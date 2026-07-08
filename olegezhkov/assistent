@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>База знаний — Олег Ежков</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-hover: #f7f7f5;
+    --bg-tag: #f1f1ef;
+    --border: #e8e8e5;
+    --text-primary: #1a1a1a;
+    --text-secondary: #787774;
+    --text-tertiary: #9b9b97;
+    --accent: #2f6fe8;
+    --accent-soft: #e8f0fd;
+    --green: #0f7b6c;
+    --green-soft: #e3f5f2;
+    --orange: #c35f00;
+    --orange-soft: #fdf3e8;
+    --purple: #6940a5;
+    --purple-soft: #f0ebfa;
+    --sidebar-w: 240px;
+  }
+
+  html { font-size: 15px; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: #fbfaf9;
+    border-right: 1px solid var(--border);
+    padding: 12px 8px;
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .workspace-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: background 0.1s;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .nav-item.active { background: var(--bg-tag); color: var(--text-primary); }
+
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+  .nav-section {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 14px 8px 4px;
+  }
+
+  /* Main content */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    max-width: 860px;
+    padding: 60px 80px 120px;
+  }
+
+  /* Page header */
+  .page-emoji { font-size: 52px; margin-bottom: 12px; line-height: 1; }
+
+  .page-title {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text-tertiary);
+    margin-bottom: 32px;
+  }
+
+  /* Properties block */
+  .properties {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 0;
+    margin-bottom: 36px;
+  }
+
+  .prop-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 5px 0;
+    font-size: 13.5px;
+    min-height: 32px;
+  }
+
+  .prop-key {
+    width: 160px;
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .prop-value {
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--bg-tag);
+    color: var(--text-secondary);
+  }
+
+  .tag.blue { background: var(--accent-soft); color: var(--accent); }
+  .tag.green { background: var(--green-soft); color: var(--green); }
+  .tag.orange { background: var(--orange-soft); color: var(--orange); }
+  .tag.purple { background: var(--purple-soft); color: var(--purple); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 36px 0;
+  }
+
+  /* Headings */
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2:first-child { margin-top: 0; }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    margin-top: 24px;
+  }
+
+  p {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+
+  /* Callout */
+  .callout {
+    background: var(--bg-tag);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Cards for projects */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    background: var(--bg);
+    transition: box-shadow 0.15s, border-color 0.15s;
+    cursor: default;
+  }
+  .card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-color: #d8d8d4; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .card-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .card-role {
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* Toggle-style block */
+  .toggle-block {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .toggle-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .toggle-header:hover { background: var(--bg-hover); }
+
+  .toggle-arrow {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    transition: transform 0.2s;
+    margin-left: auto;
+  }
+  .toggle-block.open .toggle-arrow { transform: rotate(90deg); }
+
+  .toggle-content {
+    display: none;
+    padding: 4px 14px 14px 36px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+  .toggle-block.open .toggle-content { display: block; }
+
+  /* Task list */
+  .task-list { list-style: none; }
+  .task-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .task-list li::before {
+    content: '';
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 3px;
+    background: var(--bg);
+  }
+
+  /* Bullet list */
+  .bullet-list { list-style: none; }
+  .bullet-list li {
+    display: flex;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+  .bullet-list li::before {
+    content: '•';
+    color: var(--text-tertiary);
+    font-size: 16px;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+
+  /* Quote */
+  .quote {
+    border-left: 3px solid var(--border);
+    padding: 4px 0 4px 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-style: italic;
+    margin: 12px 0;
+    line-height: 1.6;
+  }
+
+  /* Skills pills */
+  .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .skill-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    background: var(--bg);
+  }
+
+  /* Inline code */
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12.5px;
+    background: var(--bg-tag);
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: var(--text-primary);
+  }
+
+  /* Column layout */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* Photo gallery */
+  .photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .photo-gallery a {
+    display: block;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    background: var(--bg-tag);
+  }
+  .photo-gallery img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+  .photo-gallery a:hover img { transform: scale(1.04); }
+
+  /* Sub-nav items (indented, smaller) */
+  .nav-sub {
+    padding-left: 28px;
+  }
+  .nav-sub .nav-item {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    padding: 3px 8px;
+  }
+  .nav-sub .nav-item:hover { color: var(--text-primary); }
+
+  @media (max-width: 720px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 40px 20px 80px; }
+    .columns { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr; }
+    .prop-key { width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="avatar">ОЕ</div>
+    <span class="workspace-name">Олег Ежков</span>
+  </div>
+
+  <div class="nav-section">Навигация</div>
+  <a class="nav-item active" href="#about">
+    <span class="nav-icon">👤</span> О себе
+  </a>
+  <a class="nav-item" href="#projects">
+    <span class="nav-icon">🚀</span> Проекты
+  </a>
+  <div class="nav-sub">
+    <a class="nav-item" href="#ch">Content Hunter</a>
+    <a class="nav-item" href="#ca">Cantor Agency</a>
+    <a class="nav-item" href="#cmo">CMO</a>
+  </div>
+  <a class="nav-item" href="#team">
+    <span class="nav-icon">👥</span> Команда
+  </a>
+  <a class="nav-item" href="#assistant">
+    <span class="nav-icon">⚡</span> Ассистенту
+  </a>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Page header -->
+  <div class="page-emoji">👋</div>
+  <h1 class="page-title">База знаний — Олег Ежков</h1>
+  <p class="page-subtitle">Всё, что нужно знать для работы со мной. Читай внимательно — вопросов должно остаться минимум.</p>
+
+  <!-- Photo gallery -->
+  <div class="photo-gallery">
+    <a href="https://postimg.cc/grr5tn00" target="_blank">
+      <img src="https://i.postimg.cc/grr5tn00/photo-1-2026-06-20-23-43-46.jpg" alt="Олег Ежков">
+    </a>
+    <a href="https://postimg.cc/vDDj2cmY" target="_blank">
+      <img src="https://i.postimg.cc/vDDj2cmY/photo-2-2026-06-20-23-43-46.jpg" alt="Олег Ежков">
+    </a>
+    <a href="https://postimg.cc/xqq7pcd1" target="_blank">
+      <img src="https://i.postimg.cc/xqq7pcd1/photo-3-2026-06-20-23-43-46.jpg" alt="Олег Ежков">
+    </a>
+  </div>
+
+  <!-- Properties -->
+  <div class="properties">
+    <div class="prop-row">
+      <div class="prop-key"><span>📍</span> Город</div>
+      <div class="prop-value">Санкт-Петербург</div>
+    </div>
+    <div class="prop-row">
+      <div class="prop-key"><span>🎂</span> Возраст</div>
+      <div class="prop-value">22 года</div>
+    </div>
+    <div class="prop-row">
+      <div class="prop-key"><span>💼</span> Роли</div>
+      <div class="prop-value">
+        <span class="tag blue">Директор по маркетингу</span>
+        <span class="tag purple">Коммерческий директор</span>
+        <span class="tag green">Предприниматель</span>
+      </div>
+    </div>
+    <div class="prop-row">
+      <div class="prop-key"><span>📚</span> Образование</div>
+      <div class="prop-value">Бакалавр — международный бизнес · Магистратура СПбГУ (менеджмент, 1 курс)</div>
+    </div>
+    <div class="prop-row">
+      <div class="prop-key"><span>🌍</span> Учёба за рубежом</div>
+      <div class="prop-value">Финляндия · Австрия · Нидерланды</div>
+    </div>
+    <div class="prop-row">
+      <div class="prop-key"><span>💻</span> Формат работы</div>
+      <div class="prop-value">Онлайн — всегда</div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <a id="about"></a>
+  <h2>👤 Кто я</h2>
+  <p>Я занимаюсь маркетингом, продажами и созданием новых продуктов. У меня три активных проекта, магистратура и желание строить команду, которая работает без моего постоянного участия в рутине.</p>
+
+  <div class="quote">«Мне нравится неопределённость и сложные решения. Не нравится — рутина и перегруз из-за полной вовлечённости во все проекты одновременно.»</div>
+
+  <h3>Увлечения и ценности</h3>
+  <div class="columns">
+    <div>
+      <ul class="bullet-list">
+        <li>🏂 Сноубординг — 15 лет</li>
+        <li>💪 Спорт</li>
+        <li>✈️ Путешествия (много стран Европы)</li>
+        <li>🎬 Кино</li>
+        <li>🚀 Создание новых проектов</li>
+      </ul>
+    </div>
+    <div>
+      <ul class="bullet-list">
+        <li>Строить что-то с нуля</li>
+        <li>Неопределённость и сложные решения</li>
+        <li>Маркетинг и продажи в глубину</li>
+        <li>Участвовать в интересных стартапах</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Projects overview -->
+  <a id="projects"></a>
+  <h3>Экспертиза</h3>
+  <div class="skills">
+    <span class="skill-pill">📣 Маркетинг</span>
+    <span class="skill-pill">💬 Продажи</span>
+    <span class="skill-pill">🎬 Контент (видео, подкасты, тексты)</span>
+    <span class="skill-pill">👥 Управление командой до 10 чел.</span>
+    <span class="skill-pill">🎮 Игровые воронки</span>
+    <span class="skill-pill">🏫 Закрытые клубы и комьюнити</span>
+    <span class="skill-pill">📊 Трафик и воронки</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <h2>🚀 Три проекта</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">📦 Content Hunter</div>
+      <div class="card-body">Маркетинговое агентство по созданию контент-ферм для масштабирования результатов.</div>
+      <div class="card-role">Директор по маркетингу и продажам</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎓 Cantor Agency</div>
+      <div class="card-body">Маркетинговое агентство для репетиторов и онлайн-школ. 25 клиентов, 4 направления.</div>
+      <div class="card-role">Руководитель / сооснователь</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🤝 CMO Community</div>
+      <div class="card-body">Комьюнити маркетологов и CMO. Telegram-бот, воркшопы по субботам, программа «Ядро».</div>
+      <div class="card-role">Партнёр (⅓)</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Content Hunter -->
+  <a id="ch"></a>
+  <h2>📦 Content Hunter</h2>
+
+  <div class="callout">
+    <span class="callout-icon">📌</span>
+    <div><strong>Что это:</strong> Маркетинговое агентство по созданию контент-ферм для масштабирования клиентских результатов.<br><strong>Мой руководитель:</strong> Кирилл Попов (CEO)</div>
+  </div>
+
+  <h3>Моя команда в подчинении</h3>
+  <ul class="bullet-list">
+    <li>Квалификатор в отделе продаж</li>
+    <li>Таргетолог Instagram</li>
+    <li>Таргетолог TikTok</li>
+  </ul>
+
+  <h3>Мои задачи</h3>
+  <div class="toggle-block open">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>✅</span> Рутинные задачи
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="task-list">
+        <li>Отвечать на вопросы лидов, доводить до сделки</li>
+        <li>Передавать лиды в отдел продукта</li>
+        <li>Заполнять утренний отчёт по маркетингу и продажам</li>
+        <li>Контролировать подрядчиков по маркетингу</li>
+        <li>Вносить изменения в сайты, боты и рекламные креативы</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="quote">~70% этих задач можно делегировать ассистенту</div>
+
+  <div class="divider"></div>
+
+  <!-- Cantor Agency -->
+  <a id="ca"></a>
+  <h2>🎓 Cantor Agency</h2>
+
+  <div class="callout">
+    <span class="callout-icon">📌</span>
+    <div><strong>База клиентов:</strong> School Smart — школа для преподавателей и репетиторов.<br><strong>Мои руководители:</strong> Юрий Спивак (стратегия, созвон раз в неделю), Иван (юрлицо и лидерство).</div>
+  </div>
+
+  <div class="columns">
+    <div>
+      <h3>4 направления продукта</h3>
+      <ul class="bullet-list">
+        <li>Продвижение репетитора на <strong>Avito</strong></li>
+        <li>Продвижение репетитора на <strong>Профи.ру</strong></li>
+        <li>Размещение <strong>рекламы у блогеров</strong></li>
+        <li>Создание <strong>сайта-визитки</strong></li>
+      </ul>
+      <p style="margin-top:8px; font-size:13px; color:var(--text-tertiary)">+ Скоро появятся новые направления</p>
+    </div>
+    <div>
+      <h3>Клиенты сейчас (25 шт.)</h3>
+      <ul class="bullet-list">
+        <li>8 клиентов — Avito</li>
+        <li>9 клиентов — блогеры</li>
+        <li>4 клиента — Профи.ру</li>
+        <li>4 клиента — сайты</li>
+      </ul>
+      <div class="tag blue" style="margin-top:8px; font-size:12px;">Клуб первых — 60 чел. в Telegram</div>
+    </div>
+  </div>
+
+  <h3>Команда агентства</h3>
+  <ul class="bullet-list">
+    <li>Клиентский менеджер — коммуникация и контроль сроков</li>
+    <li>1 специалист по Avito</li>
+    <li>2 специалиста по блогерам</li>
+    <li>1 специалист по профилю (Профи.ру)</li>
+    <li>1 специалист по сайтам</li>
+    <li>Советники (эдвайзеры) из School Smart</li>
+  </ul>
+
+  <h3>Тип клиентов MB (личный бренд)</h3>
+  <ul class="bullet-list">
+    <li>Сайт-визитка</li>
+    <li>3 типа подкастов</li>
+    <li>Анализ поисковой выдачи по имени</li>
+  </ul>
+
+  <h3>Мои задачи в агентстве</h3>
+  <div class="toggle-block open">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>📋</span> Управленческие и операционные задачи
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="task-list">
+        <li>Ежедневный созвон с менеджером</li>
+        <li>Продажи новым клиентам (до найма Sales)</li>
+        <li>Апсейл текущим клиентам</li>
+        <li>Написание постов в «Клуб первых» и канал агентства (несколько раз в неделю)</li>
+        <li>Обновление регламентов работы специалистов</li>
+        <li>Размещение вакансий и отбор специалистов</li>
+        <li>Контроль прогресса по проектам, сбор отчётов</li>
+        <li>Созвон с Юрием раз в неделю</li>
+        <li>Работа с MB-клиентами (до найма клиентского менеджера)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Инструменты</h3>
+  <p>
+    <code>BigWEK</code> — Task Tracker, база знаний, статусы по 25 проектам<br>
+    <code>Таблица контроля</code> — расходы, доходы, отчёты<br>
+    <code>Telegram-чаты</code> — по одному на каждый клиентский проект
+  </p>
+
+  <div class="divider"></div>
+
+  <!-- CMO Community -->
+  <a id="cmo"></a>
+  <h2>🤝 CMO Community</h2>
+
+  <div class="callout">
+    <span class="callout-icon">👥</span>
+    <div><strong>Партнёры:</strong> Дима Корн (привлечение клиентов) + Илья (AI-контент, воркшопы). Всё делим поровну.</div>
+  </div>
+
+  <h3>Экосистема проекта</h3>
+  <ul class="bullet-list">
+    <li><strong>CMO Chat</strong> — публичный Telegram-чат, точка входа</li>
+    <li><strong>CMO Community бот</strong> — база знаний, Random Coffee, Календарь событий, раздел «Ядро»</li>
+  </ul>
+
+  <h3>Программа «Ядро» (5 000 ₽)</h3>
+  <ul class="bullet-list">
+    <li>Доступ к закрытому чату</li>
+    <li>Субботние воркшопы (1 час): Олег — игровые мини-курсы · Илья — AI в контенте</li>
+    <li>Проверка домашних заданий по запросу</li>
+    <li>Записи эфиров с тайм-кодами и дополнительными материалами</li>
+    <li>Отслеживание прогресса участника в боте</li>
+  </ul>
+
+  <h3>Random Coffee</h3>
+  <p style="font-size:14px;">Каждую неделю участник получает нового собеседника по своему запросу, общается, оставляет отзыв — автоматический нетворкинг.</p>
+
+  <h3>Мои задачи в CMO</h3>
+  <div class="toggle-block open">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>📋</span> Операционные задачи
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="task-list">
+        <li>Добавление записей воркшопов в базу знаний бота</li>
+        <li>Посты в чате — анонсы мероприятий и новости</li>
+        <li>Общение с новыми клиентами и контроль оплат</li>
+        <li>Проведение субботних воркшопов (чередование с Ильёй)</li>
+        <li>Помощь в создании игрового мини-курса и сайта проекта</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Team -->
+  <a id="team"></a>
+  <h2>👥 Ключевые люди</h2>
+
+  <div class="toggle-block">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>📦</span> Content Hunter
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="bullet-list">
+        <li><strong>Кирилл Попов</strong> — CEO, мой руководитель</li>
+        <li><strong>Квалификатор</strong> — в отделе продаж, подчиняется мне</li>
+        <li><strong>2 таргетолога</strong> (Instagram + TikTok), подчиняются мне</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="toggle-block">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>🎓</span> Cantor Agency
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="bullet-list">
+        <li><strong>Юрий Спивак</strong> — сооснователь, стратегия (созвон раз в неделю)</li>
+        <li><strong>Иван</strong> — лидерство и юрлицо</li>
+        <li><strong>Клиентский менеджер</strong> — коммуникация с клиентами, контроль сроков</li>
+        <li><strong>Специалисты</strong> — Avito (1), блогеры (2), профиль (1), сайты (1)</li>
+        <li><strong>Эдвайзеры из School Smart</strong> — опытные репетиторы, помогают с регламентами</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="toggle-block">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>🤝</span> CMO Community
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="bullet-list">
+        <li><strong>Дима Корн</strong> — привлечение клиентов</li>
+        <li><strong>Илья</strong> — AI в контенте, воркшопы по AI</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- For assistant -->
+  <a id="assistant"></a>
+  <h2>⚡ Ассистенту — важно</h2>
+
+  <div class="callout">
+    <span class="callout-icon">🎯</span>
+    <span>Главное — ответственность, жёсткий контроль сроков и обязательств. Если дедлайн под угрозой — сообщать немедленно.</span>
+  </div>
+
+  <h3>Что мне важно в ассистенте</h3>
+  <ul class="bullet-list">
+    <li>Быстро усваивать информацию — через обсуждение или через AI</li>
+    <li>Быстро осваивать новые инструменты: AI-сервисы, хостинги, разные платформы</li>
+    <li>Иметь интерес к маркетингу и продажам</li>
+    <li>Быть полностью вовлечённым в мою деятельность</li>
+    <li>Работать в долгую — расти вместе со мной</li>
+  </ul>
+
+  <h3>Что ты получаешь</h3>
+  <ul class="bullet-list">
+    <li>Я отвечаю в любой момент на любые вопросы</li>
+    <li>Вкладываюсь в твои знания и опыт</li>
+    <li>Потенциал — стать партнёром или занять руководящую позицию</li>
+  </ul>
+
+  <h3>Какие задачи можно делегировать</h3>
+  <div class="toggle-block">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>📦</span> Content Hunter (~70%)
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="bullet-list">
+        <li>Ответы на вопросы лидов, коммуникация до закрытия сделки</li>
+        <li>Заполнение утреннего отчёта по маркетингу и продажам</li>
+        <li>Контроль подрядчиков (таргетологи, подрядчики)</li>
+        <li>Внесение изменений в сайты, боты, рекламные материалы</li>
+      </ul>
+    </div>
+  </div>
+  <div class="toggle-block">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>🎓</span> Cantor Agency
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="bullet-list">
+        <li>Подготовка постов для канала и «Клуба первых»</li>
+        <li>Размещение вакансий и первичный отбор кандидатов</li>
+        <li>Коммуникация с клиентами (апсейл, новые продажи по скриптам)</li>
+        <li>Обновление регламентов после брифинга со мной</li>
+        <li>Контроль прогресса по проектам в BigWEK</li>
+        <li>Сбор отчётов</li>
+      </ul>
+    </div>
+  </div>
+  <div class="toggle-block">
+    <div class="toggle-header" onclick="this.parentElement.classList.toggle('open')">
+      <span>🤝</span> CMO Community
+      <span class="toggle-arrow">▶</span>
+    </div>
+    <div class="toggle-content">
+      <ul class="bullet-list">
+        <li>Загрузка записей воркшопов в базу знаний бота</li>
+        <li>Посты-анонсы в чате</li>
+        <li>Контроль входящих оплат и онбординг новых клиентов</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="quote">«Мне не нравится делать рутинные действия и перегруз из-за одновременной вовлечённости во все проекты. Именно поэтому мне нужен ассистент.»</div>
+
+</main>
+
+<script>
+  // Smooth active nav on scroll
+  const sections = document.querySelectorAll('a[id]');
+  const navItems = document.querySelectorAll('.nav-item');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navItems.forEach(n => n.classList.remove('active'));
+        const id = entry.target.id;
+        const active = document.querySelector(`.nav-item[href="#${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Smooth scroll
+  navItems.forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      const id = item.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
+</body>
+</html>
