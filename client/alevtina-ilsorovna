@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Алевтина Ильсоровна — репетитор по скорочтению, ментальной арифметике и русскому языку</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-50: #EEF1FB;
+    --blue-100: #CBD4F0;
+    --blue-200: #A6B3E3;
+    --blue-400: #6E7FC9;
+    --blue-600: #4C5BA0;
+    --blue-800: #353F74;
+    --pink: #F0C8D6;
+    --violet: #9C82C2;
+    --bg: #FAF8FC;
+    --white: #ffffff;
+    --text: #2B2640;
+    --text-soft: #5B5571;
+    --text-muted: #8A84A0;
+    --border: rgba(76,91,160,0.14);
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Geologica', sans-serif;
+    --radius: 16px;
+    --shadow: 0 4px 32px rgba(76,91,160,0.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  :root { --page-padding: 5vw; }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(250,248,252,0.74);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-bottom: 1px solid rgba(76,91,160,0.10);
+    box-shadow: 0 2px 20px rgba(76,91,160,0.06);
+    padding: 0 var(--page-padding);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--blue-600);
+    text-decoration: none;
+    font-weight: 700;
+  }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    text-decoration: none;
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    font-weight: 400;
+    transition: color 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .nav-links a:hover { color: var(--violet); }
+  .nav-cta {
+    background: var(--violet);
+    color: white !important;
+    padding: 0.45rem 1.2rem;
+    border-radius: 40px;
+    font-weight: 500 !important;
+  }
+  .nav-cta:hover { background: var(--blue-600) !important; color: white !important; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 96px var(--page-padding) 64px;
+    gap: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, var(--blue-50) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--blue-50);
+    color: var(--blue-600);
+    border: 1px solid var(--blue-100);
+    padding: 0.3rem 1rem;
+    border-radius: 40px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: tag-blink 2s ease-in-out infinite;
+  }
+  @keyframes tag-blink {
+    0%, 100% { color: var(--blue-600); border-color: var(--blue-100); background: var(--blue-50); box-shadow: none; }
+    50% { color: var(--violet); border-color: var(--violet); background: rgba(156,130,194,0.14); box-shadow: 0 0 14px rgba(156,130,194,0.35); }
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+  .hero h1 em { color: var(--violet); font-style: italic; }
+  .hero-desc {
+    color: var(--text-soft);
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+    max-width: 480px;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+  .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--violet);
+    color: white;
+    padding: 0.85rem 2rem;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--blue-600); transform: translateY(-2px); }
+  .btn-outline {
+    border: 1.5px solid var(--violet);
+    color: var(--violet);
+    padding: 0.85rem 2rem;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-outline:hover { background: var(--blue-50); transform: translateY(-2px); }
+
+  .hero-visual { display: flex; justify-content: center; align-items: center; position: relative; }
+  .avatar-frame {
+    width: 380px; height: 440px;
+    background: linear-gradient(145deg, var(--blue-50), var(--pink));
+    border-radius: 40% 60% 60% 40% / 50% 40% 60% 50%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid var(--blue-100);
+  }
+  .avatar-photo { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; display: block; }
+  .avatar-fallback {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, var(--blue-100), var(--pink));
+    font-family: var(--font-display);
+    font-size: 3.4rem;
+    color: var(--blue-800);
+    font-weight: 700;
+  }
+  .hero-photo-mobile {
+    display: none;
+    width: min(200px, 52vw);
+    margin: 0 auto 1rem;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    border: 2px solid var(--blue-100);
+    box-shadow: var(--shadow);
+  }
+  .hero-photo-mobile img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; display: block; }
+
+  .stat-badges { position: absolute; display: flex; flex-direction: column; gap: 1rem; }
+  .stat-badges.left { left: -30px; top: 50%; transform: translateY(-50%); }
+  .stat-badges.right { right: -30px; top: 40%; transform: translateY(-50%); }
+  .stat-badge {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.7rem 1.1rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .stat-badge strong {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 1.6rem;
+    color: var(--violet);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-badge span { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .hero-stats-mobile { display: none; }
+
+  /* SECTION */
+  section { padding: 96px var(--page-padding); }
+  .section-label {
+    display: inline-block;
+    background: var(--blue-50);
+    color: var(--blue-600);
+    border: 1px solid var(--blue-100);
+    padding: 0.3rem 1rem;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+  .section-title em { color: var(--violet); font-style: italic; }
+  .section-sub { color: var(--text-soft); max-width: 540px; font-weight: 300; font-size: 1.05rem; }
+  .section-header { margin-bottom: 3.5rem; }
+  .form-title em { display: inline; }
+
+  /* ABOUT */
+  .about-grid { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 4rem; align-items: center; max-width: 960px; margin: 0 auto; }
+  .about-photo-wrap {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 2px solid var(--blue-100);
+    box-shadow: var(--shadow);
+    aspect-ratio: 4 / 5;
+    background: var(--blue-50);
+  }
+  .about-photo-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: block; }
+  .about-photo-wrap .avatar-fallback { font-size: 2.6rem; }
+
+  .about-text p { color: var(--text-soft); font-weight: 300; margin-bottom: 1.2rem; line-height: 1.85; font-size: 1.05rem; }
+  .about-highlight {
+    background: var(--blue-50);
+    border-left: 3px solid var(--violet);
+    padding: 1rem 1.5rem;
+    border-radius: 0 12px 12px 0;
+    margin: 1.5rem 0;
+  }
+  .about-highlight p { color: var(--blue-800) !important; font-weight: 400 !important; font-size: 1rem !important; margin: 0 !important; font-style: italic; }
+
+  /* STATS */
+  .stats-bg { background: var(--blue-800); color: white; padding: 80px var(--page-padding); }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 2.5rem; }
+  .stat-card {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .stat-num {
+    font-family: var(--font-body);
+    font-size: 3rem;
+    font-weight: 600;
+    color: var(--pink);
+    line-height: 1;
+    height: 3.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.4; font-weight: 300; margin: 0; }
+  .stats-bg .section-title { color: white; }
+  .stats-bg .section-sub { color: rgba(255,255,255,0.65); }
+  .stats-bg .section-label { background: rgba(255,255,255,0.1); color: var(--pink); border-color: rgba(255,255,255,0.2); }
+
+  /* SERVICES */
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .service-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem 1.75rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .service-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .service-card.featured { background: var(--violet); border-color: var(--violet); color: white; }
+  .service-tag {
+    display: inline-block;
+    background: var(--blue-50);
+    color: var(--blue-600);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 40px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+  .service-card h3 { font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 0.75rem; font-weight: 700; }
+  .service-card.featured h3 { color: white; }
+  .service-card p { font-size: 0.9rem; color: var(--text-soft); font-weight: 300; line-height: 1.6; margin-bottom: 1.25rem; flex: 1; }
+  .service-card.featured p { color: rgba(255,255,255,0.85); }
+  .price-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  .service-card.featured .price-line { border-top-color: rgba(255,255,255,0.22); }
+  .price-amount { font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; color: var(--text); font-variant-numeric: tabular-nums; }
+  .service-card.featured .price-amount { color: white; }
+  .price-duration { font-size: 0.82rem; color: var(--text-muted); font-weight: 400; white-space: nowrap; }
+  .service-card.featured .price-duration { color: rgba(255,255,255,0.72); }
+  .service-card.featured .service-tag { background: rgba(255,255,255,0.2); color: white; }
+
+  /* PATH (replaces "how lessons work" video block) */
+  .lessons-section {
+    background: var(--blue-50);
+    border-radius: 32px;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+  .lessons-section .section-header { margin-bottom: 2.5rem; }
+
+  .steps-block { display: block; margin-top: 1rem; }
+  .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; position: relative; }
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 56px;
+    left: calc(12.5% + 1rem);
+    right: calc(12.5% + 1rem);
+    height: 1px;
+    background: linear-gradient(to right, var(--blue-100), var(--violet), var(--blue-100));
+  }
+  .step-item { text-align: center; }
+  .step-num {
+    width: 112px; height: 112px;
+    background: white;
+    border: 2px solid var(--blue-200);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-body);
+    font-size: 2.4rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--violet);
+    margin: 0 auto 1.25rem;
+    position: relative;
+    z-index: 1;
+    padding: 0;
+    font-variant-numeric: tabular-nums;
+    box-sizing: border-box;
+  }
+  .step-item h4 { font-weight: 500; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text); }
+  .step-item p { font-size: 0.85rem; color: var(--text-soft); font-weight: 300; line-height: 1.5; }
+
+  /* REVIEWS */
+  .reviews-photos-wrapper { position: relative; margin-bottom: 0; }
+  .reviews-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+    max-height: 380px;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+  }
+  .reviews-photos-grid.expanded { max-height: 6000px; }
+  .reviews-fade-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(250,248,252,0) 0%, var(--bg) 85%);
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    z-index: 2;
+  }
+  .reviews-photos-grid.expanded ~ .reviews-fade-overlay { opacity: 0; pointer-events: none; }
+  .review-col { display: flex; flex-direction: column; gap: 1.25rem; }
+  .review-photo-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    line-height: 0;
+    min-height: 140px;
+  }
+  .review-photo-item:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(76,91,160,0.16); }
+  .review-photo-item img { width: 100%; height: auto; display: block; }
+  .review-photo-item .photo-fallback {
+    width: 100%; min-height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--blue-50), var(--pink));
+    color: var(--blue-600);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .reviews-cta { text-align: center; margin-top: 0.25rem; }
+  .reviews-cta .btn-outline {
+    border-color: var(--violet);
+    color: var(--violet);
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.7rem 1.8rem;
+    border-radius: 40px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 12px rgba(76,91,160,0.12);
+  }
+  .reviews-cta .btn-outline:hover { background: var(--blue-50); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(76,91,160,0.18); }
+  .reviews-cta.hidden { display: none; }
+
+  /* DIPLOMAS */
+  .diplomas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  .diploma-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    line-height: 0;
+  }
+  .diploma-item:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(76,91,160,0.16); }
+  .diploma-item img { width: 100%; height: auto; display: block; aspect-ratio: 3/4; object-fit: cover; }
+  .diploma-item .photo-fallback {
+    width: 100%; aspect-ratio: 3/4;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--pink), var(--blue-100));
+    color: var(--blue-800);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  /* FORM */
+  .form-section {
+    background: white;
+    border-radius: 24px;
+    padding: 4rem var(--page-padding);
+    border: 1px solid var(--border);
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; min-width: 0; }
+  .form-group { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group:has(.select-wrap) { grid-column: 1 / -1; }
+  label { font-size: 0.85rem; font-weight: 500; color: var(--text-soft); letter-spacing: 0.02em; }
+  input, select, textarea {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--violet);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(156,130,194,0.15);
+  }
+  .select-wrap { position: relative; width: 100%; max-width: 100%; min-width: 0; }
+  .select-wrap select { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .select-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--bg);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .select-trigger.placeholder { color: var(--text-muted); }
+  .select-trigger:focus { outline: none; border-color: var(--violet); background: white; box-shadow: 0 0 0 3px rgba(156,130,194,0.15); }
+  .select-trigger.error { border-color: #E24B4A; }
+  .select-trigger-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .select-chevron {
+    flex-shrink: 0;
+    width: 10px; height: 10px;
+    border-right: 2px solid var(--violet);
+    border-bottom: 2px solid var(--violet);
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.2s;
+  }
+  .select-wrap.open .select-chevron { transform: rotate(-135deg) translateY(2px); }
+  .select-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(76,91,160,0.14);
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .select-wrap.open .select-dropdown { display: block; }
+  .select-option {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .select-option:hover, .select-option:focus { background: var(--blue-50); outline: none; }
+  .select-option.selected { background: var(--blue-50); color: var(--blue-600); font-weight: 500; }
+  textarea { resize: vertical; min-height: 100px; }
+  .form-submit { margin-top: 2rem; text-align: center; }
+  .form-submit button {
+    background: var(--violet);
+    color: white;
+    border: none;
+    padding: 1.05rem 2rem;
+    border-radius: 40px;
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    width: 100%;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    box-shadow: 0 4px 20px rgba(156,130,194,0.32);
+  }
+  .form-submit button:hover { background: var(--blue-600); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(156,130,194,0.4); }
+  .form-submit button:active { transform: translateY(0); }
+  .form-note { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 1rem; }
+
+  /* FOOTER */
+  footer { background: var(--text); color: rgba(255,255,255,0.7); padding: 3rem var(--page-padding); }
+  .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+  .footer-logo { font-family: var(--font-display); font-size: 1.3rem; color: white; font-weight: 700; }
+  .footer-sub { font-size: 0.8rem; margin-top: 0.25rem; color: rgba(255,255,255,0.45); }
+  .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .footer-links a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--pink); }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    font-size: 0.75rem;
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    background: var(--blue-800);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    z-index: 999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* STICKY CTA */
+  .sticky-cta {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 95;
+    padding: 0.75rem var(--page-padding) calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: rgba(250,248,252,0.84);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-top: 1px solid rgba(76,91,160,0.14);
+    box-shadow: 0 -4px 24px rgba(76,91,160,0.10);
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .sticky-cta.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .sticky-cta-btn {
+    display: block;
+    width: 100%;
+    background: var(--violet);
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    padding: 0.95rem 1.5rem;
+    border-radius: 40px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(156,130,194,0.32);
+  }
+  .sticky-cta-btn:hover { background: var(--blue-600); }
+
+  /* BURGER MENU */
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 6px; border: none; background: none; z-index: 200; }
+  .nav-burger span { display: block; width: 24px; height: 2px; background: var(--blue-600); border-radius: 2px; transition: transform 0.3s, opacity 0.3s; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    background: rgba(250,248,252,0.94);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-bottom: 1px solid rgba(76,91,160,0.10);
+    box-shadow: 0 8px 24px rgba(76,91,160,0.10);
+    padding: 1.5rem var(--page-padding) 2rem;
+    z-index: 99;
+    flex-direction: column;
+    gap: 0;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    text-decoration: none;
+    color: var(--text-soft);
+    font-size: 1.1rem;
+    font-weight: 400;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  .mobile-menu a:hover { color: var(--violet); }
+
+  @media (max-width: 1100px) {
+    .hero { gap: 2rem; padding: 96px 4vw 64px; }
+    .avatar-frame { width: 300px; height: 360px; }
+    .stat-badges.left { left: -10px; }
+    .stat-badges.right { right: -10px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid::before { display: none; }
+    .diplomas-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    section { padding: 64px var(--page-padding); }
+    .nav-links { display: none; }
+    .nav-burger { display: flex; }
+    body.has-sticky-cta { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+
+    .hero-content { display: flex; flex-direction: column; }
+    .hero-tag { display: none; }
+    .hero h1 { order: 2; margin-bottom: 1rem; }
+    .hero-desc { order: 3; margin-bottom: 1rem; font-size: 0.92rem; line-height: 1.65; }
+    .hero-photo-mobile { order: 4; margin-bottom: 1.25rem; }
+    .hero-btns { order: 5; margin-bottom: 1.25rem; }
+    .hero-stats-mobile { order: 6; }
+    .hero { grid-template-columns: 1fr; min-height: auto; padding: 80px var(--page-padding) 40px; gap: 0; }
+    .hero::before { display: none; }
+    .hero-photo-mobile { display: block; }
+    .hero-visual { display: none; }
+    .hero h1 { font-size: clamp(2rem, 8vw, 2.8rem); }
+    .hero-desc { font-size: 0.98rem; max-width: 100%; }
+    .hero-btns { flex-direction: column; }
+    .btn-primary, .btn-outline { text-align: center; width: 100%; }
+
+    .hero-stats-mobile { display: grid !important; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.5rem; }
+    .hero-stat-m { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; text-align: center; }
+    .hero-stat-m strong { display: block; font-family: var(--font-body); font-size: 1.6rem; color: var(--violet); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+    .hero-stat-m span { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .about-grid { display: flex; flex-direction: column; gap: 2rem; }
+    .about-text { order: 1; }
+    .about-photo-wrap { order: 2; max-width: 320px; margin: 0 auto; width: 100%; }
+
+    .stats-bg { padding: 56px var(--page-padding); }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .stat-num { font-size: 2.2rem; height: 2.75rem; margin-bottom: 1rem; }
+    .stat-card { padding: 1.25rem 1rem; }
+
+    .services-grid { grid-template-columns: 1fr; }
+
+    .steps-block { display: block; margin-top: 2rem; }
+    .steps-grid { display: flex; flex-direction: column; gap: 0; max-width: 100%; margin: 0; }
+    .steps-grid::before {
+      display: block; left: 27px; right: auto; top: 28px; bottom: 28px;
+      width: 2px; height: auto; transform: none;
+      background: linear-gradient(to bottom, var(--blue-100), var(--violet), var(--blue-100));
+    }
+    .step-item { display: flex; gap: 1.25rem; align-items: flex-start; text-align: left; padding: 1rem 0; }
+    .step-num { width: 56px; height: 56px; min-width: 56px; font-size: 1.35rem; margin: 0; }
+    .step-content h4 { margin-bottom: 0.35rem; }
+
+    .reviews-photos-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; max-height: 320px; }
+    .review-col { gap: 0.85rem; }
+    .reviews-fade-overlay { height: 80px; }
+    .reviews-cta { margin-top: 0.15rem; }
+
+    .diplomas-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+
+    .form-title em { display: block; }
+    .form-section { padding: 2rem 1.25rem; border-radius: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+    .form-submit button { max-width: 100%; padding: 1.1rem 1.5rem; font-size: 1rem; }
+    .select-trigger { font-size: 16px; }
+
+    .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    .footer-links { gap: 1rem; }
+
+    section.lessons-section { border-radius: 16px; max-width: none; margin-left: 1vw; margin-right: 1vw; width: auto; }
+
+    .hero-photo-mobile { width: min(280px, 72vw) !important; }
+  }
+
+  @media (max-width: 480px) {
+    .reviews-photos-grid { grid-template-columns: 1fr; max-height: 380px; }
+    .review-col { gap: 0.85rem; }
+    .reviews-fade-overlay { height: 70px; }
+    .diplomas-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 400px) {
+    .hero h1 { font-size: 1.9rem; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .hero-stats-mobile { grid-template-columns: 1fr 1fr; }
+  }
+
+  .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .fade-in.visible { opacity: 1; transform: none; }
+
+  /* LIGHTBOX */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(20,16,36,0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox-img {
+    max-width: min(90vw, 700px);
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    display: block;
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 1.25rem; right: 1.5rem;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: white;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+    line-height: 1;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,0.22); }
+  .review-photo-item img, .diploma-item img { cursor: zoom-in; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">Алевтина Ильсоровна</a>
+  <ul class="nav-links">
+    <li><a href="#about">О репетиторе</a></li>
+    <li><a href="#services">Курсы</a></li>
+    <li><a href="#reviews">Отзывы</a></li>
+    <li><a href="#diplomas">Дипломы</a></li>
+    <li><a href="#form" class="nav-cta">Записаться</a></li>
+  </ul>
+  <button class="nav-burger" id="burger" aria-label="Меню">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about" onclick="closeMenu()">О репетиторе</a>
+  <a href="#services" onclick="closeMenu()">Курсы</a>
+  <a href="#reviews" onclick="closeMenu()">Отзывы</a>
+  <a href="#diplomas" onclick="closeMenu()">Дипломы</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <span class="hero-tag">Репетитор · Онлайн по всей России и за рубежом</span>
+    <h1>Грамотность и развитие интеллекта <br><em>без слёз и зубрёжки</em></h1>
+    <p class="hero-desc">Скорочтение, ментальная арифметика, мнемотехника и русский язык для 1–4 классов. Подготовила более 750 учеников, преподаю онлайн, в том числе для учащихся билингвальной гимназии в Братиславе.</p>
+    <div class="hero-photo-mobile">
+      <img id="hero-tutor-photo-mobile" src="images/alevtina-ilsorovna/tutor/hero2.jpg" alt="Алевтина Ильсоровна — репетитор">
+    </div>
+    <div class="hero-btns">
+      <a href="#form" class="btn-primary">Записаться на бесплатный урок</a>
+      <a href="#services" class="btn-outline">Узнать о курсах</a>
+    </div>
+    <div class="hero-stats-mobile">
+      <div class="hero-stat-m"><strong>750+</strong><span>учеников</span></div>
+      <div class="hero-stat-m"><strong>30+</strong><span>лет в педагогике</span></div>
+      <div class="hero-stat-m"><strong>4</strong><span>года на сервисе</span></div>
+      <div class="hero-stat-m"><strong>1–4</strong><span>классы по рус. яз.</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="stat-badges left">
+      <div class="stat-badge"><strong>750+</strong><span>учеников</span></div>
+      <div class="stat-badge"><strong>30+</strong><span>лет в педагогике</span></div>
+    </div>
+    <div class="avatar-frame">
+      <img id="hero-tutor-photo" class="avatar-photo" src="images/alevtina-ilsorovna/tutor/hero2.jpg" alt="Алевтина Ильсоровна — репетитор">
+    </div>
+    <div class="stat-badges right">
+      <div class="stat-badge"><strong>4</strong><span>года на сервисе</span></div>
+      <div class="stat-badge"><strong>1–4</strong><span>классы по рус. яз.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid fade-in">
+    <div class="about-photo-wrap">
+      <img id="about-tutor-photo" src="images/alevtina-ilsorovna/tutor/about.jpg" alt="Алевтина Ильсоровна на занятии">
+    </div>
+    <div class="about-text">
+      <h2 class="section-title">Подружим ребёнка<br><em>с русским языком навсегда</em></h2>
+      <p>Педагог с высшим образованием и 30-летним стажем. Веду русский язык (1–4 класс), скорочтение, ментальную арифметику и мнемотехнику онлайн — в том числе для учеников билингвальной гимназии в Братиславе.</p>
+      <div class="about-highlight">
+        <p>«Правила — не зубрим, а понимаем через логику, образы и истории. Ребёнок не учит — он понимает, и поэтому не забывает.»</p>
+      </div>
+      <p>Курс «Грамотность без слёз» закрывает все пробелы программы 1–4 класса: орфография, морфемика, пунктуация, развитие речи — в игровой форме, в мини-группах до 6 человек.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bg">
+  <div>
+    <h2 class="section-title">Цифры говорят сами за себя</h2>
+    <p class="section-sub">Опыт и результаты за годы преподавания</p>
+  </div>
+  <div class="stats-grid fade-in">
+    <div class="stat-card">
+      <span class="stat-num">750+</span>
+      <div class="stat-label">учеников подготовлено за время практики</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">30+</span>
+      <div class="stat-label">лет педагогического и репетиторского опыта</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">4</span>
+      <div class="stat-label">года на сервисе Smart, член сообщества репетиторов</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">20</span>
+      <div class="stat-label">минут — столько теперь занимает домашнее задание</div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Что говорят <em>родители и ученики</em></h2>
+    <p class="section-sub">Реальные отзывы — скриншоты переписок и оценок</p>
+  </div>
+
+  <div class="reviews-photos-wrapper fade-in">
+    <div class="reviews-photos-grid" id="reviewsPhotoGrid">
+      <div class="review-col">
+        <div class="review-photo-item" data-review="1"></div>
+        <div class="review-photo-item" data-review="2"></div>
+      </div>
+      <div class="review-col">
+        <div class="review-photo-item" data-review="3"></div>
+        <div class="review-photo-item" data-review="4"></div>
+      </div>
+      <div class="review-col">
+        <div class="review-photo-item" data-review="5"></div>
+        <div class="review-photo-item" data-review="6"></div>
+      </div>
+    </div>
+    <div class="reviews-fade-overlay"></div>
+  </div>
+
+  <div class="reviews-cta fade-in" id="reviewsCtaWrapper">
+    <button class="btn-outline" id="reviewsToggleBtn">
+      Смотреть все отзывы
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- EDUCATION / PATH -->
+<section id="lessons" class="lessons-section">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Как мы <em>начнём заниматься</em></h2>
+    <p class="section-sub">Простой путь от заявки до регулярных занятий — всё начинается с бесплатного пробного урока</p>
+  </div>
+  <div class="steps-block fade-in">
+    <div class="steps-grid">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Оставьте заявку</h4>
+          <p>Заполните короткую анкету — расскажите о ребёнке и задачах</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Бесплатный пробный урок</h4>
+          <p>Диагностика уровня, знакомство и обсуждение программы</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Личный план</h4>
+          <p>Определяем слабые зоны и составляем индивидуальную траекторию</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Занимаемся и растём</h4>
+          <p>2 занятия в неделю по 60 минут, регулярные отчёты родителям</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Программы обучения</h2>
+    <p class="section-sub">Занятия проходят онлайн — индивидуально или в мини-группах до 6 человек</p>
+  </div>
+  <div class="services-grid fade-in">
+    <div class="service-card featured">
+      <div class="service-tag">Популярно · 1–4 класс</div>
+      <h3>Русский язык: «Грамотность без слёз»</h3>
+      <p>Экспресс-курс из 30 уроков: орфография, морфемика, пунктуация, развитие речи — через логику, истории и мнемотехники, в игровой форме.</p>
+      <div class="price-line">
+        <span class="price-amount">16 000 ₽ / мес. (группа)</span>
+        <span class="price-duration">2× в нед., 60 мин</span>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-tag">Индивидуально</div>
+      <h3>Русский язык: персональные занятия</h3>
+      <p>Индивидуальная траектория с упором на слабые зоны ребёнка — фонетику, падежи, состав слова или пунктуацию.</p>
+      <div class="price-line">
+        <span class="price-amount">32 000 ₽ / мес.</span>
+        <span class="price-duration">2× в нед., 60 мин</span>
+      </div>
+    </div>
+    <div class="service-card">
+      <div class="service-tag">Развитие интеллекта</div>
+      <h3>Скорочтение, ментальная арифметика, мнемотехника</h3>
+      <p>Курсы развития памяти, концентрации и скорости мышления по сертифицированным программам IAMA.</p>
+      <div class="price-line">
+        <span class="price-amount">по запросу</span>
+        <span class="price-duration">60 мин</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIPLOMAS -->
+<section id="diplomas">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Дипломы <em>и сертификаты</em></h2>
+    <p class="section-sub">ДГПИ (учитель русского языка и литературы), сертификаты IAMA по ментальной арифметике и скорочтению, мнемотехника, курсы Schoolsmart</p>
+  </div>
+  <div class="diplomas-grid fade-in" id="diplomasGrid">
+    <div class="diploma-item" data-diploma="1"></div>
+    <div class="diploma-item" data-diploma="2"></div>
+    <div class="diploma-item" data-diploma="3"></div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section id="form">
+  <div class="section-header fade-in" style="text-align: center;">
+    <h2 class="section-title form-title">Запишитесь на <em>бесплатный пробный урок</em></h2>
+    <p class="section-sub" style="margin: 0 auto;">Заполните форму — свяжемся с вами в течение дня для подтверждения</p>
+  </div>
+  <div class="form-section fade-in">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Имя ученика</label>
+        <input type="text" id="student_name" placeholder="Имя">
+      </div>
+      <div class="form-group">
+        <label>Фамилия ученика</label>
+        <input type="text" id="student_last" placeholder="Фамилия">
+      </div>
+      <div class="form-group">
+        <label id="grade-label">Класс</label>
+        <div class="select-wrap" data-select="grade">
+          <select id="grade" required tabindex="-1" aria-hidden="true">
+            <option value="" disabled selected>Выберите класс</option>
+            <option value="1">1 класс</option>
+            <option value="2">2 класс</option>
+            <option value="3">3 класс</option>
+            <option value="4">4 класс</option>
+            <option value="other">Другое (скорочтение/арифметика)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label id="course-label">Курс</label>
+        <div class="select-wrap" data-select="course">
+          <select id="course" required tabindex="-1" aria-hidden="true">
+            <option value="" disabled selected>Выберите курс</option>
+            <option value="russian">Русский язык (1–4 класс)</option>
+            <option value="speed_reading">Скорочтение</option>
+            <option value="mental_math">Ментальная арифметика</option>
+            <option value="mnemonics">Мнемотехника</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Цель и описание ситуации</label>
+        <textarea id="goal" placeholder="Расскажите коротко — что не получается, какие цели..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Имя и отчество родителя</label>
+        <input type="text" id="parent_name" placeholder="Имя Отчество">
+      </div>
+      <div class="form-group">
+        <label>Телефон</label>
+        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
+      </div>
+      <div class="form-group full">
+        <label>Электронная почта</label>
+        <input type="email" id="email" placeholder="example@mail.ru">
+      </div>
+    </div>
+    <div class="form-submit">
+      <button type="button" onclick="submitForm()">
+        Записаться на пробный урок
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">Алевтина Ильсоровна</div>
+      <div class="footer-sub">Репетитор по русскому языку, скорочтению, ментальной арифметике и мнемотехнике</div>
+    </div>
+    <div class="footer-links">
+      <a href="#form">Записаться</a>
+      <a href="https://t.me/allacpl" target="_blank" rel="noopener">Telegram</a>
+      <a href="https://vk.com/id471050181" target="_blank" rel="noopener">VK</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 Алевтина Ильсоровна — репетитор. Онлайн по всей России и за рубежом.
+  </div>
+</footer>
+
+<div class="sticky-cta" id="stickyCta">
+  <a href="#form" class="sticky-cta-btn">Записаться на пробный урок</a>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">&#x2715;</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+</div>
+
+<div class="toast" id="toast">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  Заявка отправлена! Свяжемся с вами сегодня.
+</div>
+
+<script>
+  // Photos: drop files into the folders below with these exact names to replace placeholders.
+  (function loadMedia() {
+    const heroPhoto = 'images/alevtina-ilsorovna/tutor/hero2.jpg';
+    const aboutPhoto = 'images/alevtina-ilsorovna/tutor/about.jpg';
+
+    function setImageWithFallback(img, url, initials, loading) {
+      if (!img) return;
+      img.loading = loading || 'lazy';
+      img.onerror = () => {
+        if (img.dataset.fallbackApplied) return;
+        img.dataset.fallbackApplied = '1';
+        const fallback = document.createElement('div');
+        fallback.className = 'avatar-fallback';
+        fallback.textContent = initials;
+        img.replaceWith(fallback);
+      };
+      img.src = url;
+    }
+
+    setImageWithFallback(document.getElementById('hero-tutor-photo'), heroPhoto, 'АИ', 'eager');
+    setImageWithFallback(document.getElementById('hero-tutor-photo-mobile'), heroPhoto, 'АИ', 'eager');
+    setImageWithFallback(document.getElementById('about-tutor-photo'), aboutPhoto, 'АИ', 'lazy');
+
+    document.querySelectorAll('.review-photo-item[data-review]').forEach(el => {
+      const n = el.dataset.review;
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = 'Отзыв родителя';
+      img.onerror = () => {
+        if (img.dataset.fallbackApplied) return;
+        img.dataset.fallbackApplied = '1';
+        const fallback = document.createElement('div');
+        fallback.className = 'photo-fallback';
+        fallback.textContent = 'Отзыв ' + n;
+        img.replaceWith(fallback);
+      };
+      img.src = 'images/alevtina-ilsorovna/reviews/review-' + n + '.jpg';
+      el.appendChild(img);
+    });
+
+    document.querySelectorAll('.diploma-item[data-diploma]').forEach(el => {
+      const n = el.dataset.diploma;
+      const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.alt = 'Диплом или сертификат';
+      img.onerror = () => {
+        if (img.dataset.fallbackApplied) return;
+        img.dataset.fallbackApplied = '1';
+        const fallback = document.createElement('div');
+        fallback.className = 'photo-fallback';
+        fallback.textContent = 'Диплом ' + n;
+        img.replaceWith(fallback);
+      };
+      img.src = 'images/alevtina-ilsorovna/diplomas/diploma-' + n + '.jpg';
+      el.appendChild(img);
+    });
+  })();
+
+  // Burger menu
+  const burger = document.getElementById('burger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  burger.addEventListener('click', () => {
+    burger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+  });
+  function closeMenu() {
+    burger.classList.remove('open');
+    mobileMenu.classList.remove('open');
+  }
+
+  // Fade-in on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Sticky CTA after hero
+  const stickyCta = document.getElementById('stickyCta');
+  const heroSection = document.getElementById('home');
+  const formSection = document.getElementById('form');
+
+  function updateStickyCta() {
+    if (!stickyCta || !heroSection) return;
+    if (window.innerWidth > 768) {
+      stickyCta.classList.remove('visible');
+      document.body.classList.remove('has-sticky-cta');
+      return;
+    }
+    const heroBottom = heroSection.offsetTop + heroSection.offsetHeight - 64;
+    const formTop = formSection ? formSection.offsetTop : Infinity;
+    const scrolledPastHero = window.scrollY > heroBottom;
+    const beforeForm = window.scrollY + window.innerHeight * 0.85 < formTop;
+    const show = scrolledPastHero && beforeForm;
+    stickyCta.classList.toggle('visible', show);
+    document.body.classList.toggle('has-sticky-cta', show);
+  }
+
+  window.addEventListener('scroll', updateStickyCta, { passive: true });
+  window.addEventListener('resize', updateStickyCta);
+  updateStickyCta();
+
+  // Custom selects
+  function closeAllSelects() {
+    document.querySelectorAll('.select-wrap.open').forEach(w => {
+      w.classList.remove('open');
+      w.querySelector('.select-trigger')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function resetCustomSelect(select) {
+    select.selectedIndex = 0;
+    const wrap = select.closest('.select-wrap');
+    const trigger = wrap?.querySelector('.select-trigger');
+    const textSpan = trigger?.querySelector('.select-trigger-text');
+    if (trigger && textSpan) {
+      textSpan.textContent = select.options[0]?.text || '';
+      trigger.classList.add('placeholder');
+      trigger.classList.remove('error');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+    wrap?.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+    wrap?.classList.remove('open');
+  }
+
+  document.querySelectorAll('.select-wrap').forEach(wrap => {
+    const select = wrap.querySelector('select');
+    if (!select || wrap.querySelector('.select-trigger')) return;
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'select-trigger placeholder';
+    trigger.id = select.id + '-trigger';
+    trigger.setAttribute('aria-labelledby', select.id + '-label');
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const label = document.getElementById(select.id + '-label');
+    if (label) label.setAttribute('for', trigger.id);
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'select-trigger-text';
+    textSpan.textContent = select.options[select.selectedIndex]?.text || '';
+
+    const chevron = document.createElement('span');
+    chevron.className = 'select-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+
+    trigger.append(textSpan, chevron);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'select-dropdown';
+    dropdown.setAttribute('role', 'listbox');
+
+    Array.from(select.options).forEach(opt => {
+      if (opt.disabled || !opt.value) return;
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'select-option';
+      item.textContent = opt.textContent;
+      item.setAttribute('role', 'option');
+      item.addEventListener('click', () => {
+        select.value = opt.value;
+        textSpan.textContent = opt.textContent;
+        trigger.classList.remove('placeholder', 'error');
+        dropdown.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+        item.classList.add('selected');
+        wrap.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+      });
+      dropdown.appendChild(item);
+    });
+
+    dropdown.addEventListener('click', e => e.stopPropagation());
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wasOpen = wrap.classList.contains('open');
+      closeAllSelects();
+      if (!wasOpen) {
+        wrap.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    wrap.append(trigger, dropdown);
+  });
+
+  document.addEventListener('click', closeAllSelects);
+
+  // Form submit
+  function submitForm() {
+    const fields = ['student_name','student_last','grade','course','parent_name','phone'];
+    let valid = true;
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      const trigger = el.closest('.select-wrap')?.querySelector('.select-trigger');
+      if (!el.value.trim()) {
+        if (trigger) trigger.classList.add('error');
+        else el.style.borderColor = '#E24B4A';
+        valid = false;
+      } else {
+        if (trigger) trigger.classList.remove('error');
+        else el.style.borderColor = '';
+      }
+    });
+    if (!valid) {
+      alert('Пожалуйста, заполните все обязательные поля.');
+      return;
+    }
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+    document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
+    document.querySelectorAll('#form select').forEach(resetCustomSelect);
+  }
+
+  // Lightbox
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  function openLightbox(src, alt) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+    lightboxImg.src = '';
+  }
+  if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+  if (lightbox) lightbox.addEventListener('click', function(e) { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
+
+  document.addEventListener('click', function(e) {
+    const item = e.target.closest('.review-photo-item, .diploma-item');
+    if (!item) return;
+    const img = item.querySelector('img');
+    if (img) openLightbox(img.src, img.alt);
+  });
+
+  // Toggle reviews
+  const toggleBtn = document.getElementById('reviewsToggleBtn');
+  const photoGrid = document.getElementById('reviewsPhotoGrid');
+  const ctaWrapper = document.getElementById('reviewsCtaWrapper');
+  let expanded = false;
+
+  if (toggleBtn && photoGrid && ctaWrapper) {
+    toggleBtn.addEventListener('click', function() {
+      expanded = !expanded;
+      photoGrid.classList.toggle('expanded', expanded);
+      if (expanded) {
+        ctaWrapper.classList.add('hidden');
+      } else {
+        ctaWrapper.classList.remove('hidden');
+      }
+    });
+  }
+</script>
+</body>
+</html>

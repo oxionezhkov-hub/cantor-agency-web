@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анализ поисковой выдачи — Алексеева Оксана Витальевна</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #f7f6f3;
+    padding: 0;
+  }
+
+  /* Layout */
+  .page {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: #fff;
+    border-right: 1px solid #e8e7e3;
+    padding: 2rem 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 0 1.25rem 1.5rem;
+    border-bottom: 1px solid #e8e7e3;
+    margin-bottom: 0.75rem;
+  }
+
+  .sidebar-logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.01em;
+  }
+
+  .sidebar-logo-sub {
+    font-size: 11px;
+    color: #9b9a97;
+    margin-top: 2px;
+  }
+
+  .nav-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9b9a97;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 1rem 1.25rem 0.4rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 1.25rem;
+    font-size: 13.5px;
+    color: #37352f;
+    text-decoration: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .nav-item:hover { background: #f1f0ed; }
+  .nav-item.active { background: #e8e7e3; font-weight: 500; }
+
+  .nav-item i {
+    font-size: 15px;
+    color: #9b9a97;
+    flex-shrink: 0;
+  }
+
+  .nav-item.active i { color: #37352f; }
+
+  /* Main content */
+  .main {
+    padding: 3rem 4rem;
+    max-width: 900px;
+  }
+
+  /* Page header */
+  .page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e8e7e3;
+  }
+
+  .page-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9b9a97;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 1rem;
+  }
+
+  .meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #6b6b6b;
+    background: #f1f0ed;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .meta-tag i { font-size: 13px; }
+
+  /* Sections */
+  .section {
+    margin-bottom: 2.5rem;
+    scroll-margin-top: 2rem;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9b9a97;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e8e7e3;
+  }
+
+  .section-heading i { font-size: 14px; }
+
+  /* Callout */
+  .callout {
+    display: flex;
+    gap: 12px;
+    padding: 0.875rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .callout-info { background: #ebf5fb; border-left: 3px solid #2980b9; }
+  .callout-warn { background: #fef9e7; border-left: 3px solid #f0b429; }
+  .callout-danger { background: #fdf2f2; border-left: 3px solid #e74c3c; }
+  .callout-success { background: #eafaf1; border-left: 3px solid #27ae60; }
+
+  .callout i { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .callout-info i { color: #2980b9; }
+  .callout-warn i { color: #d68a00; }
+  .callout-danger i { color: #e74c3c; }
+  .callout-success i { color: #27ae60; }
+
+  /* Stat row */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e8e7e3;
+    border-radius: 8px;
+    padding: 0.875rem 1rem;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: #9b9a97;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: #9b9a97;
+    margin-top: 3px;
+  }
+
+  /* Profile card */
+  .profile-card {
+    background: #fff;
+    border: 1px solid #e8e7e3;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .profile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 1.125rem 1.25rem;
+    border-bottom: 1px solid #e8e7e3;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #e8e7e3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #37352f;
+    flex-shrink: 0;
+  }
+
+  .profile-card-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .profile-card-role { font-size: 12.5px; color: #6b6b6b; margin-top: 1px; }
+
+  .profile-card-body { padding: 0; }
+
+  .profile-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 0.625rem 1.25rem;
+    border-bottom: 1px solid #f1f0ed;
+    font-size: 13.5px;
+  }
+
+  .profile-row:last-child { border-bottom: none; }
+
+  .profile-row-label {
+    width: 150px;
+    flex-shrink: 0;
+    color: #9b9a97;
+    font-size: 12.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 1px;
+  }
+
+  .profile-row-label i { font-size: 14px; }
+
+  .profile-row-value { color: #1a1a1a; flex: 1; }
+
+  /* Source table */
+  .source-list { background: #fff; border: 1px solid #e8e7e3; border-radius: 8px; overflow: hidden; }
+
+  .source-item {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid #f1f0ed;
+    font-size: 13.5px;
+  }
+
+  .source-item:last-child { border-bottom: none; }
+
+  .source-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .dot-green { background: #27ae60; }
+  .dot-amber { background: #f0b429; }
+  .dot-red { background: #e74c3c; }
+  .dot-gray { background: #c0bfbc; }
+
+  .source-content {}
+  .source-title { font-weight: 500; color: #1a1a1a; margin-bottom: 2px; }
+
+  .source-url {
+    font-size: 11.5px;
+    color: #9b9a97;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-bottom: 4px;
+  }
+
+  .source-url a { color: #2980b9; text-decoration: none; }
+  .source-url a:hover { text-decoration: underline; }
+
+  .source-desc { font-size: 13px; color: #6b6b6b; line-height: 1.5; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  .badge-green { background: #eafaf1; color: #1e8449; }
+  .badge-amber { background: #fef9e7; color: #9a6f00; }
+  .badge-red { background: #fdf2f2; color: #c0392b; }
+  .badge-gray { background: #f1f0ed; color: #6b6b6b; }
+  .badge-blue { background: #ebf5fb; color: #1a6fa3; }
+
+  /* Noise bar chart */
+  .noise-section { background: #fff; border: 1px solid #e8e7e3; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
+
+  .noise-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 48px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .noise-row:last-child { margin-bottom: 0; }
+
+  .noise-label { font-size: 13px; color: #37352f; }
+
+  .noise-track {
+    height: 6px;
+    background: #f1f0ed;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .noise-fill { height: 100%; border-radius: 3px; }
+
+  .noise-pct { font-size: 12px; color: #9b9a97; text-align: right; }
+
+  /* Recommendation items */
+  .rec-list { background: #fff; border: 1px solid #e8e7e3; border-radius: 8px; overflow: hidden; }
+
+  .rec-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid #f1f0ed;
+  }
+
+  .rec-item:last-child { border-bottom: none; }
+
+  .rec-icon-wrap {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: #f1f0ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .rec-icon-wrap i { font-size: 16px; color: #6b6b6b; }
+
+  .rec-title { font-size: 13.5px; font-weight: 500; color: #1a1a1a; margin-bottom: 3px; }
+  .rec-body { font-size: 13px; color: #6b6b6b; line-height: 1.5; }
+
+  /* Priority badge */
+  .priority-high { background: #fdf2f2; color: #c0392b; }
+  .priority-med { background: #fef9e7; color: #9a6f00; }
+  .priority-low { background: #eafaf1; color: #1e8449; }
+
+  /* Tags */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: #37352f;
+    background: #fff;
+    border: 1px solid #e8e7e3;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .tag i { font-size: 13px; color: #9b9a97; }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid #e8e7e3; margin: 1.5rem 0; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9b9a97;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e8e7e3;
+  }
+  td {
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #f1f0ed;
+    color: #37352f;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #f7f6f3; }
+
+  .table-wrap { background: #fff; border: 1px solid #e8e7e3; border-radius: 8px; overflow: hidden; margin-bottom: 1.25rem; }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    background: #f1f0ed;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #37352f;
+  }
+
+  /* Scrollbar */
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: #e8e7e3; border-radius: 2px; }
+
+  @media (max-width: 800px) {
+    .page { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 1.5rem; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .noise-row { grid-template-columns: 140px 1fr 40px; }
+    .profile-row-label { width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">SERP-анализ</div>
+      <div class="sidebar-logo-sub">Алексеева О.В. — репетитор</div>
+    </div>
+
+    <div class="nav-section-label">Навигация</div>
+    <a class="nav-item active" href="#summary"><i class="ti ti-layout-dashboard"></i>Общий обзор</a>
+    <a class="nav-item" href="#profile"><i class="ti ti-user"></i>Профиль специалиста</a>
+    <a class="nav-item" href="#sources-relevant"><i class="ti ti-check"></i>Релевантные источники</a>
+    <a class="nav-item" href="#sources-noise"><i class="ti ti-alert-triangle"></i>Информационный шум</a>
+    <a class="nav-item" href="#noise-chart"><i class="ti ti-chart-bar"></i>Распределение выдачи</a>
+    <a class="nav-item" href="#competitors-name"><i class="ti ti-users"></i>Тёзки и однофамильцы</a>
+    <a class="nav-item" href="#platforms"><i class="ti ti-world"></i>Платформы</a>
+    <a class="nav-item" href="#recs"><i class="ti ti-bulb"></i>Рекомендации</a>
+
+    <div class="nav-section-label" style="margin-top: 1rem;">Запросы</div>
+    <a class="nav-item" href="#"><i class="ti ti-search"></i>Алексеева Оксана русский язык</a>
+    <a class="nav-item" href="#"><i class="ti ti-search"></i>Алексеева Оксана Витальевна</a>
+    <a class="nav-item" href="#"><i class="ti ti-search"></i>репетитор САФУ Архангельск</a>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <div class="page-header">
+      <div class="page-eyebrow">Поисковая аналитика</div>
+      <h1 class="page-title">Алексеева Оксана Витальевна</h1>
+      <p style="font-size: 14px; color: #6b6b6b;">Анализ выдачи Google и Яндекса по запросам, связанным с репетитором по русскому языку и РКИ из Архангельска. Источники: поисковая выдача Яндекса (4 страницы), Google (2 страницы), сервисы «Ваш репетитор» и Repetit.ru.</p>
+      <div class="page-meta">
+        <span class="meta-tag"><i class="ti ti-calendar"></i>Июнь 2026</span>
+        <span class="meta-tag"><i class="ti ti-map-pin"></i>Архангельск</span>
+        <span class="meta-tag"><i class="ti ti-brand-google"></i>Google + Яндекс</span>
+        <span class="meta-tag"><i class="ti ti-clipboard-list"></i>~30 результатов проанализировано</span>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <section class="section" id="summary">
+      <div class="section-heading"><i class="ti ti-layout-dashboard"></i>Общий обзор</div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Релевантных источников</div>
+          <div class="stat-value">7</div>
+          <div class="stat-sub">прямо о ней</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Уровень шума</div>
+          <div class="stat-value">~70%</div>
+          <div class="stat-sub">выдачи — не она</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Агрегаторов</div>
+          <div class="stat-value">5+</div>
+          <div class="stat-sub">репетиторских площадок</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Собственных точек</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">сайт + Telegram</div>
+        </div>
+      </div>
+
+     
+    </section>
+
+    <!-- PROFILE -->
+    <section class="section" id="profile">
+      <div class="section-heading"><i class="ti ti-user"></i>Профиль специалиста</div>
+
+      <div class="profile-card">
+        <div class="profile-card-header">
+          <div class="avatar">АО</div>
+          <div>
+            <div class="profile-card-name">Алексеева Оксана Витальевна</div>
+            <div class="profile-card-role">Репетитор по русскому языку, РКИ · Кандидат филологических наук</div>
+          </div>
+        </div>
+        <div class="profile-card-body">
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-school"></i>Образование</div>
+            <div class="profile-row-value">Поморский государственный университет им. М.В. Ломоносова, факультет филологии и журналистики, специальность — преподаватель русского языка и литературы (2003 г.)</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-certificate"></i>Учёная степень</div>
+            <div class="profile-row-value">Кандидат филологических наук (2008 г.)</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-building"></i>Места работы</div>
+            <div class="profile-row-value">ПГУ (Поморский государственный университет), САФУ (Северный Арктический федеральный университет им. Ломоносова), АГМУ (Архангельский государственный медицинский университет). Педагогический стаж — 20 лет по актуальным данным Repetitors.info (ранее указывалось 10 лет).</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-clock"></i>Репетиторство</div>
+            <div class="profile-row-value">Опыт репетиторства — 20 лет (с 2006 г.), по данным Repetitors.info. На Repetit.ru указан 1 отзыв, на Repetitors.info — 10 отзывов, рейтинг 4.9.</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-book"></i>Предметы</div>
+            <div class="profile-row-value">Русский язык (5–11 классы), подготовка к ОГЭ и ЕГЭ, РКИ (русский как иностранный). Работает со школьниками и готовит к поступлению в сильные школы и вузы Москвы.</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-currency-ruble"></i>Стоимость</div>
+            <div class="profile-row-value">По Zoon.ru — от 2500 руб./час (ОГЭ 3000–6000 руб.). На старых карточках указано 600 руб./ч. — данные устарели.</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-map-pin"></i>География</div>
+            <div class="profile-row-value">Архангельск. Профиль на Профи.ру активен — «была в сети 19 минут назад», готовит к экзаменам для поступления в вузы Москвы — возможно, работает дистанционно.</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-world"></i>Собственный сайт</div>
+            <div class="profile-row-value"><a href="https://russianlanguagepro.ru" style="color: #2980b9;">russianlanguagepro.ru</a> — онлайн-школа «От А до Я». Основатель и преподаватель. Профессиональный филолог, лингвист, корректор, редактор и переводчик.</div>
+          </div>
+          <div class="profile-row">
+            <div class="profile-row-label"><i class="ti ti-brand-telegram"></i>Telegram</div>
+            <div class="profile-row-value"><a href="https://t.me/noproblemRL" style="color: #2980b9;">@noproblemRL</a> — канал «Оксана Алексеева | русский язык & Russian language»</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RELEVANT SOURCES -->
+    <section class="section" id="sources-relevant">
+      <div class="section-heading"><i class="ti ti-check"></i>Релевантные источники — прямые упоминания</div>
+
+
+      <div class="source-list">
+
+        <div class="source-item">
+          <div class="source-dot dot-green"></div>
+          <div class="source-content">
+            <div class="source-title">Онлайн-школа «От А до Я» — собственный сайт</div>
+            <div class="source-url"><a href="https://russianlanguagepro.ru">russianlanguagepro.ru</a></div>
+            <div class="source-desc">Первый результат в Яндексе. Основатель — Алексеева Оксана Витальевна. Описание: преподаватель русского языка в вузе, профессиональный филолог, лингвист, корректор, редактор и переводчик, преподаёт более 20 лет. Это сильнейшая точка присутствия: брендированный домен, собственный контент, хорошая SEO-позиция.</div>
+          </div>
+          <span class="badge badge-green">Приоритет 1</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-green"></div>
+          <div class="source-content">
+            <div class="source-title">Профи.ру — профиль репетитора</div>
+            <div class="source-url"><a href="https://profi.ru/profile/AlekseevaOV3/">profi.ru/profile/AlekseevaOV3/</a></div>
+            <div class="source-desc">«Была в сети 19 минут назад» — профиль активен. Готовит к экзаменам по русскому языку для поступления в сильнейшие школы и вузы Москвы, работает со школьниками 5–11 классов и их родителями. Крупнейший агрегатор — высокий трафик и доверие.</div>
+          </div>
+          <span class="badge badge-green">Приоритет 1</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-green"></div>
+          <div class="source-content">
+            <div class="source-title">Telegram-канал @noproblemRL</div>
+            <div class="source-url"><a href="https://t.me/noproblemRL">t.me/noproblemRL</a></div>
+            <div class="source-desc">«Оксана Алексеева | русский язык &amp; Russian language». Индексируется Яндексом. Помечен как ресурс иностранного владельца (РКН), что не мешает индексации. Хорошая точка для контента и SEO.</div>
+          </div>
+          <span class="badge badge-green">Приоритет 1</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-green"></div>
+          <div class="source-content">
+            <div class="source-title">Repetitors.info — профиль Архангельск</div>
+            <div class="source-url"><a href="http://kalmykia.repetitors.info/repetitor/p/AlekseevaOV3/">kalmykia.repetitors.info / arhangelsk.repetitors.info</a></div>
+            <div class="source-desc">Рейтинг 4.9, 10 отзывов. Педагогический стаж — 20 лет (ПГУ, САФУ, АГМУ). Опыт репетиторства — 20 лет (с 2006 г.). Это наиболее полная карточка с реальными отзывами — ключевой источник доверия.</div>
+          </div>
+          <span class="badge badge-green">Приоритет 1</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-green"></div>
+          <div class="source-content">
+            <div class="source-title">Авито — страница репетитора</div>
+            <div class="source-url"><a href="https://www.avito.ru/sankt-peterburg/predlozheniya_uslug/podgotovka_k_ege._russkiy_yazyk._peresdacha_8044791320">avito.ru (профиль)</a></div>
+            <div class="source-desc">«Меня зовут Оксана. Я профессиональный преподаватель и репетитор русского языка. Работаю в вузе, обучаю русскому языку русских и иностранных студентов.» Авито имеет высокий авторитет домена и хорошо ранжируется.</div>
+          </div>
+          <span class="badge badge-amber">Приоритет 2</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-green"></div>
+          <div class="source-content">
+            <div class="source-title">YouTube — видеопрезентация для Repetit.ru</div>
+            <div class="source-url"><a href="https://www.youtube.com/watch?v=O85lWDLKJc8">youtube.com/watch?v=O85lWDLKJc8</a></div>
+            <div class="source-desc">216 просмотров (YouTube), опубликовано ~октябрь 2024. Видео присутствует на обоих видеохостингах. Оксана Витальевна окончила ПГУ им. Ломоносова. Мультимедийная точка присутствия — хорошо для SEO и доверия.</div>
+          </div>
+          <span class="badge badge-amber">Приоритет 2</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-amber"></div>
+          <div class="source-content">
+            <div class="source-title">Zoon.ru — карточка репетитора в Архангельске</div>
+            <div class="source-url"><a href="https://zoon.ru/arkhangelsk/p-repetitor/oksana_vitalevna_alekseeva-af81/</a></div>
+            <div class="source-desc">Рейтинг 4.2, 10 отзывов. Цена — от 2500 руб. (ОГЭ: 3000–6000 руб.). Данные по цене актуальнее, чем на других площадках. Карточка заполнена.</div>
+          </div>
+          <span class="badge badge-amber">Приоритет 2</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-amber"></div>
+          <div class="source-content">
+            <div class="source-title">Repetit.ru — профиль и ВКонтакте</div>
+            <div class="source-url"><a href="https://arkhangelsk.repetit.ru">arkhangelsk.repetit.ru</a> · <a href="https://vk.com">vk.com (профиль)</a></div>
+            <div class="source-desc">1 отзыв на Repetit.ru. ВКонтакте: 508 подписчиков, 319 фото, 237 записей. «Готовлю ребят к ЕГЭ и размышляю об ошибках в родном языке.» Страница ВК активна, хотя и не продвигается специально.</div>
+          </div>
+          <span class="badge badge-amber">Приоритет 2</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-amber"></div>
+          <div class="source-content">
+            <div class="source-title">Repetitor.ru — профиль</div>
+            <div class="source-url"><a href="https://repetitor.ru">repetitor.ru</a></div>
+            <div class="source-desc">«Я обучаю русскому языку около 20 лет. В моем опыте больше сотни учеников, которые успешно сдали выпускные экзамены.» Ещё одна точка присутствия на крупном агрегаторе.</div>
+          </div>
+          <span class="badge badge-amber">Приоритет 2</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- NOISE SOURCES -->
+    <section class="section" id="sources-noise">
+      <div class="section-heading"><i class="ti ti-alert-triangle"></i>Информационный шум — нерелевантные результаты</div>
+
+      <div class="callout callout-warn">
+        <i class="ti ti-alert-circle"></i>
+        <div>По запросу <code>Алексеева Оксана русский язык</code> (без отчества) большинство результатов не относятся к репетитору. Ниже — все категории шума с конкретными источниками из выдачи.</div>
+      </div>
+
+      <div class="source-list">
+
+        <div class="source-item">
+          <div class="source-dot dot-red"></div>
+          <div class="source-content">
+            <div class="source-title">Оксана Алексеева — писательница (романы, фэнтези)</div>
+            <div class="source-url">labirint.ru · litres.ru · livelib.ru · fantlab.ru · ast.ru · mybook.ru · ozon.ru · bookz.ru · litportal.ru · massolit.site</div>
+            <div class="source-desc">Самый массовый шум. Автор книг «Возможности слов», «Пять лет», «Отрава Их Величества» и др. Присутствует на 10+ книжных платформах. Кандидат экономических наук, в прошлом доцент кафедры институциональной экономики. Активно продаётся в 2026 году — занимает органическую выдачу по имени «Оксана Алексеева».</div>
+          </div>
+          <span class="badge badge-red">Основной шум</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-red"></div>
+          <div class="source-content">
+            <div class="source-title">Другие «Оксана Алексеева» — репетиторы и педагоги</div>
+            <div class="source-url">spbrepetitor.ru · uslugi.yandex.ru · vk.com (преподаватель с 20-летним стажем) · infourok.ru</div>
+            <div class="source-desc">Несколько однофамильцев-педагогов: репетитор из СПб с рейтингом 4.8 (7 отзывов), Оксана Алексеевна с Яндекс.Услуг (учитель высшей категории, 20+ лет), учитель русского языка на инфоуроке. Особенно опасен дубль в ВКонтакте — «преподаватель с 20-летним стажем, кандидат филологических наук» (ноябрь 2024): алгоритмы могут путать с нашим специалистом.</div>
+          </div>
+          <span class="badge badge-red">Прямая конкуренция</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-amber"></div>
+          <div class="source-content">
+            <div class="source-title">Алексеева Оксана Николаевна, Вячеславовна, Михайловна</div>
+            <div class="source-url">nsportal.ru · gosuslugi.ru · nou-mirznaniy.ru · shkola9efremov</div>
+            <div class="source-desc">Педагоги с похожими именами: Оксана Николаевна (педагог с 2020 г., nsportal.ru), Оксана Вячеславовна (Госуслуги, преподаёт литературу и русский язык), Оксана Михайловна (директор частной школы «Мир знаний», МПГУ). Засоряют выдачу по имени-фамилии.</div>
+          </div>
+          <span class="badge badge-amber">Умеренный шум</span>
+        </div>
+
+        <div class="source-item">
+          <div class="source-dot dot-gray"></div>
+          <div class="source-content">
+            <div class="source-title">Прочее: Алексеева Оксана Александровна (ЛОР-врач), Алексеева Оксана Соловьёвна (писательница), OZON, Одноклассники</div>
+            <div class="source-url">prodoctorov.ru · lavkapisateley.spb.ru · ozon.ru · ok.ru</div>
+            <div class="source-desc">ЛОР-хирург из Великого Новгорода (prodoctorov.ru, 97%, 17 отзывов). Оксана Соловьёвна — книга в Книжной лавке писателей. OZON выдаёт книги Алексеевой. Одноклассники: 3920 человек с именем «Оксана Алексеева».</div>
+          </div>
+          <span class="badge badge-gray">Фоновый шум</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- COMPETITORS -->
+    <section class="section" id="competitors-name">
+      <div class="section-heading"><i class="ti ti-users"></i>Тёзки и однофамильцы — детальная карта</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Кто</th>
+              <th>Где замечена</th>
+              <th>Угроза</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Оксана Алексеева</strong> (писательница)</td>
+              <td>Автор любовных романов и фэнтези. Канд. эконом. наук, бывший доцент.</td>
+              <td>Labirint, Litres, LiveLib, FantLab, AST, MyBook, OzonBooks</td>
+              <td><span class="badge badge-red">Высокая</span></td>
+            </tr>
+            <tr>
+              <td><strong>Оксана Алексеева</strong> (репетитор, СПб)</td>
+              <td>Репетитор по русскому языку. Рейтинг 4.8, 7 отзывов (spbrepetitor.ru)</td>
+              <td>SPbRepetitor.ru, Яндекс.Услуги</td>
+              <td><span class="badge badge-amber">Средняя</span></td>
+            </tr>
+            <tr>
+              <td><strong>Оксана Алексеева</strong> (кандидат филол. наук, ВКонтакте)</td>
+              <td>Преподаватель с 20-летним стажем, кандидат филол. наук. Пост ноябрь 2024.</td>
+              <td>ВКонтакте (vk.com/wall-4340646_65...)</td>
+              <td><span class="badge badge-red">Высокая — прямой дубль</span></td>
+            </tr>
+            <tr>
+              <td><strong>Алексеева Оксана Николаевна</strong></td>
+              <td>Педагог русского языка и литературы с 2020 г. Галерея Педагогической Славы.</td>
+              <td>nsportal.ru, Госуслуги (Ефремов)</td>
+              <td><span class="badge badge-gray">Низкая</span></td>
+            </tr>
+            <tr>
+              <td><strong>Алексеева Оксана Вячеславовна</strong></td>
+              <td>Учитель литературы и русского языка.</td>
+              <td>gosuslugi.ru (лицей)</td>
+              <td><span class="badge badge-gray">Низкая</span></td>
+            </tr>
+            <tr>
+              <td><strong>Алексеева Оксана Михайловна</strong></td>
+              <td>Директор частной школы «Мир знаний», учитель нач. классов, МПГУ.</td>
+              <td>nou-mirznaniy.ru</td>
+              <td><span class="badge badge-gray">Низкая</span></td>
+            </tr>
+            <tr>
+              <td><strong>Алексеева Оксана Александровна</strong></td>
+              <td>ЛОР-хирург, Великий Новгород. Рейтинг 97%, 17 отзывов.</td>
+              <td>ProDoctors.ru</td>
+              <td><span class="badge badge-gray">Низкая</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PLATFORMS -->
+    <section class="section" id="platforms">
+      <div class="section-heading"><i class="ti ti-world"></i>Платформы — полная карта присутствия</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Платформа</th>
+              <th>URL / статус</th>
+              <th>Отзывы / рейтинг</th>
+              <th>Состояние</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>russianlanguagepro.ru</strong></td>
+              <td>Собственный сайт онлайн-школы</td>
+              <td>—</td>
+              <td><span class="badge badge-green">Активен</span></td>
+            </tr>
+            <tr>
+              <td><strong>Профи.ру</strong></td>
+              <td>profi.ru/profile/AlekseevaOV3/</td>
+              <td>Активна (19 мин. назад)</td>
+              <td><span class="badge badge-green">Активен</span></td>
+            </tr>
+            <tr>
+              <td><strong>Telegram</strong></td>
+              <td>@san_oksana</td>
+              <td>—</td>
+              <td><span class="badge badge-green">Активен</span></td>
+            </tr>
+            <tr>
+              <td><strong>Repetitors.info</strong></td>
+              <td>arhangelsk.repetitors.info</td>
+              <td>4.9 / 10 отзывов</td>
+              <td><span class="badge badge-green">Активен</span></td>
+            </tr>
+            <tr>
+              <td><strong>Авито</strong></td>
+              <td>avito.ru (профиль)</td>
+              <td>—</td>
+              <td><span class="badge badge-green">Присутствует</span></td>
+            </tr>
+            <tr>
+              <td><strong>Zoon.ru</strong></td>
+              <td>zoon.ru/arkhangelsk/p-repetitor/...</td>
+              <td>4.2 / 10 отзывов</td>
+              <td><span class="badge badge-amber">Заполнен</span></td>
+            </tr>
+            <tr>
+              <td><strong>YouTube</strong></td>
+              <td>youtube.com/watch?v=O85lWDLKJc8</td>
+              <td>216 просмотров</td>
+              <td><span class="badge badge-amber">Есть видео</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>ВКонтакте</strong></td>
+              <td>vk.com/id22263276</td>
+              <td>508 подписчиков</td>
+              <td><span class="badge badge-amber">Активна</span></td>
+            </tr>
+            <tr>
+              <td><strong>Repetit.ru</strong></td>
+              <td>arkhangelsk.repetit.ru</td>
+              <td>1 отзыв</td>
+              <td><span class="badge badge-amber">Мало отзывов</span></td>
+            </tr>
+            <tr>
+              <td><strong>Repetitor.ru</strong></td>
+              <td>repetitor.ru (карточка)</td>
+              <td>—</td>
+              <td><span class="badge badge-gray">Слабо заполнен</span></td>
+            </tr>
+            <tr>
+              <td><strong>jsprav.ru / arh.repetitory.online</strong></td>
+              <td>Зеркала данных с других агрегаторов</td>
+              <td>—</td>
+              <td><span class="badge badge-gray">Автоматически</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RECOMMENDATIONS -->
+    <section class="section" id="recs">
+      <div class="section-heading"><i class="ti ti-bulb"></i>Рекомендации по улучшению выдачи</div>
+
+      <div class="rec-list">
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-world"></i></div>
+          <div>
+            <div class="rec-title">Усилить SEO собственного сайта</div>
+            <div class="rec-body">
+              <span class="badge badge-red" style="margin-bottom: 6px;">Приоритет: высокий</span><br>
+              russianlanguagepro.ru уже занимает топ-1 в Яндексе — это главный актив. Нужно: добавить страницу «Об авторе» с полным ФИО (Алексеева Оксана Витальевна) и регалиями; прописать title и description с ключевыми словами «репетитор русский язык Архангельск», «РКИ», «ОГЭ», «кандидат филологических наук»; добавить микроразметку <code>Person</code> и <code>EducationalOrganization</code> для Google Knowledge Panel.
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-star"></i></div>
+          <div>
+            <div class="rec-title">Наростить количество отзывов на Repetitors.info</div>
+            <div class="rec-body">
+              <span class="badge badge-red" style="margin-bottom: 6px;">Приоритет: высокий</span><br>
+              Рейтинг 4.9 при 10 отзывах — хороший задел. Repetitors.info хорошо ранжируется. Попросить учеников оставить развёрнутый отзыв именно там. Repetit.ru — только 1 отзыв, Repetitor.ru — 0: нужна работа и там.
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-brand-vk"></i></div>
+          <div>
+            <div class="rec-title">Привести в порядок страницу ВКонтакте</div>
+            <div class="rec-body">
+              <span class="badge badge-amber" style="margin-bottom: 6px;">Приоритет: средний</span><br>
+              508 подписчиков и 237 записей — хорошая база. Нужно: убедиться, что в имени профиля и описании есть «репетитор по русскому языку», «Архангельск», «ОГЭ», «РКИ». Это снизит вероятность, что алгоритм будет путать с другим постом ВК о «кандидате филол. наук с 20-летним стажем».
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-brand-telegram"></i></div>
+          <div>
+            <div class="rec-title">Описание Telegram-канала с ключевыми словами</div>
+            <div class="rec-body">
+              <span class="badge badge-amber" style="margin-bottom: 6px;">Приоритет: средний</span><br>
+              @san_oksana индексируется Яндексом. В описании и закреплённом посте стоит явно указать «Алексеева Оксана Витальевна, кандидат филологических наук, репетитор по русскому языку и РКИ, Архангельск» — тогда канал будет появляться по запросу с отчеством.
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-brand-youtube"></i></div>
+          <div>
+            <div class="rec-title">Оптимизировать видеопрезентации на YouTube и Rutube</div>
+            <div class="rec-body">
+              <span class="badge badge-amber" style="margin-bottom: 6px;">Приоритет: средний</span><br>
+              Видео есть на обоих хостингах — это плюс. 216 просмотров. Добавить в описание ролика: полное ФИО, ключевые фразы «репетитор русский язык Архангельск», «подготовка к ОГЭ», «РКИ», «кандидат филологических наук», ссылку на сайт. Добавить теги. Это поднимет видео в поиске по имени.
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-alert-circle"></i></div>
+          <div>
+            <div class="rec-title">Отстроиться от писательницы Алексеевой и ВК-дубля</div>
+            <div class="rec-body">
+              <span class="badge badge-amber" style="margin-bottom: 6px;">Приоритет: средний</span><br>
+              Писательница «Оксана Алексеева» занимает ~35% выдачи по сокращённому запросу. Пост ВКонтакте о «кандидате филол. наук с 20-летним стажем» — прямой дубль. Стратегия: наполнять выдачу уникализаторами — «Витальевна», «Архангельск», «РКИ», «онлайн-школа "От А до Я"». Можно создать карточку на Яндекс.Бизнес с явным указанием специальности и города.
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-currency-ruble"></i></div>
+          <div>
+            <div class="rec-title">Актуализировать цены на всех площадках</div>
+            <div class="rec-body">
+              <span class="badge badge-gray" style="margin-bottom: 6px;">Приоритет: низкий</span><br>
+              На разных платформах указаны разные цены: 600 руб./ч (старые данные «Ваш репетитор»), 2500 руб.+ (Zoon.ru). Расхождение в 4 раза подрывает доверие. Стоит привести все карточки к единому актуальному прайсу.
+            </div>
+          </div>
+        </div>
+
+        <div class="rec-item">
+          <div class="rec-icon-wrap"><i class="ti ti-map"></i></div>
+          <div>
+            <div class="rec-title">Яндекс.Бизнес и Google Business Profile</div>
+            <div class="rec-body">
+              <span class="badge badge-gray" style="margin-bottom: 6px;">Приоритет: низкий</span><br>
+              Создание верифицированной карточки в Яндекс.Бизнесе и Google Business Profile (как образовательного учреждения или индивидуального предпринимателя) закрепит имя в правой колонке результатов и даст «Знаниевую панель» при поиске по ФИО. Требует минимум усилий, но даёт хорошую долгосрочную видимость.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <hr>
+
+    <div style="font-size: 12px; color: #9b9a97; padding-bottom: 2rem;">
+      Анализ подготовлен на основе поисковой выдачи Google (страницы 1–2) и Яндекса (страницы 1–4) по запросам «Алексеева Оксана русский язык», «Алексеева Оксана Витальевна», «Алексеева Оксана Витальевна репетитор САФУ Архангельск РКИ» и связанных запросов. Дата анализа: июнь 2026.
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>
