@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109521020', 'ym');
+
+    ym(109521020, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantor Agency — Анкета отбора</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* INTRO — единый стиль */
+.intro{padding:56px 24px 40px;max-width:680px;margin:0 auto;text-align:center}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:white;border-radius:100px;padding:8px 20px;font-size:12px;font-weight:600;margin-bottom:24px;letter-spacing:0.04em;text-transform:uppercase;font-family:'Geologica',sans-serif}
+.intro-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--red-light);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+.intro h1{font-family:'Unbounded',sans-serif;font-size:clamp(22px,5vw,38px);font-weight:900;line-height:1.12;color:var(--dark);margin-bottom:20px;letter-spacing:-0.03em}
+.intro h1 em{font-style:normal;color:var(--red)}
+
+/* Текст — Geologica, центрированный, но с комфортной шириной */
+.intro-body {
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
+  font-family: 'Geologica', sans-serif;
+  font-size: 15px;
+  color: #4a4a4a;
+  line-height: 1.7;
+}
+
+.intro-body p {
+  margin-bottom: 18px;
+}
+
+.intro-body p:last-child {
+  margin-bottom: 0;
+}
+
+.intro-body strong {
+  color: var(--dark);
+  font-weight: 600;
+}
+
+/* Оранжевая зона — акцентный блок, не сдвигает остальной текст */
+.intro-highlight {
+  background: var(--accent-bg);
+  border-left: 4px solid var(--red);
+  border-radius: var(--r-md);
+  padding: 16px 22px;
+  margin: 24px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.intro-highlight strong {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.intro-divider {
+  width: 50px;
+  height: 3px;
+  background: var(--red);
+  border-radius: 3px;
+  margin: 32px auto 0;
+}
+
+/* FORM WRAPPER */
+.form-outer{padding:8px 24px 64px;max-width:680px;margin:0 auto}
+.form-card{background:var(--white);border-radius:var(--r-xl);border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow-md)}
+
+/* PROGRESS */
+.progress-bar{height:3px;background:var(--border)}
+.progress-fill{height:100%;background:var(--red);transition:width 0.4s ease}
+.progress-info{display:flex;justify-content:space-between;align-items:center;padding:14px 24px 0;font-size:12px;color:var(--muted);font-weight:500}
+.progress-info .step-label{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--red)}
+
+/* STEP */
+.step{display:none;padding:28px 24px 24px;animation:fadeUp 0.3s ease both}
+.step.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.step-num{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;font-family:'Geologica',sans-serif}
+.step-title{font-family:'Unbounded',sans-serif;font-size:clamp(17px,3vw,22px);font-weight:700;color:var(--dark);letter-spacing:-0.02em;line-height:1.25;margin-bottom:6px}
+.step-sub{font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:22px}
+
+/* WARM NOTE */
+.warm-note{background:var(--accent-bg);border-left:3px solid var(--red);border-radius:0 var(--r-md) var(--r-md) 0;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--text);line-height:1.65}
+.warm-note strong{color:var(--red);font-weight:700}
+
+/* FIELDS */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.field label .req{color:var(--red)}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 14px;font-size:14px;font-family:'Geologica',sans-serif;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;background:white}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
+.field input::placeholder,.field textarea::placeholder{color:#BDBDBD}
+.field textarea{resize:vertical;min-height:76px}
+.field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.fields-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err-msg{font-size:11.5px;color:var(--red);margin-top:4px;display:none}
+.field.error input,.field.error select,.field.error textarea{border-color:var(--red)}
+.field.error .err-msg{display:block}
+
+/* DETAILS TOGGLE */
+.svc-details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(232,57,29,0.12)}
+.svc-details.open{display:block}
+.svc-details ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.svc-details ul li{font-size:12px;color:var(--text);display:flex;gap:7px;line-height:1.5}
+.svc-details ul li::before{content:'→';color:var(--red);flex-shrink:0;font-weight:700}
+.det-toggle{font-size:11px;font-weight:700;color:var(--red);cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-family:'Geologica',sans-serif}
+.det-toggle svg{width:13px;height:13px;stroke:var(--red);fill:none;stroke-width:2;transition:transform 0.2s}
+.det-toggle.open svg{transform:rotate(180deg)}
+
+/* SERVICE CARDS */
+.services-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.svc-card{border:1.5px solid var(--border);border-radius:var(--r-lg);padding:16px;cursor:pointer;transition:all 0.18s;position:relative;background:white;user-select:none}
+.svc-card:hover{border-color:rgba(232,57,29,0.45);background:var(--accent-bg)}
+.svc-card.selected{border-color:var(--red);background:#FFF4F1}
+.svc-logo{height:28px;margin-bottom:10px;display:flex;align-items:center}
+.svc-logo img{height:100%;width:auto;object-fit:contain}
+.svc-logo-text{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--dark)}
+.svc-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:4px;font-family:'Geologica',sans-serif}
+.svc-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.svc-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;transition:all 0.18s;flex-shrink:0}
+.svc-card.selected .svc-check{background:var(--red);border-color:var(--red)}
+.svc-check svg{width:10px;height:10px;stroke:transparent;stroke-width:2.5;fill:none;transition:stroke 0.18s}
+.svc-card.selected .svc-check svg{stroke:white}
+
+/* ROLE CARDS */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px}
+.role-card{border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px 16px;cursor:pointer;transition:all 0.18s;background:white;text-align:center}
+.role-card:hover{border-color:rgba(232,57,29,0.45);background:var(--accent-bg)}
+.role-card.selected{border-color:var(--red);background:#FFF4F1}
+.role-icon{font-size:28px;margin-bottom:10px}
+.role-name{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
+.role-desc{font-size:12px;color:var(--muted);line-height:1.55}
+
+/* OPTION LIST */
+.options-list{display:flex;flex-direction:column;gap:8px}
+.opt-item{border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;cursor:pointer;display:flex;align-items:flex-start;gap:11px;transition:all 0.18s;background:white}
+.opt-item:hover{border-color:rgba(232,57,29,0.4);background:var(--accent-bg)}
+.opt-item.selected{border-color:var(--red);background:#FFF4F1}
+.opt-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.18s;margin-top:1px}
+.opt-item.selected .opt-radio{border-color:var(--red);background:var(--red)}
+.opt-dot{width:7px;height:7px;border-radius:50%;background:white;opacity:0;transition:opacity 0.18s}
+.opt-item.selected .opt-dot{opacity:1}
+.opt-text{font-size:14px;font-weight:600;color:var(--text)}
+.opt-sub{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* TAG INPUT */
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:8px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;background:white;min-height:44px;cursor:text;transition:border-color 0.2s}
+.tag-input-wrap:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
+.tag{display:inline-flex;align-items:center;gap:5px;background:var(--red);color:white;border-radius:100px;padding:4px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.tag-remove{cursor:pointer;font-size:14px;line-height:1;opacity:0.8}
+.tag-remove:hover{opacity:1}
+.tag-input{border:none;outline:none;font-size:14px;font-family:'Geologica',sans-serif;color:var(--text);flex:1;min-width:120px;padding:2px 0;background:transparent}
+.tag-hint{font-size:11.5px;color:var(--muted);margin-top:5px}
+
+/* BTN ROW */
+.btn-row{display:flex;gap:10px;margin-top:22px;align-items:center}
+.btn-next{background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:14px 28px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Geologica',sans-serif;box-shadow:var(--shadow-red);flex:1}
+.btn-next:hover{background:var(--red-dark);transform:translateY(-1px)}
+.btn-next:active{transform:translateY(0)}
+.btn-next:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.btn-back{background:none;border:1.5px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:14px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.18s;font-family:'Geologica',sans-serif;white-space:nowrap}
+.btn-back:hover{border-color:var(--red);color:var(--red)}
+
+/* THANK YOU */
+.thank-you{display:none;text-align:center;padding:44px 24px}
+.thank-you.active{display:block}
+.ty-photo{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid rgba(232,57,29,0.25);margin:0 auto 18px;display:block}
+.ty-title{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:900;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em}
+.ty-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:420px;margin:0 auto 24px}
+.ty-contact{display:inline-flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--r-md);padding:14px 20px;border:1.5px solid var(--border);text-decoration:none;transition:all 0.2s}
+.ty-contact:hover{border-color:var(--red);background:var(--accent-bg);transform:translateY(-1px)}
+.ty-avatar-photo{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(232,57,29,0.2)}
+.ty-avatar{width:44px;height:44px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:white;flex-shrink:0;font-family:'Unbounded',sans-serif}
+.ty-name{font-size:14px;font-weight:700;color:var(--dark);text-align:left}
+.ty-role{font-size:11.5px;color:var(--muted)}
+.ty-tg{font-size:13px;color:var(--red);font-weight:600;margin-top:12px}
+.btn-reload{background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:var(--r-md);padding:11px 24px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Geologica',sans-serif;margin-top:16px}
+.btn-reload:hover{border-color:var(--red);color:var(--red)}
+
+/* PRIVACY */
+.privacy-note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6}
+.privacy-note a{color:var(--red);text-decoration:none}
+.privacy-note a:hover{text-decoration:underline}
+
+/* LOADING OVERLAY */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.loading-overlay.active{display:flex}
+.spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:white;font-size:15px;font-weight:600;font-family:'Geologica',sans-serif}
+
+/* FOOTER */
+footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
+
+@media(max-width:600px){
+  .services-grid,.role-grid{grid-template-columns:1fr}
+  .fields-row{grid-template-columns:1fr}
+  .intro{padding:36px 20px 28px}
+  .form-outer{padding:8px 16px 48px}
+  .step{padding:22px 18px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Отправляем заявку…</div>
+</div>
+
+<!-- INTRO -->
+<div class="intro">
+  <h1>Анкета отбора в первую группу <em>Cantor Agency</em></h1>
+  <div class="intro-body">
+    <p>На каждое направление — максимум 3–4 клиента. Хотим сделать крутые кейсы с максимальным погружением!</p>
+  </div>
+  <div class="intro-divider"></div>
+</div>
+
+<!-- FORM -->
+<div class="form-outer">
+  <div class="form-card">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:14%"></div></div>
+    <div class="progress-info">
+      <span class="step-label" id="stepLabel">Шаг 1</span>
+      <span id="stepCounter">1 / 7</span>
+    </div>
+
+    <!-- STEP 1: SERVICES -->
+    <div class="step active" id="step1">
+      <div class="step-num">Шаг 1 из 7</div>
+      <div class="step-title">Какие направления вас интересуют?</div>
+      <div class="step-sub">Выберите одно или несколько. На старте можно взять всё — разберёмся с чего начать.</div>
+      <div class="services-grid">
+        <div class="svc-card" data-id="avito" onclick="toggleSvc(this)">
+          <div class="svc-name">Продвижение на Авито</div>
+          <div class="svc-desc">Объявления, A/B-тест, платное продвижение, аналитика</div>
+          <button class="det-toggle" onclick="event.stopPropagation();toggleDet(this)">Подробнее <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="svc-details">
+            <ul>
+              <li>Настройка профиля и 2 объявления с A/B-тестом</li>
+              <li>Тексты по модели AIDA, инфографика с результатами</li>
+              <li>Подключение платного продвижения (XL, поднятие просмотров)</li>
+              <li>Еженедельная аналитика и оптимизация</li>
+              <li>Отчёты каждую неделю и ежемесячно</li>
+            </ul>
+          </div>
+          <div class="svc-check"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+        </div>
+        <div class="svc-card" data-id="profi" onclick="toggleSvc(this)">
+          <div class="svc-name">Продвижение на Профи.ру</div>
+          <div class="svc-desc">Анкета, верификация, ежедневные отклики, отзывы</div>
+          <button class="det-toggle" onclick="event.stopPropagation();toggleDet(this)">Подробнее <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="svc-details">
+            <ul>
+              <li>Полное заполнение анкеты, тексты описания</li>
+              <li>Помощь с верификацией и сдачей экзамена площадки</li>
+              <li>Ежедневные отклики на целевые заявки</li>
+              <li>Шаблоны откликов под разные типы запросов</li>
+              <li>Работа с отзывами и оптимизация позиций в выдаче</li>
+            </ul>
+          </div>
+          <div class="svc-check"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+        </div>
+        <div class="svc-card" data-id="bloggers" onclick="toggleSvc(this)">
+          <div class="svc-name">Реклама у блогеров</div>
+          <div class="svc-desc">Подбор, переговоры, сценарии, маркировка, CPL-аналитика</div>
+          <button class="det-toggle" onclick="event.stopPropagation();toggleDet(this)">Подробнее <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="svc-details">
+            <ul>
+              <li>Поиск и проверка блогеров на накрутку (ER, охваты, аудитория)</li>
+              <li>Переговоры с блогерами и согласование условий</li>
+              <li>Написание постов и сценариев сторис</li>
+              <li>Получение ERID, маркировка рекламы по закону</li>
+              <li>Контроль выхода + аналитика по CPL и CPA каждого размещения</li>
+            </ul>
+          </div>
+          <div class="svc-check"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+        </div>
+        <div class="svc-card" data-id="website" onclick="toggleSvc(this)">
+          <div class="svc-name">Сайт-визитка</div>
+          <div class="svc-desc">Лендинг, форма записи, Яндекс Метрика, интеграции</div>
+          <button class="det-toggle" onclick="event.stopPropagation();toggleDet(this)">Подробнее <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+          <div class="svc-details">
+            <ul>
+              <li>9 блоков: от Hero до отзывов и блока с ценой</li>
+              <li>Тексты, ориентированные на вашу целевую аудиторию</li>
+              <li>Форма заявки → Google Таблица + Telegram-бот</li>
+              <li>Яндекс Метрика с целями и UTM-метками</li>
+              <li>Публикация на вашем домене или нашем сервере</li>
+            </ul>
+          </div>
+          <div class="svc-check"><svg viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3"/></svg></div>
+        </div>
+      </div>
+      <div class="err-msg" id="svcErr" style="display:none;margin-top:6px">Выберите хотя бы одно направление</div>
+      <div class="btn-row">
+        <button class="btn-next" onclick="goTo(2)">Продолжить →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: ROLE -->
+    <div class="step" id="step2">
+      <div class="step-num">Шаг 2 из 7</div>
+      <div class="step-title">Кто вы?</div>
+      <div class="step-sub">Это определит следующие вопросы — они будут разные для разных форматов работы.</div>
+      <div class="role-grid">
+        <div class="role-card" onclick="selectRole(this,'tutor')">
+          <div class="role-icon">👤</div>
+          <div class="role-name">Репетитор</div>
+          <div class="role-desc">Работаете самостоятельно. Один предмет или несколько. Один основной продукт.</div>
+        </div>
+        <div class="role-card" onclick="selectRole(this,'school')">
+          <div class="role-icon">🏫</div>
+          <div class="role-name">Онлайн-школа</div>
+          <div class="role-desc">Несколько преподавателей или продуктов. Понимаете свою юнит-экономику.</div>
+        </div>
+      </div>
+      <div class="err-msg" id="roleErr" style="display:none;margin-top:8px">Выберите вариант</div>
+      <div class="btn-row">
+        <button class="btn-back" onclick="goTo(1)">← Назад</button>
+        <button class="btn-next" onclick="goTo(3)">Продолжить →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: ABOUT (role-dependent) -->
+    <div class="step" id="step3">
+      <div class="step-num">Шаг 3 из 7</div>
+      <div class="step-title" id="s3title">О вашем проекте</div>
+      <div class="step-sub" id="s3sub">Расскажите о предмете, аудитории и формате работы.</div>
+
+      <!-- TUTOR fields -->
+      <div id="tutorFields">
+        <div class="field" id="f-subject">
+          <label>Какой предмет преподаёте? <span class="req">*</span></label>
+          <input type="text" id="subject" placeholder="Например: математика, английский, химия ЕГЭ">
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+        <div class="field" id="f-audience">
+          <label>Кто ваши основные ученики? <span class="req">*</span></label>
+          <select id="audience">
+            <option value="">Выберите вариант</option>
+            <option value="school_low">Школьники 1–4 класс</option>
+            <option value="school_mid">Школьники 5–9 класс</option>
+            <option value="school_high">10–11 класс (ЕГЭ/ОГЭ)</option>
+            <option value="students">Студенты вузов</option>
+            <option value="adults">Взрослые</option>
+            <option value="mixed">Разные группы</option>
+          </select>
+          <div class="err-msg">Выберите вариант</div>
+        </div>
+        <div class="field" id="f-check-tutor">
+          <label>Средний чек за час занятия <span class="req">*</span></label>
+          <input type="text" id="checkTutor" placeholder="Например: 1 500 ₽/час">
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+        <div class="field" id="f-ltv-tutor">
+          <label>Средний LTV ученика — сколько всего он приносит денег за всё время обучения? <span class="req">*</span></label>
+          <input type="text" id="ltvTutor" placeholder="Например: 30 000 ₽ (6 месяцев × 5 000 ₽)">
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+      </div>
+
+      <!-- SCHOOL fields -->
+      <div id="schoolFields" style="display:none">
+        <div class="field" id="f-school-name">
+          <label>Название школы и основная тематика <span class="req">*</span></label>
+          <input type="text" id="schoolName" placeholder="Например: Школа английского для детей 7–14 лет">
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+        <div class="field" id="f-school-products">
+          <label>Основные продукты / курсы <span class="req">*</span></label>
+          <textarea id="schoolProducts" placeholder="Перечислите основные продукты и их стоимость. Например: курс ЕГЭ (30 000 ₽), разовые уроки (1 200 ₽/ч)"></textarea>
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+        <div class="field" id="f-school-check">
+          <label>Средний чек одной продажи <span class="req">*</span></label>
+          <input type="text" id="schoolCheck" placeholder="Например: 15 000 ₽ за курс">
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+        <div class="field" id="f-school-ltv">
+          <label>Средний LTV ученика — сколько всего денег он приносит за всё время? <span class="req">*</span></label>
+          <input type="text" id="schoolLtv" placeholder="Например: 60 000 ₽ (2 курса × 30 000 ₽)">
+          <div class="err-msg">Заполните это поле</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goTo(2)">← Назад</button>
+        <button class="btn-next" onclick="goTo(4)">Продолжить →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: INCOME & TRAFFIC -->
+    <div class="step" id="step4">
+      <div class="step-num">Шаг 4 из 7</div>
+      <div class="step-title">Доход и трафик</div>
+      <div class="step-sub">Расскажите о вашей текущей ситуации с деньгами и привлечением учеников.</div>
+
+      <div class="field" id="f-income">
+        <label>Ваша прибыль от репетиторства / школы в месяц <span class="req">*</span></label>
+        <div class="options-list">
+          <div class="opt-item" onclick="selectOpt(this,'income','0-50')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">До 50 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'income','50-150')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">50 000 — 150 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'income','150-400')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">150 000 — 400 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'income','400-1m')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">400 000 — 1 000 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'income','1m+')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">Более 1 000 000 ₽</div></div>
+        </div>
+        <div class="err-msg" id="incomeErr">Выберите вариант</div>
+      </div>
+
+      <div class="field" id="f-traffic-budget">
+        <label>Сколько тратите на привлечение учеников в месяц сейчас? <span class="req">*</span></label>
+        <div class="options-list">
+          <div class="opt-item" onclick="selectOpt(this,'trafficBudget','0')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">Ничего — только сарафанное радио</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'trafficBudget','1-10k')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">До 10 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'trafficBudget','10-30k')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">10 000 — 30 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'trafficBudget','30-100k')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">30 000 — 100 000 ₽</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'trafficBudget','100k+')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">Более 100 000 ₽</div></div>
+        </div>
+        <div class="err-msg" id="trafficBudgetErr">Выберите вариант</div>
+      </div>
+
+      <div class="field">
+        <label>В каких каналах сейчас привлекаете учеников? (необязательно)</label>
+        <textarea id="channels" placeholder="Авито, Профи.ру, ВКонтакте, Телеграм, сарафан, сайт, Я.Директ…"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goTo(3)">← Назад</button>
+        <button class="btn-next" onclick="goTo(5)">Продолжить →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: TOOLS EXPERIENCE -->
+    <div class="step" id="step5">
+      <div class="step-num">Шаг 5 из 7</div>
+      <div class="step-title">Опыт с выбранными инструментами</div>
+      <div class="step-sub">Расскажите, пробовали ли уже выбранные каналы и что получилось.</div>
+
+      <div class="warm-note">
+        Вы выбрали: <strong id="selectedSvcReminder">—</strong><br>
+        Нам важно знать стартовую точку. Нет опыта — не страшно. Есть — расскажите результаты: сколько лидов, какая стоимость, почему перестали.
+      </div>
+
+      <div class="field" id="f-tools-exp">
+        <label id="toolsExpLabel">Пробовали ли уже эти каналы? <span class="req">*</span></label>
+        <div class="options-list" id="toolsExpList">
+          <!-- динамически заполняется -->
+        </div>
+        <div class="err-msg" id="toolsExpErr">Выберите вариант</div>
+      </div>
+
+      <div class="field" id="f-tools-results">
+        <label>Результаты и опыт с этими каналами (если пробовали)</label>
+        <textarea id="toolsResults" placeholder="Например: Авито — запускал 3 месяца назад, было 2 заявки, дорого. Профи.ру — создал анкету, но откликов мало..."></textarea>
+      </div>
+
+      <!-- Budget summer -->
+      <div class="field" id="f-summer-budget">
+        <label>Какой бюджет на маркетинг готовы выделить летом (июнь–август)? <span class="req">*</span></label>
+        <div class="options-list">
+          <div class="opt-item" onclick="selectOpt(this,'summerBudget','0-10k')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">До 10 000 ₽/мес</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'summerBudget','10-30k')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">10 000 — 30 000 ₽/мес</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'summerBudget','30-80k')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">30 000 — 80 000 ₽/мес</div></div>
+          <div class="opt-item" onclick="selectOpt(this,'summerBudget','80k+')"><div class="opt-radio"><div class="opt-dot"></div></div><div class="opt-text">Более 80 000 ₽/мес</div></div>
+        </div>
+        <div class="err-msg" id="summerBudgetErr">Выберите вариант</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goTo(4)">← Назад</button>
+        <button class="btn-next" onclick="goTo(6)">Продолжить →</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: SALES & LINKS -->
+    <div class="step" id="step6">
+      <div class="step-num">Шаг 6 из 7</div>
+      <div class="step-title">Продажи и ваше присутствие в сети</div>
+      <div class="step-sub">Поможет нам быстрее разобраться в вашем проекте перед звонком.</div>
+
+      <div class="field" id="f-sales">
+        <label>Кто у вас занимается продажами и как это происходит? <span class="req">*</span></label>
+        <div class="options-list">
+          <div class="opt-item" onclick="selectOpt(this,'sales','self')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Я сам — отвечаю на заявки и записываю</div></div></div>
+          <div class="opt-item" onclick="selectOpt(this,'sales','manager')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Есть менеджер или помощник</div></div></div>
+          <div class="opt-item" onclick="selectOpt(this,'sales','team')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Отдел продаж / команда</div></div></div>
+          <div class="opt-item" onclick="selectOpt(this,'sales','bot')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Автоматизация — бот или воронка</div></div></div>
+        </div>
+        <div class="err-msg" id="salesErr">Выберите вариант</div>
+      </div>
+
+      <div class="field">
+        <label>Ссылка на ваш сайт (если есть)</label>
+        <input type="text" id="siteUrl" placeholder="https://...">
+      </div>
+
+      <div class="field">
+        <label>Ссылка на основную соцсеть / Telegram-канал</label>
+        <input type="text" id="socialUrl" placeholder="Например: t.me/myschool или vk.com/mypage">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goTo(5)">← Назад</button>
+        <button class="btn-next" onclick="goTo(7)">Продолжить →</button>
+      </div>
+    </div>
+
+    <!-- STEP 7: CONTACTS -->
+    <div class="step" id="step7">
+      <div class="step-num">Шаг 7 из 7</div>
+      <div class="step-title">Контакты</div>
+      <div class="step-sub">Руководитель агентства свяжется с вами в течение нескольких часов в рабочее время.</div>
+
+      <div class="warm-note">
+        Это последний шаг. После отправки Олег изучит заявку и напишет в Telegram, чтобы назначить короткий звонок. Разберём вашу ситуацию и расскажем, что сможем сделать.
+      </div>
+
+      <div class="field" id="f-name">
+        <label>Ваше имя <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="Имя">
+        <div class="err-msg">Заполните это поле</div>
+      </div>
+
+      <div class="fields-row">
+        <div class="field" id="f-tg">
+          <label>Telegram <span class="req">*</span></label>
+          <input type="text" id="tg" placeholder="@username">
+          <div class="err-msg">Введите @username</div>
+        </div>
+        <div class="field" id="f-phone">
+          <label>Телефон <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="+7 (999) 000-00-00">
+          <div class="err-msg">Введите телефон</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Вопросы или пожелания к агентству (необязательно)</label>
+        <textarea id="comment" placeholder="Если есть что-то важное — напишите здесь…"></textarea>
+      </div>
+
+      <div class="privacy-note">
+        Нажимая «Отправить заявку», вы соглашаетесь с <a href="https://cantor.agency/politika" target="_blank">политикой конфиденциальности</a>.
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goTo(6)">← Назад</button>
+        <button class="btn-next" id="submitBtn" onclick="submitForm()">Отправить заявку ✓</button>
+      </div>
+    </div>
+
+    <!-- THANK YOU -->
+    <div class="thank-you" id="thankYou">
+      <div class="ty-title">Заявка принята! 🎉</div>
+      <p class="ty-sub">Изучим вашу анкету и напишем в Telegram в ближайшее рабочее время. Разберём ситуацию и расскажем, чем сможем помочь.</p>
+      <a href="https://t.me/oleg_ezhkov" target="_blank" class="ty-contact">
+        <img src="https://i.postimg.cc/BbvN8f8L/photo-2026-06-01-14-19-21.jpg" alt="Олег Ежков" class="ty-avatar-photo" onerror="this.style.display='none';document.getElementById('ty-avatar-fallback').style.display='flex'">
+        <div id="ty-avatar-fallback" class="ty-avatar" style="display:none">ОЕ</div>
+        <div>
+          <div class="ty-name">Олег Ежков</div>
+          <div class="ty-role">Руководитель Cantor Agency</div>
+        </div>
+      </a>
+      <br>
+      <button class="btn-reload" onclick="location.reload()">← Отправить ещё одну заявку</button>
+    </div>
+  </div>
+</div>
+
+<footer>© Cantor Agency 2026 · Маркетинговое агентство для репетиторов</footer>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPk5CHyT_oDsWYZINg_bQTwXg64tJr4-3PugEpi_KU-56ix1lwTmdkkKIUOB-fAOOXeg/exec?sheet=КЛУБ';
+
+const TOTAL_STEPS = 7;
+const progressPct = {1:14,2:28,3:42,4:57,5:71,6:85,7:100};
+
+const state = {
+  currentStep: 1,
+  services: [],
+  role: '',
+  format: '',
+  income: '',
+  trafficBudget: '',
+  toolsExp: '',
+  summerBudget: '',
+  sales: ''
+};
+
+const svcNames = {avito:'Авито',profi:'Профи.ру',bloggers:'Реклама у блогеров',website:'Сайт-визитка'};
+const roleNames = {tutor:'Репетитор',school:'Онлайн-школа'};
+const formatNames = {online:'Онлайн',offline:'Офлайн',both:'Оба формата'};
+const audienceNames = {school_low:'1–4 кл.',school_mid:'5–9 кл.',school_high:'10–11 кл. (ЕГЭ/ОГЭ)',students:'Студенты',adults:'Взрослые',mixed:'Разные группы'};
+const incomeNames = {'0-50':'До 50 тыс. ₽','50-150':'50–150 тыс. ₽','150-400':'150–400 тыс. ₽','400-1m':'400 тыс. — 1 млн ₽','1m+':'Более 1 млн ₽'};
+const tbNames = {'0':'Не трачу','1-10k':'До 10 тыс. ₽','10-30k':'10–30 тыс. ₽','30-100k':'30–100 тыс. ₽','100k+':'Более 100 тыс. ₽'};
+const ltvNames = {'1-2':'1–2 мес.','3-5':'3–5 мес.','6-11':'6–11 мес.','12+':'Год и более'};
+const sbNames = {'0-10k':'До 10 тыс. ₽','10-30k':'10–30 тыс. ₽','30-80k':'30–80 тыс. ₽','80k+':'Более 80 тыс. ₽'};
+const salesNames = {self:'Сам',manager:'Менеджер/помощник',team:'Отдел продаж',bot:'Автоматизация/бот'};
+const toolsExpNames = {
+  no: 'Не пробовал',
+  some: 'Некоторые пробовал',
+  all: 'Все или почти все',
+  tried_avito: 'Пробовал Авито',
+  tried_profi: 'Пробовал Профи.ру',
+  tried_bloggers: 'Пробовал рекламу у блогеров',
+  tried_website: 'Пробовал сайт'
+};
+
+function goTo(step) {
+  if (step > state.currentStep && !validateStep(state.currentStep)) return;
+  document.getElementById('step' + state.currentStep).classList.remove('active');
+  state.currentStep = step;
+  document.getElementById('step' + step).classList.add('active');
+  document.getElementById('progressFill').style.width = progressPct[step] + '%';
+  document.getElementById('stepLabel').textContent = 'Шаг ' + step;
+  document.getElementById('stepCounter').textContent = step + ' / ' + TOTAL_STEPS;
+  if (step === 5) buildStep5();
+}
+
+function toggleSvc(el) {
+  const id = el.dataset.id;
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) { 
+    if (!state.services.includes(id)) state.services.push(id); 
+  } else { 
+    state.services = state.services.filter(s => s !== id); 
+  }
+  if (state.services.length > 0) document.getElementById('svcErr').style.display = 'none';
+}
+
+function toggleDet(btn) {
+  const details = btn.nextElementSibling;
+  details.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.childNodes[0].nodeValue = details.classList.contains('open') ? 'Скрыть ' : 'Подробнее ';
+}
+
+function buildStep5() {
+  const names = state.services.map(s => svcNames[s]);
+  document.getElementById('selectedSvcReminder').textContent = names.join(', ');
+  const list = document.getElementById('toolsExpList');
+  list.innerHTML = '';
+  list.innerHTML += `<div class="opt-item" onclick="selectOpt(this,'toolsExp','no')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Нет, ни один не пробовал</div></div></div>`;
+  if (state.services.length > 1) {
+    list.innerHTML += `<div class="opt-item" onclick="selectOpt(this,'toolsExp','some')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Да, некоторые пробовал</div></div></div>`;
+  }
+  state.services.forEach(s => {
+    list.innerHTML += `<div class="opt-item" onclick="selectOpt(this,'toolsExp','tried_${s}')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Да, пробовал ${svcNames[s]}</div></div></div>`;
+  });
+  if (state.services.length > 1) {
+    list.innerHTML += `<div class="opt-item" onclick="selectOpt(this,'toolsExp','all')"><div class="opt-radio"><div class="opt-dot"></div></div><div><div class="opt-text">Да, пробовал всё из выбранного</div></div></div>`;
+  }
+  state.toolsExp = '';
+}
+
+function selectRole(el, val) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.role = val;
+  document.getElementById('roleErr').style.display = 'none';
+  const isTutor = val === 'tutor';
+  document.getElementById('tutorFields').style.display = isTutor ? 'block' : 'none';
+  document.getElementById('schoolFields').style.display = isTutor ? 'none' : 'block';
+  document.getElementById('s3title').textContent = isTutor ? 'О вашей практике' : 'О вашей школе';
+  document.getElementById('s3sub').textContent = isTutor
+    ? 'Расскажите о предмете, аудитории и формате работы.'
+    : 'Расскажите о школе, продуктах и экономике.';
+}
+
+function selectOpt(el, name, value) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.opt-item').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  state[name] = value;
+  const errEl = document.getElementById(name + 'Err');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    if (!state.services.length) { document.getElementById('svcErr').style.display = 'block'; return false; }
+    return true;
+  }
+  if (step === 2) {
+    if (!state.role) { document.getElementById('roleErr').style.display = 'block'; return false; }
+    return true;
+  }
+  if (step === 3) {
+    let ok = true;
+    if (state.role === 'tutor') {
+      if (!val('subject')) { err('f-subject'); ok = false; } else noErr('f-subject');
+      if (!val('audience')) { err('f-audience'); ok = false; } else noErr('f-audience');
+      if (!val('checkTutor')) { err('f-check-tutor'); ok = false; } else noErr('f-check-tutor');
+      if (!val('ltvTutor')) { err('f-ltv-tutor'); ok = false; } else noErr('f-ltv-tutor');
+    } else {
+      if (!val('schoolName')) { err('f-school-name'); ok = false; } else noErr('f-school-name');
+      if (!val('schoolProducts')) { err('f-school-products'); ok = false; } else noErr('f-school-products');
+      if (!val('schoolCheck')) { err('f-school-check'); ok = false; } else noErr('f-school-check');
+      if (!val('schoolLtv')) { err('f-school-ltv'); ok = false; } else noErr('f-school-ltv');
+    }
+    return ok;
+  }
+  if (step === 4) {
+    let ok = true;
+    if (!state.income) { document.getElementById('incomeErr').style.display = 'block'; ok = false; } else document.getElementById('incomeErr').style.display = 'none';
+    if (!state.trafficBudget) { document.getElementById('trafficBudgetErr').style.display = 'block'; ok = false; } else document.getElementById('trafficBudgetErr').style.display = 'none';
+    return ok;
+  }
+  if (step === 5) {
+    let ok = true;
+    if (!state.toolsExp) { document.getElementById('toolsExpErr').style.display = 'block'; ok = false; } else document.getElementById('toolsExpErr').style.display = 'none';
+    if (!state.summerBudget) { document.getElementById('summerBudgetErr').style.display = 'block'; ok = false; } else document.getElementById('summerBudgetErr').style.display = 'none';
+    return ok;
+  }
+  if (step === 6) {
+    if (!state.sales) { document.getElementById('salesErr').style.display = 'block'; return false; } else document.getElementById('salesErr').style.display = 'none';
+    return true;
+  }
+  if (step === 7) {
+    let ok = true;
+    ['name','tg','phone'].forEach(id => {
+      if (!val(id)) { err('f-' + id); ok = false; } else noErr('f-' + id);
+    });
+    return ok;
+  }
+  return true;
+}
+
+function val(id) { const el = document.getElementById(id); return el && el.value.trim(); }
+function err(fid) { const el = document.getElementById(fid); if(el) el.classList.add('error'); }
+function noErr(fid) { const el = document.getElementById(fid); if(el) el.classList.remove('error'); }
+
+function submitForm() {
+  if (!validateStep(7)) return;
+  document.getElementById('loadingOverlay').classList.add('active');
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+
+  const fd = new FormData();
+  fd.append('timestamp', new Date().toLocaleString('ru-RU'));
+  fd.append('services', state.services.map(s => svcNames[s]).join(', '));
+  fd.append('role', roleNames[state.role] || '');
+  fd.append('subject', val('subject') || '');
+  fd.append('audience', audienceNames[val('audience')] || '');
+  fd.append('check_tutor', val('checkTutor') || '');
+  fd.append('ltv_tutor', val('ltvTutor') || '');
+  fd.append('school_name', val('schoolName') || '');
+  fd.append('school_products', val('schoolProducts') || '');
+  fd.append('school_check', val('schoolCheck') || '');
+  fd.append('school_ltv', val('schoolLtv') || '');
+  fd.append('income', incomeNames[state.income] || '');
+  fd.append('traffic_budget', tbNames[state.trafficBudget] || '');
+  fd.append('channels', val('channels') || '');
+  fd.append('tools_exp', toolsExpNames[state.toolsExp] || '');
+  fd.append('tools_results', val('toolsResults') || '');
+  fd.append('summer_budget', sbNames[state.summerBudget] || '');
+  fd.append('sales', salesNames[state.sales] || '');
+  fd.append('site_url', val('siteUrl') || '');
+  fd.append('social_url', val('socialUrl') || '');
+  fd.append('name', val('name') || '');
+  fd.append('telegram', val('tg') || '');
+  fd.append('phone', val('phone') || '');
+  fd.append('comment', val('comment') || '');
+
+  fetch(APPS_SCRIPT_URL, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(res => {
+      document.getElementById('loadingOverlay').classList.remove('active');
+      if (res.result === 'success') { showThanks(); }
+      else { alert('Ошибка при отправке. Попробуйте ещё раз или напишите https://t.me/oleg_ezhkov'); btn.disabled = false; }
+    })
+    .catch(() => {
+      document.getElementById('loadingOverlay').classList.remove('active');
+      alert('Ошибка соединения. Проверьте интернет и попробуйте снова. Или напишите https://t.me/oleg_ezhkov');
+      btn.disabled = false;
+    });
+}
+
+function showThanks() {
+  document.getElementById('step7').classList.remove('active');
+  document.getElementById('thankYou').classList.add('active');
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('stepLabel').textContent = 'Готово';
+  document.getElementById('stepCounter').textContent = '✓';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109521020', 'ym');
+
+    ym(109521020, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/109521020" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Стать эдвайзером — Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+:root {
+  --red: #E8391D;
+  --red-dark: #C42D13;
+  --red-glow: rgba(232,57,29,0.18);
+  --dark: #111111;
+  --dark2: #1A1A1A;
+  --dark3: #242424;
+  --text: #2C2C2C;
+  --muted: #7A7A7A;
+  --bg: #F2F3F6;
+  --white: #FFFFFF;
+  --border: #E4E4E4;
+  --accent-bg: #FFF2EF;
+  --radius: 14px;
+  --radius-lg: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── TICKER ── */
+.ticker-wrap {
+  background: var(--dark);
+  overflow: hidden;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+.ticker-wrap::before,
+.ticker-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.ticker-wrap::before { left: 0; background: linear-gradient(90deg, var(--dark), transparent); }
+.ticker-wrap::after  { right: 0; background: linear-gradient(-90deg, var(--dark), transparent); }
+
+.ticker-track {
+  display: flex;
+  gap: 0;
+  animation: ticker 32s linear infinite;
+  will-change: transform;
+  white-space: nowrap;
+}
+.ticker-track:hover { animation-play-state: paused; }
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 36px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: -0.01em;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  height: 48px;
+  flex-shrink: 0;
+}
+.ticker-item .ticker-icon {
+  width: 20px; height: 20px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+.ticker-item strong { color: var(--white); }
+
+/* ── HERO ── */
+.hero {
+  background: var(--dark2);
+  padding: 72px 24px 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -120px; left: 50%;
+  transform: translateX(-50%);
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,57,29,0.09) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(232,57,29,0.12);
+  color: #FF7A5C;
+  border: 1px solid rgba(232,57,29,0.22);
+  border-radius: 100px;
+  padding: 6px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  position: relative;
+}
+.hero-label-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 6vw, 62px);
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  position: relative;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--red);
+}
+.hero-sub {
+  font-size: clamp(15px, 2vw, 17px);
+  color: rgba(255,255,255,0.5);
+  max-width: 520px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+  position: relative;
+}
+.hero-sub strong { color: rgba(255,255,255,0.85); }
+
+.hero-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.3);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  position: relative;
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ── MAIN LAYOUT ── */
+.page-body {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  display: inline-block;
+  background: var(--accent-bg);
+  color: var(--red);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ── FORM CARD ── */
+.form-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  margin-top: -28px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.09);
+}
+
+.form-card-header {
+  background: var(--white);
+  padding: 36px 44px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 32px;
+}
+
+.form-card-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(22px, 3.5vw, 30px);
+  font-weight: 900;
+  color: var(--dark);
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+.form-card-header p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Step indicator */
+.steps-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 24px;
+}
+.step-dot {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.3s;
+  position: relative;
+  z-index: 1;
+}
+.step-dot.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+  box-shadow: 0 4px 12px rgba(232,57,29,0.35);
+}
+.step-dot.done {
+  background: var(--dark);
+  border-color: var(--dark);
+  color: white;
+}
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+}
+.step-line-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: var(--red);
+  transition: width 0.4s ease;
+}
+.steps-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.step-label-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  flex: 1;
+  transition: color 0.3s;
+}
+.step-label-text.active { color: var(--red); }
+.step-label-text.done { color: var(--dark); }
+
+/* Form body */
+.form-body {
+  padding: 36px 44px 40px;
+}
+
+/* Step panels */
+.step-panel { display: none; }
+.step-panel.active { display: block; animation: fadeUp 0.35s ease both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dark);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.step-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.55;
+}
+
+/* Checkbox grid */
+.channels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.channel-item {
+  position: relative;
+}
+.channel-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+}
+.channel-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--white);
+  user-select: none;
+}
+.channel-label:hover {
+  border-color: rgba(232,57,29,0.35);
+  background: var(--accent-bg);
+}
+input[type="checkbox"]:checked + .channel-label {
+  border-color: var(--red);
+  background: var(--accent-bg);
+  box-shadow: 0 0 0 3px rgba(232,57,29,0.08);
+}
+.channel-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+input[type="checkbox"]:checked + .channel-label .channel-icon-wrap {
+  background: var(--red);
+}
+.channel-icon-wrap svg {
+  width: 18px; height: 18px;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+input[type="checkbox"]:checked + .channel-label .channel-icon-wrap svg {
+  color: white;
+}
+.channel-check {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+input[type="checkbox"]:checked + .channel-label .channel-check {
+  background: var(--red);
+  border-color: var(--red);
+}
+.check-mark {
+  display: none;
+}
+input[type="checkbox"]:checked + .channel-label .check-mark {
+  display: block;
+}
+.channel-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1.25;
+}
+.channel-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* Textarea group */
+.textarea-group {
+  margin-bottom: 20px;
+  animation: fadeUp 0.3s ease both;
+}
+.textarea-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.textarea-group label span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 6px;
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.textarea-group textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--white);
+  outline: none;
+}
+.textarea-group textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(232,57,29,0.08);
+}
+.textarea-group textarea::placeholder { color: #BCBCBC; }
+
+/* Input group */
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.input-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  letter-spacing: -0.01em;
+}
+.input-group input {
+  padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--white);
+}
+.input-group input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(232,57,29,0.08);
+}
+.input-group input::placeholder { color: #BCBCBC; }
+.input-group.full { grid-column: 1 / -1; }
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  align-items: center;
+}
+.btn-primary {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 15px 32px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.22s;
+  letter-spacing: -0.01em;
+  box-shadow: 0 6px 20px rgba(232,57,29,0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary:hover {
+  background: var(--red-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(232,57,29,0.38);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-secondary {
+  background: none;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 24px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: -0.01em;
+}
+.btn-secondary:hover {
+  color: var(--dark);
+  border-color: var(--dark);
+}
+
+/* Error */
+.field-error {
+  font-size: 12px;
+  color: var(--red);
+  font-weight: 600;
+  margin-top: 6px;
+  display: none;
+}
+.field-error.show { display: block; }
+.error-banner {
+  background: #FFF2EF;
+  border: 1.5px solid rgba(232,57,29,0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--red);
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: none;
+}
+.error-banner.show { display: block; }
+
+/* ── BENEFITS SECTION ── */
+.benefits-section {
+  margin-top: 64px;
+}
+.benefits-section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px, 4vw, 34px);
+  font-weight: 900;
+  color: var(--dark);
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.benefits-section .sub {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 36px;
+  max-width: 520px;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.benefit-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 26px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.benefit-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.07);
+  transform: translateY(-2px);
+}
+.benefit-card:last-child {
+  background: var(--dark2);
+  border-color: transparent;
+}
+.benefit-icon {
+  width: 44px; height: 44px;
+  border-radius: 11px;
+  background: var(--accent-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.benefit-icon svg { width: 22px; height: 22px; color: var(--red); }
+.benefit-card:last-child .benefit-icon { background: rgba(232,57,29,0.15); }
+.benefit-card:last-child .benefit-icon svg { color: #FF7A5C; }
+.benefit-card h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--dark);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.benefit-card:last-child h3 { color: var(--white); }
+.benefit-card p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.62;
+}
+
+/* ── THANK YOU ── */
+#thank-you {
+  display: none;
+  min-height: 100vh;
+  background: var(--dark2);
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+#thank-you.show {
+  display: flex;
+  flex-direction: column;
+  animation: fadeUp 0.5s ease both;
+}
+.ty-icon {
+  width: 80px; height: 80px;
+  background: rgba(232,57,29,0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 28px;
+  animation: scaleIn 0.5s 0.1s ease both;
+}
+@keyframes scaleIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.ty-icon svg { width: 36px; height: 36px; color: var(--red); }
+#thank-you h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 900;
+  color: var(--white);
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  line-height: 1.15;
+}
+#thank-you h1 em { font-style: normal; color: var(--red); }
+#thank-you p {
+  font-size: 16px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.7;
+  max-width: 460px;
+  margin: 0 auto 8px;
+}
+#thank-you p strong { color: rgba(255,255,255,0.8); }
+.ty-contact {
+  margin-top: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+}
+.ty-contact svg { width: 20px; height: 20px; color: var(--red); flex-shrink: 0; }
+.ty-contact-text { text-align: left; }
+.ty-contact-text span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.ty-contact-text a {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--white);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.ty-contact-text a:hover { color: var(--red); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .form-card-header, .form-body { padding-left: 24px; padding-right: 24px; }
+  .channels-grid { grid-template-columns: 1fr 1fr; }
+  .input-row { grid-template-columns: 1fr; }
+  .benefits-grid { grid-template-columns: 1fr; }
+  .benefit-card:last-child { grid-column: auto; }
+  .btn-row { flex-direction: column; align-items: stretch; }
+  .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+  .steps-labels { display: none; }
+}
+@media (max-width: 420px) {
+  .channels-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ THANK YOU (hidden initially) ══ -->
+<div id="thank-you">
+  <div class="ty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <h1>Анкета<br>отправлена</h1>
+  <p>Мы рассмотрим вашу заявку и свяжемся в течение нескольких дней. Следите за сообщениями.</p>
+  <p>Если есть вопросы — напишите напрямую:</p>
+  <a class="ty-contact" href="https://t.me/oleg_ezhkov" target="_blank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21.5 2L2 9.5l7 2.5 2.5 7L21.5 2z"/>
+      <line x1="9" y1="12" x2="16" y2="5"/>
+    </svg>
+  </a>
+</div>
+
+<!-- ══ MAIN PAGE ══ -->
+<div id="main-page">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-label">
+      <span class="hero-label-dot"></span>
+      Закрытый набор · Cantor Agency
+    </div>
+    <h1>Станьте <em>эдвайзером</em><br>маркетингового агентства</h1>
+    <p class="hero-sub">
+      Если вы привлекали учеников через рекламу, соцсети или агрегаторы — <strong>ваш опыт ценен.</strong> Поделитесь им и получите эксклюзивный доступ к инструментам агентства.
+    </p>
+    <div class="hero-arrow">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      Заполните анкету ниже
+    </div>
+  </section>
+
+  <!-- Page body -->
+  <div class="page-body">
+
+    <!-- Form card -->
+    <div class="form-card" id="form-card">
+      <div class="form-card-header">
+        <div class="section-label">Анкета эдвайзера</div>
+        <h2>Расскажите о вашем опыте</h2>
+        <p>3–5 минут · Заявки рассматриваются лично</p>
+
+        <!-- Steps bar -->
+        <div class="steps-bar" style="margin-top:24px;">
+          <div class="step-dot active" id="dot-1">1</div>
+          <div class="step-line"><div class="step-line-fill" id="line-1" style="width:0%"></div></div>
+          <div class="step-dot" id="dot-2">2</div>
+          <div class="step-line"><div class="step-line-fill" id="line-2" style="width:0%"></div></div>
+          <div class="step-dot" id="dot-3">3</div>
+        </div>
+        <div class="steps-labels">
+          <span class="step-label-text active" id="label-1">Направления</span>
+          <span class="step-label-text" id="label-2">Результаты</span>
+          <span class="step-label-text" id="label-3">Контакты</span>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <div class="error-banner" id="error-banner">Пожалуйста, исправьте ошибки перед продолжением.</div>
+        <form id="adviser-form" novalidate>
+
+          <!-- Step 1: Channels -->
+          <div class="step-panel active" id="step-1">
+            <div class="step-title">Опытом в каких направлениях хотите поделиться?</div>
+            <p class="step-hint">Отметьте всё, в чём вы работали и получили хоть какой-то результат.</p>
+
+            <div class="channels-grid" id="channels-grid">
+              <!-- rendered by JS -->
+            </div>
+            <p class="field-error" id="channels-error">Выберите хотя бы одно направление</p>
+
+            <div class="btn-row">
+              <button type="button" class="btn-primary" onclick="nextStep(1)">
+                Далее
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Results -->
+          <div class="step-panel" id="step-2">
+            <div class="step-title">Расскажите коротко о результатах</div>
+            <p class="step-hint">По каждому выбранному направлению — что сделали, чем гордитесь, какие цифры получили.</p>
+            <div id="results-fields"></div>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" onclick="nextStep(2)">
+                Далее
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+              <button type="button" class="btn-secondary" onclick="prevStep(2)">Назад</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Contacts -->
+          <div class="step-panel" id="step-3">
+            <div class="step-title">Ваши контакты</div>
+            <p class="step-hint">Мы свяжемся с вами в Telegram или по телефону в течение нескольких дней.</p>
+
+            <div class="input-row">
+              <div class="input-group">
+                <label for="f-name">Имя</label>
+                <input type="text" id="f-name" name="name" placeholder="Как вас зовут?" autocomplete="given-name">
+                <p class="field-error" id="name-error">Введите ваше имя</p>
+              </div>
+              <div class="input-group">
+                <label for="f-phone">Телефон</label>
+                <input type="tel" id="f-phone" name="phone" placeholder="+7 999 000 00 00" autocomplete="tel">
+                <p class="field-error" id="phone-error">Введите номер телефона</p>
+              </div>
+            </div>
+            <div class="input-row">
+              <div class="input-group full">
+                <label for="f-tg">Telegram-юзернейм</label>
+                <input type="text" id="f-tg" name="telegram" placeholder="@username" autocomplete="off">
+                <p class="field-error" id="tg-error">Введите Telegram-юзернейм</p>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button type="submit" class="btn-primary" id="submit-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Отправить анкету
+              </button>
+              <button type="button" class="btn-secondary" onclick="prevStep(3)">Назад</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Benefits section -->
+    <div class="benefits-section">
+      <div class="section-label">Что вы получаете</div>
+      <h2>Привилегии эдвайзера</h2>
+      <p class="sub">Это не просто «спасибо за участие» — реальный доступ к тому, что строится внутри агентства.</p>
+
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <h3>Клуб эдвайзеров</h3>
+          <p>Закрытое сообщество практиков. Обмен опытом с теми, кто реально делает результат в трафике и маркетинге для образования.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
+          <h3>База знаний агентства</h3>
+          <p>Все работающие связки, инструменты и решения, которые накапливаются внутри Cantor Agency — доступ раньше всех.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <h3>Эксклюзивный доступ к услугам</h3>
+          <p>Первыми подключите инструменты агентства — Авито, блогеры, VK Ads, Reels — на специальных условиях для эдвайзеров.</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/>
+            </svg>
+          </div>
+          <h3>Амбассадорство</h3>
+          <p>Ваш опыт станет частью агентства. Узнаваемость, статус и влияние на рынок образования — ваше имя рядом с Cantor Agency.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-page -->
+
+<script>
+// ── CHANNELS DATA ──
+const CHANNELS = [
+  { id: 'avito',    name: 'Авито',              sub: 'Агрегатор',   icon: `<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/>` },
+  { id: 'profi',    name: 'Profi.ru',           sub: 'Агрегатор',   icon: `<path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z"/>` },
+  { id: 'reels',    name: 'Reels / Shorts',     sub: 'Видео',       icon: `<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>` },
+  { id: 'bloggers', name: 'Реклама у блогеров', sub: '',   icon: `<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>` },
+  { id: 'vk',       name: 'VK Ads',             sub: 'Таргет',      icon: `<path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>` },
+  { id: 'yandex',   name: 'Яндекс.Директ',     sub: 'Контекст',    icon: `<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>` },
+  { id: 'telegram', name: 'Telegram',           sub: 'Соцсети',     icon: `<path d="M21.5 2L2 9.5l7 2.5 2.5 7L21.5 2z"/><line x1="9" y1="12" x2="16" y2="5"/>` },
+  { id: 'youtube',  name: 'YouTube',            sub: 'Видео',       icon: `<path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>` },
+  { id: 'smm',      name: 'SMM / Контент',      sub: 'Соцсети',     icon: `<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>` },
+  { id: 'funnel',   name: 'Воронки продаж',     sub: 'Автоматизация',icon: `<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>` },
+  { id: 'other',    name: 'Другое',             sub: 'Иной канал',  icon: `<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>` },
+];
+
+// ── RENDER CHANNELS ──
+function renderChannels() {
+  const grid = document.getElementById('channels-grid');
+  grid.innerHTML = CHANNELS.map(ch => `
+    <div class="channel-item">
+      <input type="checkbox" id="ch-${ch.id}" name="channel_${ch.id}" value="${ch.name}">
+      <label class="channel-label" for="ch-${ch.id}">
+        <div class="channel-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ch.icon}</svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="channel-name">${ch.name}</div>
+          <div class="channel-sub">${ch.sub}</div>
+        </div>
+        <div class="channel-check">
+          <svg class="check-mark" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </label>
+    </div>
+  `).join('');
+}
+
+// ── STEP LOGIC ──
+let currentStep = 1;
+
+function getCheckedChannels() {
+  return CHANNELS.filter(ch => document.getElementById('ch-'+ch.id)?.checked);
+}
+
+function renderResultFields() {
+  const checked = getCheckedChannels();
+  const container = document.getElementById('results-fields');
+  container.innerHTML = checked.map((ch, i) => `
+    <div class="textarea-group" style="animation-delay:${i*0.07}s">
+      <label for="res-${ch.id}">${ch.name} <span>Коротко о результатах</span></label>
+      <textarea id="res-${ch.id}" name="result_${ch.id}" placeholder="Что делали, какой результат получили, чем гордитесь — 2–4 предложения" rows="3"></textarea>
+    </div>
+  `).join('');
+}
+
+function updateStepUI(step) {
+  // panels
+  document.querySelectorAll('.step-panel').forEach((p,i) => {
+    p.classList.toggle('active', i+1 === step);
+  });
+  // dots
+  [1,2,3].forEach(i => {
+    const dot = document.getElementById('dot-'+i);
+    dot.classList.remove('active','done');
+    if (i < step) dot.classList.add('done'), dot.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    else if (i === step) dot.classList.add('active'), dot.textContent = i;
+    else dot.textContent = i;
+  });
+  // lines
+  document.getElementById('line-1').style.width = step > 1 ? '100%' : '0%';
+  document.getElementById('line-2').style.width = step > 2 ? '100%' : '0%';
+  // labels
+  [1,2,3].forEach(i => {
+    const lbl = document.getElementById('label-'+i);
+    lbl.classList.remove('active','done');
+    if (i < step) lbl.classList.add('done');
+    else if (i === step) lbl.classList.add('active');
+  });
+  currentStep = step;
+  document.getElementById('error-banner').classList.remove('show');
+  // scroll to form
+  document.getElementById('form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function nextStep(from) {
+  if (from === 1) {
+    const checked = getCheckedChannels();
+    if (checked.length === 0) {
+      document.getElementById('channels-error').classList.add('show');
+      return;
+    }
+    document.getElementById('channels-error').classList.remove('show');
+    renderResultFields();
+    updateStepUI(2);
+  } else if (from === 2) {
+    updateStepUI(3);
+  }
+}
+
+function prevStep(from) {
+  updateStepUI(from - 1);
+}
+
+// ── FORM SUBMIT ──
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPk5CHyT_oDsWYZINg_bQTwXg64tJr4-3PugEpi_KU-56ix1lwTmdkkKIUOB-fAOOXeg/exec?sheet=ЭДВАЙЗЕРЫ';
+
+document.getElementById('adviser-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  // Validate step 3
+  let valid = true;
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const tg = document.getElementById('f-tg').value.trim();
+
+  document.getElementById('name-error').classList.toggle('show', !name);
+  document.getElementById('phone-error').classList.toggle('show', !phone);
+  document.getElementById('tg-error').classList.toggle('show', !tg);
+  if (!name || !phone || !tg) {
+    document.getElementById('error-banner').classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Отправка...`;
+
+  try {
+    const formData = new FormData(e.target);
+    // Collect checked channels as readable string
+    const channels = getCheckedChannels().map(c => c.name).join(', ');
+    formData.append('channels', channels);
+
+    // Collect result fields
+    getCheckedChannels().forEach(ch => {
+      const val = document.getElementById('res-'+ch.id)?.value?.trim() || '';
+      formData.append('result_' + ch.name, val);
+    });
+
+    const response = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
+    const result = await response.json();
+
+    if (result.result === 'success') {
+      document.getElementById('main-page').style.display = 'none';
+      document.getElementById('thank-you').classList.add('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      throw new Error(result.error || 'Unknown error');
+    }
+  } catch (err) {
+    console.error(err);
+    document.getElementById('error-banner').textContent = 'Ошибка отправки. Попробуйте ещё раз или напишите напрямую: @oleg_ezhkov';
+    document.getElementById('error-banner').classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Отправить анкету`;
+  }
+});
+
+// ── INIT ──
+renderChannels();
+</script>
+</body>
+</html>
