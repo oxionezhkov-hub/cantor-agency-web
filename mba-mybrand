@@ -313,9 +313,10 @@ input,textarea,select{font-family:inherit}
 
 <script>
 /* ════════════ CONFIG ════════════ */
-// The API is served by the same worker as this page (see /_worker.js + wrangler.jsonc),
-// so requests are same-origin — no absolute URL or CORS setup needed.
-const API_BASE = '';
+// cantor.agency is served by a plain host (not proxied through Cloudflare), so this
+// page can't reach the Worker same-origin. The Worker (see /_worker.js + wrangler.jsonc)
+// is deployed separately at mainweb.oxion-ezhkov.workers.dev and allows CORS from anywhere.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
 
 const QUESTION_TYPES = [
   { value: 'short', label: 'Короткий текст' },
