@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTM-ссылки — Cantor Agency</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+.hidden{display:none !important}
+
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.topbar h1{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700}
+.topbar p{color:var(--muted);font-size:14px;margin-top:4px}
+
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-sm)}
+.card + .card{margin-top:24px}
+
+.card h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:600;margin-bottom:18px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1 / -1}
+.field label{font-size:13px;font-weight:600;color:var(--text)}
+.field span.hint{font-size:12px;color:var(--muted);font-weight:400}
+.field input{padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r-md);font-size:14px;background:var(--warm-bg);transition:border-color .15s}
+.field input:focus{outline:none;border-color:var(--red)}
+
+.actions{display:flex;justify-content:flex-end;margin-top:18px}
+.btn{padding:12px 22px;border-radius:var(--r-md);border:none;font-size:14px;font-weight:600;transition:all .15s}
+.btn-primary{background:var(--red);color:#fff;box-shadow:var(--shadow-red)}
+.btn-primary:hover{background:var(--red-dark)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:var(--r-sm)}
+
+.result{margin-top:18px;padding:16px;background:var(--accent-bg);border:1.5px solid var(--red-light);border-radius:var(--r-md)}
+.result .row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.result .row:first-child{margin-top:0}
+.result label{font-size:12px;color:var(--muted);min-width:110px}
+.result code{flex:1;font-size:13px;background:var(--white);padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--border);overflow-x:auto;white-space:nowrap}
+
+.error{margin-top:14px;padding:12px 14px;background:#FFF0EE;border:1px solid var(--red-light);color:var(--red-dark);border-radius:var(--r-md);font-size:13px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.02em}
+tr:last-child td{border-bottom:none}
+td.links code{font-size:12px}
+.tag{display:inline-block;background:var(--accent-bg);color:var(--red-dark);font-size:11px;padding:2px 7px;border-radius:5px;margin:2px 4px 2px 0}
+.muted{color:var(--muted)}
+.empty{padding:30px;text-align:center;color:var(--muted);font-size:14px}
+
+.link-row{cursor:pointer}
+.link-row:hover{background:var(--warm-bg)}
+.stats-panel{margin-top:10px;padding-top:14px;border-top:1px dashed var(--border)}
+.stats-panel table{margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>UTM-ссылки</h1>
+      <p>Создавайте трекинговые ссылки для блогеров и смотрите статистику переходов.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Новая ссылка</h2>
+    <div class="grid">
+      <div class="field full">
+        <label for="targetUrl">Куда ведём (URL страницы)</label>
+        <input id="targetUrl" type="text" placeholder="https://example.com/landing">
+      </div>
+      <div class="field">
+        <label for="utm_source">utm_source <span class="hint">площадка, напр. блогер</span></label>
+        <input id="utm_source" type="text" placeholder="blogername">
+      </div>
+      <div class="field">
+        <label for="utm_medium">utm_medium <span class="hint">тип размещения</span></label>
+        <input id="utm_medium" type="text" placeholder="stories, post, video">
+      </div>
+      <div class="field">
+        <label for="utm_campaign">utm_campaign <span class="hint">название кампании</span></label>
+        <input id="utm_campaign" type="text" placeholder="july-promo">
+      </div>
+      <div class="field">
+        <label for="utm_content">utm_content <span class="hint">вариант креатива</span></label>
+        <input id="utm_content" type="text" placeholder="reels-1">
+      </div>
+      <div class="field full">
+        <label for="utm_term">utm_term <span class="hint">необязательно</span></label>
+        <input id="utm_term" type="text" placeholder="">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="createBtn">Создать ссылку</button>
+    </div>
+    <div id="createError" class="error hidden"></div>
+    <div id="createResult" class="result hidden"></div>
+  </div>
+
+  <div class="card">
+    <h2>Созданные ссылки</h2>
+    <div id="linksTableWrap"><div class="empty">Загрузка…</div></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+async function api(path, options) {
+  const res = await fetch(path, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'request_failed');
+  return data;
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.textContent;
+    btn.textContent = 'Скопировано!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+}
+
+$('createBtn').addEventListener('click', async () => {
+  const targetUrl = $('targetUrl').value.trim();
+  $('createError').classList.add('hidden');
+  $('createResult').classList.add('hidden');
+
+  if (!targetUrl) {
+    $('createError').textContent = 'Укажите ссылку, куда ведём.';
+    $('createError').classList.remove('hidden');
+    return;
+  }
+
+  $('createBtn').disabled = true;
+  $('createBtn').textContent = 'Создаём…';
+  try {
+    const body = {
+      targetUrl,
+      source: $('utm_source').value.trim(),
+      medium: $('utm_medium').value.trim(),
+      campaign: $('utm_campaign').value.trim(),
+      content: $('utm_content').value.trim(),
+      term: $('utm_term').value.trim(),
+    };
+    const data = await api('/api/utm/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    renderResult(data.link);
+    loadLinks();
+  } catch (err) {
+    $('createError').textContent = 'Не удалось создать ссылку: ' + err.message;
+    $('createError').classList.remove('hidden');
+  } finally {
+    $('createBtn').disabled = false;
+    $('createBtn').textContent = 'Создать ссылку';
+  }
+});
+
+function renderResult(link) {
+  const el = $('createResult');
+  el.innerHTML = `
+    <div class="row">
+      <label>Наша ссылка</label>
+      <code>${esc(link.ourLink)}</code>
+      <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${link.ourLink}', this)">Копировать</button>
+    </div>
+    ${link.shortUrl ? `
+    <div class="row">
+      <label>Короткая (clck.ru)</label>
+      <code>${esc(link.shortUrl)}</code>
+      <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${link.shortUrl}', this)">Копировать</button>
+    </div>` : ''}
+  `;
+  el.classList.remove('hidden');
+}
+
+function utmTags(utm) {
+  return Object.entries(utm || {}).map(([k, v]) => `<span class="tag">${esc(k)}=${esc(v)}</span>`).join('');
+}
+
+async function loadLinks() {
+  const wrap = $('linksTableWrap');
+  try {
+    const data = await api('/api/utm/list');
+    if (!data.links.length) {
+      wrap.innerHTML = '<div class="empty">Пока нет созданных ссылок.</div>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Создана</th>
+            <th>Куда ведёт</th>
+            <th>UTM</th>
+            <th>Ссылки</th>
+            <th>Клики</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.links.map((l) => `
+            <tr class="link-row" data-slug="${esc(l.slug)}">
+              <td>${new Date(l.createdAt).toLocaleString('ru-RU')}</td>
+              <td class="muted">${esc(l.targetUrl)}</td>
+              <td>${utmTags(l.utm)}</td>
+              <td class="links">
+                <code>${esc(l.ourLink)}</code>${l.shortUrl ? `<br><code>${esc(l.shortUrl)}</code>` : ''}
+              </td>
+              <td>${l.clicks || 0}</td>
+            </tr>
+            <tr class="stats-row hidden" data-slug-panel="${esc(l.slug)}">
+              <td colspan="5"><div class="stats-panel">Загрузка статистики…</div></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    wrap.querySelectorAll('.link-row').forEach((row) => {
+      row.addEventListener('click', () => toggleStats(row.dataset.slug));
+    });
+  } catch (err) {
+    wrap.innerHTML = '<div class="empty">Ошибка загрузки: ' + esc(err.message) + '</div>';
+  }
+}
+
+async function toggleStats(slug) {
+  const panelRow = document.querySelector(`[data-slug-panel="${slug}"]`);
+  const panel = panelRow.querySelector('.stats-panel');
+  const isHidden = panelRow.classList.contains('hidden');
+
+  document.querySelectorAll('.stats-row').forEach((r) => r.classList.add('hidden'));
+  if (!isHidden) return;
+
+  panelRow.classList.remove('hidden');
+  panel.textContent = 'Загрузка статистики…';
+  try {
+    const data = await api('/api/utm/stats?slug=' + encodeURIComponent(slug));
+    if (!data.clicks.length) {
+      panel.innerHTML = '<div class="muted">Переходов пока не было.</div>';
+      return;
+    }
+    panel.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>Когда</th><th>Referrer</th><th>Устройство</th><th>Страна / город</th></tr>
+        </thead>
+        <tbody>
+          ${data.clicks.map((c) => `
+            <tr>
+              <td>${new Date(c.ts).toLocaleString('ru-RU')}</td>
+              <td class="muted">${esc(c.referrer || '—')}</td>
+              <td>${esc(c.device || '—')}</td>
+              <td>${esc([c.city, c.country].filter(Boolean).join(', ') || '—')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    panel.innerHTML = '<div class="muted">Ошибка загрузки статистики.</div>';
+  }
+}
+
+loadLinks();
+</script>
+</body>
+</html>

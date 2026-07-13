@@ -2,11 +2,17 @@
  * mainweb — serves the whole site as static assets (see wrangler.jsonc "assets.directory": ".")
  * and additionally runs this script first for /api/* (assets.run_worker_first) to power
  * the /mba-mybrand brief page's backend: questionnaire schema and client answers in KV.
+ * It also powers /utm-create: creating trackable UTM redirect links and serving the
+ * /r/<slug> redirector that logs click stats.
  *
  * KV keys (binding "MBA_MYBRAND_KV"):
  *   schema                -> { blocks: [...] }
  *   client:<email-lower>  -> { email, createdAt, updatedAt, currentBlock, answers, notes, shareId }
  *   share:<shareId>       -> "<email-lower>"
+ *
+ * KV keys (binding "UTM_LINKS_KV"):
+ *   link:<slug>              -> { slug, targetUrl, utm, createdAt, ourLink, shortUrl, clicks }
+ *   click:<slug>:<ts>:<rand> -> { ts, query, referrer, userAgent, device, country, city }
  */
 
 const SCHEMA_KEY = 'schema';
@@ -132,6 +138,149 @@ async function readJson(request) {
   } catch {
     return null;
   }
+}
+
+const UTM_FIELDS = ['source', 'medium', 'campaign', 'term', 'content'];
+
+function isValidHttpUrl(value) {
+  try {
+    const u = new URL(String(value));
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function buildTargetUrl(targetUrl, utm) {
+  const u = new URL(targetUrl);
+  for (const field of UTM_FIELDS) {
+    const value = utm[field];
+    if (value) u.searchParams.set(`utm_${field}`, value);
+  }
+  return u.toString();
+}
+
+async function generateSlug(kv) {
+  for (let i = 0; i < 5; i++) {
+    const slug = crypto.randomUUID().replace(/-/g, '').slice(0, 7);
+    const existing = await kv.get(`link:${slug}`);
+    if (!existing) return slug;
+  }
+  throw new Error('slug_generation_failed');
+}
+
+async function shortenViaClck(longUrl) {
+  try {
+    const res = await fetch(`https://clck.ru/--?url=${encodeURIComponent(longUrl)}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const text = (await res.text()).trim();
+    return isValidHttpUrl(text) ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+function detectDevice(userAgent) {
+  const ua = String(userAgent || '');
+  if (/tablet|ipad/i.test(ua)) return 'tablet';
+  if (/mobile|android|iphone/i.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
+async function handleUtmApi(request, env, url) {
+  const { pathname } = url;
+  const kv = env.UTM_LINKS_KV;
+
+  // ── Create a tracked UTM link ──
+  if (pathname === '/api/utm/create' && request.method === 'POST') {
+    const body = await readJson(request);
+    const targetUrl = String((body && body.targetUrl) || '').trim();
+    if (!isValidHttpUrl(targetUrl)) return json({ error: 'invalid_target_url' }, 400);
+
+    const utm = {};
+    for (const field of UTM_FIELDS) {
+      const value = body && body[field];
+      if (typeof value === 'string' && value.trim()) utm[field] = value.trim();
+    }
+
+    const slug = await generateSlug(kv);
+    const ourLink = `${url.origin}/r/${slug}`;
+    const shortUrl = await shortenViaClck(ourLink);
+
+    const record = {
+      slug,
+      targetUrl,
+      utm,
+      createdAt: new Date().toISOString(),
+      ourLink,
+      shortUrl,
+      clicks: 0,
+    };
+    await kv.put(`link:${slug}`, JSON.stringify(record));
+    return json({ link: record });
+  }
+
+  // ── List all tracked links ──
+  if (pathname === '/api/utm/list' && request.method === 'GET') {
+    const list = await kv.list({ prefix: 'link:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    const links = records.filter(Boolean).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return json({ links });
+  }
+
+  // ── Per-link click stats ──
+  if (pathname === '/api/utm/stats' && request.method === 'GET') {
+    const slug = url.searchParams.get('slug');
+    if (!slug) return json({ error: 'missing_slug' }, 400);
+
+    const link = await kv.get(`link:${slug}`, 'json');
+    if (!link) return json({ error: 'not_found' }, 404);
+
+    const list = await kv.list({ prefix: `click:${slug}:`, limit: 500 });
+    const clicks = (await Promise.all(list.keys.map((k) => kv.get(k.name, 'json'))))
+      .filter(Boolean)
+      .sort((a, b) => (a.ts < b.ts ? 1 : -1));
+    return json({ link, clicks });
+  }
+
+  // ── Delete a tracked link ──
+  if (pathname === '/api/utm/delete' && request.method === 'POST') {
+    const body = await readJson(request);
+    const slug = body && body.slug;
+    if (!slug) return json({ error: 'missing_slug' }, 400);
+
+    await kv.delete(`link:${slug}`);
+    const list = await kv.list({ prefix: `click:${slug}:` });
+    await Promise.all(list.keys.map((k) => kv.delete(k.name)));
+    return json({ ok: true });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+async function handleRedirect(request, env, url, slug) {
+  const kv = env.UTM_LINKS_KV;
+  const link = await kv.get(`link:${slug}`, 'json');
+  if (!link) return new Response('Link not found', { status: 404 });
+
+  const ts = Date.now();
+  const rand = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
+  const click = {
+    ts,
+    query: Object.fromEntries(url.searchParams.entries()),
+    referrer: request.headers.get('Referer') || null,
+    userAgent: request.headers.get('User-Agent') || null,
+    device: detectDevice(request.headers.get('User-Agent')),
+    country: (request.cf && request.cf.country) || null,
+    city: (request.cf && request.cf.city) || null,
+  };
+
+  await kv.put(`click:${slug}:${ts}:${rand}`, JSON.stringify(click));
+  await kv.put(`link:${slug}`, JSON.stringify({ ...link, clicks: (link.clicks || 0) + 1 }));
+
+  return Response.redirect(buildTargetUrl(link.targetUrl, link.utm), 302);
 }
 
 async function handleApi(request, env, url) {
@@ -285,6 +434,26 @@ async function handleApi(request, env, url) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    const redirectMatch = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)$/);
+    if (redirectMatch) {
+      try {
+        return await handleRedirect(request, env, url, redirectMatch[1]);
+      } catch (err) {
+        return new Response(`Server error: ${String(err && err.message)}`, { status: 500 });
+      }
+    }
+
+    if (url.pathname.startsWith('/api/utm/')) {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: corsHeaders() });
+      }
+      try {
+        return await handleUtmApi(request, env, url);
+      } catch (err) {
+        return json({ error: 'server_error', message: String(err && err.message) }, 500);
+      }
+    }
 
     if (!url.pathname.startsWith('/api/')) {
       return env.ASSETS.fetch(request);
