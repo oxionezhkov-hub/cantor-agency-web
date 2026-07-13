@@ -15,7 +15,7 @@ jobs:
       - name: Deploy via rsync over SSH
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete --exclude='.git*' --exclude='.github'
+          switches: -avzr --delete --delete-excluded --exclude='.git*' --exclude='.github' --exclude='_worker.js' --exclude='wrangler.jsonc' --exclude='.assetsignore' --exclude='.wrangler'
           path: ./
           remote_path: ${{ secrets.SSH_DEPLOY_PATH }}
           remote_host: ${{ secrets.SSH_HOST }}
