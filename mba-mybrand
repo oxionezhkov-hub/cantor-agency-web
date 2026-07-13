@@ -135,6 +135,13 @@ input,textarea,select{font-family:inherit}
 .btn-icon:hover{color:var(--red);background:var(--accent-bg)}
 .btn-icon svg{width:15px;height:15px}
 
+/* CSV import */
+.csv-import-box{background:var(--warm-bg);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px}
+.csv-import-hint{font-size:12px;color:var(--muted);line-height:1.6}
+.csv-import-hint code{background:var(--bg);border-radius:4px;padding:1px 5px;font-size:11.5px}
+#csvTextInput{width:100%;min-height:110px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:12.5px;font-family:monospace;outline:none;resize:vertical;background:white}
+#csvTextInput:focus{border-color:var(--red)}
+
 /* Settings builder */
 .block-editor{background:white;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:16px}
 .block-editor-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
@@ -273,7 +280,23 @@ input,textarea,select{font-family:inherit}
     <div class="admin-page active" id="page-settings">
       <div class="admin-head">
         <h2>Блоки и вопросы</h2>
-        <button class="btn-red" onclick="saveSchema()">Сохранить настройки</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-outline" onclick="toggleCsvImport()">⬆ Импорт из CSV</button>
+          <button class="btn-red" onclick="saveSchema()">Сохранить настройки</button>
+        </div>
+      </div>
+      <div class="csv-import-box hidden" id="csvImportBox">
+        <p class="csv-import-hint">
+          Формат: столбцы <code>Блок, Описание блока, Вопрос, Тип, Обязательный, Пример, Варианты</code> (первая строка — заголовок).
+          Тип: короткий текст / длинный текст / один вариант / несколько вариантов. Варианты через «|». Обязательный: да/нет.
+          Импорт заменит текущие блоки и вопросы (уже сохранённые ответы клиентов не удаляются).
+        </p>
+        <input type="file" id="csvFileInput" accept=".csv,text/csv" onchange="handleCsvFile(this.files[0])">
+        <textarea id="csvTextInput" placeholder="…или вставьте CSV сюда"></textarea>
+        <div class="btn-row" style="margin-top:0">
+          <button type="button" class="btn-next" style="flex:0" onclick="applyCsvImport()">Импортировать</button>
+          <button type="button" class="btn-back" onclick="toggleCsvImport()">Отмена</button>
+        </div>
       </div>
       <div id="blocksEditor"></div>
       <button class="btn-outline" onclick="addBlock()">+ Добавить блок</button>
@@ -748,6 +771,133 @@ async function saveSchema() {
   } catch (e) {
     showToast('Ошибка сохранения настроек');
   }
+}
+
+/* ── CSV import ── */
+const CSV_TYPE_MAP = {
+  'короткий текст': 'short', short: 'short',
+  'длинный текст': 'long', long: 'long',
+  'один вариант': 'single', single: 'single',
+  'несколько вариантов': 'multi', multi: 'multi',
+};
+
+function toggleCsvImport() {
+  document.getElementById('csvImportBox').classList.toggle('hidden');
+}
+
+function handleCsvFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { document.getElementById('csvTextInput').value = reader.result; };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  const pushField = () => { row.push(field); field = ''; };
+  const pushRow = () => { pushField(); rows.push(row); row = []; };
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      pushField();
+    } else if (c === '\n') {
+      pushRow();
+    } else if (c === '\r') {
+      // skip, \n handles the row break
+    } else {
+      field += c;
+    }
+  }
+  if (field.length || row.length) pushRow();
+  return rows.filter((r) => r.some((c) => c.trim() !== ''));
+}
+
+function buildSchemaFromCsvRows(rows) {
+  if (!rows.length) throw new Error('empty');
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const idx = {
+    block: header.indexOf('блок'),
+    blockDesc: header.indexOf('описание блока'),
+    label: header.indexOf('вопрос'),
+    type: header.indexOf('тип'),
+    required: header.indexOf('обязательный'),
+    example: header.indexOf('пример'),
+    options: header.indexOf('варианты'),
+  };
+  if (idx.block === -1 || idx.label === -1 || idx.type === -1) {
+    throw new Error('missing_columns');
+  }
+
+  const blocksByTitle = new Map();
+  const blocks = [];
+
+  for (const r of rows.slice(1)) {
+    const blockTitle = (r[idx.block] || '').trim();
+    const label = (r[idx.label] || '').trim();
+    if (!blockTitle || !label) continue;
+
+    let block = blocksByTitle.get(blockTitle);
+    if (!block) {
+      block = { id: uid(), title: blockTitle, description: '', questions: [] };
+      blocksByTitle.set(blockTitle, block);
+      blocks.push(block);
+    }
+    const desc = idx.blockDesc > -1 ? (r[idx.blockDesc] || '').trim() : '';
+    if (desc && !block.description) block.description = desc;
+
+    const rawType = idx.type > -1 ? (r[idx.type] || '').trim().toLowerCase() : 'short';
+    const type = CSV_TYPE_MAP[rawType] || 'short';
+    const rawRequired = idx.required > -1 ? (r[idx.required] || '').trim().toLowerCase() : '';
+    const required = ['да', 'yes', 'true', '1'].includes(rawRequired);
+    const example = idx.example > -1 ? (r[idx.example] || '').trim() : '';
+    const optionsRaw = idx.options > -1 ? (r[idx.options] || '').trim() : '';
+    const options = optionsRaw ? optionsRaw.split('|').map((o) => o.trim()).filter(Boolean) : undefined;
+
+    const question = { id: uid(), type, label, required, example };
+    if (type === 'single' || type === 'multi') question.options = options && options.length ? options : ['Вариант 1', 'Вариант 2'];
+    block.questions.push(question);
+  }
+
+  if (!blocks.length) throw new Error('no_rows');
+  return { blocks };
+}
+
+function applyCsvImport() {
+  const text = document.getElementById('csvTextInput').value.trim();
+  if (!text) { showToast('Вставьте CSV или выберите файл'); return; }
+
+  let schema;
+  try {
+    schema = buildSchemaFromCsvRows(parseCsv(text));
+  } catch (e) {
+    const msg = e.message === 'missing_columns'
+      ? 'В файле нет обязательных столбцов: Блок, Вопрос, Тип'
+      : 'Не удалось разобрать CSV — проверьте формат';
+    showToast(msg);
+    return;
+  }
+
+  const totalQ = schema.blocks.reduce((s, b) => s + b.questions.length, 0);
+  if (!confirm(`Импортировать ${schema.blocks.length} блок(ов) и ${totalQ} вопрос(ов)? Это заменит текущие блоки и вопросы (уже сохранённые ответы клиентов не удаляются).`)) return;
+
+  adminState.schema = schema;
+  renderBlocksEditor();
+  toggleCsvImport();
+  document.getElementById('csvTextInput').value = '';
+  document.getElementById('csvFileInput').value = '';
+  showToast('Импортировано — не забудьте нажать «Сохранить настройки»');
 }
 
 /* ── Responses list + detail ── */
