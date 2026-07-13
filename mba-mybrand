@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бриф — Cantor Agency</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1.5px solid var(--border);background:var(--white)}
+.brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--dark);text-decoration:none}
+.brand span{color:var(--red)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.save-indicator{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.25s}
+.save-indicator.show{opacity:1}
+.save-indicator svg{width:13px;height:13px}
+.save-indicator.ok{color:#2E7D32}
+.save-indicator.err{color:var(--red)}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:pulse 1s infinite}
+.save-indicator.ok .save-dot,.save-indicator.err .save-dot{display:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.btn-quiet{background:none;border:1.5px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all 0.18s}
+.btn-quiet:hover{border-color:var(--red);color:var(--red)}
+
+/* ── GATE ── */
+#gate{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:400px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:36px 30px;text-align:center}
+.gate-card h1{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.02em}
+.gate-card p{font-size:13.5px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.gate-field{text-align:left;margin-bottom:14px}
+.gate-field input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 14px;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;background:white}
+.gate-field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
+.gate-error{font-size:12px;color:var(--red);margin:-4px 0 14px;text-align:left;display:none}
+.gate-error.show{display:block}
+.btn-gate{width:100%;background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:14px;font-size:14.5px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow-red)}
+.btn-gate:hover{background:var(--red-dark);transform:translateY(-1px)}
+.btn-gate:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+/* ── QUIZ ── */
+#quiz{max-width:680px;margin:0 auto;padding:28px 20px 64px}
+.progress-bar{height:3px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.progress-fill{height:100%;background:var(--red);transition:width 0.35s ease}
+.steps-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:thin}
+.steps-row::-webkit-scrollbar{height:4px}
+.step-chip{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:100px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);transition:all 0.18s;white-space:nowrap}
+.step-chip:hover{border-color:rgba(232,57,29,0.4)}
+.step-chip.active{border-color:var(--red);color:var(--red);background:var(--accent-bg)}
+.step-chip.done{color:var(--dark)}
+.step-chip-num{width:18px;height:18px;border-radius:50%;background:var(--border);color:var(--muted);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-chip.active .step-chip-num{background:var(--red);color:white}
+.step-chip.done .step-chip-num{background:var(--dark);color:white}
+
+.block-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:32px 28px}
+.block-title{font-family:'Unbounded',sans-serif;font-size:clamp(18px,3vw,22px);font-weight:700;color:var(--dark);letter-spacing:-0.02em;margin-bottom:6px}
+.block-desc{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:26px}
+
+.field{margin-bottom:22px}
+.field label{display:block;font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.4}
+.field label .req{color:var(--red);margin-left:2px}
+.field-example{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;font-style:italic}
+.field input[type=text],.field textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;background:white}
+.field input[type=text]:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
+.field textarea{resize:vertical;min-height:88px}
+.field.error input,.field.error textarea{border-color:var(--red)}
+.field-err{font-size:11.5px;color:var(--red);margin-top:5px;display:none}
+.field.error .field-err{display:block}
+.field.error .options-list{outline:1.5px solid var(--red);border-radius:var(--r-md)}
+
+.options-list{display:flex;flex-direction:column;gap:8px}
+.opt-item{border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:11px;transition:all 0.18s;background:white;user-select:none}
+.opt-item:hover{border-color:rgba(232,57,29,0.4);background:var(--accent-bg)}
+.opt-item.selected{border-color:var(--red);background:#FFF4F1}
+.opt-mark{width:18px;height:18px;flex-shrink:0;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all 0.18s}
+.opt-item.radio .opt-mark{border-radius:50%}
+.opt-item.checkbox .opt-mark{border-radius:5px}
+.opt-item.selected .opt-mark{border-color:var(--red);background:var(--red)}
+.opt-dot{width:7px;height:7px;border-radius:50%;background:white;opacity:0;transition:opacity 0.18s}
+.opt-item.radio.selected .opt-dot{opacity:1}
+.opt-check{width:10px;height:10px;opacity:0;transition:opacity 0.18s}
+.opt-item.checkbox.selected .opt-check{opacity:1}
+.opt-text{font-size:14px;font-weight:600;color:var(--text)}
+
+.btn-row{display:flex;gap:10px;margin-top:8px}
+.btn-next{flex:1;background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:14px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow-red)}
+.btn-next:hover{background:var(--red-dark);transform:translateY(-1px)}
+.btn-back{background:none;border:1.5px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:14px 20px;font-size:13.5px;font-weight:700;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.btn-back:hover{border-color:var(--red);color:var(--red)}
+.btn-back:disabled{opacity:0.4;cursor:not-allowed}
+
+.done-card{text-align:center;padding:20px 4px 4px}
+.done-icon{width:56px;height:56px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.done-icon svg{width:26px;height:26px;color:var(--red)}
+.done-card h2{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:700;color:var(--dark);margin-bottom:8px}
+.done-card p{font-size:13.5px;color:var(--muted);line-height:1.65;max-width:420px;margin:0 auto}
+
+/* ── ADMIN ── */
+#admin{display:flex;min-height:calc(100vh - 53px)}
+.admin-sidebar{width:200px;flex-shrink:0;background:var(--white);border-right:1.5px solid var(--border);padding:20px 14px}
+.admin-tab{display:block;width:100%;text-align:left;background:none;border:none;padding:11px 14px;border-radius:var(--r-md);font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.18s;margin-bottom:4px}
+.admin-tab:hover{background:var(--bg);color:var(--dark)}
+.admin-tab.active{background:var(--accent-bg);color:var(--red)}
+.admin-main{flex:1;min-width:0;padding:28px 32px;overflow-x:hidden}
+.admin-page{display:none}
+.admin-page.active{display:block}
+.admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.admin-head h2{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:700;color:var(--dark)}
+.btn-red{background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-red:hover{background:var(--red-dark)}
+.btn-outline{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.btn-outline:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 11px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.btn-ghost-sm:hover{border-color:var(--red);color:var(--red)}
+.btn-icon{background:none;border:none;cursor:pointer;color:var(--muted);padding:5px;border-radius:var(--r-sm);display:flex;transition:all 0.15s}
+.btn-icon:hover{color:var(--red);background:var(--accent-bg)}
+.btn-icon svg{width:15px;height:15px}
+
+/* Settings builder */
+.block-editor{background:white;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:16px}
+.block-editor-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.block-editor-head input.block-title-input{flex:1;font-family:'Unbounded',sans-serif;font-weight:700;font-size:15px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:7px 9px;background:var(--bg);outline:none}
+.block-editor-head input.block-title-input:focus{border-color:var(--red);background:white}
+.block-editor textarea.block-desc-input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:12.5px;color:var(--muted);margin-bottom:14px;min-height:44px;resize:vertical;outline:none}
+.block-editor textarea.block-desc-input:focus{border-color:var(--red)}
+.q-editor{border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:10px;background:var(--warm-bg)}
+.q-editor-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.q-editor-row select,.q-editor-row input[type=text]{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;outline:none;background:white}
+.q-editor-row select:focus,.q-editor-row input[type=text]:focus{border-color:var(--red)}
+.q-editor-row .q-label-input{flex:1;min-width:0}
+.q-editor-row .q-type-select{width:180px;flex-shrink:0;font-size:12.5px}
+.q-editor label.req-label{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.q-example-input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:12.5px;color:var(--muted);outline:none;background:white;margin-bottom:8px}
+.q-example-input:focus{border-color:var(--red)}
+.q-options{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.q-option-row{display:flex;gap:6px;align-items:center}
+.q-option-row input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:7px 9px;font-size:12.5px;outline:none;background:white}
+.q-option-row input:focus{border-color:var(--red)}
+.add-link{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0}
+.block-editor-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:10px;border-top:1px dashed var(--border)}
+.move-btns{display:flex;gap:4px}
+
+/* Responses list */
+.search-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-row input{flex:1;min-width:180px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 14px;font-size:13.5px;outline:none;background:white}
+.search-row input:focus{border-color:var(--red)}
+.client-list{display:flex;flex-direction:column;gap:8px}
+.client-row{display:flex;align-items:center;gap:14px;background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;cursor:pointer;transition:all 0.15s}
+.client-row:hover{border-color:var(--red);box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.client-avatar{width:38px;height:38px;border-radius:50%;background:var(--dark);color:white;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;flex-shrink:0}
+.client-info{flex:1;min-width:0}
+.client-email{font-size:14px;font-weight:700;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.client-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.client-progress{font-size:11px;font-weight:700;color:var(--red);background:var(--accent-bg);border-radius:100px;padding:4px 10px;flex-shrink:0;white-space:nowrap}
+.client-share-badge{width:8px;height:8px;border-radius:50%;background:#2E7D32;flex-shrink:0}
+.empty-note{color:var(--muted);font-size:13.5px;padding:24px;text-align:center;background:white;border:1.5px dashed var(--border);border-radius:var(--r-md)}
+
+/* Detail panel */
+#overlay{position:fixed;inset:0;background:rgba(10,10,10,0.45);backdrop-filter:blur(2px);z-index:900;opacity:0;pointer-events:none;transition:opacity 0.25s}
+#overlay.visible{opacity:1;pointer-events:all}
+#detail{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100vw;background:var(--bg);z-index:950;box-shadow:-20px 0 60px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.32s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column}
+#detail.open{transform:translateX(0)}
+.detail-header{padding:20px 22px;background:white;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-shrink:0}
+.detail-header h3{font-size:15.5px;font-weight:700;color:var(--dark);word-break:break-all}
+.detail-header .sub{font-size:11.5px;color:var(--muted);margin-top:4px}
+.detail-body{flex:1;overflow-y:auto;padding:18px 22px}
+.detail-section{margin-bottom:18px}
+.detail-section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);margin-bottom:10px}
+.ans-row{background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 13px;margin-bottom:8px}
+.ans-row-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px}
+.ans-label{font-size:12px;font-weight:700;color:var(--text);line-height:1.4}
+.ans-actions{display:flex;gap:2px;flex-shrink:0}
+.ans-val{font-size:13.5px;color:var(--text);white-space:pre-wrap;word-break:break-word;line-height:1.5}
+.ans-val.empty{color:var(--muted);font-style:italic}
+.ans-edit-input,.ans-edit-textarea{display:none;width:100%;border:1.5px solid var(--red);border-radius:var(--r-sm);padding:8px 10px;font-size:13.5px;font-family:inherit;outline:none;margin-top:2px}
+.ans-row.editing .ans-val{display:none}
+.ans-row.editing .ans-edit-input,.ans-row.editing .ans-edit-textarea{display:block}
+.notes-box{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 13px;font-size:13.5px;min-height:80px;outline:none;resize:vertical;background:white}
+.notes-box:focus{border-color:var(--red)}
+.share-box{background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px;display:flex;flex-direction:column;gap:8px}
+.share-link-row{display:flex;gap:6px;align-items:center}
+.share-link-row input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:12px;color:var(--muted);background:var(--bg)}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);z-index:2000;background:var(--dark);color:white;border-radius:var(--r-md);padding:11px 20px;font-size:13px;font-weight:600;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── SHARE VIEW ── */
+#shareView{max-width:680px;margin:0 auto;padding:28px 20px 64px}
+.share-card{background:white;border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:32px 28px}
+.share-card h1{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:4px}
+.share-card .share-sub{font-size:12.5px;color:var(--muted);margin-bottom:24px}
+.share-block{margin-bottom:26px}
+.share-block h2{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:var(--red);margin-bottom:12px}
+.share-q{margin-bottom:14px}
+.share-q .ql{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.share-q .av{font-size:14.5px;color:var(--text);white-space:pre-wrap;line-height:1.55}
+.share-q .av.empty{color:var(--muted);font-style:italic}
+
+/* ── RESPONSIVE ── */
+@media(max-width:840px){
+  #admin{flex-direction:column}
+  .admin-sidebar{width:100%;display:flex;gap:6px;padding:12px 14px;border-right:none;border-bottom:1.5px solid var(--border);overflow-x:auto}
+  .admin-tab{margin-bottom:0;white-space:nowrap}
+  .admin-main{padding:20px 16px}
+}
+@media(max-width:600px){
+  .block-card{padding:24px 18px}
+  #detail{width:100vw}
+  .q-editor-row{flex-wrap:wrap}
+  .q-editor-row .q-type-select{width:100%}
+  .topbar{padding:14px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="brand">CANTOR <span>AGENCY</span></a>
+  <div class="topbar-right">
+    <span class="save-indicator" id="saveIndicator"><span class="save-dot"></span><span id="saveIndicatorText">Сохранение…</span></span>
+    <button class="btn-quiet hidden" id="logoutBtn" onclick="goToGate()">Выйти</button>
+  </div>
+</div>
+
+<!-- ══ GATE ══ -->
+<div id="gate">
+  <div class="gate-card">
+    <h1>Бриф на разработку бренда</h1>
+    <p>Введите почту, чтобы начать заполнение анкеты или продолжить с того места, где остановились.</p>
+    <form id="gateForm" novalidate>
+      <div class="gate-field">
+        <input type="text" id="gateInput" placeholder="you@company.com" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <p class="gate-error" id="gateError">Введите корректный email</p>
+      <button type="submit" class="btn-gate" id="gateSubmit">Продолжить</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="quiz" class="hidden">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="steps-row" id="stepsRow"></div>
+  <div class="block-card" id="blockCard"></div>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div id="admin" class="hidden">
+  <div class="admin-sidebar">
+    <button class="admin-tab active" data-tab="settings" onclick="switchAdminTab('settings')">⚙️ Настройки</button>
+    <button class="admin-tab" data-tab="responses" onclick="switchAdminTab('responses')">📋 Ответы</button>
+  </div>
+  <div class="admin-main">
+    <div class="admin-page active" id="page-settings">
+      <div class="admin-head">
+        <h2>Блоки и вопросы</h2>
+        <button class="btn-red" onclick="saveSchema()">Сохранить настройки</button>
+      </div>
+      <div id="blocksEditor"></div>
+      <button class="btn-outline" onclick="addBlock()">+ Добавить блок</button>
+    </div>
+    <div class="admin-page" id="page-responses">
+      <div class="admin-head">
+        <h2>Ответы клиентов</h2>
+        <button class="btn-outline" onclick="exportXlsx()">⬇ Скачать все в XLSX</button>
+      </div>
+      <div class="search-row">
+        <input type="text" id="clientSearch" placeholder="Поиск по почте…" oninput="renderClientList()">
+      </div>
+      <div class="client-list" id="clientList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail slide-in -->
+<div id="overlay" onclick="closeDetail()"></div>
+<div id="detail">
+  <div class="detail-header">
+    <div>
+      <h3 id="detEmail">—</h3>
+      <div class="sub" id="detMeta"></div>
+    </div>
+    <button class="btn-icon" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<!-- ══ PUBLIC SHARE VIEW ══ -->
+<div id="shareView" class="hidden"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════ CONFIG ════════════ */
+// CHANGE ME AFTER DEPLOY: replace with your deployed worker URL (see workers/mba-mybrand/README.md)
+const API_BASE = 'https://mba-mybrand.YOUR-SUBDOMAIN.workers.dev';
+
+const QUESTION_TYPES = [
+  { value: 'short', label: 'Короткий текст' },
+  { value: 'long', label: 'Длинный текст' },
+  { value: 'single', label: 'Один вариант' },
+  { value: 'multi', label: 'Несколько вариантов' },
+];
+
+/* ════════════ HELPERS ════════════ */
+function uid() { return crypto.randomUUID().replace(/-/g, '').slice(0, 10); }
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+function answerIsEmpty(v) {
+  if (v == null) return true;
+  if (Array.isArray(v)) return v.length === 0;
+  return String(v).trim() === '';
+}
+function formatAnswer(v) {
+  if (answerIsEmpty(v)) return '';
+  if (Array.isArray(v)) return v.join(', ');
+  return String(v);
+}
+async function api(path, options) {
+  const res = await fetch(API_BASE + path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...(options && options.headers) },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || ('http_' + res.status));
+  }
+  return res.json();
+}
+
+/* ════════════ ROUTING / GATE ════════════ */
+function goToGate() {
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('admin').classList.add('hidden');
+  document.getElementById('shareView').classList.add('hidden');
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('gateInput').value = '';
+  history.replaceState(null, '', location.pathname);
+}
+
+document.getElementById('gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const raw = document.getElementById('gateInput').value.trim();
+  const errEl = document.getElementById('gateError');
+  errEl.classList.remove('show');
+
+  if (raw.toLowerCase() === 'admin') {
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('admin').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    initAdmin();
+    return;
+  }
+
+  if (!isValidEmail(raw)) {
+    errEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('gateSubmit');
+  btn.disabled = true;
+  btn.textContent = 'Загрузка…';
+  try {
+    localStorage.setItem('mba_last_email', raw);
+    await startQuiz(raw);
+  } catch (err) {
+    errEl.textContent = 'Не удалось загрузить анкету. Попробуйте ещё раз.';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Продолжить';
+  }
+});
+
+(function initGatePrefill() {
+  const last = localStorage.getItem('mba_last_email');
+  if (last) document.getElementById('gateInput').value = last;
+})();
+
+/* ════════════ QUIZ ════════════ */
+const quiz = { email: null, schema: null, client: null, blockIndex: 0 };
+let saveTimer = null;
+
+async function startQuiz(email) {
+  const data = await api('/api/client', { method: 'POST', body: JSON.stringify({ email }) });
+  quiz.email = email;
+  quiz.schema = data.schema;
+  quiz.client = data.client;
+  quiz.blockIndex = Math.min(Math.max(data.client.currentBlock || 0, 0), data.schema.blocks.length - 1);
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  renderSteps();
+  renderBlock();
+}
+
+function renderSteps() {
+  const row = document.getElementById('stepsRow');
+  const total = quiz.schema.blocks.length;
+  document.getElementById('progressFill').style.width = Math.round((quiz.blockIndex / (total - 1 || 1)) * 100) + '%';
+  row.innerHTML = quiz.schema.blocks.map((b, i) => `
+    <div class="step-chip ${i === quiz.blockIndex ? 'active' : ''} ${i < quiz.blockIndex ? 'done' : ''}" onclick="jumpToBlock(${i})">
+      <span class="step-chip-num">${i + 1}</span>${escapeHtml(b.title)}
+    </div>
+  `).join('');
+}
+
+function jumpToBlock(i) {
+  quiz.blockIndex = i;
+  doSave();
+  renderSteps();
+  renderBlock();
+}
+
+function questionFieldHtml(q) {
+  const val = quiz.client.answers[q.id];
+  const example = q.example ? `<p class="field-example">Например: ${escapeHtml(q.example)}</p>` : '';
+  const reqMark = q.required ? '<span class="req">*</span>' : '';
+
+  if (q.type === 'short') {
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
+      <input type="text" data-answer="${q.id}" value="${escapeHtml(val || '')}" placeholder="Ваш ответ">
+      <p class="field-err">Пожалуйста, заполните это поле</p></div>`;
+  }
+  if (q.type === 'long') {
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
+      <textarea data-answer="${q.id}" placeholder="Ваш ответ">${escapeHtml(val || '')}</textarea>
+      <p class="field-err">Пожалуйста, заполните это поле</p></div>`;
+  }
+  if (q.type === 'single') {
+    const opts = (q.options || []).map((opt) => `
+      <div class="opt-item radio ${val === opt ? 'selected' : ''}" data-answer="${q.id}" data-single-opt="${escapeHtml(opt)}">
+        <span class="opt-mark"><span class="opt-dot"></span></span><span class="opt-text">${escapeHtml(opt)}</span>
+      </div>`).join('');
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
+      <div class="options-list">${opts}</div>
+      <p class="field-err">Пожалуйста, выберите вариант</p></div>`;
+  }
+  if (q.type === 'multi') {
+    const arr = Array.isArray(val) ? val : [];
+    const opts = (q.options || []).map((opt) => `
+      <div class="opt-item checkbox ${arr.includes(opt) ? 'selected' : ''}" data-answer="${q.id}" data-multi-opt="${escapeHtml(opt)}">
+        <span class="opt-mark"><svg class="opt-check" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="opt-text">${escapeHtml(opt)}</span>
+      </div>`).join('');
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
+      <div class="options-list">${opts}</div>
+      <p class="field-err">Пожалуйста, выберите хотя бы один вариант</p></div>`;
+  }
+  return '';
+}
+
+function renderBlock() {
+  const block = quiz.schema.blocks[quiz.blockIndex];
+  const isLast = quiz.blockIndex === quiz.schema.blocks.length - 1;
+  const card = document.getElementById('blockCard');
+  card.innerHTML = `
+    <div class="block-title">${escapeHtml(block.title)}</div>
+    ${block.description ? `<div class="block-desc">${escapeHtml(block.description)}</div>` : ''}
+    <div id="blockFields">${block.questions.map(questionFieldHtml).join('')}</div>
+    <div class="btn-row">
+      <button type="button" class="btn-back" id="backBtn" ${quiz.blockIndex === 0 ? 'disabled' : ''} onclick="prevBlock()">Назад</button>
+      <button type="button" class="btn-next" onclick="nextBlock()">${isLast ? 'Завершить' : 'Далее'}</button>
+    </div>
+  `;
+  attachFieldListeners();
+}
+
+function attachFieldListeners() {
+  const container = document.getElementById('blockFields');
+  container.querySelectorAll('input[data-answer], textarea[data-answer]').forEach((el) => {
+    el.addEventListener('input', () => {
+      quiz.client.answers[el.dataset.answer] = el.value;
+      clearFieldError(el.dataset.answer);
+      scheduleSave();
+    });
+  });
+  container.querySelectorAll('[data-single-opt]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const qid = el.dataset.answer;
+      quiz.client.answers[qid] = el.dataset.singleOpt;
+      container.querySelectorAll(`[data-answer="${cssEsc(qid)}"].opt-item`).forEach((o) => o.classList.remove('selected'));
+      el.classList.add('selected');
+      clearFieldError(qid);
+      scheduleSave();
+    });
+  });
+  container.querySelectorAll('[data-multi-opt]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const qid = el.dataset.answer;
+      const opt = el.dataset.multiOpt;
+      const arr = Array.isArray(quiz.client.answers[qid]) ? quiz.client.answers[qid].slice() : [];
+      const idx = arr.indexOf(opt);
+      if (idx === -1) arr.push(opt); else arr.splice(idx, 1);
+      quiz.client.answers[qid] = arr;
+      el.classList.toggle('selected');
+      clearFieldError(qid);
+      scheduleSave();
+    });
+  });
+}
+
+function cssEsc(s) { return String(s).replace(/"/g, '\\"'); }
+
+function clearFieldError(qid) {
+  const field = document.querySelector(`.field[data-qid="${cssEsc(qid)}"]`);
+  if (field) field.classList.remove('error');
+}
+
+function validateBlock() {
+  const block = quiz.schema.blocks[quiz.blockIndex];
+  let ok = true;
+  block.questions.forEach((q) => {
+    if (!q.required) return;
+    const field = document.querySelector(`.field[data-qid="${cssEsc(q.id)}"]`);
+    if (answerIsEmpty(quiz.client.answers[q.id])) {
+      if (field) field.classList.add('error');
+      ok = false;
+    }
+  });
+  return ok;
+}
+
+function prevBlock() {
+  if (quiz.blockIndex === 0) return;
+  quiz.blockIndex--;
+  doSave();
+  renderSteps();
+  renderBlock();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextBlock() {
+  if (!validateBlock()) return;
+  const isLast = quiz.blockIndex === quiz.schema.blocks.length - 1;
+  if (isLast) {
+    doSave(true).then(showDoneScreen);
+    return;
+  }
+  quiz.blockIndex++;
+  doSave();
+  renderSteps();
+  renderBlock();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showDoneScreen() {
+  document.getElementById('blockCard').innerHTML = `
+    <div class="done-card">
+      <div class="done-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>Анкета сохранена</h2>
+      <p>Спасибо! Все ответы сохранены. Вы можете вернуться к анкете в любой момент, введя ту же почту — ничего не потеряется.</p>
+      <div class="btn-row" style="margin-top:20px">
+        <button type="button" class="btn-back" onclick="jumpToBlock(0)">Просмотреть ответы</button>
+      </div>
+    </div>`;
+}
+
+function setSaveStatus(state) {
+  const el = document.getElementById('saveIndicator');
+  const text = document.getElementById('saveIndicatorText');
+  el.classList.remove('ok', 'err');
+  el.classList.add('show');
+  if (state === 'saving') { text.textContent = 'Сохранение…'; }
+  else if (state === 'ok') { el.classList.add('ok'); text.textContent = 'Сохранено'; clearTimeout(setSaveStatus._t); setSaveStatus._t = setTimeout(() => el.classList.remove('show'), 1600); }
+  else { el.classList.add('err'); text.textContent = 'Ошибка сохранения'; }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  setSaveStatus('saving');
+  saveTimer = setTimeout(() => doSave(), 550);
+}
+
+async function doSave(syncCurrentBlock) {
+  try {
+    await api('/api/client/save', {
+      method: 'POST',
+      body: JSON.stringify({ email: quiz.email, answers: quiz.client.answers, currentBlock: quiz.blockIndex }),
+    });
+    setSaveStatus('ok');
+  } catch (e) {
+    setSaveStatus('err');
+  }
+}
+
+/* ════════════ ADMIN ════════════ */
+const adminState = { schema: null, clients: [] };
+
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.admin-page').forEach((p) => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+}
+
+async function initAdmin() {
+  document.getElementById('blocksEditor').innerHTML = '<p class="empty-note">Загрузка…</p>';
+  document.getElementById('clientList').innerHTML = '<p class="empty-note">Загрузка…</p>';
+  try {
+    const [schema, clientsRes] = await Promise.all([
+      api('/api/schema'),
+      api('/api/admin/clients'),
+    ]);
+    adminState.schema = schema;
+    adminState.clients = clientsRes.clients || [];
+    renderBlocksEditor();
+    renderClientList();
+  } catch (e) {
+    document.getElementById('blocksEditor').innerHTML = '<p class="empty-note">Не удалось загрузить данные админки. Проверьте, что воркер задеплоен и API_BASE указан верно.</p>';
+    document.getElementById('clientList').innerHTML = '';
+  }
+}
+
+/* ── Settings builder ── */
+function renderBlocksEditor() {
+  const container = document.getElementById('blocksEditor');
+  container.innerHTML = adminState.schema.blocks.map((block, bi) => `
+    <div class="block-editor" data-block="${block.id}">
+      <div class="block-editor-head">
+        <div class="move-btns">
+          <button class="btn-icon" title="Вверх" onclick="moveBlock(${bi},-1)" ${bi === 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
+          <button class="btn-icon" title="Вниз" onclick="moveBlock(${bi},1)" ${bi === adminState.schema.blocks.length - 1 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+        </div>
+        <input class="block-title-input" value="${escapeHtml(block.title)}" oninput="updateBlockField(${bi},'title',this.value)" placeholder="Название блока">
+        <button class="btn-icon" title="Удалить блок" onclick="removeBlock(${bi})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+      <textarea class="block-desc-input" oninput="updateBlockField(${bi},'description',this.value)" placeholder="Описание блока (необязательно)">${escapeHtml(block.description || '')}</textarea>
+      <div class="q-list">${block.questions.map((q, qi) => questionEditorHtml(block, bi, q, qi)).join('')}</div>
+      <div class="block-editor-foot">
+        <button class="add-link" onclick="addQuestion(${bi})">+ Добавить вопрос</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function questionEditorHtml(block, bi, q, qi) {
+  const showOptions = q.type === 'single' || q.type === 'multi';
+  return `
+    <div class="q-editor" data-q="${q.id}">
+      <div class="q-editor-row">
+        <select class="q-type-select" onchange="updateQuestionField(${bi},${qi},'type',this.value)">
+          ${QUESTION_TYPES.map((t) => `<option value="${t.value}" ${t.value === q.type ? 'selected' : ''}>${t.label}</option>`).join('')}
+        </select>
+        <input type="text" class="q-label-input" value="${escapeHtml(q.label)}" oninput="updateQuestionField(${bi},${qi},'label',this.value)" placeholder="Текст вопроса">
+        <label class="req-label"><input type="checkbox" ${q.required ? 'checked' : ''} onchange="updateQuestionField(${bi},${qi},'required',this.checked)"> обязательный</label>
+        <button class="btn-icon" title="Удалить вопрос" onclick="removeQuestion(${bi},${qi})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <input type="text" class="q-example-input" value="${escapeHtml(q.example || '')}" oninput="updateQuestionField(${bi},${qi},'example',this.value)" placeholder="Пример ответа (подсказка клиенту, необязательно)">
+      ${showOptions ? `
+        <div class="q-options">
+          ${(q.options || []).map((opt, oi) => `
+            <div class="q-option-row">
+              <input type="text" value="${escapeHtml(opt)}" oninput="updateOption(${bi},${qi},${oi},this.value)" placeholder="Вариант ответа">
+              <button class="btn-icon" onclick="removeOption(${bi},${qi},${oi})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>`).join('')}
+        </div>
+        <button class="add-link" onclick="addOption(${bi},${qi})">+ Добавить вариант</button>
+      ` : ''}
+    </div>
+  `;
+}
+
+function updateBlockField(bi, field, value) {
+  adminState.schema.blocks[bi][field] = value;
+}
+function updateQuestionField(bi, qi, field, value) {
+  const q = adminState.schema.blocks[bi].questions[qi];
+  q[field] = value;
+  if (field === 'type' && (value === 'single' || value === 'multi') && !q.options) q.options = ['Вариант 1', 'Вариант 2'];
+  if (field === 'type') renderBlocksEditor();
+}
+function updateOption(bi, qi, oi, value) {
+  adminState.schema.blocks[bi].questions[qi].options[oi] = value;
+}
+function addOption(bi, qi) {
+  adminState.schema.blocks[bi].questions[qi].options.push('Новый вариант');
+  renderBlocksEditor();
+}
+function removeOption(bi, qi, oi) {
+  adminState.schema.blocks[bi].questions[qi].options.splice(oi, 1);
+  renderBlocksEditor();
+}
+function addQuestion(bi) {
+  adminState.schema.blocks[bi].questions.push({ id: uid(), type: 'short', label: 'Новый вопрос', required: false, example: '' });
+  renderBlocksEditor();
+}
+function removeQuestion(bi, qi) {
+  adminState.schema.blocks[bi].questions.splice(qi, 1);
+  renderBlocksEditor();
+}
+function addBlock() {
+  adminState.schema.blocks.push({ id: uid(), title: 'Новый блок', description: '', questions: [] });
+  renderBlocksEditor();
+}
+function removeBlock(bi) {
+  if (!confirm('Удалить блок вместе со всеми вопросами?')) return;
+  adminState.schema.blocks.splice(bi, 1);
+  renderBlocksEditor();
+}
+function moveBlock(bi, dir) {
+  const arr = adminState.schema.blocks;
+  const to = bi + dir;
+  if (to < 0 || to >= arr.length) return;
+  [arr[bi], arr[to]] = [arr[to], arr[bi]];
+  renderBlocksEditor();
+}
+async function saveSchema() {
+  try {
+    await api('/api/admin/schema', { method: 'PUT', body: JSON.stringify(adminState.schema) });
+    showToast('Настройки сохранены');
+  } catch (e) {
+    showToast('Ошибка сохранения настроек');
+  }
+}
+
+/* ── Responses list + detail ── */
+function totalQuestions() {
+  return adminState.schema.blocks.reduce((sum, b) => sum + b.questions.length, 0);
+}
+function answeredCount(client) {
+  let n = 0;
+  adminState.schema.blocks.forEach((b) => b.questions.forEach((q) => { if (!answerIsEmpty(client.answers[q.id])) n++; }));
+  return n;
+}
+function renderClientList() {
+  const q = (document.getElementById('clientSearch').value || '').trim().toLowerCase();
+  const list = adminState.clients.filter((c) => c.email.includes(q));
+  const container = document.getElementById('clientList');
+  if (!list.length) {
+    container.innerHTML = '<p class="empty-note">Пока нет ни одной анкеты.</p>';
+    return;
+  }
+  const total = totalQuestions();
+  container.innerHTML = list.map((c) => `
+    <div class="client-row" onclick="openDetail('${escapeHtml(c.email)}')">
+      <div class="client-avatar">${escapeHtml(c.email[0].toUpperCase())}</div>
+      <div class="client-info">
+        <div class="client-email">${escapeHtml(c.email)}</div>
+        <div class="client-meta">Обновлено ${fmtDate(c.updatedAt)}</div>
+      </div>
+      ${c.shareId ? '<span class="client-share-badge" title="Есть публичная ссылка"></span>' : ''}
+      <span class="client-progress">${answeredCount(c)}/${total}</span>
+    </div>
+  `).join('');
+}
+
+let currentDetailEmail = null;
+
+function openDetail(email) {
+  currentDetailEmail = email;
+  document.getElementById('overlay').classList.add('visible');
+  document.getElementById('detail').classList.add('open');
+  renderDetail();
+}
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('visible');
+  document.getElementById('detail').classList.remove('open');
+  currentDetailEmail = null;
+}
+
+function getClient(email) {
+  return adminState.clients.find((c) => c.email === email);
+}
+
+function renderDetail() {
+  const client = getClient(currentDetailEmail);
+  if (!client) return;
+  document.getElementById('detEmail').textContent = client.email;
+  document.getElementById('detMeta').textContent = `Обновлено ${fmtDate(client.updatedAt)} · создано ${fmtDate(client.createdAt)}`;
+
+  const blocksHtml = adminState.schema.blocks.map((block) => `
+    <div class="detail-section">
+      <div class="detail-section-title">${escapeHtml(block.title)}</div>
+      ${block.questions.map((q) => answerRowHtml(client, q)).join('')}
+    </div>
+  `).join('');
+
+  const shareHtml = client.shareId
+    ? `<div class="share-box">
+        <div class="share-link-row">
+          <input type="text" readonly value="${escapeHtml(shareUrl(client.shareId))}" onclick="this.select()">
+          <button class="btn-ghost-sm" onclick="copyShareLink('${client.shareId}')">Копировать</button>
+        </div>
+        <button class="btn-ghost-sm" style="align-self:flex-start" onclick="revokeShare()">Отозвать доступ</button>
+      </div>`
+    : `<button class="btn-outline" onclick="createShare()">Создать публичную ссылку</button>`;
+
+  document.getElementById('detailBody').innerHTML = `
+    ${blocksHtml}
+    <div class="detail-section">
+      <div class="detail-section-title">Примечание</div>
+      <textarea class="notes-box" id="notesBox" placeholder="Заметка для команды (клиент её не видит)" onblur="saveNotes()">${escapeHtml(client.notes || '')}</textarea>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Публичная ссылка</div>
+      ${shareHtml}
+    </div>
+  `;
+}
+
+function answerRowHtml(client, q) {
+  const val = client.answers[q.id];
+  const display = formatAnswer(val);
+  const isMulti = q.type === 'multi';
+  const editHint = isMulti ? ' data-multi="1"' : '';
+  const editControl = (q.type === 'long')
+    ? `<textarea class="ans-edit-textarea" data-qid="${q.id}"${editHint}>${escapeHtml(display)}</textarea>`
+    : `<input type="text" class="ans-edit-input" data-qid="${q.id}"${editHint} value="${escapeHtml(display)}" placeholder="${isMulti ? 'Варианты через запятую' : ''}">`;
+  return `
+    <div class="ans-row" data-qid="${q.id}">
+      <div class="ans-row-head">
+        <div class="ans-label">${escapeHtml(q.label)}</div>
+        <div class="ans-actions">
+          <button class="btn-icon" title="Копировать" onclick="copyAnswer('${q.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button class="btn-icon" title="Редактировать" onclick="editAnswer('${q.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </div>
+      <div class="ans-val ${display ? '' : 'empty'}">${escapeHtml(display) || 'Нет ответа'}</div>
+      ${editControl}
+    </div>
+  `;
+}
+
+function copyAnswer(qid) {
+  const client = getClient(currentDetailEmail);
+  const q = findQuestion(qid);
+  const text = formatAnswer(client.answers[q.id]);
+  navigator.clipboard.writeText(text || '');
+  showToast('Скопировано');
+}
+function findQuestion(qid) {
+  for (const b of adminState.schema.blocks) for (const q of b.questions) if (q.id === qid) return q;
+  return null;
+}
+function editAnswer(qid) {
+  const row = document.querySelector(`.ans-row[data-qid="${cssEsc(qid)}"]`);
+  row.classList.add('editing');
+  const input = row.querySelector('.ans-edit-input,.ans-edit-textarea');
+  const isMulti = input.dataset.multi === '1';
+  input.focus();
+  const commit = async () => {
+    const client = getClient(currentDetailEmail);
+    const value = isMulti
+      ? input.value.split(',').map((s) => s.trim()).filter(Boolean)
+      : input.value;
+    client.answers[qid] = value;
+    row.classList.remove('editing');
+    const display = formatAnswer(value);
+    row.querySelector('.ans-val').textContent = display || 'Нет ответа';
+    row.querySelector('.ans-val').classList.toggle('empty', !display);
+    if (!isMulti) input.value = display;
+    try {
+      await api('/api/admin/client', { method: 'PUT', body: JSON.stringify({ email: client.email, answers: client.answers }) });
+      showToast('Ответ обновлён');
+    } catch (e) {
+      showToast('Ошибка сохранения');
+    }
+    input.removeEventListener('blur', commit);
+  };
+  input.addEventListener('blur', commit, { once: true });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && input.tagName === 'INPUT') input.blur(); });
+}
+async function saveNotes() {
+  const client = getClient(currentDetailEmail);
+  const notes = document.getElementById('notesBox').value;
+  client.notes = notes;
+  try {
+    await api('/api/admin/client', { method: 'PUT', body: JSON.stringify({ email: client.email, notes }) });
+    showToast('Примечание сохранено');
+  } catch (e) {
+    showToast('Ошибка сохранения');
+  }
+}
+function shareUrl(shareId) {
+  return `${location.origin}${location.pathname}?share=${shareId}`;
+}
+async function createShare() {
+  try {
+    const res = await api('/api/admin/client/share', { method: 'POST', body: JSON.stringify({ email: currentDetailEmail }) });
+    getClient(currentDetailEmail).shareId = res.shareId;
+    renderDetail();
+    renderClientList();
+    showToast('Ссылка создана');
+  } catch (e) {
+    showToast('Ошибка создания ссылки');
+  }
+}
+async function revokeShare() {
+  if (!confirm('Отозвать публичный доступ к этой анкете?')) return;
+  try {
+    await api('/api/admin/client/unshare', { method: 'POST', body: JSON.stringify({ email: currentDetailEmail }) });
+    getClient(currentDetailEmail).shareId = null;
+    renderDetail();
+    renderClientList();
+    showToast('Доступ отозван');
+  } catch (e) {
+    showToast('Ошибка');
+  }
+}
+function copyShareLink(shareId) {
+  navigator.clipboard.writeText(shareUrl(shareId));
+  showToast('Ссылка скопирована');
+}
+
+/* ── XLSX export ── */
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+async function exportXlsx() {
+  try {
+    await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    const questions = [];
+    adminState.schema.blocks.forEach((b) => b.questions.forEach((q) => questions.push(q)));
+    const rows = adminState.clients.map((c) => {
+      const row = { Email: c.email, Обновлено: fmtDate(c.updatedAt), Создано: fmtDate(c.createdAt), Примечание: c.notes || '' };
+      questions.forEach((q) => { row[q.label] = formatAnswer(c.answers[q.id]); });
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ответы');
+    XLSX.writeFile(wb, 'mba-mybrand-otvety.xlsx');
+  } catch (e) {
+    showToast('Не удалось сформировать файл');
+  }
+}
+
+/* ════════════ PUBLIC SHARE VIEW ════════════ */
+async function initShareView(shareId) {
+  document.getElementById('gate').classList.add('hidden');
+  const view = document.getElementById('shareView');
+  view.classList.remove('hidden');
+  view.innerHTML = '<div class="share-card">Загрузка…</div>';
+  try {
+    const data = await api('/api/share?id=' + encodeURIComponent(shareId));
+    const blocksHtml = data.schema.blocks.map((block) => `
+      <div class="share-block">
+        <h2>${escapeHtml(block.title)}</h2>
+        ${block.questions.map((q) => {
+          const display = formatAnswer(data.client.answers[q.id]);
+          return `<div class="share-q"><div class="ql">${escapeHtml(q.label)}</div><div class="av ${display ? '' : 'empty'}">${escapeHtml(display) || 'Нет ответа'}</div></div>`;
+        }).join('')}
+      </div>
+    `).join('');
+    view.innerHTML = `<div class="share-card"><h1>Бриф</h1><p class="share-sub">Только для просмотра · обновлено ${fmtDate(data.client.updatedAt)}</p>${blocksHtml}</div>`;
+  } catch (e) {
+    view.innerHTML = '<div class="share-card"><h1>Ссылка недоступна</h1><p class="share-sub">Она могла быть отозвана или введена с ошибкой.</p></div>';
+  }
+}
+
+/* ════════════ INIT ════════════ */
+(function init() {
+  const params = new URLSearchParams(location.search);
+  const shareId = params.get('share');
+  if (shareId) {
+    initShareView(shareId);
+  }
+})();
+</script>
+</body>
+</html>
