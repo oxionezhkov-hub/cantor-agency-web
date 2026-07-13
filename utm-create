@@ -133,8 +133,13 @@ td.links code{font-size:12px}
 <script>
 const $ = (id) => document.getElementById(id);
 
+// cantor.agency is served by plain nginx on reg.ru, not by the Cloudflare Worker —
+// only mainweb.oxion-ezhkov.workers.dev runs /api/* and /r/*, so calls go cross-origin
+// there (same pattern as mba-mybrand's API_BASE) until the domain is bound to the Worker.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+
 async function api(path, options) {
-  const res = await fetch(path, options);
+  const res = await fetch(API_BASE + path, options);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'request_failed');
   return data;
