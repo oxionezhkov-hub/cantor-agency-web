@@ -40,6 +40,7 @@ input,textarea,select{font-family:inherit}
 .save-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:pulse 1s infinite}
 .save-indicator.ok .save-dot,.save-indicator.err .save-dot{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.progress-percent{font-family:'Unbounded',sans-serif;font-weight:700;font-size:13px;color:var(--red)}
 .btn-quiet{background:none;border:1.5px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all 0.18s}
 .btn-quiet:hover{border-color:var(--red);color:var(--red)}
 
@@ -59,9 +60,8 @@ input,textarea,select{font-family:inherit}
 
 /* ── QUIZ ── */
 #quiz{max-width:680px;margin:0 auto;padding:28px 20px 64px}
-.progress-percent{text-align:right;font-family:'Unbounded',sans-serif;font-weight:700;font-size:13px;color:var(--red);margin-bottom:10px}
-.steps-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:thin}
-.steps-row::-webkit-scrollbar{height:4px}
+.steps-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none}
+.steps-row::-webkit-scrollbar{display:none}
 .step-chip{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:100px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);transition:all 0.18s;white-space:nowrap}
 .step-chip:hover{border-color:rgba(232,57,29,0.4)}
 .step-chip.active{border-color:var(--red);color:var(--red);background:var(--accent-bg)}
@@ -240,6 +240,7 @@ input,textarea,select{font-family:inherit}
   <a href="/" class="brand">CANTOR <span>AGENCY</span></a>
   <div class="topbar-right">
     <span class="save-indicator" id="saveIndicator"><span class="save-dot"></span><span id="saveIndicatorText">Сохранение…</span></span>
+    <span class="progress-percent hidden" id="progressPercent">0%</span>
     <button class="btn-quiet hidden" id="logoutBtn" onclick="goToGate()">Выйти</button>
   </div>
 </div>
@@ -261,7 +262,6 @@ input,textarea,select{font-family:inherit}
 
 <!-- ══ QUIZ ══ -->
 <div id="quiz" class="hidden">
-  <div class="progress-percent" id="progressPercent">0%</div>
   <div class="steps-row" id="stepsRow"></div>
   <div class="block-card" id="blockCard"></div>
 </div>
@@ -304,7 +304,7 @@ input,textarea,select{font-family:inherit}
           <button class="btn-outline" onclick="exportXlsx()">⬇ Скачать все в XLSX</button>
         </div>
         <div class="search-row">
-          <input type="text" id="clientSearch" placeholder="Поиск по почте…" oninput="renderClientList()">
+          <input type="text" id="clientSearch" placeholder="Поиск по почте или имени…" oninput="renderClientList()">
         </div>
         <div class="client-list" id="clientList"></div>
       </div>
@@ -391,6 +391,7 @@ function goToGate() {
   document.getElementById('shareView').classList.add('hidden');
   document.getElementById('gate').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('progressPercent').classList.add('hidden');
   document.getElementById('gateInput').value = '';
   history.replaceState(null, '', location.pathname);
 }
@@ -442,6 +443,7 @@ async function startQuiz(email) {
   document.getElementById('gate').classList.add('hidden');
   document.getElementById('quiz').classList.remove('hidden');
   document.getElementById('logoutBtn').classList.remove('hidden');
+  document.getElementById('progressPercent').classList.remove('hidden');
   renderSteps();
   renderBlock();
 }
@@ -928,7 +930,12 @@ function clientPrimaryLabel(c) {
 }
 function renderClientList() {
   const q = (document.getElementById('clientSearch').value || '').trim().toLowerCase();
-  const list = adminState.clients.filter((c) => c.email.includes(q));
+  const nameQid = firstQuestionId();
+  const list = adminState.clients.filter((c) => {
+    if (c.email.includes(q)) return true;
+    const name = nameQid ? formatAnswer(c.answers[nameQid]) : '';
+    return name.toLowerCase().includes(q);
+  });
   const container = document.getElementById('clientList');
   if (!list.length) {
     container.innerHTML = '<p class="empty-note">Пока нет ни одной анкеты.</p>';
