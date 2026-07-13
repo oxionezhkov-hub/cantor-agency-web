@@ -1,14 +1,23 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mainweb",
+  "main": "_worker.js",
   "compatibility_date": "2026-07-13",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
   },
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "MBA_MYBRAND_KV",
+      "id": "d6de16be80b74e07a8d2ebe1e0aae5cc"
+    }
   ]
 }

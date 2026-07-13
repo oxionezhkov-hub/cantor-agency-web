@@ -313,8 +313,9 @@ input,textarea,select{font-family:inherit}
 
 <script>
 /* ════════════ CONFIG ════════════ */
-// CHANGE ME AFTER DEPLOY: replace with your deployed worker URL (see workers/mba-mybrand/README.md)
-const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+// The API is served by the same worker as this page (see /_worker.js + wrangler.jsonc),
+// so requests are same-origin — no absolute URL or CORS setup needed.
+const API_BASE = '';
 
 const QUESTION_TYPES = [
   { value: 'short', label: 'Короткий текст' },
