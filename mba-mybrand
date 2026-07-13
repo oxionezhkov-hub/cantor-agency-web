@@ -59,8 +59,7 @@ input,textarea,select{font-family:inherit}
 
 /* ── QUIZ ── */
 #quiz{max-width:680px;margin:0 auto;padding:28px 20px 64px}
-.progress-bar{height:3px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px}
-.progress-fill{height:100%;background:var(--red);transition:width 0.35s ease}
+.progress-percent{text-align:right;font-family:'Unbounded',sans-serif;font-weight:700;font-size:13px;color:var(--red);margin-bottom:10px}
 .steps-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:thin}
 .steps-row::-webkit-scrollbar{height:4px}
 .step-chip{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:100px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);transition:all 0.18s;white-space:nowrap}
@@ -78,8 +77,8 @@ input,textarea,select{font-family:inherit}
 .field{margin-bottom:22px}
 .field label{display:block;font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.4}
 .field label .req{color:var(--red);margin-left:2px}
-.field-example{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;font-style:italic}
 .field input[type=text],.field textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;background:white}
+.field input[type=text]::placeholder,.field textarea::placeholder{color:#B8B8B8}
 .field input[type=text]:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
 .field textarea{resize:vertical;min-height:88px}
 .field.error input,.field.error textarea{border-color:var(--red)}
@@ -179,17 +178,14 @@ input,textarea,select{font-family:inherit}
 .client-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
 .client-progress{font-size:11px;font-weight:700;color:var(--red);background:var(--accent-bg);border-radius:100px;padding:4px 10px;flex-shrink:0;white-space:nowrap}
 .client-share-badge{width:8px;height:8px;border-radius:50%;background:#2E7D32;flex-shrink:0}
+.client-row-actions{display:flex;gap:2px;flex-shrink:0}
 .empty-note{color:var(--muted);font-size:13.5px;padding:24px;text-align:center;background:white;border:1.5px dashed var(--border);border-radius:var(--r-md)}
 
-/* Detail panel */
-#overlay{position:fixed;inset:0;background:rgba(10,10,10,0.45);backdrop-filter:blur(2px);z-index:900;opacity:0;pointer-events:none;transition:opacity 0.25s}
-#overlay.visible{opacity:1;pointer-events:all}
-#detail{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100vw;background:var(--bg);z-index:950;box-shadow:-20px 0 60px rgba(0,0,0,0.15);transform:translateX(100%);transition:transform 0.32s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column}
-#detail.open{transform:translateX(0)}
-.detail-header{padding:20px 22px;background:white;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-shrink:0}
-.detail-header h3{font-size:15.5px;font-weight:700;color:var(--dark);word-break:break-all}
-.detail-header .sub{font-size:11.5px;color:var(--muted);margin-top:4px}
-.detail-body{flex:1;overflow-y:auto;padding:18px 22px}
+/* Detail view (inline, full-width within admin-main — sidebar stays visible) */
+.detail-header{padding-bottom:18px;border-bottom:1.5px solid var(--border);display:flex;align-items:flex-start;gap:14px;margin-bottom:20px}
+.detail-header h3{font-size:18px;font-weight:700;color:var(--dark);word-break:break-all}
+.detail-header .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.detail-body{max-width:760px}
 .detail-section{margin-bottom:18px}
 .detail-section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);margin-bottom:10px}
 .ans-row{background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 13px;margin-bottom:8px}
@@ -218,7 +214,8 @@ input,textarea,select{font-family:inherit}
 .share-block{margin-bottom:26px}
 .share-block h2{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:var(--red);margin-bottom:12px}
 .share-q{margin-bottom:14px}
-.share-q .ql{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.share-q-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.share-q .ql{font-size:12.5px;font-weight:700;color:var(--muted)}
 .share-q .av{font-size:14.5px;color:var(--text);white-space:pre-wrap;line-height:1.55}
 .share-q .av.empty{color:var(--muted);font-style:italic}
 
@@ -231,7 +228,6 @@ input,textarea,select{font-family:inherit}
 }
 @media(max-width:600px){
   .block-card{padding:24px 18px}
-  #detail{width:100vw}
   .q-editor-row{flex-wrap:wrap}
   .q-editor-row .q-type-select{width:100%}
   .topbar{padding:14px 16px}
@@ -265,7 +261,7 @@ input,textarea,select{font-family:inherit}
 
 <!-- ══ QUIZ ══ -->
 <div id="quiz" class="hidden">
-  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-percent" id="progressPercent">0%</div>
   <div class="steps-row" id="stepsRow"></div>
   <div class="block-card" id="blockCard"></div>
 </div>
@@ -302,31 +298,30 @@ input,textarea,select{font-family:inherit}
       <button class="btn-outline" onclick="addBlock()">+ Добавить блок</button>
     </div>
     <div class="admin-page" id="page-responses">
-      <div class="admin-head">
-        <h2>Ответы клиентов</h2>
-        <button class="btn-outline" onclick="exportXlsx()">⬇ Скачать все в XLSX</button>
+      <div id="responsesListView">
+        <div class="admin-head">
+          <h2>Ответы клиентов</h2>
+          <button class="btn-outline" onclick="exportXlsx()">⬇ Скачать все в XLSX</button>
+        </div>
+        <div class="search-row">
+          <input type="text" id="clientSearch" placeholder="Поиск по почте…" oninput="renderClientList()">
+        </div>
+        <div class="client-list" id="clientList"></div>
       </div>
-      <div class="search-row">
-        <input type="text" id="clientSearch" placeholder="Поиск по почте…" oninput="renderClientList()">
+      <div id="responsesDetailView" class="hidden">
+        <div class="detail-header">
+          <button class="btn-icon" onclick="closeDetail()" title="К списку">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+          <div>
+            <h3 id="detEmail">—</h3>
+            <div class="sub" id="detMeta"></div>
+          </div>
+        </div>
+        <div class="detail-body" id="detailBody"></div>
       </div>
-      <div class="client-list" id="clientList"></div>
     </div>
   </div>
-</div>
-
-<!-- Detail slide-in -->
-<div id="overlay" onclick="closeDetail()"></div>
-<div id="detail">
-  <div class="detail-header">
-    <div>
-      <h3 id="detEmail">—</h3>
-      <div class="sub" id="detMeta"></div>
-    </div>
-    <button class="btn-icon" onclick="closeDetail()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  </div>
-  <div class="detail-body" id="detailBody"></div>
 </div>
 
 <!-- ══ PUBLIC SHARE VIEW ══ -->
@@ -390,6 +385,7 @@ async function api(path, options) {
 
 /* ════════════ ROUTING / GATE ════════════ */
 function goToGate() {
+  localStorage.removeItem('mba_last_email');
   document.getElementById('quiz').classList.add('hidden');
   document.getElementById('admin').classList.add('hidden');
   document.getElementById('shareView').classList.add('hidden');
@@ -433,11 +429,6 @@ document.getElementById('gateForm').addEventListener('submit', async (e) => {
   }
 });
 
-(function initGatePrefill() {
-  const last = localStorage.getItem('mba_last_email');
-  if (last) document.getElementById('gateInput').value = last;
-})();
-
 /* ════════════ QUIZ ════════════ */
 const quiz = { email: null, schema: null, client: null, blockIndex: 0 };
 let saveTimer = null;
@@ -457,13 +448,27 @@ async function startQuiz(email) {
 
 function renderSteps() {
   const row = document.getElementById('stepsRow');
-  const total = quiz.schema.blocks.length;
-  document.getElementById('progressFill').style.width = Math.round((quiz.blockIndex / (total - 1 || 1)) * 100) + '%';
   row.innerHTML = quiz.schema.blocks.map((b, i) => `
     <div class="step-chip ${i === quiz.blockIndex ? 'active' : ''} ${i < quiz.blockIndex ? 'done' : ''}" onclick="jumpToBlock(${i})">
       <span class="step-chip-num">${i + 1}</span>${escapeHtml(b.title)}
     </div>
   `).join('');
+  updateProgressPercent();
+}
+
+function computeRequiredProgress() {
+  let total = 0;
+  let done = 0;
+  quiz.schema.blocks.forEach((b) => b.questions.forEach((q) => {
+    if (!q.required) return;
+    total++;
+    if (!answerIsEmpty(quiz.client.answers[q.id])) done++;
+  }));
+  return total === 0 ? 100 : Math.round((done / total) * 100);
+}
+
+function updateProgressPercent() {
+  document.getElementById('progressPercent').textContent = computeRequiredProgress() + '%';
 }
 
 function jumpToBlock(i) {
@@ -475,17 +480,17 @@ function jumpToBlock(i) {
 
 function questionFieldHtml(q) {
   const val = quiz.client.answers[q.id];
-  const example = q.example ? `<p class="field-example">Например: ${escapeHtml(q.example)}</p>` : '';
+  const placeholder = escapeHtml(q.example || 'Ваш ответ');
   const reqMark = q.required ? '<span class="req">*</span>' : '';
 
   if (q.type === 'short') {
-    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
-      <input type="text" data-answer="${q.id}" value="${escapeHtml(val || '')}" placeholder="Ваш ответ">
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>
+      <input type="text" data-answer="${q.id}" value="${escapeHtml(val || '')}" placeholder="${placeholder}">
       <p class="field-err">Пожалуйста, заполните это поле</p></div>`;
   }
   if (q.type === 'long') {
-    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
-      <textarea data-answer="${q.id}" placeholder="Ваш ответ">${escapeHtml(val || '')}</textarea>
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>
+      <textarea data-answer="${q.id}" placeholder="${placeholder}">${escapeHtml(val || '')}</textarea>
       <p class="field-err">Пожалуйста, заполните это поле</p></div>`;
   }
   if (q.type === 'single') {
@@ -493,7 +498,7 @@ function questionFieldHtml(q) {
       <div class="opt-item radio ${val === opt ? 'selected' : ''}" data-answer="${q.id}" data-single-opt="${escapeHtml(opt)}">
         <span class="opt-mark"><span class="opt-dot"></span></span><span class="opt-text">${escapeHtml(opt)}</span>
       </div>`).join('');
-    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>
       <div class="options-list">${opts}</div>
       <p class="field-err">Пожалуйста, выберите вариант</p></div>`;
   }
@@ -503,7 +508,7 @@ function questionFieldHtml(q) {
       <div class="opt-item checkbox ${arr.includes(opt) ? 'selected' : ''}" data-answer="${q.id}" data-multi-opt="${escapeHtml(opt)}">
         <span class="opt-mark"><svg class="opt-check" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="opt-text">${escapeHtml(opt)}</span>
       </div>`).join('');
-    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>${example}
+    return `<div class="field" data-qid="${q.id}"><label>${escapeHtml(q.label)}${reqMark}</label>
       <div class="options-list">${opts}</div>
       <p class="field-err">Пожалуйста, выберите хотя бы один вариант</p></div>`;
   }
@@ -532,6 +537,7 @@ function attachFieldListeners() {
     el.addEventListener('input', () => {
       quiz.client.answers[el.dataset.answer] = el.value;
       clearFieldError(el.dataset.answer);
+      updateProgressPercent();
       scheduleSave();
     });
   });
@@ -542,6 +548,7 @@ function attachFieldListeners() {
       container.querySelectorAll(`[data-answer="${cssEsc(qid)}"].opt-item`).forEach((o) => o.classList.remove('selected'));
       el.classList.add('selected');
       clearFieldError(qid);
+      updateProgressPercent();
       scheduleSave();
     });
   });
@@ -555,6 +562,7 @@ function attachFieldListeners() {
       quiz.client.answers[qid] = arr;
       el.classList.toggle('selected');
       clearFieldError(qid);
+      updateProgressPercent();
       scheduleSave();
     });
   });
@@ -909,6 +917,15 @@ function answeredCount(client) {
   adminState.schema.blocks.forEach((b) => b.questions.forEach((q) => { if (!answerIsEmpty(client.answers[q.id])) n++; }));
   return n;
 }
+function firstQuestionId() {
+  const block = adminState.schema.blocks[0];
+  return block && block.questions[0] ? block.questions[0].id : null;
+}
+function clientPrimaryLabel(c) {
+  const qid = firstQuestionId();
+  const name = qid ? formatAnswer(c.answers[qid]) : '';
+  return name ? `${escapeHtml(name)} — ${escapeHtml(c.email)}` : escapeHtml(c.email);
+}
 function renderClientList() {
   const q = (document.getElementById('clientSearch').value || '').trim().toLowerCase();
   const list = adminState.clients.filter((c) => c.email.includes(q));
@@ -922,8 +939,16 @@ function renderClientList() {
     <div class="client-row" onclick="openDetail('${escapeHtml(c.email)}')">
       <div class="client-avatar">${escapeHtml(c.email[0].toUpperCase())}</div>
       <div class="client-info">
-        <div class="client-email">${escapeHtml(c.email)}</div>
+        <div class="client-email">${clientPrimaryLabel(c)}</div>
         <div class="client-meta">Обновлено ${fmtDate(c.updatedAt)}</div>
+      </div>
+      <div class="client-row-actions">
+        <button class="btn-icon" title="Скопировать публичную ссылку" onclick="event.stopPropagation(); quickCopyShareLink('${escapeHtml(c.email)}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+        <button class="btn-icon" title="Скачать в XLSX" onclick="event.stopPropagation(); exportSingleClientXlsx('${escapeHtml(c.email)}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
       </div>
       ${c.shareId ? '<span class="client-share-badge" title="Есть публичная ссылка"></span>' : ''}
       <span class="client-progress">${answeredCount(c)}/${total}</span>
@@ -935,18 +960,36 @@ let currentDetailEmail = null;
 
 function openDetail(email) {
   currentDetailEmail = email;
-  document.getElementById('overlay').classList.add('visible');
-  document.getElementById('detail').classList.add('open');
+  document.getElementById('responsesListView').classList.add('hidden');
+  document.getElementById('responsesDetailView').classList.remove('hidden');
   renderDetail();
 }
 function closeDetail() {
-  document.getElementById('overlay').classList.remove('visible');
-  document.getElementById('detail').classList.remove('open');
+  document.getElementById('responsesDetailView').classList.add('hidden');
+  document.getElementById('responsesListView').classList.remove('hidden');
   currentDetailEmail = null;
+  renderClientList();
 }
 
 function getClient(email) {
   return adminState.clients.find((c) => c.email === email);
+}
+
+async function quickCopyShareLink(email) {
+  const client = getClient(email);
+  if (!client) return;
+  try {
+    if (!client.shareId) {
+      const res = await api('/api/admin/client/share', { method: 'POST', body: JSON.stringify({ email }) });
+      client.shareId = res.shareId;
+      renderClientList();
+      if (currentDetailEmail === email) renderDetail();
+    }
+    navigator.clipboard.writeText(shareUrl(client.shareId));
+    showToast('Ссылка скопирована');
+  } catch (e) {
+    showToast('Ошибка создания ссылки');
+  }
 }
 
 function renderDetail() {
@@ -982,7 +1025,23 @@ function renderDetail() {
       <div class="detail-section-title">Публичная ссылка</div>
       ${shareHtml}
     </div>
+    <div class="detail-section">
+      <button class="btn-ghost-sm" style="color:var(--red);border-color:rgba(232,57,29,0.3)" onclick="deleteClient()">Удалить анкету</button>
+    </div>
   `;
+}
+
+async function deleteClient() {
+  const email = currentDetailEmail;
+  if (!confirm(`Удалить анкету ${email} без возможности восстановления?`)) return;
+  try {
+    await api('/api/admin/client', { method: 'DELETE', body: JSON.stringify({ email }) });
+    adminState.clients = adminState.clients.filter((c) => c.email !== email);
+    closeDetail();
+    showToast('Анкета удалена');
+  } catch (e) {
+    showToast('Ошибка удаления');
+  }
 }
 
 function answerRowHtml(client, q) {
@@ -1100,17 +1159,15 @@ function loadScriptOnce(src) {
     document.head.appendChild(s);
   });
 }
+function clientXlsxRow(c) {
+  const row = { Email: c.email, Обновлено: fmtDate(c.updatedAt), Создано: fmtDate(c.createdAt), Примечание: c.notes || '' };
+  adminState.schema.blocks.forEach((b) => b.questions.forEach((q) => { row[q.label] = formatAnswer(c.answers[q.id]); }));
+  return row;
+}
 async function exportXlsx() {
   try {
     await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-    const questions = [];
-    adminState.schema.blocks.forEach((b) => b.questions.forEach((q) => questions.push(q)));
-    const rows = adminState.clients.map((c) => {
-      const row = { Email: c.email, Обновлено: fmtDate(c.updatedAt), Создано: fmtDate(c.createdAt), Примечание: c.notes || '' };
-      questions.forEach((q) => { row[q.label] = formatAnswer(c.answers[q.id]); });
-      return row;
-    });
-    const ws = XLSX.utils.json_to_sheet(rows);
+    const ws = XLSX.utils.json_to_sheet(adminState.clients.map(clientXlsxRow));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Ответы');
     XLSX.writeFile(wb, 'mba-mybrand-otvety.xlsx');
@@ -1118,8 +1175,29 @@ async function exportXlsx() {
     showToast('Не удалось сформировать файл');
   }
 }
+async function exportSingleClientXlsx(email) {
+  const client = getClient(email);
+  if (!client) return;
+  try {
+    await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    const ws = XLSX.utils.json_to_sheet([clientXlsxRow(client)]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ответ');
+    const safeName = email.replace(/[^a-z0-9@._-]/gi, '_');
+    XLSX.writeFile(wb, `mba-mybrand-${safeName}.xlsx`);
+  } catch (e) {
+    showToast('Не удалось сформировать файл');
+  }
+}
 
 /* ════════════ PUBLIC SHARE VIEW ════════════ */
+let shareViewAnswers = {};
+
+function copyShareAnswer(qid) {
+  navigator.clipboard.writeText(formatAnswer(shareViewAnswers[qid]) || '');
+  showToast('Скопировано');
+}
+
 async function initShareView(shareId) {
   document.getElementById('gate').classList.add('hidden');
   const view = document.getElementById('shareView');
@@ -1127,12 +1205,21 @@ async function initShareView(shareId) {
   view.innerHTML = '<div class="share-card">Загрузка…</div>';
   try {
     const data = await api('/api/share?id=' + encodeURIComponent(shareId));
+    shareViewAnswers = data.client.answers;
     const blocksHtml = data.schema.blocks.map((block) => `
       <div class="share-block">
         <h2>${escapeHtml(block.title)}</h2>
         ${block.questions.map((q) => {
           const display = formatAnswer(data.client.answers[q.id]);
-          return `<div class="share-q"><div class="ql">${escapeHtml(q.label)}</div><div class="av ${display ? '' : 'empty'}">${escapeHtml(display) || 'Нет ответа'}</div></div>`;
+          return `<div class="share-q">
+            <div class="share-q-head">
+              <div class="ql">${escapeHtml(q.label)}</div>
+              <button class="btn-icon" title="Копировать" onclick="copyShareAnswer('${q.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <div class="av ${display ? '' : 'empty'}">${escapeHtml(display) || 'Нет ответа'}</div>
+          </div>`;
         }).join('')}
       </div>
     `).join('');
@@ -1148,6 +1235,15 @@ async function initShareView(shareId) {
   const shareId = params.get('share');
   if (shareId) {
     initShareView(shareId);
+    return;
+  }
+
+  const lastEmail = localStorage.getItem('mba_last_email');
+  if (lastEmail) {
+    document.getElementById('gateInput').value = lastEmail;
+    startQuiz(lastEmail).catch(() => {
+      // Cached email failed to load (offline, worker unreachable) — fall back to the gate, prefilled.
+    });
   }
 })();
 </script>
