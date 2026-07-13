@@ -982,7 +982,24 @@ function renderDetail() {
       <div class="detail-section-title">Публичная ссылка</div>
       ${shareHtml}
     </div>
+    <div class="detail-section">
+      <button class="btn-ghost-sm" style="color:var(--red);border-color:rgba(232,57,29,0.3)" onclick="deleteClient()">Удалить анкету</button>
+    </div>
   `;
+}
+
+async function deleteClient() {
+  const email = currentDetailEmail;
+  if (!confirm(`Удалить анкету ${email} без возможности восстановления?`)) return;
+  try {
+    await api('/api/admin/client', { method: 'DELETE', body: JSON.stringify({ email }) });
+    adminState.clients = adminState.clients.filter((c) => c.email !== email);
+    closeDetail();
+    renderClientList();
+    showToast('Анкета удалена');
+  } catch (e) {
+    showToast('Ошибка удаления');
+  }
 }
 
 function answerRowHtml(client, q) {

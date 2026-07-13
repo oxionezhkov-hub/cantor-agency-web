@@ -250,6 +250,21 @@ async function handleApi(request, env, url) {
     return json({ ok: true });
   }
 
+  // ── Admin: delete a client entirely ──
+  if (pathname === '/api/admin/client' && request.method === 'DELETE') {
+    const body = await readJson(request);
+    const email = normalizeEmail(body && body.email);
+    if (!isValidEmail(email)) return json({ error: 'invalid_email' }, 400);
+
+    const key = `client:${email}`;
+    const existing = await kv.get(key, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+
+    if (existing.shareId) await kv.delete(`share:${existing.shareId}`);
+    await kv.delete(key);
+    return json({ ok: true });
+  }
+
   // ── Public: read a shared client's answers ──
   if (pathname === '/api/share' && request.method === 'GET') {
     const shareId = url.searchParams.get('id');
