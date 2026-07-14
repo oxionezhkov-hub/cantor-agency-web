@@ -305,18 +305,9 @@
   .stats-bg .section-title { color: white; }
   .stats-bg .section-sub { color: rgba(255,255,255,0.65); }
   .stats-bg .section-label { background: rgba(255,255,255,0.1); color: var(--pink); border-color: rgba(255,255,255,0.2); }
-  .results-list {
-    list-style: none; margin: 2.5rem auto 0; padding: 0; max-width: 720px;
-    display: flex; flex-direction: column; gap: 0.85rem;
-  }
-  .results-list li {
-    position: relative; padding-left: 1.6rem;
-    color: rgba(255,255,255,0.82); font-weight: 300; line-height: 1.65; font-size: 0.98rem;
-  }
-  .results-list li::before { content: "→"; position: absolute; left: 0; color: var(--pink); font-weight: 700; }
 
   /* SERVICES */
-  .services-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+  .services-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; max-width: 1080px; margin: 0 auto; }
   .service-card {
     flex: 1 1 300px;
     max-width: 340px;
@@ -481,7 +472,15 @@
   .reviews-cta.hidden { display: none; }
 
   /* DIPLOMAS */
-  .diplomas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; max-width: 780px; margin: 0 auto; }
+  .diplomas-section {
+    background: var(--blue-50);
+    border-radius: 32px;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+  .diplomas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; width: 100%; }
   .diploma-item {
     background: white;
     border: 1px solid var(--border);
@@ -489,12 +488,15 @@
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(76,91,160,0.08);
     transition: transform 0.2s, box-shadow 0.2s;
-    line-height: 0;
+    aspect-ratio: 3/4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .diploma-item:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(76,91,160,0.14); }
-  .diploma-item img { width: 100%; height: auto; display: block; aspect-ratio: 3/4; object-fit: cover; }
+  .diploma-item img { width: 100%; height: 100%; display: block; object-fit: contain; }
   .diploma-item .photo-fallback {
-    width: 100%; aspect-ratio: 3/4;
+    width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--pink), var(--blue-100));
     color: var(--blue-800);
@@ -793,7 +795,7 @@
     .reviews-fade-overlay { height: 80px; }
     .reviews-cta { margin-top: 0.15rem; }
 
-    .diplomas-grid { gap: 0.85rem; }
+    .diplomas-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
 
     .form-title em { display: block; }
     .form-section { padding: 2rem 1.25rem; border-radius: 16px; }
@@ -805,7 +807,7 @@
     .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
     .footer-links { gap: 1rem; }
 
-    section.lessons-section { border-radius: 16px; max-width: none; margin-left: 1vw; margin-right: 1vw; width: auto; }
+    section.lessons-section, section.diplomas-section { border-radius: 16px; max-width: none; margin-left: 1vw; margin-right: 1vw; width: auto; }
 
     .hero-photo-mobile { width: min(280px, 72vw) !important; }
   }
@@ -814,7 +816,7 @@
     .reviews-photos-grid { grid-template-columns: 1fr; max-height: 380px; }
     .review-col { gap: 0.85rem; }
     .reviews-fade-overlay { height: 70px; }
-    .diplomas-grid { grid-template-columns: repeat(2, 1fr); max-width: 340px; }
+    .diplomas-grid { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 400px) {
@@ -876,7 +878,6 @@
     <li><a href="#services">Курсы</a></li>
     <li><a href="#reviews">Отзывы</a></li>
     <li><a href="#diplomas">Дипломы</a></li>
-    <li><a href="https://telegram.me/allacpl" target="_blank" rel="noopener">Telegram</a></li>
     <li><a href="#form" class="nav-cta">Записаться</a></li>
   </ul>
   <button class="nav-burger" id="burger" aria-label="Меню">
@@ -888,7 +889,6 @@
   <a href="#services" onclick="closeMenu()">Курсы</a>
   <a href="#reviews" onclick="closeMenu()">Отзывы</a>
   <a href="#diplomas" onclick="closeMenu()">Дипломы</a>
-  <a href="https://telegram.me/allacpl" target="_blank" rel="noopener" onclick="closeMenu()">Telegram</a>
 </div>
 
 <!-- HERO -->
@@ -938,7 +938,7 @@
       <div class="about-highlight">
         <p>«Учёба — это не зубрёжка, а азартное приключение. Каждый успех укрепляет веру ребёнка в свои силы.»</p>
       </div>
-      <p>Работая в школе, я увидела: детям неинтересно заучивать сухие правила. Поэтому я объединила пять направлений — ментальную арифметику, скорочтение, мнемотехнику, русский язык и таблицу умножения — в единую игровую систему, без давления, скуки и оценок.</p>
+      <p>Работая в школе, я увидела: детям неинтересно заучивать сухие правила. Поэтому я объединила пять направлений в единую игровую систему, без давления, скуки и оценок.</p>
     </div>
   </div>
 </section>
@@ -967,12 +967,6 @@
       <div class="stat-label">минут — столько теперь занимает домашнее задание</div>
     </div>
   </div>
-  <ul class="results-list fade-in">
-    <li>Мальчик с ЗПР за 2 года догнал сверстников и поступил в престижную инженерную школу</li>
-    <li>Второклассник через 6 месяцев читает осмысленно со скоростью 374 слова в минуту (уровень старшеклассника!)</li>
-    <li>Ученица — победитель Международной олимпиады по развитию памяти</li>
-    <li>Ученики сдают ВПР по русскому на «4» и «5» уже через полгода, а таблицу умножения помнят даже спустя годы</li>
-  </ul>
 </div>
 
 <!-- REVIEWS -->
@@ -1098,7 +1092,7 @@
 </section>
 
 <!-- DIPLOMAS -->
-<section id="diplomas">
+<section id="diplomas" class="diplomas-section">
   <div class="section-header fade-in">
     <h2 class="section-title">Дипломы <em>и сертификаты</em></h2>
     <p class="section-sub">ДГПИ (учитель русского языка и литературы), сертификаты IAMA по ментальной арифметике и скорочтению, мнемотехника, курсы Schoolsmart</p>
