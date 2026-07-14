@@ -345,6 +345,7 @@
     padding: 96px var(--page-padding);
   }
   #about, #diplomas { background: var(--teal-50); }
+  #who-for { background: var(--white); }
   #reviews { background: transparent; }
   #services { background: var(--white); }
   #form {
@@ -426,6 +427,61 @@
     margin: 0 !important;
     font-style: italic;
   }
+
+  /* WHO IT'S FOR */
+  .who-for-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .who-for-card {
+    border-radius: 24px;
+    padding: 2.5rem;
+    border: 2px solid var(--teal-100);
+    background: var(--teal-50);
+  }
+  .who-for-card.who-for-gain {
+    background: linear-gradient(145deg, var(--teal-600), var(--teal-800));
+    border-color: var(--teal-600);
+  }
+  .who-for-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    color: var(--teal-800);
+  }
+  .who-for-card.who-for-gain h3 { color: white; }
+  .who-for-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .who-for-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    color: var(--text-soft);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .who-for-card.who-for-gain .who-for-list li { color: rgba(255,255,255,0.92); }
+  .who-for-check {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--teal-400);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .who-for-card.who-for-gain .who-for-check { background: var(--mint); color: var(--teal-800); }
 
 
   /* SERVICES */
@@ -1352,6 +1408,10 @@
     .about-text { order: 1; }
     .about-photo-wrap { order: 2; max-width: 320px; margin: 0 auto; width: 100%; }
 
+    /* WHO IT'S FOR */
+    .who-for-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    .who-for-card { padding: 1.75rem; }
+
     /* SERVICES */
     .services-grid { grid-template-columns: 1fr; }
 
@@ -1773,7 +1833,7 @@
   <div class="hero-content">
     <span class="hero-tag">Репетитор по химии · Онлайн</span>
     <h1>Химия<br><em>легко и на высокий балл</em></h1>
-    <p class="hero-desc">15 лет опыта подготовки к ОГЭ и ЕГЭ по химии. Высший балл ученицы — 99, у большинства результат от 85 и выше. Занятия онлайн для учеников 9–11 классов из Кабардино-Балкарии и любого региона России.</p>
+    <p class="hero-desc">Более 15 лет опыта подготовки к ОГЭ и ЕГЭ по химии. Высший балл ученицы — 99, у большинства результат от 85 и выше. Занятия онлайн для учеников 9–11 классов из любого региона России.</p>
     <div class="hero-photo-mobile">
       <img id="hero-tutor-photo-mobile" src="images/svetlana-idrisova/svetlana-hero.jpg" alt="Светлана Идрисова — репетитор по химии">
     </div>
@@ -1823,11 +1883,40 @@
     </div>
     <div class="about-text">
       <h2 class="section-title">Опыт, которому<br><em>можно доверять</em></h2>
-      <p>Идрисова Светлана Валерьевна — репетитор по химии с 15-летним опытом. Готовлю учеников 9–11 классов к ОГЭ и ЕГЭ через понимание, а не зубрёжку.</p>
+      <p>Идрисова Светлана Валерьевна — репетитор по химии с опытом работы более 15 лет. Готовлю учеников 9–11 классов к ОГЭ и ЕГЭ через понимание, а не зубрёжку.</p>
       <div class="about-highlight">
         <p>«Химия — это не сложно, если правильно преподносить материал.»</p>
       </div>
-      <p>Учитель высшей квалификационной категории. За 15 лет — десятки учеников с результатом от 85 баллов и выше, лучший результат — 99 баллов ЕГЭ.</p>
+      <p>Каждый ученик — это индивидуальный подход. Вместе мы определяем цель, составляем эффективный план подготовки и шаг за шагом идем к желаемому результату.<br>Наши занятия — это не только знания и дисциплина, но и доверие, поддержка и взаимопонимание.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHO IT'S FOR / RESULTS -->
+<section id="who-for">
+  <div class="who-for-grid fade-in">
+    <div class="who-for-card who-for-pain">
+      <h3>Вам точно ко мне, если:</h3>
+      <ul class="who-for-list">
+        <li><span class="who-for-check">✓</span> Мечтаете поступить в топовый ВУЗ мечты на БЮДЖЕТ!</li>
+        <li><span class="who-for-check">✓</span> Мечтаете получить 5 на ОГЭ!</li>
+        <li><span class="who-for-check">✓</span> Хотите повысить успеваемость!</li>
+        <li><span class="who-for-check">✓</span> Экзамен по химии кажется нерешаемым и слишком сложным!</li>
+        <li><span class="who-for-check">✓</span> Вам страшно за свои экзаменационные баллы, а нынешняя подготовка не приносит никаких результатов!</li>
+        <li><span class="who-for-check">✓</span> Осталось слишком мало времени и Вы боитесь, что не готовы к экзамену!</li>
+      </ul>
+    </div>
+    <div class="who-for-card who-for-gain">
+      <h3>Со мной Вы:</h3>
+      <ul class="who-for-list">
+        <li><span class="who-for-check">✓</span> Сдадите ЕГЭ и ОГЭ на желаемый балл!</li>
+        <li><span class="who-for-check">✓</span> Поступите в топовый ВУЗ мечты на БЮДЖЕТ!</li>
+        <li><span class="who-for-check">✓</span> Повысите успеваемость!</li>
+        <li><span class="who-for-check">✓</span> Научитесь с первых занятий видеть в химии логику, а не просто набор сложных формул!</li>
+        <li><span class="who-for-check">✓</span> Научитесь не зубрить, а понимать предмет!</li>
+        <li><span class="who-for-check">✓</span> Поймёте, что экзамен выстроен логично, и он уже не будет казаться таким сложным!</li>
+        <li><span class="who-for-check">✓</span> С большим количеством практики Вы быстро набьете руку к казалось бы «нерешаемым» заданиям!</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -2015,8 +2104,8 @@
           <li>Разбор ошибок и обратная связь после каждого занятия</li>
         </ul>
         <div class="price-line">
-          <span class="price-amount">4 000 ₽</span>
-          <span class="price-duration">60 мин</span>
+          <span class="price-amount">5 000 ₽</span>
+          <span class="price-duration">55 мин</span>
         </div>
       </div>
     </div>
@@ -2032,8 +2121,8 @@
           <li>Та же программа, что и в индивидуальном формате</li>
         </ul>
         <div class="price-line">
-          <span class="price-amount">2 000 ₽</span>
-          <span class="price-duration">60 мин</span>
+          <span class="price-amount">2 500 ₽</span>
+          <span class="price-duration">55 мин</span>
         </div>
       </div>
     </div>
@@ -2049,8 +2138,8 @@
           <li>Самая доступная цена за занятие</li>
         </ul>
         <div class="price-line">
-          <span class="price-amount">1 000 ₽</span>
-          <span class="price-duration">60 мин</span>
+          <span class="price-amount">1 500 ₽</span>
+          <span class="price-duration">55 мин</span>
         </div>
       </div>
     </div>
