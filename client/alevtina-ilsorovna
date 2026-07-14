@@ -930,7 +930,7 @@
 <section id="about">
   <div class="about-grid fade-in">
     <div class="about-photo-wrap">
-      <img id="about-tutor-photo" src="images/alevtina-ilsorovna/tutor/about.jpg" alt="Алевтина Ильсоровна на занятии">
+      <img id="about-tutor-photo" src="images/alevtina-ilsorovna/tutor/about2.jpg" alt="Алевтина Ильсоровна на занятии">
     </div>
     <div class="about-text">
       <h2 class="section-title">Подружим ребёнка<br><em>с русским языком навсегда</em></h2>
@@ -997,16 +997,25 @@
   <div class="reviews-photos-wrapper fade-in">
     <div class="reviews-photos-grid" id="reviewsPhotoGrid">
       <div class="review-col">
-        <div class="review-photo-item" data-review="1"></div>
-        <div class="review-photo-item" data-review="2"></div>
+        <div class="review-photo-item" data-review="1" data-ext="png"></div>
+        <div class="review-photo-item" data-review="4" data-ext="png"></div>
+        <div class="review-photo-item" data-review="7" data-ext="png"></div>
+        <div class="review-photo-item" data-review="10" data-ext="png"></div>
+        <div class="review-photo-item" data-review="13" data-ext="png"></div>
       </div>
       <div class="review-col">
-        <div class="review-photo-item" data-review="3"></div>
-        <div class="review-photo-item" data-review="4"></div>
+        <div class="review-photo-item" data-review="2" data-ext="png"></div>
+        <div class="review-photo-item" data-review="5" data-ext="png"></div>
+        <div class="review-photo-item" data-review="8" data-ext="png"></div>
+        <div class="review-photo-item" data-review="11" data-ext="png"></div>
+        <div class="review-photo-item" data-review="14" data-ext="jpg"></div>
       </div>
       <div class="review-col">
-        <div class="review-photo-item" data-review="5"></div>
-        <div class="review-photo-item" data-review="6"></div>
+        <div class="review-photo-item" data-review="3" data-ext="png"></div>
+        <div class="review-photo-item" data-review="6" data-ext="png"></div>
+        <div class="review-photo-item" data-review="9" data-ext="png"></div>
+        <div class="review-photo-item" data-review="12" data-ext="png"></div>
+        <div class="review-photo-item" data-review="15" data-ext="jpg"></div>
       </div>
     </div>
     <div class="reviews-fade-overlay"></div>
@@ -1110,6 +1119,8 @@
     <div class="diploma-item" data-diploma="1"></div>
     <div class="diploma-item" data-diploma="2"></div>
     <div class="diploma-item" data-diploma="3"></div>
+    <div class="diploma-item" data-diploma="4"></div>
+    <div class="diploma-item" data-diploma="5"></div>
   </div>
 </section>
 
@@ -1216,7 +1227,7 @@
   // Photos: drop files into the folders below with these exact names to replace placeholders.
   (function loadMedia() {
     const heroPhoto = 'images/alevtina-ilsorovna/tutor/hero2.jpg';
-    const aboutPhoto = 'images/alevtina-ilsorovna/tutor/about.jpg';
+    const aboutPhoto = 'images/alevtina-ilsorovna/tutor/about2.jpg';
 
     function setImageWithFallback(img, url, initials, loading) {
       if (!img) return;
@@ -1238,6 +1249,7 @@
 
     document.querySelectorAll('.review-photo-item[data-review]').forEach(el => {
       const n = el.dataset.review;
+      const ext = el.dataset.ext || 'jpg';
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.alt = 'Отзыв родителя';
@@ -1249,7 +1261,7 @@
         fallback.textContent = 'Отзыв ' + n;
         img.replaceWith(fallback);
       };
-      img.src = 'images/alevtina-ilsorovna/reviews/review-' + n + '.jpg';
+      img.src = 'images/alevtina-ilsorovna/reviews/review-' + n + '.' + ext;
       el.appendChild(img);
     });
 
