@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Светлана Идрисова — репетитор по химии</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2224%22%20fill%3D%22%237A5DA8%22/%3E%3Ctext%20x%3D%2250%22%20y%3D%2270%22%20font-size%3D%2256%22%20text-anchor%3D%22middle%22%3E%F0%9F%A7%AA%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500&display=swap" rel="stylesheet">
@@ -386,7 +387,7 @@
     display: grid;
     grid-template-columns: 0.95fr 1.05fr;
     gap: 4rem;
-    align-items: center;
+    align-items: stretch;
     max-width: 960px;
     margin: 0 auto;
   }
@@ -396,6 +397,7 @@
     border: 2px solid var(--teal-100);
     box-shadow: var(--shadow);
     aspect-ratio: 4 / 5;
+    min-height: 100%;
     background: var(--teal-50);
   }
   .about-photo-wrap img {
@@ -426,6 +428,9 @@
     font-size: 1rem !important;
     margin: 0 !important;
     font-style: italic;
+  }
+  .about-final {
+    margin-top: 0.4rem;
   }
 
   /* WHO IT'S FOR */
@@ -1012,22 +1017,25 @@
     position: fixed;
     inset: 0;
     z-index: 1000;
-    opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.15s ease, visibility 0s linear 0.15s;
   }
   .policy-modal.open {
-    opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transition: opacity 0.15s ease;
   }
   .policy-modal-overlay {
     position: absolute;
     inset: 0;
     background: rgba(15, 20, 18, 0.55);
     backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    will-change: opacity, backdrop-filter;
+  }
+  .policy-modal.open .policy-modal-overlay {
+    opacity: 1;
   }
   .policy-modal-dialog {
     position: relative;
@@ -1539,11 +1547,11 @@
 }
 
 .review-photo-item {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--white);
+  border: 1px solid var(--teal-100);
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 4px rgba(122,93,168,0.06), 0 12px 28px rgba(122,93,168,0.10);
   transition: transform 0.2s, box-shadow 0.2s;
   padding: 1.25rem;
   height: 230px;
@@ -1562,14 +1570,14 @@
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--teal-600);
-  background: linear-gradient(to bottom, transparent, var(--bg) 55%);
+  background: linear-gradient(to bottom, transparent, var(--white) 55%);
   padding-top: 1.2rem;
   pointer-events: none;
 }
 
 .review-photo-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(122,93,168,0.14);
+  box-shadow: 0 4px 10px rgba(122,93,168,0.08), 0 16px 36px rgba(122,93,168,0.18);
 }
 
 .review-card-head {
@@ -1887,7 +1895,7 @@
       <div class="about-highlight">
         <p>«Химия — это не сложно, если правильно преподносить материал.»</p>
       </div>
-      <p>Каждый ученик — это индивидуальный подход. Вместе мы определяем цель, составляем эффективный план подготовки и шаг за шагом идем к желаемому результату.<br>Наши занятия — это не только знания и дисциплина, но и доверие, поддержка и взаимопонимание.</p>
+      <p class="about-final">Каждый ученик — это индивидуальный подход. Вместе мы определяем цель, составляем эффективный план подготовки и шаг за шагом идем к желаемому результату.<br>Наши занятия — это не только знания и дисциплина, но и доверие, поддержка и взаимопонимание.</p>
     </div>
   </div>
 </section>
@@ -2221,12 +2229,12 @@
       <div class="footer-sub">Репетитор по химии</div>
     </div>
     <div class="footer-links">
-      <a href="https://t.me/SvetlanaIdrisova061017" target="_blank" rel="noopener">Telegram</a>
+      <a href="https://telegram.me/SvetlanaIdrisova061017" target="_blank" rel="noopener">Telegram</a>
       <a href="#form">Записаться</a>
     </div>
   </div>
   <div class="footer-bottom">
-    © 2026 Светлана Идрисова — репетитор по химии. Онлайн, Кабардино-Балкарская республика и вся Россия.
+    © 2026 Светлана Идрисова — репетитор по химии. Онлайн, вся Россия.
   </div>
 </footer>
 
@@ -2251,7 +2259,7 @@
       <p><strong>2. Цель обработки.</strong> Данные используются исключительно для связи с Вами, обсуждения формата и расписания занятий, проведения пробного урока и дальнейшего сотрудничества по репетиторству.</p>
       <p><strong>3. Передача третьим лицам.</strong> Данные не передаются и не продаются третьим лицам, за исключением сервисов, технически обеспечивающих приём и хранение заявок (например, почтовые сервисы и мессенджеры, через которые Вы соглашаетесь получить ответ).</p>
       <p><strong>4. Срок хранения.</strong> Данные хранятся не дольше, чем это необходимо для целей связи и организации занятий, и удаляются по Вашему запросу.</p>
-      <p><strong>5. Ваши права.</strong> Вы можете в любой момент запросить уточнение, блокировку или удаление своих данных, а также отозвать согласие на их обработку, написав в Telegram <a href="https://t.me/SvetlanaIdrisova061017" target="_blank" rel="noopener noreferrer">@SvetlanaIdrisova061017</a>.</p>
+      <p><strong>5. Ваши права.</strong> Вы можете в любой момент запросить уточнение, блокировку или удаление своих данных, а также отозвать согласие на их обработку, написав в Telegram <a href="https://telegram.me/SvetlanaIdrisova061017" target="_blank" rel="noopener noreferrer">@SvetlanaIdrisova061017</a>.</p>
       <p>Заполняя и отправляя форму на сайте, Вы подтверждаете своё согласие на обработку указанных персональных данных на условиях настоящей Политики.</p>
     </div>
   </div>
