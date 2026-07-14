@@ -307,6 +307,7 @@
   .stats-bg .section-label { background: rgba(255,255,255,0.1); color: var(--pink); border-color: rgba(255,255,255,0.2); }
 
   /* SERVICES */
+  #services .section-header { max-width: 1080px; margin-left: auto; margin-right: auto; }
   .services-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; max-width: 1080px; margin: 0 auto; }
   .service-card {
     flex: 1 1 300px;
@@ -360,51 +361,6 @@
   .service-signup a:hover { background: var(--blue-50); transform: translateY(-2px); }
   .service-card.featured .service-signup a { border-color: rgba(255,255,255,0.7); color: white; }
   .service-card.featured .service-signup a:hover { background: rgba(255,255,255,0.15); }
-
-  /* PATH (replaces "how lessons work" video block) */
-  .lessons-section {
-    background: var(--blue-50);
-    border-radius: 32px;
-    max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-  }
-  .lessons-section .section-header { margin-bottom: 2.5rem; }
-
-  .steps-block { display: block; margin-top: 1rem; }
-  .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; position: relative; }
-  .steps-grid::before {
-    content: '';
-    position: absolute;
-    top: 56px;
-    left: calc(12.5% + 1rem);
-    right: calc(12.5% + 1rem);
-    height: 1px;
-    background: linear-gradient(to right, var(--blue-100), var(--violet), var(--blue-100));
-  }
-  .step-item { text-align: center; }
-  .step-num {
-    width: 112px; height: 112px;
-    background: white;
-    border: 2px solid var(--blue-200);
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-family: var(--font-body);
-    font-size: 2.4rem;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--violet);
-    margin: 0 auto 1.25rem;
-    position: relative;
-    z-index: 1;
-    padding: 0;
-    font-variant-numeric: tabular-nums;
-    box-sizing: border-box;
-  }
-  .step-item h4 { font-weight: 500; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text); }
-  .step-item p { font-size: 0.85rem; color: var(--text-soft); font-weight: 300; line-height: 1.5; }
 
   /* REVIEWS */
   .reviews-photos-wrapper { position: relative; margin-bottom: 0; }
@@ -488,7 +444,7 @@
     overflow: hidden;
     box-shadow: 0 2px 12px rgba(76,91,160,0.08);
     transition: transform 0.2s, box-shadow 0.2s;
-    aspect-ratio: 3/4;
+    aspect-ratio: 3/2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -737,8 +693,6 @@
     .stat-badges.left { left: -10px; }
     .stat-badges.right { right: -10px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
-    .steps-grid { grid-template-columns: repeat(2, 1fr); }
-    .steps-grid::before { display: none; }
   }
 
   @media (max-width: 768px) {
@@ -779,17 +733,6 @@
 
     .service-card { flex: 1 1 100%; max-width: none; }
 
-    .steps-block { display: block; margin-top: 2rem; }
-    .steps-grid { display: flex; flex-direction: column; gap: 0; max-width: 100%; margin: 0; }
-    .steps-grid::before {
-      display: block; left: 27px; right: auto; top: 28px; bottom: 28px;
-      width: 2px; height: auto; transform: none;
-      background: linear-gradient(to bottom, var(--blue-100), var(--violet), var(--blue-100));
-    }
-    .step-item { display: flex; gap: 1.25rem; align-items: flex-start; text-align: left; padding: 1rem 0; }
-    .step-num { width: 56px; height: 56px; min-width: 56px; font-size: 1.35rem; margin: 0; }
-    .step-content h4 { margin-bottom: 0.35rem; }
-
     .reviews-photos-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; max-height: 320px; }
     .review-col { gap: 0.85rem; }
     .reviews-fade-overlay { height: 80px; }
@@ -807,7 +750,7 @@
     .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
     .footer-links { gap: 1rem; }
 
-    section.lessons-section, section.diplomas-section { border-radius: 16px; max-width: none; margin-left: 1vw; margin-right: 1vw; width: auto; }
+    section.diplomas-section { border-radius: 16px; max-width: none; margin-left: 1vw; margin-right: 1vw; width: auto; }
 
     .hero-photo-mobile { width: min(280px, 72vw) !important; }
   }
@@ -875,9 +818,9 @@
   <a class="nav-logo" href="#">Алевтина Ильсоровна</a>
   <ul class="nav-links">
     <li><a href="#about">О репетиторе</a></li>
-    <li><a href="#services">Курсы</a></li>
     <li><a href="#reviews">Отзывы</a></li>
     <li><a href="#diplomas">Дипломы</a></li>
+    <li><a href="#services">Курсы</a></li>
     <li><a href="#form" class="nav-cta">Записаться</a></li>
   </ul>
   <button class="nav-burger" id="burger" aria-label="Меню">
@@ -886,9 +829,9 @@
 </nav>
 <div class="mobile-menu" id="mobileMenu">
   <a href="#about" onclick="closeMenu()">О репетиторе</a>
-  <a href="#services" onclick="closeMenu()">Курсы</a>
   <a href="#reviews" onclick="closeMenu()">Отзывы</a>
   <a href="#diplomas" onclick="closeMenu()">Дипломы</a>
+  <a href="#services" onclick="closeMenu()">Курсы</a>
 </div>
 
 <!-- HERO -->
@@ -1011,43 +954,17 @@
   </div>
 </section>
 
-<!-- EDUCATION / PATH -->
-<section id="lessons" class="lessons-section">
+<!-- DIPLOMAS -->
+<section id="diplomas" class="diplomas-section">
   <div class="section-header fade-in">
-    <h2 class="section-title">Как мы <em>начнём заниматься</em></h2>
-    <p class="section-sub">Простой путь от заявки до регулярных занятий — всё начинается с бесплатного пробного урока</p>
+    <h2 class="section-title">Дипломы <em>и сертификаты</em></h2>
+    <p class="section-sub">ДГПИ (учитель русского языка и литературы), сертификаты IAMA по ментальной арифметике и скорочтению, мнемотехника, курсы Schoolsmart</p>
   </div>
-  <div class="steps-block fade-in">
-    <div class="steps-grid">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>Оставьте заявку</h4>
-          <p>Заполните короткую анкету — расскажите о ребёнке и задачах</p>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>Бесплатный пробный урок</h4>
-          <p>Диагностика уровня, знакомство и обсуждение программы</p>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <h4>Личный план</h4>
-          <p>Определяем слабые зоны и составляем индивидуальную траекторию</p>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <h4>Занимаемся и растём</h4>
-          <p>2 занятия в неделю по 60 минут, регулярные отчёты родителям</p>
-        </div>
-      </div>
-    </div>
+  <div class="diplomas-grid fade-in" id="diplomasGrid">
+    <div class="diploma-item" data-diploma="2"></div>
+    <div class="diploma-item" data-diploma="3"></div>
+    <div class="diploma-item" data-diploma="4"></div>
+    <div class="diploma-item" data-diploma="5"></div>
   </div>
 </section>
 
@@ -1088,20 +1005,6 @@
       <p>Осваиваем сразу несколькими способами: японская методика (визуальное пересечение линий) и классика в игровой форме. Ребёнок видит математику как пазл и запоминает результаты навсегда.</p>
       <div class="service-signup"><a href="#form">Записаться на курс</a></div>
     </div>
-  </div>
-</section>
-
-<!-- DIPLOMAS -->
-<section id="diplomas" class="diplomas-section">
-  <div class="section-header fade-in">
-    <h2 class="section-title">Дипломы <em>и сертификаты</em></h2>
-    <p class="section-sub">ДГПИ (учитель русского языка и литературы), сертификаты IAMA по ментальной арифметике и скорочтению, мнемотехника, курсы Schoolsmart</p>
-  </div>
-  <div class="diplomas-grid fade-in" id="diplomasGrid">
-    <div class="diploma-item" data-diploma="2"></div>
-    <div class="diploma-item" data-diploma="3"></div>
-    <div class="diploma-item" data-diploma="4"></div>
-    <div class="diploma-item" data-diploma="5"></div>
   </div>
 </section>
 
