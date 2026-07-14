@@ -322,31 +322,42 @@
   }
   .who-for-card.who-for-gain .who-for-check { background: var(--gold); color: var(--note-800); }
 
-  /* REVIEWS — screenshot masonry, full screenshot visible, click to zoom */
-  #reviews .section-header { max-width: 980px; margin-left: auto; margin-right: auto; margin-bottom: 3.5rem; }
-  .reviews-grid {
-    columns: 2 320px;
-    column-gap: 1.75rem;
-    max-width: 900px;
+  /* REVIEWS — intro left, single-review carousel right, click to zoom */
+  .reviews-layout {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 3rem;
+    align-items: center;
+    max-width: 1080px;
     margin: 0 auto;
   }
-  .review-screenshot-card {
-    display: block;
-    break-inside: avoid;
-    margin-bottom: 1.5rem;
-    background: white;
-    border: 1px solid var(--border);
+  .reviews-intro .section-header { margin-bottom: 0; }
+  .reviews-carousel { position: relative; }
+  .reviews-viewport {
+    height: 420px;
     border-radius: var(--radius);
-    overflow: hidden;
+    border: 1px solid var(--border);
     box-shadow: var(--shadow);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-    line-height: 0;
+    background: white;
+    overflow: hidden;
   }
-  .review-screenshot-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(60,74,138,0.14); }
-  .review-screenshot-card img { width: 100%; height: auto; display: block; }
-  .review-screenshot-card .photo-fallback {
-    width: 100%; min-height: 140px;
+  .reviews-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.45s cubic-bezier(0.65,0,0.35,1);
+  }
+  .review-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    cursor: zoom-in;
+  }
+  .review-slide img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .review-slide .photo-fallback {
+    width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--note-50), var(--gold));
     color: var(--note-600);
@@ -354,6 +365,36 @@
     text-align: center;
     padding: 1.5rem;
     line-height: 1.5;
+  }
+  .reviews-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--note-600);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: background 0.2s, transform 0.15s, opacity 0.2s;
+  }
+  .reviews-arrow:hover { background: var(--note-400); color: white; transform: translateY(-50%) scale(1.06); }
+  .reviews-arrow-prev { left: -24px; }
+  .reviews-arrow-next { right: -24px; }
+  .reviews-arrow:disabled {
+    background: var(--note-50);
+    color: var(--note-200);
+    opacity: 0.6;
+    cursor: default;
+    pointer-events: none;
+    transform: translateY(-50%);
+    box-shadow: none;
   }
 
   /* LESSONS / STEPS */
@@ -407,21 +448,10 @@
   }
   .service-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
   .service-card.featured { background: var(--note-400); border-color: var(--note-400); color: white; }
-  .service-tag {
-    display: inline-block;
-    background: var(--note-50);
-    color: var(--note-600);
-    font-size: 0.75rem;
-    padding: 0.2rem 0.7rem;
-    border-radius: 40px;
-    margin-bottom: 1rem;
-    font-weight: 500;
-  }
   .service-card h3 { font-family: var(--font-display); font-size: 1.35rem; margin-bottom: 0.75rem; font-weight: 700; }
   .service-card.featured h3 { color: white; }
   .service-card p { font-size: 0.92rem; color: var(--text-soft); font-weight: 300; line-height: 1.65; margin-bottom: 1.25rem; flex: 1; }
   .service-card.featured p { color: rgba(255,255,255,0.85); }
-  .service-card.featured .service-tag { background: rgba(255,255,255,0.2); color: white; }
   .price-line {
     display: flex;
     justify-content: space-between;
@@ -757,10 +787,23 @@
   @media (max-width: 1100px) {
     .hero { gap: 2rem; padding: 96px 4vw 64px; }
     .avatar-frame { width: 320px; height: 380px; }
-    .stat-badges.left { left: -10px; }
-    .stat-badges.right { right: -10px; }
     .steps-grid { grid-template-columns: repeat(2, 1fr); }
     .steps-grid::before { display: none; }
+  }
+
+  /* TABLET — floating stat badges don't have room beside the photo; use a row instead */
+  @media (min-width: 769px) and (max-width: 1100px) {
+    .stat-badges { display: none; }
+    .hero-stats-mobile {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 2rem;
+      max-width: 340px;
+    }
+    .hero-stat-m { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; text-align: center; }
+    .hero-stat-m strong { display: block; font-family: var(--font-body); font-size: 1.5rem; color: var(--amber); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+    .hero-stat-m span { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
   }
 
   @media (max-width: 768px) {
@@ -811,8 +854,11 @@
     .step-num { width: 56px; height: 56px; min-width: 56px; font-size: 1.35rem; margin: 0; }
     .step-content h4 { margin-bottom: 0.35rem; }
 
-    .reviews-grid { columns: 1; max-width: 100%; }
-    .review-screenshot-card { margin-bottom: 0.85rem; }
+    .reviews-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+    .reviews-viewport { height: 300px; }
+    .reviews-arrow { width: 40px; height: 40px; }
+    .reviews-arrow-prev { left: -8px; }
+    .reviews-arrow-next { right: -8px; }
 
     .form-title em { display: block; }
     .form-section { padding: 2rem 1.25rem; border-radius: 16px; }
@@ -936,16 +982,30 @@
 
 <!-- REVIEWS -->
 <section id="reviews">
-  <div class="section-header fade-in">
-    <h2 class="section-title">Что говорят <em>ученики</em></h2>
-    <p class="section-sub">Реальные отзывы учеников и студентов</p>
-  </div>
-  <div class="reviews-grid fade-in" id="reviewsGrid">
-    <div class="review-screenshot-card" data-review="1"></div>
-    <div class="review-screenshot-card" data-review="2"></div>
-    <div class="review-screenshot-card" data-review="3"></div>
-    <div class="review-screenshot-card" data-review="4"></div>
-    <div class="review-screenshot-card" data-review="5"></div>
+  <div class="reviews-layout fade-in">
+    <div class="reviews-intro">
+      <div class="section-header">
+        <h2 class="section-title">Что говорят <em>ученики</em></h2>
+        <p class="section-sub">Реальные отзывы учеников и студентов</p>
+      </div>
+    </div>
+    <div class="reviews-carousel">
+      <button type="button" class="reviews-arrow reviews-arrow-prev" id="reviewsPrev" aria-label="Предыдущий отзыв">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="reviews-viewport">
+        <div class="reviews-track" id="reviewsTrack">
+          <div class="review-slide" data-review="1"></div>
+          <div class="review-slide" data-review="2"></div>
+          <div class="review-slide" data-review="3"></div>
+          <div class="review-slide" data-review="4"></div>
+          <div class="review-slide" data-review="5"></div>
+        </div>
+      </div>
+      <button type="button" class="reviews-arrow reviews-arrow-next" id="reviewsNext" aria-label="Следующий отзыв">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
   </div>
 </section>
 
@@ -997,7 +1057,6 @@
   </div>
   <div class="services-grid fade-in">
     <div class="service-card featured">
-      <div class="service-tag">Популярно</div>
       <h3>Сольфеджио</h3>
       <p>Для учеников музыкальных школ и колледжей, у которых есть трудности с сольфеджио — слух, ритм, диктанты, сольфеджирование, разбор сложных тем через понимание.</p>
       <div class="price-line">
@@ -1006,7 +1065,6 @@
       </div>
     </div>
     <div class="service-card">
-      <div class="service-tag">Муз. колледж</div>
       <h3>Гармония</h3>
       <p>Для учащихся музыкальных колледжей — гармонический анализ, построение аккордов и последовательностей, практические формы.</p>
       <div class="price-line">
@@ -1015,7 +1073,6 @@
       </div>
     </div>
     <div class="service-card">
-      <div class="service-tag">Абитуриентам</div>
       <h3>Подготовка к поступлению</h3>
       <p>Для тех, кто готовится к поступлению в музыкальный колледж или вуз — разбираем формат вступительных испытаний по сольфеджио и теории.</p>
       <div class="price-line">
@@ -1024,7 +1081,6 @@
       </div>
     </div>
     <div class="service-card">
-      <div class="service-tag">Для себя</div>
       <h3>Для любителей музыки</h3>
       <p>Для тех, кто хочет глубже разобраться в законах музыки — без экзаменов и оценок, в своём темпе и с индивидуальной программой.</p>
       <div class="price-line">
@@ -1180,10 +1236,10 @@
     setImageWithFallback(document.getElementById('hero-tutor-photo-mobile'), heroPhoto, 'АД', 'eager');
     setImageWithFallback(document.getElementById('about-tutor-photo'), aboutPhoto, 'АД', 'lazy');
 
-    document.querySelectorAll('.review-screenshot-card[data-review]').forEach(el => {
+    document.querySelectorAll('.review-slide[data-review]').forEach(el => {
       const n = el.dataset.review;
       const img = document.createElement('img');
-      img.loading = 'lazy';
+      img.loading = 'eager';
       img.alt = 'Отзыв ученика';
       img.onerror = () => {
         if (img.dataset.fallbackApplied) return;
@@ -1366,10 +1422,10 @@
   })();
 
   // Review screenshot lightbox
-  document.getElementById('reviewsGrid')?.addEventListener('click', (e) => {
-    const card = e.target.closest('.review-screenshot-card');
-    if (!card) return;
-    const img = card.querySelector('img');
+  document.getElementById('reviewsTrack')?.addEventListener('click', (e) => {
+    const slide = e.target.closest('.review-slide');
+    if (!slide) return;
+    const img = slide.querySelector('img');
     if (!img) return;
     document.getElementById('reviewLightboxImg').src = img.src;
     document.getElementById('reviewLightboxImg').alt = img.alt;
@@ -1382,6 +1438,51 @@
     document.body.style.overflow = '';
     return false;
   }
+
+  // Reviews carousel — one review at a time, arrows + auto-advance ping-pong
+  (function () {
+    const track = document.getElementById('reviewsTrack');
+    const prevBtn = document.getElementById('reviewsPrev');
+    const nextBtn = document.getElementById('reviewsNext');
+    if (!track || !prevBtn || !nextBtn) return;
+    const slides = Array.from(track.children);
+    const last = slides.length - 1;
+    let index = 0;
+    let direction = 1;
+    let timer = null;
+
+    function render() {
+      track.style.transform = `translateX(-${index * 100}%)`;
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === last;
+    }
+
+    function goTo(i) {
+      index = Math.max(0, Math.min(last, i));
+      render();
+    }
+
+    function autoAdvance() {
+      if (index === last) direction = -1;
+      else if (index === 0) direction = 1;
+      goTo(index + direction);
+    }
+
+    function startAutoplay() {
+      stopAutoplay();
+      timer = setInterval(autoAdvance, 5000);
+    }
+    function stopAutoplay() {
+      if (timer) clearInterval(timer);
+      timer = null;
+    }
+
+    prevBtn.addEventListener('click', () => { goTo(index - 1); startAutoplay(); });
+    nextBtn.addEventListener('click', () => { goTo(index + 1); startAutoplay(); });
+
+    render();
+    startAutoplay();
+  })();
 
   // Form submit
   function submitForm() {
