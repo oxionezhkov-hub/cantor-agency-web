@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Анна Дейнега — репетитор по сольфеджио и гармонии</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23232B58'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' text-anchor='middle' fill='%23E7C878'%3E%E2%99%AA%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Geologica:wght@300;400;500&display=swap" rel="stylesheet">
@@ -320,14 +321,18 @@
   }
   .who-for-card.who-for-gain .who-for-check { background: var(--gold); color: var(--note-800); }
 
-  /* REVIEWS — screenshot grid, click to zoom */
+  /* REVIEWS — screenshot masonry, full screenshot visible, click to zoom */
   #reviews .section-header { max-width: 980px; margin-left: auto; margin-right: auto; margin-bottom: 3.5rem; }
-  .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 980px; margin: 0 auto; }
+  .reviews-grid {
+    columns: 3 240px;
+    column-gap: 1.5rem;
+    max-width: 980px;
+    margin: 0 auto;
+  }
   .review-screenshot-card {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 260px;
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
     background: white;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -335,17 +340,19 @@
     box-shadow: var(--shadow);
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
+    line-height: 0;
   }
   .review-screenshot-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(60,74,138,0.14); }
-  .review-screenshot-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .review-screenshot-card img { width: 100%; height: auto; display: block; }
   .review-screenshot-card .photo-fallback {
-    width: 100%; height: 100%;
+    width: 100%; min-height: 140px;
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--note-50), var(--gold));
     color: var(--note-600);
     font-size: 0.85rem;
     text-align: center;
     padding: 1.5rem;
+    line-height: 1.5;
   }
 
   /* LESSONS / STEPS */
@@ -801,8 +808,8 @@
     .step-num { width: 56px; height: 56px; min-width: 56px; font-size: 1.35rem; margin: 0; }
     .step-content h4 { margin-bottom: 0.35rem; }
 
-    .reviews-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
-    .review-screenshot-card { height: 160px; }
+    .reviews-grid { columns: 2 150px; column-gap: 0.85rem; }
+    .review-screenshot-card { margin-bottom: 0.85rem; }
 
     .form-title em { display: block; }
     .form-section { padding: 2rem 1.25rem; border-radius: 16px; }
@@ -1103,7 +1110,7 @@
       <div class="footer-sub">Репетитор по сольфеджио и гармонии</div>
     </div>
     <div class="footer-links">
-      <a href="https://t.me/annamyday" target="_blank" rel="noopener">Telegram</a>
+      <a href="https://telegram.me/annamyday" target="_blank" rel="noopener">Telegram</a>
       <a href="https://vk.com/id89955273" target="_blank" rel="noopener">VK</a>
       <a href="tel:+79226348841">+7 922 634-88-41</a>
       <a href="#form">Записаться</a>
@@ -1135,7 +1142,7 @@
       <p><strong>2. Цель обработки.</strong> Данные используются исключительно для связи с Вами, обсуждения формата и расписания занятий, проведения пробного урока и дальнейшего сотрудничества по репетиторству.</p>
       <p><strong>3. Передача третьим лицам.</strong> Данные не передаются и не продаются третьим лицам, за исключением сервисов, технически обеспечивающих приём и хранение заявок (например, почтовые сервисы и мессенджеры, через которые Вы соглашаетесь получить ответ).</p>
       <p><strong>4. Срок хранения.</strong> Данные хранятся не дольше, чем это необходимо для целей связи и организации занятий, и удаляются по Вашему запросу.</p>
-      <p><strong>5. Ваши права.</strong> Вы можете в любой момент запросить уточнение, блокировку или удаление своих данных, а также отозвать согласие на их обработку, написав в Telegram <a href="https://t.me/annamyday" target="_blank" rel="noopener noreferrer">@annamyday</a>.</p>
+      <p><strong>5. Ваши права.</strong> Вы можете в любой момент запросить уточнение, блокировку или удаление своих данных, а также отозвать согласие на их обработку, написав в Telegram <a href="https://telegram.me/annamyday" target="_blank" rel="noopener noreferrer">@annamyday</a>.</p>
       <p>Заполняя и отправляя форму на сайте, Вы подтверждаете своё согласие на обработку указанных персональных данных на условиях настоящей Политики.</p>
     </div>
   </div>
