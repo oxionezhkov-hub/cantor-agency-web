@@ -818,14 +818,23 @@
     text-align: center;
     margin-top: 1rem;
   }
+  .policy-link-row {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+  }
+  .policy-link-row a {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
   .consent-row {
     display: flex;
     align-items: flex-start;
     gap: 0.6rem;
-    margin-top: 1.5rem;
+    margin-top: 0.75rem;
     font-size: 0.85rem;
     color: var(--text-soft);
   }
+  .consent-row:first-of-type { margin-top: 0.75rem; }
   .consent-row input[type="checkbox"] {
     width: 18px;
     height: 18px;
@@ -910,6 +919,31 @@
     color: var(--text-soft);
     cursor: pointer;
   }
+  .policy-requisites {
+    margin-top: 1.2rem;
+    padding: 1rem 1.1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .policy-requisites-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+  .policy-req-row {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .policy-req-row:last-child { border-bottom: none; }
+  .policy-req-label { min-width: 130px; flex-shrink: 0; color: var(--text-muted); }
+  .policy-req-val { color: var(--text-soft); }
 
   /* FOOTER */
   footer {
@@ -1738,9 +1772,16 @@
         <input type="email" id="email" placeholder="example@mail.ru">
       </div>
     </div>
+    <div class="policy-link-row">
+      <a href="#" onclick="return openPolicyModal(event)">Политика обработки персональных данных</a>
+    </div>
     <div class="consent-row">
       <input type="checkbox" id="consent" required>
-      <label for="consent">Согласен(на) на <a href="#" onclick="return openPolicyModal(event)">обработку персональных данных</a></label>
+      <label for="consent">Согласие на <a href="#" onclick="return openPolicyModal(event)">обработку персональных данных</a></label>
+    </div>
+    <div class="consent-row">
+      <input type="checkbox" id="adConsent">
+      <label for="adConsent">Согласие на рекламную рассылку</label>
     </div>
     <div class="form-submit">
       <button type="button" onclick="submitForm()">
@@ -1760,6 +1801,9 @@
     <div class="footer-links">
       <a href="https://t.me/fizika_o_Jizni" target="_blank" rel="noopener noreferrer">Telegram</a>
       <a href="https://max.ru/join/7RshwauYYJ9eSoOfv1NUbMY4rqr3XG1SViK3ZVYxcd4" target="_blank" rel="noopener noreferrer">Max</a>
+      <a href="#" onclick="return openPolicyModal(event)">Политика</a>
+      <a href="#" onclick="return openOfferModal(event)">Оферта</a>
+      <a href="#" onclick="return openLicenseModal(event)">Лицензия</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -1781,15 +1825,62 @@
   <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
     <button type="button" class="policy-modal-close" onclick="closePolicyModal(event)" aria-label="Закрыть">&times;</button>
     <h3 id="policyModalTitle">Политика обработки персональных данных</h3>
-    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике · последнее обновление: 30 июня 2026 г.</p>
+    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
     <div class="policy-modal-body">
-      <p>Настоящая Политика определяет порядок обработки и защиты персональных данных, которые Вы оставляете при заполнении формы записи на сайте, а также правила их использования.</p>
-      <p><strong>1. Какие данные собираются.</strong> Имя и фамилия ученика, класс, изучаемый предмет, цель занятий, имя и отчество родителя, номер телефона, адрес электронной почты — то есть данные, которые Вы добровольно указываете в форме.</p>
-      <p><strong>2. Цель обработки.</strong> Данные используются исключительно для связи с Вами, обсуждения формата и расписания занятий, проведения пробного урока и дальнейшего сотрудничества по репетиторству.</p>
-      <p><strong>3. Передача третьим лицам.</strong> Данные не передаются и не продаются третьим лицам, за исключением сервисов, технически обеспечивающих приём и хранение заявок (например, почтовые сервисы и мессенджеры, через которые Вы соглашаетесь получить ответ).</p>
-      <p><strong>4. Срок хранения.</strong> Данные хранятся не дольше, чем это необходимо для целей связи и организации занятий, и удаляются по Вашему запросу.</p>
-      <p><strong>5. Ваши права.</strong> Вы можете в любой момент запросить уточнение, блокировку или удаление своих данных, а также отозвать согласие на их обработку, написав в Telegram <a href="https://t.me/fizika_o_Jizni" target="_blank" rel="noopener noreferrer">@fizika_o_Jizni</a>.</p>
-      <p>Заполняя и отправляя форму на сайте, Вы подтверждаете своё согласие на обработку указанных персональных данных на условиях настоящей Политики.</p>
+      <p>Документ находится в разработке и будет опубликован в полном виде после регистрации ИП. Заполняя форму на сайте, Вы соглашаетесь на обработку указанных персональных данных для связи с Вами и организации занятий.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты (будут указаны после регистрации ИП)</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">КПП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Р/с</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Банк</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">БИК</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Корр. счёт</span><span class="policy-req-val">—</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="policy-modal" id="offerModal">
+  <div class="policy-modal-overlay" onclick="closeOfferModal(event)"></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="offerModalTitle">
+    <button type="button" class="policy-modal-close" onclick="closeOfferModal(event)" aria-label="Закрыть">&times;</button>
+    <h3 id="offerModalTitle">Публичная оферта</h3>
+    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
+    <div class="policy-modal-body">
+      <p>Документ находится в разработке и будет опубликован в полном виде после регистрации ИП.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты (будут указаны после регистрации ИП)</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">КПП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Р/с</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Банк</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">БИК</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Корр. счёт</span><span class="policy-req-val">—</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="policy-modal" id="licenseModal">
+  <div class="policy-modal-overlay" onclick="closeLicenseModal(event)"></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="licenseModalTitle">
+    <button type="button" class="policy-modal-close" onclick="closeLicenseModal(event)" aria-label="Закрыть">&times;</button>
+    <h3 id="licenseModalTitle">Лицензия</h3>
+    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
+    <div class="policy-modal-body">
+      <p>Документ находится в разработке и будет опубликован после регистрации ИП.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты (будут указаны после регистрации ИП)</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">КПП</span><span class="policy-req-val">—</span></div>
     </div>
   </div>
 </div>
@@ -1962,6 +2053,30 @@
     document.body.style.overflow = '';
     return false;
   }
+  function openOfferModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('offerModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeOfferModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('offerModal').classList.remove('open');
+    document.body.style.overflow = '';
+    return false;
+  }
+  function openLicenseModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('licenseModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeLicenseModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('licenseModal').classList.remove('open');
+    document.body.style.overflow = '';
+    return false;
+  }
 
   // Form submit
   function submitForm() {
@@ -1991,13 +2106,48 @@
       alert('Пожалуйста, заполните все обязательные поля и подтвердите согласие на обработку данных.');
       return;
     }
-    const toast = document.getElementById('toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 4000);
-    // Reset
-    document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
-    document.querySelectorAll('#form select').forEach(resetCustomSelect);
-    consent.checked = false;
+
+    const adConsent = document.getElementById('adConsent');
+    const submitBtn = document.querySelector('#form .form-submit button');
+    const payload = {
+      source: 'iulia-yanson',
+      fields: {
+        'Имя ученика': document.getElementById('student_name').value.trim(),
+        'Фамилия ученика': document.getElementById('student_last').value.trim(),
+        'Класс': document.getElementById('grade').value,
+        'Предмет': document.getElementById('subject').selectedOptions[0]?.textContent || document.getElementById('subject').value,
+        'Цель и описание ситуации': document.getElementById('goal').value.trim(),
+        'Имя и отчество родителя': document.getElementById('parent_name').value.trim(),
+        'Телефон': document.getElementById('phone').value.trim(),
+        'Email': document.getElementById('email').value.trim(),
+        'Согласие на рекламную рассылку': adConsent.checked ? 'да' : 'нет',
+      },
+    };
+
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch('/api/leads/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('request_failed');
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+        // Reset
+        document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
+        document.querySelectorAll('#form select').forEach(resetCustomSelect);
+        consent.checked = false;
+        adConsent.checked = false;
+      })
+      .catch(() => {
+        alert('Не удалось отправить заявку. Попробуйте ещё раз или напишите нам в Telegram.');
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      });
   }
 // Toggle reviews — показать все / свернуть
 const toggleBtn = document.getElementById('reviewsToggleBtn');

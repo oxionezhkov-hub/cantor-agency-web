@@ -283,9 +283,65 @@ async function handleRedirect(request, env, url, slug) {
   return Response.redirect(buildTargetUrl(link.targetUrl, link.utm), 302);
 }
 
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+async function sendTelegramMessage(env, text) {
+  const token = env.TELEGRAM_BOT_TOKEN;
+  const chatIds = String(env.TELEGRAM_CHAT_IDS || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (!token || chatIds.length === 0) {
+    throw new Error('telegram_not_configured');
+  }
+
+  await Promise.all(
+    chatIds.map((chatId) =>
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+      })
+    )
+  );
+}
+
+// ── Leads: forward landing-page form submissions to Telegram ──
+async function handleLeadNotify(request, env) {
+  const body = await readJson(request);
+  if (!body || typeof body !== 'object') return json({ error: 'invalid_body' }, 400);
+
+  const source = String(body.source || 'website').trim();
+  const fields = body.fields && typeof body.fields === 'object' ? body.fields : {};
+
+  const lines = [`<b>Новая заявка — ${escapeHtml(source)}</b>`];
+  for (const [label, value] of Object.entries(fields)) {
+    const clean = String(value || '').trim();
+    if (!clean) continue;
+    lines.push(`<b>${escapeHtml(label)}:</b> ${escapeHtml(clean)}`);
+  }
+
+  try {
+    await sendTelegramMessage(env, lines.join('\n'));
+  } catch (err) {
+    return json({ error: 'telegram_failed', message: String(err && err.message) }, 502);
+  }
+  return json({ ok: true });
+}
+
 async function handleApi(request, env, url) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
+
+  // ── Leads: notify Telegram ──
+  if (pathname === '/api/leads/notify' && request.method === 'POST') {
+    return handleLeadNotify(request, env);
+  }
 
   // ── Public schema (read) ──
   if (pathname === '/api/schema' && request.method === 'GET') {
