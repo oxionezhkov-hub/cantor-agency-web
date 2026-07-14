@@ -264,6 +264,22 @@
   .about-photo-wrap .avatar-fallback { font-size: 2.6rem; }
 
   .about-text p { color: var(--text-soft); font-weight: 300; margin-bottom: 1.2rem; line-height: 1.85; font-size: 1.05rem; }
+  .about-text p strong { color: var(--text); font-weight: 600; }
+  .about-directions { list-style: none; counter-reset: direction; margin: 0 0 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .about-directions li { counter-increment: direction; position: relative; padding-left: 2.4rem; color: var(--text-soft); font-weight: 300; line-height: 1.75; font-size: 1.02rem; }
+  .about-directions li::before {
+    content: counter(direction);
+    position: absolute; left: 0; top: 0.1rem;
+    width: 1.7rem; height: 1.7rem;
+    background: var(--blue-50); color: var(--blue-600);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+  }
+  .about-directions li strong { color: var(--text); font-weight: 600; }
+  .about-results { list-style: none; margin: 0 0 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+  .about-results li { position: relative; padding-left: 1.6rem; color: var(--text-soft); font-weight: 300; line-height: 1.7; font-size: 1.02rem; }
+  .about-results li::before { content: "→"; position: absolute; left: 0; color: var(--violet); font-weight: 700; }
   .about-highlight {
     background: var(--blue-50);
     border-left: 3px solid var(--violet);
@@ -331,21 +347,31 @@
   .service-card.featured h3 { color: white; }
   .service-card p { font-size: 0.9rem; color: var(--text-soft); font-weight: 300; line-height: 1.6; margin-bottom: 1.25rem; flex: 1; }
   .service-card.featured p { color: rgba(255,255,255,0.85); }
-  .price-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    margin-top: auto;
-  }
-  .service-card.featured .price-line { border-top-color: rgba(255,255,255,0.22); }
-  .price-amount { font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; color: var(--text); font-variant-numeric: tabular-nums; }
-  .service-card.featured .price-amount { color: white; }
-  .price-duration { font-size: 0.82rem; color: var(--text-muted); font-weight: 400; white-space: nowrap; }
-  .service-card.featured .price-duration { color: rgba(255,255,255,0.72); }
   .service-card.featured .service-tag { background: rgba(255,255,255,0.2); color: white; }
+  .service-signup {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+  }
+  .service-card.featured .service-signup { border-top-color: rgba(255,255,255,0.22); }
+  .service-signup a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.7rem 1.4rem;
+    border-radius: 40px;
+    border: 1.5px solid var(--violet);
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.92rem;
+    transition: all 0.2s;
+  }
+  .service-signup a:hover { background: var(--blue-50); transform: translateY(-2px); }
+  .service-card.featured .service-signup a { border-color: rgba(255,255,255,0.7); color: white; }
+  .service-card.featured .service-signup a:hover { background: rgba(255,255,255,0.15); }
 
   /* PATH (replaces "how lessons work" video block) */
   .lessons-section {
@@ -908,11 +934,29 @@
     </div>
     <div class="about-text">
       <h2 class="section-title">Подружим ребёнка<br><em>с русским языком навсегда</em></h2>
-      <p>Педагог с высшим образованием и 30-летним стажем. Веду русский язык (1–4 класс), скорочтение, ментальную арифметику и мнемотехнику онлайн — в том числе для учеников билингвальной гимназии в Братиславе.</p>
+      <p>Представьте: ваш ребёнок пишет диктанты без ошибок, потому что чувствует правила, а таблицу умножения щёлкает как орешки — и не скучно, а с азартом. Это не магия, это современные нейротехники и игровые методики, которые я внедряю в каждый урок.</p>
+      <p>Меня зовут Алевтина Ильсоровна. Я педагог с высшим образованием и репетитор-практик. Подготовила более 750 успешных учеников, участников и победителей олимпиад по ментальной арифметике, скорочтению, мнемотехники.</p>
+      <p>Работая в школе, я увидела главную боль детей: им неинтересно заучивать сухие правила и столбики цифр. Их мозг перегружен, а школьная программа не даёт инструментов, чтобы справляться с этим потоком. Я перевернула подход и объединила пять мощных направлений в единую игровую систему:</p>
+      <ol class="about-directions">
+        <li><strong>Ментальная арифметика</strong> — «турбо-режим» мозга: скорость мышления, концентрация и логика.</li>
+        <li><strong>Скорочтение</strong> — не гонка за словами, а работа с образами: ребёнок понимает 90–100% прочитанного с первого раза.</li>
+        <li><strong>Мнемотехника</strong> — супер-память, которая связывает любые факты в прочные цепочки. То, что учили неделю, усваивается за вечер.</li>
+        <li><strong>Русский язык без зубрёжки в 1–4 классах</strong> — база, на которой выстроится фундамент грамотного думающего ученика — с помощью нейротехник: мы переводим орфограммы в яркие зрительные образы, рифмы и алгоритмы. Ребёнок начинает писать грамотно интуитивно, а правила запоминаются сами собой.</li>
+        <li><strong>Таблица умножения</strong> — без слёз и страха! Мы осваиваем её не одной, а сразу несколькими способами: японская методика (визуальное пересечение линий) и классика в игровой форме. Ребёнок видит математику как пазл, а не как набор цифр, и запоминает результаты навсегда.</li>
+      </ol>
+      <p>Всё это — в формате азартного приключения. Без давления, скуки и оценок. Учёба превращается в квест, где каждый успех укрепляет веру ребёнка в свои силы.</p>
+      <p><strong>Результаты моих учеников, которые ломают стереотипы:</strong></p>
+      <ul class="about-results">
+        <li>Мальчик с ЗПР за 2 года догнал сверстников и поступил в престижную инженерную школу.</li>
+        <li>Второклассник через 6 месяцев читает осмысленно со скоростью 374 слова в минуту (уровень старшеклассника!).</li>
+        <li>Ученица — победитель Международной олимпиады по развитию памяти.</li>
+        <li>Мои ученики сдают ВПР по русскому на «4» и «5» уже через полгода, а таблицу умножения помнят даже спустя годы — потому что она стала частью их мышления.</li>
+      </ul>
       <div class="about-highlight">
-        <p>«Правила — не зубрим, а понимаем через логику, образы и истории. Ребёнок не учит — он понимает, и поэтому не забывает.»</p>
+        <p>«Ваша главная выгода: экономия нервов, времени и сотен тысяч рублей на бесконечных репетиторах. Вместо того чтобы «закрывать двойки», ваш ребёнок получает навыки гениального мышления, которые гарантируют лёгкое поступление в топовую школу и вуз.»</p>
       </div>
-      <p>Курс «Грамотность без слёз» закрывает все пробелы программы 1–4 класса: орфография, морфемика, пунктуация, развитие речи — в игровой форме, в мини-группах до 6 человек.</p>
+      <p>Хотите увидеть своего ребёнка в числе этих победителей? Запишитесь на бесплатную диагностическую встречу — свободные места на новый поток строго ограничены, я работаю с каждым лично.</p>
+      <a href="#form" class="btn-primary">Записаться и забронировать место</a>
     </div>
   </div>
 </section>
@@ -1020,35 +1064,38 @@
 <section id="services">
   <div class="section-header fade-in">
     <h2 class="section-title">Программы обучения</h2>
-    <p class="section-sub">Занятия проходят онлайн — индивидуально или в мини-группах до 6 человек</p>
+    <p class="section-sub">Занятия проходят онлайн — индивидуально или в мини-группах до 6 человек. Пять направлений, объединённых в единую игровую систему.</p>
   </div>
   <div class="services-grid fade-in">
     <div class="service-card featured">
       <div class="service-tag">Популярно · 1–4 класс</div>
-      <h3>Русский язык: «Грамотность без слёз»</h3>
-      <p>Экспресс-курс из 30 уроков: орфография, морфемика, пунктуация, развитие речи — через логику, истории и мнемотехники, в игровой форме.</p>
-      <div class="price-line">
-        <span class="price-amount">16 000 ₽ / мес. (группа)</span>
-        <span class="price-duration">2× в нед., 60 мин</span>
-      </div>
-    </div>
-    <div class="service-card">
-      <div class="service-tag">Индивидуально</div>
-      <h3>Русский язык: персональные занятия</h3>
-      <p>Индивидуальная траектория с упором на слабые зоны ребёнка — фонетику, падежи, состав слова или пунктуацию.</p>
-      <div class="price-line">
-        <span class="price-amount">32 000 ₽ / мес.</span>
-        <span class="price-duration">2× в нед., 60 мин</span>
-      </div>
+      <h3>Русский язык без зубрёжки</h3>
+      <p>Орфография, морфемика, пунктуация, развитие речи — через нейротехники: орфограммы превращаются в яркие образы, рифмы и алгоритмы. Ребёнок пишет грамотно интуитивно.</p>
+      <div class="service-signup"><a href="#form">Записаться на курс</a></div>
     </div>
     <div class="service-card">
       <div class="service-tag">Развитие интеллекта</div>
-      <h3>Скорочтение, ментальная арифметика, мнемотехника</h3>
-      <p>Курсы развития памяти, концентрации и скорости мышления по сертифицированным программам IAMA.</p>
-      <div class="price-line">
-        <span class="price-amount">по запросу</span>
-        <span class="price-duration">60 мин</span>
-      </div>
+      <h3>Ментальная арифметика</h3>
+      <p>«Турбо-режим» мозга: скорость мышления, концентрация и логика по сертифицированным программам IAMA.</p>
+      <div class="service-signup"><a href="#form">Записаться на курс</a></div>
+    </div>
+    <div class="service-card">
+      <div class="service-tag">Развитие интеллекта</div>
+      <h3>Скорочтение</h3>
+      <p>Не гонка за словами, а работа с образами: ребёнок понимает 90–100% прочитанного с первого раза.</p>
+      <div class="service-signup"><a href="#form">Записаться на курс</a></div>
+    </div>
+    <div class="service-card">
+      <div class="service-tag">Развитие интеллекта</div>
+      <h3>Мнемотехника</h3>
+      <p>Супер-память, которая связывает любые факты в прочные цепочки. То, что учили неделю, усваивается за вечер.</p>
+      <div class="service-signup"><a href="#form">Записаться на курс</a></div>
+    </div>
+    <div class="service-card">
+      <div class="service-tag">Без слёз и страха</div>
+      <h3>Таблица умножения</h3>
+      <p>Осваиваем сразу несколькими способами: японская методика (визуальное пересечение линий) и классика в игровой форме. Ребёнок видит математику как пазл и запоминает результаты навсегда.</p>
+      <div class="service-signup"><a href="#form">Записаться на курс</a></div>
     </div>
   </div>
 </section>
