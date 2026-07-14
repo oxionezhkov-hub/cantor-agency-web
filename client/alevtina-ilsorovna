@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Алевтина Ильсоровна — репетитор по скорочтению, ментальной арифметике и русскому языку</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2224%22%20fill%3D%22%239C82C2%22/%3E%3Ctext%20x%3D%2250%22%20y%3D%2270%22%20font-size%3D%2256%22%20text-anchor%3D%22middle%22%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500&display=swap" rel="stylesheet">
@@ -265,21 +266,6 @@
 
   .about-text p { color: var(--text-soft); font-weight: 300; margin-bottom: 1.2rem; line-height: 1.85; font-size: 1.05rem; }
   .about-text p strong { color: var(--text); font-weight: 600; }
-  .about-directions { list-style: none; counter-reset: direction; margin: 0 0 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
-  .about-directions li { counter-increment: direction; position: relative; padding-left: 2.4rem; color: var(--text-soft); font-weight: 300; line-height: 1.75; font-size: 1.02rem; }
-  .about-directions li::before {
-    content: counter(direction);
-    position: absolute; left: 0; top: 0.1rem;
-    width: 1.7rem; height: 1.7rem;
-    background: var(--blue-50); color: var(--blue-600);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem; font-weight: 700;
-  }
-  .about-directions li strong { color: var(--text); font-weight: 600; }
-  .about-results { list-style: none; margin: 0 0 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
-  .about-results li { position: relative; padding-left: 1.6rem; color: var(--text-soft); font-weight: 300; line-height: 1.7; font-size: 1.02rem; }
-  .about-results li::before { content: "→"; position: absolute; left: 0; color: var(--violet); font-weight: 700; }
   .about-highlight {
     background: var(--blue-50);
     border-left: 3px solid var(--violet);
@@ -319,10 +305,21 @@
   .stats-bg .section-title { color: white; }
   .stats-bg .section-sub { color: rgba(255,255,255,0.65); }
   .stats-bg .section-label { background: rgba(255,255,255,0.1); color: var(--pink); border-color: rgba(255,255,255,0.2); }
+  .results-list {
+    list-style: none; margin: 2.5rem auto 0; padding: 0; max-width: 720px;
+    display: flex; flex-direction: column; gap: 0.85rem;
+  }
+  .results-list li {
+    position: relative; padding-left: 1.6rem;
+    color: rgba(255,255,255,0.82); font-weight: 300; line-height: 1.65; font-size: 0.98rem;
+  }
+  .results-list li::before { content: "→"; position: absolute; left: 0; color: var(--pink); font-weight: 700; }
 
   /* SERVICES */
-  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+  .services-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
   .service-card {
+    flex: 1 1 300px;
+    max-width: 340px;
     background: white;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -343,7 +340,7 @@
     margin-bottom: 1rem;
     font-weight: 500;
   }
-  .service-card h3 { font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 0.75rem; font-weight: 700; }
+  .service-card h3 { font-family: var(--font-body); font-size: 1.2rem; margin-bottom: 0.75rem; font-weight: 600; }
   .service-card.featured h3 { color: white; }
   .service-card p { font-size: 0.9rem; color: var(--text-soft); font-weight: 300; line-height: 1.6; margin-bottom: 1.25rem; flex: 1; }
   .service-card.featured p { color: rgba(255,255,255,0.85); }
@@ -484,17 +481,17 @@
   .reviews-cta.hidden { display: none; }
 
   /* DIPLOMAS */
-  .diplomas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  .diplomas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; max-width: 780px; margin: 0 auto; }
   .diploma-item {
     background: white;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: var(--shadow);
+    box-shadow: 0 2px 12px rgba(76,91,160,0.08);
     transition: transform 0.2s, box-shadow 0.2s;
     line-height: 0;
   }
-  .diploma-item:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(76,91,160,0.16); }
+  .diploma-item:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(76,91,160,0.14); }
   .diploma-item img { width: 100%; height: auto; display: block; aspect-ratio: 3/4; object-fit: cover; }
   .diploma-item .photo-fallback {
     width: 100%; aspect-ratio: 3/4;
@@ -689,11 +686,12 @@
     color: white;
     text-align: center;
     text-decoration: none;
-    padding: 0.95rem 1.5rem;
+    padding: 0.95rem 1rem;
     border-radius: 40px;
     font-family: var(--font-body);
     font-size: 1rem;
     font-weight: 500;
+    white-space: nowrap;
     box-shadow: 0 4px 20px rgba(156,130,194,0.32);
   }
   .sticky-cta-btn:hover { background: var(--blue-600); }
@@ -739,7 +737,6 @@
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
     .steps-grid { grid-template-columns: repeat(2, 1fr); }
     .steps-grid::before { display: none; }
-    .diplomas-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   @media (max-width: 768px) {
@@ -778,7 +775,7 @@
     .stat-num { font-size: 2.2rem; height: 2.75rem; margin-bottom: 1rem; }
     .stat-card { padding: 1.25rem 1rem; }
 
-    .services-grid { grid-template-columns: 1fr; }
+    .service-card { flex: 1 1 100%; max-width: none; }
 
     .steps-block { display: block; margin-top: 2rem; }
     .steps-grid { display: flex; flex-direction: column; gap: 0; max-width: 100%; margin: 0; }
@@ -796,13 +793,13 @@
     .reviews-fade-overlay { height: 80px; }
     .reviews-cta { margin-top: 0.15rem; }
 
-    .diplomas-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+    .diplomas-grid { gap: 0.85rem; }
 
     .form-title em { display: block; }
     .form-section { padding: 2rem 1.25rem; border-radius: 16px; }
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: 1; }
-    .form-submit button { max-width: 100%; padding: 1.1rem 1.5rem; font-size: 1rem; }
+    .form-submit button { max-width: 100%; padding: 1.1rem 1rem; font-size: 0.92rem; white-space: nowrap; gap: 0.4rem; }
     .select-trigger { font-size: 16px; }
 
     .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
@@ -817,13 +814,14 @@
     .reviews-photos-grid { grid-template-columns: 1fr; max-height: 380px; }
     .review-col { gap: 0.85rem; }
     .reviews-fade-overlay { height: 70px; }
-    .diplomas-grid { grid-template-columns: 1fr; }
+    .diplomas-grid { grid-template-columns: repeat(2, 1fr); max-width: 340px; }
   }
 
   @media (max-width: 400px) {
     .hero h1 { font-size: 1.9rem; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .hero-stats-mobile { grid-template-columns: 1fr 1fr; }
+    .sticky-cta-btn { font-size: 0.9rem; padding: 0.9rem 0.75rem; }
   }
 
   .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
@@ -878,6 +876,7 @@
     <li><a href="#services">Курсы</a></li>
     <li><a href="#reviews">Отзывы</a></li>
     <li><a href="#diplomas">Дипломы</a></li>
+    <li><a href="https://telegram.me/allacpl" target="_blank" rel="noopener">Telegram</a></li>
     <li><a href="#form" class="nav-cta">Записаться</a></li>
   </ul>
   <button class="nav-burger" id="burger" aria-label="Меню">
@@ -889,6 +888,7 @@
   <a href="#services" onclick="closeMenu()">Курсы</a>
   <a href="#reviews" onclick="closeMenu()">Отзывы</a>
   <a href="#diplomas" onclick="closeMenu()">Дипломы</a>
+  <a href="https://telegram.me/allacpl" target="_blank" rel="noopener" onclick="closeMenu()">Telegram</a>
 </div>
 
 <!-- HERO -->
@@ -934,29 +934,11 @@
     </div>
     <div class="about-text">
       <h2 class="section-title">Подружим ребёнка<br><em>с русским языком навсегда</em></h2>
-      <p>Представьте: ваш ребёнок пишет диктанты без ошибок, потому что чувствует правила, а таблицу умножения щёлкает как орешки — и не скучно, а с азартом. Это не магия, это современные нейротехники и игровые методики, которые я внедряю в каждый урок.</p>
-      <p>Меня зовут Алевтина Ильсоровна. Я педагог с высшим образованием и репетитор-практик. Подготовила более 750 успешных учеников, участников и победителей олимпиад по ментальной арифметике, скорочтению, мнемотехники.</p>
-      <p>Работая в школе, я увидела главную боль детей: им неинтересно заучивать сухие правила и столбики цифр. Их мозг перегружен, а школьная программа не даёт инструментов, чтобы справляться с этим потоком. Я перевернула подход и объединила пять мощных направлений в единую игровую систему:</p>
-      <ol class="about-directions">
-        <li><strong>Ментальная арифметика</strong> — «турбо-режим» мозга: скорость мышления, концентрация и логика.</li>
-        <li><strong>Скорочтение</strong> — не гонка за словами, а работа с образами: ребёнок понимает 90–100% прочитанного с первого раза.</li>
-        <li><strong>Мнемотехника</strong> — супер-память, которая связывает любые факты в прочные цепочки. То, что учили неделю, усваивается за вечер.</li>
-        <li><strong>Русский язык без зубрёжки в 1–4 классах</strong> — база, на которой выстроится фундамент грамотного думающего ученика — с помощью нейротехник: мы переводим орфограммы в яркие зрительные образы, рифмы и алгоритмы. Ребёнок начинает писать грамотно интуитивно, а правила запоминаются сами собой.</li>
-        <li><strong>Таблица умножения</strong> — без слёз и страха! Мы осваиваем её не одной, а сразу несколькими способами: японская методика (визуальное пересечение линий) и классика в игровой форме. Ребёнок видит математику как пазл, а не как набор цифр, и запоминает результаты навсегда.</li>
-      </ol>
-      <p>Всё это — в формате азартного приключения. Без давления, скуки и оценок. Учёба превращается в квест, где каждый успех укрепляет веру ребёнка в свои силы.</p>
-      <p><strong>Результаты моих учеников, которые ломают стереотипы:</strong></p>
-      <ul class="about-results">
-        <li>Мальчик с ЗПР за 2 года догнал сверстников и поступил в престижную инженерную школу.</li>
-        <li>Второклассник через 6 месяцев читает осмысленно со скоростью 374 слова в минуту (уровень старшеклассника!).</li>
-        <li>Ученица — победитель Международной олимпиады по развитию памяти.</li>
-        <li>Мои ученики сдают ВПР по русскому на «4» и «5» уже через полгода, а таблицу умножения помнят даже спустя годы — потому что она стала частью их мышления.</li>
-      </ul>
+      <p>Меня зовут Алевтина Ильсоровна. Я педагог с высшим образованием и репетитор-практик. Подготовила более 750 учеников — участников и победителей олимпиад по ментальной арифметике, скорочтению и мнемотехнике.</p>
       <div class="about-highlight">
-        <p>«Ваша главная выгода: экономия нервов, времени и сотен тысяч рублей на бесконечных репетиторах. Вместо того чтобы «закрывать двойки», ваш ребёнок получает навыки гениального мышления, которые гарантируют лёгкое поступление в топовую школу и вуз.»</p>
+        <p>«Учёба — это не зубрёжка, а азартное приключение. Каждый успех укрепляет веру ребёнка в свои силы.»</p>
       </div>
-      <p>Хотите увидеть своего ребёнка в числе этих победителей? Запишитесь на бесплатную диагностическую встречу — свободные места на новый поток строго ограничены, я работаю с каждым лично.</p>
-      <a href="#form" class="btn-primary">Записаться и забронировать место</a>
+      <p>Работая в школе, я увидела: детям неинтересно заучивать сухие правила. Поэтому я объединила пять направлений — ментальную арифметику, скорочтение, мнемотехнику, русский язык и таблицу умножения — в единую игровую систему, без давления, скуки и оценок.</p>
     </div>
   </div>
 </section>
@@ -985,6 +967,12 @@
       <div class="stat-label">минут — столько теперь занимает домашнее задание</div>
     </div>
   </div>
+  <ul class="results-list fade-in">
+    <li>Мальчик с ЗПР за 2 года догнал сверстников и поступил в престижную инженерную школу</li>
+    <li>Второклассник через 6 месяцев читает осмысленно со скоростью 374 слова в минуту (уровень старшеклассника!)</li>
+    <li>Ученица — победитель Международной олимпиады по развитию памяти</li>
+    <li>Ученики сдают ВПР по русскому на «4» и «5» уже через полгода, а таблицу умножения помнят даже спустя годы</li>
+  </ul>
 </div>
 
 <!-- REVIEWS -->
@@ -1116,7 +1104,6 @@
     <p class="section-sub">ДГПИ (учитель русского языка и литературы), сертификаты IAMA по ментальной арифметике и скорочтению, мнемотехника, курсы Schoolsmart</p>
   </div>
   <div class="diplomas-grid fade-in" id="diplomasGrid">
-    <div class="diploma-item" data-diploma="1"></div>
     <div class="diploma-item" data-diploma="2"></div>
     <div class="diploma-item" data-diploma="3"></div>
     <div class="diploma-item" data-diploma="4"></div>
@@ -1158,10 +1145,11 @@
         <div class="select-wrap" data-select="course">
           <select id="course" required tabindex="-1" aria-hidden="true">
             <option value="" disabled selected>Выберите курс</option>
-            <option value="russian">Русский язык (1–4 класс)</option>
-            <option value="speed_reading">Скорочтение</option>
+            <option value="russian">Русский язык без зубрёжки</option>
             <option value="mental_math">Ментальная арифметика</option>
+            <option value="speed_reading">Скорочтение</option>
             <option value="mnemonics">Мнемотехника</option>
+            <option value="multiplication">Таблица умножения</option>
           </select>
         </div>
       </div>
@@ -1200,7 +1188,7 @@
     </div>
     <div class="footer-links">
       <a href="#form">Записаться</a>
-      <a href="https://t.me/allacpl" target="_blank" rel="noopener">Telegram</a>
+      <a href="https://telegram.me/allacpl" target="_blank" rel="noopener">Telegram</a>
       <a href="https://vk.com/id471050181" target="_blank" rel="noopener">VK</a>
     </div>
   </div>
