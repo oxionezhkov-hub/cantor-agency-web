@@ -300,15 +300,26 @@ async function sendTelegramMessage(env, text) {
     throw new Error('telegram_not_configured');
   }
 
-  await Promise.all(
-    chatIds.map((chatId) =>
-      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+  const results = await Promise.all(
+    chatIds.map(async (chatId) => {
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
-      })
-    )
+      });
+      const data = await res.json().catch(() => null);
+      return { chatId, ok: res.ok && data && data.ok, description: data && data.description };
+    })
   );
+
+  const failed = results.filter((r) => !r.ok);
+  if (failed.length) {
+    console.error('telegram_send_failed', JSON.stringify(failed));
+  }
+  if (failed.length === results.length) {
+    throw new Error(`telegram_delivery_failed: ${failed.map((f) => `${f.chatId}: ${f.description}`).join('; ')}`);
+  }
+  return { failed };
 }
 
 // ── Leads: forward landing-page form submissions to Telegram ──
@@ -327,11 +338,11 @@ async function handleLeadNotify(request, env) {
   }
 
   try {
-    await sendTelegramMessage(env, lines.join('\n'));
+    const { failed } = await sendTelegramMessage(env, lines.join('\n'));
+    return json({ ok: true, partialFailures: failed.length });
   } catch (err) {
     return json({ error: 'telegram_failed', message: String(err && err.message) }, 502);
   }
-  return json({ ok: true });
 }
 
 async function handleApi(request, env, url) {
