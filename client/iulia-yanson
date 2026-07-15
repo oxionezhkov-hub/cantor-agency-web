@@ -1975,6 +1975,12 @@
 </div>
 
 <script>
+  // cantor.agency is served by a plain host (not proxied through Cloudflare), so this
+  // page can't reach the Worker same-origin at /api/. The Worker (see /_worker.js +
+  // wrangler.jsonc) is deployed separately at mainweb.oxion-ezhkov.workers.dev and
+  // allows CORS from anywhere — same pattern as /mba-mybrand's API_BASE.
+  const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+
   (function loadMedia() {
     const heroPhoto = 'images/iulia-yanson/yulia-hero.png';
     const aboutPhoto = 'images/iulia-yanson/yulia-about.png';
@@ -2230,7 +2236,7 @@
 
     if (submitBtn) submitBtn.disabled = true;
 
-    fetch('/api/leads/notify', {
+    fetch(API_BASE + '/api/leads/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
