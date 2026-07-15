@@ -322,7 +322,26 @@ async function sendTelegramMessage(env, text) {
   return { failed };
 }
 
-// ── Leads: forward landing-page form submissions to Telegram ──
+// Best-effort email notification via FormSubmit (https://formsubmit.co) — a free
+// no-signup relay: the first submission to a given address triggers a one-time
+// confirmation email that the recipient must click before further mail is delivered.
+// Used because cantor.agency's DNS isn't on Cloudflare, so Cloudflare Email Routing
+// (which needs a Cloudflare-managed zone) isn't an option for this domain.
+async function sendEmailNotification(env, subject, cleanFields) {
+  const email = env.ADMIN_EMAIL;
+  if (!email) return null;
+
+  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ _subject: subject, ...cleanFields }),
+    signal: AbortSignal.timeout(5000),
+  });
+  const data = await res.json().catch(() => null);
+  return { status: res.status, ok: res.ok, data };
+}
+
+// ── Leads: forward landing-page form submissions to Telegram + email ──
 async function handleLeadNotify(request, env) {
   const body = await readJson(request);
   if (!body || typeof body !== 'object') return json({ error: 'invalid_body' }, 400);
@@ -330,18 +349,33 @@ async function handleLeadNotify(request, env) {
   const source = String(body.source || 'website').trim();
   const fields = body.fields && typeof body.fields === 'object' ? body.fields : {};
 
+  const cleanFields = {};
   const lines = [`<b>Новая заявка — ${escapeHtml(source)}</b>`];
   for (const [label, value] of Object.entries(fields)) {
     const clean = String(value || '').trim();
     if (!clean) continue;
+    cleanFields[label] = clean;
     lines.push(`<b>${escapeHtml(label)}:</b> ${escapeHtml(clean)}`);
   }
 
+  // Run in parallel and with a timeout above so a slow/unreachable email relay
+  // never delays or blocks the Telegram delivery, which is the primary channel.
+  const [emailSettled, telegramSettled] = await Promise.allSettled([
+    sendEmailNotification(env, `Новая заявка — ${source}`, cleanFields),
+    sendTelegramMessage(env, lines.join('\n')),
+  ]);
+
+  const emailResult = emailSettled.status === 'fulfilled' ? emailSettled.value : null;
+  if (emailSettled.status === 'rejected') {
+    console.error('email_send_failed', String(emailSettled.reason && emailSettled.reason.message));
+  }
+
   try {
-    const { failed } = await sendTelegramMessage(env, lines.join('\n'));
-    return json({ ok: true, partialFailures: failed.length });
+    if (telegramSettled.status === 'rejected') throw telegramSettled.reason;
+    const { failed } = telegramSettled.value;
+    return json({ ok: true, partialFailures: failed.length, email: emailResult });
   } catch (err) {
-    return json({ error: 'telegram_failed', message: String(err && err.message) }, 502);
+    return json({ error: 'telegram_failed', message: String(err && err.message), email: emailResult }, 502);
   }
 }
 
