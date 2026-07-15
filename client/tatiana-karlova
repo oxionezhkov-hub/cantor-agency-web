@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Татьяна Карлова — репетитор по математике</title>
+<title>Татьяна Владимировна Карлова — репетитор по математике</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
     --rose-50: #FBF0F0;
@@ -23,6 +23,10 @@
     --text-soft: #6E5D5D;
     --text-muted: #9E8E8E;
     --border: rgba(154, 79, 79, 0.12);
+    --whatsapp: #25D366;
+    --whatsapp-dark: #1EBE5A;
+    --telegram: #29A9EA;
+    --telegram-dark: #1E97D4;
     --font-display: 'Playfair Display', Georgia, serif;
     --font-body: 'Geologica', sans-serif;
     --radius: 16px;
@@ -70,6 +74,7 @@
   }
   .nav-links {
     display: flex;
+    align-items: center;
     gap: 2rem;
     list-style: none;
   }
@@ -90,6 +95,17 @@
     font-weight: 500 !important;
   }
   .nav-cta:hover { background: var(--rose-600) !important; color: white !important; }
+  .nav-whatsapp {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--whatsapp);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .nav-whatsapp:hover { background: var(--whatsapp-dark); transform: scale(1.08); }
+  .nav-whatsapp svg { display: block; }
 
   /* HERO */
   .hero {
@@ -109,6 +125,23 @@
     width: 700px; height: 700px;
     background: radial-gradient(circle, var(--rose-50) 0%, transparent 70%);
     pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -240px; left: -180px;
+    width: 560px; height: 560px;
+    background: radial-gradient(circle, var(--peach) 0%, transparent 70%);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .hero-name-tag {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--rose-800);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.6rem;
   }
   .hero-tag {
     display: inline-block;
@@ -184,8 +217,24 @@
     font-size: 1rem;
     transition: all 0.2s;
     display: inline-block;
+    background: transparent;
   }
   .btn-outline:hover { background: var(--rose-50); transform: translateY(-2px); }
+  .btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: var(--whatsapp);
+    color: white;
+    padding: 0.85rem 1.8rem;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 4px 20px rgba(37,211,102,0.28);
+  }
+  .btn-whatsapp:hover { background: var(--whatsapp-dark); transform: translateY(-2px); }
 
   .hero-visual {
     display: flex;
@@ -211,9 +260,30 @@
     object-position: center 15%;
     display: block;
   }
+  .avatar-accent {
+    position: absolute;
+    left: -34px;
+    bottom: 18px;
+    width: 132px;
+    height: 160px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 4px solid var(--white);
+    box-shadow: var(--shadow);
+    transform: rotate(-6deg);
+    z-index: 2;
+    background: var(--rose-50);
+  }
+  .avatar-accent img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 18%;
+    display: block;
+  }
   .hero-photo-mobile {
     display: none;
-    width: min(200px, 52vw);
+    width: min(280px, 72vw);
     margin: 0 auto 1rem;
     border-radius: 20px;
     overflow: hidden;
@@ -227,39 +297,6 @@
     object-fit: cover;
     object-position: center 15%;
     display: block;
-  }
-  .avatar-placeholder {
-    width: 100%; height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .avatar-initials {
-    width: 110px; height: 110px;
-    background: var(--rose-400);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-size: 2.4rem;
-    color: white;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-  .avatar-name-tag {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    color: var(--rose-800);
-    font-weight: 700;
-    text-align: center;
-  }
-  .avatar-sub {
-    font-size: 0.85rem;
-    color: var(--rose-600);
-    text-align: center;
   }
 
   .stat-badges {
@@ -335,12 +372,15 @@
   .about-grid {
     display: grid;
     grid-template-columns: 0.95fr 1.05fr;
-    gap: 4rem;
+    gap: 4.5rem;
     align-items: center;
-    max-width: 960px;
+    max-width: 1040px;
     margin: 0 auto;
   }
   .about-photo-wrap {
+    position: relative;
+  }
+  .about-photo-main {
     border-radius: 24px;
     overflow: hidden;
     border: 2px solid var(--rose-100);
@@ -348,14 +388,35 @@
     aspect-ratio: 4 / 5;
     background: var(--rose-50);
   }
-  .about-photo-wrap img {
+  .about-photo-main img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center 20%;
     display: block;
   }
+  .about-photo-accent {
+    position: absolute;
+    right: -28px;
+    bottom: -28px;
+    width: 148px;
+    height: 178px;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 4px solid var(--white);
+    box-shadow: var(--shadow);
+    transform: rotate(5deg);
+    background: var(--rose-50);
+  }
+  .about-photo-accent img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 15%;
+    display: block;
+  }
 
+  .about-text h2 { margin-bottom: 1.4rem; }
   .about-text p {
     color: var(--text-soft);
     font-weight: 300;
@@ -376,6 +437,30 @@
     font-size: 1rem !important;
     margin: 0 !important;
     font-style: italic;
+  }
+  .about-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 0.25rem 0 1.5rem;
+  }
+  .about-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--rose-50);
+    border: 1px solid var(--rose-100);
+    color: var(--rose-800);
+    padding: 0.45rem 0.95rem;
+    border-radius: 40px;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+  .about-cta {
+    display: flex;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    margin-top: 1.75rem;
   }
 
   /* RESULTS STATS */
@@ -423,6 +508,78 @@
   .stats-bg .section-title { color: white; }
   .stats-bg .section-sub { color: rgba(255,255,255,0.65); }
   .stats-bg .section-label { background: rgba(255,255,255,0.1); color: var(--peach); border-color: rgba(255,255,255,0.2); }
+
+  /* PAIN POINTS */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .pain-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2.25rem 2rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .pain-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom, var(--rose-400), var(--rose-200));
+  }
+  .pain-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(154,79,79,0.14);
+  }
+  .pain-icon {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    background: var(--rose-50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 1.4rem;
+  }
+  .pain-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    margin-bottom: 1.1rem;
+    color: var(--text);
+    line-height: 1.35;
+  }
+  .pain-row {
+    display: flex;
+    gap: 0.7rem;
+    margin-bottom: 0.85rem;
+    align-items: flex-start;
+  }
+  .pain-row:last-child { margin-bottom: 0; }
+  .pain-label {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    margin-top: 0.15rem;
+    white-space: nowrap;
+  }
+  .pain-label.problem { background: rgba(194, 68, 66, 0.1); color: #B33D3B; }
+  .pain-label.solution { background: rgba(154, 79, 79, 0.1); color: var(--rose-600); }
+  .pain-row p {
+    font-size: 0.92rem;
+    color: var(--text-soft);
+    font-weight: 300;
+    line-height: 1.65;
+    margin: 0;
+  }
 
   /* SERVICES */
   .services-grid {
@@ -474,36 +631,39 @@
     flex: 1;
   }
   .service-card.featured p { color: rgba(255,255,255,0.85); }
-  .price-line {
+  .service-footer {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border);
     margin-top: auto;
   }
-  .service-card.featured .price-line {
+  .service-card.featured .service-footer {
     border-top-color: rgba(255,255,255,0.22);
   }
-  .price-amount {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 1.05rem;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
+  .service-footer a {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--rose-600);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
   }
-  .service-card.featured .price-amount { color: white; }
-  .price-duration {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    font-weight: 400;
-    white-space: nowrap;
-  }
-  .service-card.featured .price-duration { color: rgba(255,255,255,0.72); }
+  .service-footer a:hover { color: var(--rose-800); }
+  .service-card.featured .service-footer a { color: white; }
   .service-card.featured .service-tag {
     background: rgba(255,255,255,0.2);
     color: white;
+  }
+  .services-note {
+    text-align: center;
+    margin-top: 2.5rem;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    font-weight: 300;
   }
 
   /* HOW LESSONS WORK */
@@ -590,6 +750,59 @@
     font-weight: 300;
     line-height: 1.5;
   }
+
+  /* CONTACT BAND */
+  .contact-band {
+    background: linear-gradient(135deg, var(--rose-800), #7d4141);
+    border-radius: 32px;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-band::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .contact-band .section-header { margin-bottom: 2.25rem; position: relative; }
+  .contact-band .section-title { color: white; }
+  .contact-band .section-sub { color: rgba(255,255,255,0.7); margin: 0 auto; }
+  .contact-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    position: relative;
+  }
+  .contact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: white;
+    padding: 0.9rem 1.7rem;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    backdrop-filter: blur(6px);
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .contact-pill:hover { transform: translateY(-3px); background: rgba(255,255,255,0.18); }
+  .contact-pill.whatsapp { background: var(--whatsapp); border-color: var(--whatsapp); }
+  .contact-pill.whatsapp:hover { background: var(--whatsapp-dark); }
+  .contact-pill.telegram { background: var(--telegram); border-color: var(--telegram); }
+  .contact-pill.telegram:hover { background: var(--telegram-dark); }
+  .contact-pill svg { flex-shrink: 0; }
 
   /* REVIEWS */
   .reviews-grid {
@@ -817,6 +1030,16 @@
     text-align: center;
     margin-top: 1rem;
   }
+  .form-alt {
+    font-size: 0.9rem;
+    color: var(--text-soft);
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .form-alt a { color: var(--rose-600); font-weight: 500; text-decoration: none; }
+  .form-alt a:hover { color: var(--rose-800); }
 
   /* FOOTER */
   footer {
@@ -827,7 +1050,7 @@
   .footer-inner {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 1.5rem;
   }
@@ -842,6 +1065,22 @@
     margin-top: 0.25rem;
     color: rgba(255,255,255,0.45);
   }
+  .footer-contact {
+    margin-top: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .footer-contact a {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s;
+  }
+  .footer-contact a:hover { color: var(--peach); }
   .footer-links {
     display: flex;
     gap: 1.5rem;
@@ -900,6 +1139,8 @@
     opacity: 0;
     pointer-events: none;
     transition: transform 0.3s ease, opacity 0.3s ease;
+    display: flex;
+    gap: 0.6rem;
   }
   .sticky-cta.visible {
     transform: translateY(0);
@@ -908,7 +1149,7 @@
   }
   .sticky-cta-btn {
     display: block;
-    width: 100%;
+    flex: 1;
     background: var(--rose-400);
     color: white;
     text-align: center;
@@ -921,6 +1162,35 @@
     box-shadow: 0 4px 20px rgba(212,145,145,0.28);
   }
   .sticky-cta-btn:hover { background: var(--rose-600); }
+  .sticky-cta-whatsapp {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--whatsapp);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(37,211,102,0.32);
+  }
+
+  /* FLOATING WHATSAPP */
+  .whatsapp-float {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 90;
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: var(--whatsapp);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 24px rgba(37,211,102,0.4);
+    transition: transform 0.2s, bottom 0.3s;
+  }
+  .whatsapp-float:hover { transform: scale(1.08); background: var(--whatsapp-dark); }
+  body.has-sticky-cta .whatsapp-float { display: none; }
 
   /* BURGER MENU */
   .nav-burger {
@@ -957,6 +1227,8 @@
     z-index: 99;
     flex-direction: column;
     gap: 0;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
   }
   .mobile-menu.open { display: flex; }
   .mobile-menu a {
@@ -969,16 +1241,39 @@
     transition: color 0.2s;
   }
   .mobile-menu a:hover { color: var(--rose-400); }
+  .mobile-menu-contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .mobile-menu-contacts a {
+    border-bottom: none !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border-radius: 40px;
+    padding: 0.9rem 1rem !important;
+    font-size: 0.95rem !important;
+    color: white !important;
+    font-weight: 500 !important;
+  }
+  .mobile-menu-contacts a.mm-whatsapp { background: var(--whatsapp); }
+  .mobile-menu-contacts a.mm-telegram { background: var(--telegram); }
+  .mobile-menu-contacts a.mm-phone { background: var(--rose-400); }
 
   /* TABLET 900–1100px */
   @media (max-width: 1100px) {
     .hero { gap: 2rem; padding: 96px 4vw 64px; }
     .avatar-frame { width: 300px; height: 360px; }
+    .avatar-accent { width: 100px; height: 122px; left: -18px; bottom: 10px; }
     .stat-badges.left { left: -10px; }
     .stat-badges.right { right: -10px; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
     .steps-grid { grid-template-columns: repeat(2, 1fr); }
     .steps-grid::before { display: none; }
+    .pain-grid { grid-template-columns: 1fr; }
   }
 
   /* MOBILE < 768px */
@@ -998,9 +1293,10 @@
       flex-direction: column;
     }
     .hero-tag { display: none; }
+    .hero-name-tag { order: 1; }
     .hero h1 { order: 2; margin-bottom: 1rem; }
     .hero-desc { order: 3; margin-bottom: 1rem; font-size: 0.92rem; line-height: 1.65; }
-    .hero-photo-mobile { order: 4; margin-bottom: 1.25rem; }
+    .hero-photo-mobile { order: 4; margin-bottom: 1.25rem; position: relative; }
     .hero-btns { order: 5; margin-bottom: 1.25rem; }
     .hero-stats-mobile { order: 6; }
     .hero {
@@ -1009,13 +1305,13 @@
       padding: 80px var(--page-padding) 40px;
       gap: 0;
     }
-    .hero::before { display: none; }
+    .hero::before, .hero::after { display: none; }
     .hero-photo-mobile { display: block; }
     .hero-visual { display: none; }
     .hero h1 { font-size: clamp(2rem, 8vw, 2.8rem); }
     .hero-desc { font-size: 0.98rem; max-width: 100%; }
     .hero-btns { flex-direction: column; }
-    .btn-primary, .btn-outline { text-align: center; width: 100%; }
+    .btn-primary, .btn-outline, .btn-whatsapp { text-align: center; width: 100%; justify-content: center; }
 
     /* mobile stats strip after hero text */
     .hero-stats-mobile {
@@ -1051,10 +1347,11 @@
     .about-grid {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 2.5rem;
     }
     .about-text { order: 1; }
     .about-photo-wrap { order: 2; max-width: 320px; margin: 0 auto; width: 100%; }
+    .about-photo-accent { width: 108px; height: 130px; right: -14px; bottom: -18px; }
 
     /* STATS */
     .stats-bg { padding: 56px var(--page-padding); }
@@ -1062,8 +1359,16 @@
     .stat-num { font-size: 2.2rem; height: 2.75rem; margin-bottom: 1rem; }
     .stat-card { padding: 1.25rem 1rem; }
 
+    /* PAIN POINTS */
+    .pain-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    .pain-card { padding: 1.75rem 1.5rem; }
+
     /* SERVICES */
     .services-grid { grid-template-columns: 1fr; }
+
+    /* CONTACT BAND */
+    .contact-links { flex-direction: column; }
+    .contact-pill { width: 100%; justify-content: center; }
 
     /* STEPS — vertical timeline on mobile */
     .steps-block { display: block; margin-top: 2.5rem; }
@@ -1118,11 +1423,21 @@
     .select-trigger { font-size: 16px; }
 
     /* FOOTER */
-    .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
     .footer-links { gap: 1rem; }
+
+    /* WHATSAPP FLOAT */
+    .whatsapp-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
 
     /* HOW-IT-WORKS section */
     section.lessons-section {
+      border-radius: 16px;
+      max-width: none;
+      margin-left: 1vw;
+      margin-right: 1vw;
+      width: auto;
+    }
+    section.contact-band {
       border-radius: 16px;
       max-width: none;
       margin-left: 1vw;
@@ -1334,8 +1649,12 @@
   <a class="nav-logo" href="#">Татьяна Карлова</a>
   <ul class="nav-links">
     <li><a href="#about">О репетиторе</a></li>
+    <li><a href="#pains">Как я помогаю</a></li>
     <li><a href="#services">Занятия</a></li>
     <li><a href="#reviews">Отзывы</a></li>
+    <li><a class="nav-whatsapp" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+    </a></li>
     <li><a href="#form" class="nav-cta">Записаться</a></li>
   </ul>
   <button class="nav-burger" id="burger" aria-label="Меню">
@@ -1344,21 +1663,32 @@
 </nav>
 <div class="mobile-menu" id="mobileMenu">
   <a href="#about" onclick="closeMenu()">О репетиторе</a>
+  <a href="#pains" onclick="closeMenu()">Как я помогаю</a>
   <a href="#services" onclick="closeMenu()">Занятия</a>
   <a href="#reviews" onclick="closeMenu()">Отзывы</a>
+  <div class="mobile-menu-contacts">
+    <a class="mm-whatsapp" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+    <a class="mm-telegram" href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram-канал</a>
+    <a class="mm-phone" href="tel:+79629790773">+7 962 979-07-73</a>
+  </div>
 </div>
 
 <!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-content">
+    <div class="hero-name-tag">Татьяна Владимировна Карлова</div>
     <span class="hero-tag">Репетитор · Россия и онлайн</span>
     <h1>Математика, алгебра, геометрия<br><em>понятно и с результатом</em></h1>
     <p class="hero-desc">13 лет учительского опыта. ОГЭ по математике, удвоение баллов. Ученики успешно сдают экзамены и начинают верить в свои силы. Занятия онлайн для 5–9 класса.</p>
     <div class="hero-photo-mobile">
-      <img id="hero-tutor-photo-mobile" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Карлова — репетитор по математике">
+      <img id="hero-tutor-photo-mobile" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике">
     </div>
     <div class="hero-btns">
       <a href="#form" class="btn-primary">Записаться на диагностику</a>
+      <a href="https://wa.me/79629790773" class="btn-whatsapp" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+        Написать в WhatsApp
+      </a>
       <a href="#services" class="btn-outline">Узнать о занятиях</a>
     </div>
     <div class="hero-stats-mobile">
@@ -1380,7 +1710,10 @@
       </div>
     </div>
     <div class="avatar-frame">
-      <img id="hero-tutor-photo" class="avatar-photo" src="images/tatiana-karlova/tatyana-hero.png" alt="Татьяна Карлова — репетитор по математике">
+      <img id="hero-tutor-photo" class="avatar-photo" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике">
+      <div class="avatar-accent">
+        <img src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Владимировна Карлова на занятии" loading="lazy">
+      </div>
     </div>
     <div class="stat-badges right">
       <div class="stat-badge">
@@ -1399,15 +1732,34 @@
 <section id="about">
   <div class="about-grid fade-in">
     <div class="about-photo-wrap">
-      <img id="about-tutor-photo" src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Карлова на занятии">
+      <div class="about-photo-main">
+        <img id="about-tutor-photo" src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Владимировна Карлова на занятии">
+      </div>
+      <div class="about-photo-accent">
+        <img src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике" loading="lazy">
+      </div>
     </div>
     <div class="about-text">
-      <h2 class="section-title">Опыт, которому<br><em>можно доверять</em></h2>
-      <p>Я помогаю школьникам 5–9 классов разобраться с математикой, алгеброй и геометрией — не через зубрёжку, а через понимание.</p>
+      <span class="section-label">Обо мне</span>
+      <h2 class="section-title">Татьяна Владимировна —<br>учитель, которому<br><em>можно доверять</em></h2>
+      <div class="about-badges">
+        <span class="about-badge">🎓 13 лет в школе</span>
+        <span class="about-badge">📐 10 лет репетитор</span>
+        <span class="about-badge">🏆 23 балла ОГЭ у учеников</span>
+        <span class="about-badge">💯 100% сдают экзамен</span>
+      </div>
+      <p>Меня зовут Татьяна Владимировна Карлова. Больше десяти лет я преподаю математику в школе и ещё столько же — веду частные занятия. За это время я перестала верить в «неспособных к математике» детей: есть только те, кому пока не объяснили тему на понятном именно им языке.</p>
       <div class="about-highlight">
         <p>«Не существует детей, неспособных к математике. Есть те, кому её просто не объяснили на понятном языке. Я помогаю каждому найти свой путь к пониманию предмета.»</p>
       </div>
-      <p>Работаю как с теми, кто боится математики и хочет просто не завалить ОГЭ, так и с теми, кто стремится к стабильно высоким баллам и развитию математической логики.</p>
+      <p>Работаю и с теми, кто боится математики и хочет просто не завалить ОГЭ, и с теми, кто стремится к стабильно высоким баллам и развитию математического мышления. На занятиях — никакой зубрёжки: только логика, понимание и уверенность, которая остаётся с ребёнком надолго.</p>
+      <div class="about-cta">
+        <a href="#form" class="btn-primary">Записаться на диагностику</a>
+        <a href="https://wa.me/79629790773" class="btn-whatsapp" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+          Есть вопрос — напишите
+        </a>
+      </div>
     </div>
   </div>
 </section>
@@ -1438,6 +1790,65 @@
   </div>
 </div>
 
+<!-- PAIN POINTS -->
+<section id="pains">
+  <div class="section-header fade-in">
+    <span class="section-label">Знакомая ситуация?</span>
+    <h2 class="section-title">У каждого — <em>своя причина</em><br>обратиться</h2>
+    <p class="section-sub">За десять лет я видела десятки похожих историй. Возможно, среди них — и ваша.</p>
+  </div>
+  <div class="pain-grid fade-in">
+    <div class="pain-card">
+      <div class="pain-icon">😰</div>
+      <h3>Ребёнок боится математики</h3>
+      <div class="pain-row">
+        <span class="pain-label problem">Боль</span>
+        <p>Контрольные вызывают панику, оценки падают, а вместе с ними — вера в себя. Даже разговор о домашке заканчивается слезами.</p>
+      </div>
+      <div class="pain-row">
+        <span class="pain-label solution">Решение</span>
+        <p>Разбираем ошибки без критики и спешки. Начинаем с маленьких понятных побед — и страх постепенно уходит, а уверенность растёт.</p>
+      </div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">⏳</div>
+      <h3>Скоро ОГЭ, а времени почти нет</h3>
+      <div class="pain-row">
+        <span class="pain-label problem">Боль</span>
+        <p>Экзамен через несколько месяцев, а пробелы копились годами. В школе объясняют быстро, времени наверстывать нет.</p>
+      </div>
+      <div class="pain-row">
+        <span class="pain-label solution">Решение</span>
+        <p>Начинаем с бесплатной диагностики: находим ровно те темы, где «дыры», и выстраиваем сжатый план подготовки без лишнего.</p>
+      </div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">🚀</div>
+      <h3>Хорошие оценки, но хочется большего</h3>
+      <div class="pain-row">
+        <span class="pain-label problem">Боль</span>
+        <p>Ребёнок способный, но на уроках скучает — программа слишком простая, а мотивация постепенно теряется.</p>
+      </div>
+      <div class="pain-row">
+        <span class="pain-label solution">Решение</span>
+        <p>Даю более сложные, олимпиадные задачи, развиваю математическое мышление и интерес к предмету, а не только «прохождение программы».</p>
+      </div>
+    </div>
+    <div class="pain-card">
+      <div class="pain-icon">🙇‍♀️</div>
+      <h3>Родитель сам не может помочь</h3>
+      <div class="pain-row">
+        <span class="pain-label problem">Боль</span>
+        <p>Программа изменилась, объяснить по-новому сложно, а совместные домашние задания заканчиваются конфликтом.</p>
+      </div>
+      <div class="pain-row">
+        <span class="pain-label solution">Решение</span>
+        <p>Беру объяснение материала полностью на себя — вы остаётесь в роли поддержки, а не «второго учителя», и дома снова спокойно.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- REVIEWS -->
 <section id="reviews">
   <div class="section-header fade-in">
@@ -1454,7 +1865,7 @@
           <img src="images/tatiana-karlova/Отзыв № 1 (2).jpg" alt="Отзыв ученика" loading="lazy">
         </div>
       </div>
-      
+
       <div class="review-col">
         <div class="review-photo-item">
           <img src="images/tatiana-karlova/Отзыв №3.png" alt="Отзыв ученика" loading="lazy">
@@ -1466,7 +1877,7 @@
           <img src="images/tatiana-karlova/Успех Арсения.jpg" alt="Успех Арсения" loading="lazy">
         </div>
       </div>
-      
+
       <div class="review-col">
         <div class="review-photo-item">
           <img src="images/tatiana-karlova/Отклик Ильи.jpg" alt="Отклик Ильи" loading="lazy">
@@ -1496,12 +1907,12 @@
   </div>
   <div class="lessons-video-wrap fade-in">
     <div style="padding:56.25% 0 0 0;position:relative;">
-      <iframe 
-        src="https://player.vimeo.com/video/1202873861?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" 
-        frameborder="0" 
-        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" 
-        referrerpolicy="strict-origin-when-cross-origin" 
-        style="position:absolute;top:0;left:0;width:100%;height:100%;" 
+      <iframe
+        src="https://player.vimeo.com/video/1202873861?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+        frameborder="0"
+        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;"
         title="Видео о репетиторе Татьяне Карловой">
       </iframe>
     </div>
@@ -1545,36 +1956,60 @@
 <section id="services">
   <div class="section-header fade-in">
     <h2 class="section-title">Форматы работы</h2>
-    <p class="section-sub">Выберите удобный вариант занятий</p>
+    <p class="section-sub">Выберите удобный вариант занятий — стоимость обсудим индивидуально на бесплатной диагностике</p>
   </div>
   <div class="services-grid fade-in">
     <div class="service-card">
       <div class="service-tag">Математика • 5–9 класс</div>
       <h3>Индивидуальные занятия</h3>
       <p>Персональная программа, разобранная под вашего ребёнка. ОГЭ, ВПР, контрольные или просто желание разобраться в предмете.</p>
-      <div class="price-line">
-        <span class="price-amount">5 000 ₽</span>
-        <span class="price-duration">60 мин</span>
+      <div class="service-footer">
+        <span>60 минут</span>
+        <a href="#form">Записаться →</a>
       </div>
     </div>
     <div class="service-card featured">
-      <div class="service-tag">Популярно</div>
+      <div class="service-tag">Бесплатно · популярно</div>
       <h3>Диагностика знаний</h3>
       <p>20 минут: определение реального уровня, поиск скрытых пробелов, пошаговый план действий.</p>
-      <div class="price-line">
-        <span class="price-amount">Бесплатно</span>
-        <span class="price-duration">20 мин</span>
+      <div class="service-footer">
+        <span>20 минут</span>
+        <a href="#form">Записаться →</a>
       </div>
     </div>
     <div class="service-card">
       <div class="service-tag">Алгебра, геометрия • 5–9 класс</div>
       <h3>Мини-группы</h3>
-      <p>Небольшие группы 2–3 человека — живое общение, совместное решение задач, более доступная цена.</p>
-      <div class="price-line">
-        <span class="price-amount">2 500 ₽</span>
-        <span class="price-duration">60 мин</span>
+      <p>Небольшие группы 2–3 человека — живое общение, совместное решение задач, более доступный формат.</p>
+      <div class="service-footer">
+        <span>60 минут</span>
+        <a href="#form">Записаться →</a>
       </div>
     </div>
+  </div>
+  <p class="services-note">Точную стоимость и удобное расписание обсудим лично — напишите в WhatsApp или оставьте заявку ниже</p>
+</section>
+
+<!-- CONTACT BAND -->
+<section id="contact" class="contact-band">
+  <div class="section-header fade-in">
+    <span class="section-label">Быстрая связь</span>
+    <h2 class="section-title">Свяжитесь <em>любым удобным способом</em></h2>
+    <p class="section-sub">Отвечаю быстро — обычно в течение дня</p>
+  </div>
+  <div class="contact-links fade-in">
+    <a class="contact-pill whatsapp" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+      WhatsApp
+    </a>
+    <a class="contact-pill telegram" href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M21.94 4.6L18.6 20.1c-.25 1.13-.9 1.4-1.83.87l-5.06-3.73-2.44 2.35c-.27.27-.5.5-1.02.5l.36-5.16 9.39-8.49c.41-.36-.09-.57-.63-.2L6.36 12.9l-5.06-1.58c-1.1-.35-1.12-1.1.23-1.62L20.53 3.1c.92-.34 1.72.2 1.41 1.5z"/></svg>
+      Telegram-канал
+    </a>
+    <a class="contact-pill" href="tel:+79629790773">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      +7 962 979-07-73
+    </a>
   </div>
 </section>
 
@@ -1642,29 +2077,47 @@
       </button>
     </div>
     <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
+    <p class="form-alt">Не хотите заполнять форму? Напишите напрямую в <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a> или в <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram-канал</a></p>
   </div>
 </section>
 
 <footer>
   <div class="footer-inner">
     <div>
-      <div class="footer-logo">Татьяна Карлова</div>
+      <div class="footer-logo">Татьяна Владимировна Карлова</div>
       <div class="footer-sub">Репетитор по математике, алгебре и геометрии</div>
+      <div class="footer-contact">
+        <a href="tel:+79629790773">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          +7 962 979-07-73
+        </a>
+        <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+          Написать в WhatsApp
+        </a>
+      </div>
     </div>
     <div class="footer-links">
       <a href="https://vk.com/matematikarepetit" target="_blank" rel="noopener noreferrer">ВКонтакте</a>
-      <a href="https://t.me/Tata_Karlova" target="_blank" rel="noopener noreferrer">Telegram</a>
+      <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram-канал</a>
       <a href="https://ok.ru/profile/910083730336?utm_campaign=web_share&utm_content=profile" target="_blank" rel="noopener noreferrer">Одноклассники</a>
     </div>
   </div>
   <div class="footer-bottom">
-    © 2026 Татьяна Карлова — репетитор по математике. Россия, онлайн.
+    © 2026 Татьяна Владимировна Карлова — репетитор по математике. Россия, онлайн.
   </div>
 </footer>
 
 <div class="sticky-cta" id="stickyCta">
   <a href="#form" class="sticky-cta-btn">Записаться на диагностику</a>
+  <a href="https://wa.me/79629790773" class="sticky-cta-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+  </a>
 </div>
+
+<a class="whatsapp-float" id="whatsappFloat" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
+</a>
 
 <div class="toast" id="toast">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
