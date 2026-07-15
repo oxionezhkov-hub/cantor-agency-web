@@ -14,11 +14,16 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  // TELEGRAM_BOT_TOKEN and RESEND_API_KEY are secrets and must NOT be set here —
+  // this file is committed to a public repo, and GitHub secret scanning has
+  // already caused both a prior Telegram token and a Resend key to be revoked
+  // after being exposed this way. Set them instead via the Cloudflare dashboard:
+  // Workers & Pages -> mainweb -> Settings -> Variables and Secrets -> Add
+  // variable -> toggle "Encrypt". They'll still be available as env.TELEGRAM_BOT_TOKEN
+  // / env.RESEND_API_KEY at runtime, just never stored in this file or in git.
   "vars": {
-    "TELEGRAM_BOT_TOKEN": "8881271772:AAFbAser2_keHJas9R-rie6QzV3B8Mm7NSQ",
     "TELEGRAM_CHAT_IDS": "749880288,1326867567",
-    "ADMIN_EMAIL": "oxion.ezhkov@gmail.com",
-    "RESEND_API_KEY": "re_McaFyvcr_2dyrYro5fiRn2wUyJYFLVgiT"
+    "ADMIN_EMAIL": "oxion.ezhkov@gmail.com"
   },
   "kv_namespaces": [
     {
