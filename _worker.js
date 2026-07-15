@@ -9,6 +9,10 @@
  *   schema                -> { blocks: [...] }
  *   client:<email-lower>  -> { email, createdAt, updatedAt, currentBlock, answers, notes, shareId }
  *   share:<shareId>       -> "<email-lower>"
+ *   email_usage:day:<YYYY-MM-DD>    -> count of lead emails sent via Resend that day
+ *   email_usage:month:<YYYY-MM>     -> count of lead emails sent via Resend that month
+ *   email_usage_warned:day:<...>    -> "1" once a 90%-of-limit warning has been sent for that day
+ *   email_usage_warned:month:<...>  -> "1" once a 90%-of-limit warning has been sent for that month
  *
  * KV keys (binding "UTM_LINKS_KV"):
  *   link:<slug>              -> { slug, targetUrl, utm, createdAt, ourLink, shortUrl, clicks }
@@ -290,16 +294,33 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;');
 }
 
-// Email notification via Resend (cantor.agency is verified as a sending domain there).
-// Used because cantor.agency's DNS is on reg.ru, not Cloudflare, so Cloudflare Email
-// Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
-async function sendEmailNotification(env, subject, cleanFields) {
-  const apiKey = env.RESEND_API_KEY;
-  const to = String(env.ADMIN_EMAIL || '')
+function parseEmailList(value) {
+  return String(value || '')
     .split(',')
     .map((addr) => addr.trim())
     .filter(Boolean);
-  if (!apiKey || to.length === 0) return null;
+}
+
+// Low-level send via Resend (cantor.agency is verified as a sending domain there).
+// Used because cantor.agency's DNS is on reg.ru, not Cloudflare, so Cloudflare Email
+// Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
+async function sendViaResend(env, { to, subject, html, text }) {
+  const apiKey = env.RESEND_API_KEY;
+  if (!apiKey || !to || to.length === 0) return null;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ from: 'Заявки с сайта <leads@cantor.agency>', to, subject, html, text }),
+    signal: AbortSignal.timeout(5000),
+  });
+  const data = await res.json().catch(() => null);
+  return { status: res.status, ok: res.ok, data };
+}
+
+async function sendEmailNotification(env, subject, cleanFields) {
+  const to = parseEmailList(env.ADMIN_EMAIL);
+  if (to.length === 0) return null;
 
   const rows = Object.entries(cleanFields)
     .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#667;white-space:nowrap;"><b>${escapeHtml(label)}</b></td><td style="padding:4px 0;">${escapeHtml(value)}</td></tr>`)
@@ -307,20 +328,56 @@ async function sendEmailNotification(env, subject, cleanFields) {
   const html = `<table cellspacing="0" cellpadding="0">${rows}</table>`;
   const text = Object.entries(cleanFields).map(([label, value]) => `${label}: ${value}`).join('\n');
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      from: 'Заявки с сайта <leads@cantor.agency>',
+  return sendViaResend(env, { to, subject, html, text });
+}
+
+// Resend's free-tier caps (see resend.com/pricing — adjust here if the plan changes).
+const RESEND_LIMITS = { day: 100, month: 3000 };
+const USAGE_WARN_RATIO = 0.9;
+const USAGE_LABELS = { day: 'сутки', month: 'месяц' };
+
+// Track how many lead emails go out per day/month in KV, and fire a one-time
+// warning email (to OPS_ALERT_EMAIL only, not the lead recipients) the first
+// time either counter crosses 90% of Resend's free-tier limit.
+async function trackEmailUsage(env, wasSent) {
+  const kv = env.MBA_MYBRAND_KV;
+  if (!wasSent || !kv) return;
+
+  const now = new Date();
+  const dayKey = now.toISOString().slice(0, 10);
+  const monthKey = now.toISOString().slice(0, 7);
+
+  await Promise.all([
+    bumpUsageAndWarn(env, kv, 'day', dayKey, RESEND_LIMITS.day),
+    bumpUsageAndWarn(env, kv, 'month', monthKey, RESEND_LIMITS.month),
+  ]);
+}
+
+async function bumpUsageAndWarn(env, kv, period, periodKey, limit) {
+  const ttl = period === 'day' ? 60 * 60 * 24 * 3 : 60 * 60 * 24 * 45;
+  const countKey = `email_usage:${period}:${periodKey}`;
+  const count = (parseInt(await kv.get(countKey), 10) || 0) + 1;
+  await kv.put(countKey, String(count), { expirationTtl: ttl });
+
+  if (count < Math.ceil(limit * USAGE_WARN_RATIO)) return;
+
+  const warnedKey = `email_usage_warned:${period}:${periodKey}`;
+  if (await kv.get(warnedKey)) return;
+  await kv.put(warnedKey, '1', { expirationTtl: ttl });
+
+  const to = parseEmailList(env.OPS_ALERT_EMAIL);
+  if (to.length === 0) return;
+  const label = USAGE_LABELS[period];
+  try {
+    await sendViaResend(env, {
       to,
-      subject,
-      html,
-      text,
-    }),
-    signal: AbortSignal.timeout(5000),
-  });
-  const data = await res.json().catch(() => null);
-  return { status: res.status, ok: res.ok, data };
+      subject: `⚠️ Resend: использовано ${count}/${limit} писем за ${label}`,
+      text: `Отправлено ${count} из ${limit} писем через Resend за текущ${period === 'day' ? 'ие сутки' : 'ий месяц'} — это ${Math.round((count / limit) * 100)}% лимита бесплатного тарифа. Проверьте дашборд Resend, иначе новые заявки перестанут доставляться на почту.`,
+      html: `<p>Отправлено <b>${count}</b> из <b>${limit}</b> писем через Resend за текущ${period === 'day' ? 'ие сутки' : 'ий месяц'} — это <b>${Math.round((count / limit) * 100)}%</b> лимита бесплатного тарифа.</p><p>Проверьте дашборд Resend, иначе новые заявки перестанут доставляться на почту.</p>`,
+    });
+  } catch (err) {
+    console.error('usage_warning_failed', String(err && err.message));
+  }
 }
 
 // ── Leads: forward landing-page form submissions by email ──
@@ -340,6 +397,7 @@ async function handleLeadNotify(request, env) {
 
   try {
     const emailResult = await sendEmailNotification(env, `Новая заявка — ${source}`, cleanFields);
+    await trackEmailUsage(env, emailResult && emailResult.ok);
     return json({ ok: true, email: emailResult });
   } catch (err) {
     return json({ error: 'email_failed', message: String(err && err.message) }, 502);
