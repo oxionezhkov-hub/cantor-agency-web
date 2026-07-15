@@ -295,8 +295,11 @@ function escapeHtml(value) {
 // Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
 async function sendEmailNotification(env, subject, cleanFields) {
   const apiKey = env.RESEND_API_KEY;
-  const to = env.ADMIN_EMAIL;
-  if (!apiKey || !to) return null;
+  const to = String(env.ADMIN_EMAIL || '')
+    .split(',')
+    .map((addr) => addr.trim())
+    .filter(Boolean);
+  if (!apiKey || to.length === 0) return null;
 
   const rows = Object.entries(cleanFields)
     .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#667;white-space:nowrap;"><b>${escapeHtml(label)}</b></td><td style="padding:4px 0;">${escapeHtml(value)}</td></tr>`)
@@ -309,7 +312,7 @@ async function sendEmailNotification(env, subject, cleanFields) {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       from: 'Заявки с сайта <leads@cantor.agency>',
-      to: [to],
+      to,
       subject,
       html,
       text,
