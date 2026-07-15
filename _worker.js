@@ -322,7 +322,37 @@ async function sendTelegramMessage(env, text) {
   return { failed };
 }
 
-// ── Leads: forward landing-page form submissions to Telegram ──
+// Email notification via Resend (cantor.agency is verified as a sending domain there).
+// Used because cantor.agency's DNS is on reg.ru, not Cloudflare, so Cloudflare Email
+// Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
+async function sendEmailNotification(env, subject, cleanFields) {
+  const apiKey = env.RESEND_API_KEY;
+  const to = env.ADMIN_EMAIL;
+  if (!apiKey || !to) return null;
+
+  const rows = Object.entries(cleanFields)
+    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#667;white-space:nowrap;"><b>${escapeHtml(label)}</b></td><td style="padding:4px 0;">${escapeHtml(value)}</td></tr>`)
+    .join('');
+  const html = `<table cellspacing="0" cellpadding="0">${rows}</table>`;
+  const text = Object.entries(cleanFields).map(([label, value]) => `${label}: ${value}`).join('\n');
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      from: 'Заявки с сайта <leads@cantor.agency>',
+      to: [to],
+      subject,
+      html,
+      text,
+    }),
+    signal: AbortSignal.timeout(5000),
+  });
+  const data = await res.json().catch(() => null);
+  return { status: res.status, ok: res.ok, data };
+}
+
+// ── Leads: forward landing-page form submissions to Telegram + email ──
 async function handleLeadNotify(request, env) {
   const body = await readJson(request);
   if (!body || typeof body !== 'object') return json({ error: 'invalid_body' }, 400);
@@ -330,18 +360,33 @@ async function handleLeadNotify(request, env) {
   const source = String(body.source || 'website').trim();
   const fields = body.fields && typeof body.fields === 'object' ? body.fields : {};
 
+  const cleanFields = {};
   const lines = [`<b>Новая заявка — ${escapeHtml(source)}</b>`];
   for (const [label, value] of Object.entries(fields)) {
     const clean = String(value || '').trim();
     if (!clean) continue;
+    cleanFields[label] = clean;
     lines.push(`<b>${escapeHtml(label)}:</b> ${escapeHtml(clean)}`);
   }
 
+  // Run in parallel and with a timeout above so a slow/unreachable email relay
+  // never delays or blocks the Telegram delivery, which is the primary channel.
+  const [emailSettled, telegramSettled] = await Promise.allSettled([
+    sendEmailNotification(env, `Новая заявка — ${source}`, cleanFields),
+    sendTelegramMessage(env, lines.join('\n')),
+  ]);
+
+  const emailResult = emailSettled.status === 'fulfilled' ? emailSettled.value : null;
+  if (emailSettled.status === 'rejected') {
+    console.error('email_send_failed', String(emailSettled.reason && emailSettled.reason.message));
+  }
+
   try {
-    const { failed } = await sendTelegramMessage(env, lines.join('\n'));
-    return json({ ok: true, partialFailures: failed.length });
+    if (telegramSettled.status === 'rejected') throw telegramSettled.reason;
+    const { failed } = telegramSettled.value;
+    return json({ ok: true, partialFailures: failed.length, email: emailResult });
   } catch (err) {
-    return json({ error: 'telegram_failed', message: String(err && err.message) }, 502);
+    return json({ error: 'telegram_failed', message: String(err && err.message), email: emailResult }, 502);
   }
 }
 
