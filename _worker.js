@@ -322,19 +322,30 @@ async function sendTelegramMessage(env, text) {
   return { failed };
 }
 
-// Best-effort email notification via FormSubmit (https://formsubmit.co) — a free
-// no-signup relay: the first submission to a given address triggers a one-time
-// confirmation email that the recipient must click before further mail is delivered.
-// Used because cantor.agency's DNS isn't on Cloudflare, so Cloudflare Email Routing
-// (which needs a Cloudflare-managed zone) isn't an option for this domain.
+// Email notification via Resend (cantor.agency is verified as a sending domain there).
+// Used because cantor.agency's DNS is on reg.ru, not Cloudflare, so Cloudflare Email
+// Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
 async function sendEmailNotification(env, subject, cleanFields) {
-  const email = env.ADMIN_EMAIL;
-  if (!email) return null;
+  const apiKey = env.RESEND_API_KEY;
+  const to = env.ADMIN_EMAIL;
+  if (!apiKey || !to) return null;
 
-  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+  const rows = Object.entries(cleanFields)
+    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#667;white-space:nowrap;"><b>${escapeHtml(label)}</b></td><td style="padding:4px 0;">${escapeHtml(value)}</td></tr>`)
+    .join('');
+  const html = `<table cellspacing="0" cellpadding="0">${rows}</table>`;
+  const text = Object.entries(cleanFields).map(([label, value]) => `${label}: ${value}`).join('\n');
+
+  const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ _subject: subject, ...cleanFields }),
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      from: 'Заявки с сайта <leads@cantor.agency>',
+      to: [to],
+      subject,
+      html,
+      text,
+    }),
     signal: AbortSignal.timeout(5000),
   });
   const data = await res.json().catch(() => null);
