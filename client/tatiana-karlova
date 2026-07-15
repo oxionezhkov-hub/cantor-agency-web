@@ -6,59 +6,98 @@
 <title>Татьяна Владимировна Карлова — репетитор по математике</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Work+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-    --rose-50: #FBF0F0;
-    --rose-100: #F5D9D9;
-    --rose-200: #EBB9B9;
-    --rose-400: #D49191;
-    --rose-600: #B86B6B;
-    --rose-800: #9A4F4F;
-    --peach: #FBE0D2;
-    --dusty-rose: #E0B4B4;
-    --bg: #FDF9F9;
-    --white: #ffffff;
-    --text: #3D2C2C;
-    --text-soft: #6E5D5D;
-    --text-muted: #9E8E8E;
-    --border: rgba(154, 79, 79, 0.12);
-    --whatsapp: #25D366;
-    --whatsapp-dark: #1EBE5A;
-    --telegram: #29A9EA;
-    --telegram-dark: #1E97D4;
-    --font-display: 'Playfair Display', Georgia, serif;
-    --font-body: 'Geologica', sans-serif;
-    --radius: 16px;
-    --shadow: 0 4px 32px rgba(154, 79, 79, 0.08);
+    --ink: #23201C;
+    --paper: #F3EFE7;
+    --paper-dim: #EAE3D4;
+    --red: #A83D2A;
+    --pencil: #6B6154;
+    --line: #D9CFBC;
+    --white: #FFFFFF;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Work Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+
+    --radius: 4px;
+    --page-padding: 6vw;
+    --max: 1180px;
 }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { scroll-behavior: smooth; }
-
   body {
     font-family: var(--font-body);
-    background: var(--bg);
-    color: var(--text);
+    background: var(--paper);
+    color: var(--ink);
     font-size: 16px;
-    line-height: 1.7;
+    line-height: 1.6;
     overflow-x: hidden;
   }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+  ::selection { background: var(--red); color: var(--paper); }
 
-  :root {
-    --page-padding: 5vw;
+  :focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 3px;
   }
 
-  /* NAV - glass/semi-transparent */
+  .wrap { max-width: var(--max); margin: 0 auto; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--pencil);
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .eyebrow.on-dark { color: rgba(243,239,231,0.6); }
+  .eyebrow.accent { color: var(--red); }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    line-height: 1.12;
+    font-weight: 500;
+  }
+  em {
+    font-style: italic;
+    color: var(--red);
+  }
+  .mark {
+    position: relative;
+    white-space: nowrap;
+  }
+  .mark::after {
+    content: '';
+    position: absolute;
+    left: -2%; right: -2%;
+    bottom: 0.06em;
+    height: 0.09em;
+    background: var(--red);
+    opacity: 0.9;
+    border-radius: 2px;
+    transform: rotate(-0.6deg);
+  }
+
+  section { padding: 6.5rem var(--page-padding); }
+  .section-inner { max-width: var(--max); margin: 0 auto; }
+  .section-head { max-width: 620px; margin-bottom: 3.25rem; }
+  .section-head h2 { font-size: clamp(1.7rem, 2.6vw, 2.35rem); margin-bottom: 0.85rem; }
+  .section-head p { color: var(--pencil); font-weight: 300; font-size: 1.02rem; max-width: 540px; }
+
+  /* NAV */
   nav {
     position: fixed;
     top: 0; left: 0; right: 0;
     z-index: 100;
-    background: rgba(253,249,249,0.72);
-    backdrop-filter: blur(18px) saturate(160%);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    border-bottom: 1px solid rgba(154,79,79,0.10);
-    box-shadow: 0 2px 20px rgba(154,79,79,0.06);
+    background: rgba(243,239,231,0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
     padding: 0 var(--page-padding);
     height: 64px;
     display: flex;
@@ -67,1597 +106,622 @@
   }
   .nav-logo {
     font-family: var(--font-display);
-    font-size: 1.2rem;
-    color: var(--rose-600);
+    font-size: 1.05rem;
+    color: var(--ink);
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 600;
   }
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 2.25rem;
     list-style: none;
   }
-  .nav-links a {
+  .nav-links a:not(.btn) {
     text-decoration: none;
-    color: var(--text-soft);
-    font-size: 0.9rem;
-    font-weight: 400;
-    transition: color 0.2s;
-    letter-spacing: 0.02em;
+    color: var(--pencil);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color 0.15s;
   }
-  .nav-links a:hover { color: var(--rose-400); }
-  .nav-cta {
-    background: var(--rose-400);
-    color: white !important;
-    padding: 0.45rem 1.2rem;
-    border-radius: 40px;
-    font-weight: 500 !important;
-  }
-  .nav-cta:hover { background: var(--rose-600) !important; color: white !important; }
-  .nav-whatsapp {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--whatsapp);
-    display: flex;
+  .nav-links a:not(.btn):hover { color: var(--ink); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s, background 0.2s;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.85rem 1.7rem;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    min-height: 44px;
+    line-height: 1.1;
   }
-  .nav-whatsapp:hover { background: var(--whatsapp-dark); transform: scale(1.08); }
-  .nav-whatsapp svg { display: block; }
+  .btn:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .btn-outline:hover { background: var(--ink); color: var(--paper); }
+  .btn-sm { padding: 0.6rem 1.15rem; font-size: 0.85rem; min-height: 38px; }
+  .btn-on-dark { border-color: var(--paper); background: var(--paper); color: var(--ink); }
+  .btn-on-dark:hover { background: var(--red); border-color: var(--red); color: var(--paper); }
+
+  .text-link {
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+    transition: text-decoration-color 0.15s;
+  }
+  .text-link:hover { text-decoration-color: var(--red); }
 
   /* HERO */
   .hero {
-    min-height: 100vh;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 4.5rem;
     align-items: center;
-    padding: 96px var(--page-padding) 64px;
-    gap: 4rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -200px; right: -200px;
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, var(--rose-50) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .hero::after {
-    content: '';
-    position: absolute;
-    bottom: -240px; left: -180px;
-    width: 560px; height: 560px;
-    background: radial-gradient(circle, var(--peach) 0%, transparent 70%);
-    opacity: 0.5;
-    pointer-events: none;
-  }
-  .hero-name-tag {
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    color: var(--rose-800);
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.6rem;
-  }
-  .hero-tag {
-    display: inline-block;
-    background: var(--rose-50);
-    color: var(--rose-600);
-    border: 1px solid var(--rose-100);
-    padding: 0.3rem 1rem;
-    border-radius: 40px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
-    animation: tag-blink 2s ease-in-out infinite;
-  }
-  @keyframes tag-blink {
-    0%, 100% {
-      color: var(--rose-600);
-      border-color: var(--rose-100);
-      background: var(--rose-50);
-      box-shadow: none;
-    }
-    50% {
-      color: var(--rose-400);
-      border-color: var(--rose-400);
-      background: rgba(212,145,145,0.14);
-      box-shadow: 0 0 14px rgba(212,145,145,0.35);
-    }
+    padding: 148px var(--page-padding) 6rem;
+    max-width: var(--max);
+    margin: 0 auto;
   }
   .hero h1 {
-    font-family: var(--font-display);
-    font-size: clamp(2.4rem, 4vw, 3.6rem);
-    line-height: 1.15;
-    margin-bottom: 1.5rem;
-    color: var(--text);
-  }
-  .hero h1 em {
-    color: var(--rose-400);
-    font-style: italic;
+    font-size: clamp(2.3rem, 3.6vw, 3.35rem);
+    margin-bottom: 1.4rem;
   }
   .hero-desc {
-    color: var(--text-soft);
-    font-size: 1.05rem;
-    margin-bottom: 2rem;
+    color: var(--pencil);
+    font-size: 1.08rem;
+    font-weight: 300;
     max-width: 480px;
-    font-weight: 300;
-    line-height: 1.8;
+    margin-bottom: 2rem;
+    line-height: 1.75;
   }
-  .hero-btns {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
+  .hero-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; }
+  .hero-contact-line {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--pencil);
   }
-  .btn-primary {
-    background: var(--rose-400);
-    color: white;
-    padding: 0.85rem 2rem;
-    border-radius: 40px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: background 0.2s, transform 0.15s;
-    display: inline-block;
-  }
-  .btn-primary:hover { background: var(--rose-600); transform: translateY(-2px); }
-  .btn-outline {
-    border: 1.5px solid var(--rose-400);
-    color: var(--rose-400);
-    padding: 0.85rem 2rem;
-    border-radius: 40px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: all 0.2s;
-    display: inline-block;
-    background: transparent;
-  }
-  .btn-outline:hover { background: var(--rose-50); transform: translateY(-2px); }
-  .btn-whatsapp {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    background: var(--whatsapp);
-    color: white;
-    padding: 0.85rem 1.8rem;
-    border-radius: 40px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: background 0.2s, transform 0.15s;
-    box-shadow: 0 4px 20px rgba(37,211,102,0.28);
-  }
-  .btn-whatsapp:hover { background: var(--whatsapp-dark); transform: translateY(-2px); }
+  .hero-contact-line a { color: var(--ink); }
 
-  .hero-visual {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .hero-photo {
     position: relative;
   }
-  .avatar-frame {
-    width: 380px; height: 440px;
-    background: linear-gradient(145deg, var(--rose-50), var(--rose-100));
-    border-radius: 40% 60% 60% 40% / 50% 40% 60% 50%;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-    border: 2px solid var(--rose-100);
-  }
-  .avatar-photo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 15%;
-    display: block;
-  }
-  .avatar-accent {
-    position: absolute;
-    left: -34px;
-    bottom: 18px;
-    width: 132px;
-    height: 160px;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 4px solid var(--white);
-    box-shadow: var(--shadow);
-    transform: rotate(-6deg);
-    z-index: 2;
-    background: var(--rose-50);
-  }
-  .avatar-accent img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 18%;
-    display: block;
-  }
-  .hero-photo-mobile {
-    display: none;
-    width: min(280px, 72vw);
-    margin: 0 auto 1rem;
-    border-radius: 20px;
-    overflow: hidden;
+  .hero-photo-frame {
+    border: 1.5px solid var(--ink);
     aspect-ratio: 4 / 5;
-    border: 2px solid var(--rose-100);
-    box-shadow: var(--shadow);
+    overflow: hidden;
+    background: var(--paper-dim);
   }
-  .hero-photo-mobile img {
-    width: 100%;
-    height: 100%;
+  .hero-photo-frame img {
+    width: 100%; height: 100%;
     object-fit: cover;
-    object-position: center 15%;
-    display: block;
+    object-position: center 14%;
   }
-
-  .stat-badges {
-    position: absolute;
+  .hero-photo-caption {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .stat-badges.left { left: -30px; top: 50%; transform: translateY(-50%); }
-  .stat-badges.right { right: -30px; top: 40%; transform: translateY(-50%); }
-  .stat-badge {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.7rem 1.1rem;
-    box-shadow: var(--shadow);
-    text-align: center;
-    white-space: nowrap;
-  }
-  .stat-badge strong {
-    display: block;
-    font-family: var(--font-body);
-    font-size: 1.6rem;
-    color: var(--rose-400);
-    font-weight: 600;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .stat-badge span {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
     letter-spacing: 0.05em;
-  }
-
-  .hero-stats-mobile { display: none; }
-
-  /* SECTION */
-  section {
-    padding: 96px var(--page-padding);
-  }
-  .section-label {
-    display: inline-block;
-    background: var(--rose-50);
-    color: var(--rose-600);
-    border: 1px solid var(--rose-100);
-    padding: 0.3rem 1rem;
-    border-radius: 40px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
+    color: var(--pencil);
+    margin-top: 0.65rem;
     text-transform: uppercase;
-    margin-bottom: 1rem;
   }
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    line-height: 1.2;
-    margin-bottom: 1rem;
-    color: var(--text);
+
+  /* SCOREBOARD / STATS */
+  .scoreboard {
+    background: var(--ink);
+    color: var(--paper);
   }
-  .section-title em { color: var(--rose-400); font-style: italic; }
-  .section-sub {
-    color: var(--text-soft);
-    max-width: 540px;
+  .scoreboard-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .scoreboard-item {
+    padding: 0 1.5rem;
+    border-left: 1px solid rgba(243,239,231,0.18);
+  }
+  .scoreboard-item:first-child { border-left: none; padding-left: 0; }
+  .scoreboard-num {
+    font-family: var(--font-mono);
+    font-size: clamp(2rem, 3.6vw, 2.9rem);
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 0.6rem;
+    color: var(--paper);
+  }
+  .scoreboard-label {
+    font-size: 0.85rem;
+    color: rgba(243,239,231,0.62);
     font-weight: 300;
-    font-size: 1.05rem;
+    line-height: 1.4;
   }
-  .section-header { margin-bottom: 3.5rem; }
-  .form-title em { display: inline; }
 
   /* ABOUT */
   .about-grid {
     display: grid;
-    grid-template-columns: 0.95fr 1.05fr;
+    grid-template-columns: 0.85fr 1.15fr;
     gap: 4.5rem;
-    align-items: center;
-    max-width: 1040px;
-    margin: 0 auto;
+    align-items: start;
   }
-  .about-photo-wrap {
-    position: relative;
-  }
-  .about-photo-main {
-    border-radius: 24px;
-    overflow: hidden;
-    border: 2px solid var(--rose-100);
-    box-shadow: var(--shadow);
+  .about-photo-frame {
+    border: 1.5px solid var(--ink);
     aspect-ratio: 4 / 5;
-    background: var(--rose-50);
-  }
-  .about-photo-main img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 20%;
-    display: block;
-  }
-  .about-photo-accent {
-    position: absolute;
-    right: -28px;
-    bottom: -28px;
-    width: 148px;
-    height: 178px;
-    border-radius: 18px;
     overflow: hidden;
-    border: 4px solid var(--white);
-    box-shadow: var(--shadow);
-    transform: rotate(5deg);
-    background: var(--rose-50);
+    background: var(--paper-dim);
+    position: sticky;
+    top: 96px;
   }
-  .about-photo-accent img {
-    width: 100%;
-    height: 100%;
+  .about-photo-frame img {
+    width: 100%; height: 100%;
     object-fit: cover;
-    object-position: center 15%;
-    display: block;
+    object-position: center 18%;
   }
-
-  .about-text h2 { margin-bottom: 1.4rem; }
   .about-text p {
-    color: var(--text-soft);
+    color: var(--pencil);
     font-weight: 300;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.3rem;
     line-height: 1.85;
-    font-size: 1.05rem;
+    font-size: 1.04rem;
   }
-  .about-highlight {
-    background: var(--rose-50);
-    border-left: 3px solid var(--rose-400);
-    padding: 1rem 1.5rem;
-    border-radius: 0 12px 12px 0;
-    margin: 1.5rem 0;
+  .about-text p strong { color: var(--ink); font-weight: 500; }
+  .margin-note {
+    border-left: 2px solid var(--red);
+    padding-left: 1.4rem;
+    margin: 2rem 0;
   }
-  .about-highlight p {
-    color: var(--rose-800) !important;
-    font-weight: 400 !important;
-    font-size: 1rem !important;
-    margin: 0 !important;
+  .margin-note p {
+    font-family: var(--font-display);
     font-style: italic;
+    font-size: 1.15rem !important;
+    color: var(--ink) !important;
+    line-height: 1.55 !important;
+    margin: 0 !important;
   }
-  .about-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin: 0.25rem 0 1.5rem;
-  }
-  .about-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: var(--rose-50);
-    border: 1px solid var(--rose-100);
-    color: var(--rose-800);
-    padding: 0.45rem 0.95rem;
-    border-radius: 40px;
-    font-size: 0.82rem;
-    font-weight: 500;
-  }
-  .about-cta {
-    display: flex;
-    gap: 0.9rem;
-    flex-wrap: wrap;
-    margin-top: 1.75rem;
-  }
-
-  /* RESULTS STATS */
-  .stats-bg {
-    background: var(--rose-800);
-    color: white;
-    padding: 80px var(--page-padding);
-  }
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
-    margin-top: 2.5rem;
-  }
-  .stat-card {
-    text-align: center;
-    padding: 2rem 1.5rem;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .stat-num {
-    font-family: var(--font-body);
-    font-size: 3rem;
-    font-weight: 600;
-    color: var(--peach);
-    line-height: 1;
-    height: 3.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .stat-label {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.65);
-    line-height: 1.4;
-    font-weight: 300;
-    margin: 0;
-  }
-  .stats-bg .section-title { color: white; }
-  .stats-bg .section-sub { color: rgba(255,255,255,0.65); }
-  .stats-bg .section-label { background: rgba(255,255,255,0.1); color: var(--peach); border-color: rgba(255,255,255,0.2); }
+  .about-cta { margin-top: 1.75rem; }
 
   /* PAIN POINTS */
   .pain-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
   }
   .pain-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2.25rem 2rem;
-    box-shadow: var(--shadow);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .pain-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 4px; height: 100%;
-    background: linear-gradient(to bottom, var(--rose-400), var(--rose-200));
-  }
-  .pain-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(154,79,79,0.14);
-  }
-  .pain-icon {
-    width: 54px; height: 54px;
-    border-radius: 14px;
-    background: var(--rose-50);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6rem;
-    margin-bottom: 1.4rem;
+    background: var(--paper);
+    padding: 2.5rem 2.25rem;
   }
   .pain-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
+    font-size: 1.18rem;
     margin-bottom: 1.1rem;
-    color: var(--text);
-    line-height: 1.35;
+    line-height: 1.3;
   }
-  .pain-row {
-    display: flex;
-    gap: 0.7rem;
-    margin-bottom: 0.85rem;
-    align-items: flex-start;
-  }
-  .pain-row:last-child { margin-bottom: 0; }
-  .pain-label {
-    flex-shrink: 0;
+  .pain-line { margin-bottom: 0.9rem; }
+  .pain-line:last-child { margin-bottom: 0; }
+  .pain-tag {
+    font-family: var(--font-mono);
     font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 0.2rem 0.65rem;
-    border-radius: 20px;
-    margin-top: 0.15rem;
-    white-space: nowrap;
+    color: var(--pencil);
+    display: block;
+    margin-bottom: 0.3rem;
   }
-  .pain-label.problem { background: rgba(194, 68, 66, 0.1); color: #B33D3B; }
-  .pain-label.solution { background: rgba(154, 79, 79, 0.1); color: var(--rose-600); }
-  .pain-row p {
-    font-size: 0.92rem;
-    color: var(--text-soft);
+  .pain-line p {
+    font-size: 0.94rem;
+    color: var(--ink);
     font-weight: 300;
-    line-height: 1.65;
-    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* HOW LESSONS WORK */
+  .lessons-section { background: var(--paper-dim); }
+  .lessons-video-frame {
+    border: 1.5px solid var(--ink);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--ink);
+    margin-bottom: 3.5rem;
+  }
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2.5rem;
+  }
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--red);
+    margin-bottom: 0.75rem;
+  }
+  .step-item h4 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.98rem;
+    margin-bottom: 0.5rem;
+  }
+  .step-item p {
+    font-size: 0.88rem;
+    color: var(--pencil);
+    font-weight: 300;
+    line-height: 1.55;
   }
 
   /* SERVICES */
   .services-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
   }
   .service-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem 1.75rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-    display: flex;
-    flex-direction: column;
+    background: var(--paper);
+    padding: 2.25rem 2rem;
   }
-  .service-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow);
-  }
-  .service-card.featured {
-    background: var(--rose-400);
-    border-color: var(--rose-400);
-    color: white;
-  }
-  .service-tag {
-    display: inline-block;
-    background: var(--rose-50);
-    color: var(--rose-600);
-    font-size: 0.75rem;
-    padding: 0.2rem 0.7rem;
-    border-radius: 40px;
-    margin-bottom: 1rem;
-    font-weight: 500;
-  }
+  .service-card .eyebrow { margin-bottom: 1.25rem; }
   .service-card h3 {
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 0.85rem;
   }
-  .service-card.featured h3 { color: white; }
   .service-card p {
-    font-size: 0.9rem;
-    color: var(--text-soft);
+    font-size: 0.92rem;
+    color: var(--pencil);
     font-weight: 300;
     line-height: 1.6;
-    margin-bottom: 1.25rem;
-    flex: 1;
-  }
-  .service-card.featured p { color: rgba(255,255,255,0.85); }
-  .service-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    margin-top: auto;
-  }
-  .service-card.featured .service-footer {
-    border-top-color: rgba(255,255,255,0.22);
-  }
-  .service-footer a {
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--rose-600);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-  .service-footer a:hover { color: var(--rose-800); }
-  .service-card.featured .service-footer a { color: white; }
-  .service-card.featured .service-tag {
-    background: rgba(255,255,255,0.2);
-    color: white;
   }
   .services-note {
-    text-align: center;
     margin-top: 2.5rem;
-    color: var(--text-muted);
-    font-size: 0.92rem;
-    font-weight: 300;
-  }
-
-  /* HOW LESSONS WORK */
-  .lessons-section {
-    background: var(--rose-50);
-    border-radius: 32px;
-    max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-  }
-  .lessons-section .section-header {
-    margin-bottom: 2.5rem;
-  }
-  .lessons-video-wrap {
-    width: 100%;
-    margin: 0 auto;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 2px solid var(--rose-100);
-    box-shadow: var(--shadow);
-    background: var(--rose-800);
-    aspect-ratio: 16 / 9;
-  }
-  .lessons-video-wrap video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    background: #000;
-  }
-  .lessons-note { display: none; }
-
-  /* HOW IT WORKS */
-  .steps-block {
-    display: block;
-    margin-top: 3rem;
-  }
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
-    position: relative;
-  }
-  .steps-grid::before {
-    content: '';
-    position: absolute;
-    top: 56px;
-    left: calc(12.5% + 1rem);
-    right: calc(12.5% + 1rem);
-    height: 1px;
-    background: linear-gradient(to right, var(--rose-100), var(--rose-200), var(--rose-100));
-  }
-  .step-item { text-align: center; }
-  .step-num {
-    width: 112px;
-    height: 112px;
-    background: white;
-    border: 2px solid var(--rose-200);
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-family: var(--font-body);
-    font-size: 2.4rem;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--rose-400);
-    margin: 0 auto 1.25rem;
-    position: relative;
-    z-index: 1;
-    padding: 0;
-    font-variant-numeric: tabular-nums;
-    box-sizing: border-box;
-  }
-  .step-item h4 {
-    font-weight: 500;
+    color: var(--pencil);
     font-size: 0.95rem;
-    margin-bottom: 0.5rem;
-    color: var(--text);
-  }
-  .step-item p {
-    font-size: 0.85rem;
-    color: var(--text-soft);
     font-weight: 300;
-    line-height: 1.5;
   }
+  .services-note .text-link { color: var(--ink); }
 
-  /* CONTACT BAND */
-  .contact-band {
-    background: linear-gradient(135deg, var(--rose-800), #7d4141);
-    border-radius: 32px;
-    max-width: 960px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-    text-align: center;
-    color: white;
-    position: relative;
-    overflow: hidden;
-  }
-  .contact-band::before {
-    content: '';
-    position: absolute;
-    top: -120px; right: -80px;
-    width: 320px; height: 320px;
-    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .contact-band .section-header { margin-bottom: 2.25rem; position: relative; }
-  .contact-band .section-title { color: white; }
-  .contact-band .section-sub { color: rgba(255,255,255,0.7); margin: 0 auto; }
-  .contact-links {
+  /* CONTACT */
+  .contact-section { background: var(--ink); color: var(--paper); }
+  .contact-grid {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: flex-end;
     flex-wrap: wrap;
-    gap: 1rem;
-    position: relative;
+    gap: 2.5rem;
   }
-  .contact-pill {
-    display: inline-flex;
+  .contact-grid h2 { color: var(--paper); }
+  .contact-grid .section-head p { color: rgba(243,239,231,0.62); }
+  .contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .contact-list a {
+    display: flex;
     align-items: center;
-    gap: 0.6rem;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.22);
-    color: white;
-    padding: 0.9rem 1.7rem;
-    border-radius: 40px;
+    gap: 0.75rem;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 0.95rem;
-    backdrop-filter: blur(6px);
-    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    color: var(--paper);
+    font-size: 1.05rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(243,239,231,0.2);
+    transition: border-color 0.15s, color 0.15s;
+    min-width: 280px;
   }
-  .contact-pill:hover { transform: translateY(-3px); background: rgba(255,255,255,0.18); }
-  .contact-pill.whatsapp { background: var(--whatsapp); border-color: var(--whatsapp); }
-  .contact-pill.whatsapp:hover { background: var(--whatsapp-dark); }
-  .contact-pill.telegram { background: var(--telegram); border-color: var(--telegram); }
-  .contact-pill.telegram:hover { background: var(--telegram-dark); }
-  .contact-pill svg { flex-shrink: 0; }
+  .contact-list a:hover { border-color: var(--red); color: var(--red); }
+  .contact-list svg { flex-shrink: 0; opacity: 0.85; }
 
   /* REVIEWS */
-  .reviews-grid {
+  .reviews-photos-wrapper { position: relative; }
+  .reviews-photos-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-  }
-  .review-screenshot-card {
-    display: block;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    max-height: 420px;
     overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: transform 0.2s, box-shadow 0.2s;
-    text-decoration: none;
+    transition: max-height 0.5s ease;
   }
-  .review-screenshot-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(154,79,79,0.14);
+  .reviews-photos-grid.expanded { max-height: 6000px; }
+  .reviews-fade-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 110px;
+    background: linear-gradient(to bottom, rgba(243,239,231,0) 0%, var(--paper) 88%);
+    pointer-events: none;
+    transition: opacity 0.4s ease;
   }
-  .review-screenshot-card img {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  .reviews-cta {
-    text-align: center;
-    margin-top: 2.5rem;
-  }
-  .reviews-cta a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .reviews-profi-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: var(--rose-50);
-    color: var(--rose-600);
-    border: 1px solid var(--rose-100);
-    padding: 0.35rem 0.9rem;
-    border-radius: 40px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-bottom: 1rem;
-  }
+  .reviews-photos-grid.expanded ~ .reviews-fade-overlay { opacity: 0; }
+  .review-col { display: flex; flex-direction: column; gap: 1px; }
+  .review-photo-item { background: var(--paper); line-height: 0; }
+  .review-photo-item img { width: 100%; height: auto; }
+  .reviews-cta { text-align: center; margin-top: 2.5rem; }
+  .reviews-cta.hidden { display: none; }
 
   /* FORM */
   .form-section {
-    background: white;
-    border-radius: 24px;
-    padding: 4rem var(--page-padding);
-    border: 1px solid var(--border);
-    max-width: 800px;
+    background: var(--white);
+    border: 1.5px solid var(--ink);
+    padding: 3.5rem var(--page-padding);
+    max-width: 760px;
     margin: 0 auto;
-    width: 100%;
-    box-sizing: border-box;
   }
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-    min-width: 0;
-  }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; }
   .form-group.full { grid-column: 1 / -1; }
   .form-group:has(.select-wrap) { grid-column: 1 / -1; }
   label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-soft);
-    letter-spacing: 0.02em;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--pencil);
   }
   input, select, textarea {
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.9rem;
     font-family: var(--font-body);
-    font-size: 0.95rem;
-    color: var(--text);
-    background: var(--bg);
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    font-size: 0.96rem;
+    color: var(--ink);
+    background: var(--paper);
+    transition: border-color 0.15s;
     outline: none;
     width: 100%;
   }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--rose-400);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(212,145,145,0.12);
-  }
-  .select-wrap {
-    position: relative;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-  .select-wrap select {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
-  }
+  input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+  .select-wrap { position: relative; width: 100%; min-width: 0; }
+  .select-wrap select { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
   .select-trigger {
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.9rem;
     font-family: var(--font-body);
-    font-size: 0.95rem;
-    color: var(--text);
-    background: var(--bg);
+    font-size: 0.96rem;
+    color: var(--ink);
+    background: var(--paper);
     cursor: pointer;
     text-align: left;
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: border-color 0.15s;
   }
-  .select-trigger.placeholder { color: var(--text-muted); }
-  .select-trigger:focus {
-    outline: none;
-    border-color: var(--rose-400);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(212,145,145,0.12);
-  }
-  .select-trigger.error { border-color: #E24B4A; }
-  .select-trigger-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-    flex: 1;
-  }
+  .select-trigger.placeholder { color: var(--pencil); }
+  .select-trigger:focus { border-color: var(--ink); }
+  .select-trigger.error { border-color: var(--red); }
+  .select-trigger-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .select-chevron {
-    flex-shrink: 0;
-    width: 10px;
-    height: 10px;
-    border-right: 2px solid var(--rose-400);
-    border-bottom: 2px solid var(--rose-400);
+    flex-shrink: 0; width: 8px; height: 8px;
+    border-right: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink);
     transform: rotate(45deg) translateY(-2px);
     transition: transform 0.2s;
   }
-  .select-wrap.open .select-chevron {
-    transform: rotate(-135deg) translateY(2px);
-  }
+  .select-wrap.open .select-chevron { transform: rotate(-135deg) translateY(2px); }
   .select-dropdown {
     display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    width: 100%;
-    box-sizing: border-box;
-    background: white;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(154,79,79,0.12);
-    z-index: 50;
-    max-height: 240px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--white);
+    border: 1.5px solid var(--ink);
+    z-index: 50; max-height: 240px; overflow-y: auto;
   }
   .select-wrap.open .select-dropdown { display: block; }
   .select-option {
-    display: block;
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: none;
-    background: none;
-    font-family: var(--font-body);
-    font-size: 0.95rem;
-    color: var(--text);
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.15s;
+    display: block; width: 100%; padding: 0.7rem 0.9rem; border: none; background: none;
+    font-family: var(--font-body); font-size: 0.94rem; color: var(--ink); text-align: left; cursor: pointer;
   }
-  .select-option:hover,
-  .select-option:focus {
-    background: var(--rose-50);
-    outline: none;
-  }
-  .select-option.selected {
-    background: var(--rose-50);
-    color: var(--rose-600);
-    font-weight: 500;
-  }
+  .select-option:hover, .select-option:focus { background: var(--paper-dim); outline: none; }
+  .select-option.selected { background: var(--paper-dim); font-weight: 500; }
   textarea { resize: vertical; min-height: 100px; }
-  .form-submit {
-    margin-top: 2rem;
-    text-align: center;
-  }
-  .form-submit button {
-    background: var(--rose-400);
-    color: white;
-    border: none;
-    padding: 1.05rem 2rem;
-    border-radius: 40px;
-    font-family: var(--font-body);
-    font-size: 1.05rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    width: 100%;
-    max-width: 100%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    box-shadow: 0 4px 20px rgba(212,145,145,0.28);
-  }
-  .form-submit button:hover { background: var(--rose-600); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(212,145,145,0.35); }
-  .form-submit button:active { transform: translateY(0); }
+  .form-submit { margin-top: 1.75rem; }
+  .form-submit .btn { width: 100%; }
   .form-note {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--pencil);
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 1.1rem;
   }
   .form-alt {
     font-size: 0.9rem;
-    color: var(--text-soft);
+    color: var(--pencil);
     text-align: center;
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--line);
   }
-  .form-alt a { color: var(--rose-600); font-weight: 500; text-decoration: none; }
-  .form-alt a:hover { color: var(--rose-800); }
+  .form-alt a { color: var(--ink); }
 
   /* FOOTER */
-  footer {
-    background: var(--text);
-    color: rgba(255,255,255,0.7);
-    padding: 3rem var(--page-padding);
-  }
+  footer { background: var(--ink); color: rgba(243,239,231,0.68); padding: 3rem var(--page-padding) 2rem; }
   .footer-inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 1.5rem;
+    max-width: var(--max); margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 2rem;
   }
-  .footer-logo {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    color: white;
-    font-weight: 700;
+  .footer-logo { font-family: var(--font-display); font-size: 1.2rem; color: var(--paper); font-weight: 600; }
+  .footer-sub { font-size: 0.85rem; margin-top: 0.35rem; color: rgba(243,239,231,0.5); }
+  .footer-col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .footer-col a { text-decoration: none; color: rgba(243,239,231,0.68); font-size: 0.9rem; transition: color 0.15s; }
+  .footer-col a:hover { color: var(--paper); }
+  .footer-label {
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(243,239,231,0.4); margin-bottom: 0.3rem;
   }
-  .footer-sub {
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    color: rgba(255,255,255,0.45);
-  }
-  .footer-contact {
-    margin-top: 0.9rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .footer-contact a {
-    color: rgba(255,255,255,0.75);
-    text-decoration: none;
-    font-size: 0.88rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: color 0.2s;
-  }
-  .footer-contact a:hover { color: var(--peach); }
-  .footer-links {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
-  .footer-links a {
-    color: rgba(255,255,255,0.6);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.2s;
-  }
-  .footer-links a:hover { color: var(--peach); }
   .footer-bottom {
-    border-top: 1px solid rgba(255,255,255,0.08);
-    margin-top: 2rem;
+    max-width: var(--max); margin: 2.5rem auto 0;
+    border-top: 1px solid rgba(243,239,231,0.12);
     padding-top: 1.5rem;
-    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
     text-align: center;
-    color: rgba(255,255,255,0.3);
+    color: rgba(243,239,231,0.3);
   }
 
   /* TOAST */
   .toast {
-    position: fixed;
-    bottom: 2rem; right: 2rem;
-    background: var(--rose-800);
-    color: white;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    z-index: 999;
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--ink); color: var(--paper);
+    padding: 1rem 1.5rem; border-radius: var(--radius);
+    font-size: 0.9rem; z-index: 999;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; pointer-events: none;
+    display: flex; align-items: center; gap: 0.6rem;
+    border: 1px solid var(--red);
   }
   .toast.show { transform: translateY(0); opacity: 1; }
 
-  /* STICKY CTA - glass */
+  /* STICKY CTA (mobile only) */
   .sticky-cta {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 95;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
     padding: 0.75rem var(--page-padding) calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    background: rgba(253,249,249,0.82);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border-top: 1px solid rgba(154,79,79,0.12);
-    box-shadow: 0 -4px 24px rgba(154,79,79,0.08);
-    transform: translateY(110%);
-    opacity: 0;
-    pointer-events: none;
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+    transform: translateY(110%); opacity: 0; pointer-events: none;
     transition: transform 0.3s ease, opacity 0.3s ease;
-    display: flex;
-    gap: 0.6rem;
   }
-  .sticky-cta.visible {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .sticky-cta-btn {
-    display: block;
-    flex: 1;
-    background: var(--rose-400);
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    padding: 0.95rem 1.5rem;
-    border-radius: 40px;
-    font-family: var(--font-body);
-    font-size: 1rem;
-    font-weight: 500;
-    box-shadow: 0 4px 20px rgba(212,145,145,0.28);
-  }
-  .sticky-cta-btn:hover { background: var(--rose-600); }
-  .sticky-cta-whatsapp {
-    flex-shrink: 0;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--whatsapp);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(37,211,102,0.32);
-  }
+  .sticky-cta.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .sticky-cta .btn { width: 100%; }
 
-  /* FLOATING WHATSAPP */
-  .whatsapp-float {
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 90;
-    width: 58px; height: 58px;
-    border-radius: 50%;
-    background: var(--whatsapp);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 24px rgba(37,211,102,0.4);
-    transition: transform 0.2s, bottom 0.3s;
-  }
-  .whatsapp-float:hover { transform: scale(1.08); background: var(--whatsapp-dark); }
-  body.has-sticky-cta .whatsapp-float { display: none; }
-
-  /* BURGER MENU */
+  /* BURGER */
   .nav-burger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 6px;
-    border: none;
-    background: none;
-    z-index: 200;
+    display: none; flex-direction: column; gap: 5px; cursor: pointer;
+    padding: 6px; border: none; background: none; z-index: 200;
   }
-  .nav-burger span {
-    display: block;
-    width: 24px; height: 2px;
-    background: var(--rose-600);
-    border-radius: 2px;
-    transition: transform 0.3s, opacity 0.3s;
-  }
-  .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-burger span { display: block; width: 22px; height: 1.5px; background: var(--ink); transition: transform 0.3s, opacity 0.3s; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
   .nav-burger.open span:nth-child(2) { opacity: 0; }
-  .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
   .mobile-menu {
     display: none;
-    position: fixed;
-    top: 64px; left: 0; right: 0;
-    background: rgba(253,249,249,0.92);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border-bottom: 1px solid rgba(154,79,79,0.10);
-    box-shadow: 0 8px 24px rgba(154,79,79,0.08);
+    position: fixed; top: 64px; left: 0; right: 0;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
     padding: 1.5rem var(--page-padding) 2rem;
     z-index: 99;
     flex-direction: column;
-    gap: 0;
     max-height: calc(100vh - 64px);
     overflow-y: auto;
   }
   .mobile-menu.open { display: flex; }
-  .mobile-menu a {
-    text-decoration: none;
-    color: var(--text-soft);
-    font-size: 1.1rem;
-    font-weight: 400;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid var(--border);
-    transition: color 0.2s;
+  .mobile-menu a:not(.btn) {
+    text-decoration: none; color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--line);
   }
-  .mobile-menu a:hover { color: var(--rose-400); }
-  .mobile-menu-contacts {
+  .mobile-menu .btn { margin-top: 1.5rem; }
+  .mobile-menu-contact {
+    margin-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--pencil);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+    gap: 0.4rem;
   }
-  .mobile-menu-contacts a {
-    border-bottom: none !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    border-radius: 40px;
-    padding: 0.9rem 1rem !important;
-    font-size: 0.95rem !important;
-    color: white !important;
-    font-weight: 500 !important;
-  }
-  .mobile-menu-contacts a.mm-whatsapp { background: var(--whatsapp); }
-  .mobile-menu-contacts a.mm-telegram { background: var(--telegram); }
-  .mobile-menu-contacts a.mm-phone { background: var(--rose-400); }
+  .mobile-menu-contact a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); }
 
-  /* TABLET 900–1100px */
+  /* TABLET */
   @media (max-width: 1100px) {
-    .hero { gap: 2rem; padding: 96px 4vw 64px; }
-    .avatar-frame { width: 300px; height: 360px; }
-    .avatar-accent { width: 100px; height: 122px; left: -18px; bottom: 10px; }
-    .stat-badges.left { left: -10px; }
-    .stat-badges.right { right: -10px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
-    .steps-grid { grid-template-columns: repeat(2, 1fr); }
-    .steps-grid::before { display: none; }
+    .hero { gap: 2.5rem; }
+    .scoreboard-row { grid-template-columns: repeat(2, 1fr); row-gap: 2rem; }
+    .scoreboard-item:nth-child(3) { border-left: none; padding-left: 0; }
     .pain-grid { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); row-gap: 2.5rem; }
   }
 
-  /* MOBILE < 768px */
+  /* MOBILE */
   @media (max-width: 768px) {
-    section { padding: 64px var(--page-padding); }
+    section { padding: 4.5rem var(--page-padding); }
+    .section-head { margin-bottom: 2.5rem; }
 
-    /* NAV */
-    .nav-links { display: none; }
+    .nav-links > *:not(:last-child):not(.nav-burger-item) { display: none; }
+    .nav-links { gap: 0.75rem; }
     .nav-burger { display: flex; }
-    /* mobile-menu uses glass too */
+    .nav-cta-desktop { display: none; }
 
-    body.has-sticky-cta { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+    body.has-sticky-cta { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 
-    /* HERO */
-    .hero-content {
-      display: flex;
-      flex-direction: column;
-    }
-    .hero-tag { display: none; }
-    .hero-name-tag { order: 1; }
-    .hero h1 { order: 2; margin-bottom: 1rem; }
-    .hero-desc { order: 3; margin-bottom: 1rem; font-size: 0.92rem; line-height: 1.65; }
-    .hero-photo-mobile { order: 4; margin-bottom: 1.25rem; position: relative; }
-    .hero-btns { order: 5; margin-bottom: 1.25rem; }
-    .hero-stats-mobile { order: 6; }
     .hero {
       grid-template-columns: 1fr;
-      min-height: auto;
-      padding: 80px var(--page-padding) 40px;
-      gap: 0;
+      padding: 96px var(--page-padding) 3rem;
+      gap: 2rem;
     }
-    .hero::before, .hero::after { display: none; }
-    .hero-photo-mobile { display: block; }
-    .hero-visual { display: none; }
-    .hero h1 { font-size: clamp(2rem, 8vw, 2.8rem); }
+    .hero-photo { order: -1; max-width: 320px; margin: 0 auto 0.5rem; }
+    .hero h1 { font-size: clamp(2rem, 8vw, 2.6rem); }
     .hero-desc { font-size: 0.98rem; max-width: 100%; }
-    .hero-btns { flex-direction: column; }
-    .btn-primary, .btn-outline, .btn-whatsapp { text-align: center; width: 100%; justify-content: center; }
+    .hero-actions { align-items: stretch; }
+    .hero-actions .btn { width: 100%; }
 
-    /* mobile stats strip after hero text */
-    .hero-stats-mobile {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      margin-top: 0.5rem;
-    }
-    .hero-stat-m {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.9rem 1rem;
-      text-align: center;
-    }
-    .hero-stat-m strong {
-      display: block;
-      font-family: var(--font-body);
-      font-size: 1.6rem;
-      color: var(--rose-400);
-      font-weight: 600;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .hero-stat-m span {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+    .scoreboard-row { grid-template-columns: repeat(2, 1fr); gap: 1.75rem 1rem; }
+    .scoreboard-item { padding-left: 1rem; }
+    .scoreboard-item:nth-child(odd) { border-left: none; padding-left: 0; }
+    .scoreboard-num { font-size: 2rem; }
 
-    /* ABOUT */
-    .about-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 2.5rem;
-    }
-    .about-text { order: 1; }
-    .about-photo-wrap { order: 2; max-width: 320px; margin: 0 auto; width: 100%; }
-    .about-photo-accent { width: 108px; height: 130px; right: -14px; bottom: -18px; }
+    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .about-photo-frame { position: static; max-width: 320px; margin: 0 auto; }
 
-    /* STATS */
-    .stats-bg { padding: 56px var(--page-padding); }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .stat-num { font-size: 2.2rem; height: 2.75rem; margin-bottom: 1rem; }
-    .stat-card { padding: 1.25rem 1rem; }
-
-    /* PAIN POINTS */
-    .pain-grid { grid-template-columns: 1fr; gap: 1.25rem; }
     .pain-card { padding: 1.75rem 1.5rem; }
 
-    /* SERVICES */
     .services-grid { grid-template-columns: 1fr; }
 
-    /* CONTACT BAND */
-    .contact-links { flex-direction: column; }
-    .contact-pill { width: 100%; justify-content: center; }
+    .steps-grid { grid-template-columns: 1fr; gap: 2rem; }
 
-    /* STEPS — vertical timeline on mobile */
-    .steps-block { display: block; margin-top: 2.5rem; }
-    .steps-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      max-width: 100%;
-      margin: 0;
-    }
-    .steps-grid::before {
-      display: block;
-      left: 27px;
-      right: auto;
-      top: 28px;
-      bottom: 28px;
-      width: 2px;
-      height: auto;
-      transform: none;
-      background: linear-gradient(to bottom, var(--rose-100), var(--rose-200), var(--rose-100));
-    }
-    .step-item {
-      display: flex;
-      gap: 1.25rem;
-      align-items: flex-start;
-      text-align: left;
-      padding: 1rem 0;
-    }
-    .step-num {
-      width: 56px;
-      height: 56px;
-      min-width: 56px;
-      font-size: 1.35rem;
-      margin: 0;
-    }
-    .step-content h4 { margin-bottom: 0.35rem; }
+    .contact-grid { flex-direction: column; align-items: flex-start; }
+    .contact-list a { min-width: 0; width: 100%; }
 
-    /* REVIEWS */
-    .reviews-grid { grid-template-columns: 1fr; }
+    .reviews-photos-grid { grid-template-columns: repeat(2, 1fr); max-height: 340px; }
 
-    .form-title em { display: block; }
-
-    /* FORM */
-    .form-section { padding: 2rem 1.25rem; border-radius: 16px; }
+    .form-section { padding: 2rem 1.25rem; }
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: 1; }
-    .form-submit button {
-      max-width: 100%;
-      padding: 1.1rem 1.5rem;
-      font-size: 1rem;
-    }
     .select-trigger { font-size: 16px; }
 
-    /* FOOTER */
-    .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-    .footer-links { gap: 1rem; }
+    .footer-inner { flex-direction: column; gap: 1.75rem; }
 
-    /* WHATSAPP FLOAT */
-    .whatsapp-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
-
-    /* HOW-IT-WORKS section */
-    section.lessons-section {
-      border-radius: 16px;
-      max-width: none;
-      margin-left: 1vw;
-      margin-right: 1vw;
-      width: auto;
-    }
-    section.contact-band {
-      border-radius: 16px;
-      max-width: none;
-      margin-left: 1vw;
-      margin-right: 1vw;
-      width: auto;
-    }
+    section.lessons-section { padding: 4.5rem var(--page-padding); }
   }
 
-  /* EXTRA SMALL < 400px */
-  @media (max-width: 400px) {
-    .hero h1 { font-size: 1.9rem; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .hero-stats-mobile { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* REVIEWS — колонки, картинки прижаты друг к другу сверху, с затемнением внизу */
-.reviews-photos-wrapper {
-  position: relative;
-  margin-bottom: 0;
-}
-
-.reviews-photos-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-  align-items: start;
-  max-height: 380px;
-  overflow: hidden;
-  transition: max-height 0.5s ease;
-}
-
-.reviews-photos-grid.expanded {
-  max-height: 6000px;
-}
-
-.reviews-fade-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background: linear-gradient(to bottom, rgba(253, 249, 249, 0) 0%, var(--bg) 85%);
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-  z-index: 2;
-}
-
-.reviews-photos-grid.expanded ~ .reviews-fade-overlay {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.review-col {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.review-photo-item {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s, box-shadow 0.2s;
-  line-height: 0;
-}
-
-.review-photo-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(154,79,79,0.14);
-}
-
-.review-photo-item img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.reviews-cta {
-  text-align: center;
-  margin-top: 0.25rem;
-}
-
-.reviews-cta .btn-outline {
-  border-color: var(--rose-400);
-  color: var(--rose-400);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.7rem 1.8rem;
-  border-radius: 40px;
-  font-size: 0.95rem;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: 0 2px 12px rgba(154,79,79,0.10);
-}
-
-.reviews-cta .btn-outline:hover {
-  background: var(--rose-50);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(154,79,79,0.15);
-}
-
-.reviews-cta.hidden {
-  display: none;
-}
-
-/* Адаптив */
-@media (max-width: 768px) {
-  .reviews-photos-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.85rem;
-    max-height: 320px;
-  }
-  .review-col {
-    gap: 0.85rem;
-  }
-  .reviews-fade-overlay {
-    height: 80px;
-  }
-  .reviews-cta {
-    margin-top: 0.15rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .reviews-photos-grid {
-    grid-template-columns: 1fr;
-    max-height: 380px;
-  }
-  .review-col {
-    gap: 0.85rem;
-  }
-  .reviews-fade-overlay {
-    height: 70px;
-  }
-}
-
-  /* VIDEO REVIEWS */
-  .video-reviews-section {
-    margin-top: 3rem;
-  }
-  .video-reviews-title {
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    color: var(--text);
-    margin-bottom: 1.5rem;
-  }
-  .video-reviews-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-  }
-  .video-review-wrap {
-    border-radius: var(--radius);
-    overflow: hidden;
-    border: 2px solid var(--rose-100);
-    box-shadow: var(--shadow);
-    aspect-ratio: 16 / 9;
-    background: var(--rose-800);
-  }
-  .video-review-wrap iframe {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  /* Bigger mobile photo */
-  @media (max-width: 768px) {
-    .hero-photo-mobile {
-      width: min(280px, 72vw) !important;
-    }
-    .reviews-photos-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.85rem;
-      margin-bottom: 2rem;
-    }
-    .video-reviews-grid {
-      grid-template-columns: 1fr;
-    }
-    .video-reviews-title { font-size: 1.15rem; }
-  }
   @media (max-width: 480px) {
-    .reviews-photos-grid {
-      grid-template-columns: 1fr;
-    }
+    .reviews-photos-grid { grid-template-columns: 1fr; }
   }
 
   /* ANIMATE */
-  .fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .fade-in.visible {
-    opacity: 1;
-    transform: none;
+  .fade-in { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .fade-in.visible { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .fade-in { opacity: 1 !important; transform: none !important; transition: none !important; }
   }
 </style>
 </head>
 <body>
 
 <nav>
-  <a class="nav-logo" href="#">Татьяна Карлова</a>
+  <a class="nav-logo" href="#">Т. В. Карлова</a>
   <ul class="nav-links">
     <li><a href="#about">О репетиторе</a></li>
     <li><a href="#pains">Как я помогаю</a></li>
     <li><a href="#services">Занятия</a></li>
     <li><a href="#reviews">Отзывы</a></li>
-    <li><a class="nav-whatsapp" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-    </a></li>
-    <li><a href="#form" class="nav-cta">Записаться</a></li>
+    <li class="nav-cta-desktop"><a href="#form" class="btn btn-sm">Записаться</a></li>
   </ul>
-  <button class="nav-burger" id="burger" aria-label="Меню">
+  <button class="nav-burger" id="burger" aria-label="Меню" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
 </nav>
@@ -1666,418 +730,347 @@
   <a href="#pains" onclick="closeMenu()">Как я помогаю</a>
   <a href="#services" onclick="closeMenu()">Занятия</a>
   <a href="#reviews" onclick="closeMenu()">Отзывы</a>
-  <div class="mobile-menu-contacts">
-    <a class="mm-whatsapp" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-    <a class="mm-telegram" href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram-канал</a>
-    <a class="mm-phone" href="tel:+79629790773">+7 962 979-07-73</a>
+  <a href="#form" class="btn" onclick="closeMenu()">Записаться на диагностику</a>
+  <div class="mobile-menu-contact">
+    <span>+7 962 979-07-73 · <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a> · <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram</a></span>
   </div>
 </div>
 
 <!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-content">
-    <div class="hero-name-tag">Татьяна Владимировна Карлова</div>
-    <span class="hero-tag">Репетитор · Россия и онлайн</span>
-    <h1>Математика, алгебра, геометрия<br><em>понятно и с результатом</em></h1>
-    <p class="hero-desc">13 лет учительского опыта. ОГЭ по математике, удвоение баллов. Ученики успешно сдают экзамены и начинают верить в свои силы. Занятия онлайн для 5–9 класса.</p>
-    <div class="hero-photo-mobile">
-      <img id="hero-tutor-photo-mobile" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике">
-    </div>
-    <div class="hero-btns">
-      <a href="#form" class="btn-primary">Записаться на диагностику</a>
-      <a href="https://wa.me/79629790773" class="btn-whatsapp" target="_blank" rel="noopener noreferrer">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-        Написать в WhatsApp
-      </a>
-      <a href="#services" class="btn-outline">Узнать о занятиях</a>
-    </div>
-    <div class="hero-stats-mobile">
-      <div class="hero-stat-m"><strong>23</strong><span>балла ОГЭ</span></div>
-      <div class="hero-stat-m"><strong>13</strong><span>лет в школе</span></div>
-      <div class="hero-stat-m"><strong>10</strong><span>лет опыт</span></div>
-      <div class="hero-stat-m"><strong>5-9</strong><span>классы</span></div>
+    <span class="eyebrow">Т. В. Карлова — репетитор по математике · Россия, онлайн</span>
+    <h1>Математика, которая наконец <em class="mark">становится понятной</em></h1>
+    <p class="hero-desc">13 лет в школе и 10 лет частной практики. Ученики перестают бояться контрольных и начинают решать задачи сами — от «подтянуть тройку» до максимального балла на ОГЭ.</p>
+    <div class="hero-actions">
+      <a href="#form" class="btn">Записаться на диагностику</a>
+      <span class="hero-contact-line">Или сразу написать: <a href="tel:+79629790773" class="text-link">+7 962 979-07-73</a> · <a href="https://wa.me/79629790773" class="text-link" target="_blank" rel="noopener noreferrer">WhatsApp</a> · <a href="https://t.me/k_tany1" class="text-link" target="_blank" rel="noopener noreferrer">Telegram</a></span>
     </div>
   </div>
-  <div class="hero-visual">
-    <div class="stat-badges left">
-      <div class="stat-badge">
-        <strong>23</strong>
-        <span>балла ОГЭ</span>
-      </div>
-      <div class="stat-badge">
-        <strong>13</strong>
-        <span>лет в школе</span>
-      </div>
+  <div class="hero-photo">
+    <div class="hero-photo-frame">
+      <img id="hero-tutor-photo" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике">
     </div>
-    <div class="avatar-frame">
-      <img id="hero-tutor-photo" class="avatar-photo" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике">
-      <div class="avatar-accent">
-        <img src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Владимировна Карлова на занятии" loading="lazy">
-      </div>
-    </div>
-    <div class="stat-badges right">
-      <div class="stat-badge">
-        <strong>10</strong>
-        <span>лет опыт</span>
-      </div>
-      <div class="stat-badge">
-        <strong>5-9</strong>
-        <span>классы</span>
-      </div>
+    <div class="hero-photo-caption">
+      <span>Татьяна Владимировна Карлова</span>
+      <span>2026</span>
     </div>
   </div>
 </section>
 
-<!-- ABOUT -->
-<section id="about">
-  <div class="about-grid fade-in">
-    <div class="about-photo-wrap">
-      <div class="about-photo-main">
-        <img id="about-tutor-photo" src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Владимировна Карлова на занятии">
+<!-- SCOREBOARD -->
+<div class="scoreboard">
+  <div class="section-inner" style="padding: 3.5rem var(--page-padding);">
+    <div class="scoreboard-row fade-in">
+      <div class="scoreboard-item">
+        <div class="scoreboard-num">23/32</div>
+        <div class="scoreboard-label">максимальный балл ОГЭ по математике среди учеников</div>
       </div>
-      <div class="about-photo-accent">
-        <img src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике" loading="lazy">
+      <div class="scoreboard-item">
+        <div class="scoreboard-num">13</div>
+        <div class="scoreboard-label">лет работы учителем в общеобразовательной школе</div>
       </div>
-    </div>
-    <div class="about-text">
-      <span class="section-label">Обо мне</span>
-      <h2 class="section-title">Татьяна Владимировна —<br>учитель, которому<br><em>можно доверять</em></h2>
-      <div class="about-badges">
-        <span class="about-badge">🎓 13 лет в школе</span>
-        <span class="about-badge">📐 10 лет репетитор</span>
-        <span class="about-badge">🏆 23 балла ОГЭ у учеников</span>
-        <span class="about-badge">💯 100% сдают экзамен</span>
+      <div class="scoreboard-item">
+        <div class="scoreboard-num">10</div>
+        <div class="scoreboard-label">лет частной практики репетитором</div>
       </div>
-      <p>Меня зовут Татьяна Владимировна Карлова. Больше десяти лет я преподаю математику в школе и ещё столько же — веду частные занятия. За это время я перестала верить в «неспособных к математике» детей: есть только те, кому пока не объяснили тему на понятном именно им языке.</p>
-      <div class="about-highlight">
-        <p>«Не существует детей, неспособных к математике. Есть те, кому её просто не объяснили на понятном языке. Я помогаю каждому найти свой путь к пониманию предмета.»</p>
+      <div class="scoreboard-item">
+        <div class="scoreboard-num">100%</div>
+        <div class="scoreboard-label">учеников сдают ОГЭ и контрольные работы</div>
       </div>
-      <p>Работаю и с теми, кто боится математики и хочет просто не завалить ОГЭ, и с теми, кто стремится к стабильно высоким баллам и развитию математического мышления. На занятиях — никакой зубрёжки: только логика, понимание и уверенность, которая остаётся с ребёнком надолго.</p>
-      <div class="about-cta">
-        <a href="#form" class="btn-primary">Записаться на диагностику</a>
-        <a href="https://wa.me/79629790773" class="btn-whatsapp" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-          Есть вопрос — напишите
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- STATS -->
-<div class="stats-bg">
-  <div>
-    <h2 class="section-title">Цифры говорят сами за себя</h2>
-    <p class="section-sub">Конкретные результаты учеников за годы работы</p>
-  </div>
-  <div class="stats-grid fade-in">
-    <div class="stat-card">
-      <span class="stat-num">23</span>
-      <div class="stat-label">максимальный балл ОГЭ по математике среди учеников</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">13</span>
-      <div class="stat-label">лет работы учителем в общеобразовательной школе</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">10</span>
-      <div class="stat-label">лет успешной работы репетитором</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-num">100%</span>
-      <div class="stat-label">учеников сдают ОГЭ и контрольные работы</div>
     </div>
   </div>
 </div>
 
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner about-grid fade-in">
+    <div class="about-photo-frame">
+      <img id="about-tutor-photo" src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Владимировна Карлова на занятии">
+    </div>
+    <div class="about-text">
+      <span class="eyebrow">Обо мне</span>
+      <h2>Никакой магии — только <em>система</em></h2>
+      <p>Меня зовут Татьяна Владимировна Карлова. Больше десяти лет я преподаю математику в школе и ещё столько же веду частные занятия — с пятыми классами, которые только знакомятся с дробями, и с девятыми, которым через полгода сдавать ОГЭ.</p>
+      <p>За эти годы я перестала верить в <strong>«неспособных к математике»</strong> детей. Есть только те, кому предмет пока не объяснили на понятном именно им языке — без спешки и без стыда за ошибки.</p>
+      <div class="margin-note">
+        <p>«Я помогаю каждому найти свой путь к пониманию предмета — и не отпускаю тему, пока она не станет по-настоящему ясной».</p>
+      </div>
+      <p>Работаю и с теми, кто боится контрольных и хочет просто закрыть год без троек, и с теми, кто метит на высокий балл и олимпиады. Разница — в темпе и сложности задач, а не в отношении: на занятиях всегда разбираем, а не заучиваем.</p>
+      <div class="about-cta">
+        <a href="#form" class="btn btn-outline">Записаться на диагностику</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- PAIN POINTS -->
 <section id="pains">
-  <div class="section-header fade-in">
-    <span class="section-label">Знакомая ситуация?</span>
-    <h2 class="section-title">У каждого — <em>своя причина</em><br>обратиться</h2>
-    <p class="section-sub">За десять лет я видела десятки похожих историй. Возможно, среди них — и ваша.</p>
+  <div class="section-inner">
+    <div class="section-head fade-in">
+      <span class="eyebrow">Знакомая ситуация?</span>
+      <h2>У каждого — <em>своя причина</em> обратиться</h2>
+      <p>За десять лет я видела десятки похожих историй. Возможно, среди них — и ваша.</p>
+    </div>
+    <div class="pain-grid fade-in">
+      <div class="pain-card">
+        <h3>Ребёнок боится математики</h3>
+        <div class="pain-line">
+          <span class="pain-tag">Боль</span>
+          <p>Контрольные вызывают панику, оценки падают, а вместе с ними — вера в себя.</p>
+        </div>
+        <div class="pain-line">
+          <span class="pain-tag">Ответ</span>
+          <p>Разбираем ошибки без критики и спешки. Начинаем с маленьких понятных побед — страх уходит постепенно.</p>
+        </div>
+      </div>
+      <div class="pain-card">
+        <h3>Скоро ОГЭ, а времени почти нет</h3>
+        <div class="pain-line">
+          <span class="pain-tag">Боль</span>
+          <p>Экзамен через несколько месяцев, а пробелы копились годами.</p>
+        </div>
+        <div class="pain-line">
+          <span class="pain-tag">Ответ</span>
+          <p>Начинаем с бесплатной диагностики: находим ровно те темы, где «дыры», и строим сжатый план подготовки.</p>
+        </div>
+      </div>
+      <div class="pain-card">
+        <h3>Хорошие оценки, но хочется большего</h3>
+        <div class="pain-line">
+          <span class="pain-tag">Боль</span>
+          <p>Ребёнок способный, но на уроках скучает — программа для него слишком простая.</p>
+        </div>
+        <div class="pain-line">
+          <span class="pain-tag">Ответ</span>
+          <p>Даю более сложные и олимпиадные задачи, развиваю математическое мышление, а не прохождение программы.</p>
+        </div>
+      </div>
+      <div class="pain-card">
+        <h3>Родитель сам не может помочь</h3>
+        <div class="pain-line">
+          <span class="pain-tag">Боль</span>
+          <p>Программа изменилась, объяснить по-новому сложно, а домашка заканчивается конфликтом.</p>
+        </div>
+        <div class="pain-line">
+          <span class="pain-tag">Ответ</span>
+          <p>Беру объяснение материала на себя — вы остаётесь в роли поддержки, а не «второго учителя».</p>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="pain-grid fade-in">
-    <div class="pain-card">
-      <div class="pain-icon">😰</div>
-      <h3>Ребёнок боится математики</h3>
-      <div class="pain-row">
-        <span class="pain-label problem">Боль</span>
-        <p>Контрольные вызывают панику, оценки падают, а вместе с ними — вера в себя. Даже разговор о домашке заканчивается слезами.</p>
-      </div>
-      <div class="pain-row">
-        <span class="pain-label solution">Решение</span>
-        <p>Разбираем ошибки без критики и спешки. Начинаем с маленьких понятных побед — и страх постепенно уходит, а уверенность растёт.</p>
+</section>
+
+<!-- HOW LESSONS WORK -->
+<section id="lessons" class="lessons-section">
+  <div class="section-inner">
+    <div class="section-head fade-in">
+      <span class="eyebrow">Как проходят занятия</span>
+      <h2>Что происходит на <em>уроке</em></h2>
+      <p>Короткая видео-визитка — как строится урок и как я объясняю материал</p>
+    </div>
+    <div class="lessons-video-frame fade-in">
+      <div style="padding:56.25% 0 0 0;position:relative;">
+        <iframe
+          src="https://player.vimeo.com/video/1202873861?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+          frameborder="0"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;"
+          title="Видео о репетиторе Татьяне Карловой">
+        </iframe>
       </div>
     </div>
-    <div class="pain-card">
-      <div class="pain-icon">⏳</div>
-      <h3>Скоро ОГЭ, а времени почти нет</h3>
-      <div class="pain-row">
-        <span class="pain-label problem">Боль</span>
-        <p>Экзамен через несколько месяцев, а пробелы копились годами. В школе объясняют быстро, времени наверстывать нет.</p>
+    <div class="steps-grid fade-in">
+      <div class="step-item">
+        <div class="step-num">01</div>
+        <h4>Оставьте заявку</h4>
+        <p>Короткая анкета — расскажите о ребёнке и задачах</p>
       </div>
-      <div class="pain-row">
-        <span class="pain-label solution">Решение</span>
-        <p>Начинаем с бесплатной диагностики: находим ровно те темы, где «дыры», и выстраиваем сжатый план подготовки без лишнего.</p>
+      <div class="step-item">
+        <div class="step-num">02</div>
+        <h4>Бесплатная диагностика</h4>
+        <p>20 минут онлайн: проверка знаний и обсуждение программы</p>
       </div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">🚀</div>
-      <h3>Хорошие оценки, но хочется большего</h3>
-      <div class="pain-row">
-        <span class="pain-label problem">Боль</span>
-        <p>Ребёнок способный, но на уроках скучает — программа слишком простая, а мотивация постепенно теряется.</p>
+      <div class="step-item">
+        <div class="step-num">03</div>
+        <h4>Личный план</h4>
+        <p>Составляем программу с учётом целей и пробелов</p>
       </div>
-      <div class="pain-row">
-        <span class="pain-label solution">Решение</span>
-        <p>Даю более сложные, олимпиадные задачи, развиваю математическое мышление и интерес к предмету, а не только «прохождение программы».</p>
+      <div class="step-item">
+        <div class="step-num">04</div>
+        <h4>Занимаемся и растём</h4>
+        <p>Регулярные занятия с контролем прогресса</p>
       </div>
     </div>
-    <div class="pain-card">
-      <div class="pain-icon">🙇‍♀️</div>
-      <h3>Родитель сам не может помочь</h3>
-      <div class="pain-row">
-        <span class="pain-label problem">Боль</span>
-        <p>Программа изменилась, объяснить по-новому сложно, а совместные домашние задания заканчиваются конфликтом.</p>
+  </div>
+</section>
+
+<!-- FORMATS -->
+<section id="services">
+  <div class="section-inner">
+    <div class="section-head fade-in">
+      <span class="eyebrow">Форматы работы</span>
+      <h2>Выберите удобный вариант</h2>
+      <p>Стоимость и расписание обсудим индивидуально на бесплатной диагностике</p>
+    </div>
+    <div class="services-grid fade-in">
+      <div class="service-card">
+        <span class="eyebrow">Математика · 5–9 класс</span>
+        <h3>Индивидуальные занятия</h3>
+        <p>Персональная программа под вашего ребёнка. ОГЭ, ВПР, контрольные — или просто желание разобраться в предмете.</p>
       </div>
-      <div class="pain-row">
-        <span class="pain-label solution">Решение</span>
-        <p>Беру объяснение материала полностью на себя — вы остаётесь в роли поддержки, а не «второго учителя», и дома снова спокойно.</p>
+      <div class="service-card">
+        <span class="eyebrow accent">Бесплатно</span>
+        <h3>Диагностика знаний</h3>
+        <p>20 минут: определение реального уровня, поиск скрытых пробелов, пошаговый план действий.</p>
       </div>
+      <div class="service-card">
+        <span class="eyebrow">Алгебра, геометрия · 5–9 класс</span>
+        <h3>Мини-группы</h3>
+        <p>2–3 человека — живое общение, совместное решение задач, более доступный формат.</p>
+      </div>
+    </div>
+    <p class="services-note fade-in">Есть вопрос до диагностики? <a href="https://wa.me/79629790773" class="text-link" target="_blank" rel="noopener noreferrer">Напишите в WhatsApp</a> — отвечаю в течение дня.</p>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact-section">
+  <div class="section-inner contact-grid">
+    <div class="section-head fade-in" style="margin-bottom: 0;">
+      <span class="eyebrow on-dark">Связаться</span>
+      <h2>Отвечаю быстро — обычно в течение дня</h2>
+    </div>
+    <div class="contact-list fade-in">
+      <a href="tel:+79629790773">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        +7 962 979-07-73
+      </a>
+      <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        WhatsApp
+      </a>
+      <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Telegram-канал
+      </a>
     </div>
   </div>
 </section>
 
 <!-- REVIEWS -->
 <section id="reviews">
-  <div class="section-header fade-in">
-    <h2 class="section-title">Что говорят <em>родители и ученики</em></h2>
-  </div>
-
-  <div class="reviews-photos-wrapper fade-in">
-    <div class="reviews-photos-grid" id="reviewsPhotoGrid">
-      <div class="review-col">
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Отзыв № 1 (1).jpg" alt="Отзыв ученика" loading="lazy">
-        </div>
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Отзыв № 1 (2).jpg" alt="Отзыв ученика" loading="lazy">
-        </div>
-      </div>
-
-      <div class="review-col">
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Отзыв №3.png" alt="Отзыв ученика" loading="lazy">
-        </div>
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Успех Лианы.jpg" alt="Успех Лианы" loading="lazy">
-        </div>
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Успех Арсения.jpg" alt="Успех Арсения" loading="lazy">
-        </div>
-      </div>
-
-      <div class="review-col">
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Отклик Ильи.jpg" alt="Отклик Ильи" loading="lazy">
-        </div>
-        <div class="review-photo-item">
-          <img src="images/tatiana-karlova/Отзыв 4.png" alt="Отзыв ученика" loading="lazy">
-        </div>
-      </div>
+  <div class="section-inner">
+    <div class="section-head fade-in">
+      <span class="eyebrow">Отзывы</span>
+      <h2>Что говорят <em>родители и ученики</em></h2>
     </div>
-    <div class="reviews-fade-overlay"></div>
-  </div>
 
-  <div class="reviews-cta fade-in" id="reviewsCtaWrapper">
-    <button class="btn-outline" id="reviewsToggleBtn">
-      Смотреть все отзывы
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"/>
-      </svg>
-    </button>
-  </div>
-</section>
-<!-- HOW LESSONS WORK -->
-<section id="lessons" class="lessons-section">
-  <div class="section-header fade-in">
-    <h2 class="section-title">Как проходят <em>занятия</em></h2>
-    <p class="section-sub">Посмотрите короткую видео-визитку — как строится урок, как объясняю материал и работаю с учениками</p>
-  </div>
-  <div class="lessons-video-wrap fade-in">
-    <div style="padding:56.25% 0 0 0;position:relative;">
-      <iframe
-        src="https://player.vimeo.com/video/1202873861?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
-        frameborder="0"
-        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        style="position:absolute;top:0;left:0;width:100%;height:100%;"
-        title="Видео о репетиторе Татьяне Карловой">
-      </iframe>
-    </div>
-  </div>
-  <div class="steps-block fade-in">
-    <div class="steps-grid">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>Оставьте заявку</h4>
-          <p>Заполните короткую анкету — расскажите о ребёнке и задачах</p>
+    <div class="reviews-photos-wrapper fade-in">
+      <div class="reviews-photos-grid" id="reviewsPhotoGrid">
+        <div class="review-col">
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Отзыв № 1 (1).jpg" alt="Отзыв ученика" loading="lazy">
+          </div>
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Отзыв № 1 (2).jpg" alt="Отзыв ученика" loading="lazy">
+          </div>
+        </div>
+        <div class="review-col">
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Отзыв №3.png" alt="Отзыв ученика" loading="lazy">
+          </div>
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Успех Лианы.jpg" alt="Успех Лианы" loading="lazy">
+          </div>
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Успех Арсения.jpg" alt="Успех Арсения" loading="lazy">
+          </div>
+        </div>
+        <div class="review-col">
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Отклик Ильи.jpg" alt="Отклик Ильи" loading="lazy">
+          </div>
+          <div class="review-photo-item">
+            <img src="images/tatiana-karlova/Отзыв 4.png" alt="Отзыв ученика" loading="lazy">
+          </div>
         </div>
       </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>Бесплатная диагностика</h4>
-          <p>20 минут онлайн: тестирование знаний и обсуждение программы</p>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <h4>Личный план</h4>
-          <p>Составляем индивидуальную программу с учётом целей и пробелов</p>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <h4>Занимаемся и растём</h4>
-          <p>Регулярные занятия с контролем прогресса и обратной связью</p>
-        </div>
-      </div>
+      <div class="reviews-fade-overlay"></div>
     </div>
-  </div>
-</section>
 
-
-<!-- FORMATS -->
-<section id="services">
-  <div class="section-header fade-in">
-    <h2 class="section-title">Форматы работы</h2>
-    <p class="section-sub">Выберите удобный вариант занятий — стоимость обсудим индивидуально на бесплатной диагностике</p>
-  </div>
-  <div class="services-grid fade-in">
-    <div class="service-card">
-      <div class="service-tag">Математика • 5–9 класс</div>
-      <h3>Индивидуальные занятия</h3>
-      <p>Персональная программа, разобранная под вашего ребёнка. ОГЭ, ВПР, контрольные или просто желание разобраться в предмете.</p>
-      <div class="service-footer">
-        <span>60 минут</span>
-        <a href="#form">Записаться →</a>
-      </div>
+    <div class="reviews-cta fade-in" id="reviewsCtaWrapper">
+      <button class="btn btn-outline btn-sm" id="reviewsToggleBtn">Смотреть все отзывы</button>
     </div>
-    <div class="service-card featured">
-      <div class="service-tag">Бесплатно · популярно</div>
-      <h3>Диагностика знаний</h3>
-      <p>20 минут: определение реального уровня, поиск скрытых пробелов, пошаговый план действий.</p>
-      <div class="service-footer">
-        <span>20 минут</span>
-        <a href="#form">Записаться →</a>
-      </div>
-    </div>
-    <div class="service-card">
-      <div class="service-tag">Алгебра, геометрия • 5–9 класс</div>
-      <h3>Мини-группы</h3>
-      <p>Небольшие группы 2–3 человека — живое общение, совместное решение задач, более доступный формат.</p>
-      <div class="service-footer">
-        <span>60 минут</span>
-        <a href="#form">Записаться →</a>
-      </div>
-    </div>
-  </div>
-  <p class="services-note">Точную стоимость и удобное расписание обсудим лично — напишите в WhatsApp или оставьте заявку ниже</p>
-</section>
-
-<!-- CONTACT BAND -->
-<section id="contact" class="contact-band">
-  <div class="section-header fade-in">
-    <span class="section-label">Быстрая связь</span>
-    <h2 class="section-title">Свяжитесь <em>любым удобным способом</em></h2>
-    <p class="section-sub">Отвечаю быстро — обычно в течение дня</p>
-  </div>
-  <div class="contact-links fade-in">
-    <a class="contact-pill whatsapp" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-      WhatsApp
-    </a>
-    <a class="contact-pill telegram" href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M21.94 4.6L18.6 20.1c-.25 1.13-.9 1.4-1.83.87l-5.06-3.73-2.44 2.35c-.27.27-.5.5-1.02.5l.36-5.16 9.39-8.49c.41-.36-.09-.57-.63-.2L6.36 12.9l-5.06-1.58c-1.1-.35-1.12-1.1.23-1.62L20.53 3.1c.92-.34 1.72.2 1.41 1.5z"/></svg>
-      Telegram-канал
-    </a>
-    <a class="contact-pill" href="tel:+79629790773">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-      +7 962 979-07-73
-    </a>
   </div>
 </section>
 
 <!-- FORM -->
 <section id="form">
-  <div class="section-header fade-in" style="text-align: center;">
-    <h2 class="section-title form-title">Запишитесь на <em>бесплатную диагностику</em></h2>
-    <p class="section-sub" style="margin: 0 auto;">Заполните форму — свяжусь с вами в течение дня для подтверждения</p>
-  </div>
-  <div class="form-section fade-in">
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Имя ученика</label>
-        <input type="text" id="student_name" placeholder="Имя">
-      </div>
-      <div class="form-group">
-        <label>Фамилия ученика</label>
-        <input type="text" id="student_last" placeholder="Фамилия">
-      </div>
-      <div class="form-group">
-        <label id="grade-label">Класс</label>
-        <div class="select-wrap" data-select="grade">
-          <select id="grade" required tabindex="-1" aria-hidden="true">
-            <option value="" disabled selected>Выберите класс</option>
-            <option value="5">5 класс</option>
-            <option value="6">6 класс</option>
-            <option value="7">7 класс</option>
-            <option value="8">8 класс</option>
-            <option value="9">9 класс</option>
-          </select>
+  <div class="section-inner">
+    <div class="section-head fade-in" style="text-align: center; max-width: none; margin-left: auto; margin-right: auto;">
+      <span class="eyebrow" style="text-align:center;">Запись</span>
+      <h2>Запишитесь на <em>бесплатную диагностику</em></h2>
+      <p style="margin: 0 auto;">Заполните форму — свяжусь с вами в течение дня для подтверждения</p>
+    </div>
+    <div class="form-section fade-in">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Имя ученика</label>
+          <input type="text" id="student_name" placeholder="Имя">
+        </div>
+        <div class="form-group">
+          <label>Фамилия ученика</label>
+          <input type="text" id="student_last" placeholder="Фамилия">
+        </div>
+        <div class="form-group">
+          <label id="grade-label">Класс</label>
+          <div class="select-wrap" data-select="grade">
+            <select id="grade" required tabindex="-1" aria-hidden="true">
+              <option value="" disabled selected>Выберите класс</option>
+              <option value="5">5 класс</option>
+              <option value="6">6 класс</option>
+              <option value="7">7 класс</option>
+              <option value="8">8 класс</option>
+              <option value="9">9 класс</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label id="subject-label">Предмет</label>
+          <div class="select-wrap" data-select="subject">
+            <select id="subject" required tabindex="-1" aria-hidden="true">
+              <option value="" disabled selected>Выберите предмет</option>
+              <option value="math">Математика</option>
+              <option value="algebra">Алгебра</option>
+              <option value="geometry">Геометрия</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Цель и описание ситуации</label>
+          <textarea id="goal" placeholder="Расскажите коротко — что не получается, к чему готовитесь, какие цели (ОГЭ, ВПР, подтянуть оценки)..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Имя и отчество родителя</label>
+          <input type="text" id="parent_name" placeholder="Имя Отчество">
+        </div>
+        <div class="form-group">
+          <label>Телефон</label>
+          <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
+        </div>
+        <div class="form-group full">
+          <label>Электронная почта</label>
+          <input type="email" id="email" placeholder="example@mail.ru">
         </div>
       </div>
-      <div class="form-group">
-        <label id="subject-label">Предмет</label>
-        <div class="select-wrap" data-select="subject">
-          <select id="subject" required tabindex="-1" aria-hidden="true">
-            <option value="" disabled selected>Выберите предмет</option>
-            <option value="math">Математика</option>
-            <option value="algebra">Алгебра</option>
-            <option value="geometry">Геометрия</option>
-          </select>
-        </div>
+      <div class="form-submit">
+        <button type="button" class="btn" onclick="submitForm()">Записаться на диагностику</button>
       </div>
-      <div class="form-group full">
-        <label>Цель и описание ситуации</label>
-        <textarea id="goal" placeholder="Расскажите коротко — что не получается, к чему готовитесь, какие цели (ОГЭ, ВПР, подтянуть оценки)..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Имя и отчество родителя</label>
-        <input type="text" id="parent_name" placeholder="Имя Отчество">
-      </div>
-      <div class="form-group">
-        <label>Телефон</label>
-        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-      </div>
-      <div class="form-group full">
-        <label>Электронная почта</label>
-        <input type="email" id="email" placeholder="example@mail.ru">
-      </div>
+      <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
+      <p class="form-alt">Не хотите заполнять форму? <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" class="text-link">WhatsApp</a> · <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer" class="text-link">Telegram-канал</a></p>
     </div>
-    <div class="form-submit">
-      <button type="button" onclick="submitForm()">
-        Записаться на диагностику
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
-      </button>
-    </div>
-    <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
-    <p class="form-alt">Не хотите заполнять форму? Напишите напрямую в <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a> или в <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram-канал</a></p>
   </div>
 </section>
 
@@ -2086,41 +1079,28 @@
     <div>
       <div class="footer-logo">Татьяна Владимировна Карлова</div>
       <div class="footer-sub">Репетитор по математике, алгебре и геометрии</div>
-      <div class="footer-contact">
-        <a href="tel:+79629790773">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          +7 962 979-07-73
-        </a>
-        <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-          Написать в WhatsApp
-        </a>
-      </div>
     </div>
-    <div class="footer-links">
-      <a href="https://vk.com/matematikarepetit" target="_blank" rel="noopener noreferrer">ВКонтакте</a>
+    <div class="footer-col">
+      <span class="footer-label">Контакты</span>
+      <a href="tel:+79629790773">+7 962 979-07-73</a>
+      <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a>
       <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram-канал</a>
+    </div>
+    <div class="footer-col">
+      <span class="footer-label">Ещё</span>
+      <a href="https://vk.com/matematikarepetit" target="_blank" rel="noopener noreferrer">ВКонтакте</a>
       <a href="https://ok.ru/profile/910083730336?utm_campaign=web_share&utm_content=profile" target="_blank" rel="noopener noreferrer">Одноклассники</a>
     </div>
   </div>
-  <div class="footer-bottom">
-    © 2026 Татьяна Владимировна Карлова — репетитор по математике. Россия, онлайн.
-  </div>
+  <div class="footer-bottom">© 2026 Татьяна Владимировна Карлова — репетитор по математике. Россия, онлайн.</div>
 </footer>
 
 <div class="sticky-cta" id="stickyCta">
-  <a href="#form" class="sticky-cta-btn">Записаться на диагностику</a>
-  <a href="https://wa.me/79629790773" class="sticky-cta-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-  </a>
+  <a href="#form" class="btn">Записаться на диагностику</a>
 </div>
 
-<a class="whatsapp-float" id="whatsappFloat" href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.28c1.4.76 2.99 1.18 4.79 1.18 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.85 14.24c-.25.7-1.24 1.28-2.02 1.44-.53.11-1.23.2-3.58-.77-2.98-1.24-4.9-4.26-5.05-4.46-.15-.2-1.2-1.6-1.2-3.05 0-1.45.75-2.16 1.02-2.46.27-.3.58-.36.78-.36h.55c.18 0 .42-.03.65.5.25.6.85 2.05.92 2.2.07.15.11.32.02.52-.09.2-.14.32-.28.5-.14.17-.29.38-.42.5-.14.14-.29.29-.13.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.7-.82.89-1.1.19-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.27.14.45.2.52.32.07.11.07.66-.18 1.36z"/></svg>
-</a>
-
 <div class="toast" id="toast">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
   Заявка отправлена! Свяжемся с вами сегодня.
 </div>
 
@@ -2128,7 +1108,6 @@
   (function loadMedia() {
     const heroPhoto = 'images/tatiana-karlova/_A3A7224_resized.jpg';
     const aboutPhoto = 'images/tatiana-karlova/Фото.jpg';
-    const fallbackPhoto = heroPhoto;
 
     function setImage(img, url, loading) {
       if (!img) return;
@@ -2136,25 +1115,26 @@
       img.onerror = () => {
         if (img.dataset.fallbackApplied) return;
         img.dataset.fallbackApplied = '1';
-        img.src = fallbackPhoto;
+        img.src = heroPhoto;
       };
       img.src = url;
     }
 
     setImage(document.getElementById('hero-tutor-photo'), heroPhoto, 'eager');
-    setImage(document.getElementById('hero-tutor-photo-mobile'), heroPhoto, 'eager');
     setImage(document.getElementById('about-tutor-photo'), aboutPhoto, 'lazy');
   })();
 
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
   burger.addEventListener('click', () => {
-    burger.classList.toggle('open');
+    const open = burger.classList.toggle('open');
     mobileMenu.classList.toggle('open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
   function closeMenu() {
     burger.classList.remove('open');
     mobileMenu.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
   }
 
   const observer = new IntersectionObserver((entries) => {
@@ -2283,7 +1263,7 @@
       const trigger = el.closest('.select-wrap')?.querySelector('.select-trigger');
       if (!el.value.trim()) {
         if (trigger) trigger.classList.add('error');
-        else el.style.borderColor = '#E24B4A';
+        else el.style.borderColor = '#A83D2A';
         valid = false;
       } else {
         if (trigger) trigger.classList.remove('error');
@@ -2301,23 +1281,18 @@
     document.querySelectorAll('#form select').forEach(resetCustomSelect);
   }
 
-const toggleBtn = document.getElementById('reviewsToggleBtn');
-const photoGrid = document.getElementById('reviewsPhotoGrid');
-const ctaWrapper = document.getElementById('reviewsCtaWrapper');
-let expanded = false;
+  const toggleBtn = document.getElementById('reviewsToggleBtn');
+  const photoGrid = document.getElementById('reviewsPhotoGrid');
+  const ctaWrapper = document.getElementById('reviewsCtaWrapper');
+  let expanded = false;
 
-if (toggleBtn && photoGrid && ctaWrapper) {
-  toggleBtn.addEventListener('click', function() {
-    expanded = !expanded;
-    photoGrid.classList.toggle('expanded', expanded);
-
-    if (expanded) {
-      ctaWrapper.classList.add('hidden');
-    } else {
-      ctaWrapper.classList.remove('hidden');
-    }
-  });
-}
+  if (toggleBtn && photoGrid && ctaWrapper) {
+    toggleBtn.addEventListener('click', function() {
+      expanded = !expanded;
+      photoGrid.classList.toggle('expanded', expanded);
+      toggleBtn.textContent = expanded ? 'Свернуть' : 'Смотреть все отзывы';
+    });
+  }
 </script>
 </body>
 </html>
