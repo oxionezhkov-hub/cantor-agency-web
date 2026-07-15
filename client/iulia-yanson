@@ -672,6 +672,12 @@
     color: var(--text-soft);
     letter-spacing: 0.02em;
   }
+  .required-mark { color: #E24B4A; }
+  .required-note {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+  }
   input:not([type="checkbox"]), select, textarea {
     border: 1.5px solid var(--border);
     border-radius: 10px;
@@ -1799,15 +1805,15 @@
     <div id="formFields">
       <div class="form-grid">
         <div class="form-group">
-          <label>Имя ученика</label>
+          <label>Имя ученика <span class="required-mark">*</span></label>
           <input type="text" id="student_name" placeholder="Имя">
         </div>
         <div class="form-group">
-          <label>Фамилия ученика</label>
+          <label>Фамилия ученика <span class="required-mark">*</span></label>
           <input type="text" id="student_last" placeholder="Фамилия">
         </div>
         <div class="form-group">
-          <label id="grade-label">Класс</label>
+          <label id="grade-label">Класс <span class="required-mark">*</span></label>
           <div class="select-wrap" data-select="grade">
             <select id="grade" required tabindex="-1" aria-hidden="true">
               <option value="" disabled selected>Выберите класс</option>
@@ -1822,7 +1828,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label id="subject-label">Предмет</label>
+          <label id="subject-label">Предмет <span class="required-mark">*</span></label>
           <div class="select-wrap" data-select="subject">
             <select id="subject" required tabindex="-1" aria-hidden="true">
               <option value="" disabled selected>Выберите предмет</option>
@@ -1837,11 +1843,11 @@
           <textarea id="goal" placeholder="Расскажите коротко — что не получается, к чему готовитесь, какие цели (ОГЭ, ЕГЭ, подтянуть оценки)..."></textarea>
         </div>
         <div class="form-group">
-          <label>Имя и отчество родителя</label>
+          <label>Имя и отчество родителя <span class="required-mark">*</span></label>
           <input type="text" id="parent_name" placeholder="Имя Отчество">
         </div>
         <div class="form-group">
-          <label>Телефон</label>
+          <label>Телефон <span class="required-mark">*</span></label>
           <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
         </div>
         <div class="form-group full">
@@ -1851,12 +1857,13 @@
       </div>
       <div class="consent-row">
         <input type="checkbox" id="consent" required>
-        <label for="consent">Согласие на <a href="#" onclick="return openPolicyModal(event)">обработку персональных данных</a></label>
+        <label for="consent">Согласие на <a href="#" onclick="return openPolicyModal(event)">обработку персональных данных</a> <span class="required-mark">*</span></label>
       </div>
       <div class="consent-row">
         <input type="checkbox" id="adConsent">
         <label for="adConsent">Согласие на рекламную рассылку</label>
       </div>
+      <p class="required-note"><span class="required-mark">*</span> — обязательные поля</p>
       <div class="form-submit">
         <button type="button" onclick="submitForm()">
           Записаться на пробный урок
@@ -1887,6 +1894,7 @@
     </div>
     <div class="footer-links">
       <a href="https://max.ru/join/7RshwauYYJ9eSoOfv1NUbMY4rqr3XG1SViK3ZVYxcd4" target="_blank" rel="noopener noreferrer">Max</a>
+      <a href="mailto:yuliayanson-27@yandex.ru">yuliayanson-27@yandex.ru</a>
       <a href="#" onclick="return openPolicyModal(event)">Политика</a>
       <a href="#" onclick="return openOfferModal(event)">Оферта</a>
       <a href="#" onclick="return openLicenseModal(event)">Лицензия</a>
