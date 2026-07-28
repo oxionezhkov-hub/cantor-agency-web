@@ -17,6 +17,19 @@
  * KV keys (binding "UTM_LINKS_KV"):
  *   link:<slug>              -> { slug, targetUrl, utm, createdAt, ourLink, shortUrl, clicks }
  *   click:<slug>:<ts>:<rand> -> { ts, query, referrer, userAgent, device, country, city }
+ *
+ * It also powers /serp-analysis: an internal tool for the "поисковая выдача" analysis
+ * (part of the MBA/личный бренд package) — staff fill in a Yandex table + a Google table
+ * of search results plus recommendations, then share a read-only link with the client.
+ *
+ * KV keys (binding "SERP_ANALYSIS_KV"):
+ *   template               -> shared editable template: section titles, column labels,
+ *                              status options (used for both tables) and base recommendations
+ *                              copied into every new analysis
+ *   analysis:<id>          -> { id, createdAt, updatedAt, clientName, analysisTitle, intro,
+ *                                yandexRows: [...], googleRows: [...], recommendations: [...],
+ *                                shareId }
+ *   share:<shareId>        -> "<analysisId>"
  */
 
 const SCHEMA_KEY = 'schema';
@@ -404,9 +417,172 @@ async function handleLeadNotify(request, env) {
   }
 }
 
+const SERP_TEMPLATE_KEY = 'template';
+
+const DEFAULT_SERP_TEMPLATE = {
+  yandexTitle: 'Яндекс',
+  googleTitle: 'Google',
+  recsTitle: 'Рекомендации по работе с поисковой выдачей',
+  columnLabels: { url: 'Ссылка', name: 'Название', description: 'Описание', status: 'Статус' },
+  statusOptions: [
+    { label: 'Оставить', color: 'green' },
+    { label: 'Можно улучшить', color: 'amber' },
+    { label: 'Вытеснять', color: 'red' },
+    { label: 'Не про клиента', color: 'gray' },
+  ],
+  baseRecommendations: [
+    'Усиливать релевантные ссылки (сайт, статьи, соцсети клиента) — регулярно обновлять и продвигать.',
+    'Ссылки не про клиента (однофамильцы, тёзки) — вытеснять контентом с точным ФИО и уникальными деталями (город, школа, ниша).',
+    'Негативные или устаревшие ссылки — вытеснять новыми материалами, которые поднимутся выше в выдаче.',
+    'Повторить анализ выдачи через 4–6 недель, чтобы оценить динамику.',
+  ],
+};
+
+function newSerpRow() {
+  return { id: crypto.randomUUID().replace(/-/g, '').slice(0, 8), url: '', name: '', description: '', status: '' };
+}
+
+function newSerpRecommendation(text) {
+  return { id: crypto.randomUUID().replace(/-/g, '').slice(0, 8), text: text || '' };
+}
+
+async function getSerpTemplate(env) {
+  const stored = await env.SERP_ANALYSIS_KV.get(SERP_TEMPLATE_KEY, 'json');
+  return stored || DEFAULT_SERP_TEMPLATE;
+}
+
+async function handleSerpApi(request, env, url) {
+  const { pathname } = url;
+  const kv = env.SERP_ANALYSIS_KV;
+
+  // ── Template: read ──
+  if (pathname === '/api/serp/template' && request.method === 'GET') {
+    return json(await getSerpTemplate(env));
+  }
+
+  // ── Template: write ──
+  if (pathname === '/api/serp/template' && request.method === 'PUT') {
+    const body = await readJson(request);
+    if (!body || typeof body !== 'object') return json({ error: 'invalid_template' }, 400);
+    await kv.put(SERP_TEMPLATE_KEY, JSON.stringify(body));
+    return json({ ok: true });
+  }
+
+  // ── Analyses: list (light fields for the dashboard) ──
+  if (pathname === '/api/serp/analyses' && request.method === 'GET') {
+    const list = await kv.list({ prefix: 'analysis:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    const analyses = records
+      .filter(Boolean)
+      .map(({ id, createdAt, updatedAt, clientName, analysisTitle, shareId }) => ({ id, createdAt, updatedAt, clientName, analysisTitle, shareId }))
+      .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    return json({ analyses });
+  }
+
+  // ── Analyses: create ──
+  if (pathname === '/api/serp/analyses' && request.method === 'POST') {
+    const body = await readJson(request);
+    const template = await getSerpTemplate(env);
+    const now = new Date().toISOString();
+    const record = {
+      id: crypto.randomUUID().replace(/-/g, '').slice(0, 10),
+      createdAt: now,
+      updatedAt: now,
+      clientName: (body && String(body.clientName || '').trim()) || '',
+      analysisTitle: '',
+      intro: '',
+      yandexRows: [newSerpRow(), newSerpRow(), newSerpRow()],
+      googleRows: [newSerpRow(), newSerpRow(), newSerpRow()],
+      recommendations: (template.baseRecommendations || []).map(newSerpRecommendation),
+      shareId: crypto.randomUUID().replace(/-/g, ''),
+    };
+    await kv.put(`analysis:${record.id}`, JSON.stringify(record));
+    await kv.put(`share:${record.shareId}`, record.id);
+    return json({ analysis: record });
+  }
+
+  // ── Analysis: read one (edit view) ──
+  if (pathname === '/api/serp/analysis' && request.method === 'GET') {
+    const id = url.searchParams.get('id');
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const analysis = await kv.get(`analysis:${id}`, 'json');
+    if (!analysis) return json({ error: 'not_found' }, 404);
+    return json({ analysis, template: await getSerpTemplate(env) });
+  }
+
+  // ── Analysis: update ──
+  if (pathname === '/api/serp/analysis' && request.method === 'PUT') {
+    const body = await readJson(request);
+    const id = body && body.id;
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const key = `analysis:${id}`;
+    const existing = await kv.get(key, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+
+    const updated = {
+      ...existing,
+      clientName: typeof body.clientName === 'string' ? body.clientName : existing.clientName,
+      analysisTitle: typeof body.analysisTitle === 'string' ? body.analysisTitle : existing.analysisTitle,
+      intro: typeof body.intro === 'string' ? body.intro : existing.intro,
+      yandexRows: Array.isArray(body.yandexRows) ? body.yandexRows : existing.yandexRows,
+      googleRows: Array.isArray(body.googleRows) ? body.googleRows : existing.googleRows,
+      recommendations: Array.isArray(body.recommendations) ? body.recommendations : existing.recommendations,
+      updatedAt: new Date().toISOString(),
+    };
+    await kv.put(key, JSON.stringify(updated));
+    return json({ ok: true, analysis: updated });
+  }
+
+  // ── Analysis: delete ──
+  if (pathname === '/api/serp/analysis' && request.method === 'DELETE') {
+    const body = await readJson(request);
+    const id = body && body.id;
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const key = `analysis:${id}`;
+    const existing = await kv.get(key, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+    if (existing.shareId) await kv.delete(`share:${existing.shareId}`);
+    await kv.delete(key);
+    return json({ ok: true });
+  }
+
+  // ── Analysis: rotate the public share link ──
+  if (pathname === '/api/serp/analysis/share' && request.method === 'POST') {
+    const body = await readJson(request);
+    const id = body && body.id;
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const key = `analysis:${id}`;
+    const existing = await kv.get(key, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+    if (existing.shareId) await kv.delete(`share:${existing.shareId}`);
+    const shareId = crypto.randomUUID().replace(/-/g, '');
+    await kv.put(`share:${shareId}`, id);
+    const updated = { ...existing, shareId };
+    await kv.put(key, JSON.stringify(updated));
+    return json({ ok: true, shareId });
+  }
+
+  // ── Public: read a shared analysis (client-facing view) ──
+  if (pathname === '/api/serp/share' && request.method === 'GET') {
+    const shareId = url.searchParams.get('id');
+    if (!shareId) return json({ error: 'missing_id' }, 400);
+    const id = await kv.get(`share:${shareId}`);
+    if (!id) return json({ error: 'not_found' }, 404);
+    const analysis = await kv.get(`analysis:${id}`, 'json');
+    if (!analysis) return json({ error: 'not_found' }, 404);
+    return json({ analysis, template: await getSerpTemplate(env) });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleApi(request, env, url) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
+
+  if (pathname.startsWith('/api/serp/')) {
+    return handleSerpApi(request, env, url);
+  }
 
   // ── Leads: notify by email ──
   if (pathname === '/api/leads/notify' && request.method === 'POST') {

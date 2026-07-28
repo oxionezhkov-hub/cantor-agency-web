@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анализ поисковой выдачи — Cantor Agency</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+  --green:#1e8449;--green-bg:#eafaf1;
+  --amber:#9a6f00;--amber-bg:#fef9e7;
+  --gray:#6b6b6b;--gray-bg:#f1f0ed;
+  --blue:#1a6fa3;--blue-bg:#ebf5fb;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1.5px solid var(--border);background:var(--white);position:sticky;top:0;z-index:20}
+.brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--dark);text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand span{color:var(--red)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.save-indicator{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.25s}
+.save-indicator.show{opacity:1}
+.save-indicator.ok{color:#2E7D32}
+.save-indicator.err{color:var(--red)}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:pulse 1s infinite}
+.save-indicator.ok .save-dot,.save-indicator.err .save-dot{display:none;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── BUTTONS ── */
+.btn-red{background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-red:hover{background:var(--red-dark)}
+.btn-outline{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.btn-outline:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 11px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn-ghost-sm:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm.danger:hover{border-color:#c0392b;color:#c0392b}
+.btn-icon{background:none;border:none;cursor:pointer;color:var(--muted);padding:5px;border-radius:var(--r-sm);display:flex;transition:all 0.15s}
+.btn-icon:hover{color:var(--red);background:var(--accent-bg)}
+.btn-icon svg{width:15px;height:15px}
+
+/* ── SHARED LAYOUT ── */
+.wrap{max-width:1040px;margin:0 auto;padding:32px 24px 80px}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.page-head h1{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;color:var(--dark);letter-spacing:-0.02em}
+.page-head .sub{font-size:13px;color:var(--muted);margin-top:4px}
+.head-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── DASHBOARD LIST ── */
+.new-row{display:flex;gap:8px;margin-bottom:20px}
+.new-row input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 14px;font-size:13.5px;outline:none;background:white}
+.new-row input:focus{border-color:var(--red)}
+.list{display:flex;flex-direction:column;gap:8px}
+.card-row{display:flex;align-items:center;gap:14px;background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;transition:all 0.15s}
+.card-row:hover{border-color:var(--red);box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.card-avatar{width:38px;height:38px;border-radius:50%;background:var(--dark);color:white;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;flex-shrink:0}
+.card-info{flex:1;min-width:0;cursor:pointer}
+.card-name{font-size:14px;font-weight:700;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.card-actions{display:flex;gap:4px;flex-shrink:0}
+.empty-note{color:var(--muted);font-size:13.5px;padding:28px;text-align:center;background:white;border:1.5px dashed var(--border);border-radius:var(--r-md)}
+
+/* ── EDITOR ── */
+.field{margin-bottom:18px}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:6px}
+.field input[type=text],.field textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 13px;font-size:14.5px;color:var(--text);outline:none;transition:border-color 0.2s;background:white}
+.field input[type=text]:focus,.field textarea:focus{border-color:var(--red)}
+.field textarea{resize:vertical;min-height:60px}
+.field.title input{font-family:'Unbounded',sans-serif;font-weight:700;font-size:19px}
+
+.section{background:white;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:18px}
+.section-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.section-title-row h2{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:var(--dark)}
+
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;padding:0 10px 8px;border-bottom:1.5px solid var(--border)}
+.tbl td{padding:6px 8px;vertical-align:top;border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl input[type=text],.tbl textarea,.tbl select{width:100%;border:1.5px solid transparent;border-radius:var(--r-sm);padding:7px 8px;font-size:13px;color:var(--text);outline:none;background:var(--bg);resize:vertical}
+.tbl textarea{min-height:38px}
+.tbl input[type=text]:focus,.tbl textarea:focus,.tbl select:focus{border-color:var(--red);background:white}
+.tbl td.col-url{width:20%}
+.tbl td.col-name{width:18%}
+.tbl td.col-desc{width:38%}
+.tbl td.col-status{width:16%}
+.tbl td.col-del{width:30px;text-align:center}
+.add-row-btn{background:none;border:1.5px dashed var(--border);border-radius:var(--r-md);padding:9px;width:100%;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.add-row-btn:hover{border-color:var(--red);color:var(--red)}
+
+.rec-list{display:flex;flex-direction:column;gap:8px}
+.rec-item{display:flex;gap:8px;align-items:flex-start}
+.rec-item textarea{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13.5px;outline:none;background:white;resize:vertical;min-height:44px}
+.rec-item textarea:focus{border-color:var(--red)}
+
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-red{background:#fdf2f2;color:#c0392b}
+.badge-gray{background:var(--gray-bg);color:var(--gray)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+
+/* ── TEMPLATE EDITOR ── */
+.opt-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.opt-row input[type=text]{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;outline:none}
+.opt-row input[type=text]:focus{border-color:var(--red)}
+.opt-row select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:12.5px;outline:none;background:white}
+.add-link{background:none;border:none;color:var(--red);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 0}
+.hint{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6}
+
+/* ── SHARE VIEW ── */
+#shareView .wrap{max-width:900px}
+.share-head{margin-bottom:28px;padding-bottom:20px;border-bottom:1.5px solid var(--border)}
+.share-eyebrow{font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.share-head h1{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:700;color:var(--dark);letter-spacing:-0.02em;line-height:1.25;margin-bottom:10px}
+.share-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:640px}
+.share-meta{font-size:11.5px;color:var(--muted);margin-top:12px}
+.share-section{margin-bottom:34px}
+.share-section h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.share-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:white}
+.share-tbl{width:100%;border-collapse:collapse;min-width:560px}
+.share-tbl th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;padding:12px 14px;background:var(--warm-bg);border-bottom:1.5px solid var(--border)}
+.share-tbl td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:top}
+.share-tbl tr:last-child td{border-bottom:none}
+.share-tbl a{color:var(--red);text-decoration:none;word-break:break-all}
+.share-tbl a:hover{text-decoration:underline}
+.rec-card-list{display:flex;flex-direction:column;gap:10px}
+.rec-card{background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;font-size:13.5px;line-height:1.6;display:flex;gap:10px}
+.rec-card .num{font-family:'Unbounded',sans-serif;font-weight:700;color:var(--red);flex-shrink:0}
+.share-error{text-align:center;padding:80px 20px}
+.share-error h1{font-family:'Unbounded',sans-serif;font-size:20px;margin-bottom:8px}
+.share-error p{color:var(--muted);font-size:14px}
+
+@media(max-width:640px){
+  .wrap{padding:20px 14px 60px}
+  .tbl thead{display:none}
+  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
+  .tbl tr{border-bottom:1.5px solid var(--border);padding:10px 0;margin-bottom:6px}
+  .tbl td{border-bottom:none;padding:4px 0}
+  .tbl td.col-del{text-align:right}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="/serp-analysis"><span>Cantor</span>&nbsp;Анализ выдачи</a>
+  <div class="topbar-right">
+    <span class="save-indicator" id="saveIndicator"><span class="save-dot"></span><span id="saveText">Сохранение…</span></span>
+    <button class="btn-outline" id="templateBtn" onclick="showTemplateEditor()">Шаблон</button>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard" class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>Анализы поисковой выдачи</h1>
+      <div class="sub">Создавайте разбор по клиенту и отправляйте ссылкой</div>
+    </div>
+  </div>
+  <div class="new-row">
+    <input type="text" id="newClientName" placeholder="Имя клиента (например, Оксана Алексеева)">
+    <button class="btn-red" onclick="createAnalysis()">+ Новый анализ</button>
+  </div>
+  <div class="list" id="analysesList"></div>
+</div>
+
+<!-- ═══ EDITOR ═══ -->
+<div id="editor" class="wrap hidden">
+  <div class="page-head">
+    <button class="btn-ghost-sm" onclick="showDashboard()">← Ко всем анализам</button>
+    <div class="head-actions">
+      <button class="btn-outline" onclick="copyShareLink()">Скопировать ссылку клиенту</button>
+      <button class="btn-outline" onclick="openShareLink()">Открыть как клиент</button>
+      <button class="btn-ghost-sm danger" onclick="deleteCurrentAnalysis()">Удалить</button>
+    </div>
+  </div>
+
+  <div class="field title">
+    <label>Клиент</label>
+    <input type="text" id="fClientName" placeholder="Имя и фамилия клиента" oninput="scheduleSave()">
+  </div>
+  <div class="field">
+    <label>Заголовок анализа (необязательно)</label>
+    <input type="text" id="fAnalysisTitle" placeholder="Например: Анализ поисковой выдачи — Оксана Алексеева" oninput="scheduleSave()">
+  </div>
+  <div class="field">
+    <label>Краткое описание</label>
+    <textarea id="fIntro" placeholder="Какие запросы разбирали, по каким источникам, за какой период" oninput="scheduleSave()"></textarea>
+  </div>
+
+  <div class="section">
+    <div class="section-title-row"><h2 id="yandexSectionTitle">Яндекс</h2></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr>
+          <th class="col-url" id="thUrl">Ссылка</th>
+          <th class="col-name" id="thName">Название</th>
+          <th class="col-desc" id="thDesc">Описание</th>
+          <th class="col-status" id="thStatus">Статус</th>
+          <th class="col-del"></th>
+        </tr></thead>
+        <tbody id="yandexRows"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn" onclick="addRow('yandex')">+ Добавить ссылку</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title-row"><h2 id="googleSectionTitle">Google</h2></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr>
+          <th class="col-url"></th><th class="col-name"></th><th class="col-desc"></th><th class="col-status"></th><th class="col-del"></th>
+        </tr></thead>
+        <tbody id="googleRows"></tbody>
+      </table>
+    </div>
+    <button class="add-row-btn" onclick="addRow('google')">+ Добавить ссылку</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title-row"><h2 id="recsSectionTitle">Рекомендации по работе с поисковой выдачей</h2></div>
+    <div class="rec-list" id="recsList"></div>
+    <button class="add-row-btn" onclick="addRecommendation()">+ Добавить рекомендацию</button>
+  </div>
+</div>
+
+<!-- ═══ TEMPLATE EDITOR ═══ -->
+<div id="templateEditor" class="wrap hidden">
+  <div class="page-head">
+    <button class="btn-ghost-sm" onclick="showDashboard()">← Ко всем анализам</button>
+    <div class="head-actions"><button class="btn-red" onclick="saveTemplate()">Сохранить шаблон</button></div>
+  </div>
+  <p class="hint">Общий шаблон применяется ко всем новым анализам: заголовки блоков, названия колонок таблиц, варианты статуса и базовые рекомендации (сотрудник сможет дополнить их для конкретного клиента). Изменения в шаблоне не затрагивают уже созданные анализы.</p>
+
+  <div class="section">
+    <div class="section-title-row"><h2>Заголовки блоков</h2></div>
+    <div class="field"><label>Название блока Яндекс</label><input type="text" id="tplYandexTitle"></div>
+    <div class="field"><label>Название блока Google</label><input type="text" id="tplGoogleTitle"></div>
+    <div class="field"><label>Название блока рекомендаций</label><input type="text" id="tplRecsTitle"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title-row"><h2>Колонки таблиц</h2></div>
+    <div class="field"><label>Колонка 1</label><input type="text" id="tplColUrl"></div>
+    <div class="field"><label>Колонка 2</label><input type="text" id="tplColName"></div>
+    <div class="field"><label>Колонка 3</label><input type="text" id="tplColDesc"></div>
+    <div class="field"><label>Колонка 4</label><input type="text" id="tplColStatus"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title-row"><h2>Варианты статуса</h2></div>
+    <div id="tplStatusOptions"></div>
+    <button class="add-link" onclick="addTplStatus()">+ Добавить статус</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title-row"><h2>Базовые рекомендации</h2></div>
+    <p class="hint">Эти пункты автоматически попадают в каждый новый анализ. Сотрудник сможет отредактировать их или дополнить своими для конкретного клиента.</p>
+    <div id="tplBaseRecs"></div>
+    <button class="add-link" onclick="addTplRec()">+ Добавить пункт</button>
+  </div>
+</div>
+
+<!-- ═══ PUBLIC SHARE VIEW ═══ -->
+<div id="shareView" class="wrap hidden"></div>
+
+<script>
+const STATUS_COLORS = { green:'badge-green', amber:'badge-amber', red:'badge-red', gray:'badge-gray', blue:'badge-blue' };
+let template = null;
+let current = null; // currently open analysis (editor)
+let saveTimer = null;
+
+async function api(path, opts) {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || ('http_' + res.status));
+  }
+  return res.json();
+}
+
+function escapeHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function initials(name) {
+  const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+}
+
+function showView(id) {
+  ['dashboard','editor','templateEditor','shareView'].forEach((v) => {
+    document.getElementById(v).classList.toggle('hidden', v !== id);
+  });
+  document.getElementById('templateBtn').classList.toggle('hidden', id === 'shareView');
+}
+
+/* ════════════ DASHBOARD ════════════ */
+async function showDashboard() {
+  history.replaceState(null, '', location.pathname);
+  showView('dashboard');
+  const { analyses } = await api('/api/serp/analyses');
+  const list = document.getElementById('analysesList');
+  if (!analyses.length) {
+    list.innerHTML = '<div class="empty-note">Пока нет ни одного анализа — создайте первый выше.</div>';
+    return;
+  }
+  list.innerHTML = analyses.map((a) => `
+    <div class="card-row">
+      <div class="card-avatar">${escapeHtml(initials(a.clientName))}</div>
+      <div class="card-info" onclick="openAnalysis('${a.id}')">
+        <div class="card-name">${escapeHtml(a.clientName || 'Без имени')}</div>
+        <div class="card-meta">обновлено ${fmtDate(a.updatedAt)}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-ghost-sm" onclick="copyLinkFor('${a.shareId}', this)">Скопировать ссылку</button>
+        <button class="btn-ghost-sm" onclick="openAnalysis('${a.id}')">Открыть</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function shareUrlFor(shareId) {
+  return `${location.origin}${location.pathname}?share=${shareId}`;
+}
+
+async function copyLinkFor(shareId, btn) {
+  try {
+    await navigator.clipboard.writeText(shareUrlFor(shareId));
+    if (btn) { const t = btn.textContent; btn.textContent = 'Скопировано ✓'; setTimeout(() => btn.textContent = t, 1400); }
+  } catch (e) {
+    prompt('Скопируйте ссылку вручную:', shareUrlFor(shareId));
+  }
+}
+
+async function createAnalysis() {
+  const input = document.getElementById('newClientName');
+  const clientName = input.value.trim();
+  const { analysis } = await api('/api/serp/analyses', { method: 'POST', body: JSON.stringify({ clientName }) });
+  input.value = '';
+  openAnalysis(analysis.id);
+}
+
+/* ════════════ EDITOR ════════════ */
+async function openAnalysis(id) {
+  const data = await api('/api/serp/analysis?id=' + encodeURIComponent(id));
+  current = data.analysis;
+  template = data.template;
+  history.replaceState(null, '', location.pathname + '?edit=' + id);
+  renderEditor();
+  showView('editor');
+}
+
+function renderEditor() {
+  document.getElementById('fClientName').value = current.clientName || '';
+  document.getElementById('fAnalysisTitle').value = current.analysisTitle || '';
+  document.getElementById('fIntro').value = current.intro || '';
+  document.getElementById('yandexSectionTitle').textContent = template.yandexTitle;
+  document.getElementById('googleSectionTitle').textContent = template.googleTitle;
+  document.getElementById('recsSectionTitle').textContent = template.recsTitle;
+  document.getElementById('thUrl').textContent = template.columnLabels.url;
+  document.getElementById('thName').textContent = template.columnLabels.name;
+  document.getElementById('thDesc').textContent = template.columnLabels.description;
+  document.getElementById('thStatus').textContent = template.columnLabels.status;
+  renderRows('yandex');
+  renderRows('google');
+  renderRecs();
+}
+
+function statusOptionsHtml(selected) {
+  return '<option value="">—</option>' + (template.statusOptions || []).map((o) =>
+    `<option value="${escapeHtml(o.label)}" ${o.label === selected ? 'selected' : ''}>${escapeHtml(o.label)}</option>`
+  ).join('');
+}
+
+function renderRows(kind) {
+  const rows = current[kind + 'Rows'] || [];
+  const tbody = document.getElementById(kind + 'Rows');
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td class="col-url"><input type="text" value="${escapeHtml(r.url)}" placeholder="https://…" oninput="updateRow('${kind}','${r.id}','url',this.value)"></td>
+      <td class="col-name"><input type="text" value="${escapeHtml(r.name)}" placeholder="Название" oninput="updateRow('${kind}','${r.id}','name',this.value)"></td>
+      <td class="col-desc"><textarea placeholder="Описание, что это за источник и почему" oninput="updateRow('${kind}','${r.id}','description',this.value)">${escapeHtml(r.description)}</textarea></td>
+      <td class="col-status"><select onchange="updateRow('${kind}','${r.id}','status',this.value)">${statusOptionsHtml(r.status)}</select></td>
+      <td class="col-del"><button class="btn-icon" title="Удалить" onclick="removeRow('${kind}','${r.id}')">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function addRow(kind) {
+  current[kind + 'Rows'].push({ id: Math.random().toString(36).slice(2, 10), url:'', name:'', description:'', status:'' });
+  renderRows(kind);
+  scheduleSave();
+}
+
+function removeRow(kind, id) {
+  current[kind + 'Rows'] = current[kind + 'Rows'].filter((r) => r.id !== id);
+  renderRows(kind);
+  scheduleSave();
+}
+
+function updateRow(kind, id, field, value) {
+  const row = current[kind + 'Rows'].find((r) => r.id === id);
+  if (row) row[field] = value;
+  scheduleSave();
+}
+
+function renderRecs() {
+  const list = document.getElementById('recsList');
+  list.innerHTML = (current.recommendations || []).map((r) => `
+    <div class="rec-item">
+      <textarea oninput="updateRec('${r.id}',this.value)">${escapeHtml(r.text)}</textarea>
+      <button class="btn-icon" title="Удалить" onclick="removeRec('${r.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function addRecommendation() {
+  current.recommendations.push({ id: Math.random().toString(36).slice(2, 10), text: '' });
+  renderRecs();
+  scheduleSave();
+}
+
+function removeRec(id) {
+  current.recommendations = current.recommendations.filter((r) => r.id !== id);
+  renderRecs();
+  scheduleSave();
+}
+
+function updateRec(id, value) {
+  const rec = current.recommendations.find((r) => r.id === id);
+  if (rec) rec.text = value;
+  scheduleSave();
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveCurrent, 600);
+}
+
+async function saveCurrent() {
+  if (!current) return;
+  current.clientName = document.getElementById('fClientName').value;
+  current.analysisTitle = document.getElementById('fAnalysisTitle').value;
+  current.intro = document.getElementById('fIntro').value;
+  const ind = document.getElementById('saveIndicator');
+  ind.className = 'save-indicator show';
+  document.getElementById('saveText').textContent = 'Сохранение…';
+  try {
+    await api('/api/serp/analysis', { method: 'PUT', body: JSON.stringify(current) });
+    ind.className = 'save-indicator show ok';
+    document.getElementById('saveText').textContent = 'Сохранено';
+    setTimeout(() => ind.classList.remove('show'), 1200);
+  } catch (e) {
+    ind.className = 'save-indicator show err';
+    document.getElementById('saveText').textContent = 'Ошибка сохранения';
+  }
+}
+
+async function copyShareLink() {
+  await copyLinkFor(current.shareId);
+}
+
+function openShareLink() {
+  window.open(shareUrlFor(current.shareId), '_blank');
+}
+
+async function deleteCurrentAnalysis() {
+  if (!current) return;
+  if (!confirm('Удалить анализ «' + (current.clientName || 'без имени') + '»? Это действие необратимо, ссылка клиенту перестанет открываться.')) return;
+  await api('/api/serp/analysis', { method: 'DELETE', body: JSON.stringify({ id: current.id }) });
+  current = null;
+  showDashboard();
+}
+
+/* ════════════ TEMPLATE EDITOR ════════════ */
+async function showTemplateEditor() {
+  template = await api('/api/serp/template');
+  document.getElementById('tplYandexTitle').value = template.yandexTitle;
+  document.getElementById('tplGoogleTitle').value = template.googleTitle;
+  document.getElementById('tplRecsTitle').value = template.recsTitle;
+  document.getElementById('tplColUrl').value = template.columnLabels.url;
+  document.getElementById('tplColName').value = template.columnLabels.name;
+  document.getElementById('tplColDesc').value = template.columnLabels.description;
+  document.getElementById('tplColStatus').value = template.columnLabels.status;
+  renderTplStatuses();
+  renderTplRecs();
+  history.replaceState(null, '', location.pathname);
+  showView('templateEditor');
+}
+
+function renderTplStatuses() {
+  const wrap = document.getElementById('tplStatusOptions');
+  wrap.innerHTML = template.statusOptions.map((o, i) => `
+    <div class="opt-row">
+      <input type="text" value="${escapeHtml(o.label)}" oninput="template.statusOptions[${i}].label=this.value">
+      <select onchange="template.statusOptions[${i}].color=this.value">
+        ${Object.keys(STATUS_COLORS).map((c) => `<option value="${c}" ${c===o.color?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <button class="btn-icon" title="Удалить" onclick="removeTplStatus(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addTplStatus() {
+  template.statusOptions.push({ label: '', color: 'gray' });
+  renderTplStatuses();
+}
+function removeTplStatus(i) {
+  template.statusOptions.splice(i, 1);
+  renderTplStatuses();
+}
+
+function renderTplRecs() {
+  const wrap = document.getElementById('tplBaseRecs');
+  wrap.innerHTML = template.baseRecommendations.map((text, i) => `
+    <div class="rec-item">
+      <textarea oninput="template.baseRecommendations[${i}]=this.value">${escapeHtml(text)}</textarea>
+      <button class="btn-icon" title="Удалить" onclick="removeTplRec(${i})">✕</button>
+    </div>
+  `).join('');
+}
+function addTplRec() {
+  template.baseRecommendations.push('');
+  renderTplRecs();
+}
+function removeTplRec(i) {
+  template.baseRecommendations.splice(i, 1);
+  renderTplRecs();
+}
+
+async function saveTemplate() {
+  template.yandexTitle = document.getElementById('tplYandexTitle').value;
+  template.googleTitle = document.getElementById('tplGoogleTitle').value;
+  template.recsTitle = document.getElementById('tplRecsTitle').value;
+  template.columnLabels = {
+    url: document.getElementById('tplColUrl').value,
+    name: document.getElementById('tplColName').value,
+    description: document.getElementById('tplColDesc').value,
+    status: document.getElementById('tplColStatus').value,
+  };
+  await api('/api/serp/template', { method: 'PUT', body: JSON.stringify(template) });
+  showDashboard();
+}
+
+/* ════════════ PUBLIC SHARE VIEW ════════════ */
+function statusBadge(label) {
+  if (!label) return '';
+  const opt = (template.statusOptions || []).find((o) => o.label === label);
+  const cls = STATUS_COLORS[(opt && opt.color) || 'gray'] || 'badge-gray';
+  return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+}
+
+function shareTableHtml(rows) {
+  const rowsHtml = (rows || []).filter((r) => r.url || r.name || r.description).map((r) => `
+    <tr>
+      <td>${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.url)}</a>` : '—'}</td>
+      <td>${escapeHtml(r.name) || '—'}</td>
+      <td>${escapeHtml(r.description) || '—'}</td>
+      <td>${statusBadge(r.status) || '—'}</td>
+    </tr>
+  `).join('');
+  return `
+    <div class="share-table-wrap">
+      <table class="share-tbl">
+        <thead><tr>
+          <th>${escapeHtml(template.columnLabels.url)}</th>
+          <th>${escapeHtml(template.columnLabels.name)}</th>
+          <th>${escapeHtml(template.columnLabels.description)}</th>
+          <th>${escapeHtml(template.columnLabels.status)}</th>
+        </tr></thead>
+        <tbody>${rowsHtml || '<tr><td colspan="4" style="color:var(--muted);text-align:center;">Пока нет данных</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function initShareView(shareId) {
+  showView('shareView');
+  const view = document.getElementById('shareView');
+  try {
+    const data = await api('/api/serp/share?id=' + encodeURIComponent(shareId));
+    const a = data.analysis;
+    template = data.template;
+    const title = a.analysisTitle || (`Анализ поисковой выдачи — ${a.clientName || ''}`);
+    const recsHtml = (a.recommendations || []).filter((r) => r.text && r.text.trim()).map((r, i) => `
+      <div class="rec-card"><span class="num">${i + 1}.</span><span>${escapeHtml(r.text)}</span></div>
+    `).join('') || '<div class="empty-note">Рекомендации пока не добавлены.</div>';
+
+    view.innerHTML = `
+      <div class="share-head">
+        <div class="share-eyebrow">Анализ поисковой выдачи</div>
+        <h1>${escapeHtml(title)}</h1>
+        ${a.intro ? `<p>${escapeHtml(a.intro)}</p>` : ''}
+        <div class="share-meta">Обновлено ${fmtDate(a.updatedAt)}</div>
+      </div>
+      <div class="share-section">
+        <h2>${escapeHtml(template.yandexTitle)}</h2>
+        ${shareTableHtml(a.yandexRows)}
+      </div>
+      <div class="share-section">
+        <h2>${escapeHtml(template.googleTitle)}</h2>
+        ${shareTableHtml(a.googleRows)}
+      </div>
+      <div class="share-section">
+        <h2>${escapeHtml(template.recsTitle)}</h2>
+        <div class="rec-card-list">${recsHtml}</div>
+      </div>
+    `;
+  } catch (e) {
+    view.innerHTML = '<div class="share-error"><h1>Ссылка недоступна</h1><p>Она могла быть отозвана или введена с ошибкой.</p></div>';
+  }
+}
+
+/* ════════════ INIT ════════════ */
+(async function init() {
+  const params = new URLSearchParams(location.search);
+  const shareId = params.get('share');
+  const editId = params.get('edit');
+  if (shareId) {
+    initShareView(shareId);
+    return;
+  }
+  template = await api('/api/serp/template');
+  if (editId) {
+    openAnalysis(editId);
+    return;
+  }
+  showDashboard();
+})();
+</script>
+</body>
+</html>
