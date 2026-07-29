@@ -108,6 +108,8 @@ input,textarea,select{font-family:inherit}
 .field input[type=text]:focus,.field textarea:focus{border-color:var(--red)}
 .field textarea{resize:vertical;min-height:60px}
 .field.title input{font-family:'Unbounded',sans-serif;font-weight:700;font-size:19px}
+.toggle-row{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text);margin-bottom:18px;cursor:pointer}
+.toggle-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--red);cursor:pointer;flex-shrink:0}
 
 .section{background:white;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:18px}
 .section-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
@@ -264,6 +266,11 @@ input,textarea,select{font-family:inherit}
     <textarea id="fIntro" placeholder="Какие запросы разбирали, по каким источникам, за какой период" oninput="scheduleSave()"></textarea>
   </div>
 
+  <label class="toggle-row">
+    <input type="checkbox" id="fSchoolTables" checked onchange="onSchoolToggle()">
+    Показывать таблицы «ФИО + онлайн-школа» (отключите, если у репетитора нет своей школы)
+  </label>
+
   <div id="tablesContainer"></div>
 
   <div class="section">
@@ -359,13 +366,21 @@ function fmtDate(iso) {
   return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
 }
 
+const SERP_SCHOOL_TABLE_IDS = ['yandexSchool', 'googleSchool'];
+
 function normalizeAnalysis(a) {
   if (!a.tables) a.tables = { yandexName: a.yandexRows || [], googleName: a.googleRows || [], yandexSchool: [], googleSchool: [] };
   for (const id of SERP_TABLE_IDS) if (!Array.isArray(a.tables[id])) a.tables[id] = [];
   if (typeof a.score !== 'number') a.score = 0;
+  if (typeof a.schoolTablesEnabled !== 'boolean') a.schoolTablesEnabled = true;
   if (!Array.isArray(a.recommendations)) a.recommendations = [];
   a.recommendations.forEach((r) => { if (typeof r.checked !== 'boolean') r.checked = false; });
   return a;
+}
+
+function visibleTables(analysis) {
+  const schoolOn = analysis.schoolTablesEnabled !== false;
+  return (template.tables || []).filter((t) => schoolOn || !SERP_SCHOOL_TABLE_IDS.includes(t.id));
 }
 
 function scoreColor(score) {
@@ -484,9 +499,16 @@ function renderEditor() {
   document.getElementById('fIntro').value = current.intro || '';
   document.getElementById('fScore').value = current.score || 0;
   updateScoreWidgetColor();
+  document.getElementById('fSchoolTables').checked = current.schoolTablesEnabled !== false;
   document.getElementById('recsSectionTitle').textContent = template.recsTitle;
   renderTables();
   renderRecs();
+}
+
+function onSchoolToggle() {
+  current.schoolTablesEnabled = document.getElementById('fSchoolTables').checked;
+  renderTables();
+  scheduleSave();
 }
 
 function updateScoreWidgetColor() {
@@ -516,7 +538,8 @@ function statusDotColor(label) {
 
 function renderTables() {
   const container = document.getElementById('tablesContainer');
-  container.innerHTML = (template.tables || []).map((t) => `
+  const tables = visibleTables(current);
+  container.innerHTML = tables.map((t) => `
     <div class="section">
       <div class="section-title-row"><h2>${escapeHtml(t.title)}</h2></div>
       <div style="overflow-x:auto">
@@ -534,7 +557,7 @@ function renderTables() {
       <button class="add-row-btn" onclick="addRow('${t.id}')">+ Добавить ссылку</button>
     </div>
   `).join('');
-  (template.tables || []).forEach((t) => renderRows(t.id));
+  tables.forEach((t) => renderRows(t.id));
 }
 
 function renderRows(tableId) {
@@ -787,7 +810,7 @@ async function initShareView(shareId) {
     const title = a.analysisTitle || (`Анализ поисковой выдачи — ${a.clientName || ''}`);
     const c = scoreColor(a.score || 0);
 
-    const tablesHtml = (template.tables || []).map((t) => `
+    const tablesHtml = visibleTables(a).map((t) => `
       <div class="share-section">
         <h2>${escapeHtml(t.title)}</h2>
         ${shareTableHtml(a.tables[t.id])}
