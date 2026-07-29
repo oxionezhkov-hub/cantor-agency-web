@@ -23,7 +23,7 @@
   --green:#1e8449;--green-bg:#eafaf1;
   --amber:#9a6f00;--amber-bg:#fef9e7;
   --gray:#6b6b6b;--gray-bg:#f1f0ed;
-  --blue:#1a6fa3;--blue-bg:#ebf5fb;
+  --red-text:#c0392b;--red-bg:#fdf2f2;
 }
 html{-webkit-text-size-adjust:100%}
 body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -33,8 +33,7 @@ input,textarea,select{font-family:inherit}
 
 /* ── TOPBAR ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1.5px solid var(--border);background:var(--white);position:sticky;top:0;z-index:20}
-.brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--dark);text-decoration:none;display:flex;align-items:center;gap:8px}
-.brand span{color:var(--red)}
+.brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--dark);text-decoration:none;display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .save-indicator{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.25s}
 .save-indicator.show{opacity:1}
@@ -56,12 +55,37 @@ input,textarea,select{font-family:inherit}
 .btn-icon:hover{color:var(--red);background:var(--accent-bg)}
 .btn-icon svg{width:15px;height:15px}
 
+@keyframes copyPop{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
+.btn-outline.copied,.btn-ghost-sm.copied{animation:copyPop 0.35s ease;border-color:#2E7D32 !important;color:#2E7D32 !important}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark);color:white;padding:12px 20px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:all 0.25s ease;display:flex;align-items:center;gap:8px;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast svg{width:16px;height:16px;color:#4ADE80;flex-shrink:0}
+
+/* ── ADMIN GATE ── */
+#adminGate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:380px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:36px 30px;text-align:center}
+.gate-card h1{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.02em}
+.gate-card p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.gate-card input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 14px;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s;background:white;margin-bottom:12px;text-align:center;letter-spacing:0.1em}
+.gate-card input:focus{border-color:var(--red)}
+.gate-error{font-size:12px;color:var(--red);margin:-4px 0 14px;display:none}
+.gate-error.show{display:block}
+
 /* ── SHARED LAYOUT ── */
 .wrap{max-width:1040px;margin:0 auto;padding:32px 24px 80px}
 .page-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;flex-wrap:wrap}
 .page-head h1{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;color:var(--dark);letter-spacing:-0.02em}
 .page-head .sub{font-size:13px;color:var(--muted);margin-top:4px}
-.head-actions{display:flex;gap:8px;flex-wrap:wrap}
+.head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ── SCORE WIDGET (editor, editable) ── */
+.score-widget{display:flex;align-items:center;gap:6px;border-radius:100px;padding:7px 14px 7px 14px;font-size:12px;font-weight:700}
+.score-widget .score-label{opacity:0.75;white-space:nowrap}
+.score-widget input[type=number]{width:36px;border:none;background:transparent;font-family:'Unbounded',sans-serif;font-weight:700;font-size:15px;text-align:right;outline:none;color:inherit;-moz-appearance:textfield}
+.score-widget input[type=number]::-webkit-outer-spin-button,.score-widget input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.score-widget .score-suffix{opacity:0.7}
 
 /* ── DASHBOARD LIST ── */
 .new-row{display:flex;gap:8px;margin-bottom:20px}
@@ -89,60 +113,64 @@ input,textarea,select{font-family:inherit}
 .section-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .section-title-row h2{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:var(--dark)}
 
-.tbl{width:100%;border-collapse:collapse}
+.tbl{width:100%;border-collapse:collapse;table-layout:fixed}
 .tbl th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;padding:0 10px 8px;border-bottom:1.5px solid var(--border)}
 .tbl td{padding:6px 8px;vertical-align:top;border-bottom:1px solid var(--border)}
 .tbl tr:last-child td{border-bottom:none}
-.tbl input[type=text],.tbl textarea,.tbl select{width:100%;border:1.5px solid transparent;border-radius:var(--r-sm);padding:7px 8px;font-size:13px;color:var(--text);outline:none;background:var(--bg);resize:vertical}
+.tbl input[type=text],.tbl textarea,.tbl select{width:100%;border:1.5px solid transparent;border-radius:var(--r-sm);padding:7px 8px;font-size:13px;color:var(--text);outline:none;background:var(--bg);resize:vertical;white-space:pre-wrap;overflow-wrap:anywhere}
 .tbl textarea{min-height:38px}
 .tbl input[type=text]:focus,.tbl textarea:focus,.tbl select:focus{border-color:var(--red);background:white}
-.tbl td.col-url{width:20%}
+.tbl td.col-url{width:22%}
 .tbl td.col-name{width:18%}
-.tbl td.col-desc{width:38%}
-.tbl td.col-status{width:16%}
+.tbl td.col-desc{width:34%}
+.tbl td.col-status{width:18%}
 .tbl td.col-del{width:30px;text-align:center}
+.status-select-wrap{display:flex;align-items:center;gap:6px}
+.status-select-wrap select{flex:1}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#d0d0d0;border:1px solid rgba(0,0,0,0.08)}
 .add-row-btn{background:none;border:1.5px dashed var(--border);border-radius:var(--r-md);padding:9px;width:100%;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s}
 .add-row-btn:hover{border-color:var(--red);color:var(--red)}
 
 .rec-list{display:flex;flex-direction:column;gap:8px}
-.rec-item{display:flex;gap:8px;align-items:flex-start}
+.rec-item{display:flex;gap:10px;align-items:flex-start}
+.rec-item input[type=checkbox]{margin-top:12px;width:18px;height:18px;accent-color:var(--red);flex-shrink:0;cursor:pointer}
 .rec-item textarea{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13.5px;outline:none;background:white;resize:vertical;min-height:44px}
 .rec-item textarea:focus{border-color:var(--red)}
 
 .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap}
-.badge-green{background:var(--green-bg);color:var(--green)}
-.badge-amber{background:var(--amber-bg);color:var(--amber)}
-.badge-red{background:#fdf2f2;color:#c0392b}
-.badge-gray{background:var(--gray-bg);color:var(--gray)}
-.badge-blue{background:var(--blue-bg);color:var(--blue)}
 
 /* ── TEMPLATE EDITOR ── */
 .opt-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .opt-row input[type=text]{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;outline:none}
 .opt-row input[type=text]:focus{border-color:var(--red)}
-.opt-row select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:12.5px;outline:none;background:white}
+.color-swatch-input{width:38px;height:38px;padding:2px;border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;background:white;flex-shrink:0}
 .add-link{background:none;border:none;color:var(--red);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 0}
 .hint{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6}
 
 /* ── SHARE VIEW ── */
 #shareView .wrap{max-width:900px}
-.share-head{margin-bottom:28px;padding-bottom:20px;border-bottom:1.5px solid var(--border)}
+.share-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:20px;border-bottom:1.5px solid var(--border)}
+.share-head-text{flex:1;min-width:240px}
 .share-eyebrow{font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
 .share-head h1{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:700;color:var(--dark);letter-spacing:-0.02em;line-height:1.25;margin-bottom:10px}
 .share-head p{font-size:14px;color:var(--muted);line-height:1.6;max-width:640px}
 .share-meta{font-size:11.5px;color:var(--muted);margin-top:12px}
+.score-badge-lg{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:92px;padding:14px 16px;border-radius:var(--r-lg);flex-shrink:0}
+.score-badge-lg .score-num{font-family:'Unbounded',sans-serif;font-weight:900;font-size:28px;line-height:1}
+.score-badge-lg .score-cap{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-top:5px;opacity:0.85;text-align:center}
 .share-section{margin-bottom:34px}
 .share-section h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;color:var(--dark);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .share-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:white}
-.share-tbl{width:100%;border-collapse:collapse;min-width:560px}
+.share-tbl{width:100%;border-collapse:collapse;table-layout:fixed}
 .share-tbl th{text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;padding:12px 14px;background:var(--warm-bg);border-bottom:1.5px solid var(--border)}
-.share-tbl td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:top}
+.share-tbl td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:top;word-break:break-word;overflow-wrap:anywhere}
 .share-tbl tr:last-child td{border-bottom:none}
 .share-tbl a{color:var(--red);text-decoration:none;word-break:break-all}
 .share-tbl a:hover{text-decoration:underline}
-.rec-card-list{display:flex;flex-direction:column;gap:10px}
-.rec-card{background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;font-size:13.5px;line-height:1.6;display:flex;gap:10px}
-.rec-card .num{font-family:'Unbounded',sans-serif;font-weight:700;color:var(--red);flex-shrink:0}
+.checklist{display:flex;flex-direction:column;gap:10px}
+.check-item{display:flex;gap:12px;align-items:flex-start;background:white;border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px;font-size:13.5px;line-height:1.6}
+.check-item input[type=checkbox]{margin-top:3px;width:18px;height:18px;accent-color:var(--red);flex-shrink:0}
+.check-item.done span{color:var(--muted);text-decoration:line-through}
 .share-error{text-align:center;padding:80px 20px}
 .share-error h1{font-family:'Unbounded',sans-serif;font-size:20px;margin-bottom:8px}
 .share-error p{color:var(--muted);font-size:14px}
@@ -154,21 +182,43 @@ input,textarea,select{font-family:inherit}
   .tbl tr{border-bottom:1.5px solid var(--border);padding:10px 0;margin-bottom:6px}
   .tbl td{border-bottom:none;padding:4px 0}
   .tbl td.col-del{text-align:right}
+
+  .share-tbl thead{display:none}
+  .share-tbl,.share-tbl tbody,.share-tbl tr,.share-tbl td{display:block;width:100%}
+  .share-tbl tr{border-bottom:1.5px solid var(--border);padding:10px 14px}
+  .share-tbl tr:last-child{border-bottom:none}
+  .share-tbl td{border-bottom:none;padding:6px 0}
+  .share-tbl td[data-label]::before{content:attr(data-label);display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;color:var(--muted);margin-bottom:2px}
+
+  .share-head{flex-direction:column-reverse}
 }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <a class="brand" href="/serp-analysis"><span>Cantor</span>&nbsp;Анализ выдачи</a>
+<div class="topbar" id="topbar">
+  <button class="brand" onclick="goHome()">Анализ выдачи</button>
   <div class="topbar-right">
     <span class="save-indicator" id="saveIndicator"><span class="save-dot"></span><span id="saveText">Сохранение…</span></span>
     <button class="btn-outline" id="templateBtn" onclick="showTemplateEditor()">Шаблон</button>
   </div>
 </div>
 
+<!-- ═══ ADMIN PASSWORD GATE ═══ -->
+<div id="adminGate" class="hidden">
+  <div class="gate-card">
+    <h1>Анализ поисковой выдачи</h1>
+    <p>Внутренний инструмент — введите пароль сотрудника</p>
+    <form id="gateForm">
+      <input type="password" id="gatePassword" placeholder="Пароль" autocomplete="off" autofocus>
+      <div class="gate-error" id="gateError">Неверный пароль</div>
+      <button type="submit" class="btn-red" style="width:100%">Войти</button>
+    </form>
+  </div>
+</div>
+
 <!-- ═══ DASHBOARD ═══ -->
-<div id="dashboard" class="wrap">
+<div id="dashboard" class="wrap hidden">
   <div class="page-head">
     <div>
       <h1>Анализы поисковой выдачи</h1>
@@ -187,7 +237,12 @@ input,textarea,select{font-family:inherit}
   <div class="page-head">
     <button class="btn-ghost-sm" onclick="showDashboard()">← Ко всем анализам</button>
     <div class="head-actions">
-      <button class="btn-outline" onclick="copyShareLink()">Скопировать ссылку клиенту</button>
+      <div class="score-widget" id="scoreWidget">
+        <span class="score-label">Оценка выдачи</span>
+        <input type="number" id="fScore" min="0" max="100" value="0" oninput="onScoreInput()">
+        <span class="score-suffix">/100</span>
+      </div>
+      <button class="btn-outline" onclick="copyShareLink(this)">Скопировать ссылку клиенту</button>
       <button class="btn-outline" onclick="openShareLink()">Открыть как клиент</button>
       <button class="btn-ghost-sm danger" onclick="deleteCurrentAnalysis()">Удалить</button>
     </div>
@@ -206,35 +261,7 @@ input,textarea,select{font-family:inherit}
     <textarea id="fIntro" placeholder="Какие запросы разбирали, по каким источникам, за какой период" oninput="scheduleSave()"></textarea>
   </div>
 
-  <div class="section">
-    <div class="section-title-row"><h2 id="yandexSectionTitle">Яндекс</h2></div>
-    <div style="overflow-x:auto">
-      <table class="tbl">
-        <thead><tr>
-          <th class="col-url" id="thUrl">Ссылка</th>
-          <th class="col-name" id="thName">Название</th>
-          <th class="col-desc" id="thDesc">Описание</th>
-          <th class="col-status" id="thStatus">Статус</th>
-          <th class="col-del"></th>
-        </tr></thead>
-        <tbody id="yandexRows"></tbody>
-      </table>
-    </div>
-    <button class="add-row-btn" onclick="addRow('yandex')">+ Добавить ссылку</button>
-  </div>
-
-  <div class="section">
-    <div class="section-title-row"><h2 id="googleSectionTitle">Google</h2></div>
-    <div style="overflow-x:auto">
-      <table class="tbl">
-        <thead><tr>
-          <th class="col-url"></th><th class="col-name"></th><th class="col-desc"></th><th class="col-status"></th><th class="col-del"></th>
-        </tr></thead>
-        <tbody id="googleRows"></tbody>
-      </table>
-    </div>
-    <button class="add-row-btn" onclick="addRow('google')">+ Добавить ссылку</button>
-  </div>
+  <div id="tablesContainer"></div>
 
   <div class="section">
     <div class="section-title-row"><h2 id="recsSectionTitle">Рекомендации по работе с поисковой выдачей</h2></div>
@@ -249,12 +276,11 @@ input,textarea,select{font-family:inherit}
     <button class="btn-ghost-sm" onclick="showDashboard()">← Ко всем анализам</button>
     <div class="head-actions"><button class="btn-red" onclick="saveTemplate()">Сохранить шаблон</button></div>
   </div>
-  <p class="hint">Общий шаблон применяется ко всем новым анализам: заголовки блоков, названия колонок таблиц, варианты статуса и базовые рекомендации (сотрудник сможет дополнить их для конкретного клиента). Изменения в шаблоне не затрагивают уже созданные анализы.</p>
+  <p class="hint">Общий шаблон применяется ко всем новым анализам: заголовки таблиц, названия колонок, варианты статуса (с цветом) и базовые рекомендации (сотрудник сможет дополнить их для конкретного клиента). Изменения в шаблоне не затрагивают уже созданные анализы.</p>
 
   <div class="section">
-    <div class="section-title-row"><h2>Заголовки блоков</h2></div>
-    <div class="field"><label>Название блока Яндекс</label><input type="text" id="tplYandexTitle"></div>
-    <div class="field"><label>Название блока Google</label><input type="text" id="tplGoogleTitle"></div>
+    <div class="section-title-row"><h2>Заголовки таблиц</h2></div>
+    <div id="tplTableTitles"></div>
     <div class="field"><label>Название блока рекомендаций</label><input type="text" id="tplRecsTitle"></div>
   </div>
 
@@ -268,6 +294,7 @@ input,textarea,select{font-family:inherit}
 
   <div class="section">
     <div class="section-title-row"><h2>Варианты статуса</h2></div>
+    <p class="hint">Цвет выбирается напрямую — нажмите на цветной квадрат.</p>
     <div id="tplStatusOptions"></div>
     <button class="add-link" onclick="addTplStatus()">+ Добавить статус</button>
   </div>
@@ -283,8 +310,16 @@ input,textarea,select{font-family:inherit}
 <!-- ═══ PUBLIC SHARE VIEW ═══ -->
 <div id="shareView" class="wrap hidden"></div>
 
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastText">Ссылка скопирована</span>
+</div>
+
 <script>
-const STATUS_COLORS = { green:'badge-green', amber:'badge-amber', red:'badge-red', gray:'badge-gray', blue:'badge-blue' };
+const ADMIN_PASSWORD = '12345678';
+const ADMIN_STORAGE_KEY = 'serp_admin_ok';
+const SERP_TABLE_IDS = ['yandexName', 'googleName', 'yandexSchool', 'googleSchool'];
+
 let template = null;
 let current = null; // currently open analysis (editor)
 let saveTimer = null;
@@ -321,12 +356,61 @@ function fmtDate(iso) {
   return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
 }
 
+function normalizeAnalysis(a) {
+  if (!a.tables) a.tables = { yandexName: a.yandexRows || [], googleName: a.googleRows || [], yandexSchool: [], googleSchool: [] };
+  for (const id of SERP_TABLE_IDS) if (!Array.isArray(a.tables[id])) a.tables[id] = [];
+  if (typeof a.score !== 'number') a.score = 0;
+  if (!Array.isArray(a.recommendations)) a.recommendations = [];
+  a.recommendations.forEach((r) => { if (typeof r.checked !== 'boolean') r.checked = false; });
+  return a;
+}
+
+function scoreColor(score) {
+  if (score >= 75) return { fg: '#1e8449', bg: '#eafaf1' };
+  if (score >= 45) return { fg: '#9a6f00', bg: '#fef9e7' };
+  return { fg: '#c0392b', bg: '#fdf2f2' };
+}
+
+let toastTimer = null;
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
 function showView(id) {
-  ['dashboard','editor','templateEditor','shareView'].forEach((v) => {
+  ['adminGate','dashboard','editor','templateEditor','shareView'].forEach((v) => {
     document.getElementById(v).classList.toggle('hidden', v !== id);
   });
-  document.getElementById('templateBtn').classList.toggle('hidden', id === 'shareView');
+  const isChrome = id !== 'shareView' && id !== 'adminGate';
+  document.getElementById('topbar').classList.toggle('hidden', !isChrome);
+  document.getElementById('templateBtn').classList.toggle('hidden', id !== 'dashboard' && id !== 'editor' && id !== 'templateEditor');
 }
+
+function goHome() {
+  if (isAdminUnlocked()) showDashboard();
+}
+
+/* ════════════ ADMIN GATE ════════════ */
+function isAdminUnlocked() {
+  return localStorage.getItem(ADMIN_STORAGE_KEY) === '1';
+}
+
+document.getElementById('gateForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('gatePassword');
+  const err = document.getElementById('gateError');
+  if (input.value === ADMIN_PASSWORD) {
+    localStorage.setItem(ADMIN_STORAGE_KEY, '1');
+    input.value = '';
+    err.classList.remove('show');
+    boot();
+  } else {
+    err.classList.add('show');
+  }
+});
 
 /* ════════════ DASHBOARD ════════════ */
 async function showDashboard() {
@@ -360,9 +444,16 @@ function shareUrlFor(shareId) {
 async function copyLinkFor(shareId, btn) {
   try {
     await navigator.clipboard.writeText(shareUrlFor(shareId));
-    if (btn) { const t = btn.textContent; btn.textContent = 'Скопировано ✓'; setTimeout(() => btn.textContent = t, 1400); }
   } catch (e) {
     prompt('Скопируйте ссылку вручную:', shareUrlFor(shareId));
+    return;
+  }
+  showToast('Ссылка скопирована');
+  if (btn) {
+    const original = btn.textContent;
+    btn.classList.add('copied');
+    btn.textContent = 'Скопировано ✓';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = original; }, 1400);
   }
 }
 
@@ -377,7 +468,7 @@ async function createAnalysis() {
 /* ════════════ EDITOR ════════════ */
 async function openAnalysis(id) {
   const data = await api('/api/serp/analysis?id=' + encodeURIComponent(id));
-  current = data.analysis;
+  current = normalizeAnalysis(data.analysis);
   template = data.template;
   history.replaceState(null, '', location.pathname + '?edit=' + id);
   renderEditor();
@@ -388,16 +479,25 @@ function renderEditor() {
   document.getElementById('fClientName').value = current.clientName || '';
   document.getElementById('fAnalysisTitle').value = current.analysisTitle || '';
   document.getElementById('fIntro').value = current.intro || '';
-  document.getElementById('yandexSectionTitle').textContent = template.yandexTitle;
-  document.getElementById('googleSectionTitle').textContent = template.googleTitle;
+  document.getElementById('fScore').value = current.score || 0;
+  updateScoreWidgetColor();
   document.getElementById('recsSectionTitle').textContent = template.recsTitle;
-  document.getElementById('thUrl').textContent = template.columnLabels.url;
-  document.getElementById('thName').textContent = template.columnLabels.name;
-  document.getElementById('thDesc').textContent = template.columnLabels.description;
-  document.getElementById('thStatus').textContent = template.columnLabels.status;
-  renderRows('yandex');
-  renderRows('google');
+  renderTables();
   renderRecs();
+}
+
+function updateScoreWidgetColor() {
+  const c = scoreColor(current.score || 0);
+  const widget = document.getElementById('scoreWidget');
+  widget.style.background = c.bg;
+  widget.style.color = c.fg;
+}
+
+function onScoreInput() {
+  const val = Math.max(0, Math.min(100, Math.round(Number(document.getElementById('fScore').value) || 0)));
+  current.score = val;
+  updateScoreWidgetColor();
+  scheduleSave();
 }
 
 function statusOptionsHtml(selected) {
@@ -406,34 +506,73 @@ function statusOptionsHtml(selected) {
   ).join('');
 }
 
-function renderRows(kind) {
-  const rows = current[kind + 'Rows'] || [];
-  const tbody = document.getElementById(kind + 'Rows');
-  tbody.innerHTML = rows.map((r, i) => `
+function statusDotColor(label) {
+  const opt = (template.statusOptions || []).find((o) => o.label === label);
+  return (opt && opt.color) || '#d0d0d0';
+}
+
+function renderTables() {
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = (template.tables || []).map((t) => `
+    <div class="section">
+      <div class="section-title-row"><h2>${escapeHtml(t.title)}</h2></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th class="col-url">${escapeHtml(template.columnLabels.url)}</th>
+            <th class="col-name">${escapeHtml(template.columnLabels.name)}</th>
+            <th class="col-desc">${escapeHtml(template.columnLabels.description)}</th>
+            <th class="col-status">${escapeHtml(template.columnLabels.status)}</th>
+            <th class="col-del"></th>
+          </tr></thead>
+          <tbody id="rows-${t.id}"></tbody>
+        </table>
+      </div>
+      <button class="add-row-btn" onclick="addRow('${t.id}')">+ Добавить ссылку</button>
+    </div>
+  `).join('');
+  (template.tables || []).forEach((t) => renderRows(t.id));
+}
+
+function renderRows(tableId) {
+  const rows = current.tables[tableId] || [];
+  const tbody = document.getElementById('rows-' + tableId);
+  tbody.innerHTML = rows.map((r) => `
     <tr>
-      <td class="col-url"><input type="text" value="${escapeHtml(r.url)}" placeholder="https://…" oninput="updateRow('${kind}','${r.id}','url',this.value)"></td>
-      <td class="col-name"><input type="text" value="${escapeHtml(r.name)}" placeholder="Название" oninput="updateRow('${kind}','${r.id}','name',this.value)"></td>
-      <td class="col-desc"><textarea placeholder="Описание, что это за источник и почему" oninput="updateRow('${kind}','${r.id}','description',this.value)">${escapeHtml(r.description)}</textarea></td>
-      <td class="col-status"><select onchange="updateRow('${kind}','${r.id}','status',this.value)">${statusOptionsHtml(r.status)}</select></td>
-      <td class="col-del"><button class="btn-icon" title="Удалить" onclick="removeRow('${kind}','${r.id}')">✕</button></td>
+      <td class="col-url"><textarea placeholder="https://…" oninput="updateRow('${tableId}','${r.id}','url',this.value)">${escapeHtml(r.url)}</textarea></td>
+      <td class="col-name"><textarea placeholder="Название" oninput="updateRow('${tableId}','${r.id}','name',this.value)">${escapeHtml(r.name)}</textarea></td>
+      <td class="col-desc"><textarea placeholder="Описание, что это за источник и почему" oninput="updateRow('${tableId}','${r.id}','description',this.value)">${escapeHtml(r.description)}</textarea></td>
+      <td class="col-status">
+        <div class="status-select-wrap">
+          <span class="status-dot" style="background:${statusDotColor(r.status)}"></span>
+          <select onchange="onStatusChange(this,'${tableId}','${r.id}')">${statusOptionsHtml(r.status)}</select>
+        </div>
+      </td>
+      <td class="col-del"><button class="btn-icon" title="Удалить" onclick="removeRow('${tableId}','${r.id}')">✕</button></td>
     </tr>
   `).join('');
 }
 
-function addRow(kind) {
-  current[kind + 'Rows'].push({ id: Math.random().toString(36).slice(2, 10), url:'', name:'', description:'', status:'' });
-  renderRows(kind);
+function onStatusChange(sel, tableId, rowId) {
+  updateRow(tableId, rowId, 'status', sel.value);
+  const dot = sel.closest('.status-select-wrap').querySelector('.status-dot');
+  if (dot) dot.style.background = statusDotColor(sel.value);
+}
+
+function addRow(tableId) {
+  current.tables[tableId].push({ id: Math.random().toString(36).slice(2, 10), url:'', name:'', description:'', status:'' });
+  renderRows(tableId);
   scheduleSave();
 }
 
-function removeRow(kind, id) {
-  current[kind + 'Rows'] = current[kind + 'Rows'].filter((r) => r.id !== id);
-  renderRows(kind);
+function removeRow(tableId, id) {
+  current.tables[tableId] = current.tables[tableId].filter((r) => r.id !== id);
+  renderRows(tableId);
   scheduleSave();
 }
 
-function updateRow(kind, id, field, value) {
-  const row = current[kind + 'Rows'].find((r) => r.id === id);
+function updateRow(tableId, id, field, value) {
+  const row = current.tables[tableId].find((r) => r.id === id);
   if (row) row[field] = value;
   scheduleSave();
 }
@@ -442,14 +581,15 @@ function renderRecs() {
   const list = document.getElementById('recsList');
   list.innerHTML = (current.recommendations || []).map((r) => `
     <div class="rec-item">
-      <textarea oninput="updateRec('${r.id}',this.value)">${escapeHtml(r.text)}</textarea>
+      <input type="checkbox" ${r.checked ? 'checked' : ''} onchange="updateRecChecked('${r.id}', this.checked)">
+      <textarea placeholder="Текст рекомендации" oninput="updateRec('${r.id}',this.value)">${escapeHtml(r.text)}</textarea>
       <button class="btn-icon" title="Удалить" onclick="removeRec('${r.id}')">✕</button>
     </div>
   `).join('');
 }
 
 function addRecommendation() {
-  current.recommendations.push({ id: Math.random().toString(36).slice(2, 10), text: '' });
+  current.recommendations.push({ id: Math.random().toString(36).slice(2, 10), text: '', checked: false });
   renderRecs();
   scheduleSave();
 }
@@ -463,6 +603,12 @@ function removeRec(id) {
 function updateRec(id, value) {
   const rec = current.recommendations.find((r) => r.id === id);
   if (rec) rec.text = value;
+  scheduleSave();
+}
+
+function updateRecChecked(id, checked) {
+  const rec = current.recommendations.find((r) => r.id === id);
+  if (rec) rec.checked = checked;
   scheduleSave();
 }
 
@@ -490,8 +636,8 @@ async function saveCurrent() {
   }
 }
 
-async function copyShareLink() {
-  await copyLinkFor(current.shareId);
+async function copyShareLink(btn) {
+  await copyLinkFor(current.shareId, btn);
 }
 
 function openShareLink() {
@@ -509,34 +655,43 @@ async function deleteCurrentAnalysis() {
 /* ════════════ TEMPLATE EDITOR ════════════ */
 async function showTemplateEditor() {
   template = await api('/api/serp/template');
-  document.getElementById('tplYandexTitle').value = template.yandexTitle;
-  document.getElementById('tplGoogleTitle').value = template.googleTitle;
   document.getElementById('tplRecsTitle').value = template.recsTitle;
   document.getElementById('tplColUrl').value = template.columnLabels.url;
   document.getElementById('tplColName').value = template.columnLabels.name;
   document.getElementById('tplColDesc').value = template.columnLabels.description;
   document.getElementById('tplColStatus').value = template.columnLabels.status;
+  renderTplTableTitles();
   renderTplStatuses();
   renderTplRecs();
   history.replaceState(null, '', location.pathname);
   showView('templateEditor');
 }
 
+function renderTplTableTitles() {
+  const wrap = document.getElementById('tplTableTitles');
+  wrap.innerHTML = template.tables.map((t, i) => `
+    <div class="field">
+      <label>Таблица ${i + 1}</label>
+      <input type="text" value="${escapeHtml(t.title)}" oninput="template.tables[${i}].title=this.value">
+    </div>
+  `).join('');
+}
+
 function renderTplStatuses() {
   const wrap = document.getElementById('tplStatusOptions');
   wrap.innerHTML = template.statusOptions.map((o, i) => `
     <div class="opt-row">
-      <input type="text" value="${escapeHtml(o.label)}" oninput="template.statusOptions[${i}].label=this.value">
-      <select onchange="template.statusOptions[${i}].color=this.value">
-        ${Object.keys(STATUS_COLORS).map((c) => `<option value="${c}" ${c===o.color?'selected':''}>${c}</option>`).join('')}
-      </select>
+      <input type="color" class="color-swatch-input" value="${escapeHtml(o.color || '#6b6b6b')}" oninput="template.statusOptions[${i}].color=this.value">
+      <input type="text" value="${escapeHtml(o.label)}" oninput="template.statusOptions[${i}].label=this.value" placeholder="Название статуса">
       <button class="btn-icon" title="Удалить" onclick="removeTplStatus(${i})">✕</button>
     </div>
   `).join('');
 }
 
 function addTplStatus() {
-  template.statusOptions.push({ label: '', color: 'gray' });
+  const palette = ['#1e8449','#9a6f00','#c0392b','#6b6b6b','#1a6fa3','#7d3c98','#117864','#b9770e','#2c3e50','#d35400'];
+  const color = palette[template.statusOptions.length % palette.length];
+  template.statusOptions.push({ label: '', color });
   renderTplStatuses();
 }
 function removeTplStatus(i) {
@@ -563,8 +718,6 @@ function removeTplRec(i) {
 }
 
 async function saveTemplate() {
-  template.yandexTitle = document.getElementById('tplYandexTitle').value;
-  template.googleTitle = document.getElementById('tplGoogleTitle').value;
   template.recsTitle = document.getElementById('tplRecsTitle').value;
   template.columnLabels = {
     url: document.getElementById('tplColUrl').value,
@@ -580,27 +733,28 @@ async function saveTemplate() {
 function statusBadge(label) {
   if (!label) return '';
   const opt = (template.statusOptions || []).find((o) => o.label === label);
-  const cls = STATUS_COLORS[(opt && opt.color) || 'gray'] || 'badge-gray';
-  return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+  const hex = (opt && opt.color) || '#6b6b6b';
+  return `<span class="badge" style="background:${hex}1A;color:${hex}">${escapeHtml(label)}</span>`;
 }
 
 function shareTableHtml(rows) {
+  const labels = template.columnLabels;
   const rowsHtml = (rows || []).filter((r) => r.url || r.name || r.description).map((r) => `
     <tr>
-      <td>${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.url)}</a>` : '—'}</td>
-      <td>${escapeHtml(r.name) || '—'}</td>
-      <td>${escapeHtml(r.description) || '—'}</td>
-      <td>${statusBadge(r.status) || '—'}</td>
+      <td data-label="${escapeHtml(labels.url)}">${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.url)}</a>` : '—'}</td>
+      <td data-label="${escapeHtml(labels.name)}">${escapeHtml(r.name) || '—'}</td>
+      <td data-label="${escapeHtml(labels.description)}">${escapeHtml(r.description) || '—'}</td>
+      <td data-label="${escapeHtml(labels.status)}">${statusBadge(r.status) || '—'}</td>
     </tr>
   `).join('');
   return `
     <div class="share-table-wrap">
       <table class="share-tbl">
         <thead><tr>
-          <th>${escapeHtml(template.columnLabels.url)}</th>
-          <th>${escapeHtml(template.columnLabels.name)}</th>
-          <th>${escapeHtml(template.columnLabels.description)}</th>
-          <th>${escapeHtml(template.columnLabels.status)}</th>
+          <th>${escapeHtml(labels.url)}</th>
+          <th>${escapeHtml(labels.name)}</th>
+          <th>${escapeHtml(labels.description)}</th>
+          <th>${escapeHtml(labels.status)}</th>
         </tr></thead>
         <tbody>${rowsHtml || '<tr><td colspan="4" style="color:var(--muted);text-align:center;">Пока нет данных</td></tr>'}</tbody>
       </table>
@@ -608,36 +762,51 @@ function shareTableHtml(rows) {
   `;
 }
 
+function shareRecsHtml(recs) {
+  const items = (recs || []).filter((r) => r.text && r.text.trim());
+  if (!items.length) return '<div class="empty-note">Рекомендации пока не добавлены.</div>';
+  return '<div class="checklist">' + items.map((r) => `
+    <label class="check-item ${r.checked ? 'done' : ''}">
+      <input type="checkbox" ${r.checked ? 'checked' : ''} disabled>
+      <span>${escapeHtml(r.text)}</span>
+    </label>
+  `).join('') + '</div>';
+}
+
 async function initShareView(shareId) {
   showView('shareView');
   const view = document.getElementById('shareView');
   try {
     const data = await api('/api/serp/share?id=' + encodeURIComponent(shareId));
-    const a = data.analysis;
+    const a = normalizeAnalysis(data.analysis);
     template = data.template;
     const title = a.analysisTitle || (`Анализ поисковой выдачи — ${a.clientName || ''}`);
-    const recsHtml = (a.recommendations || []).filter((r) => r.text && r.text.trim()).map((r, i) => `
-      <div class="rec-card"><span class="num">${i + 1}.</span><span>${escapeHtml(r.text)}</span></div>
-    `).join('') || '<div class="empty-note">Рекомендации пока не добавлены.</div>';
+    const c = scoreColor(a.score || 0);
+
+    const tablesHtml = (template.tables || []).map((t) => `
+      <div class="share-section">
+        <h2>${escapeHtml(t.title)}</h2>
+        ${shareTableHtml(a.tables[t.id])}
+      </div>
+    `).join('');
 
     view.innerHTML = `
       <div class="share-head">
-        <div class="share-eyebrow">Анализ поисковой выдачи</div>
-        <h1>${escapeHtml(title)}</h1>
-        ${a.intro ? `<p>${escapeHtml(a.intro)}</p>` : ''}
-        <div class="share-meta">Обновлено ${fmtDate(a.updatedAt)}</div>
+        <div class="share-head-text">
+          <div class="share-eyebrow">Анализ поисковой выдачи</div>
+          <h1>${escapeHtml(title)}</h1>
+          ${a.intro ? `<p>${escapeHtml(a.intro)}</p>` : ''}
+          <div class="share-meta">Обновлено ${fmtDate(a.updatedAt)}</div>
+        </div>
+        <div class="score-badge-lg" style="background:${c.bg};color:${c.fg}">
+          <div class="score-num">${a.score || 0}</div>
+          <div class="score-cap">баллов из 100</div>
+        </div>
       </div>
-      <div class="share-section">
-        <h2>${escapeHtml(template.yandexTitle)}</h2>
-        ${shareTableHtml(a.yandexRows)}
-      </div>
-      <div class="share-section">
-        <h2>${escapeHtml(template.googleTitle)}</h2>
-        ${shareTableHtml(a.googleRows)}
-      </div>
+      ${tablesHtml}
       <div class="share-section">
         <h2>${escapeHtml(template.recsTitle)}</h2>
-        <div class="rec-card-list">${recsHtml}</div>
+        ${shareRecsHtml(a.recommendations)}
       </div>
     `;
   } catch (e) {
@@ -646,20 +815,29 @@ async function initShareView(shareId) {
 }
 
 /* ════════════ INIT ════════════ */
-(async function init() {
-  const params = new URLSearchParams(location.search);
-  const shareId = params.get('share');
-  const editId = params.get('edit');
-  if (shareId) {
-    initShareView(shareId);
-    return;
-  }
+async function boot() {
   template = await api('/api/serp/template');
+  const params = new URLSearchParams(location.search);
+  const editId = params.get('edit');
   if (editId) {
     openAnalysis(editId);
     return;
   }
   showDashboard();
+}
+
+(function init() {
+  const params = new URLSearchParams(location.search);
+  const shareId = params.get('share');
+  if (shareId) {
+    initShareView(shareId);
+    return;
+  }
+  if (!isAdminUnlocked()) {
+    showView('adminGate');
+    return;
+  }
+  boot();
 })();
 </script>
 </body>

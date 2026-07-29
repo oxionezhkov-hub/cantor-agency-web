@@ -19,15 +19,18 @@
  *   click:<slug>:<ts>:<rand> -> { ts, query, referrer, userAgent, device, country, city }
  *
  * It also powers /serp-analysis: an internal tool for the "поисковая выдача" analysis
- * (part of the MBA/личный бренд package) — staff fill in a Yandex table + a Google table
- * of search results plus recommendations, then share a read-only link with the client.
+ * (part of the MBA/личный бренд package) — staff fill in 4 tables (Yandex/Google ×
+ * "ФИО"/"ФИО + онлайн-школа" queries) plus a recommendations checklist and an overall
+ * score, then share a read-only link with the client. Admin views are gated client-side
+ * by a shared password, cached in the browser (not a real auth boundary).
  *
  * KV keys (binding "SERP_ANALYSIS_KV"):
- *   template               -> shared editable template: section titles, column labels,
- *                              status options (used for both tables) and base recommendations
+ *   template               -> shared editable template: table titles, column labels,
+ *                              status options (label + hex color) and base recommendations
  *                              copied into every new analysis
  *   analysis:<id>          -> { id, createdAt, updatedAt, clientName, analysisTitle, intro,
- *                                yandexRows: [...], googleRows: [...], recommendations: [...],
+ *                                score, tables: { yandexName, googleName, yandexSchool,
+ *                                googleSchool: [rows] }, recommendations: [{id,text,checked}],
  *                                shareId }
  *   share:<shareId>        -> "<analysisId>"
  */
@@ -419,16 +422,25 @@ async function handleLeadNotify(request, env) {
 
 const SERP_TEMPLATE_KEY = 'template';
 
+// Fixed set of 4 tables: Yandex/Google × "ФИО" / "ФИО + онлайн-школа" queries.
+// Only the titles are editable via the template — the set of tables itself is not
+// user-extensible (keeps the analysis record shape predictable).
+const SERP_TABLE_IDS = ['yandexName', 'googleName', 'yandexSchool', 'googleSchool'];
+
 const DEFAULT_SERP_TEMPLATE = {
-  yandexTitle: 'Яндекс',
-  googleTitle: 'Google',
+  tables: [
+    { id: 'yandexName', title: 'Яндекс — ФИО' },
+    { id: 'googleName', title: 'Google — ФИО' },
+    { id: 'yandexSchool', title: 'Яндекс — ФИО + онлайн-школа' },
+    { id: 'googleSchool', title: 'Google — ФИО + онлайн-школа' },
+  ],
   recsTitle: 'Рекомендации по работе с поисковой выдачей',
   columnLabels: { url: 'Ссылка', name: 'Название', description: 'Описание', status: 'Статус' },
   statusOptions: [
-    { label: 'Оставить', color: 'green' },
-    { label: 'Можно улучшить', color: 'amber' },
-    { label: 'Вытеснять', color: 'red' },
-    { label: 'Не про клиента', color: 'gray' },
+    { label: 'Оставить', color: '#1e8449' },
+    { label: 'Можно улучшить', color: '#9a6f00' },
+    { label: 'Вытеснять', color: '#c0392b' },
+    { label: 'Не про клиента', color: '#6b6b6b' },
   ],
   baseRecommendations: [
     'Усиливать релевантные ссылки (сайт, статьи, соцсети клиента) — регулярно обновлять и продвигать.',
@@ -443,7 +455,18 @@ function newSerpRow() {
 }
 
 function newSerpRecommendation(text) {
-  return { id: crypto.randomUUID().replace(/-/g, '').slice(0, 8), text: text || '' };
+  return { id: crypto.randomUUID().replace(/-/g, '').slice(0, 8), text: text || '', checked: false };
+}
+
+function newSerpTables() {
+  const tables = {};
+  for (const id of SERP_TABLE_IDS) tables[id] = [newSerpRow(), newSerpRow(), newSerpRow()];
+  return tables;
+}
+
+function clampScore(value, fallback) {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : fallback;
 }
 
 async function getSerpTemplate(env) {
@@ -491,8 +514,8 @@ async function handleSerpApi(request, env, url) {
       clientName: (body && String(body.clientName || '').trim()) || '',
       analysisTitle: '',
       intro: '',
-      yandexRows: [newSerpRow(), newSerpRow(), newSerpRow()],
-      googleRows: [newSerpRow(), newSerpRow(), newSerpRow()],
+      score: 0,
+      tables: newSerpTables(),
       recommendations: (template.baseRecommendations || []).map(newSerpRecommendation),
       shareId: crypto.randomUUID().replace(/-/g, ''),
     };
@@ -524,8 +547,8 @@ async function handleSerpApi(request, env, url) {
       clientName: typeof body.clientName === 'string' ? body.clientName : existing.clientName,
       analysisTitle: typeof body.analysisTitle === 'string' ? body.analysisTitle : existing.analysisTitle,
       intro: typeof body.intro === 'string' ? body.intro : existing.intro,
-      yandexRows: Array.isArray(body.yandexRows) ? body.yandexRows : existing.yandexRows,
-      googleRows: Array.isArray(body.googleRows) ? body.googleRows : existing.googleRows,
+      score: body.score !== undefined ? clampScore(body.score, existing.score || 0) : existing.score,
+      tables: body.tables && typeof body.tables === 'object' ? body.tables : existing.tables,
       recommendations: Array.isArray(body.recommendations) ? body.recommendations : existing.recommendations,
       updatedAt: new Date().toISOString(),
     };
