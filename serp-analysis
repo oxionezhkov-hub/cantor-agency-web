@@ -177,11 +177,14 @@ input,textarea,select{font-family:inherit}
 
 @media(max-width:640px){
   .wrap{padding:20px 14px 60px}
+  .tbl{table-layout:auto}
   .tbl thead{display:none}
-  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block;width:100%}
+  .tbl,.tbl tbody,.tbl tr,.tbl td{display:block}
+  .tbl td,.tbl td.col-url,.tbl td.col-name,.tbl td.col-desc,.tbl td.col-status,.tbl td.col-del{width:100%}
   .tbl tr{border-bottom:1.5px solid var(--border);padding:10px 0;margin-bottom:6px}
   .tbl td{border-bottom:none;padding:4px 0}
   .tbl td.col-del{text-align:right}
+  .tbl td[data-label]::before{content:attr(data-label);display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;color:var(--muted);margin-bottom:3px}
 
   .share-tbl thead{display:none}
   .share-tbl,.share-tbl tbody,.share-tbl tr,.share-tbl td{display:block;width:100%}
@@ -537,12 +540,13 @@ function renderTables() {
 function renderRows(tableId) {
   const rows = current.tables[tableId] || [];
   const tbody = document.getElementById('rows-' + tableId);
+  const labels = template.columnLabels;
   tbody.innerHTML = rows.map((r) => `
     <tr>
-      <td class="col-url"><textarea placeholder="https://…" oninput="updateRow('${tableId}','${r.id}','url',this.value)">${escapeHtml(r.url)}</textarea></td>
-      <td class="col-name"><textarea placeholder="Название" oninput="updateRow('${tableId}','${r.id}','name',this.value)">${escapeHtml(r.name)}</textarea></td>
-      <td class="col-desc"><textarea placeholder="Описание, что это за источник и почему" oninput="updateRow('${tableId}','${r.id}','description',this.value)">${escapeHtml(r.description)}</textarea></td>
-      <td class="col-status">
+      <td class="col-url" data-label="${escapeHtml(labels.url)}"><textarea placeholder="https://…" oninput="updateRow('${tableId}','${r.id}','url',this.value)">${escapeHtml(r.url)}</textarea></td>
+      <td class="col-name" data-label="${escapeHtml(labels.name)}"><textarea placeholder="Название" oninput="updateRow('${tableId}','${r.id}','name',this.value)">${escapeHtml(r.name)}</textarea></td>
+      <td class="col-desc" data-label="${escapeHtml(labels.description)}"><textarea placeholder="Описание, что это за источник и почему" oninput="updateRow('${tableId}','${r.id}','description',this.value)">${escapeHtml(r.description)}</textarea></td>
+      <td class="col-status" data-label="${escapeHtml(labels.status)}">
         <div class="status-select-wrap">
           <span class="status-dot" style="background:${statusDotColor(r.status)}"></span>
           <select onchange="onStatusChange(this,'${tableId}','${r.id}')">${statusOptionsHtml(r.status)}</select>
