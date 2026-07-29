@@ -289,8 +289,13 @@ let template = null;
 let current = null; // currently open analysis (editor)
 let saveTimer = null;
 
+// cantor.agency's DNS is on reg.ru, not Cloudflare, so /api/* on that domain never
+// reaches this worker — call the workers.dev host directly instead (same pattern
+// as mba-mybrand's API_BASE), relying on the worker's permissive CORS headers.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+
 async function api(path, opts) {
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     headers: { 'Content-Type': 'application/json' },
     ...opts,
   });
