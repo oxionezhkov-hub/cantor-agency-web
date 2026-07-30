@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Елена Лимперис</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────── */
+:root {
+  --ink:        #0B2547;
+  --ink-mid:    #123262;
+  --cream:      #FAFBFD;
+  --cream-dim:  #E9EFF6;
+  --gold:       #C9A24C;
+  --gold-light: #E3C77E;
+  --gold-dim:   #8A6F2E;
+  --sky:        #4E8FC7;
+  --sky-light:  #8FC2E8;
+  --olive:      #7C8A4A;
+  --olive-dim:  #5C6736;
+  --mist:       #64748B;
+  --mist-light: #B7C4D6;
+  --line-dark:  rgba(255,255,255,0.12);
+  --line-light: rgba(11,37,71,0.12);
+  --r:          8px;
+  --r-lg:       20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+  background: var(--cream);
+  overflow-x: hidden;
+}
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+
+/* ── REVEAL ─── */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .75s ease, transform .75s ease; }
+.reveal.left  { transform: translateX(-28px); }
+.reveal.right { transform: translateX(28px); }
+.reveal.visible { opacity: 1 !important; transform: none !important; }
+.d1 { transition-delay: .1s; }
+.d2 { transition-delay: .2s; }
+.d3 { transition-delay: .3s; }
+.d4 { transition-delay: .4s; }
+
+/* ── HEADER ─── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  pointer-events: none; opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity .4s, transform .4s, background .3s;
+}
+.header.scrolled {
+  background: rgba(250,251,253,0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line-light);
+  opacity: 1; transform: none; pointer-events: all;
+}
+.header-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 48px;
+  height: 68px; display: flex; align-items: center; justify-content: space-between;
+}
+.header-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--ink); letter-spacing: 0.02em;
+  opacity: 0; transition: opacity .3s;
+}
+.header.scrolled .header-logo { opacity: 1; }
+.nav-links { display: flex; gap: 36px; }
+.nav-links a {
+  font-size: 13px; font-weight: 500; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--mist);
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--ink); }
+.header-cta {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 9px 24px; border: 1.5px solid var(--gold);
+  color: var(--gold-dim); border-radius: 2px;
+  transition: all .2s;
+}
+.header-cta:hover { background: var(--gold); color: #fff; }
+
+.burger { display: none; flex-direction: column; gap: 6px; padding: 6px; }
+.burger span { display: block; width: 24px; height: 1.5px; background: var(--ink); transition: all .3s; }
+.burger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.burger.open span:nth-child(2) { opacity: 0; }
+.burger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+.mobile-menu {
+  position: fixed; inset: 0; z-index: 190;
+  background: var(--ink); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 40px;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.mobile-menu.open { opacity: 1; pointer-events: all; }
+.mobile-menu a { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--cream); letter-spacing: -0.5px; }
+.mobile-menu a:hover { color: var(--gold-light); }
+
+/* ── HERO ─── */
+.hero {
+  min-height: 100vh;
+  background: var(--ink);
+  display: grid; grid-template-columns: 1fr 680px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-left {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 120px 60px 100px max(48px, calc((100vw - 1200px)/2 + 48px));
+  position: relative;
+}
+.hero-kicker {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 40px;
+  display: flex; align-items: center; gap: 16px;
+  opacity: 0; animation: fadeUp .8s .4s forwards;
+}
+.hero-kicker::before {
+  content: ''; display: block; width: 32px; height: 1px; background: var(--gold); flex-shrink: 0;
+}
+.hero-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(64px, 8vw, 108px);
+  font-weight: 900; line-height: 0.92;
+  letter-spacing: -2px; color: var(--cream);
+  margin-bottom: 36px;
+  opacity: 0; animation: fadeUp .9s .6s forwards;
+}
+.hero-name em {
+  font-style: italic; color: var(--sky-light);
+}
+.hero-desc {
+  font-size: 16px; font-weight: 300; color: var(--mist-light);
+  max-width: 440px; line-height: 1.85;
+  margin-bottom: 52px;
+  opacity: 0; animation: fadeUp .8s .8s forwards;
+}
+.hero-actions {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  opacity: 0; animation: fadeUp .8s 1s forwards;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 32px; border-radius: 2px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; transition: all .22s;
+}
+.btn-gold { background: var(--gold); color: var(--ink); }
+.btn-gold:hover { background: var(--gold-light); }
+.btn-outline { border: 1.5px solid rgba(255,255,255,0.2); color: var(--cream); }
+.btn-outline:hover { border-color: var(--sky-light); color: var(--sky-light); }
+
+.hero-right {
+  position: relative; overflow: hidden;
+  background: var(--ink-mid);
+}
+.hero-photo-main {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center top;
+}
+.hero-photo-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, var(--ink) 0%, transparent 35%);
+  pointer-events: none;
+}
+.hero-badges {
+  position: absolute; bottom: 48px; right: 32px;
+  display: flex; flex-direction: column; gap: 12px;
+  opacity: 0; animation: fadeUp .8s 1.2s forwards;
+}
+.hero-badge {
+  background: var(--cream); border-radius: 2px;
+  padding: 14px 22px 14px 24px;
+  border-left: 3px solid var(--gold);
+  box-shadow: 0 8px 32px rgba(0,0,0,.35);
+}
+.hero-badge:nth-child(2) { border-left-color: var(--sky); }
+.hero-badge-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700; letter-spacing: -1px; line-height: 1;
+  color: var(--ink);
+}
+.hero-badge-label { font-size: 11px; color: var(--mist); margin-top: 3px; letter-spacing: 0.04em; }
+
+/* ── SECTION ─── */
+.section { padding: 104px 0; }
+.section-dark { background: var(--ink); }
+.section-dim { background: var(--cream-dim); }
+
+.label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--gold-dim);
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 24px;
+}
+.label::before { content: ''; display: block; width: 28px; height: 1px; background: var(--gold); flex-shrink: 0; }
+.label-light { color: var(--gold-light); }
+.label-light::before { background: var(--gold-light); }
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 700; line-height: 1.08; letter-spacing: -0.5px;
+  color: var(--ink); margin-bottom: 20px;
+}
+.section-title-light { color: var(--cream); }
+.muted { color: var(--mist); }
+
+/* ── PROJECTS ─── */
+.projects-section { padding: 104px 0; background: var(--cream); }
+.projects-list { margin-top: 56px; }
+.project-card {
+  display: grid; grid-template-columns: 56px 1fr auto;
+  gap: 0 40px; padding: 52px 0;
+  border-top: 1px solid var(--line-light);
+  align-items: start;
+}
+.project-card:last-child { border-bottom: 1px solid var(--line-light); }
+.project-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px; font-weight: 400; color: var(--gold);
+  letter-spacing: 0.08em; padding-top: 8px;
+}
+.project-body { display: flex; flex-direction: column; gap: 16px; }
+.project-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px, 2.8vw, 36px);
+  font-weight: 700; letter-spacing: -0.3px; line-height: 1.12;
+  color: var(--ink);
+}
+.project-sub {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--gold-dim);
+}
+.project-desc { font-size: 15px; color: var(--mist); line-height: 1.8; max-width: 640px; }
+.project-stats { display: flex; gap: 40px; padding-top: 8px; flex-wrap: wrap; }
+.proj-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700; letter-spacing: -1px; line-height: 1;
+  color: var(--ink);
+}
+.proj-stat-label { font-size: 11px; color: var(--mist); margin-top: 4px; line-height: 1.4; }
+.project-arrow {
+  display: flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 1.5px solid var(--line-light);
+  color: var(--ink); flex-shrink: 0;
+  transition: all .22s; margin-top: 6px;
+}
+.project-arrow:hover { background: var(--ink); border-color: var(--ink); color: var(--cream); transform: rotate(45deg); }
+
+/* ── ABOUT ─── */
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: center;
+}
+.about-photo-wrap { position: relative; }
+.about-photo-img {
+  width: 100%; aspect-ratio: 3/4;
+  object-fit: cover; object-position: center top;
+  border-radius: 4px;
+  background: var(--cream-dim);
+}
+/* Gold frame offset decoration */
+.about-photo-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -16px -16px auto auto;
+  width: 60%; height: 60%;
+  border-top: 2px solid var(--gold);
+  border-right: 2px solid var(--gold);
+  border-radius: 4px;
+  opacity: 0.4; pointer-events: none;
+}
+.about-photo-wrap::after {
+  content: '';
+  position: absolute;
+  inset: auto auto -16px -16px;
+  width: 40%; height: 40%;
+  border-bottom: 2px solid var(--olive);
+  border-left: 2px solid var(--olive);
+  border-radius: 4px;
+  opacity: 0.5; pointer-events: none;
+}
+.about-chip {
+  position: absolute; bottom: 32px; right: -28px;
+  background: var(--ink); border-radius: 4px;
+  padding: 18px 24px; border-left: 3px solid var(--sky);
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);
+}
+.about-chip-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700; letter-spacing: 0.03em; line-height: 1;
+  color: var(--sky-light);
+}
+.about-chip-label { font-size: 11px; color: var(--mist-light); margin-top: 4px; }
+.about-text { display: flex; flex-direction: column; gap: 24px; }
+.about-lead {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px, 2.5vw, 32px); font-weight: 700; line-height: 1.25;
+  letter-spacing: -0.3px; color: var(--ink);
+}
+.about-body { font-size: 15px; color: var(--mist); line-height: 1.85; }
+.about-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.about-tag {
+  font-size: 12px; font-weight: 500; letter-spacing: 0.06em;
+  padding: 7px 18px; border-radius: 2px;
+  border: 1px solid var(--line-light); color: var(--mist);
+  background: transparent;
+}
+.about-tag.olive { border-color: rgba(124,138,74,.4); color: var(--olive-dim); }
+
+/* ── STATS ─── */
+.stats-bar { padding: 72px 0; background: var(--ink); border: none; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.stat-item {
+  padding: 36px 32px;
+  border-right: 1px solid var(--line-dark);
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 4vw, 52px); font-weight: 900;
+  letter-spacing: -1.5px; line-height: 1; color: var(--cream);
+}
+.stat-desc { font-size: 13px; color: var(--mist-light); margin-top: 10px; line-height: 1.55; }
+
+/* ── REVIEWS ─── */
+.reviews-intro { margin-bottom: 20px; }
+.reviews-note { font-size: 14px; color: var(--mist); margin-bottom: 40px; }
+.reviews-note a { color: var(--gold-dim); border-bottom: 1px solid rgba(138,111,46,.35); }
+.reviews-note a:hover { color: var(--ink); }
+.reviews-with-nav { display: flex; align-items: center; gap: 20px; }
+.reviews-nav-btn {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 1.5px solid var(--line-light); background: var(--cream);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; color: var(--ink); flex-shrink: 0;
+}
+.reviews-nav-btn:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); color: var(--cream); }
+.reviews-nav-btn:disabled { opacity: 0.2; cursor: default; }
+.reviews-track-outer { overflow: hidden; flex: 1; cursor: grab; }
+.reviews-track-outer:active { cursor: grabbing; }
+.reviews-track {
+  display: flex; gap: 24px;
+  overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; padding-bottom: 8px;
+  touch-action: pan-x;
+}
+.reviews-track::-webkit-scrollbar { display: none; }
+.review-card {
+  flex: 0 0 300px; height: 390px;
+  background: var(--cream); border: 1px solid var(--line-light);
+  border-radius: 4px; overflow: hidden;
+  transition: box-shadow .3s, transform .3s; cursor: zoom-in;
+}
+.review-card:hover { box-shadow: 0 16px 48px rgba(11,37,71,.14); transform: translateY(-3px); }
+.review-img-wrap { width: 100%; height: 100%; overflow: hidden; background: var(--cream-dim); }
+.review-img-wrap img {
+  width: 100%; height: 100%; object-fit: cover; object-position: top;
+  display: block; transition: transform .4s ease;
+}
+.review-card:hover .review-img-wrap img { transform: scale(1.04); }
+
+/* ── STORIES ─── */
+.stories-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 48px;
+}
+.story-card {
+  background: var(--cream); border: 1px solid var(--line-light);
+  border-top: 3px solid var(--olive);
+  border-radius: 4px; padding: 32px 28px;
+  transition: box-shadow .3s, transform .3s;
+}
+.story-card:hover { box-shadow: 0 12px 36px rgba(11,37,71,.10); transform: translateY(-2px); }
+.story-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px; color: var(--olive-dim); letter-spacing: 0.08em; margin-bottom: 14px;
+}
+.story-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px; font-weight: 700; line-height: 1.3;
+  color: var(--ink); margin-bottom: 12px;
+}
+.story-desc { font-size: 14px; color: var(--mist); line-height: 1.75; }
+
+/* ── QUOTE + SOCIALS ─── */
+.video-socials-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+.quote-card {
+  border-radius: 4px; overflow: hidden; border: 1px solid var(--line-dark);
+  background: rgba(255,255,255,0.04);
+  padding: 44px 40px; display: flex; flex-direction: column; justify-content: center;
+  min-height: 260px;
+}
+.quote-mark {
+  font-family: 'Playfair Display', serif; font-size: 64px; line-height: 1;
+  color: var(--gold); opacity: .6; margin-bottom: 12px;
+}
+.quote-text {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: clamp(20px, 2.2vw, 27px); font-weight: 600; line-height: 1.4;
+  color: var(--cream); margin-bottom: 20px;
+}
+.quote-caption { font-size: 13px; color: var(--mist); }
+
+.socials-col { display: flex; flex-direction: column; gap: 14px; }
+.social-card {
+  display: flex; align-items: center; gap: 20px;
+  padding: 22px 26px; border-radius: 4px;
+  border: 1px solid var(--line-dark); background: rgba(255,255,255,.03);
+  color: var(--cream); transition: all .22s;
+}
+.social-card:hover { border-color: var(--sky-light); background: rgba(78,143,199,.08); }
+.social-card-icon {
+  width: 46px; height: 46px; border-radius: 4px;
+  background: rgba(255,255,255,.07);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  color: var(--mist-light);
+}
+.social-card-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 600; color: var(--cream);
+}
+.social-card-sub { font-size: 12px; color: var(--mist); margin-top: 2px; }
+.social-card-arrow { margin-left: auto; color: var(--mist); flex-shrink: 0; transition: color .2s; }
+.social-card:hover .social-card-arrow { color: var(--sky-light); }
+
+/* ── CONTACT ─── */
+.contact-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: stretch; }
+.contact-photo { border-radius: 4px; overflow: hidden; position: relative; min-height: 400px; background: var(--cream-dim); }
+.contact-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+/* Thin gold right border on contact photo */
+.contact-photo::after {
+  content: '';
+  position: absolute; inset: 0; right: -8px; top: 8px;
+  border: 1.5px solid var(--gold); border-radius: 4px;
+  opacity: 0.3; pointer-events: none;
+}
+.contact-form-side { padding-top: 12px; }
+.contact-lead {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 3vw, 42px); font-weight: 700;
+  letter-spacing: -0.5px; line-height: 1.15;
+  margin-bottom: 14px; color: var(--ink);
+}
+.contact-sub {
+  font-size: 15px; color: var(--mist); font-weight: 300;
+  margin-bottom: 40px; line-height: 1.75;
+}
+.form-field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+.form-field label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--mist);
+}
+.form-field input,
+.form-field select,
+.form-field textarea {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 300;
+  padding: 14px 18px;
+  border: 1.5px solid var(--line-light);
+  border-radius: 2px; outline: none;
+  background: transparent; color: var(--ink);
+  transition: border-color .2s;
+  width: 100%;
+}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus { border-color: var(--sky); }
+.form-field textarea { resize: vertical; min-height: 108px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-error-msg { font-size: 12px; color: #c0392b; display: none; margin-top: -12px; }
+.field-err input, .field-err select { border-color: #c0392b; }
+.field-err .form-error-msg { display: block; }
+.btn-submit {
+  width: 100%; padding: 16px; justify-content: center;
+  font-size: 13px;
+}
+.form-success {
+  display: none; padding: 36px; background: #eef4e4;
+  border-left: 3px solid var(--olive); border-radius: 4px;
+}
+.form-success h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700; margin-bottom: 8px;
+}
+.form-success p { color: var(--mist); font-size: 15px; }
+
+/* ── FOOTER ─── */
+.footer { background: var(--ink); color: rgba(255,255,255,.4); padding: 64px 0 44px; }
+.footer-top {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 48px; padding-bottom: 48px;
+  border-bottom: 1px solid var(--line-dark); margin-bottom: 36px;
+}
+.footer-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700; color: var(--cream);
+  letter-spacing: 0.02em; display: block; margin-bottom: 10px;
+}
+.footer-tagline { font-size: 13px; color: rgba(255,255,255,.35); line-height: 1.7; }
+.footer-col-title {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 16px;
+}
+.footer-col a { display: block; font-size: 14px; color: rgba(255,255,255,.45); margin-bottom: 10px; transition: color .2s; }
+.footer-col a:hover { color: var(--sky-light); }
+.footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.footer-copy { font-size: 12px; color: rgba(255,255,255,.25); }
+
+/* ── MODAL ─── */
+.img-modal {
+  position: fixed; inset: 0; background: rgba(11,37,71,.9);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: .25s ease; z-index: 9999;
+}
+.img-modal.active { opacity: 1; pointer-events: auto; }
+.img-modal-content { position: relative; max-width: 92vw; max-height: 92vh; }
+.img-modal-content img {
+  max-width: 92vw; max-height: 92vh;
+  object-fit: contain; border-radius: 4px;
+  box-shadow: 0 20px 80px rgba(0,0,0,.7);
+}
+.img-modal-close {
+  position: absolute; top: -16px; right: -16px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--cream); border: none; cursor: pointer;
+  font-size: 22px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  font-family: 'DM Sans', sans-serif; line-height: 1;
+}
+
+/* ── HORIZONTAL RULE ─── */
+.hr-gold { height: 1px; background: linear-gradient(to right, transparent, var(--gold) 40%, var(--gold) 60%, transparent); opacity: 0.2; margin: 0; }
+
+/* ── KEYFRAMES ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: 1fr; min-height: auto; }
+  .hero::before { display: none; }
+  .hero-left { padding: 100px 48px 60px; }
+  .hero-right { height: 65vw; max-height: 480px; order: -1; }
+  .hero-photo-overlay { background: linear-gradient(to top, var(--ink) 0%, transparent 50%); }
+  .hero-badges { display: none; }
+  .about-grid { grid-template-columns: 1fr; gap: 56px; }
+  .about-chip { right: 16px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-item:nth-child(2) { border-right: none; }
+  .stories-grid { grid-template-columns: 1fr 1fr; }
+  .contact-wrap { grid-template-columns: 1fr; gap: 56px; }
+  .contact-photo { max-width: 380px; }
+  .nav-links, .header-cta { display: none; }
+  .burger { display: flex; }
+  .footer-top { grid-template-columns: 1fr 1fr; }
+  .video-socials-grid { grid-template-columns: 1fr; gap: 56px; }
+  .reviews-nav-btn { display: none; }
+  .reviews-with-nav { display: block; }
+}
+@media (max-width: 640px) {
+  .container { padding: 0 24px; }
+  .header-inner { padding: 0 24px; }
+  .footer-inner { padding: 0 24px; }
+  .section { padding: 72px 0; }
+  .hero-left { padding: 80px 24px 56px; }
+  .hero-right { height: 72vw; }
+  .review-card { flex: 0 0 80vw; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-item { padding: 28px 20px; }
+  .stories-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .footer-top { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+  .project-card { grid-template-columns: 1fr; gap: 20px; }
+  .project-num { display: none; }
+  .project-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="header">
+  <div class="header-inner">
+    <a href="#" class="header-logo">Елена Лимперис</a>
+    <nav class="nav-links">
+      <a href="#project">Проект</a>
+      <a href="#about">О себе</a>
+      <a href="#reviews">Отзывы</a>
+      <a href="#social">Соцсети</a>
+      <a href="#contact">Контакты</a>
+    </nav>
+    <a href="#contact" class="header-cta">Написать</a>
+    <button class="burger" id="burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#project">Проект</a>
+  <a href="#about">О себе</a>
+  <a href="#reviews">Отзывы</a>
+  <a href="#social">Соцсети</a>
+  <a href="#contact">Написать</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-kicker">Основатель LINGRAVIA · Преподаватель греческого и английского</p>
+    <h1 class="hero-name">
+      <em>Елена</em><br>Лимперис
+    </h1>
+    <p class="hero-desc">Онлайн-школа иностранных языков для русскоговорящих экспатов на Кипре и в Греции. Учу говорить свободно и без ошибок — через живую практику, а не зубрёжку грамматики.</p>
+    <div class="hero-actions">
+      <a href="#project" class="btn btn-gold">О школе LINGRAVIA</a>
+      <a href="#contact" class="btn btn-outline">Написать мне</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <img src="images/elena-limperis/hero.jpg" alt="Елена Лимперис" class="hero-photo-main">
+    <div class="hero-photo-overlay"></div>
+    <div class="hero-badges">
+      <div class="hero-badge">
+        <div class="hero-badge-num">5+</div>
+        <div class="hero-badge-label">лет в преподавании</div>
+      </div>
+      <div class="hero-badge">
+        <div class="hero-badge-num">200+</div>
+        <div class="hero-badge-label">учеников школы</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="projects-section" id="project">
+  <div class="container">
+    <h2 class="section-title reveal">Чем я занимаюсь</h2>
+
+    <div class="projects-list">
+
+      <div class="project-card reveal">
+        <div class="project-num">01</div>
+        <div class="project-body">
+          <div class="project-sub">Онлайн-школа иностранных языков · с сентября 2025</div>
+          <div class="project-title">LINGRAVIA</div>
+          <p class="project-desc">Начали с греческого языка — для русскоговорящих экспатов на Кипре и в Греции, которым нужно сдавать экзамены или учить язык для работы и жизни в этих странах. Сейчас также преподаём английский и другие иностранные языки. Работаем по коммуникативному подходу: дозированная грамматика и лексика вместе с большим объёмом разговорной практики.</p>
+          <div class="project-stats">
+            <div>
+              <div class="proj-stat-num">200+</div>
+              <div class="proj-stat-label">учеников школы</div>
+            </div>
+            <div>
+              <div class="proj-stat-num">12–15</div>
+              <div class="proj-stat-label">сотрудников в команде</div>
+            </div>
+            <div>
+              <div class="proj-stat-num">7</div>
+              <div class="proj-stat-label">преподавателей</div>
+            </div>
+          </div>
+        </div>
+        <a href="https://lingravia.com" target="_blank" class="project-arrow" title="lingravia.com">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+
+      <div class="project-card reveal d1">
+        <div class="project-num">02</div>
+        <div class="project-body">
+          <div class="project-sub">Частная практика · с 2008 года</div>
+          <div class="project-title">Репетиторство: греческий и английский языки</div>
+          <p class="project-desc">Начала преподавать английский язык ещё во время учёбы в университете — как частный репетитор, а на 4 курсе преподавала в частной школе. С 2008 года, переехав в Грецию, преподаю ещё и греческий язык — индивидуально и в группах, взрослым и школьникам, тем, кто готовится к экзаменам, работе и жизни за рубежом.</p>
+          <div class="project-stats">
+            <div>
+              <div class="proj-stat-num">2</div>
+              <div class="proj-stat-label">языка преподавания</div>
+            </div>
+            <div>
+              <div class="proj-stat-num">Кипр</div>
+              <div class="proj-stat-label">и Греция — география учеников</div>
+            </div>
+          </div>
+        </div>
+        <a href="https://instagram.com/elena.limperis.greek.coach" target="_blank" class="project-arrow" title="Instagram">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="hr-gold"></div>
+
+<!-- ABOUT -->
+<section class="section section-dim" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-photo-wrap reveal left">
+        <img src="images/elena-limperis/about.jpg" alt="Елена Лимперис" class="about-photo-img">
+        <div class="about-chip">
+          <div class="about-chip-num">2 вуза</div>
+          <div class="about-chip-label">лингвистическое образование</div>
+        </div>
+      </div>
+      <div class="about-text">
+        <div class="reveal d1">
+          <p class="about-lead">«Каждый может выучить иностранный язык. Главное — правильный наставник и системный подход»</p>
+        </div>
+        <p class="about-body reveal d2">
+          В преподавание пришла во время учёбы в университете, получая первое высшее образование — работала частным репетитором английского языка, а на 4 курсе преподавала английский в частной школе. В 2008 году, переехав в Грецию, начала преподавать ещё и греческий язык.
+        </p>
+        <p class="about-body reveal d3">
+          Окончила ОмГУ им. Достоевского (переводчик английского языка и эксперт по странам Западной Европы и Америки) и МГУ им. Ломоносова (преподаватель иностранных языков с фокусом на новые технологии в обучении). Использую коммуникативный подход: дозированная теория и много разнообразной живой практики — чтобы учиться было понятно и интересно.
+        </p>
+        <div class="about-tags reveal d4">
+          <span class="about-tag">ОмГУ им. Достоевского</span>
+          <span class="about-tag">МГУ им. Ломоносова</span>
+          <span class="about-tag">Основатель LINGRAVIA</span>
+          <span class="about-tag olive">Греческий и английский</span>
+          <span class="about-tag olive">Теннис · фортепиано</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hr-gold"></div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item reveal">
+        <div class="stat-num">200+</div>
+        <div class="stat-desc">учеников прошло через школу LINGRAVIA</div>
+      </div>
+      <div class="stat-item reveal d1">
+        <div class="stat-num">12–15</div>
+        <div class="stat-desc">сотрудников в команде, среди них 7 преподавателей</div>
+      </div>
+      <div class="stat-item reveal d2">
+        <div class="stat-num">10–15k €</div>
+        <div class="stat-desc">средний оборот школы в месяц</div>
+      </div>
+      <div class="stat-item reveal d3">
+        <div class="stat-num">2025</div>
+        <div class="stat-desc">год основания школы LINGRAVIA</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<section class="section" id="reviews" style="background: var(--cream);">
+  <div class="container">
+    <div class="reviews-intro">
+      <h2 class="section-title reveal">Что говорят ученики</h2>
+    </div>
+    <p class="reviews-note reveal d1">Больше отзывов — в <a href="https://instagram.com/elena.limperis.greek.coach" target="_blank">Instagram</a> и Telegram-канале «Греческий шаг за шагом».</p>
+    <div class="reviews-with-nav">
+      <button class="reviews-nav-btn" id="revPrev">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="reviews-track-outer">
+        <div class="reviews-track" id="reviewsTrack">
+          <div class="review-card">
+            <div class="review-img-wrap"><img src="images/elena-limperis/review-1.jpg" alt="Отзыв 1" loading="lazy"></div>
+          </div>
+          <div class="review-card">
+            <div class="review-img-wrap"><img src="images/elena-limperis/review-2.jpg" alt="Отзыв 2" loading="lazy"></div>
+          </div>
+          <div class="review-card">
+            <div class="review-img-wrap"><img src="images/elena-limperis/review-3.jpg" alt="Отзыв 3" loading="lazy"></div>
+          </div>
+          <div class="review-card">
+            <div class="review-img-wrap"><img src="images/elena-limperis/review-4.jpg" alt="Отзыв 4" loading="lazy"></div>
+          </div>
+        </div>
+      </div>
+      <button class="reviews-nav-btn" id="revNext">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- STORIES -->
+<section class="section section-dim">
+  <div class="container">
+    <h2 class="section-title reveal">Истории учеников</h2>
+    <p class="muted reveal d1" style="font-size:15px;max-width:560px;line-height:1.75;">Три реальных случая из практики — как меняется отношение к языку и результат.</p>
+    <div class="stories-grid">
+      <div class="story-card reveal d1">
+        <div class="story-num">Случай 01</div>
+        <div class="story-title">От потерянности в грамматике — к свободной речи</div>
+        <p class="story-desc">Ученик приходил демотивированным: раньше приходилось учить тонны грамматики, и он терялся в информации, не мог ни говорить, ни понимать. Через несколько месяцев он уже свободно общается на греческом — и ему интересно учиться, потому что язык оказался комплекснее, чем зубрёжка правил и списков слов.</p>
+      </div>
+      <div class="story-card reveal d2">
+        <div class="story-num">Случай 02</div>
+        <div class="story-title">От ошибок в привычке — к правильной технике и скорости</div>
+        <p class="story-desc">Ученица несколько месяцев учила язык самостоятельно и была уверена, что уже может говорить — но с кучей ошибок. Начав заниматься внимательно, под контролем преподавателя-«тренера», она перестала закреплять ошибки в привычку. Через пару месяцев к правильности добавилась скорость речи.</p>
+      </div>
+      <div class="story-card reveal d3">
+        <div class="story-num">Случай 03</div>
+        <div class="story-title">От хаоса — к системе и уверенности</div>
+        <p class="story-desc">Ученица учила язык несистемно и потеряла мотивацию и веру в свои силы. Мы выстроили понимание того, как устроено изучение языка и на чём фокусироваться на каждом этапе. Уровень стресса снизился, появились мотивация и интерес — а результат не заставил себя ждать.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hr-gold"></div>
+
+<!-- QUOTE + SOCIALS -->
+<section class="section section-dark" id="social">
+  <div class="container">
+    <div class="video-socials-grid">
+      <div>
+        <h2 class="section-title section-title-light reveal" style="margin-bottom: 36px;">Метод и подход</h2>
+        <div class="quote-card reveal d2">
+          <div class="quote-mark">«</div>
+          <p class="quote-text">Мы концентрируемся на учениках — внимательно относимся к их запросам, интересам и возможностям. Для нас важно, чтобы обучение было интересным и понятным.</p>
+          <p class="quote-caption">Елена Лимперис, основатель LINGRAVIA</p>
+        </div>
+      </div>
+      <div>
+        <h2 class="section-title section-title-light reveal" style="margin-bottom: 36px;">Где меня найти</h2>
+        <div class="socials-col reveal d2">
+          <a href="https://t.me/elena_limperis" target="_blank" class="social-card">
+            <div class="social-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.198l-2.04 9.608c-.153.676-.553.839-1.12.522l-3.1-2.284-1.497 1.44c-.166.165-.305.305-.626.305l.223-3.162 5.754-5.198c.25-.222-.054-.346-.388-.124L7.38 14.137l-3.04-.952c-.66-.207-.674-.66.137-.977l11.888-4.584c.55-.2 1.032.134.197.574z"/></svg>
+            </div>
+            <div>
+              <div class="social-card-name">Telegram</div>
+              <div class="social-card-sub">@elena_limperis · канал «Греческий шаг за шагом»</div>
+            </div>
+            <svg class="social-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+          <a href="https://instagram.com/elena.limperis.greek.coach" target="_blank" class="social-card">
+            <div class="social-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            </div>
+            <div>
+              <div class="social-card-name">Instagram</div>
+              <div class="social-card-sub">@elena.limperis.greek.coach</div>
+            </div>
+            <svg class="social-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+          <a href="https://wa.me/306944185223" target="_blank" class="social-card">
+            <div class="social-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.523 0-10 4.477-10 10 0 1.765.464 3.482 1.345 4.995L2 22l5.146-1.35A9.96 9.96 0 0 0 12.04 22c5.523 0 10-4.477 10-10s-4.477-10-10-10zm0 18.2a8.17 8.17 0 0 1-4.166-1.14l-.298-.177-3.055.801.816-2.978-.194-.306A8.17 8.17 0 1 1 20.2 12.04 8.19 8.19 0 0 1 12.04 20.2zm4.472-6.11c-.245-.123-1.448-.715-1.673-.797-.224-.082-.387-.123-.55.123-.163.245-.63.797-.773.96-.143.163-.285.184-.53.061-.245-.123-1.034-.381-1.97-1.216-.728-.65-1.22-1.452-1.362-1.697-.143-.245-.015-.377.108-.5.111-.11.245-.286.367-.429.123-.143.163-.245.245-.408.082-.163.041-.306-.02-.429-.061-.123-.55-1.326-.753-1.816-.198-.478-.4-.413-.55-.42-.143-.007-.306-.009-.47-.009-.163 0-.428.061-.652.306-.224.245-.856.837-.856 2.04 0 1.204.877 2.367 1 2.53.122.163 1.727 2.637 4.184 3.698.585.253 1.04.404 1.396.517.586.187 1.12.16 1.542.097.47-.07 1.448-.592 1.652-1.163.204-.572.204-1.061.143-1.163-.061-.102-.224-.163-.47-.286z"/></svg>
+            </div>
+            <div>
+              <div class="social-card-name">WhatsApp</div>
+              <div class="social-card-sub">+30 694 418 5223</div>
+            </div>
+            <svg class="social-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+          <a href="https://www.profi.ru" target="_blank" class="social-card">
+            <div class="social-card-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5zm4 2v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg>
+            </div>
+            <div>
+              <div class="social-card-name">Profi.ru</div>
+              <div class="social-card-sub">Лимперис Елена Петровна</div>
+            </div>
+            <svg class="social-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hr-gold"></div>
+
+<!-- CONTACT -->
+<section class="section" id="contact" style="background: var(--cream);">
+  <div class="container">
+    <div class="contact-wrap">
+      <div class="contact-photo reveal left">
+        <img src="images/elena-limperis/contact.jpg" alt="Елена Лимперис">
+      </div>
+      <div class="contact-form-side reveal d1">
+        <p class="contact-lead">Связаться со мной</p>
+        <p class="contact-sub">Хотите учить греческий или английский язык, сотрудничать со школой LINGRAVIA или просто познакомиться — оставьте контакты, я отвечу в течение дня.</p>
+        <div id="formSuccess" class="form-success">
+          <h3>Сообщение отправлено ✓</h3>
+          <p>Я свяжусь с вами в течение нескольких часов.</p>
+        </div>
+        <form id="contactForm" novalidate>
+          <div class="form-row">
+            <div class="form-field" id="f-name">
+              <label>Имя *</label>
+              <input type="text" id="inp-name" placeholder="Ваше имя">
+              <span class="form-error-msg">Укажите имя</span>
+            </div>
+            <div class="form-field" id="f-phone">
+              <label>Телефон *</label>
+              <input type="tel" id="inp-phone" placeholder="+30 690 000 00 00">
+              <span class="form-error-msg">Введите корректный телефон</span>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Тема</label>
+            <select id="inp-goal">
+              <option value="">Выберите...</option>
+              <option>Хочу учить греческий язык</option>
+              <option>Хочу учить английский язык</option>
+              <option>Партнёрство / инвестиции</option>
+              <option>Работа / вакансия (преподаватель)</option>
+              <option>Другое</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Комментарий</label>
+            <textarea id="inp-comment" placeholder="Расскажите подробнее о вашем запросе..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-gold btn-submit">Отправить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner" style="max-width:1200px;margin:0 auto;padding:0 48px;">
+    <div class="footer-top">
+      <div>
+        <span class="footer-name">Елена Лимперис</span>
+        <p class="footer-tagline">Основатель школы LINGRAVIA.<br>Преподаватель греческого и английского языков.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Навигация</div>
+        <a href="#project">Проект</a>
+        <a href="#about">О себе</a>
+        <a href="#reviews">Отзывы</a>
+        <a href="#social">Соцсети</a>
+        <a href="#contact">Контакты</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Соцсети</div>
+        <a href="https://t.me/elena_limperis" target="_blank">Telegram</a>
+        <a href="https://instagram.com/elena.limperis.greek.coach" target="_blank">Instagram</a>
+        <a href="https://lingravia.com" target="_blank">lingravia.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© <span id="yr"></span> Елена Лимперис · LINGRAVIA</span>
+      <span class="footer-copy">Онлайн-школа иностранных языков · греческий, английский</span>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="img-modal" id="imgModal">
+  <div class="img-modal-content">
+    <button class="img-modal-close" id="imgModalClose">×</button>
+    <img id="imgModalImg" src="" alt="">
+  </div>
+</div>
+
+<script>
+/* Year */
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* Header scroll */
+const header = document.getElementById('header');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+/* Burger */
+const burger = document.getElementById('burger');
+const mobileMenu = document.getElementById('mobileMenu');
+burger.addEventListener('click', () => {
+  burger.classList.toggle('open');
+  mobileMenu.classList.toggle('open');
+  document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+});
+mobileMenu.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    burger.classList.remove('open');
+    mobileMenu.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+});
+
+/* Reveal */
+const reveals = document.querySelectorAll('.reveal');
+const revObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); revObs.unobserve(e.target); }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(el => revObs.observe(el));
+
+/* Reviews drag / scroll */
+const revTrack = document.getElementById('reviewsTrack');
+const btnPrev = document.getElementById('revPrev');
+const btnNext = document.getElementById('revNext');
+let rDrag = false, rStartX = 0, rStartY = 0, rScrollLeft = 0, rMoved = false, rIsHoriz = null;
+
+function updateNavBtns() {
+  const atStart = revTrack.scrollLeft <= 2;
+  const atEnd = revTrack.scrollLeft >= revTrack.scrollWidth - revTrack.clientWidth - 2;
+  btnPrev.disabled = atStart;
+  btnNext.disabled = atEnd;
+}
+revTrack.addEventListener('scroll', updateNavBtns, { passive: true });
+updateNavBtns();
+
+revTrack.addEventListener('mousedown', e => {
+  rDrag = true; rMoved = false; rIsHoriz = null;
+  rStartX = e.pageX; rScrollLeft = revTrack.scrollLeft;
+  revTrack.style.userSelect = 'none';
+});
+document.addEventListener('mouseup', () => {
+  rDrag = false; revTrack.style.userSelect = '';
+  setTimeout(() => { rMoved = false; }, 0);
+});
+document.addEventListener('mousemove', e => {
+  if (!rDrag) return;
+  const dx = e.pageX - rStartX;
+  if (Math.abs(dx) > 4) rMoved = true;
+  revTrack.scrollLeft = rScrollLeft - dx;
+});
+
+revTrack.addEventListener('touchstart', e => {
+  rStartX = e.touches[0].clientX; rStartY = e.touches[0].clientY;
+  rScrollLeft = revTrack.scrollLeft; rIsHoriz = null; rMoved = false;
+}, { passive: true });
+revTrack.addEventListener('touchmove', e => {
+  const dx = e.touches[0].clientX - rStartX;
+  const dy = e.touches[0].clientY - rStartY;
+  if (rIsHoriz === null) rIsHoriz = Math.abs(dx) > Math.abs(dy);
+  if (rIsHoriz) { e.preventDefault(); revTrack.scrollLeft = rScrollLeft - dx; rMoved = true; }
+}, { passive: false });
+
+btnNext.addEventListener('click', () => { revTrack.scrollBy({ left: 320, behavior: 'smooth' }); });
+btnPrev.addEventListener('click', () => { revTrack.scrollBy({ left: -320, behavior: 'smooth' }); });
+
+/* Review zoom modal */
+const modal = document.getElementById('imgModal');
+const modalImg = document.getElementById('imgModalImg');
+document.querySelectorAll('.review-card').forEach(card => {
+  card.addEventListener('click', () => {
+    if (rMoved) { rMoved = false; return; }
+    const img = card.querySelector('img');
+    if (img) { modal.classList.add('active'); modalImg.src = img.src; }
+  });
+});
+document.getElementById('imgModalClose').addEventListener('click', () => {
+  modal.classList.remove('active'); modalImg.src = '';
+});
+modal.addEventListener('click', e => {
+  if (e.target === modal) { modal.classList.remove('active'); modalImg.src = ''; }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { modal.classList.remove('active'); modalImg.src = ''; }
+});
+
+/* Form validation */
+document.getElementById('contactForm').addEventListener('submit', e => {
+  e.preventDefault();
+  let ok = true;
+  const name = document.getElementById('inp-name').value.trim();
+  const phone = document.getElementById('inp-phone').value.trim();
+  const fn = document.getElementById('f-name');
+  const fp = document.getElementById('f-phone');
+  fn.classList.toggle('field-err', !name);
+  if (!name) ok = false;
+  const phoneOk = phone && /^[+\d\s\-()\d]{7,}$/.test(phone);
+  fp.classList.toggle('field-err', !phoneOk);
+  if (!phoneOk) ok = false;
+  if (ok) {
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('formSuccess').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
