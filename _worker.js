@@ -887,7 +887,7 @@ async function fetchAllAvitoItems(token) {
   return items;
 }
 
-async function fetchAvitoStats(token, userId, itemIds, dateFrom, dateTo) {
+async function fetchAvitoStats(token, userId, itemIds, dateFrom, dateTo, errors) {
   const statsById = {};
   for (let i = 0; i < itemIds.length; i += AVITO_STATS_ITEMS_BATCH) {
     const batch = itemIds.slice(i, i + AVITO_STATS_ITEMS_BATCH);
@@ -895,7 +895,13 @@ async function fetchAvitoStats(token, userId, itemIds, dateFrom, dateTo) {
       method: 'POST',
       body: JSON.stringify({ dateFrom, dateTo, itemIds: batch, periodGrouping: 'day' }),
     });
-    const rows = (data.result && data.result.items) || data.items || [];
+    // Avito's exact response shape for this endpoint isn't documented anywhere reachable —
+    // try the shapes seen in the wild, and if none match, surface the raw response instead
+    // of silently returning blank stats so the real shape can be read off a real export.
+    const rows = (data.result && data.result.items) || data.items || (Array.isArray(data) ? data : null) || [];
+    if (!rows.length && errors) {
+      errors.push(`Статистика: сервер ответил без ожидаемых полей (items). Сырой ответ: ${JSON.stringify(data).slice(0, 500)}`);
+    }
     for (const row of rows) {
       const id = row.itemId ?? row.id;
       if (id != null) statsById[id] = row;
@@ -977,7 +983,7 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
 
   let statsById = {};
   try {
-    statsById = await fetchAvitoStats(token, userId, items.map((it) => it.id).filter(Boolean), dateFrom, dateTo);
+    statsById = await fetchAvitoStats(token, userId, items.map((it) => it.id).filter(Boolean), dateFrom, dateTo, errors);
   } catch (e) {
     errors.push(`Статистика: ${e.message}`);
   }
