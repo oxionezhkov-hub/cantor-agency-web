@@ -34,13 +34,15 @@
  *                                shareId }
  *   share:<shareId>        -> "<analysisId>"
  *
- * It also powers the CRM tab of the /mba-mybrand admin panel: a simple manually-curated
- * client list with a fixed onboarding checklist (brief, SERP analysis, 3 podcasts each
- * with 5 subtasks, website) and a "problem client" flag. Uses the same MBA_MYBRAND_KV
- * namespace as the brief tool, under its own key prefix:
+ * It also powers the CRM tab of the /mba-mybrand admin panel: a client list with a fixed
+ * onboarding checklist (brief, SERP analysis, 3 podcasts each with 5 subtasks, website) and
+ * a "problem client" flag. Clients can be added manually, and every "client:<email>" brief
+ * record is also auto-pulled in (deduped by normalized email) so the two lists stay in sync
+ * without staff re-entering people by hand. Uses the same MBA_MYBRAND_KV namespace as the
+ * brief tool, under its own key prefix:
  *
  * KV keys (binding "MBA_MYBRAND_KV", CRM prefix):
- *   crm:client:<id>  -> { id, email, name, problem, createdAt, updatedAt,
+ *   crm:client:<id>  -> { id, email, name, problem, createdAt, updatedAt, fromBrief,
  *                          tasks: { brief:{done,comment}, serp:{done,comment},
  *                                   podcast1:{date,script,recording,editing,texts: {done,comment}},
  *                                   podcast2:{...}, podcast3:{...}, site:{done,comment} } }
@@ -682,27 +684,66 @@ function newCrmClient(email, name) {
     createdAt: now,
     updatedAt: now,
     tasks: emptyCrmTasks(),
+    fromBrief: false,
   };
+}
+
+// Brief clients (the "client:<email>" records from the /mba-mybrand questionnaire) are
+// pulled into the CRM automatically so staff don't have to re-enter them by hand. Runs on
+// every CRM list load; matches by normalized email so it never creates duplicates, and only
+// ever adds missing ones — it never touches or removes CRM records that already exist.
+async function syncCrmFromBriefClients(env) {
+  const kv = env.MBA_MYBRAND_KV;
+  const [crmKeys, briefKeys] = await Promise.all([
+    kv.list({ prefix: 'crm:client:' }),
+    kv.list({ prefix: 'client:' }),
+  ]);
+  const [crmRecords, briefRecords] = await Promise.all([
+    Promise.all(crmKeys.keys.map((k) => kv.get(k.name, 'json'))),
+    Promise.all(briefKeys.keys.map((k) => kv.get(k.name, 'json'))),
+  ]);
+  const clients = crmRecords.filter(Boolean);
+  const existingEmails = new Set(clients.map((c) => normalizeEmail(c.email)));
+
+  const schema = await getSchema(env);
+  const nameQid = schema.blocks[0] && schema.blocks[0].questions[0] ? schema.blocks[0].questions[0].id : null;
+
+  const puts = [];
+  for (const b of briefRecords.filter(Boolean)) {
+    const email = normalizeEmail(b.email);
+    if (!email || !isValidEmail(email) || existingEmails.has(email)) continue;
+    const name = (nameQid && b.answers && b.answers[nameQid]) ? String(b.answers[nameQid]).trim() : '';
+    const record = { ...newCrmClient(email, name), fromBrief: true };
+    existingEmails.add(email);
+    clients.push(record);
+    puts.push(kv.put(`crm:client:${record.id}`, JSON.stringify(record)));
+  }
+  if (puts.length) await Promise.all(puts);
+  return clients;
 }
 
 async function handleCrmApi(request, env, url) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
 
-  // ── Clients: list (with checklist structure) ──
+  // ── Clients: list (with checklist structure), auto-pulling in new brief clients ──
   if (pathname === '/api/crm/clients' && request.method === 'GET') {
-    const list = await kv.list({ prefix: 'crm:client:' });
-    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
-    const clients = records.filter(Boolean).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    const clients = (await syncCrmFromBriefClients(env)).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
     return json({ clients, checklist: CRM_CHECKLIST });
   }
 
-  // ── Clients: create ──
+  // ── Clients: create manually (deduped by email against existing CRM records) ──
   if (pathname === '/api/crm/clients' && request.method === 'POST') {
     const body = await readJson(request);
     const email = normalizeEmail(body && body.email);
     if (!isValidEmail(email)) return json({ error: 'invalid_email' }, 400);
     const name = (body && String(body.name || '').trim()) || '';
+
+    const list = await kv.list({ prefix: 'crm:client:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    const existing = records.find((c) => c && normalizeEmail(c.email) === email);
+    if (existing) return json({ error: 'already_exists', client: existing }, 409);
+
     const record = newCrmClient(email, name);
     await kv.put(`crm:client:${record.id}`, JSON.stringify(record));
     return json({ client: record });
