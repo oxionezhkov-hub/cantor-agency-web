@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Выгрузка Avito — Cantor Agency</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+  --green:#1e8449;--green-bg:#eafaf1;
+  --amber:#9a6f00;--amber-bg:#fef9e7;
+  --gray:#6b6b6b;--gray-bg:#f1f0ed;
+  --red-text:#c0392b;--red-bg:#fdf2f2;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1.5px solid var(--border);background:var(--white);position:sticky;top:0;z-index:20}
+.brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--dark);text-decoration:none;display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer}
+.topbar-right{display:flex;align-items:center;gap:10px}
+
+/* ── BUTTONS ── */
+.btn-red{background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-red:hover{background:var(--red-dark)}
+.btn-red:disabled{opacity:0.55;cursor:wait}
+.btn-outline{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.btn-outline:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 11px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn-ghost-sm:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm.danger:hover{border-color:#c0392b;color:#c0392b}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark);color:white;padding:12px 20px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:all 0.25s ease;display:flex;align-items:center;gap:8px;z-index:200;max-width:80vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── ADMIN GATE ── */
+#adminGate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:380px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:36px 30px;text-align:center}
+.gate-card h1{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.02em}
+.gate-card p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.gate-card input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 14px;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s;background:white;margin-bottom:12px;text-align:center;letter-spacing:0.1em}
+.gate-card input:focus{border-color:var(--red)}
+.gate-error{font-size:12px;color:var(--red);margin:-4px 0 14px;display:none}
+.gate-error.show{display:block}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1160px;margin:0 auto;padding:28px 24px 80px;display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}}
+
+.panel{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.panel-head h2{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:var(--dark)}
+
+/* ── ACCOUNTS LIST ── */
+.acct-list{display:flex;flex-direction:column;gap:8px}
+.acct-row{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 12px;cursor:pointer;transition:all 0.15s}
+.acct-row:hover{border-color:var(--red)}
+.acct-row.active{border-color:var(--red);background:var(--accent-bg)}
+.acct-avatar{width:32px;height:32px;border-radius:50%;background:var(--dark);color:white;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-weight:700;font-size:12px;flex-shrink:0}
+.acct-info{flex:1;min-width:0}
+.acct-name{font-size:13px;font-weight:700;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-meta{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty-note{font-size:13px;color:var(--muted);padding:16px 4px;text-align:center;line-height:1.6}
+
+/* ── DETAIL ── */
+.field-row{margin-bottom:14px}
+.field-row label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px}
+.field-row input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 13px;font-size:13.5px;outline:none;background:white}
+.field-row input:focus{border-color:var(--red)}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.field-grid{grid-template-columns:1fr}}
+
+.date-row{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:18px 0}
+.date-row .field-row{margin-bottom:0;flex:1;min-width:150px}
+
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:16px 0}
+.stat-tile{background:var(--bg);border-radius:var(--r-md);padding:12px 14px}
+.stat-tile .num{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark)}
+.stat-tile .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+.err-box{background:var(--red-bg);color:var(--red-text);border-radius:var(--r-md);padding:12px 14px;font-size:12.5px;margin:14px 0;line-height:1.6}
+.err-box ul{margin:6px 0 0 18px}
+
+.runs-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+.runs-table th{text-align:left;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.03em;padding:6px 8px;border-bottom:1.5px solid var(--border)}
+.runs-table td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+.status-pill{display:inline-block;padding:2px 9px;border-radius:100px;font-size:10.5px;font-weight:700}
+.status-ok{background:var(--green-bg);color:var(--green)}
+.status-partial{background:var(--amber-bg);color:var(--amber)}
+.status-failed{background:var(--red-bg);color:var(--red-text)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(10,10,10,0.45);backdrop-filter:blur(3px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{width:100%;max-width:440px;background:var(--white);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:26px}
+.modal-card h3{font-family:'Unbounded',sans-serif;font-size:16px;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;margin-top:18px}
+.hint{font-size:11.5px;color:var(--muted);margin-top:-8px;margin-bottom:14px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div id="adminGate">
+  <form id="gateForm" class="gate-card">
+    <h1>Выгрузка Avito</h1>
+    <p>Внутренний инструмент. Введите пароль доступа.</p>
+    <input type="password" id="gatePassword" placeholder="Пароль" autocomplete="off" autofocus>
+    <div class="gate-error" id="gateError">Неверный пароль</div>
+    <button type="submit" class="btn-red" style="width:100%">Войти</button>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand">Cantor <span style="color:var(--red)">/ Avito</span></div>
+    <div class="topbar-right">
+      <button class="btn-outline" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Кабинеты</h2>
+        <button class="btn-ghost-sm" onclick="openAccountModal()">+ Добавить</button>
+      </div>
+      <div class="acct-list" id="acctList"></div>
+    </div>
+
+    <div class="panel" id="detailPanel">
+      <div class="empty-note" id="noAccountNote">Выберите кабинет слева или добавьте новый, чтобы сделать выгрузку.</div>
+      <div id="detailContent" class="hidden">
+        <div class="panel-head">
+          <h2 id="detailName">—</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost-sm" onclick="editCurrentAccount()">Изменить</button>
+            <button class="btn-ghost-sm danger" onclick="deleteCurrentAccount()">Удалить</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">User ID: <span id="detailUserId">—</span></div>
+        <div style="font-size:12px;color:var(--muted)">Последняя выгрузка: <span id="detailLastExport">никогда</span></div>
+
+        <div class="date-row">
+          <div class="field-row">
+            <label>Период с</label>
+            <input type="date" id="dateFrom">
+          </div>
+          <div class="field-row">
+            <label>Период по</label>
+            <input type="date" id="dateTo">
+          </div>
+          <button class="btn-red" id="exportBtn" onclick="runExport()">⬇ Выгрузить в XLSX</button>
+        </div>
+
+        <div id="summaryBox" class="hidden">
+          <div class="summary-grid" id="summaryGrid"></div>
+          <div id="errorBox" class="err-box hidden"></div>
+        </div>
+
+        <div class="panel-head" style="margin-top:22px">
+          <h2 style="font-size:13px">История выгрузок</h2>
+        </div>
+        <div id="runsBox"><div class="empty-note">Пока не было выгрузок.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="accountModal">
+  <div class="modal-card">
+    <h3 id="modalTitle">Новый кабинет</h3>
+    <div class="field-row">
+      <label>Название кабинета</label>
+      <input type="text" id="fName" placeholder="Например, «Репетиторы — Москва»">
+    </div>
+    <div class="field-grid">
+      <div class="field-row">
+        <label>Client ID</label>
+        <input type="text" id="fClientId" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="field-row">
+        <label>User ID (аккаунт)</label>
+        <input type="text" id="fUserId" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="field-row">
+      <label>Client Secret</label>
+      <input type="password" id="fClientSecret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="hint" id="secretHint"></div>
+    <div class="modal-actions">
+      <button class="btn-red" style="flex:1" onclick="saveAccount()">Сохранить</button>
+      <button class="btn-outline" onclick="closeAccountModal()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// cantor.agency's DNS is on reg.ru, not Cloudflare, so /api/* on that domain never
+// reaches this worker — call the workers.dev host directly instead (same pattern
+// as mba-mybrand's/serp-analysis's API_BASE), relying on the worker's permissive CORS headers.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const ADMIN_STORAGE_KEY = 'avito_export_admin_ok';
+// Client-side gate only (same convention as /serp-analysis) — not a real auth boundary.
+// Real protection is that Avito client_secret values are never sent back to the browser
+// after being saved (see maskAvitoAccount in _worker.js).
+const ADMIN_PASSWORD = '12345678';
+
+let accounts = [];
+let selectedId = null;
+let editingAccountId = null;
+let lastExportResult = null;
+
+async function api(path, opts) {
+  const res = await fetch(API_BASE + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.error || ('http_' + res.status));
+  }
+  return res.json();
+}
+
+function escapeHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function initials(name) {
+  const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+}
+let toastTimer = null;
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+/* ════════════ GATE ════════════ */
+function isAdminUnlocked() { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; }
+function logout() {
+  localStorage.removeItem(ADMIN_STORAGE_KEY);
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('adminGate').classList.remove('hidden');
+}
+document.getElementById('gateForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('gatePassword');
+  const err = document.getElementById('gateError');
+  if (input.value === ADMIN_PASSWORD) {
+    localStorage.setItem(ADMIN_STORAGE_KEY, '1');
+    input.value = '';
+    err.classList.remove('show');
+    boot();
+  } else {
+    err.classList.add('show');
+  }
+});
+
+/* ════════════ ACCOUNTS ════════════ */
+async function loadAccounts() {
+  const { accounts: list } = await api('/api/avito/accounts');
+  accounts = list;
+  renderAccounts();
+}
+
+function renderAccounts() {
+  const box = document.getElementById('acctList');
+  if (!accounts.length) {
+    box.innerHTML = '<div class="empty-note">Кабинетов пока нет — добавьте первый.</div>';
+    return;
+  }
+  box.innerHTML = accounts.map((a) => `
+    <div class="acct-row ${a.id === selectedId ? 'active' : ''}" onclick="selectAccount('${a.id}')">
+      <div class="acct-avatar">${escapeHtml(initials(a.name))}</div>
+      <div class="acct-info">
+        <div class="acct-name">${escapeHtml(a.name)}</div>
+        <div class="acct-meta">ID ${escapeHtml(a.userId)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getAccount(id) { return accounts.find((a) => a.id === id); }
+
+async function selectAccount(id) {
+  selectedId = id;
+  renderAccounts();
+  const a = getAccount(id);
+  document.getElementById('noAccountNote').classList.add('hidden');
+  document.getElementById('detailContent').classList.remove('hidden');
+  document.getElementById('detailName').textContent = a.name;
+  document.getElementById('detailUserId').textContent = a.userId;
+  document.getElementById('detailLastExport').textContent = a.lastExportAt ? fmtDate(a.lastExportAt) : 'никогда';
+  document.getElementById('summaryBox').classList.add('hidden');
+  lastExportResult = null;
+
+  const today = new Date();
+  const monthAgo = new Date(today.getTime() - 29 * 86400000);
+  document.getElementById('dateTo').value = today.toISOString().slice(0, 10);
+  document.getElementById('dateFrom').value = monthAgo.toISOString().slice(0, 10);
+
+  await loadRuns(id);
+}
+
+async function loadRuns(accountId) {
+  const box = document.getElementById('runsBox');
+  try {
+    const { runs } = await api('/api/avito/runs?accountId=' + encodeURIComponent(accountId));
+    if (!runs.length) {
+      box.innerHTML = '<div class="empty-note">Пока не было выгрузок.</div>';
+      return;
+    }
+    box.innerHTML = `
+      <table class="runs-table">
+        <thead><tr><th>Дата</th><th>Период</th><th>Статус</th><th>Объявл.</th><th>Чаты</th><th>Сообщ.</th></tr></thead>
+        <tbody>
+          ${runs.map((r) => `
+            <tr>
+              <td>${fmtDate(r.finishedAt)}</td>
+              <td>${escapeHtml(r.dateFrom)} — ${escapeHtml(r.dateTo)}</td>
+              <td><span class="status-pill status-${r.status}">${r.status === 'ok' ? 'ок' : r.status === 'partial' ? 'частично' : 'ошибка'}</span></td>
+              <td>${r.counts ? r.counts.items : '—'}</td>
+              <td>${r.counts ? r.counts.chatsInRange : '—'}</td>
+              <td>${r.counts ? r.counts.messages : '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    box.innerHTML = '<div class="empty-note">Не удалось загрузить историю.</div>';
+  }
+}
+
+/* ════════════ ACCOUNT MODAL ════════════ */
+function openAccountModal(id) {
+  editingAccountId = id || null;
+  const a = id ? getAccount(id) : null;
+  document.getElementById('modalTitle').textContent = a ? 'Изменить кабинет' : 'Новый кабинет';
+  document.getElementById('fName').value = a ? a.name : '';
+  document.getElementById('fClientId').value = a ? a.clientId : '';
+  document.getElementById('fUserId').value = a ? a.userId : '';
+  document.getElementById('fClientSecret').value = '';
+  document.getElementById('secretHint').textContent = a
+    ? 'Оставьте пустым, чтобы не менять сохранённый секрет.'
+    : 'Выдаётся в личном кабинете разработчика Avito вместе с Client ID.';
+  document.getElementById('accountModal').classList.remove('hidden');
+}
+function closeAccountModal() { document.getElementById('accountModal').classList.add('hidden'); }
+
+function editCurrentAccount() { if (selectedId) openAccountModal(selectedId); }
+
+async function saveAccount() {
+  const name = document.getElementById('fName').value.trim();
+  const clientId = document.getElementById('fClientId').value.trim();
+  const userId = document.getElementById('fUserId').value.trim();
+  const clientSecret = document.getElementById('fClientSecret').value.trim();
+  if (!name || !clientId || !userId || (!editingAccountId && !clientSecret)) {
+    showToast('Заполните название, Client ID, User ID и секрет');
+    return;
+  }
+  try {
+    if (editingAccountId) {
+      const body = { id: editingAccountId, name, clientId, userId };
+      if (clientSecret) body.clientSecret = clientSecret;
+      const { account } = await api('/api/avito/accounts', { method: 'PUT', body: JSON.stringify(body) });
+      accounts = accounts.map((a) => (a.id === account.id ? account : a));
+    } else {
+      const { account } = await api('/api/avito/accounts', { method: 'POST', body: JSON.stringify({ name, clientId, userId, clientSecret }) });
+      accounts.push(account);
+      selectedId = account.id;
+    }
+    accounts.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    renderAccounts();
+    closeAccountModal();
+    showToast('Кабинет сохранён');
+    if (selectedId) selectAccount(selectedId);
+  } catch (e) {
+    showToast('Ошибка сохранения: ' + e.message);
+  }
+}
+
+async function deleteCurrentAccount() {
+  if (!selectedId) return;
+  const a = getAccount(selectedId);
+  if (!confirm(`Удалить кабинет «${a.name}»? История выгрузок тоже будет удалена.`)) return;
+  try {
+    await api('/api/avito/accounts', { method: 'DELETE', body: JSON.stringify({ id: selectedId }) });
+    accounts = accounts.filter((x) => x.id !== selectedId);
+    selectedId = null;
+    renderAccounts();
+    document.getElementById('detailContent').classList.add('hidden');
+    document.getElementById('noAccountNote').classList.remove('hidden');
+    showToast('Кабинет удалён');
+  } catch (e) {
+    showToast('Ошибка удаления: ' + e.message);
+  }
+}
+
+/* ════════════ EXPORT ════════════ */
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function runExport() {
+  if (!selectedId) return;
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  if (!dateFrom || !dateTo) { showToast('Укажите период'); return; }
+
+  const btn = document.getElementById('exportBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Выгружаем...';
+
+  try {
+    const result = await api('/api/avito/export', {
+      method: 'POST',
+      body: JSON.stringify({ accountId: selectedId, dateFrom, dateTo }),
+    });
+    lastExportResult = result;
+    renderSummary(result);
+    await downloadXlsx(result);
+    await loadRuns(selectedId);
+    const a = getAccount(selectedId);
+    if (a) a.lastExportAt = new Date().toISOString();
+    document.getElementById('detailLastExport').textContent = fmtDate(a && a.lastExportAt);
+    showToast('Готово — файл скачан');
+  } catch (e) {
+    showToast('Ошибка выгрузки: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+function renderSummary(result) {
+  const box = document.getElementById('summaryBox');
+  box.classList.remove('hidden');
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="stat-tile"><div class="num">${result.counts.items}</div><div class="lbl">Объявлений</div></div>
+    <div class="stat-tile"><div class="num">${result.counts.chatsInRange}</div><div class="lbl">Чатов за период</div></div>
+    <div class="stat-tile"><div class="num">${result.counts.messages}</div><div class="lbl">Сообщений</div></div>
+  `;
+  const errBox = document.getElementById('errorBox');
+  if (result.errors && result.errors.length) {
+    errBox.classList.remove('hidden');
+    errBox.innerHTML = `Выгружено не всё — часть данных пропущена:<ul>${result.errors.map((e) => `<li>${escapeHtml(e)}</li>`).join('')}</ul>`;
+  } else {
+    errBox.classList.add('hidden');
+  }
+}
+
+const AUTHOR_LABEL = { client: 'клиент', manager: 'менеджер' };
+
+async function downloadXlsx(result) {
+  await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+
+  const statsRows = result.stats.map((r) => ({
+    'ID объявления': r.item_id,
+    'Название': r.title,
+    'Статус': r.status,
+    'Категория': r.category,
+    'Адрес': r.address,
+    'Ссылка': r.url,
+    'Показы': r.views,
+    'Уникальные показы': r.uniqViews,
+    'Контакты': r.contacts,
+    'Уникальные контакты': r.uniqContacts,
+    'В избранном': r.favorites,
+    'Расходы': r.spend,
+    'Период с': r.dateFrom,
+    'Период по': r.dateTo,
+  }));
+
+  const chatRows = result.chats.map((r) => ({
+    'chat_id': r.chat_id,
+    'item_id': r.item_id,
+    'Объявление': r.item_title,
+    'Адрес объявления': r.item_address,
+    'Дата первого сообщения': r.first_message_at,
+    'Дата последнего сообщения': r.last_message_at,
+    'Кто написал первым': AUTHOR_LABEL[r.first_author] || r.first_author,
+    'Сообщений всего': r.messages_total,
+    'От клиента': r.messages_client,
+    'От менеджера': r.messages_manager,
+    'Ср. время ответа менеджера, сек': r.avg_manager_response_sec,
+    'Был звонок': r.has_call,
+    'Итоговый статус': r.final_status,
+  }));
+
+  const messageRows = result.messages.map((r) => ({
+    'chat_id': r.chat_id,
+    'message_id': r.message_id,
+    'Дата/время': r.datetime,
+    'Автор': AUTHOR_LABEL[r.author] || r.author,
+    'Тип': r.type,
+    'Текст': r.text,
+    'Время ответа собеседника, сек': r.response_time_sec,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(statsRows), 'Статистика объявлений');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(chatRows), 'Чаты');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(messageRows), 'Сообщения');
+
+  const accountName = (getAccount(selectedId) || {}).name || 'avito';
+  const safeName = accountName.replace(/[^a-zA-Zа-яА-Я0-9_-]/g, '_');
+  XLSX.writeFile(wb, `avito-${safeName}-${result.meta.dateFrom}_${result.meta.dateTo}.xlsx`);
+}
+
+/* ════════════ BOOT ════════════ */
+async function boot() {
+  document.getElementById('adminGate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  try {
+    await loadAccounts();
+  } catch (e) {
+    showToast('Не удалось загрузить кабинеты: ' + e.message);
+  }
+}
+
+if (isAdminUnlocked()) boot();
+
+window.openAccountModal = openAccountModal;
+window.closeAccountModal = closeAccountModal;
+window.saveAccount = saveAccount;
+window.editCurrentAccount = editCurrentAccount;
+window.deleteCurrentAccount = deleteCurrentAccount;
+window.selectAccount = selectAccount;
+window.runExport = runExport;
+window.logout = logout;
+</script>
+</body>
+</html>
