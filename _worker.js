@@ -873,11 +873,13 @@ async function avitoJson(token, path, options) {
 async function fetchAllAvitoItems(token) {
   // Not /core/v1/accounts/{user_id}/items — that path doesn't exist on Avito's gateway
   // (confirmed against real traffic: it 404s with "no Route matched with those values").
-  // The account is implied by the token itself.
+  // The account is implied by the token itself. status=all also isn't a valid value here
+  // (confirmed against real traffic: 400 "unknown status") and Avito's exact enum for this
+  // param isn't documented anywhere reachable — omit it and take the default (active listings).
   const items = [];
   const perPage = 100;
   for (let page = 1; page <= 50; page += 1) {
-    const data = await avitoJson(token, `/core/v1/items?status=all&page=${page}&per_page=${perPage}`);
+    const data = await avitoJson(token, `/core/v1/items?page=${page}&per_page=${perPage}`);
     const batch = data.resources || data.items || [];
     items.push(...batch);
     if (batch.length < perPage) break;
