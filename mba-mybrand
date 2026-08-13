@@ -228,6 +228,7 @@ input,textarea,select{font-family:inherit}
 .crm-row-head{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer}
 .crm-row-head:hover{background:var(--warm-bg)}
 .crm-problem-badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:800;color:white;background:var(--red);border-radius:100px;padding:2px 8px;vertical-align:middle}
+.crm-brief-badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:800;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:100px;padding:2px 8px;vertical-align:middle}
 .crm-chevron{transition:transform 0.18s;flex-shrink:0}
 .crm-row.open .crm-chevron{transform:rotate(180deg)}
 .crm-row-body{border-top:1.5px solid var(--border);padding:16px;background:var(--bg)}
@@ -460,6 +461,7 @@ async function api(path, options) {
 /* ════════════ ROUTING / GATE ════════════ */
 function goToGate() {
   localStorage.removeItem('mba_last_email');
+  localStorage.removeItem('mba_admin');
   document.getElementById('quiz').classList.add('hidden');
   document.getElementById('admin').classList.add('hidden');
   document.getElementById('shareView').classList.add('hidden');
@@ -470,6 +472,14 @@ function goToGate() {
   history.replaceState(null, '', location.pathname);
 }
 
+function enterAdmin() {
+  localStorage.setItem('mba_admin', '1');
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('admin').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  initAdmin();
+}
+
 document.getElementById('gateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const raw = document.getElementById('gateInput').value.trim();
@@ -477,10 +487,7 @@ document.getElementById('gateForm').addEventListener('submit', async (e) => {
   errEl.classList.remove('show');
 
   if (raw.toLowerCase() === 'admin') {
-    document.getElementById('gate').classList.add('hidden');
-    document.getElementById('admin').classList.remove('hidden');
-    document.getElementById('logoutBtn').classList.remove('hidden');
-    initAdmin();
+    enterAdmin();
     return;
   }
 
@@ -1335,7 +1342,9 @@ async function createCrmClient() {
     renderCrmList();
     showToast('Клиент добавлен');
   } catch (e) {
-    showToast(e.message === 'invalid_email' ? 'Некорректная почта' : 'Ошибка добавления');
+    if (e.message === 'already_exists') showToast('Клиент с такой почтой уже есть в CRM');
+    else if (e.message === 'invalid_email') showToast('Некорректная почта');
+    else showToast('Ошибка добавления');
   }
 }
 
@@ -1363,7 +1372,7 @@ function crmRowHtml(c, total) {
       <div class="crm-row-head" onclick="toggleCrmRow('${c.id}')">
         <div class="client-avatar">${escapeHtml(initial)}</div>
         <div class="client-info">
-          <div class="client-email">${title}${c.problem ? '<span class="crm-problem-badge">Проблемный</span>' : ''}</div>
+          <div class="client-email">${title}${c.problem ? '<span class="crm-problem-badge">Проблемный</span>' : ''}${c.fromBrief ? '<span class="crm-brief-badge">Из брифа</span>' : ''}</div>
           <div class="client-meta">Обновлено ${fmtDate(c.updatedAt)}</div>
         </div>
         <div class="client-progress">${done}/${total}</div>
@@ -1580,6 +1589,11 @@ async function initShareView(shareId) {
   const shareId = params.get('share');
   if (shareId) {
     initShareView(shareId);
+    return;
+  }
+
+  if (localStorage.getItem('mba_admin') === '1') {
+    enterAdmin();
     return;
   }
 
