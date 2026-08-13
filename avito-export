@@ -532,10 +532,22 @@ async function downloadXlsx(result) {
     'Время ответа собеседника, сек': r.response_time_sec,
   }));
 
+  // json_to_sheet infers headers from the first row's keys — on an empty array that leaves
+  // a sheet with no header row at all, which reads as broken rather than "no data for period".
+  const STATS_HEADERS = ['ID объявления', 'Название', 'Статус', 'Категория', 'Адрес', 'Ссылка', 'Показы', 'Уникальные показы', 'Контакты', 'Уникальные контакты', 'В избранном', 'Расходы', 'Период с', 'Период по'];
+  const CHAT_HEADERS = ['chat_id', 'item_id', 'Объявление', 'Адрес объявления', 'Дата первого сообщения', 'Дата последнего сообщения', 'Кто написал первым', 'Сообщений всего', 'От клиента', 'От менеджера', 'Ср. время ответа менеджера, сек', 'Был звонок', 'Итоговый статус'];
+  const MESSAGE_HEADERS = ['chat_id', 'message_id', 'Дата/время', 'Автор', 'Тип', 'Текст', 'Время ответа собеседника, сек'];
+
+  function sheetWithHeaders(headers, rows) {
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    XLSX.utils.sheet_add_json(ws, rows, { origin: 'A2', skipHeader: true, header: headers });
+    return ws;
+  }
+
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(statsRows), 'Статистика объявлений');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(chatRows), 'Чаты');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(messageRows), 'Сообщения');
+  XLSX.utils.book_append_sheet(wb, sheetWithHeaders(STATS_HEADERS, statsRows), 'Статистика объявлений');
+  XLSX.utils.book_append_sheet(wb, sheetWithHeaders(CHAT_HEADERS, chatRows), 'Чаты');
+  XLSX.utils.book_append_sheet(wb, sheetWithHeaders(MESSAGE_HEADERS, messageRows), 'Сообщения');
 
   const accountName = (getAccount(selectedId) || {}).name || 'avito';
   const safeName = accountName.replace(/[^a-zA-Zа-яА-Я0-9_-]/g, '_');
