@@ -870,11 +870,14 @@ async function avitoJson(token, path, options) {
   return res.json();
 }
 
-async function fetchAllAvitoItems(token, userId) {
+async function fetchAllAvitoItems(token) {
+  // Not /core/v1/accounts/{user_id}/items — that path doesn't exist on Avito's gateway
+  // (confirmed against real traffic: it 404s with "no Route matched with those values").
+  // The account is implied by the token itself.
   const items = [];
   const perPage = 100;
   for (let page = 1; page <= 50; page += 1) {
-    const data = await avitoJson(token, `/core/v1/accounts/${userId}/items?status=all&page=${page}&per_page=${perPage}`);
+    const data = await avitoJson(token, `/core/v1/items?status=all&page=${page}&per_page=${perPage}`);
     const batch = data.resources || data.items || [];
     items.push(...batch);
     if (batch.length < perPage) break;
@@ -886,7 +889,7 @@ async function fetchAvitoStats(token, userId, itemIds, dateFrom, dateTo) {
   const statsById = {};
   for (let i = 0; i < itemIds.length; i += AVITO_STATS_ITEMS_BATCH) {
     const batch = itemIds.slice(i, i + AVITO_STATS_ITEMS_BATCH);
-    const data = await avitoJson(token, `/core/v1/accounts/${userId}/stats/items`, {
+    const data = await avitoJson(token, `/stats/v1/accounts/${userId}/items`, {
       method: 'POST',
       body: JSON.stringify({ dateFrom, dateTo, itemIds: batch, periodGrouping: 'day' }),
     });
@@ -963,7 +966,7 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
 
   let items = [];
   try {
-    items = await fetchAllAvitoItems(token, userId);
+    items = await fetchAllAvitoItems(token);
   } catch (e) {
     errors.push(`Объявления: ${e.message}`);
   }
@@ -1022,6 +1025,13 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
     try {
       msgs = await fetchAllAvitoMessages(token, userId, chat.id);
     } catch (e) {
+      if (String(e.message).includes('avito_402')) {
+        // Account-wide restriction (no paid Messenger API subscription on this cabinet) —
+        // every remaining chat will fail the same way, so stop hammering the API and
+        // surface one clear message instead of one line per chat.
+        errors.push('Сообщения недоступны: на этом кабинете Avito не подключена платная подписка на API мессенджера (нужно оформить в личном кабинете Avito).');
+        break;
+      }
       errors.push(`Чат ${chat.id}: ${e.message}`);
       continue;
     }
