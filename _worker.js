@@ -33,6 +33,17 @@
  *                                googleSchool: [rows] }, recommendations: [{id,text,checked}],
  *                                shareId }
  *   share:<shareId>        -> "<analysisId>"
+ *
+ * It also powers the CRM tab of the /mba-mybrand admin panel: a simple manually-curated
+ * client list with a fixed onboarding checklist (brief, SERP analysis, 3 podcasts each
+ * with 5 subtasks, website) and a "problem client" flag. Uses the same MBA_MYBRAND_KV
+ * namespace as the brief tool, under its own key prefix:
+ *
+ * KV keys (binding "MBA_MYBRAND_KV", CRM prefix):
+ *   crm:client:<id>  -> { id, email, name, problem, createdAt, updatedAt,
+ *                          tasks: { brief:{done,comment}, serp:{done,comment},
+ *                                   podcast1:{date,script,recording,editing,texts: {done,comment}},
+ *                                   podcast2:{...}, podcast3:{...}, site:{done,comment} } }
  */
 
 const SCHEMA_KEY = 'schema';
@@ -602,12 +613,150 @@ async function handleSerpApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+const CRM_PODCAST_SUBTASKS = [
+  { id: 'date', label: 'Назначена дата' },
+  { id: 'script', label: 'Подготовлен сценарий' },
+  { id: 'recording', label: 'Сделана запись' },
+  { id: 'editing', label: 'Сделан монтаж' },
+  { id: 'texts', label: 'Сделаны тексты' },
+];
+
+const CRM_CHECKLIST = [
+  { id: 'brief', label: 'Собран бриф', type: 'single' },
+  { id: 'serp', label: 'Сделан анализ поисковой выдачи', type: 'single' },
+  { id: 'podcast1', label: 'Записан подкаст 1', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
+  { id: 'podcast2', label: 'Записан подкаст 2', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
+  { id: 'podcast3', label: 'Записан подкаст 3', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
+  { id: 'site', label: 'Создан сайт', type: 'single' },
+];
+
+function emptyCrmTaskItem() {
+  return { done: false, comment: '' };
+}
+
+function emptyCrmTasks() {
+  const tasks = {};
+  for (const item of CRM_CHECKLIST) {
+    if (item.type === 'group') {
+      tasks[item.id] = {};
+      for (const sub of item.subtasks) tasks[item.id][sub.id] = emptyCrmTaskItem();
+    } else {
+      tasks[item.id] = emptyCrmTaskItem();
+    }
+  }
+  return tasks;
+}
+
+function sanitizeCrmTaskItem(value, fallback) {
+  if (!value || typeof value !== 'object') return fallback;
+  return {
+    done: typeof value.done === 'boolean' ? value.done : fallback.done,
+    comment: typeof value.comment === 'string' ? value.comment : fallback.comment,
+  };
+}
+
+function sanitizeCrmTasks(tasks) {
+  const fallback = emptyCrmTasks();
+  const clean = {};
+  for (const item of CRM_CHECKLIST) {
+    const incoming = tasks && typeof tasks === 'object' ? tasks[item.id] : null;
+    if (item.type === 'group') {
+      clean[item.id] = {};
+      for (const sub of item.subtasks) {
+        clean[item.id][sub.id] = sanitizeCrmTaskItem(incoming && incoming[sub.id], fallback[item.id][sub.id]);
+      }
+    } else {
+      clean[item.id] = sanitizeCrmTaskItem(incoming, fallback[item.id]);
+    }
+  }
+  return clean;
+}
+
+function newCrmClient(email, name) {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID().replace(/-/g, '').slice(0, 10),
+    email,
+    name: name || '',
+    problem: false,
+    createdAt: now,
+    updatedAt: now,
+    tasks: emptyCrmTasks(),
+  };
+}
+
+async function handleCrmApi(request, env, url) {
+  const { pathname } = url;
+  const kv = env.MBA_MYBRAND_KV;
+
+  // ── Clients: list (with checklist structure) ──
+  if (pathname === '/api/crm/clients' && request.method === 'GET') {
+    const list = await kv.list({ prefix: 'crm:client:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    const clients = records.filter(Boolean).sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+    return json({ clients, checklist: CRM_CHECKLIST });
+  }
+
+  // ── Clients: create ──
+  if (pathname === '/api/crm/clients' && request.method === 'POST') {
+    const body = await readJson(request);
+    const email = normalizeEmail(body && body.email);
+    if (!isValidEmail(email)) return json({ error: 'invalid_email' }, 400);
+    const name = (body && String(body.name || '').trim()) || '';
+    const record = newCrmClient(email, name);
+    await kv.put(`crm:client:${record.id}`, JSON.stringify(record));
+    return json({ client: record });
+  }
+
+  // ── Client: update (name/email/problem flag/checklist) ──
+  if (pathname === '/api/crm/client' && request.method === 'PUT') {
+    const body = await readJson(request);
+    const id = body && body.id;
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const key = `crm:client:${id}`;
+    const existing = await kv.get(key, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+
+    const nextEmail = typeof body.email === 'string' && body.email.trim() ? normalizeEmail(body.email) : existing.email;
+    if (!isValidEmail(nextEmail)) return json({ error: 'invalid_email' }, 400);
+
+    const updated = {
+      ...existing,
+      name: typeof body.name === 'string' ? body.name : existing.name,
+      email: nextEmail,
+      problem: typeof body.problem === 'boolean' ? body.problem : existing.problem,
+      tasks: body.tasks && typeof body.tasks === 'object' ? sanitizeCrmTasks(body.tasks) : existing.tasks,
+      updatedAt: new Date().toISOString(),
+    };
+    await kv.put(key, JSON.stringify(updated));
+    return json({ ok: true, client: updated });
+  }
+
+  // ── Client: delete ──
+  if (pathname === '/api/crm/client' && request.method === 'DELETE') {
+    const body = await readJson(request);
+    const id = body && body.id;
+    if (!id) return json({ error: 'missing_id' }, 400);
+    const key = `crm:client:${id}`;
+    const existing = await kv.get(key, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+    await kv.delete(key);
+    return json({ ok: true });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleApi(request, env, url) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
 
   if (pathname.startsWith('/api/serp/')) {
     return handleSerpApi(request, env, url);
+  }
+
+  if (pathname.startsWith('/api/crm/')) {
+    return handleCrmApi(request, env, url);
   }
 
   // ── Leads: notify by email ──
