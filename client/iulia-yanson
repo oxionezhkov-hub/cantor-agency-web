@@ -1010,6 +1010,28 @@
     color: var(--teal-600);
     text-decoration: underline;
   }
+  .policy-modal-body h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.3rem 0 0.5rem;
+  }
+  .policy-modal-body h4:first-child {
+    margin-top: 0;
+  }
+  .policy-modal-body ul {
+    margin: -0.3rem 0 0.9rem;
+    padding-left: 1.2rem;
+  }
+  .policy-modal-body li {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-soft);
+    margin-bottom: 0.35rem;
+  }
+  .policy-modal-dialog--wide {
+    max-width: 720px;
+  }
   .policy-modal-close {
     position: absolute;
     top: 1.1rem;
@@ -1545,8 +1567,23 @@
     transform: none;
   }
 </style>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111548285', 'ym');
+
+    ym(111548285, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<!-- /Yandex.Metrika counter -->
 </head>
 <body>
+<!-- Yandex.Metrika counter (noscript) -->
+<noscript><div><img src="https://mc.yandex.ru/watch/111548285" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter (noscript) -->
 
 <nav>
   <a class="nav-logo" href="#">Юлия Янсон</a>
@@ -1857,11 +1894,11 @@
       </div>
       <div class="consent-row">
         <input type="checkbox" id="consent" required>
-        <label for="consent">Согласие на <a href="#" onclick="return openPolicyModal(event)">обработку персональных данных</a> <span class="required-mark">*</span></label>
+        <label for="consent">Согласие на <a href="#" onclick="return openDataConsentModal(event)">обработку персональных данных</a> <span class="required-mark">*</span></label>
       </div>
       <div class="consent-row">
         <input type="checkbox" id="adConsent">
-        <label for="adConsent">Согласие на рекламную рассылку</label>
+        <label for="adConsent">Согласие на <a href="#" onclick="return openAdConsentModal(event)">рекламную рассылку</a></label>
       </div>
       <p class="required-note"><span class="required-mark">*</span> — обязательные поля</p>
       <div class="form-submit">
@@ -1898,6 +1935,7 @@
       <a href="#" onclick="return openPolicyModal(event)">Политика</a>
       <a href="#" onclick="return openOfferModal(event)">Оферта</a>
       <a href="#" onclick="return openLicenseModal(event)">Лицензия</a>
+      <a href="#" onclick="return openCookieModal(event)">Cookie</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -1911,23 +1949,95 @@
 
 <div class="policy-modal" id="policyModal">
   <div class="policy-modal-overlay" onclick="closePolicyModal(event)"></div>
-  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
+  <div class="policy-modal-dialog policy-modal-dialog--wide" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
     <button type="button" class="policy-modal-close" onclick="closePolicyModal(event)" aria-label="Закрыть">&times;</button>
     <h3 id="policyModalTitle">Политика обработки персональных данных</h3>
-    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
+    <p class="policy-modal-meta">Редакция от 20.07.2026 · ИП Янсон Юлия Николаевна</p>
     <div class="policy-modal-body">
-      <p>Документ находится в разработке и будет опубликован в полном виде после регистрации ИП. Заполняя форму на сайте, Вы соглашаетесь на обработку указанных персональных данных для связи с Вами и организации занятий.</p>
+      <h4>1. Общие положения</h4>
+      <p>1.1. Настоящая Политика обработки персональных данных (далее — «Политика») составлена в соответствии с требованиями Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных» со всеми действующими изменениями и дополнениями.</p>
+      <p>1.2. Политика определяет порядок обработки персональных данных и меры по обеспечению их безопасности при взаимодействии с Оператором через различные каналы связи, включая боты, сайты и поддомены этих сайтов, социальные сети и иные ресурсы.</p>
+      <p>1.3. Оператор обязуется соблюдать права и свободы человека при обработке персональных данных, включая защиту права на неприкосновенность частной жизни, личную и семейную тайну.</p>
+      <p>1.4. Использование любых сервисов Оператора означает ознакомление и согласие с настоящей Политикой. Согласие на обработку персональных данных предоставляется отдельно от иных документов путём совершения активных действий пользователем.</p>
+      <p>1.5. В случае несогласия с условиями Политики пользователь должен прекратить использование сайта, ботов и иных ресурсов Оператора, где происходит сбор персональных данных.</p>
+
+      <h4>2. Основные понятия</h4>
+      <p>Оператор — Индивидуальный предприниматель Янсон Юлия Николаевна, самостоятельно организующая и осуществляющая обработку персональных данных, а также определяющая цели обработки, состав данных и действия, совершаемые с ними.</p>
+      <p>Персональные данные — любая информация, относящаяся к прямо или косвенно определённому или определяемому физическому лицу (субъекту персональных данных).</p>
+      <p>Субъект персональных данных (Пользователь) — физическое лицо (клиент, контрагент, учащийся, законный представитель или посетитель веб-ресурсов), данные которого обрабатываются Оператором.</p>
+      <p>Обработка персональных данных — любое действие (операция) или совокупность действий с персональными данными с использованием средств автоматизации или без них, включая сбор, запись, систематизацию, накопление, хранение, уточнение, использование, передачу, обезличивание, блокирование, удаление и уничтожение персональных данных.</p>
+      <p>Ресурсы Оператора — сайт Оператора и его поддомены, Яндекс.Формы, чат-боты (включая бот в системе МАХ), официальные страницы в социальных сетях и каналы в мессенджерах, используемые Оператором для взаимодействия с Пользователями.</p>
+      <p>Куки-файлы (cookie-файлы) — небольшой фрагмент данных, отправленный веб-сервером и хранимый на устройстве субъекта персональных данных, используемый метрическими программами для анализа взаимодействия Пользователя с ресурсами Оператора.</p>
+
+      <h4>3. Цели и правовые основания обработки</h4>
+      <p>3.1. Цели обработки персональных данных:</p>
+      <ul>
+        <li>заключение и исполнение договоров на оказание услуг, выполнение работ, предоставление материалов;</li>
+        <li>заключение договоров для работы с поставщиками услуг (контрагентами);</li>
+        <li>установление обратной связи с клиентами и контрагентами;</li>
+        <li>подтверждение достоверности и полноты предоставленных данных;</li>
+        <li>предоставление доступа к информации и материалам на ресурсах Оператора;</li>
+        <li>публикация отзывов клиентов на ресурсах Оператора;</li>
+        <li>приём оплаты;</li>
+        <li>рекламная и информационная рассылка;</li>
+        <li>соблюдение налогового и гражданского законодательства;</li>
+        <li>ведение бухгалтерского и кадрового учёта;</li>
+        <li>ведение налоговой отчётности;</li>
+        <li>техническое обеспечение работы ресурсов;</li>
+        <li>записи уроков для контроля качества и публикации контента на ресурсах Оператора;</li>
+        <li>соблюдение законодательства РФ в сфере образования.</li>
+      </ul>
+      <p>3.2. Правовые основания обработки — Конституция РФ, ТК РФ, ГК РФ, федеральные законы (в том числе о бухгалтерском учёте и об образовании) и принятые на их основе нормативные правовые акты; исполнение обязанностей, возложенных на Оператора законодательством РФ (п. 2 ч. 1 ст. 6 152-ФЗ); согласие субъекта персональных данных (п. 1 ч. 1 ст. 6 152-ФЗ); исполнение договора, стороной которого является субъект (п. 5 ч. 1 ст. 6 152-ФЗ); осуществление законных интересов Оператора или третьих лиц (п. 7 ч. 1 ст. 6 152-ФЗ) без нарушения прав субъекта.</p>
+
+      <h4>4. Состав обрабатываемых персональных данных</h4>
+      <p>4.1. Общие персональные данные: фамилия, имя, отчество; дата, месяц и год рождения; пол; номер телефона; адрес электронной почты; адрес места жительства и регистрации; ИНН; СНИЛС; данные документа, удостоверяющего личность; данные свидетельства о рождении; номер расчётного счёта; реквизиты банковской карты; сведения об образовании; сведения, собираемые метрическими программами; контакты в мессенджерах (ID, username); фото-видео изображение лица; данные голоса.</p>
+      <p>4.2. Автоматически собираемые технические данные: IP-адрес устройства; данные cookie; информация о браузере и ОС; время доступа к ресурсам; данные о взаимодействии с ботом; сведения, собираемые Яндекс.Метрикой.</p>
+      <p>4.3. Оператор не обрабатывает персональные данные, относящиеся к специальной категории или биометрическим персональным данным.</p>
+
+      <h4>5. Способы сбора персональных данных</h4>
+      <p>Согласие на обработку получается: постановкой галочки в соответствующем поле; активацией поля «Записаться», «Получить доступ» или «Оплатить»; нажатием кнопки «Согласен» в Боте; подписанием договора с соответствующим пунктом; отдельным документом согласия.</p>
+
+      <h4>6. Передача персональных данных третьим лицам</h4>
+      <p>6.1. Оператор вправе поручить обработку персональных данных другому лицу на основании договора с согласия субъекта, если иное не предусмотрено законом. Ответственность перед субъектом за действия такого лица несёт Оператор.</p>
+      <p>6.2. Данные не передаются третьим лицам, за исключением случаев исполнения договора и требований законодательства: передача в государственные органы; передача иным лицам при заключении и исполнении договора; передача третьим лицам после получения отдельного согласия субъекта — поставщикам технических услуг (конструкторы ботов и платформы, хостинг-провайдеры, сервисы рассылок), платёжным системам, CRM-системам.</p>
+      <p>6.3. Условия передачи: наличие договора поручения обработки персональных данных; обязательство соблюдать конфиденциальность и использовать базы данных на территории РФ; передача строго в необходимом объёме; обязанность предоставлять по запросу подтверждение принятых мер безопасности.</p>
+      <p>6.4. Публикация отзывов: ФИО, фото-видео изображение и данные голоса могут быть размещены на ресурсах Оператора строго на основании отдельного Согласия на обработку персональных данных, разрешённых субъектом для распространения (ст. 10.1 152-ФЗ).</p>
+      <p>6.5. Трансграничная передача не осуществляется. Все процессы обработки данных граждан РФ выполняются с использованием баз данных, находящихся на территории РФ (ч. 5 ст. 18 152-ФЗ).</p>
+
+      <h4>7. Обеспечение безопасности данных</h4>
+      <p>Оператор реализует организационные и технические меры в соответствии с ч. 5 ст. 18 152-ФЗ: базы данных граждан РФ используются строго на территории РФ; ограничен доступ к данным; используются пароли, регулярно обновляемые (не реже раза в 90 дней); передача данных по сети Интернет — по защищённому протоколу HTTPS (TLS 1.2/1.3); применяется регулярно обновляемое лицензионное антивирусное ПО. Для хранения данных используются собственные изолированные электронные носители, защищённые российские облачные хранилища и серверы ООО «Яндекс», а также инфраструктура российских ИТ-платформ (CRM-систем).</p>
+
+      <h4>8. Реагирование на инциденты (утечки персональных данных)</h4>
+      <p>При выявлении инцидента Оператор в течение 24 часов уведомляет Роскомнадзор о произошедшем (первичное уведомление, ч. 3.1 ст. 21.1 152-ФЗ), в течение 72 часов — о результатах внутреннего расследования (вторичное уведомление), устраняет последствия и уведомляет пострадавших субъектов в разумные сроки.</p>
+
+      <h4>9. Права субъектов персональных данных</h4>
+      <p>Пользователь вправе: получать информацию об обработке своих данных; требовать уточнения, блокирования или уничтожения данных; отозвать согласие на обработку и на получение рекламных материалов; ограничить обработку персональных данных. Для реализации прав — обращение на yuliayanson-27@yandex.ru с пометкой «Персональные данные». Срок рассмотрения обращений — не более 30 дней.</p>
+
+      <h4>10. Сроки, условия и способы обработки</h4>
+      <p>Договорные отношения — до исполнения обязательств + 5 лет; рекламные рассылки — до отзыва согласия, но не более 25 лет; публикация отзывов — до отзыва согласия, но не более 25 лет; техническая информация — не более 1 года. Обработка прекращается по достижении целей, отзыву согласия, истечении срока действия согласия или ликвидации деятельности Оператора. Данные уничтожаются безвозвратно в течение 30 дней после наступления оснований для прекращения обработки. Способ обработки — смешанный, с передачей по сети Интернет.</p>
+
+      <h4>11. Согласие на обработку персональных данных</h4>
+      <p>Согласие должно быть свободным, конкретным, информированным, сознательным, однозначным и оформленным отдельно от иных документов. Согласие на распространение данных (для публикации отзывов) оформляется строго отдельно с указанием перечня данных, ресурсов размещения и порядка отзыва. Способы получения согласия: активные действия на ресурсах Оператора (чек-бокс + отправка формы); собственноручная подпись на бумажном носителе; обмен электронными образами подписанного согласия через yuliayanson-27@yandex.ru, мессенджеры или чат-боты; подтверждение с использованием ЭЦП.</p>
+
+      <h4>12. Куки (cookie) и технологии отслеживания</h4>
+      <p>Оператор использует cookie-файлы для обеспечения функционирования сайта, анализа посещаемости, персонализации контента и показа релевантной рекламы. Сбор и обработка технических данных о посетителях осуществляются с помощью Яндекс.Метрики (обработчик — ООО «ЯНДЕКС», ОГРН 1027700229193, ИНН 7736207543, 119021, Россия, г. Москва, ул. Л. Толстого, 16). Хранение и обработка данных Яндекс.Метрики происходят исключительно на серверах ООО «ЯНДЕКС» на территории РФ и не передаются за пределы Российской Федерации. Пользователь вправе в любой момент отключить cookie в настройках браузера, что может ограничить доступ к отдельным функциям сайта. Подробнее — в <a href="#" onclick="closePolicyModal(event); return openCookieModal(event)">Политике использования cookie-файлов</a>.</p>
+
+      <h4>13. Изменения политики</h4>
+      <p>Оператор вправе изменять Политику в одностороннем порядке. Новая редакция вступает в силу с момента её размещения на официальных ресурсах Оператора, если иное не предусмотрено текстом редакции. Существенные изменения требуют получения нового согласия пользователей.</p>
+
+      <p class="policy-modal-meta">Дата вступления в силу: 20.07.2026. Политика действует до замены новой редакцией. Действующая редакция размещена по адресу: <a href="https://obucheniesyulieiyanson2701online.ru/politika" target="_blank" rel="noopener noreferrer">obucheniesyulieiyanson2701online.ru/politika</a></p>
     </div>
     <div class="policy-requisites">
-      <div class="policy-requisites-title">Реквизиты (будут указаны после регистрации ИП)</div>
-      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">КПП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">Р/с</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">Банк</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">БИК</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">Корр. счёт</span><span class="policy-req-val">—</span></div>
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Янсон Юлия Николаевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">781108947769</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326784700247831</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Статус</span><span class="policy-req-val">Индивидуальный предприниматель</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Email</span><span class="policy-req-val">yuliayanson-27@yandex.ru</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Телефон</span><span class="policy-req-val">+7 911 720-45-52</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">MAX</span><span class="policy-req-val"><a href="https://max.ru/join/7RshwauYYJ9eSoOfv1NUbMY4rqr3XG1SViK3ZVYxcd4" target="_blank" rel="noopener noreferrer">перейти</a></span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ВКонтакте</span><span class="policy-req-val"><a href="https://vk.com/club240172678" target="_blank" rel="noopener noreferrer">vk.com/club240172678</a></span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Телеграм</span><span class="policy-req-val"><a href="https://t.me/fizika_o_jizni" target="_blank" rel="noopener noreferrer">t.me/fizika_o_jizni</a></span></div>
     </div>
   </div>
 </div>
@@ -1939,18 +2049,16 @@
     <h3 id="offerModalTitle">Публичная оферта</h3>
     <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
     <div class="policy-modal-body">
-      <p>Документ находится в разработке и будет опубликован в полном виде после регистрации ИП.</p>
+      <p>Текст публичной оферты находится в подготовке и будет опубликован в полном виде на этой странице. До публикации условия оказания услуг согласовываются индивидуально при записи на занятия.</p>
     </div>
     <div class="policy-requisites">
-      <div class="policy-requisites-title">Реквизиты (будут указаны после регистрации ИП)</div>
-      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">КПП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">Р/с</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">Банк</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">БИК</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">Корр. счёт</span><span class="policy-req-val">—</span></div>
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Янсон Юлия Николаевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">781108947769</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326784700247831</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Статус</span><span class="policy-req-val">Индивидуальный предприниматель</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Email</span><span class="policy-req-val">yuliayanson-27@yandex.ru</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Телефон</span><span class="policy-req-val">+7 911 720-45-52</span></div>
     </div>
   </div>
 </div>
@@ -1962,14 +2070,138 @@
     <h3 id="licenseModalTitle">Лицензия</h3>
     <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
     <div class="policy-modal-body">
-      <p>Документ находится в разработке и будет опубликован после регистрации ИП.</p>
+      <p>Индивидуальные образовательные услуги (репетиторство) оказываются без образования юридического лица и без привлечения наёмных педагогов, поэтому лицензирование образовательной деятельности не требуется (п. 2 ч. 1 ст. 91 Федерального закона от 29.12.2012 № 273-ФЗ «Об образовании в Российской Федерации»).</p>
     </div>
     <div class="policy-requisites">
-      <div class="policy-requisites-title">Реквизиты (будут указаны после регистрации ИП)</div>
-      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">—</span></div>
-      <div class="policy-req-row"><span class="policy-req-label">КПП</span><span class="policy-req-val">—</span></div>
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Янсон Юлия Николаевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">781108947769</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326784700247831</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Статус</span><span class="policy-req-val">Индивидуальный предприниматель</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="policy-modal" id="cookieModal">
+  <div class="policy-modal-overlay" onclick="closeCookieModal(event)"></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cookieModalTitle">
+    <button type="button" class="policy-modal-close" onclick="closeCookieModal(event)" aria-label="Закрыть">&times;</button>
+    <h3 id="cookieModalTitle">Политика использования cookie-файлов</h3>
+    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике · обновлено 22.07.2026</p>
+    <div class="policy-modal-body">
+      <p>Настоящая Политика описывает типы Cookies, цели их использования, как Оператор обрабатывает данные, собранные в процессе использования Посетителями сайта <a href="https://obucheniesyulieiyanson2701online.ru" target="_blank" rel="noopener noreferrer">obucheniesyulieiyanson2701online.ru</a>, и способы отказаться от обработки Cookies.</p>
+
+      <h4>1. Термины и определения</h4>
+      <p>Оператор — Индивидуальный предприниматель Янсон Юлия Николаевна, ОГРНИП 326784700247831 / ИНН 781108947769.</p>
+      <p>Посетитель сайта — лицо, посетившее и использующее Сайт. Cookies — небольшой фрагмент данных, который Сайт запрашивает у браузера Посетителя; отражают предпочтения и действия Посетителя, а также сведения об оборудовании, дате и времени сессии, и хранятся локально — Посетитель может удалить их в настройках браузера. IP-адрес — уникальный числовой идентификатор устройства, используемый для маршрутизации данных в сети Интернет.</p>
+
+      <h4>2. Общие положения</h4>
+      <p>2.1. При первом посещении Сайта новым браузером или в режиме приватного просмотра показывается баннер, предупреждающий о сборе Сookies и запрашивающий согласие на их обработку.</p>
+      <p>2.2. Нажимая «Принимаю» или продолжая пользоваться Сайтом (переход по ссылке, нажатие кнопки, просмотр контента), Посетитель даёт согласие на обработку Сookies и подтверждает согласие с положениями Политики.</p>
+      <p>2.3. Посетитель может отказаться от Сookies в настройках браузера — в этом случае Сайт будет использовать только строго необходимые для работы Cookies, что может привести к некорректной работе Сайта.</p>
+      <p>2.4. Политика применяется только к Сайту. Оператор не несёт ответственность за сайты третьих лиц, на которые Посетитель переходит по ссылкам с Сайта.</p>
+
+      <h4>3. Обработка данных на сайте</h4>
+      <p>3.1. Политика устанавливает обязательства Оператора по неразглашению и защите конфиденциальности данных Посетителя.</p>
+      <p>3.2. Оператор защищает данные, автоматически передаваемые при посещении страниц со статистическим скриптом (Яндекс.Метрика): пользовательские клики, просмотры страниц, заполнения полей, показы баннеров и видео; тип устройства и версия ОС; данные аудиторных сегментов; параметры сессии; время посещения.</p>
+
+      <h4>4. Виды Cookies</h4>
+      <p><strong>4.1. Сессионные</strong> — существуют только во временной памяти, пока Посетитель находится на странице; удаляются браузером при закрытии окна; позволяют помнить выбор на предыдущей странице.</p>
+      <p><strong>4.2. Постоянные</strong> — хранятся на устройстве и не удаляются при закрытии браузера; сохраняют пользовательские настройки и помогают вспомнить Посетителя и его действия при возвращении на Сайт.</p>
+      <p><strong>4.3. Статистические</strong> — содержат информацию о том, как Посетитель использует Сайт (какие страницы посещает, по каким ссылкам переходит) для улучшения функций Сайта.</p>
+      <p><strong>4.4. Обязательные</strong> — минимальный набор Cookies, необходимый для корректной работы Сайта.</p>
+
+      <h4>5. Цели сбора данных</h4>
+      <p>5.1. Cookies используются Оператором для улучшения работы Сайта.</p>
+      <p>5.2. Сведения о действиях Посетителей обрабатываются для совершенствования услуг, определения предпочтений и предоставления целевой информации по услугам Оператора.</p>
+
+      <h4>6. Дополнительные условия</h4>
+      <p>6.1. Владелец Сайта вправе вносить изменения в Политику.</p>
+      <p>6.2. Новая Политика вступает в силу с даты размещения на Сайте, если иное не предусмотрено новой редакцией.</p>
+      <p>6.3. Действующая Политика размещена по адресу: <a href="https://obucheniesyulieiyanson2701online.ru/cookie" target="_blank" rel="noopener noreferrer">obucheniesyulieiyanson2701online.ru/cookie</a></p>
+      <p class="policy-modal-meta">Дата последнего обновления: 22.07.2026 г.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Янсон Юлия Николаевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">781108947769</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326784700247831</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="policy-modal" id="dataConsentModal">
+  <div class="policy-modal-overlay" onclick="closeDataConsentModal(event)"></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="dataConsentModalTitle">
+    <button type="button" class="policy-modal-close" onclick="closeDataConsentModal(event)" aria-label="Закрыть">&times;</button>
+    <h3 id="dataConsentModalTitle">Согласие на обработку персональных данных</h3>
+    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
+    <div class="policy-modal-body">
+      <p>В соответствии с требованиями Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных», действуя свободно, своей волей и в своих интересах, а также подтверждая свою дееспособность, я (далее — «Пользователь») даю своё согласие Индивидуальному предпринимателю Янсон Юлии Николаевне, ИНН 781108947769, ОГРНИП 326784700247831 (далее — «Оператор»), на обработку моих персональных данных на следующих условиях.</p>
+
+      <h4>Перечень персональных данных</h4>
+      <p>Фамилия, имя, отчество, номер контактного телефона, адрес электронной почты (email), контакты в мессенджерах (ID пользователя, имя пользователя — Username).</p>
+
+      <h4>Цели обработки</h4>
+      <ul>
+        <li>установление обратной связи, обработка входящих обращений, проведение диагностик и консультаций;</li>
+        <li>заключение, исполнение и прекращение договоров на оказание услуг (выполнение работ);</li>
+        <li>подтверждение достоверности и полноты предоставленных данных.</li>
+      </ul>
+      <p>В ходе обработки с персональными данными совершаются следующие действия, с использованием средств автоматизации или без них: сбор, запись, систематизация, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, передача (доступ техническим подрядчикам Оператора в рамках договоров поручения), блокирование, удаление и уничтожение.</p>
+
+      <h4>Способ подписания согласия</h4>
+      <p>Я соглашаюсь квалифицировать в качестве простой электронной подписи под настоящим Согласием совершение мной любого из следующих действий: проставление отметки в чек-боксе рядом с текстом «Я даю согласие на обработку своих персональных данных»; нажатие на кнопку «Отправить заявку», «Записаться на диагностику», «Перейти к оплате» или «Даю Согласие»; направление Оператору скана или фотографии собственноручно подписанного согласия с моей электронной почты или через мессенджер.</p>
+
+      <h4>Срок действия и отзыв</h4>
+      <p>Согласие вступает в силу с момента предоставления и действует в течение всего срока оказания услуг (действия договора) плюс 5 лет в соответствии с требованиями налогового и архивного законодательства РФ, либо до момента досрочного отзыва Пользователем. Отозвать Согласие можно в любой момент, направив письменное заявление в свободной форме на yuliayanson-27@yandex.ru. С условиями обработки данных, изложенными в <a href="#" onclick="closeDataConsentModal(event); return openPolicyModal(event)">Политике обработки персональных данных</a>, ознакомлен, полностью согласен и принимаю их.</p>
+
+      <p class="policy-modal-meta">Для субъектов персональных данных младше 18 лет согласие предоставляет законный представитель — родитель или опекун.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Янсон Юлия Николаевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">781108947769</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326784700247831</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Статус</span><span class="policy-req-val">Индивидуальный предприниматель</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Email</span><span class="policy-req-val">yuliayanson-27@yandex.ru</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Телефон</span><span class="policy-req-val">+7 911 720-45-52</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="policy-modal" id="adConsentModal">
+  <div class="policy-modal-overlay" onclick="closeAdConsentModal(event)"></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="adConsentModalTitle">
+    <button type="button" class="policy-modal-close" onclick="closeAdConsentModal(event)" aria-label="Закрыть">&times;</button>
+    <h3 id="adConsentModalTitle">Согласие на рекламную рассылку</h3>
+    <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике</p>
+    <div class="policy-modal-body">
+      <p>Во исполнение требований ч. 1 ст. 18 Федерального закона от 13.03.2006 № 38-ФЗ «О рекламе», действуя свободно, своей волей и в своих интересах, а также подтверждая свою правоспособность и дееспособность, я даю своё согласие ИП Янсон Юлии Николаевне, ИНН 781108947769, ОГРНИП 326784700247831 (далее — «Оператор»), на получение рекламной и информационной рассылки.</p>
+
+      <h4>1. Содержание рассылки</h4>
+      <p>Согласие даётся на получение рекламных рассылок, которые могут содержать: информацию об услугах; информацию о скидках и специальных предложениях; информацию о новостях Оператора, об изменениях услуг; приглашения и анонсы мероприятий; подборки с полезными материалами и рекомендациями; иную информацию, связанную с деятельностью Оператора.</p>
+
+      <h4>2. Способы рассылки</h4>
+      <p>Согласие включает право направления рекламной информации: по адресу электронной почты; на номер телефона (включая СМС, звонки, сообщения в мессенджерах); посредством пуш-уведомлений в браузере и мобильных приложениях; в виде рекламных баннеров, всплывающих окон и иных визуальных уведомлений на сайте или в приложении; с использованием чат-ботов; в мессенджерах и социальных сетях; через внешние рекламные системы и платформы (в том числе Яндекс и др.).</p>
+
+      <h4>3. Электронная подпись</h4>
+      <p>Я соглашаюсь квалифицировать в качестве простой электронной подписи под согласием выполнение мной одного или нескольких из следующих действий: проставление отметки в чек-боксе рядом с текстом «Я даю согласие на получение рекламной рассылки»; нажатие на элемент интерфейса «Даю согласие», «Согласен/Согласна» или аналогичный; совершение иных действий, однозначно подтверждающих волеизъявление (отправка заявки, регистрация, переход по гиперссылке, продолжение использования сайта при наличии баннера об обработке данных). Указанные действия квалифицируются в соответствии с ч. 1 ст. 9 152-ФЗ как подпись, удостоверяющая факт предоставления согласия.</p>
+
+      <h4>4. Срок действия и отзыв</h4>
+      <p>Согласие действует не более 25 лет или до момента отзыва. Отозвать согласие можно: направив письменное или электронное уведомление на yuliayanson-27@yandex.ru с темой письма «Отзыв согласия на получение рекламы»; нажав на ссылку для отписки в рекламном сообщении (если применимо); через интерфейс личного кабинета, если такая функция реализована. Оператор прекращает направление рекламной информации в течение 3 рабочих дней с момента получения уведомления.</p>
+      <p>Рекламные материалы могут быть направлены Оператором самостоятельно или через третьих лиц (обработчиков), действующих по поручению Оператора. Персональные данные обрабатываются в соответствии с <a href="#" onclick="closeAdConsentModal(event); return openPolicyModal(event)">Политикой обработки персональных данных</a> Оператора.</p>
+
+      <p class="policy-modal-meta">Для субъектов персональных данных младше 18 лет согласие предоставляет законный представитель — родитель или опекун.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Янсон Юлия Николаевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">781108947769</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326784700247831</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Статус</span><span class="policy-req-val">Индивидуальный предприниматель</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Email</span><span class="policy-req-val">yuliayanson-27@yandex.ru</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">Телефон</span><span class="policy-req-val">+7 911 720-45-52</span></div>
     </div>
   </div>
 </div>
@@ -2169,6 +2401,42 @@
   function closeLicenseModal(e) {
     if (e) e.preventDefault();
     document.getElementById('licenseModal').classList.remove('open');
+    document.body.style.overflow = '';
+    return false;
+  }
+  function openCookieModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('cookieModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeCookieModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('cookieModal').classList.remove('open');
+    document.body.style.overflow = '';
+    return false;
+  }
+  function openDataConsentModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('dataConsentModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeDataConsentModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('dataConsentModal').classList.remove('open');
+    document.body.style.overflow = '';
+    return false;
+  }
+  function openAdConsentModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('adConsentModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeAdConsentModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('adConsentModal').classList.remove('open');
     document.body.style.overflow = '';
     return false;
   }
