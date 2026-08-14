@@ -228,7 +228,19 @@ input,textarea,select{font-family:inherit}
 .crm-row-head{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer}
 .crm-row-head:hover{background:var(--warm-bg)}
 .crm-problem-badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:800;color:white;background:var(--red);border-radius:100px;padding:2px 8px;vertical-align:middle}
-.crm-brief-badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:800;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:100px;padding:2px 8px;vertical-align:middle}
+.crm-filter-checkbox{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;cursor:pointer}
+.crm-filter-checkbox input{width:15px;height:15px;accent-color:var(--red);cursor:pointer}
+#crmFilterProgress{border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:13px;outline:none;background:white;color:var(--text)}
+#crmFilterProgress:focus{border-color:var(--red)}
+.crm-problem-comment-view{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--red-dark);background:var(--accent-bg);border-radius:var(--r-sm);padding:6px 9px;margin-top:6px;line-height:1.4;word-break:break-word}
+.crm-problem-comment-view a{color:var(--red-dark);flex-shrink:0}
+.crm-problem-comment-edit{margin-top:10px}
+.crm-problem-comment-edit label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.crm-problem-comment-edit input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:12.5px;outline:none;background:white}
+.crm-problem-comment-edit input:focus{border-color:var(--red)}
+.crm-name-add{display:flex;gap:6px;align-items:center;margin-top:6px}
+.crm-name-add input{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 9px;font-size:12.5px;outline:none;background:white;width:160px}
+.crm-name-add input:focus{border-color:var(--red)}
 .crm-chevron{transition:transform 0.18s;flex-shrink:0}
 .crm-row.open .crm-chevron{transform:rotate(180deg)}
 .crm-row-body{border-top:1.5px solid var(--border);padding:16px;background:var(--bg)}
@@ -262,6 +274,9 @@ input,textarea,select{font-family:inherit}
 .crm-dash-bar-row .lbl{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
 .crm-dash-bar{height:7px;background:var(--border);border-radius:100px;overflow:hidden}
 .crm-dash-bar-fill{height:100%;background:var(--red);border-radius:100px}
+.crm-dash-bar-sub{margin-left:16px;margin-bottom:8px}
+.crm-dash-bar-sub .lbl{font-size:11px;font-weight:500;color:var(--muted)}
+.crm-dash-bar-sub .crm-dash-bar{height:5px}
 
 /* ── RESPONSIVE ── */
 @media(max-width:840px){
@@ -382,6 +397,13 @@ input,textarea,select{font-family:inherit}
       </div>
       <div class="search-row">
         <input type="text" id="crmSearch" placeholder="Поиск по имени или почте…" oninput="renderCrmList()">
+        <select id="crmFilterProgress" onchange="renderCrmList()">
+          <option value="all">Все по прогрессу</option>
+          <option value="none">Ничего не выполнено</option>
+          <option value="partial">Частично выполнено</option>
+          <option value="complete">Всё выполнено</option>
+        </select>
+        <label class="crm-filter-checkbox"><input type="checkbox" id="crmFilterProblem" onchange="renderCrmList()"> Только проблемные</label>
       </div>
       <div class="client-list" id="crmList"></div>
     </div>
@@ -1325,6 +1347,11 @@ function crmGroupDoneCount(tasks, groupId, subtasks) {
 }
 function isLikelyUrl(v) { return /^https?:\/\/\S+$/i.test(String(v || '').trim()); }
 function getCrmClient(id) { return crmState.clients.find((c) => c.id === id); }
+function crmCommentLinkIcon(comment) {
+  return isLikelyUrl(comment)
+    ? `<a href="${escapeHtml(comment)}" target="_blank" rel="noopener" title="Открыть ссылку"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>`
+    : '';
+}
 
 function toggleCrmAddForm() { document.getElementById('crmAddForm').classList.toggle('hidden'); }
 
@@ -1350,14 +1377,49 @@ async function createCrmClient() {
 
 function renderCrmList() {
   const q = (document.getElementById('crmSearch').value || '').trim().toLowerCase();
-  const list = crmState.clients.filter((c) => c.email.toLowerCase().includes(q) || (c.name || '').toLowerCase().includes(q));
+  const progressFilter = document.getElementById('crmFilterProgress').value;
+  const onlyProblem = document.getElementById('crmFilterProblem').checked;
+  const total = crmTotalTasks();
+
+  const list = crmState.clients.filter((c) => {
+    if (q && !c.email.toLowerCase().includes(q) && !(c.name || '').toLowerCase().includes(q)) return false;
+    if (onlyProblem && !c.problem) return false;
+    if (progressFilter !== 'all') {
+      const done = crmDoneCount(c.tasks);
+      if (progressFilter === 'none' && done !== 0) return false;
+      if (progressFilter === 'complete' && done !== total) return false;
+      if (progressFilter === 'partial' && (done === 0 || done === total)) return false;
+    }
+    return true;
+  });
+
   const container = document.getElementById('crmList');
   if (!list.length) {
-    container.innerHTML = '<p class="empty-note">Пока нет клиентов в CRM.</p>';
+    container.innerHTML = crmState.clients.length
+      ? '<p class="empty-note">Ничего не найдено по заданным фильтрам.</p>'
+      : '<p class="empty-note">Пока нет клиентов в CRM.</p>';
     return;
   }
-  const total = crmTotalTasks();
   container.innerHTML = list.map((c) => crmRowHtml(c, total)).join('');
+}
+
+function crmNameAddHtml(c) {
+  return `
+    <div class="crm-name-add" onclick="event.stopPropagation()">
+      <input type="text" id="crmNameInput-${c.id}" placeholder="Добавить имя…">
+      <button class="btn-ghost-sm" onclick="saveCrmName('${c.id}')">Сохранить</button>
+    </div>
+  `;
+}
+
+function crmProblemCommentViewHtml(c) {
+  if (!c.problem || !c.problemComment) return '';
+  return `
+    <div class="crm-problem-comment-view" onclick="event.stopPropagation()">
+      <span>${escapeHtml(c.problemComment)}</span>
+      ${crmCommentLinkIcon(c.problemComment)}
+    </div>
+  `;
 }
 
 function crmRowHtml(c, total) {
@@ -1372,13 +1434,25 @@ function crmRowHtml(c, total) {
       <div class="crm-row-head" onclick="toggleCrmRow('${c.id}')">
         <div class="client-avatar">${escapeHtml(initial)}</div>
         <div class="client-info">
-          <div class="client-email">${title}${c.problem ? '<span class="crm-problem-badge">Проблемный</span>' : ''}${c.fromBrief ? '<span class="crm-brief-badge">Из брифа</span>' : ''}</div>
+          <div class="client-email">${title}${c.problem ? '<span class="crm-problem-badge">Проблемный</span>' : ''}</div>
           <div class="client-meta">Обновлено ${fmtDate(c.updatedAt)}</div>
+          ${c.name ? '' : crmNameAddHtml(c)}
+          ${crmProblemCommentViewHtml(c)}
         </div>
         <div class="client-progress">${done}/${total}</div>
         <button class="btn-icon crm-chevron" title="Развернуть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
       </div>
       ${open ? `<div class="crm-row-body">${crmChecklistHtml(c)}</div>` : ''}
+    </div>
+  `;
+}
+
+function crmProblemCommentEditHtml(c) {
+  if (!c.problem) return '';
+  return `
+    <div class="crm-problem-comment-edit">
+      <label>Комментарий к пометке «проблемный»</label>
+      <input type="text" value="${escapeHtml(c.problemComment || '')}" placeholder="Причина, ссылка на переписку…" onblur="updateCrmProblemComment('${c.id}', this.value)">
     </div>
   `;
 }
@@ -1392,6 +1466,7 @@ function crmChecklistHtml(c) {
       <button class="btn-ghost-sm" onclick="toggleCrmProblem('${c.id}')">${c.problem ? 'Снять пометку «проблемный»' : 'Пометить проблемным'}</button>
       <button class="btn-ghost-sm" style="color:var(--red);border-color:rgba(232,57,29,0.3)" onclick="deleteCrmClient('${c.id}')">Удалить клиента</button>
     </div>
+    ${crmProblemCommentEditHtml(c)}
   `;
 }
 
@@ -1417,9 +1492,7 @@ function crmGroupHtml(c, item) {
 function crmTaskHtml(clientId, groupId, subId, label, taskObj) {
   const t = taskObj || { done: false, comment: '' };
   const comment = t.comment || '';
-  const link = isLikelyUrl(comment)
-    ? `<a href="${escapeHtml(comment)}" target="_blank" rel="noopener" title="Открыть ссылку"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>`
-    : '';
+  const link = crmCommentLinkIcon(comment);
   const subArg = subId ? `'${subId}'` : 'null';
   return `
     <div class="crm-task">
@@ -1489,6 +1562,34 @@ async function toggleCrmProblem(id) {
   }
 }
 
+async function updateCrmProblemComment(id, value) {
+  const client = getCrmClient(id);
+  if (!client) return;
+  client.problemComment = value;
+  renderCrmList();
+  try {
+    await api('/api/crm/client', { method: 'PUT', body: JSON.stringify({ id, problemComment: value }) });
+  } catch (e) {
+    showToast('Ошибка сохранения');
+  }
+}
+
+async function saveCrmName(id) {
+  const input = document.getElementById('crmNameInput-' + id);
+  const name = input.value.trim();
+  if (!name) { showToast('Введите имя'); return; }
+  const client = getCrmClient(id);
+  if (!client) return;
+  client.name = name;
+  renderCrmList();
+  try {
+    await api('/api/crm/client', { method: 'PUT', body: JSON.stringify({ id, name }) });
+    showToast('Имя сохранено');
+  } catch (e) {
+    showToast('Ошибка сохранения');
+  }
+}
+
 async function deleteCrmClient(id) {
   if (!confirm('Удалить клиента из CRM без возможности восстановления?')) return;
   try {
@@ -1502,38 +1603,42 @@ async function deleteCrmClient(id) {
   }
 }
 
+function crmDashBarRow(label, done, total, sub) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return `
+    <div class="crm-dash-bar-row${sub ? ' crm-dash-bar-sub' : ''}">
+      <div class="lbl"><span>${escapeHtml(label)}</span><span>${done}/${total}</span></div>
+      <div class="crm-dash-bar"><div class="crm-dash-bar-fill" style="width:${pct}%"></div></div>
+    </div>
+  `;
+}
+
 function openCrmDashboard() {
-  const total = crmTotalTasks();
   const clients = crmState.clients;
   const n = clients.length;
   const problemCount = clients.filter((c) => c.problem).length;
-  const avgProgress = n ? Math.round(clients.reduce((s, c) => s + (crmDoneCount(c.tasks) / total) * 100, 0) / n) : 0;
 
   const stageRows = CRM_CHECKLIST.map((item) => {
-    let done = 0;
-    let stageTotal;
     if (item.type === 'group') {
-      stageTotal = n * item.subtasks.length;
-      clients.forEach((c) => { done += crmGroupDoneCount(c.tasks, item.id, item.subtasks); });
-    } else {
-      stageTotal = n;
-      clients.forEach((c) => { if (c.tasks[item.id] && c.tasks[item.id].done) done++; });
+      let groupDone = 0;
+      clients.forEach((c) => { groupDone += crmGroupDoneCount(c.tasks, item.id, item.subtasks); });
+      const groupRow = crmDashBarRow(item.label, groupDone, n * item.subtasks.length, false);
+      const subRows = item.subtasks.map((s) => {
+        let subDone = 0;
+        clients.forEach((c) => { if (c.tasks[item.id] && c.tasks[item.id][s.id] && c.tasks[item.id][s.id].done) subDone++; });
+        return crmDashBarRow(s.label, subDone, n, true);
+      }).join('');
+      return groupRow + subRows;
     }
-    const pct = stageTotal ? Math.round((done / stageTotal) * 100) : 0;
-    return `
-      <div class="crm-dash-bar-row">
-        <div class="lbl"><span>${escapeHtml(item.label)}</span><span>${done}/${stageTotal}</span></div>
-        <div class="crm-dash-bar"><div class="crm-dash-bar-fill" style="width:${pct}%"></div></div>
-      </div>
-    `;
+    let done = 0;
+    clients.forEach((c) => { if (c.tasks[item.id] && c.tasks[item.id].done) done++; });
+    return crmDashBarRow(item.label, done, n, false);
   }).join('');
 
   document.getElementById('crmDashBody').innerHTML = `
     <div class="crm-dash-stats">
       <div class="crm-dash-stat"><div class="num">${n}</div><div class="lbl">Клиентов</div></div>
       <div class="crm-dash-stat"><div class="num">${problemCount}</div><div class="lbl">Проблемных</div></div>
-      <div class="crm-dash-stat"><div class="num">${avgProgress}%</div><div class="lbl">Средний прогресс</div></div>
-      <div class="crm-dash-stat"><div class="num">${total}</div><div class="lbl">Задач в чеклисте</div></div>
     </div>
     ${stageRows}
   `;

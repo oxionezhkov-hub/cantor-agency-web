@@ -42,7 +42,7 @@
  * brief tool, under its own key prefix:
  *
  * KV keys (binding "MBA_MYBRAND_KV", CRM prefix):
- *   crm:client:<id>  -> { id, email, name, problem, createdAt, updatedAt, fromBrief,
+ *   crm:client:<id>  -> { id, email, name, problem, problemComment, createdAt, updatedAt, fromBrief,
  *                          tasks: { brief:{done,comment}, serp:{done,comment},
  *                                   podcast1:{date,script,recording,editing,texts: {done,comment}},
  *                                   podcast2:{...}, podcast3:{...}, site:{done,comment} } }
@@ -694,6 +694,7 @@ function newCrmClient(email, name) {
     email,
     name: name || '',
     problem: false,
+    problemComment: '',
     createdAt: now,
     updatedAt: now,
     tasks: emptyCrmTasks(),
@@ -779,6 +780,7 @@ async function handleCrmApi(request, env, url) {
       name: typeof body.name === 'string' ? body.name : existing.name,
       email: nextEmail,
       problem: typeof body.problem === 'boolean' ? body.problem : existing.problem,
+      problemComment: typeof body.problemComment === 'string' ? body.problemComment : (existing.problemComment || ''),
       tasks: body.tasks && typeof body.tasks === 'object' ? sanitizeCrmTasks(body.tasks) : existing.tasks,
       updatedAt: new Date().toISOString(),
     };
