@@ -228,10 +228,12 @@ input,textarea,select{font-family:inherit}
 .crm-row-head{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer}
 .crm-row-head:hover{background:var(--warm-bg)}
 .crm-problem-badge{display:inline-block;margin-left:8px;font-size:10px;font-weight:800;color:white;background:var(--red);border-radius:100px;padding:2px 8px;vertical-align:middle}
-.crm-filter-checkbox{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;cursor:pointer}
-.crm-filter-checkbox input{width:15px;height:15px;accent-color:var(--red);cursor:pointer}
-#crmFilterProgress{border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:13px;outline:none;background:white;color:var(--text)}
-#crmFilterProgress:focus{border-color:var(--red)}
+.crm-filter-icons{display:flex;gap:8px;flex-shrink:0}
+.crm-icon-btn{width:40px;height:40px;border-radius:var(--r-md);border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.18s;flex-shrink:0}
+.crm-icon-btn svg{width:18px;height:18px}
+.crm-icon-btn:hover{border-color:var(--red);color:var(--red)}
+.crm-icon-btn.crm-icon-problem{color:var(--red);border-color:rgba(232,57,29,0.35)}
+.crm-icon-btn.crm-icon-problem.active{background:var(--red);color:white;border-color:var(--red)}
 .crm-problem-comment-view{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--red-dark);background:var(--accent-bg);border-radius:var(--r-sm);padding:6px 9px;margin-top:6px;line-height:1.4;word-break:break-word}
 .crm-problem-comment-view a{color:var(--red-dark);flex-shrink:0}
 .crm-problem-comment-edit{margin-top:10px}
@@ -397,13 +399,17 @@ input,textarea,select{font-family:inherit}
       </div>
       <div class="search-row">
         <input type="text" id="crmSearch" placeholder="Поиск по имени или почте…" oninput="renderCrmList()">
-        <select id="crmFilterProgress" onchange="renderCrmList()">
-          <option value="all">Все по прогрессу</option>
-          <option value="none">Ничего не выполнено</option>
-          <option value="partial">Частично выполнено</option>
-          <option value="complete">Всё выполнено</option>
-        </select>
-        <label class="crm-filter-checkbox"><input type="checkbox" id="crmFilterProblem" onchange="renderCrmList()"> Только проблемные</label>
+        <div class="crm-filter-icons">
+          <button type="button" class="crm-icon-btn crm-icon-problem" id="crmFilterProblemBtn" onclick="toggleCrmProblemFilter()" title="Только проблемные">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          </button>
+          <button type="button" class="crm-icon-btn" onclick="toggleCrmExpandAll()" title="Развернуть/свернуть все">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+          </button>
+          <button type="button" class="crm-icon-btn" onclick="exportCrmCsv()" title="Выгрузить CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
       </div>
       <div class="client-list" id="crmList"></div>
     </div>
@@ -1322,7 +1328,7 @@ const CRM_CHECKLIST = [
   { id: 'site', label: 'Создан сайт', type: 'single' },
 ];
 
-const crmState = { clients: [], openRows: {}, openGroups: {} };
+const crmState = { clients: [], openRows: {}, openGroups: {}, filterProblem: false };
 
 function crmTotalTasks() {
   let n = 0;
@@ -1377,19 +1383,11 @@ async function createCrmClient() {
 
 function renderCrmList() {
   const q = (document.getElementById('crmSearch').value || '').trim().toLowerCase();
-  const progressFilter = document.getElementById('crmFilterProgress').value;
-  const onlyProblem = document.getElementById('crmFilterProblem').checked;
   const total = crmTotalTasks();
 
   const list = crmState.clients.filter((c) => {
     if (q && !c.email.toLowerCase().includes(q) && !(c.name || '').toLowerCase().includes(q)) return false;
-    if (onlyProblem && !c.problem) return false;
-    if (progressFilter !== 'all') {
-      const done = crmDoneCount(c.tasks);
-      if (progressFilter === 'none' && done !== 0) return false;
-      if (progressFilter === 'complete' && done !== total) return false;
-      if (progressFilter === 'partial' && (done === 0 || done === total)) return false;
-    }
+    if (crmState.filterProblem && !c.problem) return false;
     return true;
   });
 
@@ -1401,6 +1399,66 @@ function renderCrmList() {
     return;
   }
   container.innerHTML = list.map((c) => crmRowHtml(c, total)).join('');
+}
+
+function toggleCrmProblemFilter() {
+  crmState.filterProblem = !crmState.filterProblem;
+  document.getElementById('crmFilterProblemBtn').classList.toggle('active', crmState.filterProblem);
+  renderCrmList();
+}
+
+function toggleCrmExpandAll() {
+  const anyClosed = crmState.clients.some((c) => !crmState.openRows[c.id]);
+  crmState.clients.forEach((c) => { crmState.openRows[c.id] = anyClosed; });
+  renderCrmList();
+}
+
+function csvEscape(v) {
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function crmCsvHeaders() {
+  const headers = ['Email', 'Имя', 'Проблемный', 'Комментарий (проблема)'];
+  CRM_CHECKLIST.forEach((item) => {
+    if (item.type === 'group') {
+      item.subtasks.forEach((s) => headers.push(`${item.label}: ${s.label}`, `${item.label}: ${s.label} — комментарий`));
+    } else {
+      headers.push(item.label, `${item.label} — комментарий`);
+    }
+  });
+  return headers;
+}
+
+function crmCsvRow(c) {
+  const row = [c.email, c.name || '', c.problem ? 'Да' : 'Нет', c.problemComment || ''];
+  CRM_CHECKLIST.forEach((item) => {
+    if (item.type === 'group') {
+      item.subtasks.forEach((s) => {
+        const t = (c.tasks[item.id] && c.tasks[item.id][s.id]) || { done: false, comment: '' };
+        row.push(t.done ? 'Да' : 'Нет', t.comment || '');
+      });
+    } else {
+      const t = c.tasks[item.id] || { done: false, comment: '' };
+      row.push(t.done ? 'Да' : 'Нет', t.comment || '');
+    }
+  });
+  return row;
+}
+
+function exportCrmCsv() {
+  if (!crmState.clients.length) { showToast('Нет клиентов для выгрузки'); return; }
+  const lines = [crmCsvHeaders(), ...crmState.clients.map(crmCsvRow)].map((r) => r.map(csvEscape).join(','));
+  const csv = '\uFEFF' + lines.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'crm-clients.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function crmNameAddHtml(c) {
