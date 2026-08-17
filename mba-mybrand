@@ -254,6 +254,14 @@ input,textarea,select{font-family:inherit}
 .crm-comment input:focus{border-color:var(--red)}
 .crm-comment a{flex-shrink:0;color:var(--red);display:flex;align-items:center;padding:4px}
 .crm-comment a svg{width:14px;height:14px}
+.crm-file-badge{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 11px;background:var(--accent-bg);border:1.5px solid rgba(232,57,29,0.22);border-radius:var(--r-sm);text-decoration:none;transition:border-color 0.15s,box-shadow 0.15s}
+.crm-file-badge:hover{border-color:var(--red);box-shadow:var(--shadow-sm)}
+.crm-file-badge-icon{flex-shrink:0;display:flex;color:var(--red)}
+.crm-file-badge-icon svg{width:18px;height:18px}
+.crm-file-badge-name{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crm-file-badge-ext{flex-shrink:0;font-size:10px;font-weight:800;letter-spacing:0.02em;color:var(--red);background:white;border:1px solid rgba(232,57,29,0.25);border-radius:4px;padding:2px 6px;text-transform:uppercase}
+.crm-file-badge-download{flex-shrink:0;display:flex;color:var(--red)}
+.crm-file-badge-download svg{width:16px;height:16px}
 .crm-group{background:white;border:1.5px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
 .crm-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;cursor:pointer}
 .crm-group-head:hover{background:var(--warm-bg)}
@@ -1353,10 +1361,41 @@ function crmGroupDoneCount(tasks, groupId, subtasks) {
 }
 function isLikelyUrl(v) { return /^https?:\/\/\S+$/i.test(String(v || '').trim()); }
 function getCrmClient(id) { return crmState.clients.find((c) => c.id === id); }
+
+// A comment that's a direct link to a document (script, recording notes, etc.) gets a
+// richer "file badge" instead of the plain link icon — filename + download affordance.
+const CRM_FILE_EXTENSIONS = ['docx', 'doc', 'pdf', 'pptx', 'ppt', 'xlsx', 'xls'];
+function crmFileUrlExt(v) {
+  if (!isLikelyUrl(v)) return '';
+  try {
+    const ext = new URL(v.trim()).pathname.split('.').pop().toLowerCase();
+    return CRM_FILE_EXTENSIONS.includes(ext) ? ext : '';
+  } catch (e) { return ''; }
+}
+function crmFileNameFromUrl(v) {
+  try {
+    const path = decodeURIComponent(new URL(v.trim()).pathname);
+    return path.split('/').pop();
+  } catch (e) { return v; }
+}
 function crmCommentLinkIcon(comment) {
+  if (crmFileUrlExt(comment)) return ''; // replaced by the file badge below
   return isLikelyUrl(comment)
     ? `<a href="${escapeHtml(comment)}" target="_blank" rel="noopener" title="Открыть ссылку"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></a>`
     : '';
+}
+function crmFileBadgeHtml(comment) {
+  const ext = crmFileUrlExt(comment);
+  if (!ext) return '';
+  const name = crmFileNameFromUrl(comment);
+  return `
+    <a class="crm-file-badge" href="${escapeHtml(comment.trim())}" target="_blank" rel="noopener" title="Скачать файл" download>
+      <span class="crm-file-badge-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+      <span class="crm-file-badge-name">${escapeHtml(name)}</span>
+      <span class="crm-file-badge-ext">${escapeHtml(ext)}</span>
+      <span class="crm-file-badge-download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>
+    </a>
+  `;
 }
 
 function toggleCrmAddForm() { document.getElementById('crmAddForm').classList.toggle('hidden'); }
@@ -1551,6 +1590,7 @@ function crmTaskHtml(clientId, groupId, subId, label, taskObj) {
   const t = taskObj || { done: false, comment: '' };
   const comment = t.comment || '';
   const link = crmCommentLinkIcon(comment);
+  const fileBadge = crmFileBadgeHtml(comment);
   const subArg = subId ? `'${subId}'` : 'null';
   return `
     <div class="crm-task">
@@ -1559,9 +1599,10 @@ function crmTaskHtml(clientId, groupId, subId, label, taskObj) {
         <span>${escapeHtml(label)}</span>
       </label>
       <div class="crm-comment">
-        <input type="text" value="${escapeHtml(comment)}" placeholder="Комментарий (ссылка — кликабельно)" onblur="updateCrmComment('${clientId}','${groupId}',${subArg},this.value)">
+        <input type="text" value="${escapeHtml(comment)}" placeholder="Комментарий или ссылка на файл — кликабельно" onblur="updateCrmComment('${clientId}','${groupId}',${subArg},this.value)">
         ${link}
       </div>
+      ${fileBadge}
     </div>
   `;
 }
