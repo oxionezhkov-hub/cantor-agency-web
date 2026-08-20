@@ -343,6 +343,13 @@ function parseEmailList(value) {
     .filter(Boolean);
 }
 
+function parseChatIds(value) {
+  return String(value || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
 // Low-level send via Resend (cantor.agency is verified as a sending domain there).
 // Used because cantor.agency's DNS is on reg.ru, not Cloudflare, so Cloudflare Email
 // Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
@@ -371,6 +378,35 @@ async function sendEmailNotification(env, subject, cleanFields) {
   const text = Object.entries(cleanFields).map(([label, value]) => `${label}: ${value}`).join('\n');
 
   return sendViaResend(env, { to, subject, html, text });
+}
+
+// Low-level send via the Telegram Bot API. env.TELEGRAM_BOT_TOKEN must be set as a
+// Cloudflare Worker secret (never in wrangler.jsonc — see the note there for why).
+async function sendViaTelegram(env, chatId, text) {
+  const token = env.TELEGRAM_BOT_TOKEN;
+  if (!token || !chatId) return null;
+
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+    signal: AbortSignal.timeout(5000),
+  });
+  const data = await res.json().catch(() => null);
+  return { status: res.status, ok: res.ok, data };
+}
+
+async function sendTelegramNotification(env, subject, cleanFields) {
+  const chatIds = parseChatIds(env.TELEGRAM_CHAT_ID);
+  if (!env.TELEGRAM_BOT_TOKEN || chatIds.length === 0) return null;
+
+  const lines = [`<b>${escapeHtml(subject)}</b>`, ...Object.entries(cleanFields).map(
+    ([label, value]) => `<b>${escapeHtml(label)}:</b> ${escapeHtml(value)}`
+  )];
+  const text = lines.join('\n');
+
+  const results = await Promise.all(chatIds.map((chatId) => sendViaTelegram(env, chatId, text)));
+  return { ok: results.some((r) => r && r.ok), results };
 }
 
 // Resend's free-tier caps (see resend.com/pricing — adjust here if the plan changes).
@@ -437,12 +473,21 @@ async function handleLeadNotify(request, env) {
     cleanFields[label] = clean;
   }
 
+  const subject = `Новая заявка — ${source}`;
+
+  let telegramResult = null;
   try {
-    const emailResult = await sendEmailNotification(env, `Новая заявка — ${source}`, cleanFields);
-    await trackEmailUsage(env, emailResult && emailResult.ok);
-    return json({ ok: true, email: emailResult });
+    telegramResult = await sendTelegramNotification(env, subject, cleanFields);
   } catch (err) {
-    return json({ error: 'email_failed', message: String(err && err.message) }, 502);
+    console.error('lead_telegram_failed', String(err && err.message));
+  }
+
+  try {
+    const emailResult = await sendEmailNotification(env, subject, cleanFields);
+    await trackEmailUsage(env, emailResult && emailResult.ok);
+    return json({ ok: true, email: emailResult, telegram: telegramResult });
+  } catch (err) {
+    return json({ error: 'email_failed', message: String(err && err.message), telegram: telegramResult }, 502);
   }
 }
 

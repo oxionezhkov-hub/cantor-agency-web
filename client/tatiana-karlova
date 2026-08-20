@@ -1255,6 +1255,8 @@
 
   document.addEventListener('click', closeAllSelects);
 
+  const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+
   function submitForm() {
     const fields = ['student_name','student_last','grade','subject','parent_name','phone'];
     let valid = true;
@@ -1274,11 +1276,43 @@
       alert('Пожалуйста, заполните все обязательные поля.');
       return;
     }
-    const toast = document.getElementById('toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 4000);
-    document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
-    document.querySelectorAll('#form select').forEach(resetCustomSelect);
+
+    const submitBtn = document.querySelector('#form .form-submit button');
+    const payload = {
+      source: 'tatiana-karlova',
+      fields: {
+        'Имя ученика': document.getElementById('student_name').value.trim(),
+        'Фамилия ученика': document.getElementById('student_last').value.trim(),
+        'Класс': document.getElementById('grade').selectedOptions[0]?.textContent || document.getElementById('grade').value,
+        'Предмет': document.getElementById('subject').selectedOptions[0]?.textContent || document.getElementById('subject').value,
+        'Цель и описание ситуации': document.getElementById('goal').value.trim(),
+        'Имя и отчество родителя': document.getElementById('parent_name').value.trim(),
+        'Телефон': document.getElementById('phone').value.trim(),
+        'Email': document.getElementById('email').value.trim(),
+      },
+    };
+
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch(API_BASE + '/api/leads/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('request_failed');
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+        document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
+        document.querySelectorAll('#form select').forEach(resetCustomSelect);
+      })
+      .catch(() => {
+        alert('Не удалось отправить заявку. Попробуйте ещё раз, пожалуйста, или напишите в WhatsApp.');
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      });
   }
 
   const toggleBtn = document.getElementById('reviewsToggleBtn');
