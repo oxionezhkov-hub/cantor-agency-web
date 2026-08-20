@@ -65,11 +65,15 @@ input,textarea,select{font-family:inherit}
 
 .error{margin-top:14px;padding:12px 14px;background:#FFF0EE;border:1px solid var(--red-light);color:var(--red-dark);border-radius:var(--r-md);font-size:13px}
 
-table{width:100%;border-collapse:collapse;font-size:13px}
+.table-scroll{overflow-x:auto;max-width:100%}
+table{width:auto;min-width:100%;border-collapse:collapse;font-size:13px;table-layout:auto}
 th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top}
-th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.02em}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-td.links code{font-size:12px}
+td.url-cell{max-width:280px;word-break:break-all}
+td.link-cell{max-width:220px;word-break:break-all}
+td.link-cell code{font-size:12px;white-space:normal}
+td.clicks-cell{text-align:right;white-space:nowrap}
 .tag{display:inline-block;background:var(--accent-bg);color:var(--red-dark);font-size:11px;padding:2px 7px;border-radius:5px;margin:2px 4px 2px 0}
 .muted{color:var(--muted)}
 .empty{padding:30px;text-align:center;color:var(--muted);font-size:14px}
@@ -77,7 +81,12 @@ td.links code{font-size:12px}
 .link-row{cursor:pointer}
 .link-row:hover{background:var(--warm-bg)}
 .stats-panel{margin-top:10px;padding-top:14px;border-top:1px dashed var(--border)}
-.stats-panel table{margin-top:8px}
+.stats-panel table{width:100%}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.toolbar .search-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-md);font-size:14px;background:var(--warm-bg);transition:border-color .15s}
+.toolbar .search-input:focus{outline:none;border-color:var(--red)}
+@media(max-width:640px){.toolbar{flex-wrap:wrap}.toolbar .search-input{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -126,6 +135,10 @@ td.links code{font-size:12px}
 
   <div class="card">
     <h2>Созданные ссылки</h2>
+    <div class="toolbar">
+      <input id="linksSearch" type="text" class="search-input" placeholder="Поиск по ссылкам…">
+      <button class="btn btn-ghost btn-sm" id="exportBtn">Выгрузить в Excel</button>
+    </div>
     <div id="linksTableWrap"><div class="empty">Загрузка…</div></div>
   </div>
 </div>
@@ -217,46 +230,107 @@ function utmTags(utm) {
   return Object.entries(utm || {}).map(([k, v]) => `<span class="tag">${esc(k)}=${esc(v)}</span>`).join('');
 }
 
+let allLinks = [];
+let visibleLinks = [];
+
+function linkMatchesQuery(link, query) {
+  const haystack = [
+    link.targetUrl,
+    link.ourLink,
+    link.shortUrl,
+    link.slug,
+    ...Object.values(link.utm || {}),
+  ].filter(Boolean).join(' ').toLowerCase();
+  return haystack.includes(query);
+}
+
+function renderLinksTable(links) {
+  const wrap = $('linksTableWrap');
+  if (!links.length) {
+    wrap.innerHTML = '<div class="empty">' + (allLinks.length ? 'Ничего не найдено.' : 'Пока нет созданных ссылок.') + '</div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Создана</th>
+          <th>Куда ведёт</th>
+          <th>Клики</th>
+          <th>UTM</th>
+          <th>Наша ссылка</th>
+          <th>Короткая ссылка</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${links.map((l) => `
+          <tr class="link-row" data-slug="${esc(l.slug)}">
+            <td>${new Date(l.createdAt).toLocaleString('ru-RU')}</td>
+            <td class="muted url-cell">${esc(l.targetUrl)}</td>
+            <td class="clicks-cell">${l.clicks || 0}</td>
+            <td>${utmTags(l.utm)}</td>
+            <td class="link-cell"><code>${esc(l.ourLink)}</code></td>
+            <td class="link-cell">${l.shortUrl ? `<code>${esc(l.shortUrl)}</code>` : '<span class="muted">—</span>'}</td>
+          </tr>
+          <tr class="stats-row hidden" data-slug-panel="${esc(l.slug)}">
+            <td colspan="6"><div class="stats-panel">Загрузка статистики…</div></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+  wrap.querySelectorAll('.link-row').forEach((row) => {
+    row.addEventListener('click', () => toggleStats(row.dataset.slug));
+  });
+}
+
+function applySearch() {
+  const query = $('linksSearch').value.trim().toLowerCase();
+  visibleLinks = query ? allLinks.filter((l) => linkMatchesQuery(l, query)) : allLinks;
+  renderLinksTable(visibleLinks);
+}
+
+$('linksSearch').addEventListener('input', applySearch);
+
+function exportLinksToExcel() {
+  if (!visibleLinks.length) return;
+  const headers = ['Создана', 'Куда ведёт', 'Клики', 'UTM', 'Наша ссылка', 'Короткая ссылка'];
+  const rows = visibleLinks.map((l) => [
+    new Date(l.createdAt).toLocaleString('ru-RU'),
+    l.targetUrl,
+    l.clicks || 0,
+    Object.entries(l.utm || {}).map(([k, v]) => `${k}=${v}`).join('; '),
+    l.ourLink,
+    l.shortUrl || '',
+  ]);
+  const tableHtml = `
+    <table border="1">
+      <thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map((r) => `<tr>${r.map((v) => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>
+  `;
+  const html = `<html><head><meta charset="UTF-8"></head><body>${tableHtml}</body></html>`;
+  const blob = new Blob(['﻿' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `utm-links-${new Date().toISOString().slice(0, 10)}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+$('exportBtn').addEventListener('click', exportLinksToExcel);
+
 async function loadLinks() {
   const wrap = $('linksTableWrap');
   try {
     const data = await api('/api/utm/list');
-    if (!data.links.length) {
-      wrap.innerHTML = '<div class="empty">Пока нет созданных ссылок.</div>';
-      return;
-    }
-    wrap.innerHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th>Создана</th>
-            <th>Куда ведёт</th>
-            <th>UTM</th>
-            <th>Ссылки</th>
-            <th>Клики</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.links.map((l) => `
-            <tr class="link-row" data-slug="${esc(l.slug)}">
-              <td>${new Date(l.createdAt).toLocaleString('ru-RU')}</td>
-              <td class="muted">${esc(l.targetUrl)}</td>
-              <td>${utmTags(l.utm)}</td>
-              <td class="links">
-                <code>${esc(l.ourLink)}</code>${l.shortUrl ? `<br><code>${esc(l.shortUrl)}</code>` : ''}
-              </td>
-              <td>${l.clicks || 0}</td>
-            </tr>
-            <tr class="stats-row hidden" data-slug-panel="${esc(l.slug)}">
-              <td colspan="5"><div class="stats-panel">Загрузка статистики…</div></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-    wrap.querySelectorAll('.link-row').forEach((row) => {
-      row.addEventListener('click', () => toggleStats(row.dataset.slug));
-    });
+    allLinks = data.links;
+    applySearch();
   } catch (err) {
     wrap.innerHTML = '<div class="empty">Ошибка загрузки: ' + esc(err.message) + '</div>';
   }
