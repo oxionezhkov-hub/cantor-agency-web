@@ -434,8 +434,15 @@ document.getElementById('gateForm').addEventListener('submit', (e) => {
 async function showDashboard() {
   history.replaceState(null, '', location.pathname);
   showView('dashboard');
-  const { analyses } = await api('/api/serp/analyses');
   const list = document.getElementById('analysesList');
+  list.innerHTML = '<div class="empty-note">Загрузка…</div>';
+  let analyses;
+  try {
+    ({ analyses } = await api('/api/serp/analyses'));
+  } catch (e) {
+    list.innerHTML = '<div class="empty-note">Не удалось загрузить список анализов. Проверьте соединение и <a href="#" onclick="showDashboard();return false;">попробуйте снова</a>.</div>';
+    return;
+  }
   if (!analyses.length) {
     list.innerHTML = '<div class="empty-note">Пока нет ни одного анализа — создайте первый выше.</div>';
     return;
@@ -485,7 +492,14 @@ async function createAnalysis() {
 
 /* ════════════ EDITOR ════════════ */
 async function openAnalysis(id) {
-  const data = await api('/api/serp/analysis?id=' + encodeURIComponent(id));
+  let data;
+  try {
+    data = await api('/api/serp/analysis?id=' + encodeURIComponent(id));
+  } catch (e) {
+    alert('Не удалось загрузить анализ. Проверьте соединение и попробуйте снова.');
+    showDashboard();
+    return;
+  }
   current = normalizeAnalysis(data.analysis);
   template = data.template;
   history.replaceState(null, '', location.pathname + '?edit=' + id);
@@ -843,7 +857,15 @@ async function initShareView(shareId) {
 
 /* ════════════ INIT ════════════ */
 async function boot() {
-  template = await api('/api/serp/template');
+  showView('dashboard');
+  const list = document.getElementById('analysesList');
+  list.innerHTML = '<div class="empty-note">Загрузка…</div>';
+  try {
+    template = await api('/api/serp/template');
+  } catch (e) {
+    list.innerHTML = '<div class="empty-note">Не удалось загрузить данные. Проверьте соединение и <a href="#" onclick="boot();return false;">попробуйте снова</a>.</div>';
+    return;
+  }
   const params = new URLSearchParams(location.search);
   const editId = params.get('edit');
   if (editId) {
