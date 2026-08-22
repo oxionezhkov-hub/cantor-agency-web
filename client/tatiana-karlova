@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Татьяна Владимировна Карлова — репетитор по математике</title>
+<link rel="icon" type="image/svg+xml" href="images/tatiana-karlova/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Work+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,7 +27,11 @@
     --max: 1180px;
 }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) var(--paper);
+  }
   body {
     font-family: var(--font-body);
     background: var(--paper);
@@ -34,7 +39,12 @@
     font-size: 16px;
     line-height: 1.6;
     overflow-x: hidden;
+    font-variant-numeric: lining-nums proportional-nums;
   }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--paper); }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pencil); }
   img { max-width: 100%; display: block; }
   a { color: inherit; }
   ::selection { background: var(--red); color: var(--paper); }
@@ -88,6 +98,12 @@
   .section-head { max-width: 620px; margin-bottom: 3.25rem; }
   .section-head h2 { font-size: clamp(1.7rem, 2.6vw, 2.35rem); margin-bottom: 0.85rem; }
   .section-head p { color: var(--pencil); font-weight: 300; font-size: 1.02rem; max-width: 540px; }
+
+  /* tighter gaps between visually related sections */
+  #about { padding-bottom: 3rem; }
+  #pains { padding-top: 2.5rem; }
+  #reviews { padding-bottom: 3rem; }
+  #form { padding-top: 2.5rem; }
 
   /* NAV */
   nav {
@@ -172,17 +188,24 @@
   .hero {
     display: grid;
     grid-template-columns: 1.05fr 0.95fr;
-    gap: 4.5rem;
+    grid-template-areas:
+      "title photo"
+      "desc photo"
+      "actions photo";
+    column-gap: 4.5rem;
+    row-gap: 0;
     align-items: center;
     padding: 148px var(--page-padding) 6rem;
     max-width: var(--max);
     margin: 0 auto;
   }
   .hero h1 {
+    grid-area: title;
     font-size: clamp(2.3rem, 3.6vw, 3.35rem);
     margin-bottom: 1.4rem;
   }
   .hero-desc {
+    grid-area: desc;
     color: var(--pencil);
     font-size: 1.08rem;
     font-weight: 300;
@@ -190,15 +213,10 @@
     margin-bottom: 2rem;
     line-height: 1.75;
   }
-  .hero-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; }
-  .hero-contact-line {
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    color: var(--pencil);
-  }
-  .hero-contact-line a { color: var(--ink); }
+  .hero-actions { grid-area: actions; display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; }
 
   .hero-photo {
+    grid-area: photo;
     position: relative;
   }
   .hero-photo-frame {
@@ -256,10 +274,23 @@
   .about-grid {
     display: grid;
     grid-template-columns: 0.85fr 1.15fr;
-    gap: 4.5rem;
+    grid-template-areas:
+      "photo h2"
+      "photo p1"
+      "photo p2"
+      "photo note"
+      "photo p3"
+      "photo cta";
+    column-gap: 4.5rem;
+    row-gap: 0;
     align-items: start;
   }
+  .about-grid h2 { grid-area: h2; }
+  .about-p1 { grid-area: p1; }
+  .about-p2 { grid-area: p2; }
+  .about-p3 { grid-area: p3; }
   .about-photo-frame {
+    grid-area: photo;
     border: 1.5px solid var(--ink);
     aspect-ratio: 4 / 5;
     overflow: hidden;
@@ -272,15 +303,16 @@
     object-fit: cover;
     object-position: center 18%;
   }
-  .about-text p {
+  .about-p1, .about-p2, .about-p3 {
     color: var(--pencil);
     font-weight: 300;
     margin-bottom: 1.3rem;
     line-height: 1.85;
     font-size: 1.04rem;
   }
-  .about-text p strong { color: var(--ink); font-weight: 500; }
+  .about-p1 strong, .about-p2 strong, .about-p3 strong { color: var(--ink); font-weight: 500; }
   .margin-note {
+    grid-area: note;
     border-left: 2px solid var(--red);
     padding-left: 1.4rem;
     margin: 2rem 0;
@@ -293,7 +325,7 @@
     line-height: 1.55 !important;
     margin: 0 !important;
   }
-  .about-cta { margin-top: 1.75rem; }
+  .about-cta { grid-area: cta; margin-top: 1.75rem; }
 
   /* PAIN POINTS */
   .pain-grid {
@@ -372,8 +404,10 @@
     border: 1px solid var(--line);
   }
   .service-card {
+    position: relative;
     background: var(--paper);
     padding: 2.25rem 2rem;
+    overflow: hidden;
   }
   .service-card .eyebrow { margin-bottom: 1.25rem; }
   .service-card h3 {
@@ -386,13 +420,19 @@
     font-weight: 300;
     line-height: 1.6;
   }
-  .services-note {
-    margin-top: 2.5rem;
-    color: var(--pencil);
-    font-size: 0.95rem;
-    font-weight: 300;
+  .service-card-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(35,32,28,0.92);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
   }
-  .services-note .text-link { color: var(--ink); }
+  .service-card:hover .service-card-overlay,
+  .service-card:focus-within .service-card-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
 
   /* CONTACT */
   .contact-section { background: var(--ink); color: var(--paper); }
@@ -449,9 +489,40 @@
   .reviews-photos-grid.expanded ~ .reviews-fade-overlay { opacity: 0; }
   .review-col { display: flex; flex-direction: column; gap: 1px; }
   .review-photo-item { background: var(--paper); line-height: 0; }
-  .review-photo-item img { width: 100%; height: auto; }
+  .review-photo-item img { width: 100%; height: auto; cursor: zoom-in; }
   .reviews-cta { text-align: center; margin-top: 2.5rem; }
   .reviews-cta.hidden { display: none; }
+
+  /* REVIEW LIGHTBOX */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    padding: 4vh 4vw;
+    background: rgba(35,32,28,0.9);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.25s ease;
+  }
+  .lightbox.open { opacity: 1; visibility: visible; }
+  .lightbox img {
+    max-width: 90vw; max-height: 88vh;
+    width: auto; height: auto;
+    border: 1.5px solid var(--paper);
+    background: var(--paper);
+  }
+  .lightbox-close {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--paper);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--paper);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lightbox-close:hover { background: var(--paper); color: var(--ink); }
 
   /* FORM */
   .form-section {
@@ -625,20 +696,10 @@
     border-bottom: 1px solid var(--line);
   }
   .mobile-menu .btn { margin-top: 1.5rem; }
-  .mobile-menu-contact {
-    margin-top: 1.25rem;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--pencil);
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .mobile-menu-contact a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); }
 
   /* TABLET */
   @media (max-width: 1100px) {
-    .hero { gap: 2.5rem; }
+    .hero { column-gap: 2.5rem; }
     .scoreboard-row { grid-template-columns: repeat(2, 1fr); row-gap: 2rem; }
     .scoreboard-item:nth-child(3) { border-left: none; padding-left: 0; }
     .pain-grid { grid-template-columns: 1fr; }
@@ -649,22 +710,39 @@
   @media (max-width: 768px) {
     section { padding: 4.5rem var(--page-padding); }
     .section-head { margin-bottom: 2.5rem; }
+    #about { padding-bottom: 2rem; }
+    #pains { padding-top: 1.5rem; }
+    #reviews { padding-bottom: 2rem; }
+    #form { padding-top: 1.5rem; }
 
     .nav-links > *:not(:last-child):not(.nav-burger-item) { display: none; }
     .nav-links { gap: 0.75rem; }
     .nav-burger { display: flex; }
     .nav-cta-desktop { display: none; }
+    .nav-logo {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 62vw;
+    }
 
     body.has-sticky-cta { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 
     .hero {
       grid-template-columns: 1fr;
+      grid-template-areas:
+        "title"
+        "desc"
+        "photo"
+        "actions";
       padding: 96px var(--page-padding) 3rem;
-      gap: 2rem;
+      gap: 1.5rem;
     }
-    .hero-photo { order: -1; max-width: 320px; margin: 0 auto 0.5rem; }
+    .hero-photo { max-width: 320px; margin: 0 auto; }
+    .hero-photo-caption { display: none; }
     .hero h1 { font-size: clamp(2rem, 8vw, 2.6rem); }
-    .hero-desc { font-size: 0.98rem; max-width: 100%; }
+    .hero-desc { font-size: 0.98rem; max-width: 100%; margin-bottom: 0; }
     .hero-actions { align-items: stretch; }
     .hero-actions .btn { width: 100%; }
 
@@ -673,12 +751,32 @@
     .scoreboard-item:nth-child(odd) { border-left: none; padding-left: 0; }
     .scoreboard-num { font-size: 2rem; }
 
-    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .about-grid {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "h2"
+        "p1"
+        "photo"
+        "p2"
+        "note"
+        "p3"
+        "cta";
+      gap: 1.5rem;
+    }
     .about-photo-frame { position: static; max-width: 320px; margin: 0 auto; }
 
     .pain-card { padding: 1.75rem 1.5rem; }
 
     .services-grid { grid-template-columns: 1fr; }
+    .service-card-overlay {
+      position: static;
+      background: none;
+      justify-content: flex-start;
+      opacity: 1;
+      pointer-events: auto;
+      margin-top: 1.5rem;
+      padding: 0;
+    }
 
     .steps-grid { grid-template-columns: 1fr; gap: 2rem; }
 
@@ -713,7 +811,7 @@
 <body>
 
 <nav>
-  <a class="nav-logo" href="#">Т. В. Карлова</a>
+  <a class="nav-logo" href="#">Татьяна Владимировна Карлова</a>
   <ul class="nav-links">
     <li><a href="#about">О репетиторе</a></li>
     <li><a href="#pains">Как я помогаю</a></li>
@@ -731,23 +829,13 @@
   <a href="#services" onclick="closeMenu()">Занятия</a>
   <a href="#reviews" onclick="closeMenu()">Отзывы</a>
   <a href="#form" class="btn" onclick="closeMenu()">Записаться на диагностику</a>
-  <div class="mobile-menu-contact">
-    <span>+7 962 979-07-73 · <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer">WhatsApp</a> · <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer">Telegram</a></span>
-  </div>
 </div>
 
 <!-- HERO -->
 <section class="hero" id="home">
-  <div class="hero-content">
-    <span class="eyebrow">Т. В. Карлова — репетитор по математике · Россия, онлайн</span>
-    <h1>Математика, которая наконец <em class="mark">становится понятной</em></h1>
-    <p class="hero-desc">13 лет в школе и 10 лет частной практики. Ученики перестают бояться контрольных и начинают решать задачи сами — от «подтянуть тройку» до максимального балла на ОГЭ.</p>
-    <div class="hero-actions">
-      <a href="#form" class="btn">Записаться на диагностику</a>
-      <span class="hero-contact-line">Или сразу написать: <a href="tel:+79629790773" class="text-link">+7 962 979-07-73</a> · <a href="https://wa.me/79629790773" class="text-link" target="_blank" rel="noopener noreferrer">WhatsApp</a> · <a href="https://t.me/k_tany1" class="text-link" target="_blank" rel="noopener noreferrer">Telegram</a></span>
-    </div>
-  </div>
-  <div class="hero-photo">
+  <h1 class="fade-in">Математика, которая наконец <em class="mark">становится понятной</em></h1>
+  <p class="hero-desc fade-in">13 лет в школе и 10 лет частной практики. Ученики перестают бояться контрольных и начинают решать задачи сами — от «подтянуть тройку» до максимального балла на ОГЭ.</p>
+  <div class="hero-photo fade-in">
     <div class="hero-photo-frame">
       <img id="hero-tutor-photo" src="images/tatiana-karlova/_A3A7224_resized.jpg" alt="Татьяна Владимировна Карлова — репетитор по математике">
     </div>
@@ -755,6 +843,9 @@
       <span>Татьяна Владимировна Карлова</span>
       <span>2026</span>
     </div>
+  </div>
+  <div class="hero-actions fade-in">
+    <a href="#form" class="btn">Записаться на диагностику</a>
   </div>
 </section>
 
@@ -788,18 +879,15 @@
     <div class="about-photo-frame">
       <img id="about-tutor-photo" src="images/tatiana-karlova/Фото.jpg" alt="Татьяна Владимировна Карлова на занятии">
     </div>
-    <div class="about-text">
-      <span class="eyebrow">Обо мне</span>
-      <h2>Никакой магии — только <em>система</em></h2>
-      <p>Меня зовут Татьяна Владимировна Карлова. Больше десяти лет я преподаю математику в школе и ещё столько же веду частные занятия — с пятыми классами, которые только знакомятся с дробями, и с девятыми, которым через полгода сдавать ОГЭ.</p>
-      <p>За эти годы я перестала верить в <strong>«неспособных к математике»</strong> детей. Есть только те, кому предмет пока не объяснили на понятном именно им языке — без спешки и без стыда за ошибки.</p>
-      <div class="margin-note">
-        <p>«Я помогаю каждому найти свой путь к пониманию предмета — и не отпускаю тему, пока она не станет по-настоящему ясной».</p>
-      </div>
-      <p>Работаю и с теми, кто боится контрольных и хочет просто закрыть год без троек, и с теми, кто метит на высокий балл и олимпиады. Разница — в темпе и сложности задач, а не в отношении: на занятиях всегда разбираем, а не заучиваем.</p>
-      <div class="about-cta">
-        <a href="#form" class="btn btn-outline">Записаться на диагностику</a>
-      </div>
+    <h2>Никакой магии — только <em>система</em></h2>
+    <p class="about-p1">Меня зовут Татьяна Владимировна Карлова. Больше десяти лет я преподаю математику в школе и ещё столько же веду частные занятия — с пятыми классами, которые только знакомятся с дробями, и с девятыми, которым через полгода сдавать ОГЭ.</p>
+    <p class="about-p2">За эти годы я перестала верить в <strong>«неспособных к математике»</strong> детей. Есть только те, кому предмет пока не объяснили на понятном именно им языке — без спешки и без стыда за ошибки.</p>
+    <div class="margin-note">
+      <p>«Я помогаю каждому найти свой путь к пониманию предмета — и не отпускаю тему, пока она не станет по-настоящему ясной».</p>
+    </div>
+    <p class="about-p3">Работаю и с теми, кто боится контрольных и хочет просто закрыть год без троек, и с теми, кто метит на высокий балл и олимпиады. Разница — в темпе и сложности задач, а не в отношении: на занятиях всегда разбираем, а не заучиваем.</p>
+    <div class="about-cta">
+      <a href="#form" class="btn btn-outline">Записаться на диагностику</a>
     </div>
   </div>
 </section>
@@ -808,7 +896,6 @@
 <section id="pains">
   <div class="section-inner">
     <div class="section-head fade-in">
-      <span class="eyebrow">Знакомая ситуация?</span>
       <h2>У каждого — <em>своя причина</em> обратиться</h2>
       <p>За десять лет я видела десятки похожих историй. Возможно, среди них — и ваша.</p>
     </div>
@@ -816,44 +903,44 @@
       <div class="pain-card">
         <h3>Ребёнок боится математики</h3>
         <div class="pain-line">
-          <span class="pain-tag">Боль</span>
+          <span class="pain-tag">Что вас тревожит</span>
           <p>Контрольные вызывают панику, оценки падают, а вместе с ними — вера в себя.</p>
         </div>
         <div class="pain-line">
-          <span class="pain-tag">Ответ</span>
+          <span class="pain-tag">Чем я вам помогу</span>
           <p>Разбираем ошибки без критики и спешки. Начинаем с маленьких понятных побед — страх уходит постепенно.</p>
         </div>
       </div>
       <div class="pain-card">
         <h3>Скоро ОГЭ, а времени почти нет</h3>
         <div class="pain-line">
-          <span class="pain-tag">Боль</span>
+          <span class="pain-tag">Что вас тревожит</span>
           <p>Экзамен через несколько месяцев, а пробелы копились годами.</p>
         </div>
         <div class="pain-line">
-          <span class="pain-tag">Ответ</span>
+          <span class="pain-tag">Чем я вам помогу</span>
           <p>Начинаем с бесплатной диагностики: находим ровно те темы, где «дыры», и строим сжатый план подготовки.</p>
         </div>
       </div>
       <div class="pain-card">
         <h3>Хорошие оценки, но хочется большего</h3>
         <div class="pain-line">
-          <span class="pain-tag">Боль</span>
+          <span class="pain-tag">Что вас тревожит</span>
           <p>Ребёнок способный, но на уроках скучает — программа для него слишком простая.</p>
         </div>
         <div class="pain-line">
-          <span class="pain-tag">Ответ</span>
+          <span class="pain-tag">Чем я вам помогу</span>
           <p>Даю более сложные и олимпиадные задачи, развиваю математическое мышление, а не прохождение программы.</p>
         </div>
       </div>
       <div class="pain-card">
         <h3>Родитель сам не может помочь</h3>
         <div class="pain-line">
-          <span class="pain-tag">Боль</span>
+          <span class="pain-tag">Что вас тревожит</span>
           <p>Программа изменилась, объяснить по-новому сложно, а домашка заканчивается конфликтом.</p>
         </div>
         <div class="pain-line">
-          <span class="pain-tag">Ответ</span>
+          <span class="pain-tag">Чем я вам помогу</span>
           <p>Беру объяснение материала на себя — вы остаётесь в роли поддержки, а не «второго учителя».</p>
         </div>
       </div>
@@ -865,7 +952,6 @@
 <section id="lessons" class="lessons-section">
   <div class="section-inner">
     <div class="section-head fade-in">
-      <span class="eyebrow">Как проходят занятия</span>
       <h2>Что происходит на <em>уроке</em></h2>
       <p>Короткая видео-визитка — как строится урок и как я объясняю материал</p>
     </div>
@@ -877,7 +963,7 @@
           allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
           referrerpolicy="strict-origin-when-cross-origin"
           style="position:absolute;top:0;left:0;width:100%;height:100%;"
-          title="Видео о репетиторе Татьяне Карловой">
+          title="Видео о репетиторе Татьяне Владимировне Карловой">
         </iframe>
       </div>
     </div>
@@ -910,7 +996,6 @@
 <section id="services">
   <div class="section-inner">
     <div class="section-head fade-in">
-      <span class="eyebrow">Форматы работы</span>
       <h2>Выберите удобный вариант</h2>
       <p>Стоимость и расписание обсудим индивидуально на бесплатной диагностике</p>
     </div>
@@ -919,19 +1004,21 @@
         <span class="eyebrow">Математика · 5–9 класс</span>
         <h3>Индивидуальные занятия</h3>
         <p>Персональная программа под вашего ребёнка. ОГЭ, ВПР, контрольные — или просто желание разобраться в предмете.</p>
+        <div class="service-card-overlay"><a href="#form" class="btn btn-sm btn-on-dark">Хочу записаться</a></div>
       </div>
       <div class="service-card">
         <span class="eyebrow accent">Бесплатно</span>
         <h3>Диагностика знаний</h3>
         <p>20 минут: определение реального уровня, поиск скрытых пробелов, пошаговый план действий.</p>
+        <div class="service-card-overlay"><a href="#form" class="btn btn-sm btn-on-dark">Хочу записаться</a></div>
       </div>
       <div class="service-card">
         <span class="eyebrow">Алгебра, геометрия · 5–9 класс</span>
         <h3>Мини-группы</h3>
         <p>2–3 человека — живое общение, совместное решение задач, более доступный формат.</p>
+        <div class="service-card-overlay"><a href="#form" class="btn btn-sm btn-on-dark">Хочу записаться</a></div>
       </div>
     </div>
-    <p class="services-note fade-in">Есть вопрос до диагностики? <a href="https://wa.me/79629790773" class="text-link" target="_blank" rel="noopener noreferrer">Напишите в WhatsApp</a> — отвечаю в течение дня.</p>
   </div>
 </section>
 
@@ -939,7 +1026,6 @@
 <section id="contact" class="contact-section">
   <div class="section-inner contact-grid">
     <div class="section-head fade-in" style="margin-bottom: 0;">
-      <span class="eyebrow on-dark">Связаться</span>
       <h2>Отвечаю быстро — обычно в течение дня</h2>
     </div>
     <div class="contact-list fade-in">
@@ -963,7 +1049,6 @@
 <section id="reviews">
   <div class="section-inner">
     <div class="section-head fade-in">
-      <span class="eyebrow">Отзывы</span>
       <h2>Что говорят <em>родители и ученики</em></h2>
     </div>
 
@@ -1010,7 +1095,6 @@
 <section id="form">
   <div class="section-inner">
     <div class="section-head fade-in" style="text-align: center; max-width: none; margin-left: auto; margin-right: auto;">
-      <span class="eyebrow" style="text-align:center;">Запись</span>
       <h2>Запишитесь на <em>бесплатную диагностику</em></h2>
       <p style="margin: 0 auto;">Заполните форму — свяжусь с вами в течение дня для подтверждения</p>
     </div>
@@ -1075,7 +1159,7 @@
 </section>
 
 <footer>
-  <div class="footer-inner">
+  <div class="footer-inner fade-in">
     <div>
       <div class="footer-logo">Татьяна Владимировна Карлова</div>
       <div class="footer-sub">Репетитор по математике, алгебре и геометрии</div>
@@ -1102,6 +1186,11 @@
 <div class="toast" id="toast">
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
   Заявка отправлена! Свяжемся с вами сегодня.
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">&times;</button>
+  <img id="lightboxImg" src="" alt="Отзыв ученика">
 </div>
 
 <script>
@@ -1327,6 +1416,36 @@
       toggleBtn.textContent = expanded ? 'Свернуть' : 'Смотреть все отзывы';
     });
   }
+
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  function openLightbox(src, alt) {
+    if (!lightbox || !lightboxImg) return;
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || 'Отзыв ученика';
+    lightbox.classList.add('open');
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove('open');
+  }
+
+  document.querySelectorAll('.review-photo-item img').forEach(img => {
+    img.addEventListener('click', () => openLightbox(img.src, img.alt));
+  });
+
+  if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+  if (lightbox) {
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
+  });
 </script>
 </body>
 </html>
