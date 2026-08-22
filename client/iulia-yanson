@@ -1080,9 +1080,20 @@
   .footer-inner {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: 2rem 1.5rem;
+  }
+  .footer-col {
+    min-width: 160px;
+  }
+  .footer-col-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 0.7rem;
   }
   .footer-logo {
     font-family: var(--font-display);
@@ -1095,15 +1106,28 @@
     margin-top: 0.25rem;
     color: rgba(255,255,255,0.45);
   }
+  .footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .footer-info div {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+  }
   .footer-links {
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
   }
+  .footer-links--col {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
   .footer-links a {
     color: rgba(255,255,255,0.6);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     transition: color 0.2s;
   }
   .footer-links a:hover { color: var(--mint); }
@@ -1154,6 +1178,80 @@
     box-shadow: 0 4px 20px rgba(29,158,117,0.28);
   }
   .sticky-cta-btn:hover { background: var(--teal-600); }
+
+  /* COOKIE BANNER */
+  .cookie-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 150;
+    padding: 1.1rem var(--page-padding) calc(1.1rem + env(safe-area-inset-bottom, 0px));
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 32px rgba(15,110,86,0.14);
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+  }
+  .cookie-banner.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cookie-banner-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .cookie-banner-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--text-soft);
+    max-width: 640px;
+  }
+  .cookie-banner-text a {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+  .cookie-banner-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .cookie-btn {
+    padding: 0.65rem 1.3rem;
+    border-radius: 40px;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .cookie-btn-accept {
+    background: var(--teal-400);
+    color: white;
+    border-color: var(--teal-400);
+  }
+  .cookie-btn-accept:hover { background: var(--teal-600); border-color: var(--teal-600); }
+  .cookie-btn-decline {
+    background: transparent;
+    color: var(--text-soft);
+    border-color: var(--border);
+  }
+  .cookie-btn-decline:hover { border-color: var(--teal-400); color: var(--teal-600); }
+  @media (max-width: 768px) {
+    .cookie-banner-inner { flex-direction: column; align-items: stretch; }
+    .cookie-banner-actions { width: 100%; }
+    .cookie-btn { flex: 1; text-align: center; }
+  }
 
   /* BURGER MENU */
   .nav-burger {
@@ -1567,23 +1665,24 @@
     transform: none;
   }
 </style>
-<!-- Yandex.Metrika counter -->
+<!-- Yandex.Metrika counter: loaded only after cookie consent is given, see initCookieBanner() -->
 <script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111548285', 'ym');
+    function loadYandexMetrika() {
+        if (window.__ymLoaded) return;
+        window.__ymLoaded = true;
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=111548285', 'ym');
 
-    ym(111548285, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+        ym(111548285, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    }
 </script>
 <!-- /Yandex.Metrika counter -->
 </head>
 <body>
-<!-- Yandex.Metrika counter (noscript) -->
-<noscript><div><img src="https://mc.yandex.ru/watch/111548285" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter (noscript) -->
 
 <nav>
   <a class="nav-logo" href="#">Юлия Янсон</a>
@@ -1925,23 +2024,54 @@
 
 <footer>
   <div class="footer-inner">
-    <div>
+    <div class="footer-col">
       <div class="footer-logo">Юлия Янсон</div>
       <div class="footer-sub">Репетитор по физике и математике</div>
     </div>
-    <div class="footer-links">
-      <a href="https://max.ru/join/7RshwauYYJ9eSoOfv1NUbMY4rqr3XG1SViK3ZVYxcd4" target="_blank" rel="noopener noreferrer">Max</a>
-      <a href="mailto:yuliayanson-27@yandex.ru">yuliayanson-27@yandex.ru</a>
-      <a href="#" onclick="return openPolicyModal(event)">Политика</a>
-      <a href="#" onclick="return openOfferModal(event)">Оферта</a>
-      <a href="#" onclick="return openLicenseModal(event)">Лицензия</a>
-      <a href="#" onclick="return openCookieModal(event)">Cookie</a>
+    <div class="footer-col">
+      <div class="footer-col-title">Информация об организации</div>
+      <div class="footer-info">
+        <div>ИП Янсон Юлия Николаевна</div>
+        <div>ИНН 781108947769</div>
+        <div>ОГРНИП 326784700247831</div>
+      </div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Контакты</div>
+      <div class="footer-links footer-links--col">
+        <a href="tel:+79117204552">+7 911 720-45-52</a>
+        <a href="mailto:yuliayanson-27@yandex.ru">yuliayanson-27@yandex.ru</a>
+        <a href="https://max.ru/join/7RshwauYYJ9eSoOfv1NUbMY4rqr3XG1SViK3ZVYxcd4" target="_blank" rel="noopener noreferrer">Max</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Документы</div>
+      <div class="footer-links footer-links--col">
+        <a href="#" onclick="return openPolicyModal(event)">Политика обработки ПД</a>
+        <a href="#" onclick="return openDataConsentModal(event)">Согласие на обработку ПД</a>
+        <a href="#" onclick="return openAdConsentModal(event)">Согласие на рекламную рассылку</a>
+        <a href="#" onclick="return openCookieModal(event)">Политика Cookie</a>
+        <a href="#" onclick="return openOfferModal(event)">Оферта</a>
+        <a href="#" onclick="return openLicenseModal(event)">Лицензия</a>
+      </div>
     </div>
   </div>
   <div class="footer-bottom">
     © 2026 Юлия Янсон — репетитор по физике и математике. Онлайн по всей России.
   </div>
 </footer>
+
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Уведомление об использовании cookie">
+  <div class="cookie-banner-inner">
+    <div class="cookie-banner-text">
+      Мы используем файлы cookie для корректной работы сайта, аналитики и персонализации контента. Подробнее — в <a href="#" onclick="return openCookieModal(event)">Политике использования cookie-файлов</a>. Вы можете отключить необязательные cookie.
+    </div>
+    <div class="cookie-banner-actions">
+      <button type="button" class="cookie-btn cookie-btn-decline" onclick="setCookieConsent(false)">Только необходимые</button>
+      <button type="button" class="cookie-btn cookie-btn-accept" onclick="setCookieConsent(true)">Принять все</button>
+    </div>
+  </div>
+</div>
 
 <div class="sticky-cta" id="stickyCta">
   <a href="#form" class="sticky-cta-btn">Записаться на пробный урок</a>
@@ -2025,7 +2155,7 @@
       <h4>13. Изменения политики</h4>
       <p>Оператор вправе изменять Политику в одностороннем порядке. Новая редакция вступает в силу с момента её размещения на официальных ресурсах Оператора, если иное не предусмотрено текстом редакции. Существенные изменения требуют получения нового согласия пользователей.</p>
 
-      <p class="policy-modal-meta">Дата вступления в силу: 20.07.2026. Политика действует до замены новой редакцией. Действующая редакция размещена по адресу: <a href="https://obucheniesyulieiyanson2701online.ru/politika" target="_blank" rel="noopener noreferrer">obucheniesyulieiyanson2701online.ru/politika</a></p>
+      <p class="policy-modal-meta">Дата вступления в силу: 20.07.2026. Политика действует до замены новой редакцией. Действующая редакция размещена на <a href="#" onclick="return closePolicyModal(event)">главной странице сайта</a> Оператора.</p>
     </div>
     <div class="policy-requisites">
       <div class="policy-requisites-title">Реквизиты оператора</div>
@@ -2089,7 +2219,7 @@
     <h3 id="cookieModalTitle">Политика использования cookie-файлов</h3>
     <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике · обновлено 22.07.2026</p>
     <div class="policy-modal-body">
-      <p>Настоящая Политика описывает типы Cookies, цели их использования, как Оператор обрабатывает данные, собранные в процессе использования Посетителями сайта <a href="https://obucheniesyulieiyanson2701online.ru" target="_blank" rel="noopener noreferrer">obucheniesyulieiyanson2701online.ru</a>, и способы отказаться от обработки Cookies.</p>
+      <p>Настоящая Политика описывает типы Cookies, цели их использования, как Оператор обрабатывает данные, собранные в процессе использования Посетителями <a href="#" onclick="return closeCookieModal(event)">сайта Оператора</a>, и способы отказаться от обработки Cookies.</p>
 
       <h4>1. Термины и определения</h4>
       <p>Оператор — Индивидуальный предприниматель Янсон Юлия Николаевна, ОГРНИП 326784700247831 / ИНН 781108947769.</p>
@@ -2118,7 +2248,7 @@
       <h4>6. Дополнительные условия</h4>
       <p>6.1. Владелец Сайта вправе вносить изменения в Политику.</p>
       <p>6.2. Новая Политика вступает в силу с даты размещения на Сайте, если иное не предусмотрено новой редакцией.</p>
-      <p>6.3. Действующая Политика размещена по адресу: <a href="https://obucheniesyulieiyanson2701online.ru/cookie" target="_blank" rel="noopener noreferrer">obucheniesyulieiyanson2701online.ru/cookie</a></p>
+      <p>6.3. Действующая Политика доступна в подвале <a href="#" onclick="return closeCookieModal(event)">главной страницы сайта</a> Оператора.</p>
       <p class="policy-modal-meta">Дата последнего обновления: 22.07.2026 г.</p>
     </div>
     <div class="policy-requisites">
@@ -2261,7 +2391,7 @@
 
   function updateStickyCta() {
     if (!stickyCta || !heroSection) return;
-    if (window.innerWidth > 768) {
+    if (window.innerWidth > 768 || document.body.classList.contains('cookie-banner-open')) {
       stickyCta.classList.remove('visible');
       document.body.classList.remove('has-sticky-cta');
       return;
@@ -2278,6 +2408,33 @@
   window.addEventListener('scroll', updateStickyCta, { passive: true });
   window.addEventListener('resize', updateStickyCta);
   updateStickyCta();
+
+  // Cookie consent banner
+  const COOKIE_CONSENT_KEY = 'cookieConsent';
+  const cookieBanner = document.getElementById('cookieBanner');
+
+  function setCookieConsent(analyticsAllowed) {
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify({ analytics: analyticsAllowed, date: new Date().toISOString() }));
+    } catch (err) {}
+    if (cookieBanner) cookieBanner.classList.remove('visible');
+    document.body.classList.remove('cookie-banner-open');
+    if (analyticsAllowed) loadYandexMetrika();
+    updateStickyCta();
+  }
+
+  (function initCookieBanner() {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(COOKIE_CONSENT_KEY)); } catch (err) {}
+    if (stored && typeof stored.analytics === 'boolean') {
+      if (stored.analytics) loadYandexMetrika();
+      return;
+    }
+    if (cookieBanner) {
+      document.body.classList.add('cookie-banner-open');
+      requestAnimationFrame(() => cookieBanner.classList.add('visible'));
+    }
+  })();
 
   // Custom selects — dropdown stays within form width
   function closeAllSelects() {
