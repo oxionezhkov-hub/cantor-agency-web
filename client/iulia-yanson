@@ -2664,11 +2664,11 @@
 
     if (submitBtn) submitBtn.disabled = true;
 
-    fetch(API_BASE + '/api/leads/notify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
+    fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+})
       .then((res) => {
         if (!res.ok) throw new Error('request_failed');
         // Reset fields for next time, then show the success screen
