@@ -343,6 +343,13 @@ function parseEmailList(value) {
     .filter(Boolean);
 }
 
+function parseChatIds(value) {
+  return String(value || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
 // Low-level send via Resend (cantor.agency is verified as a sending domain there).
 // Used because cantor.agency's DNS is on reg.ru, not Cloudflare, so Cloudflare Email
 // Routing (which needs a Cloudflare-managed zone) isn't an option for this domain.
@@ -371,6 +378,44 @@ async function sendEmailNotification(env, subject, cleanFields) {
   const text = Object.entries(cleanFields).map(([label, value]) => `${label}: ${value}`).join('\n');
 
   return sendViaResend(env, { to, subject, html, text });
+}
+
+// Low-level send via the Telegram Bot API. The bot token is passed in directly —
+// each landing page's lead source has its own bot secret (see LEAD_TELEGRAM_CONFIG
+// and the note in wrangler.jsonc for why the token itself is never stored there).
+async function sendViaTelegram(token, chatId, text) {
+  if (!token || !chatId) return null;
+
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+    signal: AbortSignal.timeout(5000),
+  });
+  const data = await res.json().catch(() => null);
+  return { status: res.status, ok: res.ok, data };
+}
+
+// Per lead-source Telegram config: which secret holds that source's bot token,
+// which (non-secret) var holds its comma-separated recipient chat ids, and
+// whether this source should also get the Resend email notification.
+// Add an entry here for each new landing page that gets its own Telegram bot.
+const LEAD_TELEGRAM_CONFIG = {
+  'tatiana-karlova': { tokenEnv: 'TELEGRAM_BOT_TOKEN_KARLOVA', chatIdsEnv: 'TELEGRAM_CHAT_IDS_KARLOVA', sendEmail: false },
+};
+
+async function sendTelegramNotification(env, subject, cleanFields, config) {
+  const token = env[config.tokenEnv];
+  const chatIds = parseChatIds(env[config.chatIdsEnv]);
+  if (!token || chatIds.length === 0) return null;
+
+  const lines = [`<b>${escapeHtml(subject)}</b>`, ...Object.entries(cleanFields).map(
+    ([label, value]) => `<b>${escapeHtml(label)}:</b> ${escapeHtml(value)}`
+  )];
+  const text = lines.join('\n');
+
+  const results = await Promise.all(chatIds.map((chatId) => sendViaTelegram(token, chatId, text)));
+  return { ok: results.some((r) => r && r.ok), results };
 }
 
 // Resend's free-tier caps (see resend.com/pricing — adjust here if the plan changes).
@@ -422,7 +467,7 @@ async function bumpUsageAndWarn(env, kv, period, periodKey, limit) {
   }
 }
 
-// ── Leads: forward landing-page form submissions by email ──
+// ── Leads: forward landing-page form submissions by email and/or Telegram ──
 async function handleLeadNotify(request, env) {
   const body = await readJson(request);
   if (!body || typeof body !== 'object') return json({ error: 'invalid_body' }, 400);
@@ -437,12 +482,28 @@ async function handleLeadNotify(request, env) {
     cleanFields[label] = clean;
   }
 
+  const subject = `Новая заявка — ${source}`;
+  const telegramConfig = LEAD_TELEGRAM_CONFIG[source];
+
+  let telegramResult = null;
+  if (telegramConfig) {
+    try {
+      telegramResult = await sendTelegramNotification(env, subject, cleanFields, telegramConfig);
+    } catch (err) {
+      console.error('lead_telegram_failed', String(err && err.message));
+    }
+  }
+
+  if (telegramConfig && telegramConfig.sendEmail === false) {
+    return json({ ok: true, telegram: telegramResult });
+  }
+
   try {
-    const emailResult = await sendEmailNotification(env, `Новая заявка — ${source}`, cleanFields);
+    const emailResult = await sendEmailNotification(env, subject, cleanFields);
     await trackEmailUsage(env, emailResult && emailResult.ok);
-    return json({ ok: true, email: emailResult });
+    return json({ ok: true, email: emailResult, telegram: telegramResult });
   } catch (err) {
-    return json({ error: 'email_failed', message: String(err && err.message) }, 502);
+    return json({ error: 'email_failed', message: String(err && err.message), telegram: telegramResult }, 502);
   }
 }
 
