@@ -528,7 +528,7 @@
     border: 2px solid var(--teal-100);
     box-shadow: var(--shadow);
     background: var(--teal-800);
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 9;
   }
   .lessons-video-wrap video {
     width: 100%;
@@ -1614,7 +1614,8 @@
   }
   .video-reviews-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 300px));
+    justify-content: center;
     gap: 1.5rem;
   }
   .video-review-wrap {
@@ -1623,8 +1624,6 @@
     border: 2px solid var(--teal-100);
     box-shadow: var(--shadow);
     aspect-ratio: 100 / 177.63;
-    max-width: 360px;
-    margin: 0 auto;
     background: var(--teal-800);
   }
   .video-review-wrap iframe {
@@ -1644,9 +1643,10 @@
       gap: 0.85rem;
       margin-bottom: 2rem;
     }
-    /* Video reviews — 1 col on mobile */
+    /* Video reviews — vertical clips, keep 2 narrow columns on mobile too */
     .video-reviews-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 155px));
+      gap: 0.85rem;
     }
     .video-reviews-title { font-size: 1.15rem; }
   }
@@ -1996,11 +1996,11 @@
       </div>
       <div class="consent-row">
         <input type="checkbox" id="consent" required>
-        <label for="consent">Согласие на <a href="#" onclick="return openDataConsentModal(event)">обработку персональных данных</a> <span class="required-mark">*</span></label>
+        <label for="consent">Я ознакомлен и даю <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openDataConsentModal(event)">согласие с обработкой моих персональных данных</a> согласно <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openPolicyModal(event)">Политики обработки персональных данных</a> <span class="required-mark">*</span></label>
       </div>
       <div class="consent-row">
         <input type="checkbox" id="adConsent">
-        <label for="adConsent">Согласие на <a href="#" onclick="return openAdConsentModal(event)">рекламную рассылку</a></label>
+        <label for="adConsent">Я ознакомлен и даю <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openAdConsentModal(event)">согласие на рекламную рассылку</a></label>
       </div>
       <p class="required-note"><span class="required-mark">*</span> — обязательные поля</p>
       <div class="form-submit">
@@ -2050,12 +2050,12 @@
     <div class="footer-col">
       <div class="footer-col-title">Документы</div>
       <div class="footer-links footer-links--col">
-        <a href="#" onclick="return openPolicyModal(event)">Политика обработки ПД</a>
-        <a href="#" onclick="return openDataConsentModal(event)">Согласие на обработку ПД</a>
-        <a href="#" onclick="return openAdConsentModal(event)">Согласие на рекламную рассылку</a>
-        <a href="#" onclick="return openCookieModal(event)">Политика Cookie</a>
-        <a href="#" onclick="return openOfferModal(event)">Оферта</a>
-        <a href="#" onclick="return openLicenseModal(event)">Лицензия</a>
+        <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openPolicyModal(event)">Политика обработки ПД</a>
+        <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openDataConsentModal(event)">Согласие на обработку ПД</a>
+        <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openAdConsentModal(event)">Согласие на рекламную рассылку</a>
+        <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openCookieModal(event)">Политика Cookie</a>
+        <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openOfferModal(event)">Оферта</a>
+        <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openLicenseModal(event)">Лицензия</a>
       </div>
     </div>
   </div>
@@ -2067,7 +2067,7 @@
 <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Уведомление об использовании cookie">
   <div class="cookie-banner-inner">
     <div class="cookie-banner-text">
-      Мы используем файлы cookie для корректной работы сайта, аналитики и персонализации контента. Подробнее — в <a href="#" onclick="return openCookieModal(event)">Политике использования cookie-файлов</a>. Вы можете отключить необязательные cookie.
+      Мы используем файлы cookie для корректной работы сайта, аналитики и персонализации контента. Подробнее — в <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return openCookieModal(event)">Политике использования cookie-файлов</a>. Вы можете отключить необязательные cookie.
     </div>
     <div class="cookie-banner-actions">
       <button type="button" class="cookie-btn cookie-btn-decline" onclick="setCookieConsent(false)">Только необходимые</button>
@@ -2153,12 +2153,12 @@
       <p>Согласие должно быть свободным, конкретным, информированным, сознательным, однозначным и оформленным отдельно от иных документов. Согласие на распространение данных (для публикации отзывов) оформляется строго отдельно с указанием перечня данных, ресурсов размещения и порядка отзыва. Способы получения согласия: активные действия на ресурсах Оператора (чек-бокс + отправка формы); собственноручная подпись на бумажном носителе; обмен электронными образами подписанного согласия через yuliayanson-27@yandex.ru, мессенджеры или чат-боты; подтверждение с использованием ЭЦП.</p>
 
       <h4>12. Куки (cookie) и технологии отслеживания</h4>
-      <p>Оператор использует cookie-файлы для обеспечения функционирования сайта, анализа посещаемости, персонализации контента и показа релевантной рекламы. Сбор и обработка технических данных о посетителях осуществляются с помощью Яндекс.Метрики (обработчик — ООО «ЯНДЕКС», ОГРН 1027700229193, ИНН 7736207543, 119021, Россия, г. Москва, ул. Л. Толстого, 16). Хранение и обработка данных Яндекс.Метрики происходят исключительно на серверах ООО «ЯНДЕКС» на территории РФ и не передаются за пределы Российской Федерации. Пользователь вправе в любой момент отключить cookie в настройках браузера, что может ограничить доступ к отдельным функциям сайта. Подробнее — в <a href="#" onclick="closePolicyModal(event); return openCookieModal(event)">Политике использования cookie-файлов</a>.</p>
+      <p>Оператор использует cookie-файлы для обеспечения функционирования сайта, анализа посещаемости, персонализации контента и показа релевантной рекламы. Сбор и обработка технических данных о посетителях осуществляются с помощью Яндекс.Метрики (обработчик — ООО «ЯНДЕКС», ОГРН 1027700229193, ИНН 7736207543, 119021, Россия, г. Москва, ул. Л. Толстого, 16). Хранение и обработка данных Яндекс.Метрики происходят исключительно на серверах ООО «ЯНДЕКС» на территории РФ и не передаются за пределы Российской Федерации. Пользователь вправе в любой момент отключить cookie в настройках браузера, что может ограничить доступ к отдельным функциям сайта. Подробнее — в <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="closePolicyModal(event); return openCookieModal(event)">Политике использования cookie-файлов</a>.</p>
 
       <h4>13. Изменения политики</h4>
       <p>Оператор вправе изменять Политику в одностороннем порядке. Новая редакция вступает в силу с момента её размещения на официальных ресурсах Оператора, если иное не предусмотрено текстом редакции. Существенные изменения требуют получения нового согласия пользователей.</p>
 
-      <p class="policy-modal-meta">Дата вступления в силу: 20.07.2026. Политика действует до замены новой редакцией. Действующая редакция размещена на <a href="#" onclick="return closePolicyModal(event)">главной странице сайта</a> Оператора.</p>
+      <p class="policy-modal-meta">Дата вступления в силу: 20.07.2026. Политика действует до замены новой редакцией. Действующая редакция размещена на <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return closePolicyModal(event)">главной странице сайта</a> Оператора.</p>
     </div>
     <div class="policy-requisites">
       <div class="policy-requisites-title">Реквизиты оператора</div>
@@ -2222,7 +2222,7 @@
     <h3 id="cookieModalTitle">Политика использования cookie-файлов</h3>
     <p class="policy-modal-meta">Юлия Янсон, репетитор по физике и математике · обновлено 22.07.2026</p>
     <div class="policy-modal-body">
-      <p>Настоящая Политика описывает типы Cookies, цели их использования, как Оператор обрабатывает данные, собранные в процессе использования Посетителями <a href="#" onclick="return closeCookieModal(event)">сайта Оператора</a>, и способы отказаться от обработки Cookies.</p>
+      <p>Настоящая Политика описывает типы Cookies, цели их использования, как Оператор обрабатывает данные, собранные в процессе использования Посетителями <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return closeCookieModal(event)">сайта Оператора</a>, и способы отказаться от обработки Cookies.</p>
 
       <h4>1. Термины и определения</h4>
       <p>Оператор — Индивидуальный предприниматель Янсон Юлия Николаевна, ОГРНИП 326784700247831 / ИНН 781108947769.</p>
@@ -2251,7 +2251,7 @@
       <h4>6. Дополнительные условия</h4>
       <p>6.1. Владелец Сайта вправе вносить изменения в Политику.</p>
       <p>6.2. Новая Политика вступает в силу с даты размещения на Сайте, если иное не предусмотрено новой редакцией.</p>
-      <p>6.3. Действующая Политика доступна в подвале <a href="#" onclick="return closeCookieModal(event)">главной страницы сайта</a> Оператора.</p>
+      <p>6.3. Действующая Политика доступна в подвале <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="return closeCookieModal(event)">главной страницы сайта</a> Оператора.</p>
       <p class="policy-modal-meta">Дата последнего обновления: 22.07.2026 г.</p>
     </div>
     <div class="policy-requisites">
@@ -2287,7 +2287,7 @@
       <p>Я соглашаюсь квалифицировать в качестве простой электронной подписи под настоящим Согласием совершение мной любого из следующих действий: проставление отметки в чек-боксе рядом с текстом «Я даю согласие на обработку своих персональных данных»; нажатие на кнопку «Отправить заявку», «Записаться на диагностику», «Перейти к оплате» или «Даю Согласие»; направление Оператору скана или фотографии собственноручно подписанного согласия с моей электронной почты или через мессенджер.</p>
 
       <h4>Срок действия и отзыв</h4>
-      <p>Согласие вступает в силу с момента предоставления и действует в течение всего срока оказания услуг (действия договора) плюс 5 лет в соответствии с требованиями налогового и архивного законодательства РФ, либо до момента досрочного отзыва Пользователем. Отозвать Согласие можно в любой момент, направив письменное заявление в свободной форме на yuliayanson-27@yandex.ru. С условиями обработки данных, изложенными в <a href="#" onclick="closeDataConsentModal(event); return openPolicyModal(event)">Политике обработки персональных данных</a>, ознакомлен, полностью согласен и принимаю их.</p>
+      <p>Согласие вступает в силу с момента предоставления и действует в течение всего срока оказания услуг (действия договора) плюс 5 лет в соответствии с требованиями налогового и архивного законодательства РФ, либо до момента досрочного отзыва Пользователем. Отозвать Согласие можно в любой момент, направив письменное заявление в свободной форме на yuliayanson-27@yandex.ru. С условиями обработки данных, изложенными в <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="closeDataConsentModal(event); return openPolicyModal(event)">Политике обработки персональных данных</a>, ознакомлен, полностью согласен и принимаю их.</p>
 
       <p class="policy-modal-meta">Для субъектов персональных данных младше 18 лет согласие предоставляет законный представитель — родитель или опекун.</p>
     </div>
@@ -2323,7 +2323,7 @@
 
       <h4>4. Срок действия и отзыв</h4>
       <p>Согласие действует не более 25 лет или до момента отзыва. Отозвать согласие можно: направив письменное или электронное уведомление на yuliayanson-27@yandex.ru с темой письма «Отзыв согласия на получение рекламы»; нажав на ссылку для отписки в рекламном сообщении (если применимо); через интерфейс личного кабинета, если такая функция реализована. Оператор прекращает направление рекламной информации в течение 3 рабочих дней с момента получения уведомления.</p>
-      <p>Рекламные материалы могут быть направлены Оператором самостоятельно или через третьих лиц (обработчиков), действующих по поручению Оператора. Персональные данные обрабатываются в соответствии с <a href="#" onclick="closeAdConsentModal(event); return openPolicyModal(event)">Политикой обработки персональных данных</a> Оператора.</p>
+      <p>Рекламные материалы могут быть направлены Оператором самостоятельно или через третьих лиц (обработчиков), действующих по поручению Оператора. Персональные данные обрабатываются в соответствии с <a href="https://obucheniesyulieiyanson2701online.ru/" target="_blank" rel="noopener noreferrer" onclick="closeAdConsentModal(event); return openPolicyModal(event)">Политикой обработки персональных данных</a> Оператора.</p>
 
       <p class="policy-modal-meta">Для субъектов персональных данных младше 18 лет согласие предоставляет законный представитель — родитель или опекун.</p>
     </div>
