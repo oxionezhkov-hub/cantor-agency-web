@@ -14,17 +14,21 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  // RESEND_API_KEY and TELEGRAM_BOT_TOKEN are secrets and must NOT be set here —
-  // this file is committed to a public repo, and GitHub secret scanning already
-  // caused a prior key (and, separately, a Telegram bot token) to be revoked/abused
-  // after being exposed this way. Set them instead via the Cloudflare dashboard:
-  // Workers & Pages -> mainweb -> Settings -> Variables and Secrets -> Add
-  // variable -> toggle "Encrypt". They're still available as env.RESEND_API_KEY /
-  // env.TELEGRAM_BOT_TOKEN at runtime, just never stored in this file or in git.
+  // RESEND_API_KEY and the per-landing-page TELEGRAM_BOT_TOKEN_<CLIENT> secrets
+  // (e.g. TELEGRAM_BOT_TOKEN_KARLOVA — see LEAD_TELEGRAM_CONFIG in _worker.js)
+  // must NOT be set here — this file is committed to a public repo, and GitHub
+  // secret scanning already caused a prior key (and, separately, a Telegram bot
+  // token) to be revoked/abused after being exposed this way. Set them instead
+  // via the Cloudflare dashboard: Workers & Pages -> mainweb -> Settings ->
+  // Variables and Secrets -> Add variable -> toggle "Encrypt". They're still
+  // available as env.RESEND_API_KEY / env.TELEGRAM_BOT_TOKEN_KARLOVA at runtime,
+  // just never stored in this file or in git. Chat ids aren't secret and live
+  // in plain "vars" below, one comma-separated TELEGRAM_CHAT_IDS_<CLIENT> var
+  // per landing page.
   "vars": {
     "ADMIN_EMAIL": "oxion.ezhkov@gmail.com,yuliayanson-27@yandex.ru",
     "OPS_ALERT_EMAIL": "oxion.ezhkov@gmail.com",
-    "TELEGRAM_CHAT_ID": ""
+    "TELEGRAM_CHAT_IDS_KARLOVA": "6295628819,1326867567"
   },
   "kv_namespaces": [
     {

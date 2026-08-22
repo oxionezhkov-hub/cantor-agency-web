@@ -380,10 +380,10 @@ async function sendEmailNotification(env, subject, cleanFields) {
   return sendViaResend(env, { to, subject, html, text });
 }
 
-// Low-level send via the Telegram Bot API. env.TELEGRAM_BOT_TOKEN must be set as a
-// Cloudflare Worker secret (never in wrangler.jsonc — see the note there for why).
-async function sendViaTelegram(env, chatId, text) {
-  const token = env.TELEGRAM_BOT_TOKEN;
+// Low-level send via the Telegram Bot API. The bot token is passed in directly —
+// each landing page's lead source has its own bot secret (see LEAD_TELEGRAM_CONFIG
+// and the note in wrangler.jsonc for why the token itself is never stored there).
+async function sendViaTelegram(token, chatId, text) {
   if (!token || !chatId) return null;
 
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -396,16 +396,25 @@ async function sendViaTelegram(env, chatId, text) {
   return { status: res.status, ok: res.ok, data };
 }
 
-async function sendTelegramNotification(env, subject, cleanFields) {
-  const chatIds = parseChatIds(env.TELEGRAM_CHAT_ID);
-  if (!env.TELEGRAM_BOT_TOKEN || chatIds.length === 0) return null;
+// Per lead-source Telegram config: which secret holds that source's bot token,
+// which (non-secret) var holds its comma-separated recipient chat ids, and
+// whether this source should also get the Resend email notification.
+// Add an entry here for each new landing page that gets its own Telegram bot.
+const LEAD_TELEGRAM_CONFIG = {
+  'tatiana-karlova': { tokenEnv: 'TELEGRAM_BOT_TOKEN_KARLOVA', chatIdsEnv: 'TELEGRAM_CHAT_IDS_KARLOVA', sendEmail: false },
+};
+
+async function sendTelegramNotification(env, subject, cleanFields, config) {
+  const token = env[config.tokenEnv];
+  const chatIds = parseChatIds(env[config.chatIdsEnv]);
+  if (!token || chatIds.length === 0) return null;
 
   const lines = [`<b>${escapeHtml(subject)}</b>`, ...Object.entries(cleanFields).map(
     ([label, value]) => `<b>${escapeHtml(label)}:</b> ${escapeHtml(value)}`
   )];
   const text = lines.join('\n');
 
-  const results = await Promise.all(chatIds.map((chatId) => sendViaTelegram(env, chatId, text)));
+  const results = await Promise.all(chatIds.map((chatId) => sendViaTelegram(token, chatId, text)));
   return { ok: results.some((r) => r && r.ok), results };
 }
 
@@ -458,7 +467,7 @@ async function bumpUsageAndWarn(env, kv, period, periodKey, limit) {
   }
 }
 
-// ── Leads: forward landing-page form submissions by email ──
+// ── Leads: forward landing-page form submissions by email and/or Telegram ──
 async function handleLeadNotify(request, env) {
   const body = await readJson(request);
   if (!body || typeof body !== 'object') return json({ error: 'invalid_body' }, 400);
@@ -474,12 +483,19 @@ async function handleLeadNotify(request, env) {
   }
 
   const subject = `Новая заявка — ${source}`;
+  const telegramConfig = LEAD_TELEGRAM_CONFIG[source];
 
   let telegramResult = null;
-  try {
-    telegramResult = await sendTelegramNotification(env, subject, cleanFields);
-  } catch (err) {
-    console.error('lead_telegram_failed', String(err && err.message));
+  if (telegramConfig) {
+    try {
+      telegramResult = await sendTelegramNotification(env, subject, cleanFields, telegramConfig);
+    } catch (err) {
+      console.error('lead_telegram_failed', String(err && err.message));
+    }
+  }
+
+  if (telegramConfig && telegramConfig.sendEmail === false) {
+    return json({ ok: true, telegram: telegramResult });
   }
 
   try {
