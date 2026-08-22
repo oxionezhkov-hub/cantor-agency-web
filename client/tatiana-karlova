@@ -279,13 +279,12 @@
       "photo p1"
       "photo p2"
       "photo note"
-      "photo p3"
-      "photo cta";
+      "photo p3";
     column-gap: 4.5rem;
     row-gap: 0;
     align-items: start;
   }
-  .about-grid h2 { grid-area: h2; }
+  .about-grid h2 { grid-area: h2; font-size: clamp(1.7rem, 2.6vw, 2.35rem); margin-bottom: 0.85rem; }
   .about-p1 { grid-area: p1; }
   .about-p2 { grid-area: p2; }
   .about-p3 { grid-area: p3; }
@@ -325,8 +324,6 @@
     line-height: 1.55 !important;
     margin: 0 !important;
   }
-  .about-cta { grid-area: cta; margin-top: 1.75rem; }
-
   /* PAIN POINTS */
   .pain-grid {
     display: grid;
@@ -543,6 +540,7 @@
     text-transform: uppercase;
     color: var(--pencil);
   }
+  .required-star { color: var(--red); margin-left: 0.15em; }
   input, select, textarea {
     border: 1.5px solid var(--line);
     border-radius: var(--radius);
@@ -615,6 +613,7 @@
     border-top: 1px solid var(--line);
   }
   .form-alt a { color: var(--ink); }
+  .form-alt-links { display: inline-flex; align-items: center; gap: 0.4rem; }
 
   /* FOOTER */
   footer { background: var(--ink); color: rgba(243,239,231,0.68); padding: 3rem var(--page-padding) 2rem; }
@@ -759,8 +758,7 @@
         "photo"
         "p2"
         "note"
-        "p3"
-        "cta";
+        "p3";
       gap: 1.5rem;
     }
     .about-photo-frame { position: static; max-width: 320px; margin: 0 auto; }
@@ -768,15 +766,7 @@
     .pain-card { padding: 1.75rem 1.5rem; }
 
     .services-grid { grid-template-columns: 1fr; }
-    .service-card-overlay {
-      position: static;
-      background: none;
-      justify-content: flex-start;
-      opacity: 1;
-      pointer-events: auto;
-      margin-top: 1.5rem;
-      padding: 0;
-    }
+    .service-card-overlay { display: none; }
 
     .steps-grid { grid-template-columns: 1fr; gap: 2rem; }
 
@@ -789,10 +779,15 @@
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: 1; }
     .select-trigger { font-size: 16px; }
+    .form-alt { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .form-alt-links { flex-direction: column; gap: 0.5rem; }
+    .form-alt-dot { display: none; }
 
     .footer-inner { flex-direction: column; gap: 1.75rem; }
 
     section.lessons-section { padding: 4.5rem var(--page-padding); }
+    .lessons-video-frame { aspect-ratio: 9 / 16; max-width: 360px; margin-left: auto; margin-right: auto; }
+    .lessons-video-frame > div { padding-top: 0 !important; height: 100%; }
   }
 
   @media (max-width: 480px) {
@@ -886,9 +881,6 @@
       <p>«Я помогаю каждому найти свой путь к пониманию предмета — и не отпускаю тему, пока она не станет по-настоящему ясной».</p>
     </div>
     <p class="about-p3">Работаю и с теми, кто боится контрольных и хочет просто закрыть год без троек, и с теми, кто метит на высокий балл и олимпиады. Разница — в темпе и сложности задач, а не в отношении: на занятиях всегда разбираем, а не заучиваем.</p>
-    <div class="about-cta">
-      <a href="#form" class="btn btn-outline">Записаться на диагностику</a>
-    </div>
   </div>
 </section>
 
@@ -1101,15 +1093,15 @@
     <div class="form-section fade-in">
       <div class="form-grid">
         <div class="form-group">
-          <label>Имя ученика</label>
+          <label>Имя ученика<span class="required-star">*</span></label>
           <input type="text" id="student_name" placeholder="Имя">
         </div>
         <div class="form-group">
-          <label>Фамилия ученика</label>
+          <label>Фамилия ученика<span class="required-star">*</span></label>
           <input type="text" id="student_last" placeholder="Фамилия">
         </div>
         <div class="form-group">
-          <label id="grade-label">Класс</label>
+          <label id="grade-label">Класс<span class="required-star">*</span></label>
           <div class="select-wrap" data-select="grade">
             <select id="grade" required tabindex="-1" aria-hidden="true">
               <option value="" disabled selected>Выберите класс</option>
@@ -1122,7 +1114,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label id="subject-label">Предмет</label>
+          <label id="subject-label">Предмет<span class="required-star">*</span></label>
           <div class="select-wrap" data-select="subject">
             <select id="subject" required tabindex="-1" aria-hidden="true">
               <option value="" disabled selected>Выберите предмет</option>
@@ -1137,11 +1129,11 @@
           <textarea id="goal" placeholder="Расскажите коротко — что не получается, к чему готовитесь, какие цели (ОГЭ, ВПР, подтянуть оценки)..."></textarea>
         </div>
         <div class="form-group">
-          <label>Имя и отчество родителя</label>
+          <label>Имя и отчество родителя<span class="required-star">*</span></label>
           <input type="text" id="parent_name" placeholder="Имя Отчество">
         </div>
         <div class="form-group">
-          <label>Телефон</label>
+          <label>Телефон<span class="required-star">*</span></label>
           <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
         </div>
         <div class="form-group full">
@@ -1153,7 +1145,13 @@
         <button type="button" class="btn" onclick="submitForm()">Записаться на диагностику</button>
       </div>
       <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
-      <p class="form-alt">Не хотите заполнять форму? <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" class="text-link">WhatsApp</a> · <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer" class="text-link">Telegram-канал</a></p>
+      <p class="form-alt">Не хотите заполнять форму?
+        <span class="form-alt-links">
+          <a href="https://wa.me/79629790773" target="_blank" rel="noopener noreferrer" class="text-link">WhatsApp</a>
+          <span class="form-alt-dot">·</span>
+          <a href="https://t.me/k_tany1" target="_blank" rel="noopener noreferrer" class="text-link">Telegram-канал</a>
+        </span>
+      </p>
     </div>
   </div>
 </section>
