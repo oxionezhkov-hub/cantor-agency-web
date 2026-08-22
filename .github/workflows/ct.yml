@@ -1,0 +1,42 @@
+permissions:
+  id-token: write # Это необходимо для запроса JWT
+
+on: 
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '.github/**'
+      
+  # Позволяет запускать этот workflow вручную из вкладки Actions
+  workflow_dispatch:
+
+env:
+  FOLDER_ID: <идентификатор_каталога>
+  SA_ID: <идентификатор_сервисного_аккаунта>
+  FUNCTION_NAME: from-github-preprod
+  FUNCTION_RUNTIME: nodejs22
+  FUNCTION_ENTRYPOINT: index.handler
+  FUNCTION_MEMORY: "128mb"
+  FUNCTION_SOURCEROOT: .
+  
+jobs:
+  build:
+    environment: preprod
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy Function
+        id: sls-func
+        uses: yc-actions/yc-sls-function@v3.1.0
+        with:
+          yc-sa-id: ${{env.SA_ID}}
+          folder-id: ${{env.FOLDER_ID}}
+          function-name: ${{env.FUNCTION_NAME}}
+          runtime: ${{env.FUNCTION_RUNTIME}}
+          entrypoint: ${{env.FUNCTION_ENTRYPOINT}}
+          memory: ${{env.FUNCTION_MEMORY}}
+          source-root: ${{env.FUNCTION_SOURCEROOT}}
+          include: |
+            **/*.json
+            **/*.js
