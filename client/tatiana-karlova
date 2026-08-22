@@ -1342,7 +1342,7 @@
 
   document.addEventListener('click', closeAllSelects);
 
-  const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+  const API_BASE = 'https://functions.yandexcloud.net/d4ekhh25kr82v2u5g51m';
 
   function submitForm() {
     const fields = ['student_name','student_last','grade','subject','parent_name','phone'];
@@ -1381,7 +1381,7 @@
 
     if (submitBtn) submitBtn.disabled = true;
 
-    fetch(API_BASE + '/api/leads/notify', {
+    fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
