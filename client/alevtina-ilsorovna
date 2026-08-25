@@ -366,12 +366,14 @@
   .reviews-photos-wrapper { position: relative; margin-bottom: 0; }
   .reviews-photos-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
     align-items: start;
-    max-height: 380px;
+    max-height: 620px;
     overflow: hidden;
     transition: max-height 0.5s ease;
+    max-width: 780px;
+    margin: 0 auto;
   }
   .reviews-photos-grid.expanded { max-height: 6000px; }
   .reviews-fade-overlay {
@@ -393,7 +395,7 @@
     box-shadow: var(--shadow);
     transition: transform 0.2s, box-shadow 0.2s;
     line-height: 0;
-    min-height: 140px;
+    min-height: 220px;
   }
   .review-photo-item:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(76,91,160,0.16); }
   .review-photo-item img { width: 100%; height: auto; display: block; }
@@ -810,6 +812,37 @@
   }
   .lightbox-close:hover { background: rgba(255,255,255,0.22); }
   .review-photo-item img, .diploma-item img { cursor: zoom-in; }
+
+  /* WHY-US */
+  .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 1080px; margin: 0 auto; }
+  .why-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem 1.75rem; text-align: center; transition: transform 0.2s, box-shadow 0.2s; }
+  .why-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .why-icon { width: 64px; height: 64px; margin: 0 auto 1.25rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--blue-50); font-size: 1.8rem; }
+  .why-card h3 { font-family: var(--font-body); font-size: 1.1rem; margin-bottom: 0.6rem; font-weight: 600; }
+  .why-card p { font-size: 0.92rem; color: var(--text-soft); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  /* REFERRAL */
+  .referral-section { background: linear-gradient(120deg, var(--violet), var(--blue-600)); border-radius: 28px; max-width: 960px; margin: 0 auto; padding: 3rem var(--page-padding); color: white; display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .referral-text h2 { font-family: var(--font-display); font-size: clamp(1.5rem, 2.6vw, 2rem); margin-bottom: 0.5rem; }
+  .referral-text p { color: rgba(255,255,255,0.85); font-weight: 300; max-width: 460px; }
+  .referral-badge { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 1.5rem 2rem; text-align: center; white-space: nowrap; }
+  .referral-badge strong { display: block; font-family: var(--font-body); font-size: 2.2rem; font-weight: 600; }
+  .referral-badge span { font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+
+  /* PROMO / TIMER */
+  .promo-section { background: var(--blue-800); border-radius: 28px; max-width: 960px; margin: 0 auto; padding: 3rem var(--page-padding); color: white; text-align: center; }
+  .promo-section h2 { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 0.5rem; }
+  .promo-section p { color: rgba(255,255,255,0.7); font-weight: 300; margin-bottom: 2rem; }
+  .promo-timer { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .promo-timer-unit { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 1rem 1.4rem; min-width: 80px; }
+  .promo-timer-unit strong { display: block; font-size: 2rem; font-weight: 600; color: var(--pink); font-variant-numeric: tabular-nums; }
+  .promo-timer-unit span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.6); }
+
+  @media (max-width: 768px) {
+    .why-grid { grid-template-columns: 1fr; }
+    .referral-section, .promo-section { border-radius: 18px; padding: 2.25rem 1.5rem; }
+    .referral-section { flex-direction: column; text-align: center; }
+  }
 </style>
 </head>
 <body>
@@ -838,8 +871,8 @@
 <section class="hero" id="home">
   <div class="hero-content">
     <span class="hero-tag">Репетитор · Онлайн по всей России и за рубежом</span>
-    <h1>Грамотность и развитие интеллекта <br><em>без слёз и зубрёжки</em></h1>
-    <p class="hero-desc">Скорочтение, ментальная арифметика, мнемотехника и русский язык для 1–4 классов. Подготовила более 750 учеников, преподаю онлайн, в том числе для учащихся билингвальной гимназии в Братиславе.</p>
+    <h1>Научу верить в себя и <br><em>достигать таких высот, что учёба становится поводом для гордости!</em></h1>
+    <p class="hero-desc">Скорочтение, ментальная арифметика, мнемотехника и русский язык для учеников 5–14 лет. Подготовила более 1300 учеников, преподаю онлайн, в том числе для учащихся билингвальной гимназии в Братиславе.</p>
     <div class="hero-photo-mobile">
       <img id="hero-tutor-photo-mobile" src="images/alevtina-ilsorovna/tutor/hero2.jpg" alt="Алевтина Ильсоровна — репетитор">
     </div>
@@ -848,23 +881,23 @@
       <a href="#services" class="btn-outline">Узнать о курсах</a>
     </div>
     <div class="hero-stats-mobile">
-      <div class="hero-stat-m"><strong>750+</strong><span>учеников</span></div>
+      <div class="hero-stat-m"><strong>1300+</strong><span>учеников</span></div>
       <div class="hero-stat-m"><strong>30+</strong><span>лет в педагогике</span></div>
-      <div class="hero-stat-m"><strong>4</strong><span>года на сервисе</span></div>
-      <div class="hero-stat-m"><strong>1–4</strong><span>классы по рус. яз.</span></div>
+      <div class="hero-stat-m"><strong>5–14</strong><span>лет ученикам</span></div>
+      <div class="hero-stat-m" style="font-size: 0.95rem;"><span>Член сообщества профессиональных репетиторов</span></div>
     </div>
   </div>
   <div class="hero-visual">
     <div class="stat-badges left">
-      <div class="stat-badge"><strong>750+</strong><span>учеников</span></div>
+      <div class="stat-badge"><strong>1300+</strong><span>учеников</span></div>
       <div class="stat-badge"><strong>30+</strong><span>лет в педагогике</span></div>
     </div>
     <div class="avatar-frame">
       <img id="hero-tutor-photo" class="avatar-photo" src="images/alevtina-ilsorovna/tutor/hero2.jpg" alt="Алевтина Ильсоровна — репетитор">
     </div>
     <div class="stat-badges right">
-      <div class="stat-badge"><strong>4</strong><span>года на сервисе</span></div>
-      <div class="stat-badge"><strong>1–4</strong><span>классы по рус. яз.</span></div>
+      <div class="stat-badge" style="max-width: 150px; white-space: normal;"><span style="font-size: 0.78rem; color: var(--blue-800); font-weight: 500;">Член сообщества профессиональных репетиторов</span></div>
+      <div class="stat-badge"><strong>5–14</strong><span>лет ученикам</span></div>
     </div>
   </div>
 </section>
@@ -877,11 +910,24 @@
     </div>
     <div class="about-text">
       <h2 class="section-title">Подружим ребёнка<br><em>с русским языком навсегда</em></h2>
-      <p>Меня зовут Алевтина Ильсоровна. Я педагог с высшим образованием и репетитор-практик. Подготовила более 750 учеников — участников и победителей олимпиад по ментальной арифметике, скорочтению и мнемотехнике.</p>
+      <p>Меня зовут Алевтина Ильсоровна. Я занимаюсь с детьми 1–4 классов русским языком, используя приёмы нейропсихологии. Развиваю интеллект, обучая скорочтению, ментальной арифметике, мнемотехнике.</p>
+      <p>Почему русский язык для младшей школы? Потому что именно на этом этапе формируется языковое чутьё у ребёнка, закладывается фундамент его грамотности, развивается его успешность.</p>
       <div class="about-highlight">
-        <p>«Учёба — это не зубрёжка, а азартное приключение. Каждый успех укрепляет веру ребёнка в свои силы.»</p>
+        <p>Результат не заставляет себя ждать: оценка по русскому языку поднимается с 3 до 5 уже через несколько недель.</p>
       </div>
-      <p>Работая в школе, я увидела: детям неинтересно заучивать сухие правила. Поэтому я объединила пять направлений в единую игровую систему, без давления, скуки и оценок.</p>
+      <p>И это не единственный факт:</p>
+      <ul style="color: var(--text-soft); font-weight: 300; line-height: 1.85; font-size: 1.05rem; padding-left: 1.2rem; margin-bottom: 1.2rem;">
+        <li>мои ученики за курс увеличивают скорость чтения с 48 до 364 слов в минуту,</li>
+        <li>считают быстрее калькулятора, а значит справляются с любой задачей за доли секунд,</li>
+        <li>побеждают на международных олимпиадах по развитию памяти и внимания.</li>
+      </ul>
+      <p>За плечами — более 1300 учеников, в том числе из билингвальной гимназии Братиславы.</p>
+      <p>Но оценки и навыки — лишь верхушка. Настоящий результат — это когда ребёнок говорит: «Я справлюсь!». Когда родители перестают жить в тревоге.</p>
+      <p>Я учу детей мыслить, пробовать, ошибаться без страха и идти дальше. Я создаю пространство, где принимают по-настоящему, без давления, но с верой.</p>
+      <p>Это не магия — это системная работа с личностью, а не только с программой. В каждом ребёнке уже есть всё для успеха. А я помогаю этому проявиться.</p>
+      <div class="about-highlight">
+        <p>Хотите, чтобы ваш ребёнок почувствовал свою силу и полюбил учиться? Запишитесь на пробный урок!</p>
+      </div>
     </div>
   </div>
 </section>
@@ -894,7 +940,7 @@
   </div>
   <div class="stats-grid fade-in">
     <div class="stat-card">
-      <span class="stat-num">750+</span>
+      <span class="stat-num">1300+</span>
       <div class="stat-label">учеников подготовлено за время практики</div>
     </div>
     <div class="stat-card">
@@ -902,8 +948,8 @@
       <div class="stat-label">лет педагогического и репетиторского опыта</div>
     </div>
     <div class="stat-card">
-      <span class="stat-num">4</span>
-      <div class="stat-label">года на сервисе Smart, член сообщества репетиторов</div>
+      <span class="stat-num" style="font-size: 1.15rem;">Член сообщества</span>
+      <div class="stat-label">профессиональных репетиторов</div>
     </div>
     <div class="stat-card">
       <span class="stat-num">20</span>
@@ -923,24 +969,22 @@
     <div class="reviews-photos-grid" id="reviewsPhotoGrid">
       <div class="review-col">
         <div class="review-photo-item" data-review="1" data-ext="png"></div>
-        <div class="review-photo-item" data-review="4" data-ext="png"></div>
+        <div class="review-photo-item" data-review="3" data-ext="png"></div>
+        <div class="review-photo-item" data-review="5" data-ext="png"></div>
         <div class="review-photo-item" data-review="7" data-ext="png"></div>
-        <div class="review-photo-item" data-review="10" data-ext="png"></div>
+        <div class="review-photo-item" data-review="9" data-ext="png"></div>
+        <div class="review-photo-item" data-review="11" data-ext="png"></div>
         <div class="review-photo-item" data-review="13" data-ext="png"></div>
+        <div class="review-photo-item" data-review="15" data-ext="jpg"></div>
       </div>
       <div class="review-col">
         <div class="review-photo-item" data-review="2" data-ext="png"></div>
-        <div class="review-photo-item" data-review="5" data-ext="png"></div>
-        <div class="review-photo-item" data-review="8" data-ext="png"></div>
-        <div class="review-photo-item" data-review="11" data-ext="png"></div>
-        <div class="review-photo-item" data-review="14" data-ext="jpg"></div>
-      </div>
-      <div class="review-col">
-        <div class="review-photo-item" data-review="3" data-ext="png"></div>
+        <div class="review-photo-item" data-review="4" data-ext="png"></div>
         <div class="review-photo-item" data-review="6" data-ext="png"></div>
-        <div class="review-photo-item" data-review="9" data-ext="png"></div>
+        <div class="review-photo-item" data-review="8" data-ext="png"></div>
+        <div class="review-photo-item" data-review="10" data-ext="png"></div>
         <div class="review-photo-item" data-review="12" data-ext="png"></div>
-        <div class="review-photo-item" data-review="15" data-ext="jpg"></div>
+        <div class="review-photo-item" data-review="14" data-ext="jpg"></div>
       </div>
     </div>
     <div class="reviews-fade-overlay"></div>
@@ -972,7 +1016,7 @@
 <section id="services">
   <div class="section-header fade-in">
     <h2 class="section-title">Программы обучения</h2>
-    <p class="section-sub">Занятия проходят онлайн — индивидуально или в мини-группах до 6 человек. Пять направлений, объединённых в единую игровую систему.</p>
+    <p class="section-sub">Занятия проходят онлайн — индивидуально или в мини-группах до 6 человек. Направления, объединённые в единую игровую систему.</p>
   </div>
   <div class="services-grid fade-in">
     <div class="service-card featured">
@@ -990,7 +1034,7 @@
     <div class="service-card">
       <div class="service-tag">Развитие интеллекта</div>
       <h3>Скорочтение</h3>
-      <p>Не гонка за словами, а работа с образами: ребёнок понимает 90–100% прочитанного с первого раза.</p>
+      <p>Не просто увеличивает темп чтения, а учит воспринимать текст смысловыми блоками, развивая при этом внимание, память и понимание содержания.</p>
       <div class="service-signup"><a href="#form">Записаться на курс</a></div>
     </div>
     <div class="service-card">
@@ -1002,9 +1046,61 @@
     <div class="service-card">
       <div class="service-tag">Без слёз и страха</div>
       <h3>Таблица умножения</h3>
-      <p>Осваиваем сразу несколькими способами: японская методика (визуальное пересечение линий) и классика в игровой форме. Ребёнок видит математику как пазл и запоминает результаты навсегда.</p>
+      <p>Осваиваем сразу несколькими способами: классика в игровой форме и японская методика (визуальное пересечение линий). Ребёнок видит математику как пазл и запоминает результаты навсегда.</p>
       <div class="service-signup"><a href="#form">Записаться на курс</a></div>
     </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section id="why-us">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Чем отличаются <em>занятия со мной</em></h2>
+  </div>
+  <div class="why-grid fade-in">
+    <div class="why-card">
+      <div class="why-icon">🏆</div>
+      <h3>Опытный преподаватель</h3>
+      <p>Уже привела к успеху более 1300 учеников по всей России и за рубежом.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🎯</div>
+      <h3>Точки роста — сразу</h3>
+      <p>Оценка сильных сторон и точек роста ребёнка уже на первом пробном уроке.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">💻</div>
+      <h3>Бесплатные тренажёры</h3>
+      <p>Онлайн-тренажёры для закрепления навыков между занятиями — в подарок.</p>
+    </div>
+  </div>
+</section>
+
+<!-- REFERRAL -->
+<section id="referral">
+  <div class="referral-section fade-in">
+    <div class="referral-text">
+      <h2>Приведи друга — получи бонус</h2>
+      <p>Порекомендуйте занятия знакомым, и как только их ребёнок начнёт учиться — вы получите бонус на счёт.</p>
+    </div>
+    <div class="referral-badge">
+      <strong>+5000 ₽</strong>
+      <span>за приведённого друга</span>
+    </div>
+  </div>
+</section>
+
+<!-- PROMO -->
+<section id="promo">
+  <div class="promo-section fade-in">
+    <h2>Запишись сейчас и учись со скидкой</h2>
+    <p>Акция действует ограниченное время — успейте записаться на пробный урок</p>
+    <div class="promo-timer" id="promoTimer">
+      <div class="promo-timer-unit"><strong id="promoHours">00</strong><span>часов</span></div>
+      <div class="promo-timer-unit"><strong id="promoMinutes">00</strong><span>минут</span></div>
+      <div class="promo-timer-unit"><strong id="promoSeconds">00</strong><span>секунд</span></div>
+    </div>
+    <a href="#form" class="btn-primary">Записаться со скидкой</a>
   </div>
 </section>
 
@@ -1352,6 +1448,40 @@
     const img = item.querySelector('img');
     if (img) openLightbox(img.src, img.alt);
   });
+
+  // Promo countdown timer (resets every 24h, stored per browser)
+  (function promoTimer() {
+    const hoursEl = document.getElementById('promoHours');
+    const minutesEl = document.getElementById('promoMinutes');
+    const secondsEl = document.getElementById('promoSeconds');
+    if (!hoursEl || !minutesEl || !secondsEl) return;
+
+    const STORAGE_KEY = 'promoDeadline';
+    let deadline = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+    if (!deadline || deadline < Date.now()) {
+      deadline = Date.now() + 24 * 60 * 60 * 1000;
+      localStorage.setItem(STORAGE_KEY, deadline);
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+      let diff = deadline - Date.now();
+      if (diff <= 0) {
+        deadline = Date.now() + 24 * 60 * 60 * 1000;
+        localStorage.setItem(STORAGE_KEY, deadline);
+        diff = deadline - Date.now();
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      hoursEl.textContent = pad(h);
+      minutesEl.textContent = pad(m);
+      secondsEl.textContent = pad(s);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
 
   // Toggle reviews
   const toggleBtn = document.getElementById('reviewsToggleBtn');
