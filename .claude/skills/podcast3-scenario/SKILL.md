@@ -354,6 +354,25 @@ CRM — это Cloudflare Worker (`mainweb`) поверх KV-namespace `MBA_MYBR
   отправить весь объект обратно — иначе остальные задачи (даты записи,
   ссылки на запись, монтаж и т.д.) обнулятся.
 
+**Свежесть чтения перед записью (обязательно для каждого клиента отдельно)**:
+CRM редактируется вручную через UI параллельно с этим процессом (например,
+дату записи могли проставить прямо сейчас). Поэтому нельзя переиспользовать
+один закешированный `GET /api/crm/clients`, снятый в начале скрипта, для
+записи нескольких клиентов подряд — окно между чтением и записью должно быть
+минимальным:
+1. Прямо перед `PUT` для конкретного клиента — свежий `GET /api/crm/client/<id>`
+   (или свежий `GET /api/crm/clients`, если поштучного эндпоинта нет) —
+   не переиспользовать JSON, снятый на шаге поиска client id.
+2. Взять `tasks` из этого свежего ответа, точечно поменять `podcast3.script`,
+   тут же отправить `PUT`.
+3. Сразу после `PUT` — ещё раз `GET` того же клиента и явно сверить, что
+   `tasks.podcast3.script.comment` в ответе равен записанной ссылке. Считать
+   шаг успешным только по этой проверке, а не по `"ok":true` в ответе `PUT`
+   (это подтверждает, что запрос принят, а не что нужное поле реально
+   сохранилось — оно могло быть перезаписано конкурентной правкой из UI
+   до момента проверки).
+4. Повторить 1–3 для каждого клиента по отдельности, не пакетно.
+
 Структура задачи `tasks.podcast3.script`:
 ```json
 { "done": true, "comment": "https://cantor.agency/podcast-scenarios/<url-encoded filename>.docx" }
@@ -374,32 +393,51 @@ https://cantor.agency/podcast-scenarios/<urllib.parse.quote(filename, safe='')>
 ```python
 import json, urllib.parse, subprocess
 
+CRM_LIST = 'https://mainweb.oxion-ezhkov.workers.dev/api/crm/clients'
+CRM_PUT = 'https://mainweb.oxion-ezhkov.workers.dev/api/crm/client'
+
+def fetch_clients():
+    r = subprocess.run(['curl', '-s', CRM_LIST], capture_output=True, text=True)
+    return {c['id']: c for c in json.loads(r.stdout)['clients']}
+
 # 1. Найти client id по имени (из брифа) — ФИО в CRM часто отличается от
 #    короткого имени в файле сценария, сопоставлять по фамилии.
-subprocess.run(['curl','-s','https://mainweb.oxion-ezhkov.workers.dev/api/crm/clients','-o','/tmp/crm.json'])
-d = json.load(open('/tmp/crm.json'))
-by_id = {c['id']: c for c in d['clients']}
-for c in d['clients']:
+#    Этот снимок годится только для поиска id, НЕ для записи ниже.
+by_id = fetch_clients()
+for c in by_id.values():
     if 'Фамилия' in c['name']:
         print(c['id'], c['name'])
 
-# 2. Обновить нужных клиентов
+# 2. Обновить нужных клиентов — по одному, с точечным чтением перед записью
 mapping = {
   '<clientId1>': 'Имя Фамилия — сценарий подкаст 3.docx',
   # ...
 }
 for cid, fname in mapping.items():
-    c = by_id[cid]
     url = 'https://cantor.agency/podcast-scenarios/' + urllib.parse.quote(fname, safe='')
+
+    # 2a. Свежий GET прямо перед записью — не переиспользуем by_id сверху
+    fresh = fetch_clients()
+    c = fresh[cid]
     tasks = json.loads(json.dumps(c['tasks']))  # deep copy
     tasks.setdefault('podcast3', {})
     tasks['podcast3']['script'] = {'done': True, 'comment': url}
     payload = {'id': cid, 'tasks': tasks}
+
+    # 2b. Запись
     res = subprocess.run(
-        ['curl', '-s', '-X', 'PUT', 'https://mainweb.oxion-ezhkov.workers.dev/api/crm/client',
+        ['curl', '-s', '-X', 'PUT', CRM_PUT,
          '-H', 'Content-Type: application/json', '-d', json.dumps(payload, ensure_ascii=False)],
         capture_output=True, text=True)
-    print(cid, c['name'], '"ok":true' in res.stdout)
+
+    # 2c. Верификация — перечитать и явно сверить сохранённое значение,
+    #     не полагаться на "ok":true из ответа PUT
+    verify = fetch_clients()[cid]
+    saved = verify['tasks'].get('podcast3', {}).get('script', {}).get('comment')
+    ok = saved == url
+    print(cid, c['name'], 'PUT ok:', '"ok":true' in res.stdout, 'verified:', ok)
+    if not ok:
+        print('  MISMATCH — saved:', saved, 'expected:', url)
 ```
 
 ### Финальная проверка
@@ -426,5 +464,9 @@ curl -s -o /dev/null -w "%{http_code} %{content_type}\n" "<та же ссылк�
 - [ ] Открыт draft PR в `oxionezhkov-hub/cantor-agency-web`, подписка на события PR включена.
 - [ ] PR смержен (дождаться события merge, известный `build`/401 — не блокер).
 - [ ] В CRM у соответствующего клиента `tasks.podcast3.script` = `{done:true, comment:<url>}`,
-      остальные поля `tasks` не тронуты.
+      записано через свежий GET непосредственно перед PUT (не переиспользован
+      более ранний снимок), остальные поля `tasks` не тронуты.
+- [ ] Запись в CRM подтверждена повторным GET после PUT — значение
+      `tasks.podcast3.script.comment` в ответе реально равно записанной
+      ссылке (не просто `"ok":true` в ответе PUT).
 - [ ] Ссылка проверена curl'ом — отдаёт 200 и правильный content-type.
