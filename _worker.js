@@ -1547,14 +1547,17 @@ async function handleDashboardApi(request, env, url) {
     const weekStart = body && String(body.weekStart || '').trim();
     if (!employeeId || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return json({ error: 'missing_employee_or_week' }, 400);
 
-    const clamp = (v) => Math.min(5, Math.max(1, Number(v) || 1));
+    // A criterion the client sends as 1-5 is a real rating; anything else (0,
+    // missing) means "not rated yet this week" and stays 0 — the client autosaves
+    // one criterion per star click, so the other two are still legitimately unset.
+    const pick = (v) => { const n = Number(v); return n >= 1 && n <= 5 ? n : 0; };
     const now = new Date().toISOString();
     const rating = {
       employeeId,
       weekStart,
-      discipline: clamp(body.discipline),
-      communication: clamp(body.communication),
-      skills: clamp(body.skills),
+      discipline: pick(body.discipline),
+      communication: pick(body.communication),
+      skills: pick(body.skills),
       updatedAt: now,
     };
     await kv.put(`rating:${employeeId}:${weekStart}`, JSON.stringify(rating));

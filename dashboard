@@ -45,7 +45,7 @@ input,textarea,select{font-family:inherit}
 header.top{background:var(--dark);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 header.top .title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800}
 header.top .title span{color:var(--red-light)}
-.tabs{display:flex;gap:6px;background:var(--dark2);padding:6px 28px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab-btn{background:none;border:none;color:#bbb;padding:10px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600}
 .tab-btn.active{background:var(--red);color:#fff}
 .tab-btn:hover:not(.active){background:#2a2a2a;color:#fff}
@@ -81,6 +81,11 @@ main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
 .metric .l{font-size:11px;color:var(--muted)}
 .metric input{border:1.5px solid var(--border);border-radius:6px;padding:4px 6px;font-size:14px;font-weight:700;width:100%}
 
+.computed-row{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;margin:-2px 0 12px;background:var(--accent-bg);border-radius:var(--r-md)}
+.computed-item{display:flex;flex-direction:column;align-items:center;flex:1;text-align:center}
+.computed-item .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.computed-item .v{font-size:14px;font-weight:700}
+
 .stars{display:flex;gap:3px}
 .stars button{background:none;border:none;font-size:18px;color:var(--border);padding:0;line-height:1}
 .stars button.on{color:var(--red)}
@@ -92,8 +97,6 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 .status-active{background:var(--green-bg);color:var(--green)}
 .status-paused{background:var(--amber-bg);color:var(--amber)}
 .status-done{background:var(--gray-bg);color:var(--gray)}
-
-.card-foot{display:flex;justify-content:flex-end;margin-top:12px}
 
 /* Employees */
 .emp-card .salary{font-size:20px;font-weight:800;color:var(--red);margin-bottom:4px}
@@ -159,13 +162,13 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 <div id="app">
   <header class="top">
     <div class="title">Cantor Agency <span>· Дашборд</span></div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="projects">Проекты</button>
+      <button class="tab-btn" data-tab="employees">Сотрудники</button>
+      <button class="tab-btn" data-tab="sales">Продажи</button>
+      <button class="tab-btn" data-tab="tasks">Задачи</button>
+    </nav>
   </header>
-  <nav class="tabs">
-    <button class="tab-btn active" data-tab="projects">Проекты</button>
-    <button class="tab-btn" data-tab="employees">Сотрудники</button>
-    <button class="tab-btn" data-tab="sales">Продажи</button>
-    <button class="tab-btn" data-tab="tasks">Задачи</button>
-  </nav>
 
   <main>
     <!-- PROJECTS -->
@@ -189,7 +192,6 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 
     <!-- SALES -->
     <section class="panel" id="panel-sales">
-      <div class="month-toggle" id="monthToggleSales"></div>
       <div class="section-head"><h2>Продажи</h2></div>
       <div class="sales-grid">
         <div class="sales-card" id="salesPrimary"></div>
@@ -316,22 +318,21 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
   });
 });
 
-// ── Month toggles ──
+// ── Month toggle (Projects tab; Sales follows the same currentMonth) ──
 function renderMonthToggles() {
-  [['monthToggleProjects', renderProjects], ['monthToggleSales', renderSales]].forEach(([id, rerender]) => {
-    const el = document.getElementById(id);
-    el.innerHTML = '';
-    MONTHS.forEach((m) => {
-      const b = document.createElement('button');
-      b.textContent = m.label;
-      if (m.key === currentMonth) b.classList.add('active');
-      b.addEventListener('click', () => {
-        currentMonth = m.key;
-        renderMonthToggles();
-        rerender();
-      });
-      el.appendChild(b);
+  const el = document.getElementById('monthToggleProjects');
+  el.innerHTML = '';
+  MONTHS.forEach((m) => {
+    const b = document.createElement('button');
+    b.textContent = m.label;
+    if (m.key === currentMonth) b.classList.add('active');
+    b.addEventListener('click', () => {
+      currentMonth = m.key;
+      renderMonthToggles();
+      renderProjects();
+      renderSales();
     });
+    el.appendChild(b);
   });
 }
 
@@ -372,10 +373,7 @@ function renderProjects() {
 
     const a = analyticsFor(p.id, currentMonth);
 
-    card.innerHTML = `
-      <h3>${escapeHtml(p.name)}</h3>
-      <div class="sub">${escapeHtml(p.service)}</div>
-    `;
+    card.innerHTML = `<h3>${escapeHtml(p.name)}</h3>`;
 
     const statusRow = document.createElement('div');
     statusRow.className = 'field-row';
@@ -416,27 +414,33 @@ function renderProjects() {
     respRow.appendChild(respSel);
     card.appendChild(respRow);
 
-    // Metrics
+    // Metrics — editable inputs, plus a computed row (conversion/CPL/CAC) below them
     const metrics = document.createElement('div');
     metrics.className = 'metrics';
     const fields = [
-      ['budget', 'Расход, ₽'], ['views', 'Просмотров'], ['contacts', 'Обращений'],
-      ['conversionPct', 'Конверсия, %'], ['cpl', 'CPL, ₽'], ['diagnostics', 'Диагностик'],
-      ['salesCount', 'Продаж'], ['cac', 'CAC, ₽'],
+      ['budget', 'Расход, ₽'], ['views', 'Просмотров'], ['contacts', 'Контактов'],
+      ['diagnostics', 'Диагностик'], ['salesCount', 'Продаж'],
     ];
-    const av = a || { budget: '', views: '', contacts: '', conversionPct: '', cpl: '', diagnostics: '', salesCount: '', cac: '' };
+    const av = a || { budget: '', views: '', contacts: '', diagnostics: '', salesCount: '' };
     fields.forEach(([key, label]) => {
       const m = document.createElement('div');
       m.className = 'metric';
       m.innerHTML = `<span class="l">${label}</span>`;
       const input = document.createElement('input');
       input.type = 'number';
+      input.dataset.key = key;
       input.value = av[key] ?? '';
-      input.addEventListener('change', () => saveAnalytics(p.id, fields, metrics));
+      input.addEventListener('input', () => renderComputedRow(computedRow, metricsValues(metrics)));
+      input.addEventListener('change', () => saveAnalytics(p.id, metrics, computedRow));
       m.appendChild(input);
       metrics.appendChild(m);
     });
     card.appendChild(metrics);
+
+    const computedRow = document.createElement('div');
+    computedRow.className = 'computed-row';
+    card.appendChild(computedRow);
+    renderComputedRow(computedRow, metricsValues(metrics));
 
     // Ratings
     const ratingsBlock = document.createElement('div');
@@ -470,34 +474,48 @@ function renderProjects() {
     });
     card.appendChild(review);
 
-    const foot = document.createElement('div');
-    foot.className = 'card-foot';
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn danger small';
-    delBtn.textContent = 'Удалить проект';
-    delBtn.addEventListener('click', async () => {
-      if (!confirm('Удалить проект «' + p.name + '»?')) return;
-      await api('/api/dashboard/project?id=' + encodeURIComponent(p.id), { method: 'DELETE' });
-      state.projects = state.projects.filter((x) => x.id !== p.id);
-      renderProjects();
-    });
-    foot.appendChild(delBtn);
-    card.appendChild(foot);
-
     grid.appendChild(card);
 
-    async function saveAnalytics(projectId, fieldDefs, metricsEl) {
-      const inputs = metricsEl.querySelectorAll('input');
-      const body = { projectId, month: currentMonth };
-      fieldDefs.forEach(([key], i) => { body[key] = inputs[i].value; });
+    async function saveAnalytics(projectId, metricsEl, computedRowEl) {
+      const vals = metricsValues(metricsEl);
+      const derived = computeDerived(vals);
+      const body = { projectId, month: currentMonth, ...vals, ...derived };
       const res = await api('/api/dashboard/analytics', { method: 'POST', body: JSON.stringify(body) });
       if (res && res.analytics) {
         state.analytics = state.analytics.filter((x) => !(x.projectId === projectId && x.month === currentMonth));
         state.analytics.push(res.analytics);
+        renderComputedRow(computedRowEl, vals);
         toast('Метрики сохранены');
       }
     }
   });
+}
+
+function metricsValues(metricsEl) {
+  const vals = {};
+  metricsEl.querySelectorAll('input[data-key]').forEach((inp) => { vals[inp.dataset.key] = inp.value; });
+  return vals;
+}
+
+function computeDerived(vals) {
+  const budget = Number(vals.budget) || 0;
+  const views = Number(vals.views) || 0;
+  const contacts = Number(vals.contacts) || 0;
+  const salesCount = Number(vals.salesCount) || 0;
+  return {
+    conversionPct: views > 0 ? Math.round((contacts / views) * 100) : 0,
+    cpl: contacts > 0 ? Math.round(budget / contacts) : 0,
+    cac: salesCount > 0 ? Math.round(budget / salesCount) : null,
+  };
+}
+
+function renderComputedRow(el, vals) {
+  const { conversionPct, cpl, cac } = computeDerived(vals);
+  el.innerHTML = `
+    <div class="computed-item"><span class="l">Конверсия</span><span class="v">${conversionPct}%</span></div>
+    <div class="computed-item"><span class="l">CPL</span><span class="v">${cpl ? cpl.toLocaleString('ru-RU') + ' ₽' : '—'}</span></div>
+    <div class="computed-item"><span class="l">CAC</span><span class="v">${cac != null ? cac.toLocaleString('ru-RU') + ' ₽' : '—'}</span></div>
+  `;
 }
 
 document.getElementById('addProjectBtn').addEventListener('click', () => {
@@ -576,27 +594,21 @@ function renderEmployees() {
       const starsWrap = document.createElement('div');
       function draw() {
         starsWrap.innerHTML = '';
-        starsWrap.appendChild(starPicker(key, draft[key], (val) => { draft[key] = val; draw(); }));
+        starsWrap.appendChild(starPicker(key, draft[key], async (val) => {
+          draft[key] = val;
+          draw();
+          const res = await api('/api/dashboard/rating', { method: 'POST', body: JSON.stringify({ employeeId: emp.id, weekStart, ...draft }) });
+          if (res && res.rating) {
+            state.ratings = state.ratings.filter((r) => !(r.employeeId === emp.id && r.weekStart === weekStart));
+            state.ratings.push(res.rating);
+            toast('Оценка сохранена');
+          }
+        }));
       }
       draw();
       row.appendChild(starsWrap);
       card.appendChild(row);
     });
-    const saveWeekBtn = document.createElement('button');
-    saveWeekBtn.className = 'btn small';
-    saveWeekBtn.textContent = 'Сохранить оценку за неделю';
-    saveWeekBtn.style.marginTop = '6px';
-    saveWeekBtn.addEventListener('click', async () => {
-      if (!draft.discipline || !draft.communication || !draft.skills) { toast('Заполните все три критерия'); return; }
-      const res = await api('/api/dashboard/rating', { method: 'POST', body: JSON.stringify({ employeeId: emp.id, weekStart, ...draft }) });
-      if (res && res.rating) {
-        state.ratings = state.ratings.filter((r) => !(r.employeeId === emp.id && r.weekStart === weekStart));
-        state.ratings.push(res.rating);
-        toast('Оценка сохранена');
-        renderEmployees();
-      }
-    });
-    card.appendChild(saveWeekBtn);
 
     // averages + history
     const hist = ratingsFor(emp.id);
@@ -614,21 +626,6 @@ function renderEmployees() {
       histBlock.innerHTML = `<table><thead><tr><th>Неделя</th><th>Дисц.</th><th>Комм.</th><th>Навыки</th></tr></thead><tbody>${rows}</tbody></table>`;
       card.appendChild(histBlock);
     }
-
-    const foot = document.createElement('div');
-    foot.className = 'card-foot';
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn danger small';
-    delBtn.textContent = 'Удалить сотрудника';
-    delBtn.addEventListener('click', async () => {
-      if (!confirm('Удалить сотрудника «' + emp.name + '»?')) return;
-      await api('/api/dashboard/employee?id=' + encodeURIComponent(emp.id), { method: 'DELETE' });
-      state.employees = state.employees.filter((x) => x.id !== emp.id);
-      state.ratings = state.ratings.filter((x) => x.employeeId !== emp.id);
-      renderEmployees();
-    });
-    foot.appendChild(delBtn);
-    card.appendChild(foot);
 
     grid.appendChild(card);
   });
@@ -666,10 +663,6 @@ document.getElementById('addEmployeeBtn').addEventListener('click', () => {
 });
 
 // ══════════════════════ SALES ══════════════════════
-function salesFor(month) {
-  return state.sales[month] || state.sales.find?.((s) => s.month === month) || { primary: {}, repeat: {}, leads: 0 };
-}
-
 function renderSalesCard(elId, kind, label, price) {
   const el = document.getElementById(elId);
   const record = getSalesRecord(currentMonth);
