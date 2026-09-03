@@ -46,14 +46,10 @@
     {
       "binding": "AVITO_KV",
       "id": "ad6fea8159ef48c4b2833620e72c52af"
+    },
+    {
+      "binding": "AGENCY_DASHBOARD_KV",
+      "id": "b0921ad0182347b091c7fe4947d91cba"
     }
-    // /dashboard (the agency-owner dashboard) needs its own namespace, binding
-    // "AGENCY_DASHBOARD_KV" — deliberately not added here yet: Cloudflare Workers
-    // Builds validates that every kv_namespaces id in this file actually exists in
-    // the account, so a placeholder id fails the build. Once the namespace exists
-    // (`wrangler kv namespace create AGENCY_DASHBOARD_KV`, requires `wrangler login`),
-    // add an entry here the same shape as the ones above, with the real id. Until
-    // then /api/dashboard/* responds with a clear "not configured" error instead of
-    // crashing (see handleDashboardApi in _worker.js).
   ]
 }
