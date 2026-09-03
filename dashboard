@@ -272,9 +272,13 @@ async function api(path, options = {}, pwOverride, silent) {
     location.reload();
     return null;
   }
-  if (!res.ok) { toast('Ошибка сохранения'); return null; }
-  const data = await res.json().catch(() => null);
-  return silent ? true : data;
+  if (silent) return true; // password accepted — any other status is a separate (server-side) problem
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    toast((data && data.message) || 'Ошибка сохранения');
+    return null;
+  }
+  return res.json().catch(() => null);
 }
 
 function toast(msg) {

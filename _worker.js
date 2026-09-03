@@ -1416,6 +1416,12 @@ async function handleDashboardApi(request, env, url) {
 
   if (!checkDashboardAuth(request)) return json({ error: 'unauthorized' }, 401);
 
+  if (!kv) {
+    // AGENCY_DASHBOARD_KV isn't bound in wrangler.jsonc yet (see the comment there) —
+    // fail clearly instead of throwing on the first kv.* call below.
+    return json({ error: 'kv_not_configured', message: 'AGENCY_DASHBOARD_KV namespace is not set up yet — see wrangler.jsonc' }, 500);
+  }
+
   await ensureDashboardSeed(kv);
 
   // ── Bootstrap: everything the dashboard needs in one call ──
