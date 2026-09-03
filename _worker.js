@@ -767,11 +767,14 @@ function newCrmClient(email, name) {
 // pulled into the CRM automatically so staff don't have to re-enter them by hand. Runs on
 // every CRM list load; matches by normalized email so it never creates duplicates, and only
 // ever adds missing ones — it never touches or removes CRM records that already exist.
+// Emails a staffer has explicitly deleted from the CRM are tombstoned in "crm:deleted:<email>"
+// so this resync never resurrects them.
 async function syncCrmFromBriefClients(env) {
   const kv = env.MBA_MYBRAND_KV;
-  const [crmKeys, briefKeys] = await Promise.all([
+  const [crmKeys, briefKeys, deletedKeys] = await Promise.all([
     kv.list({ prefix: 'crm:client:' }),
     kv.list({ prefix: 'client:' }),
+    kv.list({ prefix: 'crm:deleted:' }),
   ]);
   const [crmRecords, briefRecords] = await Promise.all([
     Promise.all(crmKeys.keys.map((k) => kv.get(k.name, 'json'))),
@@ -779,6 +782,7 @@ async function syncCrmFromBriefClients(env) {
   ]);
   const clients = crmRecords.filter(Boolean);
   const existingEmails = new Set(clients.map((c) => normalizeEmail(c.email)));
+  const deletedEmails = new Set(deletedKeys.keys.map((k) => k.name.slice('crm:deleted:'.length)));
 
   const schema = await getSchema(env);
   const nameQid = schema.blocks[0] && schema.blocks[0].questions[0] ? schema.blocks[0].questions[0].id : null;
@@ -786,7 +790,7 @@ async function syncCrmFromBriefClients(env) {
   const puts = [];
   for (const b of briefRecords.filter(Boolean)) {
     const email = normalizeEmail(b.email);
-    if (!email || !isValidEmail(email) || existingEmails.has(email)) continue;
+    if (!email || !isValidEmail(email) || existingEmails.has(email) || deletedEmails.has(email)) continue;
     const name = (nameQid && b.answers && b.answers[nameQid]) ? String(b.answers[nameQid]).trim() : '';
     const record = { ...newCrmClient(email, name), fromBrief: true };
     existingEmails.add(email);
@@ -821,6 +825,7 @@ async function handleCrmApi(request, env, url) {
 
     const record = newCrmClient(email, name);
     await kv.put(`crm:client:${record.id}`, JSON.stringify(record));
+    await kv.delete(`crm:deleted:${email}`);
     return json({ client: record });
   }
 
@@ -858,6 +863,8 @@ async function handleCrmApi(request, env, url) {
     const existing = await kv.get(key, 'json');
     if (!existing) return json({ error: 'not_found' }, 404);
     await kv.delete(key);
+    const email = normalizeEmail(existing.email);
+    if (email) await kv.put(`crm:deleted:${email}`, '1');
     return json({ ok: true });
   }
 
