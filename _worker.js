@@ -59,6 +59,27 @@
  *   account:<id>            -> { id, name, clientId, clientSecret, userId, createdAt, updatedAt, lastExportAt }
  *   token:<accountId>       -> { accessToken, expiresAt }  (cached OAuth token, refreshed on expiry)
  *   runlog:<accountId>:<ts> -> { id, accountId, dateFrom, dateTo, startedAt, finishedAt, status, counts, errors }
+ *
+ * It also powers /dashboard: the agency-owner dashboard (active Avito-promotion projects,
+ * staff cards with weekly 1–5 ratings, sales plan/fact, agency task list). Gated client-side
+ * by a shared password (same pattern as /serp-analysis) and additionally by an
+ * "x-dashboard-password" header the API itself checks — not a real auth boundary, just one
+ * step past the SERP page's, since salaries live here too.
+ *
+ * KV keys (binding "AGENCY_DASHBOARD_KV"):
+ *   seeded                        -> "1" once the starter projects/employees have been written
+ *   project:<id>                  -> { id, name, service, responsibleId, status, review,
+ *                                        ratings: { result, communication, quality }, // 0-5, 0 = not rated
+ *                                        createdAt, updatedAt }
+ *   analytics:<projectId>:<YYYY-MM> -> { budget, views, contacts, conversionPct, cpl, diagnostics,
+ *                                          salesCount, cac, notes, updatedAt }
+ *   employee:<id>                 -> { id, name, position, salary, createdAt, updatedAt }
+ *   rating:<employeeId>:<weekStart> -> { weekStart, discipline, communication, skills, updatedAt } // 1-5 each
+ *   sales:<YYYY-MM>                -> { primary: { planCount, factCount, planRevenue, factRevenue },
+ *                                         repeat: { planCount, factCount, planRevenue, factRevenue },
+ *                                         leads, updatedAt }
+ *   registrationBase               -> { total, updatedAt }  (cumulative count, never resets monthly)
+ *   task:<id>                      -> { id, text, status, owner, due, createdAt, updatedAt }
  */
 
 const SCHEMA_KEY = 'schema';
@@ -1305,6 +1326,300 @@ async function handleAvitoApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// ── /dashboard: agency-owner dashboard ──
+
+const DASHBOARD_PASSWORD = '12345678';
+const SALE_PRICES = { primary: 50000, repeat: 25000 };
+
+const DEFAULT_EMPLOYEES = [
+  { id: 'olga-shpakovskaya', name: 'Ольга Шпаковская', position: 'Клиентский менеджер', salary: 25000 },
+  { id: 'sofia-romanovna', name: 'София Романовна', position: 'Ассистент', salary: 25000 },
+  { id: 'ainur-sadretdinov', name: 'Айнур Садретдинов', position: 'Специалист по Авито', salary: 25000 },
+  { id: 'evgeny-isaev', name: 'Евгений Исаев', position: 'Специалист по Авито', salary: 30000 },
+];
+
+const DEFAULT_PROJECTS = [
+  'irina-armbrister::Ирина Армбристер',
+  'larisa-romashova::Лариса Ромашова',
+  'elena-dobrynina::Елена Добрынина',
+  'alexey-shevchuk::Алексей Шевчук',
+  'valentin-volkov::Валентин Волков',
+  'ivan-karientidi::Иван Кариентиди',
+  'olga-ageshina::Ольга Агешина',
+  'svetlana-soboleva::Светлана Соболева',
+  'olga-simagina::Ольга Симагина',
+  'oksana-alekseeva::Оксана Алексеева',
+].map((entry) => {
+  const [id, name] = entry.split('::');
+  return { id, name, service: 'Продвижение на Авито', responsibleId: null, status: 'active', review: '', ratings: { result: 0, communication: 0, quality: 0 } };
+});
+
+// From the daily Avito ad-account reports (месячные итоги на 31.08 и на 02.09).
+const DEFAULT_ANALYTICS = [
+  { projectId: 'irina-armbrister', month: '2026-08', budget: 25430, views: 174, contacts: 12, conversionPct: 7, cpl: 2119, diagnostics: 1, salesCount: 0, cac: null },
+  { projectId: 'larisa-romashova', month: '2026-08', budget: 19994, views: 310, contacts: 21, conversionPct: 7, cpl: 952, diagnostics: 7, salesCount: 1, cac: 19994 },
+  { projectId: 'elena-dobrynina', month: '2026-08', budget: 46047, views: 704, contacts: 41, conversionPct: 6, cpl: 1123, diagnostics: 12, salesCount: 9, cac: 5116 },
+  { projectId: 'alexey-shevchuk', month: '2026-08', budget: 13507, views: 162, contacts: 9, conversionPct: 6, cpl: 1501, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'valentin-volkov', month: '2026-08', budget: 29373, views: 268, contacts: 16, conversionPct: 6, cpl: 1836, diagnostics: 2, salesCount: 2, cac: 14686 },
+  { projectId: 'ivan-karientidi', month: '2026-08', budget: 13947, views: 150, contacts: 5, conversionPct: 3, cpl: 2789, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'olga-ageshina', month: '2026-08', budget: 14504, views: 114, contacts: 5, conversionPct: 4, cpl: 2901, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'svetlana-soboleva', month: '2026-08', budget: 86456, views: 709, contacts: 58, conversionPct: 8, cpl: 1491, diagnostics: 10, salesCount: 3, cac: 28819 },
+  { projectId: 'irina-armbrister', month: '2026-09', budget: 2341, views: 29, contacts: 0, conversionPct: 0, cpl: 0, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'larisa-romashova', month: '2026-09', budget: 2085, views: 31, contacts: 3, conversionPct: 10, cpl: 695, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'elena-dobrynina', month: '2026-09', budget: 2092, views: 38, contacts: 1, conversionPct: 3, cpl: 2092, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'alexey-shevchuk', month: '2026-09', budget: 990, views: 16, contacts: 1, conversionPct: 6, cpl: 990, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'valentin-volkov', month: '2026-09', budget: 2000, views: 21, contacts: 1, conversionPct: 5, cpl: 2000, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'ivan-karientidi', month: '2026-09', budget: 5039, views: 39, contacts: 4, conversionPct: 10, cpl: 1260, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'olga-ageshina', month: '2026-09', budget: 3349, views: 18, contacts: 1, conversionPct: 6, cpl: 3349, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'svetlana-soboleva', month: '2026-09', budget: 8195, views: 73, contacts: 3, conversionPct: 4, cpl: 2732, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'olga-simagina', month: '2026-09', budget: 2050, views: 23, contacts: 1, conversionPct: 4, cpl: 2050, diagnostics: 0, salesCount: 0, cac: null },
+  { projectId: 'oksana-alekseeva', month: '2026-09', budget: 1604, views: 28, contacts: 1, conversionPct: 4, cpl: 1604, diagnostics: 0, salesCount: 0, cac: null },
+];
+
+function emptySalesMonth() {
+  return {
+    primary: { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 },
+    repeat: { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 },
+    leads: 0,
+  };
+}
+
+async function ensureDashboardSeed(kv) {
+  const seeded = await kv.get('seeded');
+  if (seeded) return;
+
+  const now = new Date().toISOString();
+  await Promise.all([
+    ...DEFAULT_EMPLOYEES.map((e) => kv.put(`employee:${e.id}`, JSON.stringify({ ...e, createdAt: now, updatedAt: now }))),
+    ...DEFAULT_PROJECTS.map((p) => kv.put(`project:${p.id}`, JSON.stringify({ ...p, createdAt: now, updatedAt: now }))),
+    ...DEFAULT_ANALYTICS.map((a) => kv.put(`analytics:${a.projectId}:${a.month}`, JSON.stringify({ ...a, updatedAt: now }))),
+    kv.put('sales:2026-08', JSON.stringify({ ...emptySalesMonth(), month: '2026-08', updatedAt: now })),
+    kv.put('sales:2026-09', JSON.stringify({ ...emptySalesMonth(), month: '2026-09', updatedAt: now })),
+    kv.put('registrationBase', JSON.stringify({ total: 0, updatedAt: now })),
+  ]);
+  await kv.put('seeded', '1');
+}
+
+async function listByPrefix(kv, prefix) {
+  const list = await kv.list({ prefix });
+  const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+  return records.filter(Boolean);
+}
+
+function checkDashboardAuth(request) {
+  return request.headers.get('x-dashboard-password') === DASHBOARD_PASSWORD;
+}
+
+async function handleDashboardApi(request, env, url) {
+  const { pathname } = url;
+  const kv = env.AGENCY_DASHBOARD_KV;
+
+  if (!checkDashboardAuth(request)) return json({ error: 'unauthorized' }, 401);
+
+  await ensureDashboardSeed(kv);
+
+  // ── Bootstrap: everything the dashboard needs in one call ──
+  if (pathname === '/api/dashboard/bootstrap' && request.method === 'GET') {
+    const [projects, employees, analytics, ratings, sales, registrationBase, tasks] = await Promise.all([
+      listByPrefix(kv, 'project:'),
+      listByPrefix(kv, 'employee:'),
+      listByPrefix(kv, 'analytics:'),
+      listByPrefix(kv, 'rating:'),
+      listByPrefix(kv, 'sales:'),
+      kv.get('registrationBase', 'json'),
+      listByPrefix(kv, 'task:'),
+    ]);
+    return json({
+      projects: projects.sort((a, b) => a.name.localeCompare(b.name, 'ru')),
+      employees: employees.sort((a, b) => a.name.localeCompare(b.name, 'ru')),
+      analytics,
+      ratings,
+      sales,
+      registrationBase: registrationBase || { total: 0 },
+      tasks: tasks.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+      salePrices: SALE_PRICES,
+    });
+  }
+
+  // ── Projects ──
+  if (pathname === '/api/dashboard/project' && request.method === 'POST') {
+    const body = await readJson(request);
+    const name = body && String(body.name || '').trim();
+    if (!name) return json({ error: 'missing_name' }, 400);
+
+    const id = (body && body.id) || crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    const existing = (await kv.get(`project:${id}`, 'json')) || {};
+    const now = new Date().toISOString();
+    const project = {
+      id,
+      name,
+      service: (body && body.service) || existing.service || 'Продвижение на Авито',
+      responsibleId: body && 'responsibleId' in body ? body.responsibleId || null : existing.responsibleId ?? null,
+      status: (body && body.status) || existing.status || 'active',
+      review: body && 'review' in body ? String(body.review || '') : existing.review || '',
+      ratings: {
+        result: Number((body && body.ratings && body.ratings.result) ?? existing.ratings?.result ?? 0),
+        communication: Number((body && body.ratings && body.ratings.communication) ?? existing.ratings?.communication ?? 0),
+        quality: Number((body && body.ratings && body.ratings.quality) ?? existing.ratings?.quality ?? 0),
+      },
+      createdAt: existing.createdAt || now,
+      updatedAt: now,
+    };
+    await kv.put(`project:${id}`, JSON.stringify(project));
+    return json({ project });
+  }
+
+  if (pathname === '/api/dashboard/project' && request.method === 'DELETE') {
+    const id = url.searchParams.get('id');
+    if (!id) return json({ error: 'missing_id' }, 400);
+    await kv.delete(`project:${id}`);
+    const list = await kv.list({ prefix: `analytics:${id}:` });
+    await Promise.all(list.keys.map((k) => kv.delete(k.name)));
+    return json({ ok: true });
+  }
+
+  // ── Analytics (per project, per month) ──
+  if (pathname === '/api/dashboard/analytics' && request.method === 'POST') {
+    const body = await readJson(request);
+    const projectId = body && String(body.projectId || '').trim();
+    const month = body && String(body.month || '').trim();
+    if (!projectId || !/^\d{4}-\d{2}$/.test(month)) return json({ error: 'missing_project_or_month' }, 400);
+
+    const now = new Date().toISOString();
+    const record = {
+      projectId,
+      month,
+      budget: Number(body.budget) || 0,
+      views: Number(body.views) || 0,
+      contacts: Number(body.contacts) || 0,
+      conversionPct: Number(body.conversionPct) || 0,
+      cpl: Number(body.cpl) || 0,
+      diagnostics: Number(body.diagnostics) || 0,
+      salesCount: Number(body.salesCount) || 0,
+      cac: body.cac === '' || body.cac == null ? null : Number(body.cac),
+      notes: String(body.notes || ''),
+      updatedAt: now,
+    };
+    await kv.put(`analytics:${projectId}:${month}`, JSON.stringify(record));
+    return json({ analytics: record });
+  }
+
+  // ── Employees ──
+  if (pathname === '/api/dashboard/employee' && request.method === 'POST') {
+    const body = await readJson(request);
+    const name = body && String(body.name || '').trim();
+    if (!name) return json({ error: 'missing_name' }, 400);
+
+    const id = (body && body.id) || crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    const existing = (await kv.get(`employee:${id}`, 'json')) || {};
+    const now = new Date().toISOString();
+    const employee = {
+      id,
+      name,
+      position: (body && body.position) ?? existing.position ?? '',
+      salary: body && 'salary' in body ? Number(body.salary) || 0 : existing.salary || 0,
+      createdAt: existing.createdAt || now,
+      updatedAt: now,
+    };
+    await kv.put(`employee:${id}`, JSON.stringify(employee));
+    return json({ employee });
+  }
+
+  if (pathname === '/api/dashboard/employee' && request.method === 'DELETE') {
+    const id = url.searchParams.get('id');
+    if (!id) return json({ error: 'missing_id' }, 400);
+    await kv.delete(`employee:${id}`);
+    const list = await kv.list({ prefix: `rating:${id}:` });
+    await Promise.all(list.keys.map((k) => kv.delete(k.name)));
+    return json({ ok: true });
+  }
+
+  // ── Weekly employee ratings ──
+  if (pathname === '/api/dashboard/rating' && request.method === 'POST') {
+    const body = await readJson(request);
+    const employeeId = body && String(body.employeeId || '').trim();
+    const weekStart = body && String(body.weekStart || '').trim();
+    if (!employeeId || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return json({ error: 'missing_employee_or_week' }, 400);
+
+    const clamp = (v) => Math.min(5, Math.max(1, Number(v) || 1));
+    const now = new Date().toISOString();
+    const rating = {
+      employeeId,
+      weekStart,
+      discipline: clamp(body.discipline),
+      communication: clamp(body.communication),
+      skills: clamp(body.skills),
+      updatedAt: now,
+    };
+    await kv.put(`rating:${employeeId}:${weekStart}`, JSON.stringify(rating));
+    return json({ rating });
+  }
+
+  // ── Sales plan/fact (per month) ──
+  if (pathname === '/api/dashboard/sales' && request.method === 'POST') {
+    const body = await readJson(request);
+    const month = body && String(body.month || '').trim();
+    if (!/^\d{4}-\d{2}$/.test(month)) return json({ error: 'missing_month' }, 400);
+
+    const side = (s) => ({
+      planCount: Number(s && s.planCount) || 0,
+      factCount: Number(s && s.factCount) || 0,
+      planRevenue: Number(s && s.planRevenue) || 0,
+      factRevenue: Number(s && s.factRevenue) || 0,
+    });
+    const now = new Date().toISOString();
+    const record = {
+      month,
+      primary: side(body.primary),
+      repeat: side(body.repeat),
+      leads: Number(body.leads) || 0,
+      updatedAt: now,
+    };
+    await kv.put(`sales:${month}`, JSON.stringify(record));
+    return json({ sales: record, month });
+  }
+
+  // ── Cumulative registration base ──
+  if (pathname === '/api/dashboard/registration-base' && request.method === 'POST') {
+    const body = await readJson(request);
+    const total = Number(body && body.total) || 0;
+    const record = { total, updatedAt: new Date().toISOString() };
+    await kv.put('registrationBase', JSON.stringify(record));
+    return json({ registrationBase: record });
+  }
+
+  // ── Agency tasks ──
+  if (pathname === '/api/dashboard/task' && request.method === 'POST') {
+    const body = await readJson(request);
+    const text = body && String(body.text || '').trim();
+    if (!text) return json({ error: 'missing_text' }, 400);
+
+    const id = (body && body.id) || crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    const existing = (await kv.get(`task:${id}`, 'json')) || {};
+    const now = new Date().toISOString();
+    const task = {
+      id,
+      text,
+      status: (body && body.status) || existing.status || 'open',
+      owner: body && 'owner' in body ? body.owner || null : existing.owner ?? null,
+      due: body && 'due' in body ? body.due || null : existing.due ?? null,
+      createdAt: existing.createdAt || now,
+      updatedAt: now,
+    };
+    await kv.put(`task:${id}`, JSON.stringify(task));
+    return json({ task });
+  }
+
+  if (pathname === '/api/dashboard/task' && request.method === 'DELETE') {
+    const id = url.searchParams.get('id');
+    if (!id) return json({ error: 'missing_id' }, 400);
+    await kv.delete(`task:${id}`);
+    return json({ ok: true });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleApi(request, env, url) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
@@ -1319,6 +1634,10 @@ async function handleApi(request, env, url) {
 
   if (pathname.startsWith('/api/avito/')) {
     return handleAvitoApi(request, env, url);
+  }
+
+  if (pathname.startsWith('/api/dashboard/')) {
+    return handleDashboardApi(request, env, url);
   }
 
   // ── Leads: notify by email ──

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дашборд руководителя — Cantor Agency</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+  --green:#1e8449;--green-bg:#eafaf1;
+  --amber:#9a6f00;--amber-bg:#fef9e7;
+  --gray:#6b6b6b;--gray-bg:#f1f0ed;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+
+/* ── Password gate ── */
+#gate{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+#gate .box{background:var(--white);border-radius:var(--r-lg);padding:36px 32px;width:100%;max-width:340px;box-shadow:var(--shadow-md);text-align:center}
+#gate h1{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;margin-bottom:18px}
+#gate input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;font-size:15px;margin-bottom:12px}
+#gate button{width:100%;background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:12px;font-size:14px;font-weight:600}
+#gate button:hover{background:var(--red-dark)}
+#gate .err{color:var(--red);font-size:12px;margin-bottom:10px;min-height:14px}
+
+/* ── App shell ── */
+#app{display:none}
+#app.ready{display:block}
+header.top{background:var(--dark);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+header.top .title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800}
+header.top .title span{color:var(--red-light)}
+.tabs{display:flex;gap:6px;background:var(--dark2);padding:6px 28px;flex-wrap:wrap}
+.tab-btn{background:none;border:none;color:#bbb;padding:10px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600}
+.tab-btn.active{background:var(--red);color:#fff}
+.tab-btn:hover:not(.active){background:#2a2a2a;color:#fff}
+main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+
+.month-toggle{display:flex;gap:8px;margin-bottom:20px}
+.month-toggle button{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;color:var(--muted)}
+.month-toggle button.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.section-head h2{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:800}
+.btn{background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:10px 16px;font-size:13px;font-weight:600;box-shadow:var(--shadow-red)}
+.btn:hover{background:var(--red-dark)}
+.btn.secondary{background:var(--white);color:var(--text);border:1.5px solid var(--border);box-shadow:none}
+.btn.secondary:hover{border-color:var(--red);color:var(--red)}
+.btn.small{padding:6px 10px;font-size:12px}
+.btn.danger{background:var(--white);color:var(--red);border:1.5px solid var(--border);box-shadow:none}
+.btn.danger:hover{border-color:var(--red);background:var(--accent-bg)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-sm)}
+.card h3{font-size:16px;font-weight:700;margin-bottom:2px}
+.card .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.field-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.field-row label{font-size:12px;color:var(--muted);flex-shrink:0}
+.field-row select,.field-row input[type=text],.field-row input[type=number]{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;width:100%;max-width:190px}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;background:var(--warm-bg);border-radius:var(--r-md);padding:12px 14px;margin:12px 0}
+.metric{display:flex;flex-direction:column}
+.metric .v{font-size:16px;font-weight:700}
+.metric .l{font-size:11px;color:var(--muted)}
+.metric input{border:1.5px solid var(--border);border-radius:6px;padding:4px 6px;font-size:14px;font-weight:700;width:100%}
+
+.stars{display:flex;gap:3px}
+.stars button{background:none;border:none;font-size:18px;color:var(--border);padding:0;line-height:1}
+.stars button.on{color:var(--red)}
+.rating-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.rating-row .l{font-size:12px;color:var(--muted)}
+
+textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;min-height:60px;resize:vertical;margin-top:6px}
+.status-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.status-active{background:var(--green-bg);color:var(--green)}
+.status-paused{background:var(--amber-bg);color:var(--amber)}
+.status-done{background:var(--gray-bg);color:var(--gray)}
+
+.card-foot{display:flex;justify-content:flex-end;margin-top:12px}
+
+/* Employees */
+.emp-card .salary{font-size:20px;font-weight:800;color:var(--red);margin-bottom:4px}
+.week-picker{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:12px}
+.week-picker input{border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px}
+.avg-row{display:flex;gap:14px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.avg-row b{color:var(--text);font-size:14px}
+.history{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.history table{width:100%;font-size:11px;border-collapse:collapse}
+.history th,.history td{text-align:left;padding:4px 2px;color:var(--muted)}
+.history th{font-weight:600}
+
+/* Sales */
+.sales-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+@media(max-width:760px){.sales-grid{grid-template-columns:1fr}}
+.sales-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.sales-card h3{font-size:15px;margin-bottom:2px}
+.sales-card .price{font-size:12px;color:var(--muted);margin-bottom:14px}
+.plan-fact{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pf-box{background:var(--warm-bg);border-radius:var(--r-md);padding:10px 12px}
+.pf-box .l{font-size:11px;color:var(--muted);margin-bottom:6px}
+.pf-box input{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:14px;font-weight:700;margin-bottom:6px}
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.kpi-box{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px 20px}
+.kpi-box .l{font-size:12px;color:var(--muted);margin-bottom:6px}
+.kpi-box input{border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:18px;font-weight:800;width:100%}
+
+/* Tasks */
+.task-add{display:flex;gap:8px;margin-bottom:16px}
+.task-add input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-size:13px}
+.task{display:flex;align-items:flex-start;gap:12px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px}
+.task input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--red)}
+.task .txt{flex:1;font-size:13px}
+.task.done .txt{color:var(--muted);text-decoration:line-through}
+.task .meta{display:flex;gap:8px;font-size:11px;color:var(--muted);margin-top:4px}
+.task select{border:1px solid var(--border);border-radius:6px;font-size:11px;padding:2px 4px}
+
+/* Modal */
+#overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
+#overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--r-lg);padding:26px;width:100%;max-width:380px;box-shadow:var(--shadow-md)}
+.modal h3{font-family:'Unbounded',sans-serif;font-size:15px;margin-bottom:16px}
+.modal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.modal input,.modal select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+.empty{color:var(--muted);font-size:13px;padding:20px;text-align:center}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;border-radius:var(--r-sm);font-size:13px;z-index:1100;opacity:0;transform:translateY(8px);transition:all .2s}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <h1>Дашборд руководителя</h1>
+    <div class="err" id="gateErr"></div>
+    <input type="password" id="gatePassword" placeholder="Пароль" autocomplete="off" autofocus>
+    <button id="gateSubmit">Войти</button>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div class="title">Cantor Agency <span>· Дашборд</span></div>
+  </header>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="projects">Проекты</button>
+    <button class="tab-btn" data-tab="employees">Сотрудники</button>
+    <button class="tab-btn" data-tab="sales">Продажи</button>
+    <button class="tab-btn" data-tab="tasks">Задачи</button>
+  </nav>
+
+  <main>
+    <!-- PROJECTS -->
+    <section class="panel active" id="panel-projects">
+      <div class="month-toggle" id="monthToggleProjects"></div>
+      <div class="section-head">
+        <h2>Активные проекты — продвижение на Авито</h2>
+        <button class="btn" id="addProjectBtn">+ Добавить проект</button>
+      </div>
+      <div class="grid" id="projectsGrid"></div>
+    </section>
+
+    <!-- EMPLOYEES -->
+    <section class="panel" id="panel-employees">
+      <div class="section-head">
+        <h2>Сотрудники</h2>
+        <button class="btn" id="addEmployeeBtn">+ Добавить сотрудника</button>
+      </div>
+      <div class="grid" id="employeesGrid"></div>
+    </section>
+
+    <!-- SALES -->
+    <section class="panel" id="panel-sales">
+      <div class="month-toggle" id="monthToggleSales"></div>
+      <div class="section-head"><h2>Продажи</h2></div>
+      <div class="sales-grid">
+        <div class="sales-card" id="salesPrimary"></div>
+        <div class="sales-card" id="salesRepeat"></div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-box">
+          <div class="l">Лидов за месяц</div>
+          <input type="number" id="leadsInput" min="0">
+        </div>
+        <div class="kpi-box">
+          <div class="l">Общая база регистраций (накопительно)</div>
+          <input type="number" id="regBaseInput" min="0">
+        </div>
+      </div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="panel" id="panel-tasks">
+      <div class="section-head"><h2>Ключевые задачи агентства</h2></div>
+      <div class="task-add">
+        <input type="text" id="newTaskText" placeholder="Новая задача...">
+        <button class="btn" id="addTaskBtn">Добавить</button>
+      </div>
+      <div id="tasksList"></div>
+    </section>
+  </main>
+</div>
+
+<div id="overlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_STORAGE_KEY = 'agency_dashboard_ok';
+const MONTHS = [
+  { key: '2026-08', label: 'Август' },
+  { key: '2026-09', label: 'Сентябрь' },
+];
+const STATUS_LABELS = { active: 'В работе', paused: 'На паузе', done: 'Завершён' };
+const RATING_LABELS = { result: 'Результат', communication: 'Коммуникация', quality: 'Качество работы' };
+const WEEK_RATING_LABELS = { discipline: 'Дисциплина', communication: 'Коммуникация', skills: 'Навыки' };
+
+let state = { projects: [], employees: [], analytics: [], ratings: [], sales: {}, registrationBase: { total: 0 }, tasks: [], salePrices: { primary: 50000, repeat: 25000 } };
+let currentMonth = MONTHS[MONTHS.length - 1].key;
+
+// ── Gate ──
+function isUnlocked() { try { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; } catch { return false; } }
+function unlock(pw) {
+  try { localStorage.setItem(ADMIN_STORAGE_KEY, '1'); localStorage.setItem('agency_dashboard_pw', pw); } catch {}
+}
+function getPassword() { try { return localStorage.getItem('agency_dashboard_pw') || ''; } catch { return ''; } }
+
+document.getElementById('gateSubmit').addEventListener('click', tryGate);
+document.getElementById('gatePassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryGate(); });
+async function tryGate() {
+  const pw = document.getElementById('gatePassword').value;
+  const ok = await api('/api/dashboard/bootstrap', {}, pw, true);
+  if (ok) {
+    unlock(pw);
+    document.getElementById('gate').style.display = 'none';
+    boot();
+  } else {
+    document.getElementById('gateErr').textContent = 'Неверный пароль';
+  }
+}
+
+// ── API helper ──
+async function api(path, options = {}, pwOverride, silent) {
+  const pw = pwOverride || getPassword();
+  const res = await fetch(path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw, ...(options.headers || {}) },
+  });
+  if (res.status === 401) {
+    if (silent) return false;
+    try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch {}
+    location.reload();
+    return null;
+  }
+  if (!res.ok) { toast('Ошибка сохранения'); return null; }
+  const data = await res.json().catch(() => null);
+  return silent ? true : data;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── Boot ──
+async function boot() {
+  document.getElementById('app').classList.add('ready');
+  const data = await api('/api/dashboard/bootstrap');
+  if (!data) return;
+  state = data;
+  renderMonthToggles();
+  renderProjects();
+  renderEmployees();
+  renderSales();
+  renderTasks();
+}
+
+if (isUnlocked()) {
+  document.getElementById('gate').style.display = 'none';
+  boot();
+}
+
+// ── Tabs ──
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Month toggles ──
+function renderMonthToggles() {
+  [['monthToggleProjects', renderProjects], ['monthToggleSales', renderSales]].forEach(([id, rerender]) => {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    MONTHS.forEach((m) => {
+      const b = document.createElement('button');
+      b.textContent = m.label;
+      if (m.key === currentMonth) b.classList.add('active');
+      b.addEventListener('click', () => {
+        currentMonth = m.key;
+        renderMonthToggles();
+        rerender();
+      });
+      el.appendChild(b);
+    });
+  });
+}
+
+// ── Modal helpers ──
+function openModal(html) {
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
+
+// ══════════════════════ PROJECTS ══════════════════════
+function analyticsFor(projectId, month) {
+  return state.analytics.find((a) => a.projectId === projectId && a.month === month) || null;
+}
+
+function starPicker(criterion, value, onSet) {
+  const wrap = document.createElement('div');
+  wrap.className = 'stars';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.textContent = '★';
+    if (i <= value) b.classList.add('on');
+    b.addEventListener('click', () => onSet(i));
+    wrap.appendChild(b);
+  }
+  return wrap;
+}
+
+function renderProjects() {
+  const grid = document.getElementById('projectsGrid');
+  grid.innerHTML = '';
+  if (!state.projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
+
+  state.projects.forEach((p) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const a = analyticsFor(p.id, currentMonth);
+
+    card.innerHTML = `
+      <h3>${escapeHtml(p.name)}</h3>
+      <div class="sub">${escapeHtml(p.service)}</div>
+    `;
+
+    const statusRow = document.createElement('div');
+    statusRow.className = 'field-row';
+    statusRow.innerHTML = '<label>Статус</label>';
+    const statusSel = document.createElement('select');
+    Object.entries(STATUS_LABELS).forEach(([k, label]) => {
+      const opt = document.createElement('option');
+      opt.value = k; opt.textContent = label;
+      if (k === p.status) opt.selected = true;
+      statusSel.appendChild(opt);
+    });
+    statusSel.addEventListener('change', async () => {
+      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, status: statusSel.value }) });
+      p.status = statusSel.value;
+      toast('Сохранено');
+    });
+    statusRow.appendChild(statusSel);
+    card.appendChild(statusRow);
+
+    const respRow = document.createElement('div');
+    respRow.className = 'field-row';
+    respRow.innerHTML = '<label>Ответственный</label>';
+    const respSel = document.createElement('select');
+    const noneOpt = document.createElement('option');
+    noneOpt.value = ''; noneOpt.textContent = '— не назначен —';
+    respSel.appendChild(noneOpt);
+    state.employees.forEach((e) => {
+      const opt = document.createElement('option');
+      opt.value = e.id; opt.textContent = e.name;
+      if (p.responsibleId === e.id) opt.selected = true;
+      respSel.appendChild(opt);
+    });
+    respSel.addEventListener('change', async () => {
+      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, responsibleId: respSel.value || null }) });
+      p.responsibleId = respSel.value || null;
+      toast('Сохранено');
+    });
+    respRow.appendChild(respSel);
+    card.appendChild(respRow);
+
+    // Metrics
+    const metrics = document.createElement('div');
+    metrics.className = 'metrics';
+    const fields = [
+      ['budget', 'Расход, ₽'], ['views', 'Просмотров'], ['contacts', 'Обращений'],
+      ['conversionPct', 'Конверсия, %'], ['cpl', 'CPL, ₽'], ['diagnostics', 'Диагностик'],
+      ['salesCount', 'Продаж'], ['cac', 'CAC, ₽'],
+    ];
+    const av = a || { budget: '', views: '', contacts: '', conversionPct: '', cpl: '', diagnostics: '', salesCount: '', cac: '' };
+    fields.forEach(([key, label]) => {
+      const m = document.createElement('div');
+      m.className = 'metric';
+      m.innerHTML = `<span class="l">${label}</span>`;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.value = av[key] ?? '';
+      input.addEventListener('change', () => saveAnalytics(p.id, fields, metrics));
+      m.appendChild(input);
+      metrics.appendChild(m);
+    });
+    card.appendChild(metrics);
+
+    // Ratings
+    const ratingsBlock = document.createElement('div');
+    Object.entries(RATING_LABELS).forEach(([key, label]) => {
+      const row = document.createElement('div');
+      row.className = 'rating-row';
+      row.innerHTML = `<span class="l">${label}</span>`;
+      row.appendChild(starPicker(key, p.ratings[key] || 0, async (val) => {
+        p.ratings[key] = val;
+        await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, ratings: p.ratings }) });
+        renderProjects();
+        toast('Оценка сохранена');
+      }));
+      ratingsBlock.appendChild(row);
+    });
+    card.appendChild(ratingsBlock);
+
+    // Review
+    const reviewLabel = document.createElement('div');
+    reviewLabel.className = 'field-row';
+    reviewLabel.innerHTML = '<label>Отзыв клиента</label>';
+    card.appendChild(reviewLabel);
+    const review = document.createElement('textarea');
+    review.className = 'review';
+    review.placeholder = 'Что клиент говорит о сотрудничестве...';
+    review.value = p.review || '';
+    review.addEventListener('blur', async () => {
+      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, review: review.value }) });
+      p.review = review.value;
+      toast('Отзыв сохранён');
+    });
+    card.appendChild(review);
+
+    const foot = document.createElement('div');
+    foot.className = 'card-foot';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn danger small';
+    delBtn.textContent = 'Удалить проект';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('Удалить проект «' + p.name + '»?')) return;
+      await api('/api/dashboard/project?id=' + encodeURIComponent(p.id), { method: 'DELETE' });
+      state.projects = state.projects.filter((x) => x.id !== p.id);
+      renderProjects();
+    });
+    foot.appendChild(delBtn);
+    card.appendChild(foot);
+
+    grid.appendChild(card);
+
+    async function saveAnalytics(projectId, fieldDefs, metricsEl) {
+      const inputs = metricsEl.querySelectorAll('input');
+      const body = { projectId, month: currentMonth };
+      fieldDefs.forEach(([key], i) => { body[key] = inputs[i].value; });
+      const res = await api('/api/dashboard/analytics', { method: 'POST', body: JSON.stringify(body) });
+      if (res && res.analytics) {
+        state.analytics = state.analytics.filter((x) => !(x.projectId === projectId && x.month === currentMonth));
+        state.analytics.push(res.analytics);
+        toast('Метрики сохранены');
+      }
+    }
+  });
+}
+
+document.getElementById('addProjectBtn').addEventListener('click', () => {
+  openModal(`
+    <h3>Новый проект</h3>
+    <label>Название клиента</label>
+    <input type="text" id="mProjectName" placeholder="Имя Фамилия">
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn" id="mProjectSave">Создать</button>
+    </div>
+  `);
+  document.getElementById('mProjectSave').addEventListener('click', async () => {
+    const name = document.getElementById('mProjectName').value.trim();
+    if (!name) return;
+    const res = await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ name }) });
+    if (res && res.project) { state.projects.push(res.project); renderProjects(); closeModal(); }
+  });
+});
+
+// ══════════════════════ EMPLOYEES ══════════════════════
+function isoMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  return date.toISOString().slice(0, 10);
+}
+
+function ratingsFor(employeeId) {
+  return state.ratings.filter((r) => r.employeeId === employeeId).sort((a, b) => (a.weekStart < b.weekStart ? 1 : -1));
+}
+
+function renderEmployees() {
+  const grid = document.getElementById('employeesGrid');
+  grid.innerHTML = '';
+  if (!state.employees.length) { grid.innerHTML = '<div class="empty">Пока нет сотрудников</div>'; return; }
+
+  state.employees.forEach((emp) => {
+    const card = document.createElement('div');
+    card.className = 'card emp-card';
+
+    card.innerHTML = `<h3>${escapeHtml(emp.name)}</h3>`;
+
+    const posRow = document.createElement('div');
+    posRow.className = 'field-row';
+    posRow.innerHTML = '<label>Должность</label>';
+    const posInput = document.createElement('input');
+    posInput.type = 'text'; posInput.value = emp.position || '';
+    posInput.addEventListener('blur', () => saveEmployeeField(emp, 'position', posInput.value));
+    posRow.appendChild(posInput);
+    card.appendChild(posRow);
+
+    const salRow = document.createElement('div');
+    salRow.className = 'field-row';
+    salRow.innerHTML = '<label>Зарплата, ₽/мес</label>';
+    const salInput = document.createElement('input');
+    salInput.type = 'number'; salInput.value = emp.salary || 0;
+    salInput.addEventListener('blur', () => saveEmployeeField(emp, 'salary', salInput.value));
+    salRow.appendChild(salInput);
+    card.appendChild(salRow);
+
+    // current week ratings
+    const weekStart = isoMonday(new Date());
+    const existing = state.ratings.find((r) => r.employeeId === emp.id && r.weekStart === weekStart) || { discipline: 0, communication: 0, skills: 0 };
+    const wk = document.createElement('div');
+    wk.className = 'week-picker';
+    wk.innerHTML = '<span>Оценка за неделю с ' + weekStart + '</span>';
+    card.appendChild(wk);
+
+    const draft = { discipline: existing.discipline || 0, communication: existing.communication || 0, skills: existing.skills || 0 };
+    Object.entries(WEEK_RATING_LABELS).forEach(([key, label]) => {
+      const row = document.createElement('div');
+      row.className = 'rating-row';
+      row.innerHTML = `<span class="l">${label}</span>`;
+      const starsWrap = document.createElement('div');
+      function draw() {
+        starsWrap.innerHTML = '';
+        starsWrap.appendChild(starPicker(key, draft[key], (val) => { draft[key] = val; draw(); }));
+      }
+      draw();
+      row.appendChild(starsWrap);
+      card.appendChild(row);
+    });
+    const saveWeekBtn = document.createElement('button');
+    saveWeekBtn.className = 'btn small';
+    saveWeekBtn.textContent = 'Сохранить оценку за неделю';
+    saveWeekBtn.style.marginTop = '6px';
+    saveWeekBtn.addEventListener('click', async () => {
+      if (!draft.discipline || !draft.communication || !draft.skills) { toast('Заполните все три критерия'); return; }
+      const res = await api('/api/dashboard/rating', { method: 'POST', body: JSON.stringify({ employeeId: emp.id, weekStart, ...draft }) });
+      if (res && res.rating) {
+        state.ratings = state.ratings.filter((r) => !(r.employeeId === emp.id && r.weekStart === weekStart));
+        state.ratings.push(res.rating);
+        toast('Оценка сохранена');
+        renderEmployees();
+      }
+    });
+    card.appendChild(saveWeekBtn);
+
+    // averages + history
+    const hist = ratingsFor(emp.id);
+    if (hist.length) {
+      const avg = (k) => (hist.reduce((s, r) => s + r[k], 0) / hist.length).toFixed(1);
+      const avgRow = document.createElement('div');
+      avgRow.className = 'avg-row';
+      avgRow.style.marginTop = '10px';
+      avgRow.innerHTML = `<span>Дисциплина <b>${avg('discipline')}</b></span><span>Коммуникация <b>${avg('communication')}</b></span><span>Навыки <b>${avg('skills')}</b></span>`;
+      card.appendChild(avgRow);
+
+      const histBlock = document.createElement('div');
+      histBlock.className = 'history';
+      const rows = hist.slice(0, 8).map((r) => `<tr><td>${r.weekStart}</td><td>${r.discipline}</td><td>${r.communication}</td><td>${r.skills}</td></tr>`).join('');
+      histBlock.innerHTML = `<table><thead><tr><th>Неделя</th><th>Дисц.</th><th>Комм.</th><th>Навыки</th></tr></thead><tbody>${rows}</tbody></table>`;
+      card.appendChild(histBlock);
+    }
+
+    const foot = document.createElement('div');
+    foot.className = 'card-foot';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn danger small';
+    delBtn.textContent = 'Удалить сотрудника';
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('Удалить сотрудника «' + emp.name + '»?')) return;
+      await api('/api/dashboard/employee?id=' + encodeURIComponent(emp.id), { method: 'DELETE' });
+      state.employees = state.employees.filter((x) => x.id !== emp.id);
+      state.ratings = state.ratings.filter((x) => x.employeeId !== emp.id);
+      renderEmployees();
+    });
+    foot.appendChild(delBtn);
+    card.appendChild(foot);
+
+    grid.appendChild(card);
+  });
+}
+
+async function saveEmployeeField(emp, field, value) {
+  const body = { id: emp.id, name: emp.name };
+  body[field] = value;
+  const res = await api('/api/dashboard/employee', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.employee) { Object.assign(emp, res.employee); toast('Сохранено'); }
+}
+
+document.getElementById('addEmployeeBtn').addEventListener('click', () => {
+  openModal(`
+    <h3>Новый сотрудник</h3>
+    <label>Имя</label>
+    <input type="text" id="mEmpName">
+    <label>Должность</label>
+    <input type="text" id="mEmpPosition">
+    <label>Зарплата, ₽/мес</label>
+    <input type="number" id="mEmpSalary" value="0">
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn" id="mEmpSave">Создать</button>
+    </div>
+  `);
+  document.getElementById('mEmpSave').addEventListener('click', async () => {
+    const name = document.getElementById('mEmpName').value.trim();
+    if (!name) return;
+    const position = document.getElementById('mEmpPosition').value.trim();
+    const salary = document.getElementById('mEmpSalary').value;
+    const res = await api('/api/dashboard/employee', { method: 'POST', body: JSON.stringify({ name, position, salary }) });
+    if (res && res.employee) { state.employees.push(res.employee); renderEmployees(); closeModal(); }
+  });
+});
+
+// ══════════════════════ SALES ══════════════════════
+function salesFor(month) {
+  return state.sales[month] || state.sales.find?.((s) => s.month === month) || { primary: {}, repeat: {}, leads: 0 };
+}
+
+function renderSalesCard(elId, kind, label, price) {
+  const el = document.getElementById(elId);
+  const record = getSalesRecord(currentMonth);
+  const data = record[kind] || { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 };
+
+  el.innerHTML = `
+    <h3>${label}</h3>
+    <div class="price">Цена: ${price.toLocaleString('ru-RU')} ₽</div>
+    <div class="plan-fact">
+      <div class="pf-box"><div class="l">План, шт/мес</div><input type="number" id="${elId}-planCount" value="${data.planCount}"></div>
+      <div class="pf-box"><div class="l">Факт, шт</div><input type="number" id="${elId}-factCount" value="${data.factCount}"></div>
+      <div class="pf-box"><div class="l">План выручки, ₽</div><input type="number" id="${elId}-planRevenue" value="${data.planRevenue}"></div>
+      <div class="pf-box"><div class="l">Факт выручки, ₽</div><input type="number" id="${elId}-factRevenue" value="${data.factRevenue}"></div>
+    </div>
+  `;
+  ['planCount', 'factCount', 'planRevenue', 'factRevenue'].forEach((f) => {
+    document.getElementById(`${elId}-${f}`).addEventListener('blur', () => saveSales());
+  });
+}
+
+function getSalesRecord(month) {
+  const raw = state.sales;
+  let rec;
+  if (Array.isArray(raw)) rec = raw.find((s) => s.month === month);
+  else rec = raw[month];
+  return rec || { primary: { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 }, repeat: { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 }, leads: 0 };
+}
+
+function setSalesRecord(month, rec) {
+  if (Array.isArray(state.sales)) {
+    state.sales = state.sales.filter((s) => s.month !== month);
+    state.sales.push({ ...rec, month });
+  } else {
+    state.sales[month] = rec;
+  }
+}
+
+async function saveSales() {
+  const p = 'salesPrimary', r = 'salesRepeat';
+  const body = {
+    month: currentMonth,
+    primary: {
+      planCount: document.getElementById(p + '-planCount').value,
+      factCount: document.getElementById(p + '-factCount').value,
+      planRevenue: document.getElementById(p + '-planRevenue').value,
+      factRevenue: document.getElementById(p + '-factRevenue').value,
+    },
+    repeat: {
+      planCount: document.getElementById(r + '-planCount').value,
+      factCount: document.getElementById(r + '-factCount').value,
+      planRevenue: document.getElementById(r + '-planRevenue').value,
+      factRevenue: document.getElementById(r + '-factRevenue').value,
+    },
+    leads: document.getElementById('leadsInput').value,
+  };
+  const res = await api('/api/dashboard/sales', { method: 'POST', body: JSON.stringify(body) });
+  if (res && res.sales) { setSalesRecord(currentMonth, res.sales); toast('Продажи сохранены'); }
+}
+
+function renderSales() {
+  renderSalesCard('salesPrimary', 'primary', 'Первичные продажи', state.salePrices.primary);
+  renderSalesCard('salesRepeat', 'repeat', 'Повторные продажи', state.salePrices.repeat);
+  const rec = getSalesRecord(currentMonth);
+  document.getElementById('leadsInput').value = rec.leads || 0;
+  document.getElementById('leadsInput').onblur = saveSales;
+  document.getElementById('regBaseInput').value = (state.registrationBase && state.registrationBase.total) || 0;
+  document.getElementById('regBaseInput').onblur = async () => {
+    const total = document.getElementById('regBaseInput').value;
+    const res = await api('/api/dashboard/registration-base', { method: 'POST', body: JSON.stringify({ total }) });
+    if (res && res.registrationBase) { state.registrationBase = res.registrationBase; toast('Сохранено'); }
+  };
+}
+
+// ══════════════════════ TASKS ══════════════════════
+function renderTasks() {
+  const list = document.getElementById('tasksList');
+  list.innerHTML = '';
+  if (!state.tasks.length) { list.innerHTML = '<div class="empty">Нет задач</div>'; return; }
+
+  state.tasks.forEach((t) => {
+    const row = document.createElement('div');
+    row.className = 'task' + (t.status === 'done' ? ' done' : '');
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = t.status === 'done';
+    cb.addEventListener('change', async () => {
+      const status = cb.checked ? 'done' : 'open';
+      const res = await api('/api/dashboard/task', { method: 'POST', body: JSON.stringify({ id: t.id, text: t.text, status, owner: t.owner, due: t.due }) });
+      if (res && res.task) { Object.assign(t, res.task); renderTasks(); }
+    });
+    row.appendChild(cb);
+
+    const body = document.createElement('div');
+    body.style.flex = '1';
+    const txt = document.createElement('div');
+    txt.className = 'txt';
+    txt.textContent = t.text;
+    body.appendChild(txt);
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const ownerSel = document.createElement('select');
+    const noneOpt = document.createElement('option');
+    noneOpt.value = ''; noneOpt.textContent = 'Без ответственного';
+    ownerSel.appendChild(noneOpt);
+    state.employees.forEach((e) => {
+      const opt = document.createElement('option');
+      opt.value = e.id; opt.textContent = e.name;
+      if (t.owner === e.id) opt.selected = true;
+      ownerSel.appendChild(opt);
+    });
+    ownerSel.addEventListener('change', async () => {
+      const res = await api('/api/dashboard/task', { method: 'POST', body: JSON.stringify({ id: t.id, text: t.text, status: t.status, owner: ownerSel.value || null, due: t.due }) });
+      if (res && res.task) Object.assign(t, res.task);
+    });
+    meta.appendChild(ownerSel);
+    body.appendChild(meta);
+    row.appendChild(body);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn danger small';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', async () => {
+      await api('/api/dashboard/task?id=' + encodeURIComponent(t.id), { method: 'DELETE' });
+      state.tasks = state.tasks.filter((x) => x.id !== t.id);
+      renderTasks();
+    });
+    row.appendChild(delBtn);
+
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('addTaskBtn').addEventListener('click', addTask);
+document.getElementById('newTaskText').addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+async function addTask() {
+  const input = document.getElementById('newTaskText');
+  const text = input.value.trim();
+  if (!text) return;
+  const res = await api('/api/dashboard/task', { method: 'POST', body: JSON.stringify({ text }) });
+  if (res && res.task) { state.tasks.unshift(res.task); input.value = ''; renderTasks(); }
+}
+
+// ── util ──
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+</script>
+</body>
+</html>
