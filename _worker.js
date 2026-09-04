@@ -978,27 +978,44 @@ async function fetchAllAvitoItems(token) {
   return items;
 }
 
-async function fetchAvitoStats(token, userId, itemIds, dateFrom, dateTo, errors) {
-  const statsById = {};
+// /stats/v1/accounts/{id}/items always answers with one entry per day per item
+// (confirmed against real traffic — periodGrouping has no "total"/aggregate mode, and the
+// endpoint's `fields` enum is only [views contacts favorites uniqViews uniqContacts
+// uniqFavorites], so ad spend isn't available through this endpoint at all, whatever the
+// request asks for): { result: { items: [ { itemId, stats: [ { date, uniqViews,
+// uniqContacts, uniqFavorites }, ... ] } ] } }. Callers sum the daily rows themselves —
+// see sumAvitoStatDays / sumAvitoStatDaysInRange.
+async function fetchAvitoDailyStats(token, userId, itemIds, dateFrom, dateTo, errors) {
+  const dailyByItem = {};
   for (let i = 0; i < itemIds.length; i += AVITO_STATS_ITEMS_BATCH) {
     const batch = itemIds.slice(i, i + AVITO_STATS_ITEMS_BATCH);
     const data = await avitoJson(token, `/stats/v1/accounts/${userId}/items`, {
       method: 'POST',
-      body: JSON.stringify({ dateFrom, dateTo, itemIds: batch, periodGrouping: 'day' }),
+      body: JSON.stringify({ dateFrom, dateTo, itemIds: batch }),
     });
-    // Avito's exact response shape for this endpoint isn't documented anywhere reachable —
-    // try the shapes seen in the wild, and if none match, surface the raw response instead
-    // of silently returning blank stats so the real shape can be read off a real export.
-    const rows = (data.result && data.result.items) || data.items || (Array.isArray(data) ? data : null) || [];
+    const rows = (data.result && data.result.items) || [];
     if (!rows.length && errors) {
       errors.push(`Статистика: сервер ответил без ожидаемых полей (items). Сырой ответ: ${JSON.stringify(data).slice(0, 500)}`);
     }
     for (const row of rows) {
       const id = row.itemId ?? row.id;
-      if (id != null) statsById[id] = row;
+      if (id != null) dailyByItem[id] = row.stats || [];
     }
   }
-  return statsById;
+  return dailyByItem;
+}
+
+function sumAvitoStatDays(days) {
+  return (days || []).reduce((acc, d) => {
+    acc.views += d.uniqViews || 0;
+    acc.contacts += d.uniqContacts || 0;
+    acc.favorites += d.uniqFavorites || 0;
+    return acc;
+  }, { views: 0, contacts: 0, favorites: 0 });
+}
+
+function sumAvitoStatDaysInRange(days, fromStr, toStr) {
+  return sumAvitoStatDays((days || []).filter((d) => d.date >= fromStr && d.date <= toStr));
 }
 
 async function fetchAllAvitoChats(token, userId) {
@@ -1091,15 +1108,15 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
   const itemById = {};
   items.forEach((it) => { itemById[it.id] = it; });
 
-  let statsById = {};
+  let dailyByItem = {};
   try {
-    statsById = await fetchAvitoStats(token, userId, items.map((it) => it.id).filter(Boolean), dateFrom, dateTo, errors);
+    dailyByItem = await fetchAvitoDailyStats(token, userId, items.map((it) => it.id).filter(Boolean), dateFrom, dateTo, errors);
   } catch (e) {
     errors.push(`Статистика: ${e.message}`);
   }
 
   const stats = items.map((it) => {
-    const s = statsById[it.id] || {};
+    const s = sumAvitoStatDays(dailyByItem[it.id]);
     return {
       item_id: it.id,
       title: it.title || '',
@@ -1107,12 +1124,14 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
       category: (it.category && it.category.name) || it.category || '',
       address: it.address || (it.location && it.location.title) || '',
       url: it.url || '',
-      views: s.views ?? s.uniqViews ?? '',
-      uniqViews: s.uniqViews ?? '',
-      contacts: s.contacts ?? s.uniqContacts ?? '',
-      uniqContacts: s.uniqContacts ?? '',
-      favorites: s.favorites ?? s.uniqFavorites ?? '',
-      spend: s.spend ?? s.expenses ?? '',
+      views: s.views,
+      uniqViews: s.views,
+      contacts: s.contacts,
+      uniqContacts: s.contacts,
+      favorites: s.favorites,
+      // Ad spend isn't exposed by this (or any known) Avito partner API endpoint — only
+      // visible in the seller's own cabinet — so this column is left blank rather than guessed.
+      spend: '',
       dateFrom,
       dateTo,
     };
@@ -1250,6 +1269,14 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
   };
 }
 
+function avitoYmd(d) { return d.toISOString().slice(0, 10); }
+function avitoAddDays(ymdStr, delta) {
+  const d = new Date(`${ymdStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + delta);
+  return avitoYmd(d);
+}
+function avitoMonthStart(ymdStr) { return `${ymdStr.slice(0, 7)}-01`; }
+
 async function runAvitoOverview(env, account, dateFrom, dateTo) {
   const errors = [];
   const token = await avitoGetToken(env, account);
@@ -1273,15 +1300,24 @@ async function runAvitoOverview(env, account, dateFrom, dateTo) {
     errors.push(`Объявления: ${e.message}`);
   }
 
-  let statsById = {};
+  // "Вчера" / "с начала месяца" are fixed to the calendar, independent of the dateFrom/dateTo
+  // the caller picked for the listings table — widen the fetch to cover both so one call
+  // (per item-batch) serves the whole overview instead of two.
+  const today = avitoYmd(new Date());
+  const yesterday = avitoAddDays(today, -1);
+  const monthStart = avitoMonthStart(today);
+  const rangeFrom = dateFrom < monthStart ? dateFrom : monthStart;
+  const rangeTo = dateTo > today ? dateTo : today;
+
+  let dailyByItem = {};
   try {
-    statsById = await fetchAvitoStats(token, userId, items.map((it) => it.id).filter(Boolean), dateFrom, dateTo, null);
+    dailyByItem = await fetchAvitoDailyStats(token, userId, items.map((it) => it.id).filter(Boolean), rangeFrom, rangeTo, errors);
   } catch (e) {
     errors.push(`Статистика: ${e.message}`);
   }
 
   const items_out = items.map((it) => {
-    const s = statsById[it.id] || {};
+    const s = sumAvitoStatDaysInRange(dailyByItem[it.id], dateFrom, dateTo);
     return {
       item_id: it.id,
       title: it.title || '',
@@ -1290,12 +1326,15 @@ async function runAvitoOverview(env, account, dateFrom, dateTo) {
       category: (it.category && it.category.name) || it.category || '',
       address: it.address || (it.location && it.location.title) || '',
       url: it.url || '',
-      views: s.views ?? s.uniqViews ?? '',
-      contacts: s.contacts ?? s.uniqContacts ?? '',
-      favorites: s.favorites ?? s.uniqFavorites ?? '',
-      spend: s.spend ?? s.expenses ?? '',
+      views: s.views,
+      contacts: s.contacts,
+      favorites: s.favorites,
     };
   });
+
+  const allDays = Object.values(dailyByItem).flat();
+  const yesterdayTotals = sumAvitoStatDaysInRange(allDays, yesterday, yesterday);
+  const monthToDateTotals = sumAvitoStatDaysInRange(allDays, monthStart, today);
 
   let chatsTotal = 0;
   try {
@@ -1310,6 +1349,13 @@ async function runAvitoOverview(env, account, dateFrom, dateTo) {
     balance: balanceRes.status === 'fulfilled' ? balanceRes.value : null,
     rating: ratingRes.status === 'fulfilled' ? ratingRes.value : null,
     reviews: reviewsRes.status === 'fulfilled' ? reviewsRes.value : { total: 0, reviews: [] },
+    // Ad spend / "Аванс" (advance) aren't exposed by any documented Avito partner API
+    // endpoint — they only exist in the seller's own web cabinet — so they're not included
+    // here; views/contacts/favorites below are real, summed from daily stats.
+    daily: {
+      yesterday: { date: yesterday, ...yesterdayTotals },
+      monthToDate: { from: monthStart, to: today, ...monthToDateTotals },
+    },
     items: items_out,
     counts: { items: items_out.length, chatsTotal },
     errors,
