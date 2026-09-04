@@ -111,6 +111,52 @@ input,textarea,select{font-family:inherit}
 .modal-card h3{font-family:'Unbounded',sans-serif;font-size:16px;margin-bottom:16px}
 .modal-actions{display:flex;gap:8px;margin-top:18px}
 .hint{font-size:11.5px;color:var(--muted);margin-top:-8px;margin-bottom:14px;line-height:1.5}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;border-bottom:1.5px solid var(--border);margin:18px 0 16px}
+.tab-btn{background:none;border:none;padding:9px 4px;margin-right:18px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--red);border-bottom-color:var(--red)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ── OVERVIEW ── */
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.ov-card{background:var(--bg);border-radius:var(--r-md);padding:13px 14px}
+.ov-card .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px}
+.ov-card .val{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark)}
+.ov-card .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.profile-box{font-size:12.5px;color:var(--text);background:var(--warm-bg);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;line-height:1.7}
+.profile-box b{color:var(--dark)}
+.review-item{border-bottom:1px solid var(--border);padding:10px 0;font-size:12.5px}
+.review-item:last-child{border-bottom:none}
+.review-score{color:var(--amber);font-weight:700}
+
+/* ── LISTINGS / DATA TABLES ── */
+.data-table-wrap{overflow-x:auto;margin-top:4px}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
+.data-table th{text-align:left;color:var(--muted);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.03em;padding:7px 9px;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:var(--white)}
+.data-table td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+.data-table td.wrap-cell{white-space:normal;max-width:260px}
+.data-table a{color:var(--red);text-decoration:none}
+.data-table a:hover{text-decoration:underline}
+.loading-note{font-size:12.5px;color:var(--muted);padding:14px 4px}
+
+/* ── CHATS ── */
+.chat-list{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto}
+.chat-row{border:1.5px solid var(--border);border-radius:var(--r-md);padding:10px 12px;cursor:pointer;transition:all 0.15s}
+.chat-row:hover{border-color:var(--red)}
+.chat-row.active{border-color:var(--red);background:var(--accent-bg)}
+.chat-row .ct-title{font-size:12.5px;font-weight:700;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-row .ct-preview{font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-row .ct-date{font-size:10.5px;color:var(--muted);margin-top:3px}
+.chat-split{display:grid;grid-template-columns:280px 1fr;gap:16px}
+@media(max-width:760px){.chat-split{grid-template-columns:1fr}}
+.thread{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto;padding:4px}
+.bubble{max-width:78%;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.5}
+.bubble.client{align-self:flex-start;background:var(--gray-bg);border-bottom-left-radius:3px}
+.bubble.manager{align-self:flex-end;background:var(--accent-bg);border-bottom-right-radius:3px}
+.bubble .b-meta{font-size:10px;color:var(--muted);margin-top:4px}
 </style>
 </head>
 <body>
@@ -158,24 +204,53 @@ input,textarea,select{font-family:inherit}
         <div class="date-row">
           <div class="field-row">
             <label>Период с</label>
-            <input type="date" id="dateFrom">
+            <input type="date" id="dateFrom" onchange="onPeriodChange()">
           </div>
           <div class="field-row">
             <label>Период по</label>
-            <input type="date" id="dateTo">
+            <input type="date" id="dateTo" onchange="onPeriodChange()">
           </div>
-          <button class="btn-red" id="exportBtn" onclick="runExport()">⬇ Выгрузить в XLSX</button>
         </div>
 
-        <div id="summaryBox" class="hidden">
-          <div class="summary-grid" id="summaryGrid"></div>
-          <div id="errorBox" class="err-box hidden"></div>
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Обзор</button>
+          <button class="tab-btn" data-tab="listings" onclick="switchTab('listings')">Объявления</button>
+          <button class="tab-btn" data-tab="chats" onclick="switchTab('chats')">Сообщения</button>
+          <button class="tab-btn" data-tab="export" onclick="switchTab('export')">Экспорт в XLSX</button>
         </div>
 
-        <div class="panel-head" style="margin-top:22px">
-          <h2 style="font-size:13px">История выгрузок</h2>
+        <div class="tab-pane active" id="tab-overview">
+          <div id="overviewBox"><div class="loading-note">Загрузка…</div></div>
         </div>
-        <div id="runsBox"><div class="empty-note">Пока не было выгрузок.</div></div>
+
+        <div class="tab-pane" id="tab-listings">
+          <div id="listingsBox"><div class="loading-note">Загрузка…</div></div>
+        </div>
+
+        <div class="tab-pane" id="tab-chats">
+          <div class="chat-split">
+            <div>
+              <div id="chatListBox"><div class="loading-note">Загрузка…</div></div>
+              <button class="btn-ghost-sm hidden" id="loadMoreChatsBtn" style="margin-top:8px;width:100%" onclick="loadMoreChats()">Показать ещё</button>
+            </div>
+            <div id="threadBox"><div class="empty-note">Выберите чат слева.</div></div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="tab-export">
+          <div style="margin-bottom:14px">
+            <button class="btn-red" id="exportBtn" onclick="runExport()">⬇ Выгрузить в XLSX</button>
+          </div>
+          <div id="summaryBox" class="hidden">
+            <div class="summary-grid" id="summaryGrid"></div>
+            <div id="errorBox" class="err-box hidden"></div>
+          </div>
+
+          <div class="panel-head" style="margin-top:22px">
+            <h2 style="font-size:13px">История выгрузок</h2>
+          </div>
+          <div id="runsBox"><div class="empty-note">Пока не было выгрузок.</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -227,6 +302,12 @@ let accounts = [];
 let selectedId = null;
 let editingAccountId = null;
 let lastExportResult = null;
+let currentTab = 'overview';
+let overviewCache = null; // { key, data }
+let chatOffset = 0;
+let chatList = [];
+let chatHasMore = false;
+let selectedChatId = null;
 
 async function api(path, opts) {
   const res = await fetch(API_BASE + path, {
@@ -325,7 +406,194 @@ async function selectAccount(id) {
   document.getElementById('dateTo').value = today.toISOString().slice(0, 10);
   document.getElementById('dateFrom').value = monthAgo.toISOString().slice(0, 10);
 
+  overviewCache = null;
+  chatOffset = 0;
+  chatList = [];
+  selectedChatId = null;
+  switchTab('overview');
+
   await loadRuns(id);
+}
+
+/* ════════════ LIVE VIEW: TABS ════════════ */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach((p) => p.classList.toggle('active', p.id === 'tab-' + tab));
+  if (tab === 'overview') loadOverview();
+  if (tab === 'listings') loadListings();
+  if (tab === 'chats' && chatList.length === 0) loadChats(true);
+}
+
+function onPeriodChange() {
+  overviewCache = null;
+  if (currentTab === 'overview') loadOverview();
+  if (currentTab === 'listings') loadListings();
+}
+
+function overviewCacheKey() {
+  return selectedId + '|' + document.getElementById('dateFrom').value + '|' + document.getElementById('dateTo').value;
+}
+
+async function fetchOverviewData() {
+  const key = overviewCacheKey();
+  if (overviewCache && overviewCache.key === key) return overviewCache.data;
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  const data = await api(`/api/avito/overview?accountId=${encodeURIComponent(selectedId)}&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`);
+  overviewCache = { key, data };
+  return data;
+}
+
+function fmtMoney(v) {
+  return Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' ₽';
+}
+
+async function loadOverview() {
+  if (!selectedId) return;
+  const box = document.getElementById('overviewBox');
+  if (!overviewCache || overviewCache.key !== overviewCacheKey()) box.innerHTML = '<div class="loading-note">Загрузка…</div>';
+  try {
+    const data = await fetchOverviewData();
+    renderOverview(data);
+  } catch (e) {
+    box.innerHTML = `<div class="loading-note">Не удалось загрузить: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderOverview(data) {
+  const box = document.getElementById('overviewBox');
+  const self = data.self || {};
+  const balance = data.balance || {};
+  const rating = (data.rating && data.rating.rating) || {};
+  const reviews = (data.reviews && data.reviews.reviews) || [];
+
+  let html = `<div class="profile-box">
+    <div><b>${escapeHtml(self.name || 'Профиль недоступен')}</b></div>
+    ${self.email ? `<div>Email: ${escapeHtml(self.email)}</div>` : ''}
+    ${self.phone ? `<div>Телефон: ${escapeHtml(self.phone)}</div>` : ''}
+    ${self.profile_url ? `<div><a href="${escapeHtml(self.profile_url)}" target="_blank" rel="noopener">Профиль на Avito ↗</a></div>` : ''}
+  </div>`;
+
+  html += '<div class="ov-grid">';
+  html += `<div class="ov-card"><div class="lbl">Баланс</div><div class="val">${balance.real != null ? fmtMoney(balance.real) : '—'}</div>${balance.bonus ? `<div class="sub">+ ${fmtMoney(balance.bonus)} бонусов</div>` : ''}</div>`;
+  html += `<div class="ov-card"><div class="lbl">Рейтинг</div><div class="val">${rating.score != null ? Number(rating.score).toFixed(1) : '—'}</div><div class="sub">${rating.reviewsCount || 0} отзывов</div></div>`;
+  html += `<div class="ov-card"><div class="lbl">Объявлений</div><div class="val">${data.counts ? data.counts.items : '—'}</div></div>`;
+  html += `<div class="ov-card"><div class="lbl">Чатов всего</div><div class="val">${data.counts ? data.counts.chatsTotal : '—'}</div></div>`;
+  html += '</div>';
+
+  if (reviews.length) {
+    html += '<div class="panel-head" style="margin-top:2px"><h2 style="font-size:13px">Последние отзывы</h2></div>';
+    html += reviews.slice(0, 8).map((r) => `
+      <div class="review-item">
+        <span class="review-score">★ ${escapeHtml(r.score)}</span> — ${escapeHtml((r.sender && r.sender.name) || 'Клиент')}
+        ${r.item && r.item.title ? ` · ${escapeHtml(r.item.title)}` : ''}
+        <div>${escapeHtml(r.text || '')}</div>
+      </div>
+    `).join('');
+  }
+
+  if (data.errors && data.errors.length) {
+    html += `<div class="err-box">Часть данных недоступна:<ul>${data.errors.map((e) => `<li>${escapeHtml(e)}</li>`).join('')}</ul></div>`;
+  }
+
+  box.innerHTML = html;
+}
+
+async function loadListings() {
+  if (!selectedId) return;
+  const box = document.getElementById('listingsBox');
+  if (!overviewCache || overviewCache.key !== overviewCacheKey()) box.innerHTML = '<div class="loading-note">Загрузка…</div>';
+  try {
+    const data = await fetchOverviewData();
+    renderListings(data.items || []);
+  } catch (e) {
+    box.innerHTML = `<div class="loading-note">Не удалось загрузить: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderListings(items) {
+  const box = document.getElementById('listingsBox');
+  if (!items.length) { box.innerHTML = '<div class="empty-note">Нет активных объявлений.</div>'; return; }
+  box.innerHTML = `<div class="data-table-wrap"><table class="data-table">
+    <thead><tr><th>Объявление</th><th>Статус</th><th>Цена</th><th>Показы</th><th>Контакты</th><th>В избр.</th><th>Расходы за период</th></tr></thead>
+    <tbody>${items.map((it) => `
+      <tr>
+        <td class="wrap-cell"><a href="${escapeHtml(it.url)}" target="_blank" rel="noopener">${escapeHtml(it.title)}</a><div style="color:var(--muted);font-size:11px">${escapeHtml(it.address)}</div></td>
+        <td>${escapeHtml(it.status)}</td>
+        <td>${it.price !== '' && it.price != null ? Number(it.price).toLocaleString('ru-RU') + ' ₽' : '—'}</td>
+        <td>${escapeHtml(it.views)}</td>
+        <td>${escapeHtml(it.contacts)}</td>
+        <td>${escapeHtml(it.favorites)}</td>
+        <td>${it.spend !== '' ? escapeHtml(it.spend) : '—'}</td>
+      </tr>
+    `).join('')}</tbody>
+  </table></div>`;
+}
+
+/* ════════════ LIVE VIEW: CHATS ════════════ */
+async function loadChats(reset) {
+  if (!selectedId) return;
+  if (reset) {
+    chatOffset = 0;
+    chatList = [];
+    selectedChatId = null;
+    document.getElementById('threadBox').innerHTML = '<div class="empty-note">Выберите чат слева.</div>';
+    document.getElementById('chatListBox').innerHTML = '<div class="loading-note">Загрузка…</div>';
+  }
+  const box = document.getElementById('chatListBox');
+  try {
+    const data = await api(`/api/avito/chats?accountId=${encodeURIComponent(selectedId)}&limit=30&offset=${chatOffset}`);
+    chatList = chatList.concat(data.chats);
+    chatOffset += data.chats.length;
+    chatHasMore = data.hasMore;
+    renderChatList();
+    document.getElementById('loadMoreChatsBtn').classList.toggle('hidden', !chatHasMore);
+  } catch (e) {
+    box.innerHTML = `<div class="loading-note">Не удалось загрузить: ${escapeHtml(e.message)}</div>`;
+  }
+}
+function loadMoreChats() { loadChats(false); }
+
+function renderChatList() {
+  const box = document.getElementById('chatListBox');
+  if (!chatList.length) { box.innerHTML = '<div class="empty-note">Чатов нет.</div>'; return; }
+  box.innerHTML = `<div class="chat-list">${chatList.map((c) => `
+    <div class="chat-row ${c.chat_id === selectedChatId ? 'active' : ''}" onclick="selectChat('${escapeHtml(c.chat_id)}')">
+      <div class="ct-title">${escapeHtml(c.item_title || 'Без объявления')}</div>
+      <div class="ct-preview">${c.last_message_author_is_manager ? 'Вы: ' : ''}${escapeHtml(c.last_message_text || '')}</div>
+      <div class="ct-date">${c.updated ? fmtDate(c.updated) : ''}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+async function selectChat(chatId) {
+  selectedChatId = chatId;
+  renderChatList();
+  const box = document.getElementById('threadBox');
+  box.innerHTML = '<div class="loading-note">Загрузка переписки…</div>';
+  try {
+    const data = await api(`/api/avito/messages?accountId=${encodeURIComponent(selectedId)}&chatId=${encodeURIComponent(chatId)}`);
+    renderThread(data.messages || []);
+  } catch (e) {
+    const note = String(e.message).includes('402')
+      ? 'На этом кабинете не подключена платная подписка Avito на API мессенджера.'
+      : `Не удалось загрузить переписку: ${escapeHtml(e.message)}`;
+    box.innerHTML = `<div class="loading-note">${note}</div>`;
+  }
+}
+
+function renderThread(messages) {
+  const box = document.getElementById('threadBox');
+  if (!messages.length) { box.innerHTML = '<div class="empty-note">Сообщений нет.</div>'; return; }
+  box.innerHTML = `<div class="thread" id="threadScroll">${messages.map((m) => `
+    <div class="bubble ${m.author}">
+      <div>${escapeHtml(m.text)}</div>
+      <div class="b-meta">${fmtDate(m.datetime)}</div>
+    </div>
+  `).join('')}</div>`;
+  const scroller = document.getElementById('threadScroll');
+  scroller.scrollTop = scroller.scrollHeight;
 }
 
 async function loadRuns(accountId) {
@@ -575,6 +843,10 @@ window.deleteCurrentAccount = deleteCurrentAccount;
 window.selectAccount = selectAccount;
 window.runExport = runExport;
 window.logout = logout;
+window.switchTab = switchTab;
+window.onPeriodChange = onPeriodChange;
+window.loadMoreChats = loadMoreChats;
+window.selectChat = selectChat;
 </script>
 </body>
 </html>
