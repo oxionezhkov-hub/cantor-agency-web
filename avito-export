@@ -448,6 +448,11 @@ async function fetchOverviewData() {
 function fmtMoney(v) {
   return Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' ₽';
 }
+function fmtShortDate(ymd) {
+  if (!ymd) return '';
+  const [y, m, d] = ymd.split('-');
+  return `${d}.${m}`;
+}
 
 async function loadOverview() {
   if (!selectedId) return;
@@ -476,11 +481,21 @@ function renderOverview(data) {
   </div>`;
 
   html += '<div class="ov-grid">';
-  html += `<div class="ov-card"><div class="lbl">Баланс</div><div class="val">${balance.real != null ? fmtMoney(balance.real) : '—'}</div>${balance.bonus ? `<div class="sub">+ ${fmtMoney(balance.bonus)} бонусов</div>` : ''}</div>`;
+  html += `<div class="ov-card"><div class="lbl">Баланс (кошелёк)</div><div class="val">${balance.real != null ? fmtMoney(balance.real) : '—'}</div>${balance.bonus ? `<div class="sub">+ ${fmtMoney(balance.bonus)} бонусов</div>` : ''}</div>`;
   html += `<div class="ov-card"><div class="lbl">Рейтинг</div><div class="val">${rating.score != null ? Number(rating.score).toFixed(1) : '—'}</div><div class="sub">${rating.reviewsCount || 0} отзывов</div></div>`;
   html += `<div class="ov-card"><div class="lbl">Объявлений</div><div class="val">${data.counts ? data.counts.items : '—'}</div></div>`;
   html += `<div class="ov-card"><div class="lbl">Чатов всего</div><div class="val">${data.counts ? data.counts.chatsTotal : '—'}</div></div>`;
   html += '</div>';
+
+  const daily = data.daily;
+  if (daily) {
+    html += '<div class="panel-head" style="margin-top:2px"><h2 style="font-size:13px">Просмотры и контакты</h2></div>';
+    html += '<div class="ov-grid">';
+    html += `<div class="ov-card"><div class="lbl">Вчера, ${fmtShortDate(daily.yesterday.date)}</div><div class="val">${daily.yesterday.views} 👁</div><div class="sub">${daily.yesterday.contacts} контактов</div></div>`;
+    html += `<div class="ov-card"><div class="lbl">С начала месяца</div><div class="val">${daily.monthToDate.views} 👁</div><div class="sub">${daily.monthToDate.contacts} контактов</div></div>`;
+    html += '</div>';
+  }
+  html += '<div class="hint" style="margin:-4px 0 16px">Расходы на продвижение и «Аванс» Avito не отдаёт ни в одном публичном эндпоинте API (только в личном кабинете продавца) — поэтому их здесь нет; показы/контакты/избранное — реальные цифры из Avito.</div>';
 
   if (reviews.length) {
     html += '<div class="panel-head" style="margin-top:2px"><h2 style="font-size:13px">Последние отзывы</h2></div>';
@@ -516,7 +531,7 @@ function renderListings(items) {
   const box = document.getElementById('listingsBox');
   if (!items.length) { box.innerHTML = '<div class="empty-note">Нет активных объявлений.</div>'; return; }
   box.innerHTML = `<div class="data-table-wrap"><table class="data-table">
-    <thead><tr><th>Объявление</th><th>Статус</th><th>Цена</th><th>Показы</th><th>Контакты</th><th>В избр.</th><th>Расходы за период</th></tr></thead>
+    <thead><tr><th>Объявление</th><th>Статус</th><th>Цена</th><th>Показы</th><th>Контакты</th><th>В избр.</th></tr></thead>
     <tbody>${items.map((it) => `
       <tr>
         <td class="wrap-cell"><a href="${escapeHtml(it.url)}" target="_blank" rel="noopener">${escapeHtml(it.title)}</a><div style="color:var(--muted);font-size:11px">${escapeHtml(it.address)}</div></td>
@@ -525,7 +540,6 @@ function renderListings(items) {
         <td>${escapeHtml(it.views)}</td>
         <td>${escapeHtml(it.contacts)}</td>
         <td>${escapeHtml(it.favorites)}</td>
-        <td>${it.spend !== '' ? escapeHtml(it.spend) : '—'}</td>
       </tr>
     `).join('')}</tbody>
   </table></div>`;
