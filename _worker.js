@@ -1034,6 +1034,25 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
   return (data && (data.voices_urls || data.urls)) || data || {};
 }
 
+async function fetchAvitoSelf(token) {
+  return avitoJson(token, '/core/v1/accounts/self');
+}
+
+async function fetchAvitoBalance(token, userId) {
+  // {"bonus":0,"real":0.04} — real ⩽0 is common (Avito lets the balance run slightly
+  // negative before blocking promotion), not a bug in the fetch.
+  return avitoJson(token, `/core/v1/accounts/${userId}/balance/`);
+}
+
+async function fetchAvitoRating(token, userId) {
+  return avitoJson(token, `/ratings/v1/info?user_id=${userId}`);
+}
+
+async function fetchAvitoReviews(token, limit = 50) {
+  const data = await avitoJson(token, `/ratings/v1/reviews?offset=0&limit=${limit}`);
+  return { total: data.total || 0, reviews: data.reviews || [] };
+}
+
 function avitoMessageText(m) {
   const content = m.content || {};
   switch (m.type) {
@@ -1231,6 +1250,124 @@ async function runAvitoExport(env, account, dateFrom, dateTo) {
   };
 }
 
+async function runAvitoOverview(env, account, dateFrom, dateTo) {
+  const errors = [];
+  const token = await avitoGetToken(env, account);
+  const userId = account.userId;
+
+  const [selfRes, balanceRes, ratingRes, reviewsRes] = await Promise.allSettled([
+    fetchAvitoSelf(token),
+    fetchAvitoBalance(token, userId),
+    fetchAvitoRating(token, userId),
+    fetchAvitoReviews(token, 20),
+  ]);
+  if (selfRes.status === 'rejected') errors.push(`Профиль: ${selfRes.reason.message}`);
+  if (balanceRes.status === 'rejected') errors.push(`Баланс: ${balanceRes.reason.message}`);
+  if (ratingRes.status === 'rejected') errors.push(`Рейтинг: ${ratingRes.reason.message}`);
+  if (reviewsRes.status === 'rejected') errors.push(`Отзывы: ${reviewsRes.reason.message}`);
+
+  let items = [];
+  try {
+    items = await fetchAllAvitoItems(token);
+  } catch (e) {
+    errors.push(`Объявления: ${e.message}`);
+  }
+
+  let statsById = {};
+  try {
+    statsById = await fetchAvitoStats(token, userId, items.map((it) => it.id).filter(Boolean), dateFrom, dateTo, null);
+  } catch (e) {
+    errors.push(`Статистика: ${e.message}`);
+  }
+
+  const items_out = items.map((it) => {
+    const s = statsById[it.id] || {};
+    return {
+      item_id: it.id,
+      title: it.title || '',
+      status: it.status || '',
+      price: it.price ?? '',
+      category: (it.category && it.category.name) || it.category || '',
+      address: it.address || (it.location && it.location.title) || '',
+      url: it.url || '',
+      views: s.views ?? s.uniqViews ?? '',
+      contacts: s.contacts ?? s.uniqContacts ?? '',
+      favorites: s.favorites ?? s.uniqFavorites ?? '',
+      spend: s.spend ?? s.expenses ?? '',
+    };
+  });
+
+  let chatsTotal = 0;
+  try {
+    chatsTotal = (await fetchAllAvitoChats(token, userId)).length;
+  } catch (e) {
+    errors.push(`Чаты: ${e.message}`);
+  }
+
+  return {
+    meta: { accountId: account.id, accountName: account.name, userId, dateFrom, dateTo, generatedAt: new Date().toISOString() },
+    self: selfRes.status === 'fulfilled' ? selfRes.value : null,
+    balance: balanceRes.status === 'fulfilled' ? balanceRes.value : null,
+    rating: ratingRes.status === 'fulfilled' ? ratingRes.value : null,
+    reviews: reviewsRes.status === 'fulfilled' ? reviewsRes.value : { total: 0, reviews: [] },
+    items: items_out,
+    counts: { items: items_out.length, chatsTotal },
+    errors,
+  };
+}
+
+async function runAvitoChatList(env, account, limit, offset) {
+  const token = await avitoGetToken(env, account);
+  const userId = account.userId;
+  const data = await avitoJson(token, `/messenger/${AVITO_CHATS_VERSION}/accounts/${userId}/chats?chat_types=u2i&limit=${limit}&offset=${offset}`);
+  const chats = (data.chats || []).map((c) => ({
+    chat_id: c.id,
+    item_id: (c.context && c.context.value && c.context.value.id) || '',
+    item_title: (c.context && c.context.value && c.context.value.title) || '',
+    updated: c.updated ? new Date(Number(c.updated) * 1000).toISOString() : '',
+    last_message_text: c.last_message ? avitoMessageText(c.last_message) : '',
+    last_message_author_is_manager: c.last_message ? String(c.last_message.author_id) === String(userId) : null,
+  }));
+  return { chats, hasMore: Boolean(data.meta && data.meta.has_more) };
+}
+
+async function runAvitoChatMessages(env, account, chatId) {
+  const token = await avitoGetToken(env, account);
+  const userId = account.userId;
+  const msgs = await fetchAllAvitoMessages(token, userId, chatId);
+
+  const voiceQueue = [];
+  const out = msgs.map((m) => {
+    const ts = Number(m.created) * 1000;
+    const row = {
+      message_id: m.id,
+      datetime: new Date(ts).toISOString(),
+      author: String(m.author_id) === String(userId) ? 'manager' : 'client',
+      type: m.type,
+      text: avitoMessageText(m),
+    };
+    if (m.type === 'voice') {
+      const voiceId = m.content && m.content.voice && m.content.voice.voice_id;
+      if (voiceId) voiceQueue.push(voiceId);
+    }
+    return row;
+  });
+
+  if (voiceQueue.length) {
+    try {
+      const links = await fetchAvitoVoiceLinks(token, userId, voiceQueue);
+      out.forEach((row, i) => {
+        const voiceId = msgs[i].content && msgs[i].content.voice && msgs[i].content.voice.voice_id;
+        if (voiceId && links[voiceId]) row.text = `[голосовое сообщение] ${links[voiceId]}`;
+      });
+    } catch {
+      // voice links are a nice-to-have; missing ones just keep the placeholder text
+    }
+  }
+
+  return { messages: out };
+}
+
 async function handleAvitoApi(request, env, url) {
   const { pathname } = url;
   const kv = env.AVITO_KV;
@@ -1328,6 +1465,47 @@ async function handleAvitoApi(request, env, url) {
     const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
     const runs = records.filter(Boolean).sort((a, b) => (a.id < b.id ? 1 : -1)).slice(0, 20);
     return json({ runs });
+  }
+
+  if (pathname === '/api/avito/overview' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    const dateFrom = url.searchParams.get('dateFrom');
+    const dateTo = url.searchParams.get('dateTo');
+    if (!accountId || !dateFrom || !dateTo) return json({ error: 'missing_fields' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    try {
+      return json(await runAvitoOverview(env, account, dateFrom, dateTo));
+    } catch (e) {
+      return json({ error: 'overview_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
+  if (pathname === '/api/avito/chats' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    if (!accountId) return json({ error: 'missing_account_id' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    const limit = Math.min(Number(url.searchParams.get('limit')) || 30, 100);
+    const offset = Number(url.searchParams.get('offset')) || 0;
+    try {
+      return json(await runAvitoChatList(env, account, limit, offset));
+    } catch (e) {
+      return json({ error: 'chats_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
+  if (pathname === '/api/avito/messages' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    const chatId = url.searchParams.get('chatId');
+    if (!accountId || !chatId) return json({ error: 'missing_fields' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    try {
+      return json(await runAvitoChatMessages(env, account, chatId));
+    } catch (e) {
+      return json({ error: 'messages_failed', message: String(e && e.message) }, 502);
+    }
   }
 
   return json({ error: 'not_found' }, 404);
