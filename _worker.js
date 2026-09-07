@@ -2053,11 +2053,13 @@ export default {
       }
     }
 
-    // /mba-mybrand itself is served from mba-mybrand/index — the directory also holds
-    // per-client podcast materials pages (mba-mybrand/<slug>-podcastN).
-    if (url.pathname === '/mba-mybrand') {
+    // /mba-mybrand itself is served from mba-mybrand/index.html — the directory also
+    // holds per-client podcast materials pages (mba-mybrand/<slug>-podcastN). Handles
+    // both with and without the trailing slash since production (cantor.agency, served
+    // by plain nginx, not this Worker) 301s the bare path to the slash form itself.
+    if (url.pathname === '/mba-mybrand' || url.pathname === '/mba-mybrand/') {
       const assetUrl = new URL(request.url);
-      assetUrl.pathname = '/mba-mybrand/index';
+      assetUrl.pathname = '/mba-mybrand/index.html';
       return env.ASSETS.fetch(new Request(assetUrl, request));
     }
 
