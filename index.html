@@ -14,10 +14,10 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cantor Agency — маркетинг для репетиторов</title>
+<title>Cantor Agency — продвижение на Авито для репетиторов и школ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,600&family=Inter:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,600&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -33,6 +33,8 @@
   --board2:#16221D;
   --chalk:#F2EFE3;
   --white:#FFFFFF;
+  --tg:#229ED9;
+  --tg-dark:#1B7FAF;
   --shadow-sm:0 2px 10px rgba(34,31,28,0.08);
   --shadow-md:0 16px 44px rgba(34,31,28,0.14);
   --r-sm:4px;
@@ -45,9 +47,9 @@ body{
   background-image:repeating-linear-gradient(to bottom, transparent 0 39px, rgba(203,191,163,0.55) 39px 40px);
 }
 @media(prefers-reduced-motion:no-preference){
-  .service-card,.grade-stamp,.step,.btn-primary,.btn-outline{transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease}
+  .service-card,.metric-card,.step,.btn-primary,.btn-outline,.btn-tg,.field input,.field select,.field textarea{transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease}
 }
-a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2.5px solid var(--red);outline-offset:3px}
 
 /* MARGIN RULE — notebook page edge */
 .margin-rule{position:fixed;top:0;bottom:0;left:56px;width:2px;background:rgba(210,50,31,0.35);z-index:0;pointer-events:none}
@@ -63,6 +65,10 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
 .btn-outline{background:transparent;border:1.5px solid var(--ink);color:var(--ink);padding:9px 22px;border-radius:2px;font-size:13px;font-weight:700;text-decoration:none;transition:all 0.2s;font-family:'Inter',sans-serif}
 .btn-outline:hover{background:var(--ink);color:var(--paper)}
 
+/* AVITO MARK */
+.avito-mark{display:block;height:22px;width:auto}
+.avito-mark .word{font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-0.03em}
+
 /* HERO */
 .hero{position:relative;z-index:2;max-width:920px;margin:0 auto;padding:76px 24px 60px 76px;text-align:left}
 .hero-badge{display:inline-flex;align-items:center;gap:9px;background:transparent;border:1.5px solid var(--red);color:var(--red);border-radius:100px;padding:6px 16px 6px 12px;font-size:11px;font-weight:700;margin-bottom:30px;letter-spacing:0.05em;text-transform:uppercase;transform:rotate(-1.5deg)}
@@ -71,28 +77,29 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
 .hero h1 .strike{position:relative;color:var(--ink-soft);font-weight:400;white-space:nowrap}
 .hero h1 .strike::after{content:'';position:absolute;left:-2%;right:-2%;top:52%;height:3px;background:var(--red);transform:rotate(-2deg)}
 .hero h1 .correction{display:inline-block;font-family:'Caveat',cursive;font-weight:700;color:var(--red);font-size:1.2em;transform:rotate(-3deg);margin-left:6px}
-.hero p{font-size:16.5px;color:var(--ink-soft);max-width:560px;margin:0 0 36px;line-height:1.75}
-.hero-buttons{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.hero p{font-size:16.5px;color:var(--ink-soft);max-width:580px;margin:0 0 36px;line-height:1.75}
+.hero-buttons{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:34px}
 .btn-primary{background:var(--red);color:var(--paper);border:none;border-radius:2px;padding:15px 30px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:9px;box-shadow:3px 3px 0 var(--ink)}
 .btn-primary:hover{background:var(--red-dark);transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
 .btn-secondary{background:transparent;border:none;color:var(--ink);border-bottom:1.5px solid var(--ink);padding:15px 2px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;text-decoration:none;display:inline-block}
 .btn-secondary:hover{color:var(--red);border-color:var(--red)}
 
-/* SIGNATURE STAMP */
-.hero-stamp{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:78px;height:78px;border:2px solid var(--red);border-radius:50%;transform:rotate(-9deg);color:var(--red);font-family:'Caveat',cursive;font-weight:700;line-height:1;margin-left:8px;flex-shrink:0}
-.hero-stamp .num{font-size:24px}
-.hero-stamp .label{font-size:11px;letter-spacing:0.02em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:700;margin-top:2px}
+/* PLATFORM CHIP */
+.hero-platform{display:inline-flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--ink);border-radius:var(--r-md);padding:10px 16px;box-shadow:var(--shadow-sm);transform:rotate(-1.2deg)}
+.hero-platform-label{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em}
 
 /* DIVIDER */
 .divider{max-width:1200px;margin:0 auto;padding:0 24px}
 .divider hr{border:none;border-top:1.5px dashed var(--rule)}
 
-/* SERVICES */
-.services{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:64px 24px 72px 76px}
+/* SECTION HEAD (shared) */
 .eyebrow{font-family:'Caveat',cursive;font-weight:700;color:var(--red);font-size:20px;display:block;margin-bottom:2px;transform:rotate(-2deg)}
 .section-title{font-family:'Fraunces',serif;font-size:clamp(24px,4vw,34px);font-weight:900;color:var(--ink);letter-spacing:-0.01em;margin-bottom:14px}
-.section-sub{color:var(--ink-soft);font-size:15px;margin-bottom:44px;max-width:560px}
-.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.section-sub{color:var(--ink-soft);font-size:15px;margin-bottom:44px;max-width:600px}
+
+/* NICHES */
+.niches{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:64px 24px 72px 76px}
+.niches-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
 .service-card{position:relative;background:var(--white);border:1.5px solid var(--ink);border-radius:var(--r-md);padding:26px 24px;transition:all 0.2s}
 .service-card:hover{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--red)}
 .service-check{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:50%;background:var(--paper);border:1.5px solid var(--red);display:flex;align-items:center;justify-content:center}
@@ -101,31 +108,81 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
 .service-icon svg{width:24px;height:24px;stroke:var(--ink);stroke-width:1.6;fill:none}
 .service-card h3{font-family:'Fraunces',serif;font-size:19px;font-weight:700;color:var(--ink);margin-bottom:9px;letter-spacing:-0.01em;padding-right:24px}
 .service-card p{font-size:13.5px;color:var(--ink-soft);line-height:1.65}
+.service-card .lang-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.service-card .lang-tag{font-size:11px;font-weight:700;color:var(--red);background:var(--paper2);border-radius:100px;padding:4px 10px}
 
-/* ABOUT */
-.about{position:relative;z-index:2;background:var(--paper2);border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);padding:68px 24px 68px 76px}
-.about-inner{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:1.1fr 1fr;gap:52px;align-items:center}
-.about-text h2{font-family:'Fraunces',serif;font-size:clamp(22px,4vw,30px);font-weight:900;color:var(--ink);margin-bottom:18px;letter-spacing:-0.01em}
-.about-text p{font-size:15px;color:var(--ink-soft);margin-bottom:16px;line-height:1.75}
-.about-text p:last-child{margin-bottom:0}
-.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:20px 16px}
-.grade-stamp{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px 10px;background:var(--white);border:2px solid var(--red);border-radius:50%;aspect-ratio:1;box-shadow:var(--shadow-sm)}
-.grade-stamp:nth-child(odd){transform:rotate(-4deg)}
-.grade-stamp:nth-child(even){transform:rotate(3deg)}
-.stat-number{font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:var(--red);margin-bottom:4px;line-height:1}
-.stat-label{font-size:11px;color:var(--ink-soft);font-weight:600;line-height:1.3}
+/* METRICS */
+.metrics{position:relative;z-index:2;background:var(--paper2);border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);padding:68px 24px 68px 76px}
+.metrics-inner{max-width:1120px;margin:0 auto}
+.funnel-path{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:24px}
+.funnel-path .arrow{color:var(--red)}
+.funnel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:24px}
+.metric-card{background:var(--white);border:1.5px solid var(--ink);border-radius:var(--r-md);padding:26px 22px;box-shadow:var(--shadow-sm)}
+.metric-card .metric-step{font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+.metric-number{font-family:'Fraunces',serif;font-size:34px;font-weight:900;color:var(--ink);line-height:1;margin-bottom:8px}
+.metric-label{font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+.scale-card{background:var(--ink);color:var(--chalk);border-radius:var(--r-md);padding:30px 28px;display:flex;flex-wrap:wrap;align-items:center;gap:24px;justify-content:space-between}
+.scale-number{font-family:'Fraunces',serif;font-size:38px;font-weight:900;color:#F2C9A0;line-height:1}
+.scale-text{font-size:14px;color:#C9C3B4;max-width:420px;line-height:1.6}
+.scale-text strong{color:var(--chalk)}
 
-/* APPROACH */
+/* APPROACH / PRINCIPLES */
 .approach{position:relative;z-index:2;max-width:1000px;margin:0 auto;padding:72px 24px 72px 76px}
 .approach-head{margin-bottom:44px}
 .approach h2{font-family:'Fraunces',serif;font-size:clamp(22px,4vw,30px);font-weight:900;color:var(--ink);margin-bottom:14px}
-.approach p{font-size:15px;color:var(--ink-soft);max-width:560px}
+.approach p{font-size:15px;color:var(--ink-soft);max-width:580px}
 .steps{position:relative;display:flex;flex-direction:column;gap:0}
 .steps::before{content:'';position:absolute;left:23px;top:8px;bottom:8px;width:1.5px;background:repeating-linear-gradient(to bottom, var(--rule) 0 6px, transparent 6px 12px)}
 .step{position:relative;display:flex;gap:22px;padding:20px 0}
 .step-num{position:relative;z-index:1;flex-shrink:0;width:48px;height:48px;background:var(--red);color:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:19px;border:3px solid var(--paper)}
 .step-body h4{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px}
-.step-body p{font-size:13.5px;color:var(--ink-soft);margin:0;max-width:440px}
+.step-body p{font-size:13.5px;color:var(--ink-soft);margin:0;max-width:480px}
+
+/* APPLY FORM */
+.apply{position:relative;z-index:2;background:var(--paper2);border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);padding:72px 24px 76px 76px}
+.apply-head{max-width:640px;margin:0 auto 36px;text-align:center}
+.apply-head .section-sub{margin-left:auto;margin-right:auto}
+.apply-wrap{max-width:640px;margin:0 auto}
+.apply-card{background:var(--white);border:1.5px solid var(--ink);border-radius:var(--r-lg);padding:36px 32px;box-shadow:var(--shadow-md)}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.field label .req{color:var(--red)}
+.field label .opt{font-weight:400;color:var(--ink-soft);font-size:12px;text-transform:none;letter-spacing:0}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--rule);border-radius:var(--r-sm);padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--ink);outline:none;background:var(--paper);transition:border-color 0.2s,box-shadow 0.2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(210,50,31,0.08)}
+.field input::placeholder,.field textarea::placeholder{color:#9C9585}
+.field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235B564C' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.fields-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err-msg{font-size:11.5px;color:var(--red);margin-top:5px;display:none}
+.field.error input,.field.error select,.field.error textarea{border-color:var(--red)}
+.field.error .err-msg{display:block}
+
+/* BUDGET SLIDER */
+.budget-field{background:var(--paper2);border:1.5px dashed var(--rule);border-radius:var(--r-md);padding:18px 18px 16px}
+.budget-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.budget-value{font-family:'Fraunces',serif;font-weight:900;font-size:24px;color:var(--red);white-space:nowrap}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:4px;background:var(--rule);outline:none;cursor:pointer;margin:6px 0 4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--red);border:3px solid var(--white);box-shadow:0 2px 6px rgba(34,31,28,0.3);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--red);border:3px solid var(--white);box-shadow:0 2px 6px rgba(34,31,28,0.3);cursor:pointer;border:3px solid var(--white)}
+.budget-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft)}
+
+.apply-submit{width:100%;justify-content:center;margin-top:6px}
+.apply-submit:disabled{opacity:0.65;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 var(--ink)}
+.privacy-note{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:16px;line-height:1.6}
+.privacy-note a{color:var(--red);text-decoration:none}
+.privacy-note a:hover{text-decoration:underline}
+
+/* THANK YOU */
+.apply-thanks{display:none;text-align:center;padding:12px 4px 4px}
+.apply-thanks.active{display:block}
+.apply-thanks h3{font-family:'Fraunces',serif;font-size:24px;font-weight:900;color:var(--ink);margin-bottom:14px}
+.apply-thanks p{font-size:14.5px;color:var(--ink-soft);line-height:1.75;max-width:440px;margin:0 auto 26px}
+.btn-tg{background:var(--tg);color:var(--white);border:none;border-radius:2px;padding:15px 30px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:9px;box-shadow:3px 3px 0 var(--ink)}
+.btn-tg:hover{background:var(--tg-dark);transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+
+/* LOADING */
+.loading-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-left:2px;animation:blinkdot 1s infinite}
+@keyframes blinkdot{0%,100%{opacity:0.25}50%{opacity:1}}
 
 /* FOOTER — chalkboard */
 .footer{position:relative;z-index:2;background:var(--board);background-image:linear-gradient(var(--board),var(--board2));color:#B9C4BC;padding:52px 24px 24px}
@@ -146,13 +203,15 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
 @media(max-width:860px){
   .header{padding:16px 20px}
   .nav{gap:20px}
-  .hero,.services,.about,.approach{padding-left:24px}
-  .about-inner{grid-template-columns:1fr;gap:32px}
-  .services-grid{gap:16px}
+  .hero,.niches,.metrics,.approach,.apply{padding-left:24px}
+  .apply-card{padding:28px 20px}
+  .fields-row{grid-template-columns:1fr}
+  .niches-grid{gap:16px}
   .hero-buttons{gap:12px}
+  .scale-card{padding:24px 20px}
 }
 @media(max-width:520px){
-  .hero-stamp{display:none}
+  .hero-platform{display:none}
 }
 </style>
 </head>
@@ -163,135 +222,207 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
 <header class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <div class="nav">
-    <a href="#services">Услуги</a>
-    <a href="#about">Об агентстве</a>
+    <a href="#niches">Ниши</a>
+    <a href="#metrics">Результаты</a>
     <a href="#approach">Подход</a>
   </div>
-  <a href="https://cantor.agency/club-anketa" class="btn-outline" id="applyBtn">Заполнить анкету</a>
+  <a href="#apply" class="btn-outline">Оставить заявку</a>
 </header>
 
 <main>
   <section class="hero">
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
-      Маркетинг для репетиторов
+      Продвижение репетиторов на Авито
     </div>
-    <h1>Найдём учеников, чтобы вы<br><span class="strike">тратили вечера на рекламу</span><span class="correction">только учили</span></h1>
-    <p>Берём на себя продвижение на Авито, Профи.ру, рекламу у блогеров и разработку сайтов. Работаем с репетиторами и онлайн-школами.</p>
+    <h1>Приводим учеников через Авито,<br>чтобы вы <span class="strike">тратили вечера на объявления</span><span class="correction">только учили</span></h1>
+    <p>Мы специализируемся только на Авито — знаем площадку изнутри и ведём каждый проект к целевой стоимости лида. Работаем с репетиторами ЕГЭ/ОГЭ, логопедами и школами иностранных языков.</p>
     <div class="hero-buttons">
-      <a href="https://cantor.agency/club-anketa" class="btn-primary" id="applyBtn2">
-        Заполнить анкету
+      <a href="#apply" class="btn-primary">
+        Оставить заявку
       </a>
-      <a href="#services" class="btn-secondary">Узнать подробнее</a>
-      <span class="hero-stamp" aria-hidden="true"><span class="num">5+</span><span class="label">лет</span></span>
+      <a href="#metrics" class="btn-secondary">Смотреть цифры</a>
+      <span class="hero-platform" aria-label="Работаем на платформе Avito">
+        <span class="hero-platform-label">Работаем на</span>
+        <svg class="avito-mark" viewBox="0 0 150 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Avito">
+          <text x="0" y="27" class="word" font-size="28" fill="#161616">avito</text>
+          <circle cx="123" cy="9" r="4.2" fill="#00AAFF"/>
+          <circle cx="133" cy="14" r="4.2" fill="#FF6163"/>
+          <circle cx="129" cy="23" r="4.2" fill="#97CF26"/>
+          <circle cx="118" cy="19" r="4.2" fill="#A169F7"/>
+        </svg>
+      </span>
     </div>
   </section>
 
   <div class="divider"><hr></div>
 
-  <section class="services" id="services">
-    <span class="eyebrow">предметы, по которым мы сильны</span>
-    <h2 class="section-title">Что мы делаем</h2>
-    <div class="section-sub">Выберите направления, которые нужны именно вам</div>
-    <div class="services-grid">
+  <section class="niches" id="niches">
+    <span class="eyebrow">ниши, в которых мы сильны</span>
+    <h2 class="section-title">С кем мы работаем</h2>
+    <div class="section-sub">Не берём всех подряд — специализируемся на нескольких направлениях и знаем их аудиторию на Авито изнутри</div>
+    <div class="niches-grid">
       <div class="service-card">
         <span class="service-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
         <div class="service-icon">
-          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M22 10v6"/><path d="M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>
         </div>
-        <h3>Авито</h3>
-        <p>Профиль, объявления, A/B-тесты, платное продвижение и аналитика — поднимем отклики и продажи.</p>
+        <h3>ЕГЭ / ОГЭ</h3>
+        <p>Подготовка школьников к экзаменам — самая конкурентная ниша на Авито. Знаем, какие объявления и офферы реально приводят заявки.</p>
       </div>
       <div class="service-card">
         <span class="service-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
         <div class="service-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>
         </div>
-        <h3>Профи.ру</h3>
-        <p>Анкета, верификация, ежедневные отклики и шаблоны. Выходим в топ выдачи по вашему предмету.</p>
+        <h3>Логопеды</h3>
+        <p>Продвижение логопедической практики — работа с родителями, которые ищут специалиста здесь и сейчас, рядом с домом.</p>
       </div>
       <div class="service-card">
         <span class="service-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
         <div class="service-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0 0 20c5.5 0 10-4.5 10-10S17.5 2 12 2z"/><path d="M12 6v6l4 2"/><path d="M8 11h8"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
-        <h3>Блогеры</h3>
-        <p>Подбор, переговоры, сценарии, маркировка и CPL-аналитика рекламы у блогеров.</p>
-      </div>
-      <div class="service-card">
-        <span class="service-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <h3>Иностранные языки</h3>
+        <p>Школы и репетиторы по языкам — от массовых направлений до редких.</p>
+        <div class="lang-list">
+          <span class="lang-tag">Английский</span>
+          <span class="lang-tag">Итальянский</span>
+          <span class="lang-tag">Арабский</span>
         </div>
-        <h3>Сайт-визитка</h3>
-        <p>Лендинг с формой заявки, Метрикой и Telegram-ботом. Публикация на вашем домене.</p>
       </div>
     </div>
   </section>
 
-  <section class="about" id="about">
-    <div class="about-inner">
-      <div class="about-text">
-        <span class="eyebrow">почему выбирают нас</span>
-        <h2>Мы не ставим оценки — мы их получаем</h2>
-        <p>Мы не просто настраиваем рекламу — мы становимся партнёром, который понимает специфику обучения. На каждом направлении работаем с максимальным погружением в ваш продукт.</p>
-        <p>Берём ограниченное количество клиентов — до 3–4 на направление. Так мы гарантируем качество и делаем реальные кейсы, которыми гордимся.</p>
+  <section class="metrics" id="metrics">
+    <div class="metrics-inner">
+      <span class="eyebrow">цифры по кампаниям</span>
+      <h2 class="section-title">Сколько стоит привести ученика</h2>
+      <div class="section-sub">Средние показатели наших кампаний на Авито — от первого контакта до пришедшего на занятие ученика</div>
+
+      <div class="funnel-path">
+        <span>Контакт</span><span class="arrow">→</span><span>Диагностика</span><span class="arrow">→</span><span>Ученик</span>
       </div>
-      <div class="about-stats">
-        <div class="grade-stamp">
-          <div class="stat-number">50+</div>
-          <div class="stat-label">успешных&nbsp;запусков</div>
+
+      <div class="funnel-grid">
+        <div class="metric-card">
+          <div class="metric-step">Шаг 1 · Контакт</div>
+          <div class="metric-number">1 200 ₽</div>
+          <div class="metric-label">Средняя стоимость контакта — обращения по объявлению</div>
         </div>
-        <div class="grade-stamp">
-          <div class="stat-number">12</div>
-          <div class="stat-label">активных&nbsp;клиентов</div>
+        <div class="metric-card">
+          <div class="metric-step">Шаг 2 · Диагностика</div>
+          <div class="metric-number">6 590 ₽</div>
+          <div class="metric-label">Средняя стоимость диагностики — записи на пробное занятие</div>
         </div>
-        <div class="grade-stamp">
-          <div class="stat-number">3x</div>
-          <div class="stat-label">рост&nbsp;заявок</div>
+        <div class="metric-card">
+          <div class="metric-step">Шаг 3 · Ученик</div>
+          <div class="metric-number">12 490 ₽</div>
+          <div class="metric-label">Средняя стоимость привлечения ученика, который начал заниматься</div>
         </div>
-        <div class="grade-stamp">
-          <div class="stat-number">24/7</div>
-          <div class="stat-label">поддержка</div>
+      </div>
+
+      <div class="scale-card">
+        <div>
+          <div class="scale-number">500 000 ₽</div>
         </div>
+        <div class="scale-text">Рекламного бюджета в месяц <strong>под нашим управлением</strong> на Авито — считаем каждый рубль и оптимизируем кампании еженедельно.</div>
       </div>
     </div>
   </section>
 
   <section class="approach" id="approach">
     <div class="approach-head">
-      <span class="eyebrow">от анкеты до отчёта</span>
-      <h2>Как мы работаем</h2>
-      <p>Прозрачно, с аналитикой и без скрытых комиссий</p>
+      <span class="eyebrow">как мы работаем</span>
+      <h2>Наш подход</h2>
+      <p>Не просто настраиваем рекламу — управляем результатом и держим в фокусе конкретные цифры</p>
     </div>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-body">
-          <h4>Анкета</h4>
-          <p>Рассказываете о проекте — мы анализируем стартовую точку</p>
+          <h4>Целевые показатели</h4>
+          <p>Для каждого проекта считаем целевую стоимость контакта, диагностики и ученика — и ведём кампанию к этим цифрам, а не к абстрактному «трафику».</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-body">
-          <h4>Стратегия</h4>
-          <p>Готовим план действий под ваш бюджет и цели</p>
+          <h4>Опыт эдвайзеров</h4>
+          <p>У нас есть пул экспертов-эдвайзеров по Авито. Собираем их находки по нишам в общую базу знаний и применяем на каждом новом проекте.</p>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-body">
-          <h4>Запуск</h4>
-          <p>Настраиваем каналы, запускаем рекламу, пишем тексты</p>
+          <h4>Смелые стратегии</h4>
+          <p>Тестируем нестандартные форматы объявлений и продвижения, а не только проверенные шаблоны — так находим то, что работает лучше среднего по рынку.</p>
         </div>
       </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <h4>Отчёты</h4>
-          <p>Каждую неделю показываем результаты и оптимизируем</p>
+    </div>
+  </section>
+
+  <section class="apply" id="apply">
+    <div class="apply-head">
+      <span class="eyebrow">заявка</span>
+      <h2 class="section-title">Оставьте заявку</h2>
+      <div class="section-sub">Коротко расскажите о себе — свяжемся и обсудим детали по вашему проекту на Авито</div>
+    </div>
+    <div class="apply-wrap">
+      <div class="apply-card">
+
+        <form id="applyForm">
+          <div class="field" id="f-name">
+            <label>Имя <span class="req">*</span></label>
+            <input type="text" id="name" placeholder="Как к вам обращаться">
+            <div class="err-msg">Заполните это поле</div>
+          </div>
+
+          <div class="fields-row">
+            <div class="field" id="f-phone">
+              <label>Телефон <span class="req">*</span></label>
+              <input type="tel" id="phone" placeholder="+7 (999) 000-00-00">
+              <div class="err-msg">Введите телефон</div>
+            </div>
+            <div class="field" id="f-tg">
+              <label>Telegram <span class="opt">(по желанию)</span></label>
+              <input type="text" id="tg" placeholder="@username">
+            </div>
+          </div>
+
+          <div class="field" id="f-experience">
+            <label>Опыт с Авито <span class="req">*</span></label>
+            <select id="experience">
+              <option value="">Выберите вариант</option>
+              <option value="Ещё не пробовал(а) рекламу на Авито">Ещё не пробовал(а) рекламу на Авито</option>
+              <option value="Пробовал(а), но результат не устроил">Пробовал(а), но результат не устроил</option>
+              <option value="Сейчас уже даю рекламу на Авито">Сейчас уже даю рекламу на Авито</option>
+            </select>
+            <div class="err-msg">Выберите вариант</div>
+          </div>
+
+          <div class="field budget-field">
+            <div class="budget-top">
+              <label style="margin-bottom:0">Бюджет на рекламу, ₽/мес</label>
+              <span class="budget-value" id="budgetValue">100 000 ₽/мес</span>
+            </div>
+            <input type="range" id="budgetSlider" min="10000" max="500000" step="10000" value="100000">
+            <div class="budget-scale"><span>10 000 ₽</span><span>500 000 ₽ и более</span></div>
+          </div>
+
+          <button type="submit" class="btn-primary apply-submit" id="submitBtn">Отправить заявку</button>
+
+          <div class="privacy-note">
+            Нажимая «Отправить заявку», вы соглашаетесь с <a href="https://cantor.agency/politika" target="_blank">политикой конфиденциальности</a>.
+          </div>
+        </form>
+
+        <div class="apply-thanks" id="applyThanks">
+          <h3>Заявка отправлена</h3>
+          <p>Мы свяжемся с вами в ближайшее время. Но вы можете написать нам уже сейчас.</p>
+          <a href="https://t.me/m/VgeEywMJY2U6" target="_blank" class="btn-tg">Написать в Telegram</a>
         </div>
+
       </div>
     </div>
   </section>
@@ -301,7 +432,14 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
   <div class="footer-inner">
     <div class="footer-col">
       <a href="/" class="logo-footer">Cantor <span>Agency</span></a>
-      <p>Маркетинговое агентство для репетиторов и онлайн-школ. Найдём учеников, чтобы вы только учили.</p>
+      <p>Продвигаем репетиторов, логопедов и школы иностранных языков на Авито.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Связь</h4>
+      <ul class="footer-links">
+        <li><a href="https://t.me/m/VgeEywMJY2U6" target="_blank">Написать в Telegram</a></li>
+        <li><a href="#apply">Оставить заявку</a></li>
+      </ul>
     </div>
     <div class="footer-col">
       <h4>Документы</h4>
@@ -325,15 +463,67 @@ a:focus-visible,button:focus-visible{outline:2.5px solid var(--red);outline-offs
 </footer>
 
 <script>
-  // Кнопки анкеты — ведут на страницу с формой
-  document.getElementById('applyBtn')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    window.location.href = 'https://cantor.agency/club-anketa';
-  });
-  document.getElementById('applyBtn2')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    window.location.href = 'https://cantor.agency/club-anketa';
-  });
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPk5CHyT_oDsWYZINg_bQTwXg64tJr4-3PugEpi_KU-56ix1lwTmdkkKIUOB-fAOOXeg/exec?sheet=КЛУБ';
+
+const budgetSlider = document.getElementById('budgetSlider');
+const budgetValue = document.getElementById('budgetValue');
+
+function fmtBudget(v) {
+  v = Number(v);
+  if (v >= 500000) return '500 000 ₽/мес и более';
+  return v.toLocaleString('ru-RU') + ' ₽/мес';
+}
+function updateBudget() { budgetValue.textContent = fmtBudget(budgetSlider.value); }
+budgetSlider.addEventListener('input', updateBudget);
+updateBudget();
+
+function val(id) { const el = document.getElementById(id); return el && el.value.trim(); }
+function showErr(fid) { const el = document.getElementById(fid); if (el) el.classList.add('error'); }
+function clearErr(fid) { const el = document.getElementById(fid); if (el) el.classList.remove('error'); }
+
+function validateApply() {
+  let ok = true;
+  if (!val('name')) { showErr('f-name'); ok = false; } else clearErr('f-name');
+  if (!val('phone')) { showErr('f-phone'); ok = false; } else clearErr('f-phone');
+  if (!val('experience')) { showErr('f-experience'); ok = false; } else clearErr('f-experience');
+  return ok;
+}
+
+document.getElementById('applyForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  if (!validateApply()) return;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Отправляем…';
+
+  const fd = new FormData();
+  fd.append('timestamp', new Date().toLocaleString('ru-RU'));
+  fd.append('services', 'Авито');
+  fd.append('name', val('name'));
+  fd.append('phone', val('phone'));
+  fd.append('telegram', val('tg') || '');
+  fd.append('tools_results', val('experience'));
+  fd.append('summer_budget', fmtBudget(budgetSlider.value));
+
+  fetch(APPS_SCRIPT_URL, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(res => {
+      if (res.result === 'success') {
+        document.getElementById('applyForm').style.display = 'none';
+        document.getElementById('applyThanks').classList.add('active');
+      } else {
+        alert('Ошибка при отправке. Попробуйте ещё раз или напишите https://t.me/m/VgeEywMJY2U6');
+        btn.disabled = false;
+        btn.textContent = 'Отправить заявку';
+      }
+    })
+    .catch(() => {
+      alert('Ошибка соединения. Проверьте интернет и попробуйте снова. Или напишите https://t.me/m/VgeEywMJY2U6');
+      btn.disabled = false;
+      btn.textContent = 'Отправить заявку';
+    });
+});
 </script>
 </body>
 </html>
