@@ -269,8 +269,8 @@ input,textarea,select{font-family:inherit}
         <input type="text" id="fClientId" autocapitalize="off" autocorrect="off" spellcheck="false">
       </div>
       <div class="field-row">
-        <label>User ID (аккаунт)</label>
-        <input type="text" id="fUserId" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <label>User ID (необязательно)</label>
+        <input type="text" id="fUserId" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Определим сами">
       </div>
     </div>
     <div class="field-row">
@@ -663,8 +663,8 @@ async function saveAccount() {
   const clientId = document.getElementById('fClientId').value.trim();
   const userId = document.getElementById('fUserId').value.trim();
   const clientSecret = document.getElementById('fClientSecret').value.trim();
-  if (!name || !clientId || !userId || (!editingAccountId && !clientSecret)) {
-    showToast('Заполните название, Client ID, User ID и секрет');
+  if (!name || !clientId || (!editingAccountId && !clientSecret)) {
+    showToast('Заполните название, Client ID и секрет');
     return;
   }
   try {
@@ -684,7 +684,8 @@ async function saveAccount() {
     showToast('Кабинет сохранён');
     if (selectedId) selectAccount(selectedId);
   } catch (e) {
-    showToast('Ошибка сохранения: ' + e.message);
+    const hint = !userId ? ' Не удалось определить User ID автоматически — введите его вручную.' : '';
+    showToast('Ошибка сохранения: ' + e.message + hint);
   }
 }
 

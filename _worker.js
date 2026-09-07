@@ -938,6 +938,27 @@ async function avitoGetToken(env, account) {
   return data.access_token;
 }
 
+// Lets the account form leave "User ID" blank: exchange the credentials for a token
+// (uncached — this account doesn't have a KV entry yet) and read the numeric id off
+// /core/v1/accounts/self, the same id Avito otherwise only surfaces inside the developer
+// portal's app settings.
+async function avitoLookupUserId(clientId, clientSecret) {
+  const res = await fetch(`${AVITO_API_BASE}/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`auth_failed_${res.status}: ${text.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  if (!data.access_token) throw new Error('auth_no_token_in_response');
+  const self = await fetchAvitoSelf(data.access_token);
+  if (self == null || self.id == null) throw new Error('self_has_no_id');
+  return String(self.id);
+}
+
 async function avitoRequest(token, path, options = {}, attempt = 0) {
   const res = await fetch(`${AVITO_API_BASE}${path}`, {
     ...options,
@@ -1430,8 +1451,16 @@ async function handleAvitoApi(request, env, url) {
     const name = (body && String(body.name || '').trim()) || '';
     const clientId = (body && String(body.clientId || '').trim()) || '';
     const clientSecret = (body && String(body.clientSecret || '').trim()) || '';
-    const userId = (body && String(body.userId || '').trim()) || '';
-    if (!name || !clientId || !clientSecret || !userId) return json({ error: 'missing_fields' }, 400);
+    let userId = (body && String(body.userId || '').trim()) || '';
+    if (!name || !clientId || !clientSecret) return json({ error: 'missing_fields' }, 400);
+
+    if (!userId) {
+      try {
+        userId = await avitoLookupUserId(clientId, clientSecret);
+      } catch (e) {
+        return json({ error: 'user_id_lookup_failed', message: String(e && e.message) }, 502);
+      }
+    }
 
     const now = new Date().toISOString();
     const account = {
