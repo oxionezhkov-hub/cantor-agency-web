@@ -91,12 +91,12 @@ svg{display:block}
 .copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
 
 /* PODCAST VIDEO */
+.podcast-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:800;color:var(--dark);letter-spacing:-0.01em;margin-bottom:18px}
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:20px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
 .podcast-video-block{margin-bottom:32px}
-.podcast-video-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-.podcast-video-title{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--dark)}
-.podcast-audience-tag{font-size:11px;font-weight:700;color:var(--red-dark);background:var(--accent-bg);padding:4px 12px;border-radius:100px}
 .video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
-.video-hint{text-align:center;font-size:12.5px;color:var(--muted);margin-top:12px}
 
 /* ARTICLE / DOC CARD / PODCAST KIT */
 .doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
@@ -158,6 +158,8 @@ svg{display:block}
   .tr-who{flex:none}
   .tabs{justify-content:flex-start}
   .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
 }
 </style>
 </head>
@@ -181,8 +183,8 @@ svg{display:block}
   <h2>Частые вопросы</h2>
   <details class="faq-item">
     <summary>Куда выкладывать видео подкаста?</summary>
-    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, таймкоды, ключевые слова и хэштеги.</p>
-    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Таймкоды переносите в начало описания построчно в формате 00:00 — YouTube сам соберёт из них главы. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
     <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
   </details>
   <details class="faq-item">
@@ -239,16 +241,17 @@ svg{display:block}
   <!-- PODCAST (video + publishing kit) -->
   <div class="panel active" id="podcast">
 
-    <!-- Тип подкаста определяется по номеру в названии эмбеда: _v1 = для партнёров,
-         _v2 = для сотрудников, _v3 = для клиентов. Текущее видео — _v2 → «для сотрудников». -->
+    <!-- Аудитория этого выпуска — «для партнёров» (уточнено с командой), а не по номеру в названии эмбеда. -->
+    <div class="podcast-title">Материалы подкаста для партнёров</div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1221159992" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
     <div class="podcast-video-block">
-      <div class="podcast-video-head">
-        <div class="podcast-video-title">Материалы подкаста <span class="podcast-audience-tag">для сотрудников</span></div>
-        <a class="dl-btn" href="https://vimeo.com/1221159992" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
-      </div>
       <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1221159992?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Особый_подход_к_построению_онлайн-школ___Иван_Хлебников_v2 (720p)"></iframe></div>
       <script src="https://player.vimeo.com/api/player.js"></script>
-      <p class="video-hint">Кнопка откроет страницу видео на Vimeo — там же можно скачать сам файл.</p>
     </div>
 
     <div class="doc-card">
@@ -262,19 +265,6 @@ svg{display:block}
 🔗 Школа «105 баллов»: [ссылка]
 🔗 Написать Ивану ВКонтакте: [ссылка]
 🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
-
-      <div class="kit-head"><h3>Таймкоды</h3><button class="copy-btn on-light" data-copy="kitTimecodes">Копировать</button></div>
-      <p id="kitTimecodes">[00:00] От юриста к музыканту
-[00:00] Можно ли зарабатывать в образовании
-[00:00] Как начиналась школа «Амига»
-[00:00] Найм и обучение преподавателей
-[00:00] Критика против требовательности
-[00:00] Как проходит собеседование
-[00:00] Как удерживают команду
-[00:00] Зачем нужна вторая школа
-[00:00] Видение через 5 лет
-
-Замените [00:00] на реальное время из своего видео — так ролик лучше находится в поиске YouTube и удобнее смотрится по главам.</p>
 
       <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
       <p id="kitKeywords">онлайн-школа, EdTech, подкаст для предпринимателей, найм преподавателей, школа гитары, подготовка к ЕГЭ, репетиторский бизнес, управление школой, Иван Хлебников</p>
@@ -290,7 +280,7 @@ svg{display:block}
       <div class="doc-topbar-name">📰 Статья</div>
       <div class="doc-topbar-actions">
         <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
-        <a class="dl-btn" href="/ivan-hlebnikov-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+        <a class="dl-btn" href="/mba-mybrand/ivan-hlebnikov-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
       </div>
     </div>
     <div class="doc-card" id="articleCopy">
@@ -489,7 +479,7 @@ svg{display:block}
       <div class="doc-topbar-name">🎙 Транскрибация</div>
       <div class="doc-topbar-actions">
         <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
-        <a class="dl-btn" href="/ivan-hlebnikov-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+        <a class="dl-btn" href="/mba-mybrand/ivan-hlebnikov-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
       </div>
     </div>
 

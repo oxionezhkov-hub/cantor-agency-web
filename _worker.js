@@ -2053,6 +2053,14 @@ export default {
       }
     }
 
+    // /mba-mybrand itself is served from mba-mybrand/index — the directory also holds
+    // per-client podcast materials pages (mba-mybrand/<slug>-podcastN).
+    if (url.pathname === '/mba-mybrand') {
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = '/mba-mybrand/index';
+      return env.ASSETS.fetch(new Request(assetUrl, request));
+    }
+
     if (!url.pathname.startsWith('/api/')) {
       return env.ASSETS.fetch(request);
     }
