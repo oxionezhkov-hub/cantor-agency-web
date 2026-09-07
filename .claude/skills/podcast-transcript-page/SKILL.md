@@ -34,15 +34,28 @@ mba-mybrand/<slug>-podcastN
 команды/по брифу, а не угадывай по имени файла.
 
 Файл отдаётся как обычная HTML-страница на
-`https://cantor.agency/mba-mybrand/<slug>-podcastN` через фолбэк Cloudflare
-Worker на статические ассеты (`env.ASSETS.fetch(request)` в `_worker.js`) —
-так же, как уже отдаются `offer`, `client/iulia-yanson`, `podcast-scenarios/...`
-и т.п. Отдельная маршрутизация не нужна.
+`https://cantor.agency/mba-mybrand/<slug>-podcastN` — так же, как уже
+отдаются `offer`, `client/iulia-yanson`, `podcast-scenarios/...` и т.п.
+Отдельная маршрутизация для конкретного имени файла не нужна.
 
-⚠️ `mba-mybrand/index` — это CRM/анкета-бриф самого агентства (открывается
-по `/mba-mybrand`, есть явный рерайт `/mba-mybrand` → `/mba-mybrand/index`
-в `_worker.js`). Никогда не перезаписывай и не удаляй этот файл — только
-добавляй рядом файлы `<slug>-podcastN[...]`.
+⚠️ **Важно про архитектуру:** прод (`cantor.agency`) отдаётся напрямую
+через nginx (DNS домена — на reg.ru, не на Cloudflare), а не через
+Cloudflare Worker — `_worker.js` реально исполняется только на
+`*.workers.dev` (в т.ч. превью-домены веток) и обслуживает там `/api/*`
+и раздачу ассетов. На проде для плоского файла (`mba-mybrand/<slug>-podcastN`)
+это не имеет значения — nginx просто отдаёт файл по точному пути. Но для
+самого каталога `mba-mybrand/` без имени файла (`/mba-mybrand` и
+`/mba-mybrand/`) nginx резолвит индекс сам, только если там лежит файл
+`index.html` (или `index.htm`) — **не** `index` без расширения. Поэтому:
+
+⚠️ `mba-mybrand/index.html` — это CRM/анкета-бриф самого агентства
+(открывается по `/mba-mybrand`). Никогда не перезаписывай, не удаляй и не
+переименовывай этот файл (расширение `.html` обязательно — без него прод
+отдаёт 403 на `/mba-mybrand/`) — только добавляй рядом файлы
+`<slug>-podcastN[...]`. В `_worker.js` есть дублирующий рерайт
+`/mba-mybrand` и `/mba-mybrand/` → `/mba-mybrand/index.html` для домена
+воркера — держи его в синхроне с именем файла, если когда-нибудь его
+переименуешь.
 
 ---
 
