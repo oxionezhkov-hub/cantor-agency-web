@@ -33,14 +33,10 @@ html{scroll-behavior:smooth}
 body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
 
 a{color:var(--red)}
-
-/* VIDEO */
-.video-hero{max-width:900px;margin:0 auto;padding:40px 24px 0}
-.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
-.video-hint{text-align:center;font-size:13px;color:var(--muted);margin-top:14px}
+svg{display:block}
 
 /* INTRO / CHECKLIST */
-.intro{max-width:820px;margin:0 auto;padding:36px 24px 0}
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
 .intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
 .intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
 .intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
@@ -58,16 +54,21 @@ a{color:var(--red)}
 .faq-item summary::-webkit-details-marker{display:none}
 .faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
 .faq-item[open] summary::after{content:"–"}
-.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.6}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
 
 /* TABS */
 .tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
-.tabs{max-width:1000px;margin:0 auto;display:flex;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
 .tabs::-webkit-scrollbar{height:5px}
 .tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
-.tab-btn{flex:0 0 auto;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
 .tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
 .tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
 .tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
 
 /* CONTENT */
@@ -76,22 +77,30 @@ a{color:var(--red)}
 .panel.active{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* DOC TOPBAR (article / transcript / podcast) */
+/* DOC TOPBAR (article / transcript) */
 .doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
 .doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
 .doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
-.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:6px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
 .copy-btn.copied{background:var(--red);border-color:var(--red)}
 .dl-btn{background:var(--red);border-color:var(--red)}
 .dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
 
-/* ARTICLE / DOC CARD (also used for podcast panel) */
+/* PODCAST VIDEO */
+.podcast-video-block{margin-bottom:32px}
+.podcast-video-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.podcast-video-title{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:var(--dark)}
+.podcast-audience-tag{font-size:11px;font-weight:700;color:var(--red-dark);background:var(--accent-bg);padding:4px 12px;border-radius:100px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+.video-hint{text-align:center;font-size:12.5px;color:var(--muted);margin-top:12px}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
 .doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
-.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em}
-.art-sub{color:var(--muted);font-size:15px;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border)}
-.art-meta{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:0}
-.art-meta b{color:var(--dark2)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
 .doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
 .doc-card h2:first-of-type{margin-top:8px}
 .doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
@@ -99,17 +108,22 @@ a{color:var(--red)}
 .doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
 .art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
 
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
 /* TELEGRAM POSTS */
 .tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
-.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
 .tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
-.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light)}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
 .tg-body{padding:30px 32px 34px}
-.tg-body h3{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:800;color:var(--dark);margin-bottom:16px;line-height:1.35}
-.tg-body h4{font-size:15.5px;font-weight:700;color:var(--red-dark);margin:20px 0 8px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
 .tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
 .tg-body p:last-child{margin-bottom:0}
-.tg-tag{display:inline-block;font-size:11.5px;font-weight:700;color:var(--red-dark);background:var(--accent-bg);padding:4px 12px;border-radius:100px;margin-bottom:16px}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
 
 /* TRANSCRIPT */
 .tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
@@ -122,7 +136,7 @@ a{color:var(--red)}
 .tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
 .tr-line{display:flex;gap:14px;margin-bottom:14px}
 .tr-line:last-child{margin-bottom:0}
-.tr-who{flex:0 0 76px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
 .tr-who.host{color:var(--muted)}
 .tr-who.guest{color:var(--red-dark)}
 .tr-txt{font-size:15px;color:var(--text)}
@@ -130,27 +144,24 @@ a{color:var(--red)}
 .tr-txt p:last-child{margin-bottom:0}
 
 @media(max-width:640px){
-  .video-hero{padding:24px 16px 0}
   .intro{padding:24px 16px 0}
   .intro-card{padding:24px 20px}
   .faq{padding:20px 16px 0}
-  .doc-card{padding:28px 22px}
+  .doc-card{padding:26px 20px}
   .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
   .tg-body{padding:24px 20px 28px}
   .tr-section{padding:22px 18px}
   .tr-toc ol{grid-template-columns:1fr}
   .tr-line{flex-direction:column;gap:4px}
   .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
 }
 </style>
 </head>
 <body>
-
-<div class="video-hero">
-  <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1221159992?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Особый_подход_к_построению_онлайн-школ___Иван_Хлебников_v2 (720p)"></iframe></div>
-  <p class="video-hint">Вы можете скачать видео-файл, перейдя в него.</p>
-</div>
-<script src="https://player.vimeo.com/api/player.js"></script>
 
 <div class="intro">
   <div class="intro-card">
@@ -170,27 +181,49 @@ a{color:var(--red)}
   <h2>Частые вопросы</h2>
   <details class="faq-item">
     <summary>Куда выкладывать видео подкаста?</summary>
-    <p>На YouTube и VK Видео как основную запись. Короткие нарезки с самыми яркими моментами — в Reels, Shorts, VK Клипы и сторис. Если на сайте школы есть блог или страница «О нас» — разместите видео и там, это усиливает доверие к бренду.</p>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, таймкоды, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Таймкоды переносите в начало описания построчно в формате 00:00 — YouTube сам соберёт из них главы. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
   </details>
   <details class="faq-item">
     <summary>Как использовать транскрибацию?</summary>
-    <p>Скачайте .docx и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) с конкретной задачей — например: «на основе этой транскрибации напиши 5 постов для родителей о преимуществах школы» или «сделай на основе этого текста email-рассылку». Чем точнее задача — площадка, аудитория, тон — тем лучше результат.</p>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
   </details>
   <details class="faq-item">
     <summary>Куда выкладывать статью?</summary>
-    <p>Статья хорошо заходит на форумах и площадках для предпринимателей и родителей: VC.ru, профильные родительские форумы и группы, Дзен, личный блог. Перед публикацией замените имя и детали под контекст конкретной площадки.</p>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
   </details>
   <details class="faq-item">
     <summary>Куда выкладывать посты?</summary>
-    <p>В Telegram-канал и ВКонтакте — по одному посту раз в 2–3 дня, чтобы не выжигать аудиторию сразу. Короткую цитату из поста можно продублировать в сторис со ссылкой «читать полностью в канале».</p>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
   </details>
 </div>
 
 <div class="tabs-wrap">
   <div class="tabs tabs-row1" id="tabs">
-    <button class="tab-btn active" data-tab="podcast">🎬 Подкаст</button>
-    <button class="tab-btn" data-tab="article">📰 Статья</button>
-    <button class="tab-btn" data-tab="transcript">🎙 Транскрибация</button>
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
   </div>
   <div class="tabs tabs-row2">
     <button class="tab-btn" data-tab="post1">Пост 1</button>
@@ -203,28 +236,35 @@ a{color:var(--red)}
 
 <div class="content">
 
-  <!-- PODCAST (publishing kit) -->
+  <!-- PODCAST (video + publishing kit) -->
   <div class="panel active" id="podcast">
-    <div class="doc-topbar">
-      <div class="doc-topbar-name">🎬 Материалы для публикации видео</div>
-      <div class="doc-topbar-actions">
-        <button class="copy-btn" data-copy="podcastCopy">Копировать текст</button>
-      </div>
-    </div>
-    <div class="doc-card" id="podcastCopy">
-      <h2>Название видео</h2>
-      <p>Особый подход к построению онлайн-школ. Иван Хлебников — от юриста до основателя двух школ</p>
 
-      <h2>Описание</h2>
-      <p>Как юрист с 15-летним стажем ушёл из судебных процессов и построил две образовательные школы — «Амига» (гитара и укулеле) и «105 баллов» (подготовка к ОГЭ и ЕГЭ). В выпуске — про найм преподавателей, философию «без критики», деньги в образовании и то, зачем нужна вторая школа, когда первая и так растёт.
+    <!-- Тип подкаста определяется по номеру в названии эмбеда: _v1 = для партнёров,
+         _v2 = для сотрудников, _v3 = для клиентов. Текущее видео — _v2 → «для сотрудников». -->
+    <div class="podcast-video-block">
+      <div class="podcast-video-head">
+        <div class="podcast-video-title">Материалы подкаста <span class="podcast-audience-tag">для сотрудников</span></div>
+        <a class="dl-btn" href="https://vimeo.com/1221159992" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      </div>
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1221159992?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Особый_подход_к_построению_онлайн-школ___Иван_Хлебников_v2 (720p)"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+      <p class="video-hint">Кнопка откроет страницу видео на Vimeo — там же можно скачать сам файл.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">Особый подход к построению онлайн-школ. Иван Хлебников — от юриста до основателя двух школ</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Как юрист с 15-летним стажем ушёл из судебных процессов и построил две образовательные школы — «Амига» (гитара и укулеле) и «105 баллов» (подготовка к ОГЭ и ЕГЭ). В выпуске — про найм преподавателей, философию «без критики», деньги в образовании и то, зачем нужна вторая школа, когда первая и так растёт.
 
 🔗 Школа «Амига»: [ссылка]
 🔗 Школа «105 баллов»: [ссылка]
 🔗 Написать Ивану ВКонтакте: [ссылка]
 🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
 
-      <h2>Таймкоды</h2>
-      <p>[00:00] От юриста к музыканту
+      <div class="kit-head"><h3>Таймкоды</h3><button class="copy-btn on-light" data-copy="kitTimecodes">Копировать</button></div>
+      <p id="kitTimecodes">[00:00] От юриста к музыканту
 [00:00] Можно ли зарабатывать в образовании
 [00:00] Как начиналась школа «Амига»
 [00:00] Найм и обучение преподавателей
@@ -236,11 +276,11 @@ a{color:var(--red)}
 
 Замените [00:00] на реальное время из своего видео — так ролик лучше находится в поиске YouTube и удобнее смотрится по главам.</p>
 
-      <h2>Ключевые слова</h2>
-      <p>онлайн-школа, EdTech, подкаст для предпринимателей, найм преподавателей, школа гитары, подготовка к ЕГЭ, репетиторский бизнес, управление школой, Иван Хлебников</p>
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, подкаст для предпринимателей, найм преподавателей, школа гитары, подготовка к ЕГЭ, репетиторский бизнес, управление школой, Иван Хлебников</p>
 
-      <h2>Хэштеги</h2>
-      <p>#подкаст #предприниматель #образование #школагитары #ЕГЭ #EdTech #найм #бизнесобразование</p>
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #школагитары #ЕГЭ #EdTech #найм #бизнесобразование</p>
     </div>
   </div>
 
@@ -250,14 +290,11 @@ a{color:var(--red)}
       <div class="doc-topbar-name">📰 Статья</div>
       <div class="doc-topbar-actions">
         <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
-        <a class="dl-btn" href="/ivan-hlebnikov-statya.docx" download>⬇ Скачать .docx</a>
+        <a class="dl-btn" href="/ivan-hlebnikov-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
       </div>
     </div>
     <div class="doc-card" id="articleCopy">
       <h1 class="art-title">От зала суда до урока гитары: как я построил две школы и зачем мне это нужно</h1>
-      <div class="art-sub">
-        <div class="art-meta">Колонка от первого лица · <b>Иван Хлебников</b> — основатель школ «Амига» и «105 баллов»</div>
-      </div>
 
       <p>Пятнадцать лет я был юристом. Судебные процессы, крупные гонорары, своя компания, ключевые клиенты. К 2019 году у меня был хороший портфель заказов и партнёры, с которыми мы выигрывали дела одно за другим. И именно в этой точке, на пике, я продал свою долю в бизнесе. Не потому что что-то пошло не так. А потому что встал вопрос, который рано или поздно задаёт себе каждый предприниматель: а что дальше?</p>
 
@@ -275,25 +312,47 @@ a{color:var(--red)}
       <blockquote>Интересно работать в школе, где есть деньги. Где ученики платят, преподаватели зарабатывают, а у школы есть время и ресурсы, чтобы внедрять новые подходы и нанимать ещё больше хороших учителей.</blockquote>
       <p>Я искренне считаю: чем сильнее в экономическом смысле школа, тем больше она может дать детям. И через это — сделать нашу страну умнее, счастливее и богаче.</p>
 
+      <h2>Итальянский урок, который перевернул нашу методику</h2>
+      <p>Двадцать лет назад моя жена Екатерина попала в Италию на летнюю школу классической гитары. К тому моменту она уже хорошо знала, что такое советская школа преподавания — довольно жёсткая, построенная на разборе ошибок. А в Италии урок начинался с обычного разговора: не про домашку, а про то, какое у тебя настроение и что происходит в жизни. Учитель по-настоящему интересовался человеком, а не только его игрой.</p>
+      <p>Дальше начиналась игра — и педагог садился играть рядом, будто поднимал тебя до своего уровня и вёл дальше за собой. За весь урок — ни одного замечания. Такое переживание создаёт совсем другую мотивацию, чем разбор ошибок под запись.</p>
+      <p>Когда Екатерина вернулась в Россию и попробовала перенести этот подход в государственную музыкальную школу, не получилось — там жёсткая структура экзаменов не оставляет для этого места. Поэтому мы стали экспериментировать уже в своей школе, и её интуитивный подход постепенно превратился в чёткую систему, которую мы разложили и описали. Если одним словом описывать школу «Амига», это будет слово «поддержка» — и в «105 баллов» работает тот же принцип: педагог говорит ученику «ты умный, у тебя получится» и идёт к результату вместе с ним, а не наблюдает со стороны.</p>
+
       <h2>Слово, которым можно описать всю мою школу</h2>
-      <p>Если бы меня попросили описать школу «Амига» одним словом, я бы сказал — поддержка. Мы сознательно убрали из процесса обучения критику. Не потому что нам всё равно, правильно ли ученик держит гитару. А потому что критика создаёт эмоциональную привязку к плохому результату: ребёнок написал четыре страницы прекрасного текста, но запомнит именно обведённую кружочком одну ошибку.</p>
+      <p>Мы сознательно убрали из процесса обучения критику. Не потому что нам всё равно, правильно ли ученик держит гитару. А потому что критика создаёт эмоциональную привязку к плохому результату: ребёнок написал четыре страницы прекрасного текста, но запомнит именно обведённую кружочком одну ошибку.</p>
       <p>Мы выбрали привязывать эмоцию к хорошему. «Смотри, вот здесь ты сыграл отлично — давай сыграем так же ещё раз здесь». Это не значит, что мы снижаем требовательность — требовательность и критика вообще разные вещи. Лучший учитель в моей жизни, преподаватель литературы в 10–11 классе, ни разу не повысила на нас голос и не раскритиковала ни одной работы — но была невероятно требовательной. Именно она научила меня писать и думать.</p>
 
       <h2>Как я нанимаю людей, которые умеют любить учеников</h2>
       <p>Преподаватель — центральное звено любой школы. У вас может быть идеальный маркетинг и продажи, но если ребёнку некомфортно на уроке, он не станет вашей рекламой. Поэтому найм — это не формальность, а самый важный процесс в компании.</p>
       <p>На собеседовании я смотрю на четыре вещи: чувствует ли человек себя учителем по призванию, а не «пока не найду что-то получше»; готов ли он брать на себя ответственность за результат ученика; насколько убедительно он звучит и способен ли вести за собой; и главное — есть ли у него эмпатия. Мой любимый вопрос — «расскажите о себе». Это открытый вопрос без правильного ответа, и моя задача — нащупать тему, в которой человек начнёт искренне проявлять эмоции. По тому, где загораются глаза, всегда понятно, есть в человеке эмпатия или нет.</p>
+      <p>Знания при этом мы проверяем отдельно, тестом — важно не смешивать вопрос «умеет ли человек играть» с вопросом «может ли он быть учителем». Это два разных навыка, и оценивать их нужно раздельно. После трёхсот с лишним собеседований формируется насмотренность: обычно достаточно 20 минут разговора, чтобы понять человека.</p>
+
+      <h2>Почему мы иногда расстаёмся с преподавателями</h2>
+      <p>Отбор не гарантирует стопроцентного попадания. В первые два года школы гитары мы перепробовали много разных преподавателей, прежде чем чётко для себя описали портрет подходящего и неподходящего кандидата. То же самое повторилось с «105 баллов»: первые два месяца мы нанимали разных людей, и уже к концу второго месяца ясно понимали, с кем работаем, а с кем нет.</p>
+      <p>Отдельно смотрю на договороспособность. Учебный год — цикличный процесс: он начинается в сентябре и заканчивается в мае-июне, и если я беру преподавателя, мне важно быть уверенным, что он доведёт ученика до конца. Я слышал истории, когда учителя бросали учеников в апреле или мае — прямо перед экзаменом, когда поддержка нужна сильнее всего. Если человек по-своему трактует договорённости — это первый тревожный звонок, и с таким мы не работаем.</p>
 
       <h2>Зачем нужна вторая школа</h2>
       <p>Гитара, как ни крути, — это дополнительные занятия. Когда в расписании ребёнка не остаётся места или в экономике случается турбулентность, от «допов» отказываются в первую очередь. Плюс у любого навыка есть плато, и многие бросают именно на нём.</p>
       <p>Школьные предметы устроены иначе. Это длинная дистанция, где виден результат в масштабе лет: подтянули математику — ученик сравнялся с классом — стал лучшим в классе — вышел на олимпиаду — получил дополнительные баллы на экзамене — поступил в сильный вуз. От такой траектории родители не отказываются даже в кризис, потому что это инвестиция в будущее ребёнка. Так родилась «105 баллов» — название говорит само за себя: 100 базовых плюс дополнительные баллы, которые дают победы на всероссийских олимпиадах.</p>
 
+      <h2>Как мы запускали «105 баллов» онлайн</h2>
+      <p>Ключевые вещи мы перенесли из «Амиги» — администрирование и саму логику методики. Тут было проще: методику школьных предметов не пришлось придумывать с нуля, она прекрасно работает в педагогических университетах, наша задача — убрать всё лишнее и оставить учителя с учеником наедине.</p>
+      <p>А вот маркетинг тестировали заново. Школа онлайн — и здесь своя специфика: в оффлайне достаточно яркой вывески у дороги, а здесь этого мало. За первые восемь месяцев мы протестировали больше тридцати концепций подачи школы под разные сезоны — октябрьские, январские, мартовские, майские и даже июньские запросы, когда родители спохватываются буквально перед самым экзаменом.</p>
+
       <h2>Три роли, которые я выполняю каждый день</h2>
       <p>В управлении обеими школами у меня три роли. Первая — стратегическая: куда мы идём, какая у нас миссия, какие цели на годы вперёд. Вторая — я связующее звено между отделами: администрированием, продажами, методикой, маркетингом. У меня выстроены регулярные созвоны — по вторникам с администраторами, отдельно по продажам, где мы разбираем каждого ученика, прошедшего пробный урок. Третья роль — точечная: где нужно, я включаюсь в маркетинг, в регламенты, в конкретные срочные вопросы.</p>
+      <p>Сейчас в «Амиге» пять преподавателей, две локации в Екатеринбурге и около 200 учеников. Основной трафик идёт с 2GIS и платной рекламы, но по факту главный канал — рекомендации: около 30% новых учеников приходят по совету, потому что лучшая реклама детской школы гитары — играющий и довольный ребёнок. На втором месте, как ни странно, органический трафик из Google — вообще без платной рекламы. Мы регулярно проводим отчётные концерты, и есть четыре концертные группы — своего рода элита школы, которая занимается больше остальных и участвует в конкурсах.</p>
       <p>При этом моя главная задача по отношению к преподавателям — убрать от них всё, что мешает учить. Согласование расписания, отработки, сбор оплат — всё это делает отдел администрирования. Я уважаю время отдыха каждого учителя и не позволяю дёргать его в выходной. А зарплата у нас за 12 лет работы школы ни разу не задерживалась — на сегодняшнем рынке это серьёзное конкурентное преимущество.</p>
+
+      <h2>Чего мне ещё не хватает</h2>
+      <p>Если бы ко мне пришли опытные партнёры, я бы не просил у них советов — советов на рынке хватает. Мне интересна помощь именно как компетенция. Первое — системное управление маркетингом: не «как сделать один хороший рекламный креатив», а как выстроить процесс управления маркетингом целиком. Второе — передовые практики в HR: не сами критерии подбора преподавателя, тут у меня всё чётко, а автоматизированная, полностью регламентированная система найма от и до.</p>
 
       <h2>Куда я иду дальше</h2>
       <p>Я не вижу для себя пути в диверсификацию — школу английского, школу для малышей и так далее. Я вижу огромный потенциал в интенсивном развитии того, что у нас уже есть: у каждого школьного предмета своя логика — история требует понимания причинно-следственных связей, математика — доведённого до автоматизма навыка, физика открывает космос. Хочу, чтобы «105 баллов» стала местом, где каждый из этих предметов преподаётся на пределе своей специфики.</p>
       <p>Через пять лет я буду считать проект успешным, если школа будет расти минимум вдвое каждый год, средний балл ЕГЭ наших учеников составит 90, а весь процесс — от найма до методики — будет чётко регламентирован, работать и зарабатывать.</p>
+
+      <h2>Что я читаю и как со мной связаться</h2>
+      <p>Из книг, которые сильно на меня повлияли ещё со времён юриспруденции — «Дух римского права» Рудольфа Иеринга: она о том, благодаря чему римская цивилизация выросла в огромную империю, и после неё я по-другому стал смотреть на жизнь. Из фильмов — «Секретные материалы»: в детстве меня притягивали загадки и тайны, а сейчас я вижу в нём двух профессионалов высокого класса, которые по-настоящему любят своё дело.</p>
+      <p>Мне можно написать ВКонтакте — с любым вопросом про бизнес, найм, построение отделов. Ко мне часто обращаются руководители других школ, и я обычно не даю готовых советов, а задаю вопросы — чтобы человек сам увидел, что решение у него уже есть. Я всегда открыт для дружеской поддержки и товарищеского совета.</p>
 
       <p class="art-signature">Иван Хлебников,<br>основатель школ «Амига» и «105 баллов»</p>
     </div>
@@ -303,11 +362,10 @@ a{color:var(--red)}
   <div class="panel" id="post1">
     <div class="tg-card">
       <div class="tg-topbar">
-        <div class="tg-topbar-name"><span class="tg-dot"></span>Telegram · пост 1 из 5</div>
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про философию обучения</div>
         <button class="copy-btn" data-copy="copy1">Копировать текст</button>
       </div>
       <div class="tg-body" id="copy1">
-        <span class="tg-tag">Философия обучения</span>
         <h3>🚫 Мы официально запретили критику в школе. Вот что из этого вышло</h3>
         <p>Звучит как ересь, да? Но выслушайте.</p>
         <p>Представьте: ребёнок написал четыре страницы прекрасного сочинения. Одна ошибка — обвели кружочком, поставили галочку. И что он запомнит из этих четырёх страниц? Правильно, ту самую ошибку.</p>
@@ -329,11 +387,10 @@ a{color:var(--red)}
   <div class="panel" id="post2">
     <div class="tg-card">
       <div class="tg-topbar">
-        <div class="tg-topbar-name"><span class="tg-dot"></span>Telegram · пост 2 из 5</div>
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про найм преподавателей</div>
         <button class="copy-btn" data-copy="copy2">Копировать текст</button>
       </div>
       <div class="tg-body" id="copy2">
-        <span class="tg-tag">Найм преподавателей</span>
         <h3>🎤 Мой любимый вопрос на собеседовании. Простой до неприличия</h3>
         <p>«Расскажите о себе».</p>
         <p>Звучит банально, я знаю. Но за этим вопросом стоит вся логика найма в моих школах.</p>
@@ -342,10 +399,10 @@ a{color:var(--red)}
 
 Именно там, где загораются глаза, спрятана эмпатия. А без эмпатии учитель — это просто выгрузка контента, а не педагог.</p>
         <h4>Четыре вещи, которые я проверяю за 20 минут разговора</h4>
-        <p>1️⃣ Это призвание или временная остановка на пути к чему-то другому?
-2️⃣ Готов ли человек брать ответственность за результат ученика?
-3️⃣ Как он звучит — может ли повести за собой?
-4️⃣ Есть ли эмпатия — видит ли он ученика, а не просто «выгружает» тему?</p>
+        <p>1. Это призвание или временная остановка на пути к чему-то другому?
+2. Готов ли человек брать ответственность за результат ученика?
+3. Как он звучит — может ли повести за собой?
+4. Есть ли эмпатия — видит ли он ученика, а не просто «выгружает» тему?</p>
         <p>После 300+ собеседований этого действительно хватает. Не потому что я такой проницательный — а потому что насмотренность на самом деле работает лучше любого теста.</p>
         <p>💬 А какой у вас самый показательный вопрос на собеседовании? Делитесь в комментариях.</p>
       </div>
@@ -356,11 +413,10 @@ a{color:var(--red)}
   <div class="panel" id="post3">
     <div class="tg-card">
       <div class="tg-topbar">
-        <div class="tg-topbar-name"><span class="tg-dot"></span>Telegram · пост 3 из 5</div>
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про деньги в образовании</div>
         <button class="copy-btn" data-copy="copy3">Копировать текст</button>
       </div>
       <div class="tg-body" id="copy3">
-        <span class="tg-tag">Бизнес в образовании</span>
         <h3>💰 «Разве на образовании можно зарабатывать?» Мне задают этот вопрос постоянно</h3>
         <p>Отвечаю развёрнуто, потому что тема реально важная.</p>
         <h4>Есть два разных процесса</h4>
@@ -369,7 +425,7 @@ a{color:var(--red)}
         <h4>Почему это важно не только мне</h4>
         <p>Потому что школа без денег — это школа без развития. Ей не на что нанимать сильных преподавателей, внедрять новые методики, расти.</p>
         <p>А школа, где ученики платят и преподаватели хорошо зарабатывают — это школа, у которой есть время и ресурс становиться лучше каждый год.</p>
-        <p>🇷🇺 Я искренне верю: чем сильнее экономически образование, тем умнее, счастливее и богаче становится вся страна.</p>
+        <p>Я искренне верю: чем сильнее экономически образование, тем умнее, счастливее и богаче становится вся страна.</p>
         <p>Зарабатывать в образовании — не стыдно. Стыдно — не давать хорошим учителям расти, потому что «это же дети, тут не до денег».</p>
       </div>
     </div>
@@ -379,11 +435,10 @@ a{color:var(--red)}
   <div class="panel" id="post4">
     <div class="tg-card">
       <div class="tg-topbar">
-        <div class="tg-topbar-name"><span class="tg-dot"></span>Telegram · пост 4 из 5</div>
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про удержание команды</div>
         <button class="copy-btn" data-copy="copy4">Копировать текст</button>
       </div>
       <div class="tg-body" id="copy4">
-        <span class="tg-tag">Удержание команды</span>
         <h3>🛡 Как удержать сильного преподавателя? Спойлер — не только деньгами</h3>
         <p>За 12 лет через мои школы прошли сотни преподавателей. Вот что реально работает, если вы хотите, чтобы лучшие оставались с вами надолго.</p>
         <h4>1. Уберите с них всю рутину</h4>
@@ -393,7 +448,7 @@ a{color:var(--red)}
         <h4>3. Зарплата — вовремя и в оговорённом размере. Без исключений</h4>
         <p>За 12 лет работы школы у нас не было ни одной задержки. Ни разу. Сегодня это не мелочь — это одно из самых сильных конкурентных преимуществ на рынке труда преподавателей.</p>
         <p>Хороший учитель не уходит из-за денег в первую очередь. Он уходит, когда чувствует, что его выматывают вопросами, дёргают в выходной и не могут гарантировать элементарную стабильность.</p>
-        <p>Дайте человеку заниматься тем, что он любит — и он останется надолго. 💛</p>
+        <p>Дайте человеку заниматься тем, что он любит — и он останется надолго.</p>
       </div>
     </div>
   </div>
@@ -402,11 +457,10 @@ a{color:var(--red)}
   <div class="panel" id="post5">
     <div class="tg-card">
       <div class="tg-topbar">
-        <div class="tg-topbar-name"><span class="tg-dot"></span>Telegram · пост 5 из 5</div>
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про вторую школу</div>
         <button class="copy-btn" data-copy="copy5">Копировать текст</button>
       </div>
       <div class="tg-body" id="copy5">
-        <span class="tg-tag">Стратегия роста</span>
         <h3>🎯 Зачем я открыл вторую школу, если первая и так прекрасно работала</h3>
         <p>У меня 12 лет успешно растёт школа гитары «Амига». Казалось бы — зачем рисковать и открывать что-то ещё?</p>
         <p>Вот честный ответ.</p>
@@ -415,16 +469,16 @@ a{color:var(--red)}
         <h4>Школьные предметы — это другая история</h4>
         <p>Это длинная дистанция, где результат видно годами:
 
-📈 подтянули математику — ученик сравнялся с классом
-🏆 стал лучшим в классе
-🥇 вышел на олимпиаду
-🎓 получил дополнительные баллы на экзамене
-🏛 поступил в сильный вуз
+— подтянули математику — ученик сравнялся с классом
+— стал лучшим в классе
+— вышел на олимпиаду
+— получил дополнительные баллы на экзамене
+— поступил в сильный вуз
 
 От такой траектории родители не откажутся даже в сложный период — потому что это инвестиция в будущее ребёнка. Раньше откажутся от бассейна и шахмат, чем от подготовки к ЕГЭ.</p>
         <h4>Отсюда и название</h4>
         <p>«105 баллов» — 100 базовых плюс дополнительные, которые даёт победа во всероссийской олимпиаде. Это же и есть наша цель для каждого ученика — не просто сдать экзамен, а выйти на максимум своих возможностей.</p>
-        <p>Иногда вторая школа — это не про распыление. Это про то, чтобы довести философию до конца на более длинной дистанции. 🚀</p>
+        <p>Иногда вторая школа — это не про распыление. Это про то, чтобы довести философию до конца на более длинной дистанции.</p>
       </div>
     </div>
   </div>
@@ -435,7 +489,7 @@ a{color:var(--red)}
       <div class="doc-topbar-name">🎙 Транскрибация</div>
       <div class="doc-topbar-actions">
         <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
-        <a class="dl-btn" href="/ivan-hlebnikov-transkript.docx" download>⬇ Скачать .docx</a>
+        <a class="dl-btn" href="/ivan-hlebnikov-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
       </div>
     </div>
 
@@ -466,7 +520,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t1">
       <h3>1. От юриста к музыканту</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Вы по образованию юрист, но оказались в нише образования. Расскажите про начало пути.</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы по образованию юрист, но оказались в нише образования. Расскажите про начало пути.</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Первое образование у меня действительно юридическое — я закончил юридическую академию в 2005 году. Через два года пошёл получать ещё одно высшее юридическое образование в школу частного права, и параллельно поступил в училище имени Чайковского на гитару. То есть я закончил училище как гитарист, и у меня при этом два высших юридических образования.</p>
         <p>Первые пятнадцать лет я работал юристом. В 2019 году у меня уже была своя юридическая компания, хороший портфель заказов, ключевые клиенты, выигранные процессы. И на этом пике я продал свою долю партнёрам. Встал вопрос: чем заниматься дальше — открыть ещё одну юридическую компанию, уйти в смежную сферу или попробовать что-то совершенно другое.</p>
@@ -477,7 +531,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t2">
       <h3>2. Продажа юридического бизнеса</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Если бы, когда вы строили юридическую компанию, вам предсказали, что через 10 лет вы станете владельцем двух школ — вы бы поверили?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если бы, когда вы строили юридическую компанию, вам предсказали, что через 10 лет вы станете владельцем двух школ — вы бы поверили?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Мне бы очень хотелось поверить, и я думаю, что поверил бы легко. У меня очень давно была мечта открыть свою школу гитары — ещё до того, как я пошёл в музыкальное училище. На самом деле я пошёл в училище именно для того, чтобы поднять свой уровень гитары и построить свою школу. Но жизнь повернулась так, что я стал работать юристом, и довольно долго. Только спустя десять лет после юридического образования я пошёл работать в школу гитары.</p>
       </div></div>
@@ -485,7 +539,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t3">
       <h3>3. Можно ли зарабатывать в образовании</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Многие считают, что в образовании сложно зарабатывать. Вы боялись рисков, когда принимали решение?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Многие считают, что в образовании сложно зарабатывать. Вы боялись рисков, когда принимали решение?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Тут возникает вопрос: можно ли вообще относиться к образованию как к бизнесу? Я считаю, что образование — это большой процесс, и в нём есть часть, которая называется обучением — непосредственная передача знаний от учителя к ученику. Эта часть не может быть бизнесом, потому что она сугубо личная, основанная на эмпатии.</p>
         <p>А всё, что строится вокруг обучения, должно быть организовано, точно описано, эффективно и рентабельно. Поэтому у меня не было сомнений, что из этого важнейшего процесса в жизни каждого ребёнка можно и нужно построить эффективный бизнес. Мне искренне интересно работать в школе, где есть деньги: где ученики платят, преподаватели зарабатывают, есть время и возможности для развития — внедрять новые подходы, методики, нанимать больше хороших учителей. И благодаря этому мы делаем нашу страну умнее, счастливее и богаче.</p>
@@ -494,13 +548,13 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t4">
       <h3>4. Как начиналась школа «Амига»</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Расскажите про первые шаги школы гитары. С чего всё начиналось?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Расскажите про первые шаги школы гитары. С чего всё начиналось?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Школа «Амига» началась в 2014 году. Мы зарегистрировали некоммерческую организацию, но открытие отложили на год — у нас родился третий ребёнок. С 2014 года школа существовала в виде одного ученика, который приходил заниматься к нам домой. Когда мы запустили школу в 2015-м, мы ещё ходили к ученикам сами — своего класса не было, это были частные уроки под вывеской школы.</p>
         <p>В конце 2015 года сняли первое помещение — квартиру в соседнем подъезде, главным критерием было то, что жена могла быстро сходить домой покормить малыша. Там мы проработали года два, и в лучший месяц работали в ноль, в обычные — в минус. Основным драйвером была жена как самый сильный преподаватель со своим пакетом учеников.</p>
         <p>Потом переехали в офисное помещение и впервые поймали действительно хороший трафик — настолько, что попросили таргетолога остановиться, потому что школа уже не вмещала учеников. Взяли помещение побольше, с тремя классами, наняли администратора и начали более системно развиваться.</p>
       </div></div>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Интересно услышать про «Бизнес Молодость» — сейчас многие относятся к этому критично.</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Интересно услышать про «Бизнес Молодость» — сейчас многие относятся к этому критично.</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Когда мы решили открывать школу, я сказал жене: мы с тобой бизнесом заниматься не умеем, поэтому иди на курсы «Бизнес Молодости» и делай всё, как они говорят. Она сама сделала сайт, сама настроила таргет — и это были лучшие результаты по таргету, которые я видел когда-либо: тогда, видимо, алгоритмы были ещё не такими сложными, а материал был рабочим. Если делать именно то, что говорят, это даёт хороший результат. Мы нагнали несколько тысяч лидов, набрали первый поток — так и начали работать. Некоторые инструменты действительно сработали, и это был хороший старт: каркас бизнеса мы собрали именно оттуда.</p>
       </div></div>
@@ -508,7 +562,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t5">
       <h3>5. Найм и обучение преподавателей</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Расскажите про ваш подход к найму и обучению преподавателей.</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Расскажите про ваш подход к найму и обучению преподавателей.</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Преподаватели — центральное звено. У школы может быть прекрасная упаковка и продажи, но если ребёнку некомфортно на уроке, он не станет рассказывать о вашей школе. Когда я пришёл работать в «Амигу», там уже блестяще работала жена — у неё была своя методика, но она искренне не понимала, почему другие преподаватели не могут вести так же ярко.</p>
         <p>Мы садились вместе, и я начинал задавать ей вопросы: как ты ведёшь урок, что говоришь, что делает ученик, а что не делает, почему ты сказала именно так. Так я нашёл закономерности и чётко описал, что именно она делает, чтобы урок получился ярким и чтобы у ученика не было ошибок. Когда процесс описан, я уже точно знаю, что нужно, чтобы обучить этому других людей.</p>
@@ -518,7 +572,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t6">
       <h3>6. Итальянская методика и «поддержка»</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Откуда вообще взялся этот подход через поддержку? Связано ли это с личным опытом?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Откуда вообще взялся этот подход через поддержку? Связано ли это с личным опытом?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Двадцать лет назад моя жена Екатерина была в Италии на летней школе классической гитары. К тому моменту она уже понимала, что такое советская школа преподавания — довольно жёсткая. А в Италии урок начинался с дружеской беседы: не про домашку, а про то, какое у тебя настроение, что происходит в жизни. Учитель искренне интересовался человеком.</p>
         <p>Дальше она начинает играть — и учитель садится играть вместе с ней, будто поднимает тебя на уровень своего мастерства и несёт дальше. За весь урок она не получила ни одного замечания. Проживание такого опыта создаёт сильнейшую мотивацию.</p>
@@ -529,7 +583,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t7">
       <h3>7. Критика против требовательности</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>А если ученику всё разрешать и только поддерживать, не разленится ли он?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если ученику всё разрешать и только поддерживать, не разленится ли он?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Хороший вопрос. Здесь нужно разделить два момента: строгость и требовательность — это прекрасная вещь, которая должна быть. А вот критика за ошибку — совсем другое, и именно её мы убрали.</p>
         <p>Если ученик играет неправильно, мы не говорим «ты здесь ошибся» — мы говорим «смотри, вот здесь ты сыграл хорошо, давай сыграем так же тут». Если задаться вопросом, зачем взрослый состоявшийся преподаватель критикует ученика, ответ с точки зрения психологии, педагогики и делового этикета неутешительный — это неконструктивно. Когда мы обозначаем критику, мы создаём эмоциональную привязку к негативному результату и подсознательный страх ошибиться.</p>
@@ -540,12 +594,12 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t8">
       <h3>8. Как проходит собеседование</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Как вы выстраиваете найм: тесты, собеседования, пробный период?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы выстраиваете найм: тесты, собеседования, пробный период?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Знания проверяются тестом, собеседование — беседой. В беседе я смотрю на три вещи. Первое — случайно ли человек в этой профессии, или это действительно его призвание. Второе — готовность взять ответственность за результат ученика: учитель не может гарантировать 100 баллов на ЕГЭ, потому что пишет всё-таки ученик, но он берёт на себя ответственность за то, что в период подготовки сделает всё для его знаний. Третье — как он звучит, может ли повести за собой.</p>
         <p>Есть учителя, которые просто приходят выгружать контент — взял ученик или не взял, не их забота. А есть те, кто видит ученика: понимает, на каком он этапе, какие у него сопротивления, где он будет через месяц или три. Именно таких учителей я беру.</p>
       </div></div>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>А как вы на собеседовании отсеиваете людей без эмпатии?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как вы на собеседовании отсеиваете людей без эмпатии?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Эмпатия — это маст-хэв, без неё будет просто выгрузка контента. Мой самый любимый вопрос на собеседовании — «расскажите о себе». Это открытый вопрос без правильного ответа: кандидат может рассказывать о чём угодно. Моя задача — разговорить его, нащупать тему, в которой он начнёт раскрываться и проявлять эмоции. И когда он рассказывает о том, что ему по-настоящему нравится, я понимаю, что для него важно и есть ли у него эмпатия.</p>
         <p>Когда собеседований было больше трёхсот, появляется насмотренность, и мне достаточно 20 минут, чтобы понять человека. Есть внутреннее ощущение, что он меня почувствовал — а значит, будет так же чувствовать учеников.</p>
@@ -554,7 +608,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t9">
       <h3>9. Почему преподаватели уходят</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Бывает, что даже после отбора приходится расставаться с преподавателями?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Бывает, что даже после отбора приходится расставаться с преподавателями?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>На старте проектов такое бывает. В первые два года школы гитары мы перепробовали много разных преподавателей и выявили портрет подходящего и неподходящего кандидата. Так же было и в «105 баллов» — первые два месяца мы нанимали разных людей, и уже к концу второго месяца чётко понимали, с кем работаем, а с кем нет.</p>
         <p>Есть ещё момент договороспособности: если человек по-своему толкует договорённости, это первый звонок — с таким мы не работаем. Учёба цикличный процесс: он начинается в сентябре и заканчивается в мае-июне, и если мы берём преподавателя, я должен быть уверен, что он доведёт ученика до конца года. Я слышал истории, когда люди бросали учеников в апреле или мае — перед самым экзаменом, когда поддержка нужнее всего. У нас такого нет — мы чувствуем таких людей заранее.</p>
@@ -563,7 +617,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t10">
       <h3>10. Как удерживают команду</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Как вы удерживаете хороших преподавателей — премиями, культурой?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы удерживаете хороших преподавателей — премиями, культурой?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Самое главное, что я делаю — убираю от преподавателей всё, что может им помешать. Согласование расписания, переносы, отработки, сбор оплат, назначение пробных уроков — всё это делает отдел администрирования. Наши преподаватели очень ценят этот комфорт. Я уважительно отношусь ко времени отдыха каждого: если у человека выходной, его нельзя дёргать вопросами про отработки или объяснения — это высасывает ресурс, который нужен на уроках.</p>
         <p>Второй важный момент — у меня всегда вовремя зарплата в том размере, о котором договорились. Мы работаем уже 12 лет, и у нас никогда не было задержек. Сегодня это сильное конкурентное преимущество.</p>
@@ -572,7 +626,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t11">
       <h3>11. Управление школой и отделы</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Вы сами глубоко в операционке, продажах, маркетинге, или уже делегировали?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы сами глубоко в операционке, продажах, маркетинге, или уже делегировали?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Сейчас в школе гитары «Амига» пять преподавателей, две школы в Екатеринбурге и 200 учеников. Основной трафик — 2GIS с платной рекламой, но главный канал всё равно рекомендации: около 30% новых учеников приходят по совету, потому что лучшая реклама детской школы гитары — играющий и довольный ребёнок. На втором месте, как ни странно, органический трафик с Google — без всякой платной рекламы. У нас регулярно проходят отчётные концерты, есть четыре концертные группы — элита школы, которая занимается больше остальных, оттачивает номера и участвует в конкурсах.</p>
         <p>У меня три роли: стратегическая — миссия и долгосрочные планы; связующее звено между отделами; и точечная помощь по маркетингу, регламентам, продажам. Выстроено два сильных отдела. Администрирование — регламентированы все процессы от найма до рабочего дня, есть показатели: отток, отработки, выполнение финансового плана. С администраторами у меня регулярный созвон по вторникам. Отдельно есть созвон по продажам — там разбираем каждого ученика, прошедшего пробный урок: кто хорошо покупает, кто из преподавателей лучше проводит уроки, какие проблемы и возможности появляются.</p>
@@ -582,7 +636,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t12">
       <h3>12. Школа «105 баллов»: старт</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>В новой школе вы сохраняете ту же структуру, или что-то ещё достраивается?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В новой школе вы сохраняете ту же структуру, или что-то ещё достраивается?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Ключевые моменты системы — администрирование и сама методика преподавания — мы перенесли из «Амиги», и здесь нам было проще: методику школьных предметов не нужно было создавать с нуля, она уже прекрасно работает в педагогических университетах. Наша задача — убрать всё, что ей мешает, и оставить учителя с учеником наедине.</p>
         <p>А вот маркетинг тестируем заново — школа онлайн, и это своя специфика: если в оффлайне достаточно яркой вывески, здесь этого мало. За 8 месяцев мы протестировали больше тридцати концепций подачи школы под разные сезоны — октябрьские, январские, мартовские, майские и даже июньские запросы, когда родители спохватываются перед самым экзаменом.</p>
@@ -591,7 +645,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t13">
       <h3>13. Зачем нужна вторая школа</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Как вы пришли к мысли открыть вторую школу, совсем в другом направлении, с рисками?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы пришли к мысли открыть вторую школу, совсем в другом направлении, с рисками?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Основная причина — длинная дистанция. Школа гитары — это всё-таки дополнительные занятия. Когда случается какой-то чёрный лебедь в экономике, от допов отказываются в первую очередь. Плюс всегда есть период подъёма, а потом плато, и многие бросают именно на нём.</p>
         <p>Школьные предметы — та ситуация, где результат можно увидеть в долгую. Приходит ученик в шестом классе, надо подтянуть математику — подтянули, он сравнялся с классом. Дальше — стал лучшим в классе. Дальше — олимпиады, новая высота. А когда есть олимпиадный кейс — это уже дополнительные баллы на ОГЭ и ЕГЭ. И тогда мы говорим родителю: давай поставим цель поступить в МГУ через три года, с результатами всероссийских олимпиад, одними из лучших на потоке.</p>
@@ -601,7 +655,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t14">
       <h3>14. Планы на будущее</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Планируете масштабироваться в другие ниши — английский, начальные классы?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Планируете масштабироваться в другие ниши — английский, начальные классы?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Я вижу очень много возможностей именно в интенсивном развитии, а не в экстенсивном распылении на новые проекты. У каждого школьного предмета своя логика: история — это причинно-следственные связи и исторический контекст, литература — умение живо размышлять о жизненных вопросах, математика — доведённый до автоматизма навык применения формул. Физика вообще вызывает у меня самое большое восхищение: когда я выгрузил все темы, которые изучаются в школе, был впечатлён объёмом знаний, который получает выпускник — от бытовой механики до устройства космоса.</p>
         <p>Я искренне считаю, что наша система школьного образования и подготовки преподавателей — огромное достижение страны, и хочу через свою школу доносить ценность этого отношения. Если человек по-настоящему усвоит школьную программу, ему открыта любая дорога и любая карьера — и это может поменять общество.</p>
@@ -610,7 +664,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t15">
       <h3>15. Какая помощь нужна Ивану</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Если к вам придут опытные партнёры — какая помощь вам сейчас нужна?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если к вам придут опытные партнёры — какая помощь вам сейчас нужна?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Мне интересна помощь именно как компетенция. Первое — системное управление маркетингом: не «как сделать рекламный креатив», а как выстроить эффективную систему управления процессом. Второе — передовые практики в HR: не столько сами критерии подбора преподавателя, которые я чётко понимаю, сколько автоматизированная и полностью регламентированная система найма от и до.</p>
       </div></div>
@@ -618,7 +672,7 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t16">
       <h3>16. Видение через 5 лет</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Представим, что прошло 5 лет и вы добились всего, чего хотели. Как это выглядит?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Представим, что прошло 5 лет и вы добились всего, чего хотели. Как это выглядит?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Для школы «105 баллов» я вижу три пункта успеха. Первое — школа увеличивается минимум в два раза каждый год. Второе — средний балл по ЕГЭ у наших учеников — 90 баллов. Третье — чёткий, отработанный, регламентированный процесс, который работает, зарабатывает и развивается. Если через 5 лет всё это будет так — я посчитаю проект успешным.</p>
       </div></div>
@@ -626,12 +680,12 @@ a{color:var(--red)}
 
     <div class="tr-section" id="t17">
       <h3>17. Книга, фильм, контакты</h3>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Что бы вы посоветовали почитать или посмотреть, чтобы глубже понять ваше мышление?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Что бы вы посоветовали почитать или посмотреть, чтобы глубже понять ваше мышление?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Одна из моих любимых книг ещё со времён юриспруденции — Рудольф Иеринг, «Дух римского права». Она о том, благодаря чему римская цивилизация развилась в огромную империю, и после неё я по-другому стал смотреть на жизнь.</p>
         <p>Из фильмов — «Секретные материалы». В детстве меня интересовали загадки и тайны, а сейчас я вижу в нём двух профессионалов высокого класса, которые безумно любят свою работу и делают её очень хорошо.</p>
       </div></div>
-      <div class="tr-line"><div class="tr-who host">Олег</div><div class="tr-txt"><p>Как с вами связаться тем, кто хочет обменяться опытом?</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как с вами связаться тем, кто хочет обменяться опытом?</p></div></div>
       <div class="tr-line"><div class="tr-who guest">Иван</div><div class="tr-txt">
         <p>Мне можно написать ВКонтакте — напрямую, с любым вопросом про бизнес, развитие, строительство отделов. Ко мне часто обращаются руководители других школ, и я обычно не даю готовых советов, а задаю вопросы — чтобы человек сам увидел, что решение у него уже есть. Я всегда открыт для дружеской поддержки и товарищеского совета.</p>
       </div></div>
