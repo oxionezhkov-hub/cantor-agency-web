@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Максим Фадеев — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223229316?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Максим Фадеев - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223229316" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">«У вас потолок — 60-70 баллов». Максим Фадеев — как ученик, которому предрекали средний результат, сдал физику на 100</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Максим — выпускник физфака МГУ и основатель онлайн-школы подготовки к ЕГЭ и ОГЭ по математике, физике, информатике и русскому языку. В школу проходит меньше 2% кандидатов в преподаватели. В выпуске — про кейс ученика, который сдал физику на максимальный балл после того, как другой репетитор предрёк ему потолок в 60-70, про поиск мотивации через интересы ученика и про 10 лет работы с подростками в педагогическом отряде, которые легли в основу методики.
+
+🔗 Онлайн-школа Максима: [ссылка]
+🔗 Написать Максиму в Telegram: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, подготовка к ЕГЭ, подготовка к ОГЭ, репетиторство, физика, математика, найм преподавателей, мотивация подростков, Максим Фадеев</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #ЕГЭ #ОГЭ #EdTech #репетиторство #физика</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/maxim-fadeev-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">«У вас потолок — 60-70 баллов». Как мой ученик доказал обратное и сдал физику на 100</h1>
+
+      <p>Перед тем как прийти ко мне, мой ученик Сергей позанимался с другим преподавателем, который сказал ему: вы пришли слишком поздно, поэтому максимум, на что можно рассчитывать, — это 60-70 баллов по ЕГЭ. В итоге Сергей сдал физику на 100 — верхнюю границу, максимальный результат, без единой ошибки ни в первой, ни во второй части. Он написал мне, что проснулся, разбудил весь дом и кричал от радости. Для меня это был не просто хороший балл, а подтверждение того, во что я верю: если человеку сказали, что у него есть предел, — это не диагноз, а просто мнение одного преподавателя. Нужно искать тех, кто сможет довести до результата.</p>
+
+      <h2>Как мы вытянули три предмета одновременно</h2>
+      <p>Сергей пришёл не в начале года, а где-то с середины одиннадцатого класса, и готовился сразу по трём предметам — физике, русскому и математике. У нас есть входная диагностика: смотрим на начальный уровень по каждому предмету, поднимаем цель, к которой идёт ученик, и уже исходя из этого подбираем формат и количество занятий. Просто сказать «нам нужно столько-то баллов» бесполезно — нужен контекст.</p>
+      <p>Мы посмотрели уровень по каждому предмету, поняли, где сделать больший приоритет, и ежемесячно смотрели результаты пробников — из общей картины перераспределяли нагрузку. В какой-то момент увеличивали занятия по одному предмету, потом переключали внимание на другой. Потому что для поступления важна сумма баллов, и нельзя делать упор только на один предмет, забывая про остальные.</p>
+
+      <h2>Почему в мою школу проходит меньше 2% кандидатов</h2>
+      <p>Мы бы хотели работать с большим процентом преподавателей, если бы они подходили. Но найти сейчас хорошего репетитора действительно очень сложно: очень многие толком не знают свой предмет, не умеют объяснять простым языком, не все умеют технически проводить занятия в онлайне. При этом порог входа в профессию репетитора крайне низкий — можно разместить анкету на агрегаторе, написать «я репетитор» и вспомнить, что вы хорошо знали в школе, — и вам уже напишут.</p>
+      <p>Мы постоянно осматриваем и агрегаторы, и школы, и знакомых, смотрим, как преподаватели работают на деле, — и около 98% нам не подходит.</p>
+
+      <h2>Как я начинал без всякой методики</h2>
+      <p>Я начал преподавать математику и физику, будучи студентом, сразу после поступления на бюджет физфака МГУ. На тот момент я мог дать ученикам только собственный опыт того, как сам прошёл этот путь, — довольно неплохие баллы, понимание предмета. А вот теоретической базы, методики, педагогики — этого, конечно, не было. Это просто набирается с опытом, а этому опыту, кстати, мало где учат — даже в педагогических вузах слишком большая доля академизма и сухой теории.</p>
+      <p>Сейчас мы обучаем своих преподавателей в режиме наставничества: смотрим их занятия, рассказываем про особенности возрастной психологии, разбираем нестандартные кейсы, обсуждаем, как создать интерес и мотивацию ученика. Если бы тогда, в начале, рядом был человек, который бы мне в этом помог, — было бы намного проще. Поэтому для тех, кто только начинает этот путь, мы выступаем в роли таких наставников.</p>
+
+      <h2>Главная проблема современных преподавателей — не знание предмета</h2>
+      <p>Мне кажется, я почти всю жизнь работаю с подростками. С собственного подросткового возраста я ездил в летние лагеря, попал в детское объединение, работал вожатым, организовывал лагеря, водили детей в походы и на турслёты. Десять лет я проработал в этом педагогическом отряде — а там самые разные дети со своими особенностями, запросами и жизненными ситуациями.</p>
+      <blockquote>Если каждый день идти к цели и не сдаваться, ты точно придёшь к цели. В этом у меня нет никаких сомнений.</blockquote>
+      <p>Именно этот опыт лёг в основу того, как я сам преподаю, и того, как мы обучаем своих преподавателей. Дети в девяностых и дети сейчас — это совершенно разные люди, и подходы к ним нужны совершенно разные.</p>
+
+      <h2>Чем пришлось пожертвовать</h2>
+      <p>Учиться на физфаке МГУ уже непросто, а я ещё совмещал это с работой в лагерях и активными занятиями спортом. Приходилось не жертвовать, а расставлять приоритеты — что важно, а от чего можно отказаться. Сном в студенческие годы, пожалуй, было уместно пожертвовать, и я это делал. Но очень много хотелось набираться и знаний — это академическая составляющая физфака, — и педагогического опыта — это волонтёрская организация.</p>
+
+      <h2>Индивидуально или в группе: как мы решаем</h2>
+      <p>У нас есть два формата — индивидуальные занятия или мини-группа, и здесь многое зависит от конкретного ученика. Кого-то группа мотивирует: включаются элементы соревновательности, конкурентности, единения. А кому-то нужен только индивидуальный подход. Мы смотрим, как мыслит ученик, как он социализирован, как работает в группе — и подбираем формат исходя из этого.</p>
+      <p>Диагностика у нас состоит из двух частей: общение с ребёнком и с родителем, потому что важны оба контекста. На деле мы видим, как ребёнок ведёт себя на занятии, как воспринимает материал, находит общий язык, какая у него база и в каком темпе он готов работать. А от родителей узнаём, какой у них уже был опыт. Это многофакторная история — предыдущий опыт, текущая ситуация, цель — всё это складывается вместе, и уже исходя из этого подбирается формат.</p>
+
+      <h2>Поезда, рэп и физика: как мы ищем мотивацию</h2>
+      <p>Один из самых частых запросов, с которыми к нам приходят, — это как раз интерес и мотивация. За формальным запросом на баллы и оценки почти всегда стоит желание, чтобы ученику было интересно. Если будет интерес — будет мотивация, а как следствие — результат. И, будем откровенны, в интернете всё есть: если бы ученику было интересно, он бы сам всё нашёл и разобрался. Значит, дело именно в мотивации.</p>
+      <p>Мы всегда спрашиваем про естественные интересы ученика вне учёбы — компьютерные игры, спорт, хобби — и связываем это с предметом. Однажды на диагностике выяснилось, что ученик очень любит поезда — знает все электрички Подмосковья, все маршруты, диаметры колёс, натяжение тросов. Мы стали изучать физику на примере этих поездов, и там встретились все темы программы. Внутренний интерес сыграл на пользу изучению предмета, к которому ученик изначально был не расположен, — просто потому что раньше не видел связи.</p>
+      <p>С рэпом то же самое: необязательно цепляться только за него напрямую — можно, например, посчитать вместе с учеником, сколько зарабатывает какой-нибудь известный рэпер и как. Это работа педагога — не быть говорящей головой, а работать с личностью, разбираться в мотивации и интересах, создавать связь между внутренней составляющей и внешним предметом.</p>
+
+      <h2>Как я оцениваю работу своих преподавателей</h2>
+      <p>Мы очень тщательно смотрим, с кем начинать сотрудничество, и в этом году делаем больший упор на методическую составляющую — чтобы преподаватели обменивались опытом между собой, поддерживали друг друга. Наша задача — растить преподавателей, а не просто нанимать репетиторов. Репетитор часто изолирован в своём опыте — это может быть студент или выпускник, который просто знает предмет и решил делиться знаниями. А преподавание — это не только передача знаний, это ещё и работа с личностью.</p>
+      <p>Главные показатели успеха — ученику нравится, есть результат, и родители довольны. Каждый месяц, если речь про ОГЭ и ЕГЭ, ученик пишет независимый пробник, мы строим график зависимости баллов от месяца по каждому ученику и обязательно отправляем обратную связь родителям — чтобы образовательный процесс был для них понятным, очевидным и без сюрпризов.</p>
+
+      <h2>Сколько я сам сейчас преподаю</h2>
+      <p>Сейчас преподавание у меня занимает немного времени, и я постепенно это снижаю, чтобы больше вкладываться в рост школы — обучение преподавателей, администраторов, работу с новыми каналами привлечения учеников. Один я могу научить, условно, 50 человек. А выстроив систему с хорошими преподавателями, которые транслируют мои ценности, методику и подходы, я могу дать образование в десятки, сотни и тысячи раз большему числу учеников.</p>
+      <p>При этом методическая работа — величина не постоянная. Например, в августе 2026 года начинают менять ЕГЭ по математике: меняются задания, меняется структура, и все прошлые наработки придётся делать заново. Мы всегда адаптируемся под актуальные изменения — смотрим банки ФИПИ, слёты составителей ЕГЭ, — чтобы не преподавать по старым материалам. Если экзамен не меняется, времени на это уходит немного, если меняется — фокусируемся серьёзно.</p>
+
+      <h2>Опыт вожатого, который лёг в основу методики</h2>
+      <p>Мы работали не только с трудными подростками, а со всеми, кто приходил, — а в лагерь приезжало по 200 человек, и с каждым нужно было найти подход. Навык находить подход, который влияет на человека и даёт результат, — тот же самый, что и в понимании, что ученику интересно, какие у него точки роста и где есть трудности. Поэтому наши занятия — это не просто провести 60 минут и закончить, а непрерывное взаимодействие.</p>
+      <p>Мы уделяем много внимания тайм-менеджменту, тому, как не волноваться на экзамене, как искать собственные ошибки. Потому что результат на экзамене — это не только знания, но и множество других факторов, включая психологическую и эмоциональную подготовку: можно всё знать, но разволноваться и не показать своих знаний.</p>
+
+      <h2>Биомеханика как личный компас</h2>
+      <p>У меня есть собственное увлечение — биомеханика движения, изучение связи физических законов с работой человеческого тела. Напрямую в методику школы это не переносится, но я стараюсь транслировать ученикам собственный подход к знаниям: всегда нужно учиться находить интерес, а если мы прекращаем чем-либо интересоваться — мы затвердеваем. Знания — это не только то, что происходит в школе, это всё, что нас окружает.</p>
+      <p>А если говорить конкретно про биомеханику — наше тело это сплошная физика: рычаги, мышцы, вращение, скорости. Очень многие в профессиональном изучении биомеханики сталкиваются с тем, что не знают физику, — потому что туда идут в основном врачи и массажисты, люди, работающие с телом, а не с техническими науками. И вот здесь как раз связь этих двух аспектов.</p>
+
+      <h2>Почему я не боюсь готовить конкурентов</h2>
+      <p>Я обучаю других преподавателей и даже руководителей онлайн-школ, но слабо верю в конкуренцию. Мне кажется, главные конкуренты для нас — мы сами: лень, недостаточная мотивация, недостаточная дисциплина и сила воли. Возможностей так много, что на всех хватит — скорее люди сами не будут во что-то ввязываться, в силу лени или недостаточной уверенности. А те, кто ввязываются, наоборот создают среду.</p>
+      <p>Конкуренция для меня — движущая сила: если мы начинаем что-то делить, это заставляет придумывать более качественный продукт, новые решения, становиться лучше. Если никто не конкурирует — можно делать средне, и это будет считаться нормальным. А когда есть конкуренция, приходится постоянно улучшать, думать, искать, внедрять — и это как раз повышает результат.</p>
+
+      <h2>Совет себе-первокурснику</h2>
+      <p>Если бы у меня была возможность вернуться в прошлое, к себе — первокурснику МГУ, я бы дал совет двигаться быстрее: не бояться рисковать и начинать создавать школу и всё то, к чему я сейчас прихожу, раньше. Слишком много времени тогда ушло на раскачку, на обдумывание — нужно ли мне это или нет. Меньше думать, больше делать — в разумных пределах, конечно, потому что учась на физфаке, ты всё равно очень много думаешь, и глупостей тут не появится.</p>
+
+      <h2>Что объединяет моих лучших учеников</h2>
+      <p>В день, когда мы записывали это интервью, мне с утра написала ученица — она тоже в этом году занималась у нас физикой, тоже набрала 100 баллов, выиграла грант и в тот же день узнала, что поступила на Физтех в МФТИ по совместному гранту со Сколково. И закономерно, что и у неё, и у Сергея, и у других учеников, которые добиваются хороших результатов, есть одно общее — это регулярность и дисциплина.</p>
+      <p>Сергей в конце своего интервью сказал: не слушайте тех, кто говорит, что у вас что-то не получится. Я бы добавил: и старайтесь. Потому что можно не слушать, но чтобы получилось — нужно делать, и других вариантов тут нет. Важно ещё делать правильные вещи, а не просто что-то системно повторять, — но если понимать, что действительно нужно, и раз за разом это делать, к результату нельзя не прийти.</p>
+
+      <h2>Как со мной связаться</h2>
+      <p>Мне можно написать напрямую в Telegram — если вам нужны репетиторы и преподаватели по математике, физике, информатике или русскому языку. Сейчас мы также активно начинаем работать с учениками из других стран — выходим на европейский рынок с русскоязычными детьми среднего и младшего возраста. Со мной можно обсудить и вопросы поступления — частая ситуация, когда баллы на ЕГЭ набраны, а дальше непонятно, куда с ними идти. Но, наверное, самый частый запрос — когда у детей трудности с мотивацией к учёбе, когда неинтересно и хочется играть только в компьютерные игры, а хочется, чтобы они развивались. Это я бы назвал нашей основной профессией.</p>
+
+      <p class="art-signature">Максим Фадеев,<br>основатель онлайн-школы подготовки к ЕГЭ и ОГЭ</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс Сергея</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>💯 «У вас потолок — 60-70 баллов». Мой ученик сдал физику на 100</h3>
+        <p>Перед тем как прийти ко мне, Сергей позанимался с другим репетитором. Тот сказал: вы пришли слишком поздно, максимум, на что можно рассчитывать, — 60-70 баллов по ЕГЭ.</p>
+        <h4>Что было дальше</h4>
+        <p>Мы начали заниматься примерно с середины одиннадцатого класса — где-то полгода интенсивной, насыщенной работы. Сергей сдал физику на 100 баллов — это верхняя граница, максимальный результат. Ни одной ошибки ни в первой, ни во второй части.
+
+Он написал мне утром в день результатов: проснулся, разбудил весь дом, кричал от радости.</p>
+        <h4>Что я из этого вынес</h4>
+        <p>Если кому-то сказали, что у него есть предел, — это не диагноз. Это мнение одного конкретного преподавателя. Нужно просто искать тех, кто сможет довести до результата.</p>
+        <p>🎯 Мы очень плотно работали — и это была слаженная работа, а не чудо.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор преподавателей</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>🚪 В нашу школу проходит меньше 2% кандидатов в преподаватели</h3>
+        <p>Мы бы хотели работать с большим процентом. Правда хотели бы. Но найти сейчас хорошего репетитора очень сложно.</p>
+        <h4>Почему так</h4>
+        <p>Очень многие толком не знают свой предмет. Не умеют объяснять простым языком. Не все умеют технически проводить занятия в онлайне.
+
+При этом порог входа в профессию репетитора — почти нулевой: разместил анкету на агрегаторе, написал «я репетитор», вспомнил, что хорошо знал в школе — и вам уже пишут ученики.</p>
+        <h4>Что мы делаем</h4>
+        <p>Постоянно осматриваем агрегаторы, школы, знакомых. Смотрим, как преподаватели работают на деле — не по резюме, а по реальным занятиям.
+
+Около 98% нам не подходит.</p>
+        <p>🔍 Это не жёсткость ради жёсткости. Это просто честный ответ на вопрос «а кому вы доверите своего ребёнка».</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про мотивацию через интересы</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🚂 Он ненавидел физику. Но знал все электрички Подмосковья наизусть</h3>
+        <p>На диагностике выяснилось: наш новый ученик знает все маршруты подмосковных электричек, диаметры колёс, натяжение тросов. При этом физику — не любил совсем.</p>
+        <h4>Что мы сделали</h4>
+        <p>Мы стали изучать физику на примере поездов. И там встретились абсолютно все темы школьной программы — механика, скорости, силы трения.
+
+Внутренний интерес, который вообще не был связан с учёбой, сыграл на пользу изучению предмета, к которому ученик был не расположен, — просто потому что раньше не видел связи.</p>
+        <h4>А если ученик любит рэп?</h4>
+        <p>Можно посчитать вместе с ним, сколько зарабатывает известный рэпер и как. Работа педагога — не быть говорящей головой, а работать с личностью, находить мотивацию и связывать внутренний интерес с внешним предметом.</p>
+        <p>💡 Если будет интерес — будет мотивация. А как следствие — результат.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про дисциплину и регулярность</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🏆 В один день — сразу две новости о 100 баллах по физике</h3>
+        <p>Утром мне написала ученица: сдала физику на 100 баллов, выиграла грант и в тот же день узнала, что поступила на Физтех в МФТИ по совместной программе со Сколково.</p>
+        <h4>Что объединяет её и моего ученика Сергея, который тоже сдал на 100</h4>
+        <p>Не какой-то один секретный метод. Не врождённый талант. А регулярность и дисциплина — вот что общее у всех учеников, которые добиваются действительно хороших результатов.</p>
+        <h4>Совет, который Сергей дал сам, в конце нашего с ним разговора</h4>
+        <p>«Не слушайте тех, кто говорит, что у вас что-то не получится».
+
+Я бы добавил: и старайтесь. Потому что можно не слушать чужие сомнения, но чтобы получилось — нужно делать. Других вариантов тут просто нет.</p>
+        <p>🔁 Если каждый день идти к цели и не сдаваться — ты точно придёшь к цели.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про совет себе-первокурснику</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>⏩ Если бы я мог вернуться к себе-первокурснику МГУ, я бы дал один совет</h3>
+        <p>Меня недавно спросили: представьте машину времени, эффекта бабочки не существует, можно дать самому себе один совет. Какой?</p>
+        <h4>Мой ответ</h4>
+        <p>Двигаться быстрее. Не бояться рисковать и начинать создавать школу — и всё то, к чему я прихожу сейчас, — раньше.</p>
+        <p>Слишком много времени тогда ушло на раскачку, на обдумывание: может, это мне нужно, а может — нет. Меньше думать, больше делать.</p>
+        <h4>При этом не в ущерб голове</h4>
+        <p>В разумных пределах, конечно — учась на физфаке, ты всё равно очень много думаешь, и глупостей тут не появится. Речь не про безрассудство, а про то, чтобы быстрее превращать понимание в действие.</p>
+        <p>🚀 Копай глубже, кидай дальше, отдыхай, пока летит.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/maxim-fadeev-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Кейс Сергея: 100 баллов после «максимум 60-70»</a></li>
+        <li><a href="#t2">2. Меньше 2% кандидатов проходят отбор</a></li>
+        <li><a href="#t3">3. Первые ученики на физфаке МГУ</a></li>
+        <li><a href="#t4">4. Главная проблема преподавателей</a></li>
+        <li><a href="#t5">5. Десять лет в педагогическом отряде</a></li>
+        <li><a href="#t6">6. Как распределяли нагрузку по трём предметам</a></li>
+        <li><a href="#t7">7. Формат: индивидуально или в мини-группе</a></li>
+        <li><a href="#t8">8. Диагностика: ребёнок и родитель</a></li>
+        <li><a href="#t9">9. Когда пропадает мотивация</a></li>
+        <li><a href="#t10">10. Мотивация через интересы: поезда и рэп</a></li>
+        <li><a href="#t11">11. Кейс преподавателя Павла и оценка работы</a></li>
+        <li><a href="#t12">12. Сколько сейчас занимает преподавание</a></li>
+        <li><a href="#t13">13. Опыт вожатого в методике онлайн-школы</a></li>
+        <li><a href="#t14">14. Увлечение биомеханикой</a></li>
+        <li><a href="#t15">15. Обучение чужих преподавателей и конкуренция</a></li>
+        <li><a href="#t16">16. Совет себе-первокурснику</a></li>
+        <li><a href="#t17">17. Кейс Сергея и Дарьи: дисциплина</a></li>
+        <li><a href="#t18">18. Контакты и направления работы</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Кейс Сергея: 100 баллов после «максимум 60-70»</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У нас с вами интервью, в нём постоянно будет фигурировать один из ваших учеников, Сергей, — красной нитью пройдёт через весь разговор. Первый вопрос как раз про него. Перед началом занятий с вами ему другой преподаватель сказал, что он пришёл слишком поздно, поэтому максимум, на что можно рассчитывать, — это 60-70 баллов по ЕГЭ. В итоге Сергей сдал физику на 100. Что вы почувствовали, когда он сдал на 100?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Ну, круто! Я просто был искренне рад за своего ученика, потому что 100 баллов на ЕГЭ — это верхняя граница, причём в ЕГЭ по физике это именно максимальный результат. То есть это означает, что он вообще нигде не ошибся, ни в первой, ни во второй части.</p>
+        <p>Сергей мне написал, заснял кружочек, что он проснулся, разбудил весь дом, кричал, радовался вместе с родителями. Вот это искренняя эмоция, когда видно результат собственных действий, — это прямо замечательно. И это как раз важный показатель того, что если изначально говорят, что у вас есть определённая граница, что вы не сдадите, что у вас есть предел, — конечно, нужно прислушиваться, но это не диагноз. Надо просто искать тех людей, которые смогут довести до результата. Мы очень плотно работали, это была насыщенная, интенсивная работа, и она привела к этому результату.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А этот результат за какой период времени? За сколько нужно было подготовиться? Почему там отказал преподаватель?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Я точно уже не помню, но у нас было порядка полугода, может быть, чуть больше. То есть Сергей пришёл не в самом начале года, мы готовились уже начиная с какой-то части одиннадцатого класса. У него была хорошая база, но действительно преподаватель, к которому он изначально обратился, сказал, что у вас максимум 60-70 баллов будет и всё. Мы просто выстроили очень слаженную работу, я считаю. Сергей, безусловно, старался, но и материалы, именно методика, знания, то, к чему готовиться, — оно здесь было определяющим.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Меньше 2% кандидатов проходят отбор</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В вашу школу попадает меньше 2% кандидатов преподавателей — то есть меньше 2% проходят отбор. Такой большой процент отсева — с чем это связано? Просто не подходит, или это сознательное решение работать только с двумя процентами лучших?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>И то, и то. Потому что мы бы хотели работать с большим процентом, если бы они подходили. Правда, найти сейчас хорошего репетитора, преподавателя очень сложно. Мы постоянно ищем, отсматриваем и агрегаторы, и по школам, по знакомым. Но толковых преподавателей мало, потому что очень многие толком сами не знают свой предмет, не умеют объяснять простым, понятным языком. Технически тоже не все умеют проводить занятия в онлайне. В общем, тут ужас, тем более что репетитором может стать кто угодно.</p>
+        <p>По сути, вы можете разместить свою анкету на агрегаторе, сказать: «Я репетитор», вспомнить, что вы в школе хорошо знали, — и всё, вам уже кто-то может написать. Поэтому тут очень простой порог входа, и каких-то ограничений в этом плане нет. Поэтому мы постоянно осматриваем, ищем преподавателей, смотрим, как они на деле работают, и вот 98% примерно нам не подходит.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Первые ученики на физфаке МГУ</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы начали преподавать математику, физику ещё будучи студентом, сразу после поступления на бюджет физфака МГУ, сразу начали набирать учеников. А что тогда вы могли им дать? У вас же ещё не было преподавательского, профессионального бэкграунда.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>По сути, я мог на тот момент дать свой опыт — как я сам проходил этот путь. У меня были довольно неплохие баллы, которые позволили поступить на бюджет в МГУ. Понимание предмета — да, но, конечно, какая-то теоретическая база, как преподавать, именно методика, педагогика — это, разумеется, отсутствовало. И это просто набирается с опытом. Кстати говоря, этому опыту мало где учат — даже в педагогических вузах очень большая доля академизма, какой-то сухой теории.</p>
+        <p>И мы своих преподавателей в том числе учим, как проводить занятия, в режиме наставничества. То есть мы смотрим, обучаем, говорим про особенности возрастной психологии, про то, как давать результат, прямо отсматриваем занятия, если там есть какие-то нестандартные кейсы, тоже обсуждаем, как здесь лучше поступить, как создать интерес, мотивацию ученика. Помня, как тогда было сложно — я по сути ни на что не опирался, только на знания, — если бы в тот момент рядом был человек, который бы помог мне в этом, научил, было бы намного проще. Приходилось во многом разбираться самому и набивать собственный опыт. И вот для тех преподавателей, которые только начинают этот путь, мы выступаем в том числе в роли таких наставников, помогаем побыстрее набираться этого опыта.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Главная проблема преподавателей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорили, что главная проблема современных преподавателей — это не знания предмета, а то, что не умеют работать с подростками. Вы сами этому где-то научились благодаря опыту, или всё-таки была какая-то база?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Мне кажется, я почти всю жизнь работаю с подростками. С собственного подросткового возраста я стал ездить в лагеря, вот такие летние лагеря, и потом попал в детское объединение, после работал вожатым, организовывал эти лагеря. Мы водили детей в походы, в турслёты, разные мероприятия проводили. И 10 лет я работал в этом педагогическом отряде. А там, соответственно, самые разные дети со своими особенностями, запросами, жизненными ситуациями. И вот этот опыт лёг в основу преподавательской деятельности — и того, как я сам преподаю, и того, как мы обучаем наших преподавателей. То есть здесь просто 10 лет практики работы с подростками.</p>
+        <p>Плюс руководителем той организации являлся тогда кандидат, сейчас уже доктор педагогических наук, который прямо всю жизнь посвящает именно практической работе с подростками — не теоретически, а практика каждый день: проводить какие-то мероприятия, общаться, понимать психологию, адаптируясь на то, как меняются современные дети. Дети в девяностых и дети сейчас — это совершенно разные люди, и подходы к ним нужны совершенно разные.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Десять лет в педагогическом отряде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть 10 лет вы совмещали учебную деятельность на физфаке и работу в лагерях. Как удавалось совмещать? Чем приходилось жертвовать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>По сути, просто учиться на физфаке в МГУ уже непросто, вот совмещая и то, и то. У меня ещё и спорт был в то время в активной такой фазе. Поэтому, наверное, приходилось не то чтобы жертвовать, а просто расставлять приоритеты — что важно, а что чуть менее важно, а от чего вообще можно отказаться, пожалуй, навсегда. Сном, наверное, в студенческое время ещё уместно было пожертвовать, и это я делал. Но сейчас, конечно, уже другая приоритизация.</p>
+        <p>Короче, было сложно, но очень много чего хотелось набираться этого опыта — и в плане знаний, это академическая составляющая физфака, и в плане педагогического опыта, это волонтёрская организация. И вот это всё совмещалось.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Как распределяли нагрузку по трём предметам</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Возвращаясь к Сергею — подготовку вы выстроили сразу по трём предметам параллельно: физика, русский и математика. Как вы распределяли нагрузку между этими тремя предметами, чтобы ни один не пострадал?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>У нас при начале занятий всегда есть входная диагностика. Мы смотрим на начальный уровень ученика, поднимаем цель, вообще к чему он идёт, и исходя из этого уже подбираем подходящий формат и количество занятий. Именно это и позволяет выстроить программу. Потому что если просто говорят: «Нам нужно столько баллов», то невозможно с этой информацией работать, надо понимать вообще какой контекст.</p>
+        <p>Поэтому мы посмотрели на уровень по каждому предмету, поняли, на что нужно сделать больше приоритет, на что меньше. Подобрали формат — потому что тоже у нас глобально есть два формата, можно заниматься индивидуально или в группе, и тут это очень зависит от конкретного ученика. В конечном итоге всем просто важно помнить, что если мы говорим про поступление, самое главное — это сумма баллов, и нельзя делать упор на какой-то один предмет и совсем забывать про другой. Поэтому нужно хоть как-то заниматься по каждому и смотреть ежемесячно результаты пробников, если речь про ЕГЭ, и уже из общей картины распределять нагрузку. Что мы, в принципе, и делали — в какой-то момент увеличили нагрузку по одному предмету, потом поняли, что всё нормально, надо чуть-чуть переключить внимание на другой. И вот так просто сопровождали его до конца экзамена.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Формат: индивидуально или в мини-группе</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сергей, кстати, занимался, насколько я знаю, в мини-группе. А как определяется, что ребёнку нужен именно соревновательный эффект, что он положительно повлияет на мотивацию? Это выявляется на этапе предварительной диагностики или как-то в процессе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Тут это очень зависит от конкретного ученика. Кого-то группа мотивирует, включаются элементы соревновательности, какой-то конкурентности, единения. А кому-то нужен только индивидуальный подход. Поэтому мы тоже смотрим на то, как мыслит ученик, как он включается, как он вообще социализирован, работает в группе, и исходя из этого уже подбираем.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Диагностика: ребёнок и родитель</h3>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>У нас диагностика в основном состоит из двух частей. Это непосредственно общение с ребёнком и с родителем, потому что важны оба контекста. Чтобы на деле увидеть, как ребёнок себя ведёт на занятии, как он воспринимает материал, как он находит общий язык, какая у него база, в каком темпе он вообще готов работать. И непосредственно с родителями — какой контекст они видят, какой опыт у них уже был. И исходя из этого мы подбираем формат. То есть тут нельзя сказать, что мы смотрим на что-то одно, это очень многофакторная история: их предыдущий опыт, текущая ситуация, цель — всё это вместе складывается, подбирается уже подходящий формат.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Когда пропадает мотивация</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если кейс такой, что ребёнок потерял мотивацию, интерес к предмету не нравится ему — по разным причинам, например конфликт с преподавателем или что-то ещё, или где-то пропущена база, а баллы по ЕГЭ нужны — тогда как лучше построить работу?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>На самом деле, один из самых частых запросов, которые к нам приходят, — это как раз интересы, мотивация. Понятно, что есть формальные запросы на баллы, на оценки, но за этим в основном всё-таки стоит, чтобы ученику было интересно. Потому что, с моей точки зрения, если будет интерес, то будет и мотивация, а как следствие — результат. Поэтому в первую очередь нужно работать с интересом — будем откровенны, в интернете всё есть, и если бы было интересно, ученик бы сам нашёл и разобрался. Значит, ему это не так интересно и не так важно, и надо работать именно с системой мотивации в первую очередь.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Мотивация через интересы: поезда и рэп</h3>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Что мы делаем? Мы всегда спрашиваем про естественные интересы ученика — что ему в обычной жизни интересно: компьютерные игры, спорт, хобби, увлечения. А потом это связываем с предметом. Например, к нам пришёл ученик, и на диагностике выяснилось, что он очень любит поезда — знает все электрички Подмосковья, все маршруты, диаметры колёс, натяжение тросов. Просто почему-то так сложилось, ему всё это интересно. И, конечно, мы сразу связываем это с физикой — он пришёл как раз по физике, и мы по сути физику будем изучать на примере вот этих поездов, и там все темы встретятся. И этот внутренний его интерес играет на пользу изучению предмета, к которому он изначально был не расположен, — просто не видел связи. А мы эту связь простраиваем — в принципе, с поездами, с физикой, с математикой просто.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если, например, ребёнок любит рэп, знает всех рэперов старой школы — как тут связать с физикой?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Ну, во-первых, необязательно цепляться только за рэп — то есть мы всегда смотрим какой-то перечень интересов, и по ходу можно докопаться до чего-то ещё, через спорт какой-нибудь зайти. Но если рэп, то тоже по ходу общения выясняется что-то вокруг этого, и за счёт этого можно зацепиться — например, про биографию каких-то рэперов, какой-то факт оттуда взять и связать это с математикой: сколько они зарабатывают, давайте посчитаем, как они это зарабатывают. То есть много чего тут можно — это как раз работа педагога: не быть говорящей головой, а работать с личностью, разбираться в мотивации, в интересах, создавать связь этой внутренней составляющей с внешней.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Кейс преподавателя Павла и оценка работы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Один из ваших преподавателей, Павел, получил благодарность от родителей — при том, что ребёнок получил 70 баллов по физике, 84 по математике, но благодарность была отдельно. Как вы оцениваете работу преподавателей, какие факторы для вас важны?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Как я уже сказал, мы очень тщательно смотрим, с кем начинать сотрудничество, и то, как преподаватели работают. Мы в этом году как раз делаем больший упор на методическую составляющую — то есть чтобы сами преподаватели между собой обменивались опытом, методическими аспектами, какими-то сложными ситуациями, поддерживали друг друга. Потому что наша задача — растить преподавателей. Вот чем мы отличаемся от просто репетитора. Репетитор часто изолирован в своём опыте — это может быть какой-то студент, выпускник, который просто знает предмет и принял решение, что вот он будет передавать свои знания. Но преподавание — это не просто передача знаний, это, как я уже сказал, работа с личностью в том числе.</p>
+        <p>Что является показателем успеха и результативности преподавателей? Это, по сути, то, что ученику нравится и есть результат. Если говорить про главные компоненты — вот это: ему нравится, есть результат, ну и родители довольны. Для этого мы отслеживаем результат каждый месяц — если мы говорим про ОГЭ и ЕГЭ, ученик пишет независимый пробник, и мы смотрим, как прирастают баллы от месяца к месяцу. Прямо строим график зависимости количества баллов от месяца по каждому ученику и отсылаем обратную связь родителям обязательно, чтобы они тоже были в курсе успехов или, может быть, каких-то проблемных зон, чтобы для них этот образовательный процесс был понятен, очевиден, и каких-то сюрпризов не было. Поэтому основное — это результаты учеников.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Сколько сейчас занимает преподавание</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы ещё преподаёте сами, насколько я понимаю. В процентном соотношении сколько у вас занимает методическая работа, преподавание и что-то ещё?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Тут сложно сказать, потому что всё зависит от, в принципе, в плане подготовки к занятиям — тут уже есть наработанный опыт. Например, вот сейчас, в августе 2026 года, ЕГЭ по математике начинают менять. Все наработки, которые были до этого времени, придётся делать заново — меняются задания, меняется структура, поэтому тут внезапно появляется большое поле новой работы. Прошлые годы не меняли, и там не требовалась какая-то подготовка. Поэтому мы, во-первых, всегда адаптируемся под актуальные изменения, смотрим все банки ФИПИ, все слёты учителей, составителей ЕГЭ, чтобы всё это было актуально. И если ЕГЭ в целом не меняется, то тут особо времени и не нужно, если же меняется — конечно, мы эту методическую составляющую больше прорабатываем.</p>
+        <p>А так преподавание сейчас у меня занимает немного времени. Я постепенно это снижаю, чтобы увеличивать именно свой вклад в рост школы, поскольку тут очень много работы — обучение преподавателей, сотрудников, администраторов, работа с новыми каналами привлечения учеников. В общем, тут очень много процессов, и хочется просто давать больший вклад в образование. Потому что один я могу научить, условно, там, 50 человек. А выстроив систему с хорошими преподавателями, которые транслируют мои ценности, мою методику, мои подходы, смыслы, я могу учить в десятки, сотни и тысячи раз учеников больше.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Опыт вожатого в методике онлайн-школы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Возвращаясь к вашему опыту волонтёрства в лагерях — вы же в том числе работали и с так называемыми трудными подростками. А сейчас у вас онлайн-школа, где вряд ли туда прямо трудные подростки приходят подтянуть физику и математику. Что-то из этого волонтёрского опыта пригождается в составлении программ, методики онлайн-школы?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Всё пригождается, потому что мы, разумеется, работали не только с трудными, а со всеми, кто приходил — а вот в лагерь приезжает 200 человек, 200 подростков, каждый уникальный, и с каждым нужно тоже найти какой-то подход. И вот навык находить подход, чтобы влиять и оказывать результат, он по сути лежит и в той задаче, и в этой — понять, что интересно, какие точки роста у подростка, что ему сложно, где есть какие-то проблемы, почему они возникли, где-то аспект воспитания, где-то аспект какой-то нехватки социализации. В общем, много причин, исследовать поведение, привычки и так далее.</p>
+        <p>И тут, по сути, то же самое — наши занятия это не просто провести 60 минут и закончить, провести урок и завершить. Нет, это прямо непрерывное взаимодействие. В своих занятиях с ребятами мы очень часто уделяем внимание тайм-менеджменту — как распределять время, как не волноваться на экзамене, как искать ошибки, что делать, если началась тревога на экзамене. То есть это всё, в том числе те знания, которые были приобретены там, и они приходят в методику преподавания. Потому что результат на экзамене — это не только знание, но и множество других факторов, в том числе психологическая, эмоциональная подготовка ученика — можно знать, но разволноваться и не показать своих знаний. Поэтому мы этому тоже уделяем внимание, а для этого нужно про это говорить. И как раз этому мы в том числе в той организации, в той работе с подростками обучались, и это легло в основу.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Увлечение биомеханикой</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть интересное увлечение — биомеханика движения и изучение связи физических законов с работой человеческого тела. Это вообще оффлайн-активность — удаётся ли её перенести в онлайн-школу?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Скорее нет, это моё собственное увлечение. Но мне кажется, чем эта часть может быть интересна ученикам, родителям? Почему мы вообще об этом говорим? Потому что я стараюсь транслировать собственный подход к знаниям — к тому, что всегда нужно учиться находить интерес. Если мы, с моей точки зрения, прекращаем чем-либо интересоваться, то всё, мы затвердеваем. И как раз я показываю ученикам, что вот у меня такие интересы, я вот это хочу, я вот это, чтобы транслировать какую-то живость: знания — это не только то, что в школе происходит, это всё, что окружает.</p>
+        <p>А если говорить непосредственно про биомеханику, то да, это же сплошная физика — наше тело это сплошная физика, состоящая из рычагов, там мышцы, всё это вращение, скорости — это всё оно же. Там ещё биология, анатомия. Но именно если механика, зная там анатомию, разумеется, это всё равно работа мышц. Уже в профессиональном обучении изучении биомеханики очень многие сталкиваются с тем, что они не знают физику — то есть, чтобы объяснить, как всё это вращается, переходит, как там скорости взаимосвязаны, тут многим не хватает технической базы, потому что идут туда в основном врачи, какие-то массажисты, люди, работающие с телом, а не с техническими науками. А вот тут как раз связь этих двух аспектов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Обучение чужих преподавателей и конкуренция</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы ещё обучаете других преподавателей, даже руководителей онлайн-школ. Не боитесь, что готовите себе конкурентов?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Да нет. Я вообще слабо верю в конкуренцию. Мне кажется, что главные конкуренты себе — мы сами: лень, недостаточная мотивация, недостаточная дисциплина, сила воли. Вот это основная проблема. А конкуренты — не знаю, мне кажется, возможностей так много, что на всех хватит. Скорее люди сами не будут во что-то ввязываться, пытаться, в силу какой-то, опять же, лени, недостаточной уверенности и так далее. А те, кто ввязываются, наоборот создают среду, и конкуренция для меня наоборот движущая сила — что вот, если мы начинаем что-то делить, то это заставляет придумывать более лучший продукт, какие-то новые решения, становиться лучше. В этом ключе конкуренция для меня просто двигатель. Если никто не конкурирует, значит, можно делать средне, и это нормально. А когда есть конкуренция, то приходится постоянно улучшать, думать, искать, внедрять. И это как раз и повышает результат.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. Совет себе-первокурснику</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Остались лирические вопросы. Представим, что изобрели машину времени, и у вас есть возможность вернуться в прошлое, когда вы были первокурсником МГУ. Эффекта бабочки не существует, и можно дать один совет тому первокурснику. Какой бы совет вы дали?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Интересный вопрос, я не думал сейчас. Наверное, я бы дал совет двигаться быстрее — то есть не бояться рисковать и начинать создавать школу и всё то, к чему я сейчас прихожу, раньше. Много времени ушло просто на раскачку, на обдумывание, что, может быть, это мне нужно или нет. Что меньше думать, больше делать. Вот как-то такой совет. В разумных пределах, разумеется, — учась на физфаке, всё равно ты очень много думаешь, и тут нет вариантов, что будут какие-то глупости. Просто быстрее и активнее действовать, быстрее всё внедрять и сдавать.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Копай глубже, кидай дальше, отдыхай, пока летит.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Абсолютно верно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. Кейс Сергея и Дарьи: дисциплина</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ваш ученик Сергей в конце интервью сказал: «Не слушайте тех, кто говорит, что у вас что-то не получится». Что бы вы ещё могли добавить к этому совету?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Не слушайте тех, кто говорит, что у вас ничего не получится, и старайтесь. Да, потому что можно не слушать, но чтобы получилось, нужно делать, и тут нет никаких других вариантов. То есть нужна просто дисциплина, система, и тогда будет результат. Если каждый день идти к цели и не сдаваться, ты точно придёшь к цели. Вот в этом у меня нет никаких сомнений. Поэтому просто нужна система и регулярность.</p>
+        <p>Вот, кстати, например, мы говорим про Сергея — мне сегодня с утра написала ученица, она в этом году у нас училась тоже по физике, тоже набрала 100 баллов по физике, там выиграла грант, и вот сегодня она написала, что поступила на Физтех в МФТИ — это лучший технический вуз сейчас — и Сколково, там совместный грант. Прям очень крутой результат. И что закономерно — что и у Сергея, и у Дарьи, и ещё у других учеников, которые достигают хороших результатов, есть одно общее — это регулярность и дисциплина. Вот это, пожалуй, самое главное. И добиваются большего результата те ученики, да и я думаю, вообще те люди, которые просто системно делают — и всё. Важно только правильно ещё делать, потому что можно делать системно не то, и это не туда приведёт. Поэтому надо понимать, что это действительно то, что нужно, и из раза в раз это повторять. И тогда к результату нельзя не прийти.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t18">
+      <h3>18. Контакты и направления работы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если наши слушатели или зрители захотят с вами связаться по какому-то вопросу — как это сделать и по каким вопросам можно обратиться?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Да, я думаю, я могу просто оставить свой Telegram напрямую, и мне всегда можно написать, я подскажу, отвечу. По каким вопросам? Ну, если вам требуется обучение — репетиторы, преподаватели. У нас основные направления технические — это математика, физика, информатика. Второе — это русский язык. Сейчас мы, кстати, активно начинаем работать с учениками из других стран — то есть выходим на рынок европейский с учениками среднего и младшего возраста, русскоязычными.</p>
+        <p>С вопросами поступления обязательно можно обращаться, потому что частая ситуация, когда вот баллы на ЕГЭ набрали, а дальше непонятно, куда с ними идти — как вообще там нюансы поступления работают, по этим вопросам тоже. Ну и, наверное, основной запрос — это если у ваших детей трудности с мотивацией к учёбе, когда неинтересно, играют только в компьютерные игры, а хочется, чтобы они как-то развивались в этом плане. Вот это я бы сказал, наша основная профессия. Поэтому по всем этим вопросам можно писать в Телеграм, и мы обсудим.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
