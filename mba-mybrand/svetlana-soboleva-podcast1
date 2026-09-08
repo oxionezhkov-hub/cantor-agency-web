@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Светлана Соболева — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <!-- Аудитория этого выпуска — «для партнёров» (бизнес-история для предпринимателей), подписана в плашке в самом верху страницы. -->
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223256742?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Светлана Соболева - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223256742" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">Особый подход к репетиторству. Светлана Соболева — от 99 баллов на ЕГЭ до онлайн-школы на четыре предмета</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Как преподаватель английского языка построила репетиторскую онлайн-школу без названия, но с чёткой методикой — и постепенно расширила её на математику, русский язык и информатику. В выпуске — про первый опыт подготовки к ЕГЭ на 99 баллов, отказ, который изменил всё преподавание, тайного ученика на собеседованиях и почему в основе будущего названия школы будет слово «результат».
+
+🔗 Написать Светлане в Telegram: [ссылка]
+🔗 Сообщество ВКонтакте: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, репетиторство, EdTech, подкаст для предпринимателей, найм преподавателей, методика Celta, интерактивное чтение, подготовка к ЕГЭ, Светлана Соболева</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #ЕГЭ #EdTech #репетитор #онлайншкола #найм</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/svetlana-soboleva-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Тайный ученик, 99 баллов и школа без названия: как я строю образование, в основе которого — результат</h1>
+
+      <p>У меня уже есть онлайн-школа. В ней учатся дети и взрослые, работают десять преподавателей по четырём направлениям — английский язык, математика, русский язык, информатика. А названия до сих пор нет. Меня часто спрашивают, как так вышло, и это не халатность — это осознанное решение.</p>
+
+      <h2>Почему у школы ещё нет названия</h2>
+      <p>Сначала я хотела сосредоточиться только на одном языке — английском. Но в какой-то момент поняла, что этим дело не ограничится: спрос и мои собственные амбиции выросли за рамки одного предмета. Название до сих пор в разработке, но одно я знаю точно — там будет слово «результат». Потому что это то, что мы даём своим ученикам, и это то, вокруг чего построена вся система.</p>
+
+      <h2>Принуждение или система: что не так с классическим образованием</h2>
+      <p>В одной из анкет я написала резкую фразу — что классическое образование строится на принуждении. Мне часто возражают: как же так, вы же сами педагог. На самом деле речь не про принуждение в буквальном смысле, а про программу, в рамки которой ставят преподавателей в обычной школе. У них по факту нет выбора: есть темы, которые нужно проходить, есть регламент, и учитель должен дать материал и идти дальше, даже если часть класса не усвоила тему. Мы даём дополнительное образование, и поэтому у нас есть роскошь, которой нет у школы, — остановиться там, где ребёнку нужно, проработать материал и не бежать по программе только потому, что так написано в календарно-тематическом плане.</p>
+
+      <h2>99 баллов на подоконнике</h2>
+      <p>Свой первый по-настоящему серьёзный опыт подготовки к ЕГЭ я получила ещё во время работы в школе Hello — тогда мой ученик набрал 99 баллов. Помню это чувство: я, конечно, была рада, но прекрасно понимала, что результат — это не только моя заслуга. У ученика был сильный стартовый уровень и невероятная целеустремлённость. Мы попадали в ситуации, когда все аудитории были заняты, и мы с ним готовились прямо на подоконнике в коридоре. Он ни разу не упрекнул меня за это — понимал, что дело не во мне, и продолжал заниматься. Именно эта целеустремлённость и принесла свои плоды.</p>
+
+      <h2>Отказ, который перевернул моё преподавание</h2>
+      <p>В том же 2013 году я решила пойти дальше — самостоятельно прошла обучение и получила международный сертификат TKT, а ещё съездила на недельное обучение немецкому языку в Германию. Честно говоря, поводом стал болезненный опыт: в одну из школ меня не взяли только потому, что у меня не было сертификата. Меня это очень задело — казалось бы, я преподаю так, как преподаю, и бумажка ничего не меняет. Но по факту это оказалось не про сертификат, а про саму подготовку и обучение. После этого курса изменилось абсолютно всё — и то, как я преподаю, и моя жизнь. Когда я посмотрела назад, мне стало стыдно перед студентами, которых я готовила раньше: это были буквально две разные вещи, два разных уровня преподавания.</p>
+
+      <h2>Учитель не должен говорить 90% времени</h2>
+      <p>Главное, что я вынесла из той подготовки, — понимание, как правильно исправлять ошибки и как правильно давать материал. Преподаватель не должен говорить 90% времени на занятии. Моя задача — спрашивать учеников, вовлекать их в процесс и заставлять думать, чтобы они сами приходили к ответам, сами искали информацию и начинали говорить. До этого я просто шла по учебнику и не знала многих нюансов.</p>
+      <blockquote>Тот ученик с 99 баллами всё ещё занимался у прежней меня — и если бы я вела его сегодняшними методами, кто знает, может, он получил бы все сто.</blockquote>
+
+      <h2>Два закрытых бизнеса, которые я тогда не поняла</h2>
+      <p>К моменту, когда я начала собственную школу, у меня уже был опыт предпринимательства — своя оффлайн-студия английского языка, которая просуществовала два года, и ещё один проект, Second Language. Оба закрылись. Тогда я не смогла понять, почему так вышло — казалось, что дело в чём-то неуловимом. Сейчас я понимаю: чтобы строить бизнес, нужно учиться именно бизнесу. У меня не было представления ни о маркетинге, ни о продажах, ни о внутренней структуре — я смотрела на всё со стороны преподавателя, а не предпринимателя. Основной проблемой было то, что я не умела общаться с людьми: с преподавателями, с административным составом. Я была слишком эмоциональной, и меня этому никто никогда не учил.</p>
+
+      <h2>Юрий Спивак и мир, который больше преподавания</h2>
+      <p>Сильно на моё мышление повлиял Юрий Спивак. Он показал, что мир гораздо более многогранный, чем один только урок один на один с учеником: можно не просто преподавать, а передавать свою методологию другим преподавателям и тем самым помочь ещё большему количеству учеников. Это позволяет снять с себя часть нагрузки, посмотреть на мир с другой стороны, находить время на себя, путешествовать и ценить себя — вместо того чтобы концентрироваться только на своих собственных уроках.</p>
+
+      <h2>Как английский превратился в четыре предмета</h2>
+      <p>Расширение произошло не по плану, а по запросу. В какой-то момент ученики начали спрашивать: «Светлана, а вы не могли бы порекомендовать преподавателя по математике?» Я подумала — а почему бы нет, у меня есть знакомые математики и русисты. Нашла хорошего преподавателя по математике, посидела на ознакомительной встрече — и поняла, что то, чему меня учили на курсах для преподавателей английского, работает гораздо шире, чем один язык. Это применимо к любому предмету: как исправлять ошибки, как давать материал, как вовлекать учеников в процесс. Люди мне доверяют, а я в ответ отбираю преподавателей и допускаю к ученикам только тех, кто прошёл определённый этап отбора. Так почему бы не двигаться в этом направлении?</p>
+
+      <h2>Методика, которую можно пересадить на любой предмет</h2>
+      <p>В основе работы лежит адаптированная методика Celta — курс, изначально ориентированный именно на английский язык. Но его структура — разогрев, введение, основная часть, закрепление — применима к любому предмету. Конечно, часть моментов пришлось адаптировать: в курсе примеры и разборы даются именно на материале языка. Но когда я просматриваю занятия по математике, я даю комментарии, основываясь на этом же курсе, только с примерами и задачами по математике — в какой момент преподаватель должен задать вопрос, чтобы ребёнок сам проговорил ответ. Меняется только наполняемость примера, а не суть подхода. Все десять преподавателей смотрят разборы занятий — своих и, при желании, чужих: там подчёркиваются сильные и слабые стороны, даются рекомендации.</p>
+
+      <h2>Игра в слова: как дети учатся читать за 25 занятий</h2>
+      <p>Один из моих любимых продуктов — курс интерактивного чтения. Я работаю с материалом по чтению ещё с института, с 2011 года. Тогда это было монотонно: собранные слова, которые дети просто отчитывали. Родители были благодарны, но я видела — детям скучно. Со временем мы начали придумывать игры: бросали кости на столе в оффлайн-формате. Когда я перешла к онлайн-преподаванию, я адаптировала курс полностью под интерактивный формат — с играми вроде «ходилок», где дети бросают кубик и двигают фигурки, и «морского боя», где, чтобы выстрелить, нужно произнести и прочитать два слова. Смена интерактива держит внимание ребёнка, а 25 занятий дают достаточную базу, чтобы пойти во второй класс, уже умея читать, и в большинстве случаев обойтись без репетиторов в дальнейшем.</p>
+
+      <h2>От нуля до 70 баллов — история, в которую не верил другой учитель</h2>
+      <p>Один из моих любимых кейсов — девочка, которую я довела с нуля до 60–70 баллов на ЕГЭ за два года, хотя другой преподаватель отговаривал её сдавать этот экзамен вовсе — настолько низким был стартовый уровень. Мы поговорили с папой, договорились, что цель — хотя бы проходной балл, 22–23. Но в процессе стало понятно, что при должном желании она сможет достичь и большего. В итоге она получила от 60 до 70 баллов, поступила в институт и сейчас работает переводчиком, владея несколькими языками. После неё я готовила по этому же экзамену её брата — тоже с нулевого уровня, и он тоже сдал больше чем на 60 баллов.</p>
+
+      <h2>Тайный ученик, который решает судьбу преподавателя</h2>
+      <p>Ответственность — один из главных критериев при найме, и у нас запрещено отменять занятия, скажем, за полчаса. Проверить это на этапе обычного собеседования почти невозможно, поэтому отбор у нас многоуровневый. Сначала — собеседование, на котором я рассказываю об условиях. Если человек согласен, следующий этап — тридцатиминутный демо-урок с одним из наших учеников. Секрет в том, что этот «ученик» — моя собственная дочь. Многие преподаватели об этом не знают, но именно на этом этапе часть кандидатов отсеивается: если человек начинает переносить занятие, отменять его или вовсе не выходить на связь — вне зависимости от причины, — это уже показывает, что дальше сотрудничать не получится. Если этап пройден, я передаю преподавателю реальные группы и продолжаю смотреть, как он готовится, отменяет ли занятия, насколько ответственно подходит к делу. Только после этого мы окончательно берём человека в команду.</p>
+
+      <h2>Печенье, камера и другие границы на занятии</h2>
+      <p>Кроме ответственности я смотрю на готовность обучаться — важно, чтобы преподаватель действительно воспринимал комментарии методиста, а не просто соглашался на словах. У нас все занятия проходят с включённой камерой, и есть простые, но принципиальные правила: не есть, не танцевать и не слушать музыку во время урока. Был случай, когда преподаватель постоянно трогал лицо и волосы на занятиях — мы обсудили это внутри команды, привлекли других людей со стороны, чтобы оценить, насколько комфортно было бы им заниматься с таким преподавателем, и в итоге расстались. При этом я понимаю, что все мы люди — разовая почесавшаяся щека не проблема. Вопрос в системности: если что-то повторяется из занятия в занятие, у нас есть регламент, и либо преподаватель идёт навстречу, либо мы принимаем решение о замене. Каждая ситуация рассматривается индивидуально и никогда не основывается только на моём личном мнении.</p>
+
+      <h2>Что держит хороших преподавателей в команде</h2>
+      <p>Мы предлагаем стабильную зарплату, поддерживающую атмосферу, возможность карьерного роста, бонусы и гибкий график — и график, судя по обратной связи, ценят особенно. Но чаще всего преподаватели говорят о другом: им важна сама методика, материалы, возможность использовать наши наработки и наша ориентированность на результат — то, что мы отрабатываем темы и даём возможность где-то отступить от плана ради конкретного ребёнка. Конкурентоспособная ставка — тоже фактор, о котором говорят последние преподаватели, пришедшие в команду: они видят, что оплата достойная, и готовы развиваться у нас дальше.</p>
+
+      <h2>Лавандовые поля и почему я не бегу за деньгами инвестора</h2>
+      <p>Я люблю путешествия и эфирные масла и очень хочу увидеть все лавандовые поля мира — пока не получилось, но конференции, которые организует Юрий Спивак в разных городах, отлично совмещают профессиональное развитие, общение с коллегами и саму возможность путешествовать. Похожая логика работает и в отношении инвестиций: если бы ко мне пришёл инвестор, я бы в первую очередь выбирала не деньги, а компетенции. Деньги, конечно, нужны, но без компетенций их легко потратить впустую — а с минимальными вложениями, но при поддержке знающего специалиста, можно получить куда большую отдачу. Поэтому я скорее доверюсь человеку, за которым кто-то стоит — например, рекомендации через круг Юрия Спивака, — чем случайному предложению со стороны, вроде обещания «настроить контекст» без единой рекомендации.</p>
+
+      <h2>Куда я иду: тысяча учеников и своя методология</h2>
+      <p>Сейчас у нас в плане 200 учеников одновременно, а через пять лет я хочу дойти до тысячи учеников и тридцати преподавателей. Продажи пока строятся на Avito, сервисе «Шикари», который собирает заявки из Telegram и ВКонтакте, и на сарафанном радио — и именно рекомендации приносят больше всего клиентов. Помимо роста числа учеников и предметов, мне хотелось бы открыть направление наставничества — передавать методику преподавания другим преподавателям обучения, а не только своим ученикам. Насколько хватит на это моих ресурсов, если основным носителем этой методики буду оставаться я сама, — вопрос открытый, но точно есть куда расти уже сейчас: например, добрать преподавателей по английскому и математике перед сентябрём и ввести отдельную роль куратора преподавателей, чтобы освободить часть своего времени. У нас уже есть отдел маркетинга и отдел продаж — и я постепенно передаю туда свои обязанности.</p>
+
+      <h2>Что бы я сказала себе в 2013 году</h2>
+      <p>Если бы я могла вернуться в 2013 год, в школу Hello, я бы, наверное, в шутку сказала себе не выходить замуж — тогда бы я быстрее развивалась в бизнесе. А если серьёзно — я бы посоветовала себе сразу, с самого начала, пойти на курс MBA и научиться строить бизнес, а не пытаться построить что-то на голых знаниях предмета без понимания маркетинга, продаж и структуры. Моё мышление меняется каждую неделю, и сказать, где я остановлюсь, сейчас невозможно — но я точно знаю, что хочу продолжать расти вместе со своей школой и своими учениками.</p>
+
+      <p class="art-signature">Светлана Соболева,<br>предприниматель в сфере онлайн-образования</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про тайного ученика при найме</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🕵️ У нас есть секретный ученик. И от него зависит, возьмём ли мы преподавателя в команду</h3>
+        <p>Хотите узнать, как я на самом деле проверяю ответственность кандидатов? Спойлер — не на собеседовании.</p>
+        <h4>Как это устроено</h4>
+        <p>Первый этап — обычное собеседование, где я рассказываю об условиях работы. Если кандидат согласен, дальше — тридцатиминутный демо-урок с одним из «наших учеников».</p>
+        <p>Секрет в том, что этим учеником почти всегда является моя собственная дочь. Большинство преподавателей об этом даже не догадываются.</p>
+        <h4>Что мы на самом деле проверяем</h4>
+        <p>Не знания — их проверяет тест ещё раньше. Демо-урок — это проверка ответственности. Перенёс занятие, отменил, забыл выйти на связь — неважно по какой причине — и мы уже понимаем, что сотрудничество не сложится.</p>
+        <p>Если этап пройден, я отдаю преподавателю реальные группы, но продолжаю наблюдать: как он готовится, срывает ли занятия, насколько держит слово.</p>
+        <p>🎯 Только после этого — и никак не раньше — человек попадает в команду.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про принуждение в образовании</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📏 «Классическое образование строится на принуждении» — я сказала это в анкете, и мне прилетело</h3>
+        <p>Резко звучит, особенно от человека, который сам преподаватель, правда?</p>
+        <h4>На самом деле речь не про учителей</h4>
+        <p>Это не про то, что учителя плохие. Это про программу, в рамки которой их ставят: есть темы, которые нужно пройти, есть регламент — и преподаватель обязан двигаться дальше, даже если часть класса не усвоила материал. У него просто нет выбора.</p>
+        <h4>В чём разница с допобразованием</h4>
+        <p>Мы даём дополнительное образование — и поэтому можем не следовать жёсткому плану. Если ученику нужно остановиться и проработать тему ещё раз — мы даём эту возможность. Школа физически не может себе этого позволить.</p>
+        <p>Не всем детям нужно одинаковое количество времени на одну и ту же тему. И пока система устроена так, что учитель обязан «идти дальше» несмотря на это — принуждение никуда не денется. Вопрос не в требовательности, а в возможности подстроиться.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про первую подготовку к ЕГЭ</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>📐 Мы готовились к ЕГЭ на подоконнике в коридоре. Он получил 99 баллов</h3>
+        <p>Это была моя первая подготовка ученика к ЕГЭ — и, пожалуй, самая запоминающаяся.</p>
+        <h4>Что произошло</h4>
+        <p>В какой-то момент все аудитории в школе оказались заняты. Не отменять же занятие — и мы просто садились на подоконник в коридоре и продолжали заниматься.</p>
+        <p>Он ни разу не упрекнул меня за это. Понимал, что дело не во мне, и всё равно приходил, всё равно занимался.</p>
+        <h4>Кому на самом деле принадлежит результат</h4>
+        <p>Да, я его вела и сопровождала. Но у него был сильный стартовый уровень и невероятная целеустремлённость — без неё 99 баллов бы не случилось.</p>
+        <p>Мы были командой. И, если честно, поверни я это занятие немного иначе — может, он получил бы и все сто.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про курс интерактивного чтения</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🎲 Как я превратила скучное чтение по слогам в игру, о которой просят родители</h3>
+        <p>Я работаю с материалом по чтению с 2011 года — ещё со студенчества. Тогда это было мучительно скучно: собранные слова, которые дети просто отчитывали по кругу.</p>
+        <h4>Как это выглядит сейчас</h4>
+        <p>Мы играем в «ходилки»: бросаем кубик, двигаем фигурки — машинки, ёлочные шарики, что угодно. Самая любимая игра — морской бой: чтобы «выстрелить», ребёнок должен прочитать два слова.</p>
+        <p>Смена картинок, героев и формата держит внимание — и это уже совсем не тот скучный урок, который я вела студенткой.</p>
+        <h4>Что это даёт за 25 занятий</h4>
+        <p>Этого хватает, чтобы ребёнок пошёл во второй класс, уже умея читать, с крепкой базой. А дальше многое зависит от школы и программы — но фундамент уже есть, и в большинстве случаев к репетиторам возвращаться не приходится.</p>
+        <p>📚 А родители, кстати, потом сами признаются, что играют вместе с детьми.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про инвестора и компетенции</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>💼 Если бы ко мне завтра пришёл инвестор — я бы выбрала не деньги</h3>
+        <p>Звучит нелогично для бизнеса, но у меня есть на это причина.</p>
+        <h4>Деньги без знаний легко потратить впустую</h4>
+        <p>С минимальными вложениями, но при поддержке знающего специалиста — в продажах, в маркетинге — эти вложения можно превратить в хорошую прибыль. А просто деньги без компетенций так не работают.</p>
+        <h4>Почему я не доверяю случайным предложениям</h4>
+        <p>Ко мне периодически приходят люди с предложениями вроде «у вас же нет контекстной рекламы, давайте настрою». Для меня это скорее сомнительное предложение — я предпочитаю обращаться к тем, за кем кто-то стоит, кого мне порекомендовали люди, которым я доверяю.</p>
+        <p>🤝 Хорошая рекомендация в нужном кругу стоит дороже любого холодного предложения — даже с деньгами на кону.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/svetlana-soboleva-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Почему у школы до сих пор нет названия</a></li>
+        <li><a href="#t2">2. Принуждение или система</a></li>
+        <li><a href="#t3">3. Первый опыт подготовки к ЕГЭ — 99 баллов</a></li>
+        <li><a href="#t4">4. Отказ, который изменил всё преподавание</a></li>
+        <li><a href="#t5">5. Учитель не должен говорить 90% времени</a></li>
+        <li><a href="#t6">6. Два закрытых бизнеса и их уроки</a></li>
+        <li><a href="#t7">7. Влияние Юрия Спивака</a></li>
+        <li><a href="#t8">8. Как английский превратился в четыре предмета</a></li>
+        <li><a href="#t9">9. Методика Celta для любого предмета</a></li>
+        <li><a href="#t10">10. Курс интерактивного чтения</a></li>
+        <li><a href="#t11">11. От нуля до 70 баллов на ЕГЭ</a></li>
+        <li><a href="#t12">12. Тайный ученик на собеседованиях</a></li>
+        <li><a href="#t13">13. Что ещё важно в преподавателе</a></li>
+        <li><a href="#t14">14. Печенье, камера и другие границы</a></li>
+        <li><a href="#t15">15. Что ценят преподаватели в команде</a></li>
+        <li><a href="#t16">16. Путешествия, масла и конференции</a></li>
+        <li><a href="#t17">17. Стратегия: от 200 до 1000 учеников</a></li>
+        <li><a href="#t18">18. Инвестор, продажи и маркетинг</a></li>
+        <li><a href="#t19">19. Совет себе в прошлое, книги и контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Почему у школы до сих пор нет названия</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас уже есть онлайн-школа, в ней есть ученики, преподаватели, но названия школы нет. Как так получилось?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Сначала я хотела сосредоточиться на одном языке — английском. Но в определённый момент поняла, что этим дело не ограничится. Название мы ещё не придумали, хотя сейчас уже подбираем — и там точно будет задействовано слово «результат», потому что это то, что мы даём своим ученикам.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А сколько ещё осталось до названия по времени?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Его должны опубликовать на сайте уже совсем скоро, буквально пару дней.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Принуждение или система</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В анкете вы упоминали, что классическое образование строится на принуждении. Но вы сами педагог — не слишком ли это резкое высказывание?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это не совсем про принуждение — скорее про программу, в рамки которой ставят преподавателей, и у них по факту нет выбора. Мы даём дополнительное образование, поэтому у нас есть возможность не следовать жёсткому плану: если ученику нужно где-то остановиться и проработать материал, мы можем дать эту возможность. А школа этой возможности дать не может — там нет ресурса подстроиться индивидуально под каждого и подождать.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Насколько я знаю, там ещё есть какое-то процентное соотношение — сколько должно быть отстающих, сколько успевающих.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Да, и это тоже зависит от усмотрения преподавателя, школы и многих других факторов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Первый опыт подготовки к ЕГЭ — 99 баллов</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас был опыт работы в школе Hello, и ученик набрал 99 баллов на ЕГЭ. Это был ваш первый опыт подготовки к экзамену?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt"><p>Да, всё верно.</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Помните свои чувства, когда узнали результат?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Конечно, я была рада, но результат зависел не только от меня — это был мой первый опыт подготовки. Здесь сыграла роль и мотивация ученика, и его сильный начальный уровень. Я ему помогала, сопровождала его. У нас были ситуации, когда все аудитории были заняты, и мы готовились прямо на подоконнике. Он всё равно приходил и продолжал заниматься — понимал, что это не моя вина, и его целеустремлённость принесла свои плоды.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А вы как-то отпраздновали результат?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Честно, не помню — это было давно. Запомнился только момент, когда он сказал мне о своих результатах, и тот случай с подоконником.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Отказ, который изменил всё преподавание</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В том же 2013 году вы самостоятельно прошли обучение и получили международный сертификат TKT, а ещё съездили в Германию на недельное обучение немецкому языку. Для чего это было?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это было для развития — я всегда любила учиться и не хотела стоять на месте. Но честно говоря, причина была в другом: в одной из школ, куда я пробовала устроиться, мне отказали только потому, что у меня не было сертификата. Меня это очень задело — казалось бы, я преподаю так, как преподаю, и сертификат ничего не изменит. Но на самом деле дело было не в самом сертификате, а именно в подготовке и обучении. В тот момент изменилось абсолютно всё — и моё преподавание, и моя жизнь. Когда я посмотрела назад, мне стало стыдно перед студентами, которых я готовила раньше: это были совершенно две разные вещи, новый уровень преподавания.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Учитель не должен говорить 90% времени</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что было нового в подходе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Раньше я просто шла по учебнику и не знала определённых нюансов. Именно при подготовке к этому экзамену я поняла, как правильно исправлять ошибки у студентов и как правильно давать материал. Что преподаватель не должен говорить 90% времени на занятии — я должна спрашивать учеников, вовлекать их в процесс и заставлять думать, чтобы они сами приходили к ответам, сами искали и начинали говорить. До этого всё было совершенно по-другому.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть тот ученик с 99 баллами занимался у вас ещё «прежней»?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Я была его преподавателем, вела его, помогала — но его целеустремлённость тоже сыграла большую роль. Мы вместе, как команда, достигли этого результата. Но если бы я вела его сегодняшними методами, могла бы дать больше — может, это была бы уже сотня баллов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Два закрытых бизнеса и их уроки</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас уже был опыт предпринимательства — оффлайн-школа, студия английского языка, которая просуществовала два года, и ещё проект Second Language. Но оба закрылись. Что вы вынесли из этого опыта?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>На тот момент — ничего, потому что я не понимала, почему так произошло. А сейчас понимаю: чтобы строить бизнес, нужно учиться строить бизнес и получать образование в бизнес-сфере. Тогда у меня не было представления ни о маркетинге, ни о продажах, ни о внутренней структуре — ни о том, как, помимо знаний, сопровождать ученика дополнительно. Пройдя курс MBA, я посмотрела на всё это по-другому и сейчас нахожусь на другом этапе.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А почему тогда не получилось?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Потому что не было нужных знаний. Я смотрела на всё со стороны преподавателя, а не предпринимателя, не человека, который руководит. Основным критерием было то, что я не умела общаться с людьми — с преподавателями, которых я брала, с административным составом. Я была слишком эмоциональной. Я не умела работать с людьми, и меня этому никто никогда не учил.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Влияние Юрия Спивака</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Юрий Спивак сильно на вас повлиял?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt"><p>Да, всё верно.</p></div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В чём заключается это влияние?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Наверное, в смене мышления. Он открыл совершенно другой мир — показал, что мы можем быть не только преподавателями, что мир более многогранный. Через его обучение он показал, что можно двигаться в другом направлении: не только преподавать, но и передавать свои знания другим преподавателям, тем самым помогая ещё большему количеству учеников. Это позволяет снять с себя нагрузку и посмотреть на мир с другой стороны.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть вы имеете в виду, что можно передать методологию преподавателям, и это облегчит жизнь и им, и ученикам?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Да, не концентрироваться только на себе — а передать свои знания и методологию другим, научить других преподавателей и расширить количество людей, которым можно помочь, используя мои знания. При этом освободить себе время, путешествовать, находить время на себя и ценить себя.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Как английский превратился в четыре предмета</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ваш последний проект в 2024 году — это была школа английского языка для школьников и взрослых. Сейчас уже есть математика, русский язык и информатика. Как произошло это расширение?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это был долгий процесс. Я думала, что мои знания применимы только в сфере английского языка. Но в один момент ко мне поступил запрос от учеников: «Светлана, а вы не могли бы порекомендовать преподавателя по математике?» Я подумала — а почему бы нет, у меня есть знакомые математики и русисты. Нашла среди знакомых хорошего преподавателя по математике, посидела на ознакомительной встрече — и поняла, что то, чему нас учили на курсах для преподавателей, гораздо выше, чем просто английский язык. Это применимо ко всем предметам: как исправлять ошибки, как давать материал детям, как вовлекать их в процесс. Тогда я решила: почему нет? Люди мне доверяют, а я проверяю и отбираю преподавателей — допускаю к ученикам только тех, кто прошёл определённый этап отбора.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Методика Celta для любого предмета</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как сейчас устроена работа с преподавателями — есть инструкции, предзаписанные видеоуроки?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Для каждого предмета есть инструкции, как вести занятия, и образцы. Преподаватели просматривают разборы занятий — своих и чужих — с рекомендациями, как взаимодействовать с учениками, где подчёркиваются сильные и слабые стороны. То же самое с математикой, русским, информатикой.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы работаете по методике Celta — пришлось её адаптировать для других предметов?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Celta — это скорее курс, ориентированный на английский язык, но в целом его структура применима к любому предмету: разогрев, введение, основная часть, закрепление. Какие-то моменты нужно адаптировать, потому что примеры в курсе — именно про английский. Но когда я просматриваю занятия по математике, я даю комментарии, основываясь на этом курсе, только с примерами и задачами по математике — в какой момент преподаватель должен спросить, чтобы ребёнок сам ответил. Меняется только наполняемость примера в каждом предмете, а суть остаётся той же.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Курс интерактивного чтения</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть курс по чтению в интерактивном формате — за 25 уроков ребёнок готовится к поступлению в школу, и с чтением потом проблем нет. Как этот курс появился?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Я работаю с материалом по чтению ещё с 2011 года, со времён учёбы в институте. Но тогда это было монотонно: собранные слова, которые дети просто отчитывали. Родители были благодарны, но я видела, что детям скучно. Со временем мы начали развиваться, придумали игры — бросали кости на столе в оффлайн-формате. Когда я перешла к онлайн-преподаванию с использованием интерактивных ресурсов, я адаптировала курс полностью под интерактивный формат: дети читают в интерактиве со сменой пейзажей, героев, играют в те же игры, но онлайн.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Что это за игры?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это интерактивные сайты, которые мы называем «ходилками» — бросаем кости и ходим на определённое количество шагов: фигурки машинок, новогодние шарики, разные поля. Очень популярен морской бой — чтобы выстрелить, нужно произнести и прочитать два слова. Смена интерактива делает процесс увлекательным, и родители потом признаются, что тоже играют.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Этого хватает, чтобы не обращаться к репетиторам в дальнейшем?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>25 занятий — это основа, которой достаточно, чтобы ребёнок пошёл во второй класс, умея читать, с крепкой базой. Дальше многое зависит от преподавателя, школы, программы, но в большинстве случаев этого хватает, чтобы не прибегать к репетиторам в дальнейшем.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. От нуля до 70 баллов на ЕГЭ</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть кейс, когда вы практически с нуля довели девочку до 70 баллов по ЕГЭ, хотя другие преподаватели отговаривали её сдавать экзамен вовсе. Как так получилось?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это была очень интересная ситуация, я тогда ещё работала оффлайн. Девочка занималась сначала в паре со знакомым, и в какой-то момент решила, что хочет сдавать английский. Преподаватель говорил, что она его не сдаст — уровень был действительно низким. Мы поговорили с папой, и договорились, что нужно сдать хотя бы на проходной балл — тогда это было 22–23 балла. Я сказала: на это она точно сдаст, а при желании сможет достичь и большего. В итоге она получила от 60 до 70 баллов — точно сейчас не вспомню. Это открыло ей дорогу в институт, который она уже закончила и сейчас работает переводчиком. После неё я готовила к этому же экзамену её брата — он тоже сдал больше 60 баллов, тоже с нулевого уровня.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Тайный ученик на собеседованиях</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорили, что один из главных критериев при найме — ответственность, и у вас запрещено отменять занятия, скажем, за полчаса. Как на этапе предварительного собеседования вы проверяете ответственность?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это действительно тяжело проверить на этапе обычного собеседования, поэтому у нас несколько уровней отбора. Первый — собеседование, на котором я рассказываю об условиях. Если человек соглашается, второй этап — тридцатиминутный демо-урок с одним из наших учеников. Этим «секретным учеником» является моя дочь — многие об этом не знают. И здесь мы уже проверяем ответственность: часть преподавателей уходит именно на этом этапе, потому что если они начинают переносить занятия, отменять их или вовсе не выходят на связь — вне зависимости от причины — это уже показывает, что я не смогу с ними сотрудничать.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А дальше?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Если этот этап пройден, я отдаю преподавателю определённые группы в момент, когда нужно кого-то заменить, и снова смотрю, насколько ответственно он подходит — как готовится, отменяет или не отменяет занятия. Здесь мы уже чётко видим критерии, и если всё хорошо — берём человека в команду.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Что ещё важно в преподавателе</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Какие ещё качества важны для преподавателя? На что вы сейчас смотрите?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Желание обучаться — чтобы человек воспринимал комментарии методиста, а не просто говорил «да-да-да», а действительно менялся после разбора занятий. Как я уже сказала — ответственность. И для нас важно, чтобы преподаватель не ел во время занятия, не танцевал, не слушал музыку. У нас все занятия проходят с включённой камерой.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Было такое, чтобы преподаватель танцевал во время урока?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Танцы — нет, а вот кушать во время занятия — да, такое бывало.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Печенье, камера и другие границы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если преподаватель хорош по всем параметрам, но есть какой-то один «косячок» — например, постоянно пьёт воду во время урока. Такой преподаватель вам подходит?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Очень интересный вопрос, и для меня это тоже опыт и возможность анализировать. Был у нас преподаватель, который постоянно трогал своё лицо и волосы на занятиях. Мы обсудили эту ситуацию — и расстались, этот момент нас не устроил. Возможно, это был просто стиль человека, но все, кто просмотрел это занятие со стороны, обратили на это внимание и сказали, что с этим действительно нужно что-то делать. Я оцениваю такие ситуации не только субъективно — привлекаю других людей, чтобы получить взгляд со стороны: насколько им было бы комфортно заниматься с таким преподавателем.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если, например, преподаватель пьёт чай с печеньем во время занятия — это создаёт какой-то «домашний уют»?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Потрогать лицо — можно, если это разовая история, мы все люди. Но когда это повторяется из занятия в занятие, у нас есть регламент. Мы готовы идти навстречу преподавателям и уважаем их индивидуальность, но пить чай с печеньем во время занятия — неважно, английский это или математика — уже переходит границу. Такие моменты обсуждаются, и либо преподаватель сокращает количество подобных случаев, либо мы принимаем решение о замене. Каждая ситуация рассматривается отдельно, не только на основании моего личного мнения.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Что ценят преподаватели в команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы предлагаете преподавателям стабильную зарплату, поддерживающую атмосферу, карьерный рост, бонусы и гибкий график. Что для них ценнее всего?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Думаю, гибкий график. А ещё преподаватели говорят, что им ценна сама методика и материалы, возможность использовать те наработки, которые у нас есть, и наша ориентированность на результат — что мы отрабатываем темы и даём возможность где-то отступить от плана ради конкретной темы. Ещё один фактор — конкурентоспособная ставка: последние преподаватели, которые пришли в команду, говорят, что оплата достойная и они готовы развиваться у нас дальше.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. Путешествия, масла и конференции</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я знаю, что вы увлекаетесь путешествиями и эфирными маслами и хотели бы посетить все лавандовые поля мира. Удаётся находить время на эти увлечения?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Насчёт лавандовых полей — очень надеюсь, что получится, но пока нет. Если возвращаться к Юрию Спиваку — он замечательный человек, потому что организует конференции в разных городах, что помогает совмещать сразу несколько вещей: профессиональный рост, развитие, общение с коллегами, пополнение знаний и одновременно реализацию мечты о путешествиях — как по городам России, так и за границей. Сейчас всё ограничивается рамками мест, где организуется конференция.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. Стратегия: от 200 до 1000 учеников</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы видите свою школу через три-пять лет?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Мы будем развиваться — помимо направлений, которые уже открыли, думаю, добавим дополнительные предметы. Хотелось бы открыть направление наставничества — передавать методику преподавания другим преподавателям обучения. Насколько хватит моих ресурсов, пока не знаю, потому что основным носителем этого направления буду я сама.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если в цифрах — сколько учеников, сколько преподавателей?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Сейчас план — 200 учеников. Через пять лет хотелось бы дойти до тысячи учеников и тридцати преподавателей.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А проблема, которая пока не решена, есть?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>На данный момент нет временных ресурсов нанять куратора преподавателей — мы сейчас сосредоточены на поиске других сотрудников. Это некритичная проблема, она решаема в определённые сроки. Мы сейчас развиваемся: перед сентябрём я набираю дополнительно преподавателей по английскому, математике и другим предметам, в том числе кураторов. Буду вводить отдельную единицу — куратора преподавателей, потому что именно эта часть занимает у меня больше всего времени. У нас уже есть отдел маркетинга и отдел продаж, и постепенно мы будем передавать туда мои обязанности.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t18">
+      <h3>18. Инвестор, продажи и маркетинг</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если бы к вам сейчас пришёл инвестор с идеальным предложением — что это должно быть за предложение?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Смотря, что он будет предлагать — деньги или компетенции. Деньги, конечно, нужны, но без компетенций они могут быть потрачены впустую. Поэтому если выбирать между деньгами и компетенциями, я выберу знания: даже с минимальными деньгами, но имея хорошего знающего специалиста, эти вложения можно превратить в хорошую прибыль.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как сейчас устроены продажи и маркетинг — какие каналы?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Основной канал — Avito, ещё мы получаем отклики через сервис «Шикари», который собирает заявки из Telegram и ВКонтакте, где люди запрашивают контакты репетиторов по определённым предметам. Но больше всего людей приходит по сарафанному радио.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если приходит человек и предлагает, например, настроить контекстную рекламу за процент — это интересное предложение?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Для меня это сомнительное предложение. Я предпочитаю обращаться к людям проверенным, за которыми кто-то стоит. В этом преимущество Юрия Спивака: если он порекомендует кого-то, я буду знать, что о нём есть рекомендации. Если приходит человек со стороны без рекомендаций в моём кругу общения — для меня это сомнительное предложение.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t19">
+      <h3>19. Совет себе в прошлое, книги и контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Какой бы совет вы дали себе, если бы могли вернуться в 2013 год, в школу Hello?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Не выходи замуж — тогда бы я быстрее развивалась в бизнесе и достигла бы того, чего достигла сейчас, раньше. А если серьёзно — я бы посоветовала себе с самого начала пойти на курс MBA и научиться именно строить бизнес, а не пытаться построить что-то, не имея знаний.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Кроме Юрия Спивака, есть книга или идея, которая на вас сильно повлияла?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Сложно сейчас вспомнить точно — но все рекомендации по чтению, которые давал Юрий Спивак, я прочитала. Из авторов иногда вспоминают Айн Рэнд. Ещё было какое-то предложение — что-то вроде «предложение, которое стоит сто тысяч долларов» — сейчас не вспомню автора.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как с вами связаться и на какие вопросы вы открыты?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Связаться можно в Telegram, в Max, в сообществе ВКонтакте. Я открыта ко всем вопросам — любым вопросам и предложениям, в рамках разумного.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
