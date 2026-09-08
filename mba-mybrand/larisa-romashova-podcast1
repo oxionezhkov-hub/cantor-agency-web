@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лариса Ромашова — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <!-- Аудитория этого выпуска — «для партнёров» (бизнес-история для предпринимателей), подписана в плашке в самом верху страницы. -->
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223670076?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="5 ПОДКАСТ Гость Лариса Ромашова"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223670076" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">От нуля до B2 за 5 месяцев. Лариса Ромашова — основательница онлайн-школы итальянского языка</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Выпускница консерватории по классу фортепиано построила онлайн-школу итальянского языка с методом «20 на 80» — 20% теории и 80% разговорной практики с самого первого урока. В выпуске — про отбор преподавателей, кейс, где ученица застряла на уровне A1 на год, а потом дошла до B2 за пять месяцев, и почему ученики всегда чувствуют разницу между педагогом «ради денег» и тем, кому действительно не всё равно.
+
+🔗 Написать Ларисе в Telegram: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, итальянский язык, EdTech, подкаст для предпринимателей, найм преподавателей, методика 20 на 80, подготовка к экзаменам, разговорная практика, Лариса Ромашова</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #итальянский #EdTech #найм #онлайншкола #языки</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/larisa-romashova-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">От консерватории до итальянского за 80% практики: как я построила школу, где говорят с первого урока</h1>
+
+      <p>У меня онлайн-школа итальянского языка. Большинство наших студентов — взрослые, но мы работаем и с детьми. Прежде всего мы приглашаем учеников для того, чтобы они разговорились в самые короткие сроки — но также готовим к экзаменам: вступительным в вузы, международным CELI, CILS, PLIDA на уровни B1, B2, C1 и, возможно, C2, а ещё к экзамену на гражданство. Мы помогаем и людям, которые уже живут в Италии и хотят наконец начать понимать итальянцев, и тем, кто из России — с запросом на путешествия, переезд, поступление в вуз, поиск работы или подтверждение квалификации.</p>
+
+      <h2>Что консерватория дала мне как педагогу</h2>
+      <p>Я окончила консерваторию по классу фортепиано и много лет была связана с музыкой. Именно там я поняла, что прежде всего я педагог: мне нравится погружаться в материю, сравнивать и анализировать все существующие методики и находить инструменты, которые помогают человеку не только достичь результата, но и полюбить сам предмет. Если это музыка — полюбить музыку и заниматься с удовольствием. Если это итальянский — полюбить итальянский так, чтобы заниматься с удовольствием.</p>
+
+      <h2>Кого я точно не возьму в команду</h2>
+      <p>Я очень внимательно отбираю свою команду. Даже если у человека прекрасное произношение и он сам носитель языка, для меня важно, чтобы педагог мог донести сложные темы простым языком — так, чтобы понял человек любого уровня. С другой стороны, чтобы с первых занятий была практика, а материалы были интересными, актуальными и мотивирующими. Немаловажный момент — включённость в ученика: важно, чтобы педагог был заинтересован его результатом, переживал за его достижения, включал всех учеников в процесс, если это группа. И, конечно, желание обучаться, быть открытым новым методикам — потому что я и сама обучаю педагогов, если им не хватает каких-то инструментов, чтобы привести ученика к цели.</p>
+
+      <h2>Как я обхожусь с форс-мажорами</h2>
+      <p>Мы все люди, и бывает, что урок прошёл не так, или преподаватель заболел. В таких случаях мы всегда встречаемся с педагогом индивидуально и разбираемся, что сработает и что можно сделать в этой ситуации. Если преподаватель не может провести занятие, у нас всегда есть замена — потому что у меня большой коллектив. Единственное условие — предупредить заранее, пусть даже за 10 минут, меня или администратора. И мы всегда решаем этот вопрос.</p>
+
+      <h2>Что я обещаю своей команде</h2>
+      <p>Я обещаю, и мне это несложно выполнить, — своевременную оплату труда, всегда в определённый день. И ещё я гарантирую, что педагог не останется один на один со студентом: всегда будет помощь и моя, и всей команды преподавателей, если не хватает материалов или пособий. У нас бывают очень высокие запросы — например, довести ученика от нуля до B2 за девять месяцев. Как это возможно? У меня есть такие кейсы, и я довожу даже за четыре с половиной месяца, потому что знаю, где и как ученику нужно пройти ту или иную тему. Поэтому я всегда открыта перед педагогами и всегда делюсь этим знанием — особенно на первых порах, если нужна помощь в адаптации к нашему методу.</p>
+
+      <h2>Метод 20 на 80: практика с первого урока</h2>
+      <p>Наш метод — это 20% теории и 80% разговорной практики, и это с самого первого урока. Очень часто встречаешься с вопросом: «я уже год учу итальянский, я уже год живу в Италии, а говорить так и не начал». Почему? Потому что язык дан нам для того, чтобы на нём говорить.</p>
+      <blockquote>Язык дан нам для того, чтобы на нём говорить. А чтобы на нём говорить, нужно на нём сразу практиковаться.</blockquote>
+      <p>Теория должна быть системной и структурной, но если она сразу же не применяется на практике, она либо забывается, либо человек начинает автоматически переводить в голове с русского — и уже не может сказать ни слова свободно. Поэтому лучше начинать с практики с первого занятия. У меня есть несколько инструментов, чтобы уже через два-три месяца человек общался на уровне мини-диалогов практически во всех общественных местах Италии.</p>
+
+      <h2>Как я обучаю преподавателей своей методике</h2>
+      <p>Многие педагоги, которые ко мне приходят, тоже начинают практиковать язык с первого занятия, потому что понимают, что это необходимо. Но если этого нет в их привычной методике, а они действительно хотят ею овладеть — я показываю свои видеозаписи собственных уроков, встречаюсь с педагогом и пошагово объясняю, как дать тот или иной материал и включить разговорную практику с первого занятия. Я раскладываю всё по элементам — важно, как структурируется урок. Я всегда сначала смотрю, как проводит уроки сам педагог, и подсвечиваю, что хотелось бы улучшить и добавить, чтобы привести ученика к результату.</p>
+
+      <h2>Свобода в рамках системы</h2>
+      <p>На первых ступенях обучения для меня важно, чтобы разговорная практика была связана с реальными ситуациями — лексика в баре, в супермаркете, передвижение по городу, в ресторане, темы, где ученик может рассказать о себе. У нас на курсах есть опция встречи с носителем языка — и если я даю педагогу диалог, который ученик должен озвучить с носителем через четыре урока, педагог может привести к этому результату по своим методикам, по своим учебникам. Если он приводит к результату — в этом вся свобода. Можно использовать что угодно, если ученик на занятиях удовлетворён, ему нравится, и он видит свои результаты.</p>
+
+      <h2>Команда из пяти: что ценят мои преподаватели</h2>
+      <p>У меня в команде уже пять преподавателей. Прежде всего они ценят, что у них всегда заполненное расписание — им не нужно искать учеников самим. Второе — все организационные вопросы, вся переписка с учениками, все переносы ложатся на плечи нашей команды администраторов и кураторов: педагоги только приходят и обучают. А ещё — постоянная поддержка: если у педагога случается форс-мажор в жизни, я помогаю пройти этот момент, потому что это человеческий фактор, и всякое может случиться. Ну и, конечно, зарплата всегда вовремя — они надёжно защищены. Всё это вместе — доверие ко мне и дружеский коллектив.</p>
+
+      <h2>Куда растут преподаватели в моей команде</h2>
+      <p>Рост всегда есть, потому что педагог для меня — прежде всего коллега. Коллега, который может перенять мой метод и стать куратором новых педагогов, обучать их — это рост в сторону старшего педагога, методиста. Также возможно взять на себя руководящую роль отдела учебной части. Такой рост у нас точно есть.</p>
+
+      <h2>От A1 за год до B2 за пять месяцев</h2>
+      <p>Одна из моих учениц год занималась с другим преподавателем и никак не могла преодолеть уровень A1. По моей системе за пять месяцев она дошла до B2. Прежде всего — заинтересованность и обучаемость: студентка прошла через групповой формат, а не индивидуальный, и здесь были приложены усилия двух педагогов — один русскоязычный, который объяснял грамматику и тут же её внедрял, и носитель языка, с которым, общаясь, она смогла по-настоящему разговориться. Она до сих пор занимается у этого носителя после сдачи экзамена. При этом даже носитель понимает мою систему и принимает её: если стоит задача внедрить, скажем, определённую глагольную форму в практику, я объясняю, как это сделать, или носитель сам находит материалы — но делает это ровно так, как я говорю. Если носитель прислушивается, результат обязательно получится.</p>
+
+      <h2>Разница между «ради денег» и неравнодушными — и как её видят ученики</h2>
+      <p>Я встречала педагогов, которые приходят в эту работу только ради денег и не заинтересованы в учениках — знаю, что ко мне приходят клиенты именно от таких педагогов и рассказывают об этом. В моей команде такому педагогу не по пути. Ученики не просто чувствуют разницу — они её видят. Была девушка, которая целый год проходила уровень A1 с двумя педагогами, и они говорили ей: «вы на уровне B2, идите сдавайте экзамен». А она на итальянском сказать ничего не может. Она уходила от одного педагога к другому, и второй тоже говорил «идите сдавайте» или начинал пропускать занятия — хотя ей было жизненно важно сдать этот экзамен. В итоге она попала ко мне с уверенностью, что знает язык на уровне B2. Когда я провела с ней тест, оказалось, что это едва начало уровня A2, а в теории она вообще не может сказать ни одного слова.</p>
+
+      <h2>Как попасть в мою команду</h2>
+      <p>Если человек закончил вуз и владеет языком, первый отбор проходит через видеопрезентацию на итальянском — через неё я вижу произношение, готовность рассказать о себе и владение разговорной речью. Дальше идёт вторая часть: мы встречаемся, разговариваем, я смотрю, на какие материалы он опирается. Для меня важно, чтобы педагог опирался больше на итальянские учебники — я не всем русскоязычным учебникам доверяю, это моя личная позиция. Если человек ведёт занятия только по одному учебнику, но готов учиться и взять то, что я ему предлагаю, — я беру такого педагога в команду и готова делиться своим опытом.</p>
+      <p>Чтобы попасть ко мне в команду, можно написать в Telegram, Instagram, ВКонтакте, WhatsApp или найти меня на Профи.ру — я с удовольствием рассмотрю кандидатуру и поделюсь всей поддержкой, которую только можно получить.</p>
+
+      <p class="art-signature">Лариса Ромашова,<br>основательница онлайн-школы итальянского языка</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про метод 20 на 80</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🗣 «Я год учу итальянский, а говорить так и не начал». Знакомо?</h3>
+        <p>Мне это говорят постоянно. Причём не только те, кто учится по учебникам дома, — то же самое рассказывают люди, которые уже год живут в Италии.</p>
+        <p>Причина всегда одна: теория есть, а практики — нет.</p>
+        <h4>Как это работает на самом деле</h4>
+        <p>Теория должна быть системной и структурной, это правда. Но если она сразу же не применяется на практике, происходит одно из двух: она либо забывается, либо человек начинает автоматически переводить в голове с русского — и в моменте разговора уже не может сказать ни слова свободно, потому что в голове звучит слишком много правил.</p>
+        <h4>Наш метод — 20 на 80</h4>
+        <p>20% теории и 80% разговорной практики, и это с самого первого урока. У меня есть несколько конкретных инструментов, благодаря которым уже через два-три месяца человек спокойно общается на уровне мини-диалогов практически во всех общественных местах Италии — в баре, в супермаркете, в разговоре о себе.</p>
+        <blockquote>Язык дан нам для того, чтобы на нём говорить. А чтобы на нём говорить, нужно на нём сразу практиковаться.</blockquote>
+        <p>🇮🇹 Если вы год «учите» и до сих пор не говорите — дело не в вас. Дело в методе.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор преподавателей</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>🚫 Даже если кандидат — носитель языка с идеальным произношением, я могу его не взять. Вот почему</h3>
+        <p>Я очень внимательно отбираю свою команду, и произношение или диплом — далеко не главные критерии.</p>
+        <h4>Что для меня действительно важно</h4>
+        <p>Первое — умение донести сложную тему простым языком, так, чтобы понял человек любого уровня. Второе — практика с первых занятий, а не «сначала грамматика, потом когда-нибудь заговорим». Третье — включённость: педагог должен переживать за результат ученика, а не просто вести урок от звонка до звонка.</p>
+        <h4>И ещё один пункт, о котором редко говорят</h4>
+        <p>Готовность учиться самому. Я и обучаю педагогов, если им не хватает каких-то инструментов, чтобы довести ученика до цели. И если человек закрыт для новых методик — не важно, насколько хорошо он говорит по-итальянски, — в моей команде ему не по пути.</p>
+        <p>💬 Носитель языка и хороший педагог — не одно и то же. Согласны?</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс ученицы</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>📈 Год с двумя преподавателями — уровень A1. Пять месяцев по нашей системе — уровень B2</h3>
+        <p>Расскажу реальную историю одной из моих учениц.</p>
+        <h4>Что было до нас</h4>
+        <p>Целый год девушка занималась итальянским с двумя преподавателями подряд. Оба в какой-то момент сказали ей: «Вы уже на уровне B2, идите сдавайте экзамен». А на деле она не могла сказать ни одного слова свободно. Ей было жизненно важно сдать экзамен, но педагоги либо переоценивали её уровень, либо начинали пропускать занятия.</p>
+        <h4>Что показал реальный тест</h4>
+        <p>Когда она пришла ко мне с уверенностью, что знает язык на B2, я провела тест — и оказалось, что это едва начало A2, а разговаривать она вообще не может.</p>
+        <h4>Что изменилось за 5 месяцев</h4>
+        <p>Мы перевели её в групповой формат с двумя педагогами одновременно: русскоязычный объяснял грамматику и тут же помогал внедрить её в речь, а носитель языка давал живую разговорную практику. Через пять месяцев она сдала экзамен на B2 — и до сих пор продолжает заниматься у своего преподавателя-носителя, потому что реально хочет говорить дальше.</p>
+        <p>🎯 Дело не в количестве лет изучения языка. Дело в том, устроено ли обучение вокруг практики или вокруг теории.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про поддержку команды</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🛡 Мой преподаватель никогда не остаётся один на один со сложной ситуацией. Вот что я гарантирую своей команде</h3>
+        <p>Я руковожу командой преподавателей и точно знаю, что легче всего обещать — и сложнее всего выполнять.</p>
+        <h4>Что несложно выполнить</h4>
+        <p>Своевременная зарплата, всегда в определённый день. Это база, и здесь не должно быть исключений.</p>
+        <h4>А вот что действительно важно</h4>
+        <p>Гарантия, что педагог не останется один на один со студентом. Если не хватает материалов, пособий, если что-то не получается методически — мы решаем это командой. У нас бывают очень высокие запросы от учеников: например, довести человека от нуля до B2 за девять месяцев. У меня есть кейсы, где это удавалось даже за четыре с половиной. Я знаю, где и как ученику нужно пройти ту или иную тему — и делюсь этим знанием с педагогом, а не оставляю его разбираться в одиночку.</p>
+        <p>Если у преподавателя случается форс-мажор — заболел, не успел подготовиться — мы всегда встречаемся и разбираем ситуацию вместе, а замену находим быстро: единственное условие — предупредить заранее, пусть даже за 10 минут.</p>
+        <p>🤝 Педагог, за спиной которого стоит команда, работает совсем иначе, чем педагог, оставленный один на один с проблемой.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про мотивацию преподавателей</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>💬 Ученики не просто чувствуют разницу между педагогом «ради денег» и неравнодушным — они её видят</h3>
+        <p>Мне часто задают вопрос: правда ли ученики отличают преподавателя, которому важен только заработок, от того, кому действительно не всё равно?</p>
+        <p>Отвечаю честно: да, и разница видна почти сразу.</p>
+        <h4>Я встречала таких педагогов</h4>
+        <p>Тех, кто приходит в профессию только ради денег и совершенно не заинтересован в результате ученика. Ко мне регулярно приходят клиенты именно от таких преподавателей и рассказывают об этом. В моей команде такому человеку не по пути.</p>
+        <h4>Как это выглядит на практике</h4>
+        <p>Была девушка, которая целый год занималась у двух разных педагогов на уровне A1 — и оба говорили ей «вы уже на B2, идите сдавайте». Один начинал пропускать занятия, другой просто не хотел разбираться, почему прогресса нет. А ей было жизненно важно сдать этот экзамен для переезда.</p>
+        <p>Неравнодушный педагог не отпустит ученика сдавать экзамен, если знает, что тот не готов, — он честно скажет, сколько ещё нужно, и будет рядом до результата.</p>
+        <p>❤️ Ученики платят не только за уроки. Они платят за то, чтобы кому-то было не всё равно, дойдут ли они до цели.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/larisa-romashova-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Онлайн-школа итальянского: для кого и зачем</a></li>
+        <li><a href="#t2">2. От консерватории к преподаванию языков</a></li>
+        <li><a href="#t3">3. Кого точно не возьмёт в команду</a></li>
+        <li><a href="#t4">4. Как реагирует на форс-мажоры</a></li>
+        <li><a href="#t5">5. Что обещает команде</a></li>
+        <li><a href="#t6">6. Метод 20 на 80: практика с первого урока</a></li>
+        <li><a href="#t7">7. Как обучает преподавателей методике</a></li>
+        <li><a href="#t8">8. Свобода преподавателя в рамках системы</a></li>
+        <li><a href="#t9">9. Команда из пяти преподавателей: что они ценят</a></li>
+        <li><a href="#t10">10. Карьерный рост в команде</a></li>
+        <li><a href="#t11">11. Кейс: от A1 за год до B2 за 5 месяцев</a></li>
+        <li><a href="#t12">12. Разница между «ради денег» и неравнодушными</a></li>
+        <li><a href="#t13">13. Как стать преподавателем в команде</a></li>
+        <li><a href="#t14">14. Контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Онлайн-школа итальянского: для кого и зачем</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Для тех, кто с вами не знаком, можете коротко рассказать, чем вы занимаетесь? И немного про вашу школу итальянского языка?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>У меня онлайн-школа итальянского языка. И самое главное, что у нас есть студенты в основном взрослые, но также мы работаем и с детьми. Наша школа прежде всего приглашает студентов для того, чтобы они научились разговориться, то есть заговорить в самые короткие временные отрезки, но также подготовиться к экзаменам — экзаменам в вузы для поступления, сдаче международных экзаменов CELI, CILS, PLIDA на уровень B1, B2, C1 и, возможно, C2. А также сдать на гражданство.</p>
+        <p>То есть мы полностью помогаем людям, которые проживают уже в Италии и хотят разговориться, научиться говорить и понимать итальянцев. Но также работаем со студентами из России, которые хотят путешествовать по Италии, а также с запросом переезда и поступления в вузы, поиска работы или подтверждения своей квалификации.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. От консерватории к преподаванию языков</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Насколько мне известно, вы ещё окончили консерваторию по классу фортепиано и много лет были связаны непосредственно с музыкой. А что именно из этого опыта вы применяете сегодня, особенно когда управляете командой преподавателей по языку?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Прежде всего, в музыке я поняла, что я прежде всего педагог. То есть мне нравится очень погружаться в материю, в предмет. Сравнивать, проводить анализ всех методик, которые существуют, и находить те инструменты, которые помогают не только человеку достичь результата, но и полюбить тот предмет, который изучают. Это музыка — полюбить музыку и заниматься с удовольствием на занятиях. Если это итальянский — это полюбить итальянский так, чтобы заниматься с удовольствием итальянским языком.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Кого точно не возьмёт в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если совсем просто, то какого человека вы точно не возьмёте в команду, даже если он прекрасно знает итальянский язык?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Да, я, допустим, очень внимательно отбираю свою команду. Потому что первое, что мне очень важно, — даже если произношение хорошее, грамотный, даже сам носитель, — но мне очень важно, чтобы педагог мог донести информацию простым языком, сложные темы. Мог так объяснить, чтобы человек понял, любого уровня человек. И с другой стороны, чтобы с первых занятий была практика. Немаловажно, чтобы материалы были интересны, актуальны и мотивировали ученика к обучению.</p>
+        <p>Ну и немаловажный тоже вопрос — это именно включённость в ученика. Очень важно, чтобы педагог был заинтересован результатом ученика, переживал за его достижения, не был неравнодушен к его результатам. И, конечно же, включал всех-всех учеников, если мы говорим о группе, в процесс.</p>
+        <p>А также ещё момент есть, потому что я ещё обучаю, я помогаю, если не хватает каких-то инструментов, чтобы привести ученика к его цели или к каким-то определённым важным для него моментам, которые ему нужно разъяснить. Я обучаю педагогов. И вот желание обучаться, быть открытым к новым методикам, к новому обучению, внедрению этого в свой учебный процесс — то это вот те пункты, которые я всегда отсматриваю, когда смотрю и отбираю в свою команду педагогов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Как реагирует на форс-мажоры</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В целом, мы все люди, и бывает такое, что случаются какие-то сложные ситуации: человек может заболеть, не успел подготовиться или урок прошёл не так. Как вы реагируете на такие моменты?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Ну, прежде всего, мы всегда встречаемся и обсуждаем, анализируем, если что-то не получилось на уроке. То есть у нас всегда есть такая индивидуальная встреча с педагогом, и мы пытаемся разобраться, как в этой ситуации можно реагировать, что действительно сработает и что мы можем в этой ситуации сделать.</p>
+        <p>А если педагог, конечно, может и заболеть, и пропустить — то у нас всегда есть замена, во-первых, потому что у меня большой коллектив, и всегда есть тот, кто может заменить педагога. Единственное условие — чтобы предупреждали заранее, если это даже за 10 минут, что не может человек провести занятие. То, конечно же, в этом случае тоже нужно предупредить сразу меня, администратора. И мы всегда решим этот вопрос.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Что обещает команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А вот непосредственно как руководитель, что именно вы обещаете своей команде и, наверное, что сложнее всего выполнить из этих обещаний?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Я обещаю, и это несложно выполнить, — это, конечно же, вовремя оплата зарплаты, она всегда вовремя в определённый день. И также я гарантирую, что педагог не останется один на один со студентом. Потому что всегда будет помощь не только моя, но и команды наших педагогов, если не хватает материалов, не хватает каких-то пособий. Если не получается что-то, мы всегда открыто делимся, пытаемся командой решить любые вопросы, которые связаны с учебным процессом или связаны даже с тем, как вести ученика к его цели.</p>
+        <p>Потому что бывают у нас очень высокие запросы — допустим, довести от нуля до B2 за девять месяцев. Как это возможно? Поскольку у меня такие кейсы есть, я довожу даже за четыре с половиной месяца. Я знаю, где и как, что нужно ученику, где и как ему нужно пройти ту или иную тему и как его подготовить к этому уровню. Поэтому я всегда открыта перед педагогами, я всегда делюсь, и у меня всегда есть такой момент обучения на первых порах, если нужно помочь в плане адаптации к нашему методу.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Метод 20 на 80: практика с первого урока</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я также знаю о том, что ваш метод — это 20 на 80, то есть у вас идёт 20% теории и 80% на разговорную практику акцент. Причём это идёт с самого первого урока, правильно?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Да-да, потому что очень часто встречаешься с вопросом, что приходят ученики и говорят: «Я уже год учу итальянский, или я живу уже год в Италии, а говорить до сих пор не начал». Почему? Потому что на самом деле язык для того и дан нам, иностранный, чтобы на нём говорить. А чтобы на нём говорить, нужно на нём сразу практиковаться.</p>
+        <blockquote>Язык дан нам для того, чтобы на нём говорить. А чтобы на нём говорить, нужно на нём сразу практиковаться.</blockquote>
+        <p>То есть, если я беру теорию — теория должна быть системная, структурная, но если она тут же не применяется в практике, она может либо забыться, либо она отрабатывается, но человек уже автоматически начинает переводить на свой язык эту практику. Он пытается сказать, а у него уже много теории звучит в голове. Поэтому лучше всего начинать с практики с первого занятия. У меня несколько инструментов есть, чтобы человек уже через два-три месяца говорил, общался на уровне мини-диалогов практически во всех общественных местах, допустим, в Италии, если он находится.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Как обучает преподавателей методике</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как вы помогаете своим преподавателям войти вот в эту самую методику? Ведь это тоже не так, как учат обычно в школе.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Вы знаете, на самом деле я очень много педагогов встречаю, которые тоже с первого занятия начинают практиковать язык, потому что понимают, что это необходимо. Если этого нет в методике, но педагог действительно хочет ею овладеть, то это, конечно, мои видеозаписи моих уроков, это мои встречи с педагогом, и когда я пошагово объясняю, как можно дать тот или иной материал и включить с первого занятия именно разговорную практику. Это всё я раскладываю прямо по элементам.</p>
+        <p>Ещё, конечно, немаловажно, как структурируется урок. Я всегда, когда просматриваю уроки педагога, сначала рассматриваю, как проводит сам педагог уроки. И я ему подсвечиваю, что хотелось бы улучшить, что можно было бы добавить, и как можно привести к результату ученика.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Свобода преподавателя в рамках системы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А в рамках вот этой вашей системы насколько много свободы у преподавателя? То есть по поводу выбора материалов, что он должен говорить?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Ну вот по поводу материалов — для меня очень важно, чтобы, если мы на первых ступенях обучаем ученика, то это, конечно же, разговорная практика, связанная с лексикой: допустим, в баре, в супермаркете, передвижение по городу, в ресторане. То есть вот эти темы, с которыми встретится ученик действительно в реальности, и где ученик может рассказывать о себе.</p>
+        <p>Потому что на наших курсах также существует такая опция — это встреча с носителем языка. И поэтому, если я дам педагогу диалог, который должен быть озвучен носителем на его группе через четыре урока, и педагог может к этому результату привести по своим методикам, по своим учебникам — если он приводит к этому результату, то в этом вся свобода. Пожалуйста, если можете привести к этому результату учеников, можете использовать всё, что угодно. Потому что для меня важно, что ученик на занятиях удовлетворён, ему нравится, и он видит свои результаты.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Команда из пяти преподавателей: что они ценят</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Насколько мне известно, у вас в команде уже пять преподавателей. И, наверное, такой вопрос: а что именно преподаватели ценят в вашей работе? Что им больше всего нравится — атмосфера, профессиональный рост, поддержка или оплата труда?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Да, прежде всего, это то, что у них всегда есть заполненное расписание. То есть им не нужно искать учеников. Второе, конечно же, — это то, что это онлайн, и все организационные вопросы, все переписки с учениками, все переносы, все сложные вопросы, которые встают между учеником и обучением, — они все ложатся на плечи нашей организационной команды, команды администраторов и кураторов. Поэтому педагоги — они только приходят, обучают, ведут учеников, занимаются своим профессиональным делом. Всё, что связано с перепиской, организацией расписания, это всё ложится на плечи школы.</p>
+        <p>А также всё время поддержка. Всё время понимание, если у педагога что-то случается форс-мажорное — действительно, и это действительно, я в этот момент очень помогаю педагогам пройти какие-то моменты в жизни, потому что, конечно, это человеческий фактор, человеческие жизни, и бывает, всё может случиться. И поддержку эту педагог всегда получает. Ну и, конечно, оплата труда — она вовремя, это тоже они всегда знают, что они получат свою зарплату вовремя. То есть в этом они тоже надёжно защищены. И также доверие ко мне, дружеский коллектив, потому что действительно поддержка идёт не только со стороны меня, но также со стороны администрации, которая может и найти ученика, не пришедшего вовремя на занятия, и помочь разобраться в любых сложных ситуациях.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Карьерный рост в команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А вот к вам пришёл преподаватель и начинает у вас работать. Какие его карьерные перспективы? То есть куда он может расти дальше в вашей команде?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Конечно, рост всегда есть. Потому что педагог — это, прежде всего, мой коллега. И коллега, который может взять и перенять мой метод и стать даже куратором педагогов, новых педагогов обучать — это, конечно же, рост в том, чтобы становиться старшим педагогом, становиться методистом. Также возможно взять руководящую роль отдела, отдела учебной части. Конечно, есть такой рост.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Кейс: от A1 за год до B2 за 5 месяцев</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Одна из ваших учениц год занималась с другим преподавателем и никак не могла преодолеть уровень A1. А по вашей системе за 5 месяцев она дошла до B2. Что именно в подходе преподавателей даёт возможность для такого вот скачка?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Ну, прежде всего, заинтересованность и обучаемость. Потому что, конечно же, эта студентка была проведена через группы. И что значит? Это не индивидуальным способом она дошла за 5 месяцев, а именно групповым. И там были приложены усилия двух педагогов. Один педагог русскоязычный, который мог объяснить грамматику и тут же внедрять её. И с другой стороны — это была носитель, с которой ученица, общаясь, могла разговориться. И она на самом деле, сдав экзамен, до сих пор хочет учиться и занимается сейчас, вот она занимается у неё.</p>
+        <p>Но сам педагог, даже носитель, он понимает мою систему, он её принимает. И то, что я даже носителю объясняю, как нужно вести ученика, этот носитель — он берёт и воплощает это в жизнь. Конечно же, он тоже сам работает, он сам находит материалы. Потому что если стоит задача, нам нужно, допустим, есть такой термин — кондиционале, вот эту вот форму глагольную использовать в практике, — и я показываю, как можно сделать, или не показываю, сам носитель может найти, как это сделать. Он находит материалы, делает ровно так, как я ему говорю, какие способы, инструменты методические можно использовать. И если это прислушивается носитель, то, конечно, этот результат может получиться. И естественно, получится.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Разница между «ради денег» и неравнодушными</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как вы думаете, вот ученики, которые начинают заниматься с преподавателями, — они чувствуют разницу между теми, кто пришёл в эту работу только ради денег, или тем, кому действительно не всё равно и есть вот действительно это желание обучать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>А вы знаете, если сказать, как это в действительности, — я таких педагогов встречала, которые приходят ради именно денег и не заинтересованы в учениках. Я таких встречала. И я знаю, что ко мне приходят клиенты от таких педагогов и рассказывают. Но в моей команде такому педагогу, ну, нам как бы не по пути. И поэтому я скажу так, что, конечно, ученики чувствуют, не только чувствуют, но они видят.</p>
+        <p>Вот та же девушка, которая целый год с двумя педагогами проходила уровень A1. Они ей говорили, что вы на уровне B2 и вы можете сдать экзамен, идите сдавайте. А она говорит: «Так я не говорю. Я же не говорю, как так я пойду». Она оставляет одного педагога, идёт к другому. И тот ей тоже говорит: «Да идите сдавайте!» — или пропускает, начинает пропускать. А ей жизненно важно сдать этот экзамен. И вот она ко мне попадает с уверенностью, что она знает на уровне B2. Но когда я с ней начинаю проводить тест, оказывается, что это не B2, а начало уровня A2. А в теории она вообще говорить не может, она не может сказать даже одного слова.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Как стать преподавателем в команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если человек захочет попробовать себя в роли преподавателя итальянского языка у вас — что он должен сделать в первую очередь?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Ну, в первую очередь, если человек действительно закончил вуз, владеет языком, — первый отбор происходит через видеопрезентацию на итальянском языке. Потому что через видеопрезентацию я вижу произношение и вижу, насколько человек готов именно рассказывать о себе, и также насколько он владеет разговорной речью. То есть я смотрю его уровень прежде всего и грамотность.</p>
+        <p>А потом, конечно, идёт уже вторая часть отбора, когда я смотрю его занятия. Ну, мы с ним встречаемся, мы с ним разговариваем, я смотрю, на какие он опирается материалы. Потому что для меня важно, чтобы человек ещё опирался больше на итальянские учебники, потому что я не всем русским учебникам доверяю — имеется в виду учебникам русских авторов, это моя позиция просто. И поэтому для меня очень важно, как ведёт педагог. Если он ведёт только по одному учебнику, но готов к обучению и взять то, что я ему дам, то в этот момент, конечно, я беру педагога, и я готова с ним делиться, если он тоже готов взять то, что я ему предлагаю.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ну, тогда, наверное, ещё такой вопрос: кому точно стоит вам написать, если он, посмотрев этот подкаст, захотел с вами сотрудничать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Прежде всего — для того чтобы попасть ко мне в команду, нужно написать мне либо в Telegram, либо в Instagram, либо ВКонтакте меня можно найти, либо в WhatsApp. Да, по любой связи можно со мной связаться, а также на Профи.ру можно меня найти, если совсем нет возможности меня найти. Но всё это есть, я думаю, все мои контакты они все здесь есть, и поэтому можно смело писать. Я с удовольствием рассмотрю кандидатуру и с удовольствием поделюсь моим опытом, и вся поддержка, которую можете получить, — вы её получите.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Хорошо. Спасибо большое вам за столь открытую беседу. Мне было с вами очень приятно, Лариса, пообщаться. Я надеюсь, кто нас тоже послушает, обязательно вам напишут и зададут свои вопросы. На этом я вас благодарю и, наверное, желаю вам хорошего дня и до связи.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Лариса</div><div class="tr-txt">
+        <p>Спасибо. Всего доброго. Спасибо. До свидания.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
