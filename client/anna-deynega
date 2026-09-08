@@ -1497,6 +1497,8 @@
   })();
 
   // Form submit
+  const API_BASE = 'https://functions.yandexcloud.net/d4e5n0knl6sluatppuhu';
+
   function submitForm() {
     const fields = ['student_name','student_last','status','subject','phone'];
     let valid = true;
@@ -1524,12 +1526,44 @@
       alert('Пожалуйста, заполните все обязательные поля и подтвердите согласие на обработку данных.');
       return;
     }
-    const toast = document.getElementById('toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 4000);
-    document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
-    document.querySelectorAll('#form select').forEach(resetCustomSelect);
-    consent.checked = false;
+
+    const submitBtn = document.querySelector('#form .form-submit button');
+    const payload = {
+      source: 'anna-deynega',
+      fields: {
+        'Имя ученика': document.getElementById('student_name').value.trim(),
+        'Фамилия ученика': document.getElementById('student_last').value.trim(),
+        'Кто занимается': document.getElementById('status').selectedOptions[0]?.textContent || document.getElementById('status').value,
+        'Предмет': document.getElementById('subject').selectedOptions[0]?.textContent || document.getElementById('subject').value,
+        'Цель и описание ситуации': document.getElementById('goal').value.trim(),
+        'Имя родителя': document.getElementById('parent_name').value.trim(),
+        'Телефон': document.getElementById('phone').value.trim(),
+        'Email': document.getElementById('email').value.trim(),
+      },
+    };
+
+    if (submitBtn) submitBtn.disabled = true;
+
+    fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('request_failed');
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+        document.querySelectorAll('#form input, #form textarea').forEach(el => el.value = '');
+        document.querySelectorAll('#form select').forEach(resetCustomSelect);
+        consent.checked = false;
+      })
+      .catch(() => {
+        alert('Не удалось отправить заявку. Попробуйте ещё раз, пожалуйста, или напишите в Telegram.');
+      })
+      .finally(() => {
+        if (submitBtn) submitBtn.disabled = false;
+      });
   }
 </script>
 </body>
