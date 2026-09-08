@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Станислав Морозов — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223261628?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Станислав Морозов - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223261628" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">От инженера-программиста до основателя онлайн-школы. Станислав Морозов — путь через математику, психологию и предпринимательство</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Как инженер-программист с диплом математика-преподавателя построил онлайн-школу «Интеграл возможностей» — и почему решающим оказался вопрос «кто придёт ко мне на могилку». В выпуске — про переход из репетиторства в онлайн, отбор преподавателей через эмпатию, кейсы учеников, которые дошли до МГИМО и 98 баллов на ЕГЭ, и про то, каким должен быть идеальный партнёр по бизнесу.
+
+🔗 Школа «Интеграл возможностей»: [ссылка]
+🔗 Написать Станиславу: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, подкаст для предпринимателей, репетиторство, подготовка к ЕГЭ, найм преподавателей, онлайн-образование, управление школой, Станислав Морозов</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #онлайншкола #ЕГЭ #EdTech #репетиторство #найм</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/stanislav-morozov-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Кто придёт на мою могилку? Вопрос, который привёл инженера-программиста к созданию онлайн-школы</h1>
+
+      <p>По диплому я математик-преподаватель. Но до того, как построить онлайн-школу «Интеграл возможностей», я успел поработать инженером-программистом в «Черномортранснефти», вести свой бизнес в сфере структурированных кабельных систем и много лет заниматься репетиторством. Дорога получилась не прямой — а на каком-то этапе она вообще потребовала одного очень неудобного вопроса самому себе.</p>
+
+      <h2>Математическая школа, которая дала путёвку в жизнь</h2>
+      <p>Я поступил в вуз, который изначально был педагогическим и техническим одновременно, — и поступил туда не по расчёту, а потому что окончил математическую школу. Меня зачислили превентивно, по результатам весенних экзаменов, ещё до основного набора. То есть математическая школа сама дала мне путёвку на математический факультет, а дальше это уже развилось в специальность, записанную в дипломе.</p>
+
+      <h2>Путь до точки перелома</h2>
+      <p>За карьеру я перепробовал много разных специальностей и даже профессий: инженер, предприниматель, репетитор. Каждый раз, когда вставал выбор — чем заниматься дальше, — вопрос был одним и тем же: что мне на самом деле хочется делать, что комфортнее, что вдохновляет и от чего я меньше устаю.</p>
+
+      <h2>Вопрос, который всё изменил</h2>
+      <p>В какой-то момент у меня случился настоящий переломный момент — что-то вроде кризиса среднего возраста. Я подумал: если однажды я перейду в мир иной, кто придёт ко мне на могилку и что напишет на моём камушке? За что мне будут благодарны?</p>
+      <blockquote>А кто придёт ко мне на могилку и что напишет на моём камушке? За что же мне будут благодарны?</blockquote>
+      <p>Это заставило меня задуматься по-настоящему: а кому благодарен я сам? Кто повлиял на мою жизнь? И я понял, что единственный, кого я могу смело поставить во главу угла, — это мой учитель математики в математической школе, Валерий Александрович Гусаков. Не начальник, не партнёр по бизнесу — учитель.</p>
+
+      <h2>Можно ли зарабатывать на образовании</h2>
+      <p>Мне часто задают вопрос: разве обучение — это не что-то на уровне общественного блага, вроде медицины, а значит, зарабатывать на нём странно? Я не вижу здесь противоречия. Образовательная деятельность — это деятельность, за которую берут деньги. Моя онлайн-школа — это коммерческая образовательная деятельность, которая по сути дополняет ту некоммерческую, которую ведёт государство.</p>
+      <p>Я сам успел поработать в школе, в классе с 35 учениками, и знаю эту конъюнктуру изнутри. Учитель получает зарплату и приходит в класс, где все ученики абсолютно разные, — и перед ним встаёт выбор: справляться с этой задачей или нет. А справляются с ней единицы, и те, кто умеет, в школах надолго не задерживаются. Система несовершенна, и это несовершенство кому-то приходится компенсировать.</p>
+
+      <h2>Кого компенсирует моя школа</h2>
+      <p>Если смотреть с точки зрения коммерции — да, мой бизнес компенсирует несовершенство системы: репетиторы онлайн-школы получают деньги за то, что дают образование, которое не может дать школа. Но есть и миссия, которая уже не столько про саму школьную программу, сколько про психологию, семейное образование, социум учеников, их пубертат.</p>
+      <p>Часто ученики даже в одиннадцатом классе не знают, куда пойдут работать и какое образование хотят получать. Отчасти миссия моей школы в том, чтобы провести ученика из точки А, где он ещё инфантильный подросток, мыслящий чипсами и «Кока-Колой», в ту профессию, о которой он ещё не догадывается, — показать ему эту траекторию и выстроить маршрут.</p>
+
+      <h2>33 ученика и один я</h2>
+      <p>Когда я только пришёл в школу, у меня были амбиции — проекция моего учителя Гусакова, который умел транслировать математику на весь класс из совершенно разных детей, и каждый из нас в итоге поступил в вуз. Мне казалось, что я тоже так смогу: подобрать подход к каждому, объяснить с одной стороны, с другой, с третьей. Но оказалось, что на больших числах это не работает.</p>
+      <p>Когда тебе дают классы с абсолютно разными учениками, это заставляет задуматься: почему ты не можешь достучаться до кого-то, как бы ни старался? Оказалось, есть психологические блоки — дискалькуляция, математическая неуверенность, разные психотипы.</p>
+
+      <h2>Три года на психологию, о которых не жалею</h2>
+      <p>Чтобы не просто потешить амбиции «я и тебя научу, и вас всех вылечу», а по-настоящему разобраться, я потратил ещё три года на изучение психотипов, диагностики и различных подходов. Но понял, что монетизировать психологию — это не моё: вести консультации или устраивать психологические сессии — не моё призвание.</p>
+      <p>Зато это помогло мне понять, какой подход нужен конкретному ученику: где не надо давить, где нужно действовать на мягких лапках, а где, наоборот, — быть строгим и требовательным.</p>
+
+      <h2>Ученик, которого я узнавал только по голосу</h2>
+      <p>Были моменты, когда мне даже не важно было видеть ученика — достаточно было его слышать. Я настолько адаптировался к онлайну, что мог заниматься с учеником два года и видеть его только на диагностике: чтобы не грузить трафик, мы выключали видео, и я вёл занятие у доски, слыша только голос — «так, Коля, вот это мне реши».</p>
+      <p>Был занятный случай: иду с супругой по гипермаркету, навстречу бежит парень: «Станислав Валерьевич!» — а я не понимаю, кто это. Оказалось, это Коля, мой ученик, — я узнал его только по голосу.</p>
+
+      <h2>Почему я перестал ограничивать себя оффлайном</h2>
+      <p>Когда я решил заниматься только репетиторством, самый широкий спрос тогда был на очные занятия — личный контакт, физиогномика, реакция ребёнка в метре от тебя действительно давали дополнительные преференции в поиске решений. Но со временем рынок стал развиваться, и онлайн начал приходить повсеместно.</p>
+      <p>Повышая собственную квалификацию, я всё чаще покупал курсы именно в онлайне — и понял, что то, что мне нужно, не всегда под рукой и не всегда в пешей доступности. Тогда я задумался: а почему я ограничиваю себя только оффлайн-занятиями и только теми учениками, что рядом? Я понял, что могу быть полезен не только своему району — я могу обучить любого человека онлайн.</p>
+
+      <h2>Как я клонирую себя через методику</h2>
+      <p>Онлайн-школа появилась, когда я понял, что одного меня уже мало: спрос стал превышать мои возможности, я перегрузил себя полностью. И тогда я задумался, в чём моя уникальность — наверное, в методике, в подходе, в требованиях, которые я могу зафиксировать для своего преподавателя. То есть я могу «перенести себя» — сделать что-то вроде репродукции, если у человека есть база и есть то, что мне в нём нравится.</p>
+      <p>Методика — это на самом деле не что-то неуловимое, а набор задач и критериев, как эти задачи подавать. Есть задачи из школьных учебников, а есть нестандартные — те, что когда-то помогали мне в математической школе, задачи на логику. Есть и понимание модели урока: начало занятия, фиксация внимания, прогрев, разбор примера, рефлексия — когда я вижу, что человек может решить сам, — и закрепление материала. Самое главное — передать эту модель преподавателю и проконтролировать, что он с ней справляется.</p>
+
+      <h2>Каким должен быть мой преподаватель</h2>
+      <p>Сначала я смотрю на исходное образование — если это молодой преподаватель, сдал ли он сам предмет. Дальше смотрю, насколько он эмпатичен, потому что в любой моей модели уроков важны эмпатия и позитив — я не люблю занудства. Если человек позитивный, у него горят глаза, он уже знает математику, но ему не хватает структуры и модели уроков — пробуем и смотрим, заходит или нет.</p>
+      <p>Одно дело — уровень когнитивных способностей: быстро схватывает, легко усваивает. Другое дело — человек любит математику, горит, и у него есть преподавательская жилка: он любит рассказывать так, чтобы его поняли. Я выбираю педагогов среди репетиторов, а не просто отличников, потому что бывают люди, которые прекрасно понимают математику, но они интроверты, — и это не к нам. А если человек экстраверт, эмпатичен и позитивен, в таких людях легко «посеять зерно»: они будут объяснять, пока ученик не поймёт. Нудный преподаватель, даже если объясняет досконально, мне не нужен.</p>
+
+      <h2>Матвей: от двоечника до коллеги</h2>
+      <p>Один из моих учеников пришёл ко мне ещё двоечником, в восьмом-девятом классе, в самый пубертатный период: то он с азартом делает всю домашку, то забивает на неё — приходилось применять разные способы, чтобы его мотивировать. Он изначально не понимал, куда будет поступать, думал, что останется в Краснодаре, а в итоге поступил в Московский государственный строительный университет.</p>
+      <p>Учась уже на третьем курсе, он стал моим преподавателем — у нас с ним настоящий коннект, он приезжает с тортиками. Он пропустил через себя всю мою методику и теперь передаёт её дальше — для него я тот самый Валерий Александрович Гусаков.</p>
+
+      <h2>Богдан и Амина: как я довожу до результата</h2>
+      <p>Когда моему сыну Богдану исполнилось 10 лет, я понял, что пора влиять на его учёбу, — до этого весь процесс шёл на самотёк. Мы поехали вдвоём на море, и я продумал программу на каждый из десяти дней: катание на роликах, бадминтон и несколько занятий на развитие логики — я взял с собой учебник Нагибина «Математическая шкатулка» и показал ему мнемотехники, например «дорогу Цицерона». Позже, классе в седьмом-восьмом, пришлось ломать привычку откладывать уроки на потом — на это ушло около полугода контроля и мотивации через позитивное присоединение: «ты молодец», «я в тебя верю». В итоге он выиграл олимпиаду, набрал проходной балл выше необходимого на 6 баллов и поступил в МГИМО на бюджет.</p>
+      <p>Похожая история — с ученицей Аминой. Она пришла с тройкой, засыпала на занятиях, объясняла это тем, что не выспалась и не сделала домашку. Постепенно я стал жёстче: «пока не решишь — не уйдёшь, решишь — уйдёшь раньше». Это позволило переложить ответственность на неё саму, но при этом — «я в тебя верю, я знаю, что ты умеешь». Она пришла в начале девятого класса, а в десятом уже сдавала ЕГЭ на 98 баллов, обидевшись на маленькую ошибку, которая стоила ей стопроцентного результата.</p>
+
+      <h2>Куда я веду школу дальше</h2>
+      <p>Через пять лет я вижу школу как воплощение своей миссии: в ней работают воодушевлённые, позитивные люди с искрой в глазах. В цифрах — хотелось бы, чтобы одновременно обучалось порядка тысячи учеников. Зависимость числа преподавателей от числа учеников нелинейная: кому-то нужен индивидуальный подход и свой отдельный преподаватель, а кто-то интроверт, которому нравится коллектив и соревновательная составляющая, — такую группу может вести один харизматичный педагог. Модель школы в том, чтобы подбор преподавателей был непрерывным процессом — формированием кадрового резерва, чтобы не оставаться без замены, если кто-то уйдёт или заболеет.</p>
+      <p>Сейчас главная проблема — мне нужно уйти от своего «метода тушения пожаров», когда я сам берусь всё решать, к настоящему делегированию. Нужно вырастить специалистов в тех областях, которые сейчас закрываю сам как административный ресурс, — а такого заместителя пока нет. И я склоняюсь к тому, что это должен быть человек, который прошёл все этапы у меня на глазах, а не найден готовым на рынке.</p>
+      <p>Партнёрство с человеком, который готов принести только деньги и никак не участвовать, — не тот уровень компаньонства, к которому я готов на этом этапе. А вот партнёр, который понимает, во что я буду вкладывать деньги, разделяет со мной риски тестирования гипотез и видит функционал школы изнутри — такой инвестор мне интересен. Это больше похоже на совет директоров, чем на классическую сделку «вот тебе деньги, делай что хочешь».</p>
+
+      <h2>Что бы я сказал себе десять лет назад</h2>
+      <p>Первый совет — не откладывай на потом то, что хочешь сделать сейчас: если пришла идея, начни реализовывать её в ближайшие 24 часа. Второй — не мысли категориями опасений, а мысли категориями предположений: что будет, если ты не попробуешь. Я часто, как математик, сразу оценивал все риски и то, как может «схлопнуться» бизнес или идея, — и часть времени была потрачена зря на «когда-нибудь начну». Лучше сделать и пожалеть, чем пожалеть и не сделать.</p>
+      <p>Из книг на меня сильно повлиял Роберт Кийосаки с «Богатым папой, бедным папой» — я понял, что даже с высокой зарплатой и соцпакетом в такой структуре, как «Черномортранснефть», я всё равно остаюсь наёмным работником. Дальше — управление финансами по Бодо Шефферу: оказывается, нужны разные «копилки» и стратегическое мышление о деньгах. А из последнего, что оказывает на меня самое сильное трансформационное влияние, — книга Экхарта Толле «Сила момента сейчас», я сейчас перечитываю её во второй раз.</p>
+      <p>Если кто-то захочет со мной связаться — контакты есть на сайте школы «Интеграл возможностей». Я открыт для идей: пусть обращается любой, кто считает, что может меня чем-то заинтересовать.</p>
+
+      <p class="art-signature">Станислав Морозов,<br>основатель школы «Интеграл возможностей»</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про главный вопрос, который поменял мою жизнь</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🪦 А кто придёт ко мне на могилку?</h3>
+        <p>Странный вопрос для поста про образование, согласен. Но именно он однажды поменял всю мою жизнь.</p>
+        <p>Был у меня переломный момент — что-то вроде кризиса среднего возраста. Я подумал: если однажды я перейду в мир иной, кто придёт ко мне на могилку и что напишет на моём камушке? За что мне будут благодарны?</p>
+        <h4>И я стал вспоминать по-честному</h4>
+        <p>А я сам кому был бы благодарен? Кто на самом деле повлиял на мою жизнь?
+
+Перебрал начальников, коллег, партнёров по бизнесу. И понял, что единственный, кого я могу смело поставить во главу угла, — мой учитель математики в математической школе, Валерий Александрович Гусаков.</p>
+        <p>Не тот, кто дал мне зарплату или долю в бизнесе. Тот, кто показал красоту математики и сумел донести её до целого класса совершенно разных детей — и каждый из нас в итоге поступил в вуз.</p>
+        <p>🎓 После этого я перестал спрашивать себя «сколько я заработаю» и начал спрашивать «кому я передам то, что умею». Так родилась моя онлайн-школа.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор преподавателей</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>🧠 Отличник — не значит хороший учитель. Вот почему</h3>
+        <p>Мне часто говорят: бери в преподаватели тех, кому предмет даётся легко, — они лучше объяснят. На практике всё ровно наоборот.</p>
+        <h4>Два разных навыка, которые путают</h4>
+        <p>Одно дело — уровень когнитивных способностей: быстро схватывает, легко усваивает. Совсем другое — человек любит математику, горит ей и умеет объяснять так, чтобы его поняли.
+
+Я лично проводил больше трёхсот собеседований и знаю: бывают люди, которые прекрасно понимают математику, но они интроверты — и это не к нам.</p>
+        <h4>Что я на самом деле ищу</h4>
+        <p>Эмпатию и позитив. Если человек экстраверт, у него горят глаза и есть преподавательская жилка — в таком легко «посеять зерно»: он будет объяснять, пока ученик не поймёт, а не потому что «программа требует».</p>
+        <p>Нудный преподаватель, даже если он трижды всё умеет объяснить досконально, мне в команде не нужен.</p>
+        <p>💬 А вас в школе учил кто-то, кто «горел» предметом? Расскажите в комментариях.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про историю Матвея</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🎂 Бывший двоечник, который сейчас работает у меня преподавателем</h3>
+        <p>Он пришёл ко мне в восьмом-девятом классе с тройками и абсолютным пубертатным хаосом в голове: то с азартом делает всю домашку, то забивает на неё напрочь.</p>
+        <h4>Что было тогда</h4>
+        <p>Он даже не понимал, куда будет поступать, — думал, что так и останется в Краснодаре. Приходилось перепробовать десятки способов, чтобы его замотивировать: где-то мягко, где-то жёстко, где-то просто верить в него громче, чем он сам в себя верил.</p>
+        <p>В итоге он поступил в Московский государственный строительный университет.</p>
+        <h4>А что сейчас</h4>
+        <p>Учась уже на третьем курсе, он стал моим преподавателем. У нас с ним настоящий коннект — он приезжает ко мне с тортиками.
+
+Он пропустил через себя всю мою методику и теперь ведёт учеников сам — по-своему, но с той же основой. Для него я тот самый Валерий Александрович.</p>
+        <p>🔁 Лучшая проверка методики — когда её начинает передавать дальше твой собственный бывший ученик.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про историю Амины</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>😴 Она засыпала у меня на занятиях. Сдала ЕГЭ на 98 баллов</h3>
+        <p>Амина пришла ко мне с тройкой. И в прямом смысле засыпала на уроках — говорила, что не выспалась ночью, поэтому и домашку не сделала.</p>
+        <h4>Что изменилось</h4>
+        <p>Я стал жёстче: «Пока не решишь это — не уйдёшь. Решишь — уйдёшь раньше. Как хочешь».
+
+Для неё уйти раньше было настоящим стимулом. А не сделаешь домашку — до свидания, занятие считается проведённым, и маме «накатаю телегу».</p>
+        <p>При этом каждый раз я говорил ей: «Я в тебя верю. Я знаю, что ты умеешь».</p>
+        <h4>Результат</h4>
+        <p>Она пришла в начале девятого класса. А в десятом уже сдала ЕГЭ на 98 баллов — обидевшись на маленькую ошибку, которая стоила ей стопроцентного результата. Я был уверен, что она бы написала на все сто.</p>
+        <p>🔥 Требовательность и вера в ученика работают сильнее любых нотаций про «надо стараться».</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про совет самому себе</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>⏳ Что бы я сказал себе 10 лет назад</h3>
+        <p>Меня часто спрашивают: если бы вы могли вернуться на 10 лет назад — что бы посоветовали?</p>
+        <h4>Совет первый</h4>
+        <p>Не откладывай на потом то, что хочешь сделать сейчас. Пришла идея — начни реализовывать её в ближайшие 24 часа. Не «когда-нибудь начну» — а с понедельника, буквально.</p>
+        <h4>Совет второй</h4>
+        <p>Не мысли категориями опасений — мысли категориями предположений. Не «а вдруг не получится», а «что будет, если я вообще не попробую».
+
+Я, как математик, всегда сразу просчитывал все риски — и часть времени в итоге потратил зря на бесконечное взвешивание вместо действия.</p>
+        <p>Тем же самым было и репетиторство: я годами понимал, что в школе работать некомфортно, а в репетиторстве интересно, — но продолжал совмещать, потому что «здесь хоть какая-то зарплата». И потом жалел, что не ушёл раньше.</p>
+        <p>💭 Лучше сделать и пожалеть, чем пожалеть и не сделать.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/stanislav-morozov-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. От математической школы к диплому</a></li>
+        <li><a href="#t2">2. Точка перелома: снова своё дело</a></li>
+        <li><a href="#t3">3. Можно ли зарабатывать на образовании</a></li>
+        <li><a href="#t4">4. Кого компенсирует моя школа</a></li>
+        <li><a href="#t5">5. Психологическое образование</a></li>
+        <li><a href="#t6">6. От оффлайна к онлайну</a></li>
+        <li><a href="#t7">7. Ученик, узнанный только по голосу</a></li>
+        <li><a href="#t8">8. Рождение онлайн-школы и методика</a></li>
+        <li><a href="#t9">9. Как устроена модель урока</a></li>
+        <li><a href="#t10">10. Как отбираются преподаватели</a></li>
+        <li><a href="#t11">11. История Матвея</a></li>
+        <li><a href="#t12">12. Как удерживают преподавателей</a></li>
+        <li><a href="#t13">13. Опыт из прошлого ИТ-бизнеса</a></li>
+        <li><a href="#t14">14. История сына Богдана</a></li>
+        <li><a href="#t15">15. История ученицы Амины</a></li>
+        <li><a href="#t16">16. Видение школы через 5 лет</a></li>
+        <li><a href="#t17">17. Идеальный инвестор или партнёр</a></li>
+        <li><a href="#t18">18. Совет себе, книги и контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. От математической школы к диплому</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Первый вопрос: как вы попали в эту сферу? Вы работали инженером-программистом, был свой бизнес — а теперь вы в онлайн-предпринимательстве в образовании.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Прежде всего, наверное, выстрелило образование. По диплому я математик-преподаватель — так получилось, что я поступил в вуз, который изначально был педагогическим, техническим. А поступил туда, потому что окончил математическую школу. Причём меня зачислили превентивно — по результатам экзаменов, которые проходили ещё в апреле, я уже был зачислен до основного набора.</p>
+        <p>То есть моя математическая школа дала мне путёвку на математический факультет, а дальше всё это уже развилось в специальность по диплому.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Точка перелома: снова своё дело</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас был большой карьерный опыт — и в найме, и свой бизнес в IT. Почему вы снова перешли от найма и своего бизнеса опять в своё дело — но уже в образовании?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>За карьеру я перепробовал много разных специальностей и даже профессий. А потом, когда встал выбор — что на самом деле хочется делать, что комфортнее, что вдохновляет и от чего я меньше устаю, — наверное, это всё и предопределило.</p>
+        <p>У меня был переломный момент в жизни. Это, наверное, кризис среднего возраста, когда наступил: показалось, что если я вот-вот перейду в мир иной, то кто придёт ко мне на могилку и что напишет на моём камушке? За что мне будут благодарны? И это заставило меня задуматься: а я сам кому был бы благодарен, кто повлиял на мою жизнь? Я подумал, что единственный, кого можно смело поставить во главу угла, — это мой учитель по математике в моей математической школе, Валерий Александрович Гусаков.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Можно ли зарабатывать на образовании</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Обучение изначально — это что-то некоммерческое, на уровне общественных благ, как медицина. А у вас онлайн-школа, онлайн-предпринимательство, и вы на этом зарабатываете. Как вы решаете это противоречие?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Я не вижу здесь противоречия. Образовательная деятельность — это деятельность, за которую берут деньги. Если говорить об онлайн-школе, которой я руковожу, то это коммерческая образовательная деятельность, которая по сути дополняет ту некоммерческую образовательную деятельность, которую ведёт государство.</p>
+        <p>Я сам успел поработать в школах, поэтому знаю эту конъюнктуру изнутри. Учителя получают зарплату, приходят в класс, в котором 35 учеников, и все они абсолютно разные — ты становишься перед выбором: будешь ты с этим справляться или нет. С одной стороны, хочется получать зарплату и есть какое-то призвание, а с другой — это очень непростая задача, чтобы все получили хорошее образование. И с этой задачей справляются единицы, а те, кто умеет справляться, в школах надолго не задерживаются.</p>
+        <p>Система у нас несовершенна, и это несовершенство приходится компенсировать. То есть деньги мы получаем за то, что даём образование, которое не может дать школа.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Кого компенсирует моя школа</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть ваш бизнес компенсирует несовершенство системы?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Здесь можно так сказать — если смотреть на это с точки зрения коммерции, то да. Другое дело, что есть определённая миссия, и она уже, наверное, не столько со школой связана, сколько с психологией, которая уходит корнями в семейное образование, в социум учеников, в их пубертат.</p>
+        <p>Часто ученики даже в одиннадцатом классе не знают, куда пойдут работать, какое образование хотят получить. И отчасти миссия моей онлайн-школы заключается в том, чтобы привести ученика из точки А, где он ещё инфантильный подросток, мыслящий совсем другими категориями — чипсами и «Кока-Колой», — в ту профессию, о которой он ещё не догадывается. Показать ему эту траекторию и выстроить маршрут.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Психологическое образование</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А у вас есть психологическое образование?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Да. Когда я пришёл в школу с 33 учениками, все они абсолютно разные, я пришёл с амбициями — с проекцией моего учителя Гусакова, который вкладывал душу в математику и умел транслировать её на весь класс совершенно разных детей. Каждый ученик из нашего класса поступил, все получили высшее образование. И мне с этими амбициями казалось, что я тоже точно смогу — подстроюсь под каждого, объясню с одной стороны, с другой, с третьей.</p>
+        <p>Оказалось, что это не работает на больших числах. Когда тебе дают абсолютно разные классы, это заставляет задуматься: а что не так в твоей картине мира, почему ты не можешь достучаться до кого-то, как бы ни старался? А оказывается, есть психологические блоки — дискалькуляция, математическая неуверенность, разные психотипы.</p>
+        <p>И вот это всё заставило меня задуматься, что нужно ещё делать, чтобы не просто потешить амбиции «я и тебя научу, и вас всех вылечу», — я пошёл и потратил ещё три года на то, чтобы разобраться во всех этих психотипах, в способах, подходах, начиная от диагностики. Но я понял, что психологию монетизировать — это не моё: вести какие-то консультации или психологические сессии — не моё призвание. Зато это помогло мне понять, какой подход нужен конкретному ученику — где не надо передавливать, где на мягких лапках, а где, наоборот, нужно быть строгим и требовательным.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. От оффлайна к онлайну</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы перешли от оффлайн-опыта к онлайн-школе? Ведь оффлайн-обучение и онлайн — похожи, но довольно разные: в оффлайне есть непосредственный контакт, эмоции, жестикуляция, а в онлайне гораздо меньше возможностей.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Когда я понял, что хочу заниматься только репетиторством, я пытался себя «распаковать», показать всем, какой я хороший, — для тех, кто больше всего этого хотел. А самый широкий спрос тогда был, конечно, в очных занятиях. Личный контакт правда был важен: когда ты видишь ребёнка, считываешь физиогномику, смотришь на его реакцию и когнитивные способности в метре от себя — это давало дополнительные преференции в поиске решений, в том, с какой стороны подойти к обучению.</p>
+        <p>Но прошло время, и я понял, что рынок развивается, онлайн потихонечку начал приходить повсеместно. Когда я сам стал задумываться о повышении своей квалификации — а это у меня было как фетиш, я постоянно брал себе какие-то дополнительные программы, — я понял, что покупал их всегда именно в онлайне. То есть то, что мне нужно, не всегда под рукой, не всегда в пешей доступности, не всегда рядом есть люди, которых ты лично знаешь.</p>
+        <p>И тогда я задумался: а почему я ограничиваю себя только оффлайн-занятиями, почему рекламирую себя только среди тех, кто рядом? Я понял, что могу любого человека обучить и онлайн.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Ученик, узнанный только по голосу</h3>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Были моменты, когда для меня даже не важно было видеть ученика — достаточно было его слышать. Я настолько адаптировался в этом плане, что мог заниматься с учеником два года и видеть его только на диагностике: чтобы не грузить трафик, мы выключали видео и занимались так — я у доски, а слышу только: «Так, Коля, Вася, Петя, тут понятно, а ну-ка мне вот это».</p>
+        <p>И был занятный случай, когда я иду с супругой по гипермаркету, и мне навстречу бежит парень: «Ой, Станислав Валерьевич, Станислав Валерьевич!» А я не понимаю, кто это. Оказалось, что это Коля, тот самый мой ученик — я узнал его только по голосу.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Рождение онлайн-школы и методика</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как из этого всего образовалась онлайн-школа?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Возвращаясь к вопросу про оффлайн и онлайн — я понял, что онлайн на самом деле более широкий рынок, более широкий охват: я могу быть полезен не только своему ближайшему району, а гораздо большему числу людей.</p>
+        <p>Онлайн-школа появилась, когда я понял, что одного меня мало — спрос превышал мою возможность, я себя полностью перегрузил. И тогда встал вопрос: а в чём моя уникальность? Наверное, в методике, в подходе, в том, что я могу зафиксировать в качестве требований к своему преподавателю. То есть я могу перенести себя — сделать что-то вроде репродукции, если у человека есть база и есть то, что мне в нём нравится.</p>
+        <p>Так появились мысли об онлайн-школе — о том, чтобы взять себя и размасштабировать через разных преподавателей, которые будут работать под моей методикой, под моим контролем.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Как устроена модель урока</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А методику сложно было перенести в онлайн?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Да нет, по сути дела — методика это что? Это набор, во-первых, задач, и набор критериев, как ты должен эти задачи подавать. Курс математики в школе нельзя назвать настолько ёмким, чтобы его нельзя было разбить на блоки и конкретные задачи. Есть задачи из школьных учебников, но есть и нешкольные, которые могут помочь тебе так, как когда-то помогали мне в математической школе, — нестандартные задачи, задачи на логику.</p>
+        <p>И есть понимание модели урока — что в этом уроке должно быть. Не просто набор задач, а модель урока содержит в себе такие вещи, как начало занятия, фиксация внимания, прогрев, разбор какого-то примера, потом рефлексия — когда я сам уже вижу, что человек может решить такой же пример при мне, — и закрепление материала.</p>
+        <p>И эту модель урока, конечно, важно передать педагогу и проконтролировать, что он с ней справляется. Для меня это несложно, если коротко и лаконично.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Как отбираются преподаватели</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы подбираете преподавателей?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Есть определённые требования к его первоначальному образованию — мне нужно понимать, если он сам молодой преподаватель, насколько он сам сдал предмет. После этого я смотрю, насколько он эмпатичен, потому что для меня в любой модели уроков всё равно важна эмпатия, важен позитив. Я не люблю никакой нуднятины: если я вижу, что человек позитивный, у него горят глаза, он уже знает математику, только у него нет структуры и модели уроков — тогда мы можем попробовать и дальше проверить, заходит или не заходит.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А я слышал мнение, что людям, которым легко даётся предмет, сразу всё понятно, — им сложнее быть хорошими учителями, потому что они не умеют объяснять тем, кому тяжело. А те, кому объясняли дольше, потом сами лучше объясняют другим.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Я, наверное, и соглашусь, и не соглашусь. Одно дело — оценивать уровень когнитивных способностей человека: легко схватывает, быстро усваивает — это одна часть его психологической составляющей. Другое дело — человек любит математику, горит, и у него есть преподавательская жилка: он любит рассказывать, чтобы его понимали.</p>
+        <p>Мы же выбираем педагогов среди репетиторов, а не просто студентов-отличников. Действительно, есть люди, которые хорошо понимают математику, но они интроверты, — и это не к нам. А если ты экстраверт, если ты эмпатичен, если ты позитивен — в таких людях очень легко посеять зерно, и они будут рассказывать до тех пор, пока человек не поймёт. Мне нудный преподаватель, который даже будет досконально всё объяснять, не нужен.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. История Матвея</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я знаю, что у вас ваш бывший ученик работает одним из преподавателей.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Да, так получилось. Был такой ученик, который пришёл ещё двоечником, в восьмом или девятом классе — точно уже не помню. Это был как раз пубертатный период: то он хочет, то не хочет, то с азартом всё делает, всю домашку выполняет, то на неё забивает, и приходилось всякими-разными способами его мотивировать.</p>
+        <p>Человек изначально не понимал, куда будет поступать, думал, что где-то здесь, в Краснодаре, останется. А в итоге он поступил в Московский государственный строительный университет. И учась уже на третьем курсе, он стал моим преподавателем — у нас с ним просто такой коннект, любовь: он приезжает с тортиками.</p>
+        <p>Этот парень превратился на моих глазах из слегка инфантильного подростка в целеустремлённого человека, который учится хорошо, отлично и готов свои свободные окна дополнительно забивать преподаванием, потому что он всю мою методику через себя пропустил. Он знает, как я вёл занятия, и поэтому будет вести их как-то по-своему. Для него я — тот самый Валерий Александрович Гусаков.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Как удерживают преподавателей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А сколько сейчас преподавателей в школе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Сейчас четверо. Но уже к сентябрю у нас в кадровом резерве ещё шесть человек — мы рассчитываем набирать обороты, потому что мы молодая онлайн-школа. Но я уже понимаю, что надо делать, как расти, кому себя показать и кому ретранслировать свою миссию.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А вам удалось уйти от операционки? Преподаёте ли вы сами?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Ещё преподаю — это процесс, который сразу не остановишь: с учениками ты срастаешься, хочется довести их хотя бы до какого-то этапа, плюс нужно понять, кому их передать. С сентября планирую снижать нагрузку. Помимо преподавания, на мне ещё несколько функций в онлайн-школе — административные, бухучёт, продажи и контроль продаж, маркетинг, аналитика, все финансы, управленческий учёт.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как вы удерживаете преподавателей — ведь репетитор может работать и сам на себя?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Когда человек работает сам на себя, он сам себе и маркетолог, и продюсер, и риск-менеджер: себя надо уметь и разрекламировать, и удержать, и постоянно позиционировать в продукте — школах, классах, уровнях. И это далеко не всем легко удаётся.</p>
+        <p>А когда всё уже структурировано, когда ты говоришь: «вот этому даёшь это, а вот этому — то», и ещё наполняешь его учениками, у преподавателя появляется стабильная часть работы, и при этом он может подстроить свой удобный график под свою жизнь: хочу работать с 10 утра — пожалуйста, хочу съездить в обед на плавание — пожалуйста. Плюс постоянная поддержка — есть куда и кому задавать вопросы. И с преподавателя снимается вся рутина — созвон с родителями, сбор денег, обратная связь. Соответственно, преподаватель понимает, что в онлайн-школе работать гораздо легче и комфортнее.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Опыт из прошлого ИТ-бизнеса</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы взяли опыт преподавания вашего учителя, психологическое образование — а как насчёт предпринимательского опыта?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Предпринимательский опыт начался, когда я ушёл из инженеров-программистов «Черномортранснефти» и открыл свою фирму, в которой сначала занимались ремонтом оргтехники. Потом перешли в локальные вычислительные сети, а затем — в структурированные кабельные системы. На мои плечи легло проектирование — например, сети магазинов «Таврия» в Краснодаре: крупные объекты, очень непростые решения, где нужно было завязать в одну систему кассовые аппараты, весы, компьютеры, системы оповещения так, чтобы клиенты магазина никак не могли на это повлиять и даже это увидеть.</p>
+        <p>Это требовало серьёзного стратегического подхода — как всё сделать так, чтобы оно работало. Плюс управленческий ресурс, потому что это всё равно кадры, а кадры — это человеческий фактор: все люди разные, у всех свои ожидания и опасения, и этим всем нужно уметь управлять так, чтобы было ещё и на позитиве, и результативно. Именно тогда я начал получать первые сертификаты по стратегическому управленческому учёту и управлению персоналом. Это всё было надолго забыто, когда я перешёл работать в школу и в вуз, а сейчас оно как-то само всплывает из памяти, когда нужно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. История сына Богдана</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я знаю про несколько ваших достижений — одно из них ваш сын, который поступил в МГИМО и которого вы увлекли математикой.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Был период в его жизни, когда ему исполнилось 10 лет, и я понял, что надо уже влиять — весь учебный процесс был пущен на самотёк. Нам удалось поехать с ним вдвоём на море, и я решил подготовиться серьёзно, основательно: продумал, чем мы будем заниматься каждый день из десяти дней поездки. Помимо роликов и бадминтона я запланировал несколько мероприятий на развитие логики и мышления, придумал несколько игр и взял с собой учебник Нагибина «Математическая шкатулка» — классический сборник задач, начиная от старинных, которые давали пионерам для развития смекалки. Показал ему несколько мнемотехник — способов запоминания через ассоциации, например «дорогу Цицерона».</p>
+        <p>Каждый день мы что-то делали, и так было посеяно зерно интереса к нестандартным задачкам, которые не встречаются в школе. Когда мы перешли классе в седьмом-восьмом, я понял, что надо ломать ещё один стереотип — привычку откладывать выполнение уроков на потом. Большинство школьников мыслят так: если геометрия в понедельник, а следующая только в четверг, то зачем делать её сразу, а не в четверг утром. Ломать эту привычку было непросто, ушло где-то полгода — контроль и мотивация: «ты молодец», «давай, я в тебя верю» — через позитивное присоединение.</p>
+        <p>Удалось поменять: он стал приходить со школы и сразу делать уроки, несмотря на спорт и кружки, — иногда допоздна, «спать не лягу, пока не решу». Дальше сработали небольшие вбросы-вызовы: «хочешь ещё вот такую задачку решить?» — и когда я это рассказываю увлечённо, это заражает, потому что это близкий человек. В итоге он выиграл олимпиаду, набрал проходной балл выше необходимого на 6 баллов и поступил в МГИМО на бюджет — я считаю, что в этом сыграл важную роль.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. История ученицы Амины</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ещё я знаю про случай с Аминой, которую вообще привели к вам на занятия, она саботировала их, а потом сдала ЕГЭ на 98 баллов.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Амина была ярким примером. Она приходила и засыпала на занятии — а сама пришла с тройкой. Говорила: «Я ночь не спала, поэтому и домашку не сделала», а потом ещё и засыпала прямо на уроке — «буквально 15 минут посплю».</p>
+        <p>Постепенно-потихонечку я стал жёстче: «всё, давай, пока не решишь это — не уйдёшь, решишь — уйдёшь раньше, как хочешь». Для неё уйти раньше было настоящим стимулом. И эти вбросы позволили немного «запозитивить» сам процесс обучения математике, а дальше переложить ответственность на неё саму: домашку надо обязательно сделать — сделаешь, не сделаешь — до свидания, занятие считается проведённым, и маме «сейчас телегу накатаю». При этом — «я в тебя верю, я знаю, что ты умеешь».</p>
+        <p>В итоге она пришла в начале девятого класса, а десятый уже сдавала на 98 баллов — сделав такую маленькую обидненькую ошибочку, из-за которой не хватило до ста. Я был уверен, что она бы написала на все сто.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. Видение школы через 5 лет</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы видите школу «Интеграл возможностей» лет через пять?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Планы я себе уже расписал — есть краткосрочные, есть долгосрочные. Я вижу свою школу как полностью мою миссию: в ней работают воодушевлённые, позитивные люди с искрой в глазах, которые несут разумное и светлое, включая мотивацию к поступлению в престижный вуз. В цифрах — мне бы хотелось, чтобы в моменте обучалось порядка тысячи учеников.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если 1000 учеников, то сколько должно быть преподавателей?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Тут зависимость нелинейная. Не значит, что на 100 учеников нужно 10 преподавателей, а на 1000 — сто, потому что есть разные форматы занятий. Есть преподаватели, которые готовы вести довольно большую аудиторию однородных по когнитивному уровню учеников, а есть ученики, которым нужен индивидуальный подход и отдельный преподаватель. Если находим интровертных учеников, которым нравится коллектив и соревновательная составляющая, — это может быть группа, которая занимается у одного харизматичного педагога. У одного может заниматься пять учеников, у другого — тридцать. Я сам в моменте вёл 50 учеников — это было 6 часов, 5 дней в неделю, вполне нормальная нагрузка для преподавателя, и вёл я их и группами, и индивидуально.</p>
+        <p>Поэтому сказать точно, сколько нужно преподавателей, сложно — по мере поступления учеников будут набираться преподаватели. Модель школы в том, чтобы процесс подбора преподавателей был непрерывным — это формирование кадрового резерва: если в школе четыре преподавателя и один из них уходит или заболел, что делать с его учениками? Нужен резерв, чтобы быстро подменить.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А какие нерешённые проблемы есть на этом пути?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Проблемы, которые будут не решены на этапе тысячи учеников, я ещё не знаю. Я знаю структуру онлайн-школы, какая она должна быть и как она может масштабироваться — различные виды деятельности внутри школы, различные роли, которые обеспечивают определённый функционал. Сейчас в этой роли один человек, потом может присоединиться два — всё это решается через правильно прописанные инструкции, через правильные чек-листы.</p>
+        <p>Основная проблема сейчас — мне нужно уйти от своего спокойного метода тушения пожаров, когда я сам берусь всё решать, в делегирование. Мне нужно вырастить специалистов в тех областях, которые сейчас решаю ещё я как административный ресурс, — дойти до состояния, когда у меня есть заместитель, который может решить и закрыть всё это за меня. А такой заместитель ещё не вырос.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. Идеальный инвестор или партнёр</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если поговорить об инвесторе или партнёре, который придёт к вам с каким-то предложением — как оно выглядит в ваших глазах в идеале? Это деньги, навыки, знания?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Партнёрство с человеком, который готов принести только деньги и никак в этом не участвовать, — на данном этапе непонятно, как это реализовывать: просто поверить мне и дать денег, чтобы я распоряжался ими в масштабировании, — это не совсем тот уровень компаньонства, к которому я готов.</p>
+        <p>А вот тот партнёр, который будет понимать, во что я буду вкладывать деньги, разделять это со мной, видеть функционал школы изнутри — как маркетинг влияет на продажи, как продажи влияют на удержание клиента, — вот такой инвестор интересен. Не просто тот, кто дал денег и сказал «делай что хочешь, но чтобы была вот такая прибыль», а тот, кто разделяет управленческие риски, связанные с тестированием гипотез. Маркетинг сейчас так устроен, что любая маркетинговая идея — это всегда тестирование гипотезы, а это всегда стоит денег. Поэтому лучше, чтобы человек разделял эти идеи как партнёр — это похоже на совет директоров.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t18">
+      <h3>18. Совет себе, книги и контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Какой бы совет вы себе дали, если вернуться на 10 лет назад?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Наверное, важный момент — не откладывай на потом то, что ты хочешь сделать сейчас. Разбивай и ставь себе чётко, когда ты начнёшь: пришла идея — начни её реализовывать в ближайшие 24 часа. И второй важный момент — не мысли категориями опасений, а мысли категориями предположений: что будет, если ты не попробуешь этого сделать.</p>
+        <p>Часто в моей жизни я сразу оценивал как математик все риски, которые могут быть, — и как эта идея может в моменте «схлопнуться». Хотя идей было очень много интересных, и часть времени была потрачена зря на «когда-нибудь начну это делать». Тем же самым было и с репетиторством: я понимал, что в школе работать некомфортно, а в репетиторстве прикольно, но когда совмещаешь эту деятельность, сложно окончательно отказаться от найма — «здесь вроде бы какая-никакая зарплата». Я очень часто жалел, что не сделал этого гораздо раньше.</p>
+        <p>Если два ключевых совета — первый: не откладывай на потом. Второй: не опасайся, а предполагай, что этот опыт будет тебе полезен, даже если он окажется негативным. Лучше сделать и пожалеть, чем пожалеть и не сделать.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Валерий Александрович Гусаков на вас сильно повлиял — как на педагога, как на человека. Может, есть ещё книги, идеи, которые тоже сильно повлияли, перестроили мышление?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Когда я ещё работал инженером-программистом, первое, что я случайно увидел, — это Роберт Кийосаки, «Богатый папа, бедный папа». Я понял, что, работая даже в такой структуре, как «Черномортранснефть», с высокой зарплатой, соцпакетом, премиями, тринадцатыми зарплатами, я всё равно остаюсь работником в найме. А когда я ещё посмотрел его квадрант денежного потока, мир стал совершенно другим.</p>
+        <p>Потом, про управление финансами, — это была книга Бодо Шефера: оказывается, нужны разные «копилки», нужно стратегически мыслить о финансах, иметь способность к накоплению и уметь инвестировать. А из последнего, что сейчас оказывает на меня наибольшее трансформационное влияние, — книга Экхарта Толле «Сила момента сейчас». Я сейчас нахожусь в стадии её повторного перечитывания.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если наши зрители захотят с вами связаться по каким-то вопросам, как это можно сделать и по каким вопросам вы готовы пообщаться?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Станислав</div><div class="tr-txt">
+        <p>Если человек считает, что может меня чем-то заинтересовать — пусть обращается, я открыт для идей. Контакты мои есть на сайте школы — есть электронная почта, а на главной странице пока указан мой личный сотовый телефон. Сейчас со мной можно связаться, позвонив по номеру, размещённому на сайте школы.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
