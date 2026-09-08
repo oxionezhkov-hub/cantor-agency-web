@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Николай Полещук — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <!-- Аудитория этого выпуска — «для партнёров» (бизнес-история для предпринимателей), подписана в плашке в самом верху страницы. -->
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223447058?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Николай Полещук - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223447058" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">От чёрного пояса по карате до 100 баллов на ЕГЭ. Николай Полещук — учитель физики, построивший свою школу</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Чёрный пояс по карате, 10 лет в школе и любовь к физике, которая началась с одной преподавательницы в вузе — Николай Полещук рассказывает, как из репетиторства выросла онлайн-школа с малыми группами вместо индивидуальных занятий и средним баллом ЕГЭ 88. В выпуске — про кейс, где ученица за 25 дней прошла путь от нуля до 48 баллов, отбор преподавателей по трём критериям и почему рынок репетиторства смещается к системным решениям.
+
+🔗 Написать Николаю в Telegram: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, репетиторство, EdTech, подкаст для предпринимателей, подготовка к ЕГЭ, физика, найм преподавателей, малые группы, Николай Полещук</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #ЕГЭ #EdTech #репетитор #физика #найм</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/nikolay-poleshchuk-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">От додзё до 100 баллов на ЕГЭ: как чёрный пояс по карате помог мне построить школу физики</h1>
+
+      <p>С 16 лет я занимаюсь карате, у меня чёрный пояс. И меня часто спрашивают, что из этого опыта я переношу на преподавание физики. Отвечу так: не только на физику — скорее на все занятия, которые у меня идут, включая информатику. В своё время именно карате сделало меня более спокойным, уверенным и привило системность, стремление работать ради результата. Но никаких отжиманий на уроках у меня нет — я даже не особо афиширую ученикам, что занимался карате и достиг таких результатов. Это просто давным-давно стало частью меня: манерой поведения, мыслей, действий.</p>
+
+      <h2>Почему я не виню школьных учителей</h2>
+      <p>Я говорил, что в современных школах учителям сложно вести уроки, а ученики не особо хотят учиться, и всё сводится к рисованию оценок. Но я ни в коем случае не хочу сказать ничего плохого об учителях — я считаю, что это прекрасные люди, которые делают огромный вклад в образование, в развитие детей и в целом в будущее нашей страны. Просто в современных реалиях очень много сил учителей уходит на документы, бумажную волокиту, отчётности — работу, не связанную с учёбой. А порой нагрузка настолько большая, что физически не хватает сил вести уроки. Если у учителя нет сил, ученикам становится неинтересно, скучно, и у них идёт просадка по знаниям. При этом от школ требуют высоких показателей — и оценка превращается не в показатель реальных знаний, а в то, за чем гоняются все: и руководство школы, и учителя, и ученики.</p>
+
+      <h2>Почему я всё-таки ушёл</h2>
+      <p>Я проработал в школе 10 лет — 8 в одной, 2 в другой, и уходил больше по семейным обстоятельствам. Мне нравится преподавать, мне нравится учить — это моё призвание. Поэтому даже уйдя из школы, я сделал свой собственный кабинет и продолжил вести занятия — не ушёл из этой сферы полностью.</p>
+
+      <h2>Идея, которая ждала десять лет</h2>
+      <p>Идея открыть свою школу зародилась ещё в 2015 году. Но тогда, пока я работал в школе, всё время уходило на уроки, дополнительные занятия, тренировки — я возвращался домой часов в десять-одиннадцать вечера, и на реализацию своих планов просто не было возможности. Школа как отдельная единица появилась только в 2025 году — тогда совпало сразу несколько моментов: накопились знания о том, как её открыть, появилось сообщество единомышленников, которые подсказывают и поддерживают морально. И я понял, что моя система работает, а значит, я смогу помочь и другим людям достичь хороших результатов.</p>
+
+      <h2>Как я начал преподавать ещё студентом</h2>
+      <p>Преподавать я начал в 2007 году, ещё на третьем курсе университета, и это вышло само собой. После второго курса у нас была летняя практика в лагере, где я убедился, что преподавание и образование — моя стезя: по духу мне очень легко и приятно взаимодействовать с детьми, будто сам становишься ребёнком, и появляется ощущение радости от того, что приносишь пользу и даёшь действительно полезные знания. После лагеря знакомые попросили помощи с подготовкой — и как-то оно само собой начало получаться. Плюс на третьем курсе у нас была педагогическая практика в школе, где мне сильно помогали более опытные педагоги: рассказывали, как строить уроки и на что обращать внимание.</p>
+
+      <h2>Наставница, которая заставила меня влюбиться в физику</h2>
+      <p>У меня было несколько наставников — учительница музыки, сенсей по карате, методист по информатике. Но если говорить о профессиональной деятельности — это преподавательница физики в университете, Наталья Николаевна. Она вела занятия настолько интересно, что я сам влюбился в физику — стало по-настоящему интересно изучать и развиваться в этом направлении дальше. Она вела у меня общую физику на первом-втором курсе, и когда на третьем курсе я сам решил вести занятия, у меня уже был ориентир: давать ученикам то, что зажигает интерес и желание учиться, а не просто зазубривание ради оценки для галочки.</p>
+      <blockquote>Не бойся ошибок и следуй за мечтой.</blockquote>
+      <p>При этом она была требовательной, но без унижений: есть задание — вот что ты на него сделал, то ты и получил. Это перенеслось и на моё видение своей школы — быть предельно честным с учениками и родителями, ставить те оценки, которые есть, но всегда относиться к людям по-человечески, не приравнивая личные качества к оценкам.</p>
+
+      <h2>Почему я веду только два предмета из трёх</h2>
+      <p>По образованию я физик с дополнительной специальностью «информатика», но сейчас преподаю физику, информатику и математику. При этом стараюсь углубляться именно в физику и информатику — это два моих любимых предмета, а остальное передаю коллегам-преподавателям. Я считаю: чтобы дать высокий уровень, нужно углубляться в один предмет, максимум в два. Хотя когда я работал в школе, приходилось вести ещё и робототехнику, и технологию как дополнительные предметы.</p>
+
+      <h2>Малые группы вместо индивидуальных занятий</h2>
+      <p>У нас в школе не было ни одного ученика, который бы не сдал экзамен, а средний балл по ЕГЭ за 2026 год — 88, есть ученики со 100 баллами. При этом я делаю ставку именно на малые группы, а не на индивидуальные занятия, хотя обычно считается, что индивидуальные эффективнее. Формат малых групп позволяет ввести элемент соревнования — желание кому-то покрасоваться, плюс всегда есть группа единомышленников, которая поддержит. При этом я не ухожу полностью от индивидуальных занятий: ученики могут в любой момент написать мне, если чувствуют просадку, и при необходимости я ввожу дополнительные индивидуальные уроки. В группе людей не так много по сравнению с обычным классом, и времени хватает, чтобы с каждым выстроить именно ту траекторию занятий, которая нужна.</p>
+
+      <h2>25 дней до экзамена и 48 баллов без единой формулы</h2>
+      <p>Одна моя ученица пришла ко мне за 25 дней до экзамена и вообще не могла назвать ни одной формулы. Обратились по знакомству — я заранее не знал, с чем придётся столкнуться. Стандартно перед началом занятий я провожу диагностику, и это был один из немногих моментов за последние лет пять, когда я завис минут на пять-десять, думая, что делать дальше. Дальше я просто посмотрел, сколько остаётся времени, расписал, когда у неё занятия по другим предметам с другими преподавателями, и выписал последовательно те темы, на которые можно сделать акцент, чтобы сдать экзамен. А дальше — просто работа: доходило до четырёх занятий в неделю. Это было непросто, но когда человек хочет — мне сложно отказать и не помочь. В итоге она вышла на 48 баллов без пересдачи. В своей работе я всегда выстраиваю систему и последовательность занятий, которая даёт наибольший результат — вне зависимости от того, насколько сложная стартовая ситуация.</p>
+
+      <h2>От страха физики до 100 баллов за два года</h2>
+      <p>Другая ученица пришла ко мне в девятом классе — тоже боялась физики, базы не было. Она с самого начала занималась в малой группе из трёх человек. В десятом классе она даже не думала сдавать физику, но за год предмет так понравился, что она решила сдавать ЕГЭ в одиннадцатом — уже в десятом классе обратились за помощью в подготовке, и была сформирована новая группа (у меня группы делятся на девятый класс и на десятый-одиннадцатый для подготовки к ЕГЭ), состав которой обновился примерно на половину. В итоге она сдала ОГЭ на пятёрку, а через два года ЕГЭ — на 100 баллов.</p>
+
+      <h2>Пять лет с одним учеником и Бауманка</h2>
+      <p>Это скорее мой кейс из работы учителем: я начал заниматься с одним учеником ещё в седьмом классе, потому что по школьной программе физика начинается именно тогда. Уже в девятом классе он стал призёром по физике, а вёл я его в общей сложности пять лет. После этого он поступил в Бауманский университет, и мы до сих пор поддерживаем связь, периодически списываемся. Это очень приятный опыт — видеть, как растут дети, даже чужие, и становятся успешными людьми.</p>
+
+      <h2>Как я выбираю преподавателей</h2>
+      <p>Я отбираю преподавателей по трём критериям — экспертиза, умение объяснять и совпадение по ценностям, плюс обязательный демо-урок. По ценностям расхождения бывают крайне редко: чаще всего люди, которые идут в преподавание, разделяют мои взгляды и интересы. А вот с экспертностью и умением объяснять сложнее. Бывает, человек всё умеет, но не может объяснить — такого я взять не могу, потому что если он не заинтересует учеников, качество будет не тем, которое мне хотелось бы. А бывает наоборот — экспертность немного хромает, но человек умеет объяснять и хочет работать: тогда я беру его на заметку и стараюсь помочь поднять уровень. Чаще всего расхождения происходят именно на критерии умения объяснять.</p>
+
+      <h2>Почему в команде всего четыре человека — и это осознанный выбор</h2>
+      <p>Сейчас у меня в школе четыре сотрудника и 35-40 учеников по прошлому году. Справляться силами такой команды не слишком сложно — наоборот, я хочу большего роста, больше учеников и, соответственно, больше сотрудников по другим предметам. В этом году я ориентировался на три своих базовых предмета — там, где могу в крайнем случае сам помочь преподавателям, а с этого года буду расширять линейку предметов, зная уже критерии качественного выбора преподавателя. Иногда сложно уследить за всеми учениками, но у меня есть помощники, которые тоже просматривают занятия преподавателей и собирают статистику по ученикам — так что рука всегда на пульсе.</p>
+
+      <h2>Карате, музыка, моноколесо: как я перезагружаюсь</h2>
+      <p>Времени катастрофически не хватает — было бы моё желание, я бы, наверное, и из походов не вылезал. Но стараюсь хотя бы три-четыре раза в год, особенно летом, когда меньше нагрузка, выбираться с друзьями. Пианино и гитара стоят прямо у меня в рабочем кабинете — в перерывах между занятиями всегда можно за них сесть. А лучше всего проветриться и перезагрузиться помогает покататься на моноколесе — вместо пешей прогулки прокатиться с ветерком. Конечно, есть сезонность, и большая часть такого отдыха приходится на лето, а в остальные месяцы, как и у моих учеников, — усиленная работа.</p>
+
+      <h2>От репетитора к системе: что не так с частными репетиторами</h2>
+      <p>Рынок подготовки к экзаменам растёт, и родители смещаются от одиночных репетиторов к системным решениям. У репетиторов тоже есть недостатки — я говорю это как репетитор. Порой не хватает внешнего контроля: все мы устаём, и когда есть возможность не задать домашнее задание, не проверить работу, сделать перенос — это по-человечески логично, когда занятие идёт с одним репетитором один на один. Но так или иначе это сказывается на результате. Моё желание — исключить эти уязвимости и выстроить систему, где будет контроль: занятия по-прежнему ведут репетиторы, но над ними стоят люди, которые требуют отчётность, и это способствует более качественному отношению к работе.</p>
+
+      <h2>От исполнителя к стратегу</h2>
+      <p>Сейчас весь бизнес держится полностью на мне, но через три-пять лет я хочу быть больше стратегом и владельцем, а не основным исполнителем — чтобы в школе было больше тысячи учеников в год. В первую очередь для этого нужны чёткие регламенты по действиям — сейчас я выстраиваю процессы, чтобы точно понимать, что нужно делать, а дальше передавать эти задачи другим людям. В этом году я буду работать именно над структурой школы: кто за что отвечает, какие идут действия. А дальше буду расширять и преподавательский, и административный состав.</p>
+
+      <h2>Три отдела, которые я строю</h2>
+      <p>Планирую три отдела. Первый отвечает за маркетинг — продвижение и рекламу. Второй — за продукт: постоянная связь с преподавателями, родителями, учениками, сбор обратной связи. Третий — поддержка бизнеса: технические детали, работа с платформой, обучение учителей тому, как правильно работать в системе.</p>
+
+      <h2>Совет себе в 2007 году и как я хочу, чтобы меня находили</h2>
+      <p>Если бы я мог вернуться в 2007 год, я бы сказал себе: не бойся пробовать и открывай свою школу раньше — ещё в 2015-м, с ошибками, не боясь их. Не бойся ошибок и следуй за мечтой.</p>
+      <p>У меня довольно много тёзок в интернете, и «Николай Полещук» — распространённое сочетание. Поэтому я хочу выстроить школу, которая не будет привязана к моему личному имени, а будет на слуху за счёт качества и высоких результатов учеников. Раньше я всегда позиционировал себя как репетитор, а сейчас хочу позиционировать себя как создателя качественной онлайн-школы, в которой все будут рады учиться и достигать новых вершин.</p>
+
+      <p class="art-signature">Николай Полещук,<br>основатель онлайн-школы</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс с 25 днями до экзамена</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>📐 Ко мне пришла ученица за 25 дней до ЕГЭ. Она не могла назвать ни одной формулы</h3>
+        <p>Я провожу диагностику перед началом занятий с каждым учеником. Обычно это формальность. В этот раз я завис минут на десять, думая, что вообще делать дальше.</p>
+        <h4>Что я сделал</h4>
+        <p>Посмотрел, сколько остаётся времени. Расписал, когда у неё занятия по другим предметам с другими преподавателями. Выписал по порядку темы, на которые реально можно сделать акцент, чтобы сдать экзамен. А дальше — просто работа: доходило до четырёх занятий в неделю.</p>
+        <h4>Почему я вообще взялся</h4>
+        <p>Срок был короткий, ситуация — очень плохая. Но когда человек действительно хочет — мне сложно отказать и не помочь.</p>
+        <p>🎯 Результат — 48 баллов без пересдачи. Не за счёт таланта, а за счёт системы и последовательности.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про малые группы</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>👥 Все говорят, что индивидуальные занятия эффективнее группы. Я делаю ставку на малые группы — и вот почему</h3>
+        <p>Формат малых групп добавляет то, чего никогда не будет у репетитора один на один — элемент соревнования. Желание кому-то покрасоваться, показать себя рядом со сверстником работает сильнее любых уговоров.</p>
+        <h4>Плюс поддержка</h4>
+        <p>В группе всегда есть кто-то на твоей волне — единомышленник, который поддержит в трудный момент. Одному тянуть предмет психологически тяжелее.</p>
+        <h4>А индивидуальные занятия?</h4>
+        <p>Я не отказываюсь от них полностью. Если ученик чувствует просадку — он пишет мне, и я ввожу дополнительные индивидуальные уроки. Группы у меня небольшие, и времени хватает, чтобы выстроить с каждым именно ту траекторию, которая нужна конкретно ему.</p>
+        <p>Лучший формат — не всегда самый очевидный.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор преподавателей</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🎓 Кандидат наук по высшей математике не прошёл у меня собеседование. Дело не в знаниях</h3>
+        <p>Я отбираю преподавателей по трём критериям: экспертиза, умение объяснять и совпадение по ценностям. Плюс обязательный демо-урок.</p>
+        <h4>Где чаще всего расходимся</h4>
+        <p>С ценностями почти никогда не бывает проблем — люди, которые идут преподавать, обычно разделяют мои взгляды. А вот с экспертизой и умением объяснять сложнее. Бывает, человек всё знает, но объяснить не может — такого я не возьму: если он не заинтересует ученика, качество будет не то.</p>
+        <h4>А бывает наоборот</h4>
+        <p>Экспертность немного хромает, но человек умеет объяснять и хочет работать. Такого я беру на заметку и помогаю подтянуть уровень. Знания можно докачать. Умение зажечь интерес — гораздо труднее.</p>
+        <p>Чаще всего расхождения происходят именно на умении объяснять — не на дипломах.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про карате в преподавании</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🥋 У меня чёрный пояс по карате. Нет, на уроках физики я не заставляю учеников отжиматься</h3>
+        <p>Меня часто спрашивают, что из карате я переношу на преподавание. Спойлер — не десять отжиманий, если ученик устал.</p>
+        <h4>Что на самом деле переносится</h4>
+        <p>Спокойствие и уверенность. Системность и стремление работать ради результата — не ради процесса. Это касается не только физики, но вообще всех моих занятий, включая информатику.</p>
+        <h4>Личная деталь</h4>
+        <p>Я даже особо не афиширую ученикам, что занимался карате и дошёл до чёрного пояса. Это давно перестало быть отдельным достижением и стало просто частью того, как я думаю и действую.</p>
+        <p>🎯 Иногда самый сильный перенос опыта — это не техника, а характер.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про репетиторов и систему</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>⚠️ У репетиторов есть слабое место. Я знаю это, потому что сам репетитор</h3>
+        <p>Не буду делать вид, что частные занятия идеальны. У них есть системная уязвимость — отсутствие внешнего контроля.</p>
+        <h4>Почему так происходит</h4>
+        <p>Все мы люди, все устаём. Иногда проще не задать домашнее задание, не проверить работу, перенести занятие. С одной стороны — это по-человечески логично. С другой — так или иначе сказывается на результате ученика.</p>
+        <h4>Что я строю вместо этого</h4>
+        <p>Занятия по-прежнему ведут репетиторы — но над ними стоят люди, которые требуют отчётность. Не потому что репетиторам не доверяют, а потому что внешний контроль дисциплинирует всех, включая меня самого.</p>
+        <p>Рынок подготовки к экзаменам растёт, и родители всё чаще выбирают именно системные решения — а не одного человека, у которого тоже бывают трудные недели.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/nikolay-poleshchuk-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Карате и физика</a></li>
+        <li><a href="#t2">2. Почему учителя выгорают</a></li>
+        <li><a href="#t3">3. Почему всё-таки ушёл из школы</a></li>
+        <li><a href="#t4">4. Идея школы, которая ждала десять лет</a></li>
+        <li><a href="#t5">5. Как начал преподавать студентом</a></li>
+        <li><a href="#t6">6. Момент в лагере</a></li>
+        <li><a href="#t7">7. Наставница, влюбившая в физику</a></li>
+        <li><a href="#t8">8. Три предмета, но фокус на двух</a></li>
+        <li><a href="#t9">9. Средний балл 88 и малые группы</a></li>
+        <li><a href="#t10">10. 25 дней до экзамена — 48 баллов</a></li>
+        <li><a href="#t11">11. От страха физики до 100 баллов</a></li>
+        <li><a href="#t12">12. Пять лет с одним учеником и Бауманка</a></li>
+        <li><a href="#t13">13. Отбор преподавателей</a></li>
+        <li><a href="#t14">14. Команда: 4 сотрудника, 35–40 учеников</a></li>
+        <li><a href="#t15">15. Карате, музыка, моноколесо</a></li>
+        <li><a href="#t16">16. От исполнителя к стратегу</a></li>
+        <li><a href="#t17">17. Три отдела</a></li>
+        <li><a href="#t18">18. От репетиторов к системным решениям</a></li>
+        <li><a href="#t19">19. Совет себе в 2007 году и нейминг</a></li>
+        <li><a href="#t20">20. Контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Карате и физика</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас я знаю, вы с 16 лет занимаетесь карате, у вас чёрный пояс, и при этом вы преподаёте физику. Что-то из додзё, из опыта карате вы переносите на преподавание физики?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Я бы сказал, не только на преподавание физики переношу — скорее просто на все другие занятия, которые у меня идут: кроме физики ещё и на информатику. В своё время именно карате сделало меня более спокойным, уверенным и привило, скажем так, системность и стремление именно работать для достижения каких-то результатов.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ну, это для вас, а, допустим, для учеников что-нибудь применяете?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну не знаю, там переключиться, например: видите, что ученик устал, и говорите — «давай-ка быстренько, там десять отжиманий»? Нет, в этом плане никаких таких отжиманий на уроках у меня нету. Более того, я на самом деле не особо и афиширую ученикам о том, что я занимался карате и достиг таких результатов. Это больше как часть меня, уже ставшая давным-давно манерой поведения, каким-то мыслям, действиям.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Почему учителя выгорают</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы упоминали, что в современных школах учителя учить уже не хотят, ученики учиться не хотят, и всё сводится к рисованию оценок. Но при этом вы достаточно много лет проработали сами в школе — 8 лет.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, на самом деле раньше больше — 10 лет, то есть получается, 8 лет — это в одной школе, после этого уходил и переходил ещё работать 2 года в другой школе. И уходил я из школы даже больше по семейным обстоятельствам.</p>
+        <p>И когда я именно говорил о том, что учителям сложно вести, а ученики не хотят учиться, тут нужно понимать, что я ни в коем случае не хочу ничего плохого сказать об учителях. Я считаю, что это прекрасные люди, которые делают огромнейший вклад, собственно говоря, в образование, в развитие детей, да и в целом в дальнейшем на жизнь нашей даже страны, я бы сказал.</p>
+        <p>Но просто в современных реалиях очень много сил учителей уходит на документы, бумажную какую-то волокиту, отчётности, какие-то работы, не связанные с учёбой. А порой просто очень большая загрузка, когда уже учителей просто не хватает физических сил на то, чтобы вести. А если у учителя нету силы вести занятия, то и ученикам становится неинтересно, скучно, естественно, у них идёт просадка по знаниям. И во всех школах требуют довольно высокого именно уровня показателей, и поэтому оценка превратилась вместо показателя о том, какие результаты на данный момент у ученика, во что-то, за чем гоняются, причём как и руководство школы, так и учителя, так и ученики.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Почему всё-таки ушёл из школы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А почему всё-таки они ушли раньше?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Потому что мне нравится преподавать, мне нравится учить, это, скажем так, моё призвание, можно даже так, наверное, сказать. Поэтому даже уйдя из школы, я сделал свой собственный кабинет и, собственно говоря, дальше продолжил именно ведение занятий. То есть не ушёл полностью из этой сферы.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Идея школы, которая ждала десять лет</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Школа у вас как отдельная единица появилась только в 2025 году. Что произошло в 2025 — что вы такие: «Ну всё, надо школу открывать»?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Идея открыть школу зародилась намного раньше, наверное, даже где-то в 2015 году. Но тогда, так как работал в школе и уходило всё время полностью на начало занятий в школе, потом дополнительные занятия, тренировки, — и получается, я уже часов в 10—11 возвращался домой, и понятное дело, не было возможности реализовывать какие-то свои планы.</p>
+        <p>А в 2025 году тут, наверное, совпало сразу же несколько моментов. Накопились знания о том, в принципе, как открыть школу, появилось сообщество, которое также помогает — то есть единомышленники, которые подсказывают, помогают и морально в том числе. И понял, что моя система работает, а значит, я смогу помочь и другим людям достичь хороших результатов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Как начал преподавать студентом</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Но при этом преподавать вы начали ещё в университете, в 2007 году.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>В 2007 году я уже начал преподавать, но это произошло как-то само собой. То есть это как раз-таки мой третий курс университета. После второго курса у нас была летняя практика в лагере, где я убедился о том, что преподавание и образование — именно моя стезя, моё призвание. И после этого просто вначале знакомые попросили помощи по подготовке, и как-то оно само собой начало получаться. Плюс ещё на третьем курсе у нас была уже педагогическая практика в школе, где мне действительно сильно помогали педагоги более старшие — рассказывали о том, как вести, как строить уроки, на что обращать внимание.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Момент в лагере</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что такое вот в лагере произошло? Что вы поняли, что педагогика — это ваша?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Наверное, по духу очень легко и приятно мне взаимодействовать с детьми. То есть своего рода как бы и сам становишься ребёнком, и ощущение радости и счастья от общения с ними и от того, что ты приносишь пользу и даёшь какие-то действительно полезные знания, прививаешь какие-то навыки.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Наставница, влюбившая в физику</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я знаю, что у вас было несколько наставников: учительница музыки, сенсей в карате, преподавательница физики в университете, методист по информатике. Кто из них оставил самый неожиданный след?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, все они повлияли действительно на моё становление как преподавателя, да и как человека. Но если смотреть, наверное, на профессиональную деятельность — это преподавательница по физике в вузе, Наталья Николаевна. Она вела занятия настолько интересно, что я сам влюбился, собственно говоря, в физику. Мне стало действительно очень интересно, захотелось изучать и развиваться в этом дальше направлении.</p>
+        <p>И уже она у меня вела на первом-втором курсе общую физику, и когда на третьем курсе я уже решил вести занятия, у меня был своего рода ориентир о том, что должны давать занятия моим ученикам — то есть тоже, чтобы они зажигали огонь в учениках, чтобы у них появлялось именно желание учиться, а не просто зазубривать и получать какие-то там оценки для галочки.</p>
+        <p>Но при этом она действительно была строгая, то есть требовательная, без каких-то там унижений или прочего — а именно, что вот есть задание, вот что ты сделал на него, за то ты и получил. И это точно так же перенеслось на моё видение и моё построение школы — о том, что нужно быть предельно честными как с учениками, с родителями, и ставить те оценки, которые есть, но при этом относиться всегда к людям по-человечески. Не приравнивать какие-то личные качества с оценками.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Три предмета, но фокус на двух</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ваше образование, значит, физик с дополнительной специальностью «информатика». Но сейчас вы преподаёте как физику, так и информатику и другие предметы по запросу. Как вы решаете, за какой предмет браться, за какой нет?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Тут бы я, наверное, немножко бы поправил. Я преподаю физику, информатику и математику. При этом сейчас я стараюсь именно углубиться только в физику и информатику — это два действительно моих любимых предмета. А остальные предметы уже передаю именно своим коллегам-преподавателям, потому что считаю, что чтобы достичь качества и действительно дать высокий уровень, нужно именно углубляться в один предмет, ну, максимум в два. Хотя когда работал в школе, да, там были ещё и робототехника, технология — тоже дополнительные предметы, которые приходилось вести.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Средний балл 88 и малые группы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас в школе не было ни одного ученика, который бы не сдал экзамен, и средний балл по ЕГЭ за 2026 год у вас 88.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, есть ученики, которые набрали 100 баллов.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>При этом вы делаете ставку на малые группы, а не на индивидуальные занятия, которые, ну, обычно считаются более эффективными. Почему именно малые группы?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Дело в том, что формат малых групп позволяет вводить такой элемент, как соревнование — то есть желание кому-то покрасоваться, плюс так или иначе всегда есть какая-то группа единомышленников, которая поддержит в крайнем случае — это тоже даёт свои преимущества. К тому же я не ухожу полностью от индивидуальных: ученики могут в любой момент, когда чувствуют, что начинается какая-то просадка, мне написать, и при необходимости я вводил дополнительные индивидуальные занятия.</p>
+        <p>А сейчас я стараюсь выстроить систему, где уже одновременно есть и групповые занятия, и также индивидуальные с преподавателем по необходимости. Так что, с одной стороны, индивидуальные действительно имеют какие-то преимущества, и учитывая, что там не так много людей — ну, в плане, если сравнивать с обычным классом — и времени в целом хватает для каждого ученика, чтобы с каждым провзаимодействовать и выстроить именно ту траекторию занятий, которая необходима.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. 25 дней до экзамена — 48 баллов</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Одна ваша ученица пришла к вам за 25 дней до экзамена, при этом вообще не могла назвать ни одной формулы. Вы её взяли и довели — она вышла на 48 баллов без пересдачи. Почему взяли, и как так получилось довести до нормальных баллов?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Потому что, ну, срок короткий, и ситуация очень плохая. Это очень интересная ситуация получилась, но нужно понимать, что, во-первых, обратились ко мне по знакомству — я не знал, собственно говоря, то, с чем мне придётся взаимодействовать. И стандартно, перед тем как я начинаю заниматься, я провожу диагностику. И это был один из немногих моментов, ну, наверное, за последние лет пять — это первый момент в обучении, когда я завис минут на пять-десять, думая о том, собственно говоря, а что делать дальше.</p>
+        <p>Ну, дальше я, собственно говоря, просто посмотрел, сколько у нас остаётся времени, расписал, когда идут занятия у человека с другими преподавателями, по другим предметам, и выписал последовательно те темы, на которые действительно можно сделать акцент, чтобы сдать экзамен, а дальше просто работа, работа, работа. То есть, в том случае там у нас доходило до четырёх занятий в неделю — вот довольно существенно. Но работа там была очень большая, и это было не так легко и просто. Но когда, в принципе, человек хочет — ну, как бы мне очень сложно отказать и не помочь людям.</p>
+        <p>Если не смотреть, как бы, на то, взялся не взялся, то всегда в своей работе я выстраиваю именно систему, последовательность занятий, которые дают, как бы, наибольший результат.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. От страха физики до 100 баллов</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Другая ваша ученица пришла к вам в девятом классе, тоже физики боялась, базы не было. Потом сдала ОГЭ на пять, через два года ЕГЭ на 100 баллов. И вот всё это время она была с вами — ну как, в одной малой группе, или там состав менялся? Как это у вас устроено?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Да, действительно, в девятом классе пришла ученица, она с самого начала начала заниматься в группе. И это была одна группа, в девятом классе непосредственно из трёх человек, потом, перейдя уже в десятый класс, — она даже не думала, на самом деле, сдавать и идти на физику, но за год ей так понравился этот предмет, что она решила уже и дальше в одиннадцатом классе сдавать экзамены, и уже в десятом классе они обратились за помощью в подготовке к ЕГЭ.</p>
+        <p>Там была сформирована другая группа — то есть у меня делятся группы по девятому классу и десятый-одиннадцатый класс для подготовки к ЕГЭ. Но там уже был один тоже знакомый её человек из предыдущей группы, из девятого класса. Ну и, собственно говоря, состав поменялся где-то на 50%.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Пять лет с одним учеником и Бауманка</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть ученик, с которым вы очень много работаете — с седьмого класса, при этом он стал призёром Всероссийской олимпиады, поступил в Бауманку. Что вы поняли про долгосрочную работу? Она чем-то отличается от подготовки к ЕГЭ, назовём это так?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, это мой как бы кейс больше из работы учителем. То есть я с ним действительно начинал заниматься в седьмом классе, потому что по школьной программе занятия по физике начинаются в седьмом классе. И уже в девятом классе он у меня стал призёром по физике. В дальнейшем, соответственно, тоже были интересные года — то есть действительно очень интересно было с ним заниматься, но непосредственно вёл я его пять лет.</p>
+        <p>А после этого он поступил уже в Бауманский университет, и мы просто после этого поддерживали связь — то есть до сих пор периодически мы списываемся, общаемся. Но это очень приятный опыт — видеть о том, как растут дети, даже чужие, и становятся очень интересными и успешными людьми.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Отбор преподавателей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы отбираете преподавателей в школу по трём основным блокам, или критериям — это экспертиза, умение объяснять и совпадение по ценностям, ну и ещё есть обязательный демо-урок. Что из этих трёх критериев чаще становится причиной отказа, по каким критериям чаще не дотягивают?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Сложный на самом деле вопрос. Дело в том, что перед тем как нанимать на работу, обязательно проводятся собеседования, и в первую очередь я, естественно, смотрю по ценностям. Но тут есть хорошая положительная динамика: чаще всего люди, которые идут именно в преподавание, разделяют и мои взгляды, и мои интересы именно в преподавании. Так что по этому критерию крайне редко бывают случаи несовпадения.</p>
+        <p>Дальше два критерия — по экспертности и умению объяснять — тут уже чуточку посложнее. Бывают случаи, когда человек действительно всё умеет делать, но не может объяснить. И, естественно, я не могу такого человека тоже взять, потому что если человек не сможет заинтересовать своих учеников, то качество, естественно, будет не то, которое мне бы хотелось в своей школе.</p>
+        <p>Ну а другой случай — тут в некоторых случаях я беру, то есть когда экспертность немножко хромает, но человек умеет объяснять и действительно хочет работать. В таких случаях я беру его на заметку и стараюсь именно помочь ему поднять именно уровень экспертности. То есть получается, наиболее часто — это именно умение объяснять, вот на этом критерии чаще всего происходят какие-то расхождения.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Команда: 4 сотрудника, 35–40 учеников</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас при этом в школе всего четыре сотрудника. А сколько учеников у вас проходит?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, по тому году где-то 35—40 учеников.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как удаётся справляться с помощью четырёх сотрудников?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Я бы не сказал, что слишком сложно. Наоборот, я хочу большего роста — то есть то, что я планирую, ещё больше учеников и, соответственно, больше сотрудников уже по другим предметам. В этом году я ориентировался именно на три своих базовых предмета, где я действительно могу в крайнем случае помочь преподавателям и понимаю, как они преподают и что они преподают. А с этого года я буду стараться расширять именно линейку предметов, вводить другие — но уже знаю, на что опираться, какие есть критерии по качеству выбора преподавателей.</p>
+        <p>Думаю, как говорится, всё у нас будет только расти и развиваться. Да, иногда сложно, скажем так, уследить за всеми учениками, но тут, кроме преподавателей, у меня есть ещё помощники, которые также просматривают занятия преподавателей и тоже собирают какую-то определённую статистику по ученикам — то есть берут обратную связь, и, как говорится, всегда рука на пульсе. Если возникает какая-то сложность, мы тут же с этой проблемой разбираемся.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Карате, музыка, моноколесо</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас вот, помимо чёрного пояса по карате, ну и то, что вы увлекаетесь музыкой, играете на фортепиано и гитаре, вы ещё катаетесь на моноколесе и ходите в походы. Вопрос: как на всё хватает времени? И второй вопрос: что из этого больше всего помогает перезагрузиться?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ответ на первый вопрос — на самом деле катастрофически не хватает времени. Было бы моё желание, я бы, наверное, и из походов бы не вылезал. Но, к сожалению, или к счастью, не так часто получается сходить в походы куда-нибудь или на фестивали, но всё равно стараюсь хотя бы раза три-четыре в год, в особенности летом, когда меньше нагрузка именно по преподавательской деятельности, выбираться с друзьями — это тоже повод как бы и встретиться с родными и близкими людьми.</p>
+        <p>Что касается пианино и гитары — в целом это здесь рядышком, прямо в моём рабочем кабинете. У меня здесь стоит инструмент, и при желании всегда можно в перерывах между занятиями за него сесть. А что мне позволяет так немножко проветриться — ну, наверное, это как раз-таки покататься немного на моноколесе. То есть это всегда приятно — просто взять там в перерывах либо вечером, и вместо пешей прогулки просто прокатиться, как говорится, с ветерком. Ну тут, конечно же, сезонность, и большая часть, конечно, такого отдыха приходится на лето, а в остальные месяцы, как и ученики — именно усиленная работа.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. От исполнителя к стратегу</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сейчас вы прямо говорите, что вот весь бизнес держится полностью на вас, при этом через три-пять лет вы бы хотели быть больше стратегом и владельцем, а не основным исполнителем, и чтобы было несколько сотен учеников в год — даже не несколько сотен, а больше тысячи учеников в год. Что должно произойти, чтобы это случилось?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну тут даже не то, что должно произойти, а то, что я буду делать в любом случае. Ну, в первую очередь, это чёткие регламенты по действиям. То есть сейчас я выстраиваю процессы, чтобы точно понимать, что нужно делать, и в дальнейшем, соответственно, какие-то вот эти кусочки передавать уже на других людей и переходить к следующему построению, скажем так, своей школы.</p>
+        <p>И получается, в целом есть определённые направления, которые нужно развить, то есть выработать вот эти регламенты и создать уже полноценные отделы. И когда уже получится выстроить структуру школы, уже можно увеличивать именно и по масштабу. То есть в первую очередь, именно в этом году я буду работать над структурой школы — кто за что отвечает, какие идут действия. Ну а уже в дальнейшем буду именно расширять по преподавательскому составу, ну и, соответственно, ученическому. То есть вначале административный персонал, а дальше, наверное, параллельно и ученики, и преподаватели.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. Три отдела</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А административный персонал в каком порядке — я не знаю, вначале офис-менеджер, например, или бухгалтер?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Нет. Вначале я планирую сделать три отдела. Это один отдел, который будет отвечать больше за маркетинг, соответственно, за продвижение и рекламу. Один отдел будет отвечать за продукт — то есть всегда также на связи с преподавателями, с учителями, с родителями, с учениками, всегда собирать обратную связь и думать.</p>
+        <p>Ну и третий отдел, который будет как раз-таки поддержка бизнеса — ну да, то есть стараться именно какие-то такие технические детали решать, по платформе, по взаимодействию, вводить учителей о том, как правильно работать, помогать. Ну, техническая часть.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t18">
+      <h3>18. От репетиторов к системным решениям</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорили, что сейчас рынок подготовки к экзаменам растёт, а родители смещаются от одиночных репетиторов к системным решениям. А что это значит на практике — что это такое, системное решение?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Я бы сказал так, о том, что и у репетиторов тоже есть недостатки. Я это говорю точно так же, как и репетитор. И порой не хватает просто-напросто внешнего контроля. То есть бывает такое, что все мы люди, все устаём, когда есть возможность не задать домашнее задание, дать отдых и детям, и себе, не проверить какие-то работы, сделать какой-то перенос, отмену или прочее — вот всё, с одной стороны, это как бы логично, и да, когда идёт занятие непосредственно с репетитором, вполне допустимо.</p>
+        <p>Но так или иначе это сказывается на результате. И у меня желание именно как бы исключить эти уязвимости в репетиторской деятельности и выстроить систему таким образом, что будет определённый контроль, и что занятия, с одной стороны, тоже будут проводиться как с репетиторами, но над репетиторами ещё будут стоять люди, которые будут требовать отчётность, и это так или иначе будет способствовать более качественному отношению к своей работе.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t19">
+      <h3>19. Совет себе в 2007 году и нейминг</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если бы сейчас взяли, вернулись в 2007 год, и была возможность дать себе совет — какой бы вы совет дали? Например: «Николай, открывай онлайн-школу» в 2007 году.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, схожий, наверное, совет бы я дал, но прозвучал бы он, наверное, немножко по-другому — о том, что не бойся пробовать и старайся как бы открывать свою школу, вот, когда ещё в 2015 году, вот, с ошибками — ну, не бояться ошибок. Наверное так. Не бойся ошибок и следуй за мечтой.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сейчас вопрос будет такой, про нейминг. Вы сами говорили, что у вас довольно много тёзок в интернете, и «Николай Полещук» — ну такое довольно распространённое сочетание. А вот как бы вы хотели, чтобы в вашу школу находили? По каким словам и каким образом?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Я, наверное, хочу больше выстроить школу, которая будет не привязана непосредственно к моему имени, а просто будет на слуху у людей за счёт своего качества и высоких результатов учеников. То есть, по крайней мере, в будущем у меня цель именно такая — то есть выстроить систему, которая будет действительно давать хорошие результаты.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как, наверное, себя позиционировать в интернете?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Тоже довольно сложный вопрос, потому что осознание о том, что я хочу именно быть владельцем и стратегом школы, пришло не так давно. До этого всегда я себя позиционировал как именно репетитор. Сейчас, наверное, я именно хочу сделать позиционирование как создатель такой крутой школы, в которой все будут рады учиться и достигать новых вершин. То есть позиционирование именно как создателя онлайн-школы, хорошей качественной онлайн-школы.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t20">
+      <h3>20. Контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ну, если кто-то из партнёров, потенциальных инвесторов или там родителей захочет с вами связаться, как это можно сделать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Николай</div><div class="tr-txt">
+        <p>Ну, в первую очередь я стараюсь быть по возможности везде — то есть это и Telegram, который сейчас тоже, конечно, под вопросом, но тем не менее WhatsApp, Max, ВКонтакте, различные социальные сети. То есть по возможности я стараюсь быть везде и всегда открыт для диалога, и всегда буду рад, скажем так, любым новым людям и любому новому взаимодействию с людьми.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
