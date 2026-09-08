@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Марина Миткалёва — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223265444?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Марина Миткалева - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223265444" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">23 года в преподавании английского. Марина Миткалёва — от офлайн-школы в Протвино до онлайн-школы с учениками по всему миру</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Марина преподаёт английский с 15 лет — начинала как самая младшая студентка МГУ, построила офлайн-школу Baker Street в Протвино с нуля, продала её и открыла онлайн-школу, где 100% занятий идёт на английском языке с первого урока. В выпуске — про билингвизм, отбор преподавателей по «живому» языку, кейсы учеников от нуля до свободной речи и о том, почему методика важнее, чем желание клиента угодить.
+
+🔗 Школа Acing English: [ссылка]
+🔗 Написать Марине в Telegram: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа английского, EdTech, подкаст для предпринимателей, репетиторский бизнес, изучение английского языка, билингвизм, подготовка к ЕГЭ по английскому, найм преподавателей, Марина Миткалёва</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #английскийязык #онлайншкола #EdTech #билингвизм #ЕГЭ</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/marina-mitkaleva-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Однажды в любом бизнесе приходится уволить себя. Как я отпустила школу, которую построила своими руками</h1>
+
+      <p>Я преподаю английский с 15 лет — уже 23 года. За это время я сама сдавала нормативы по физкультуре в университете, строила офлайн-школу с ремонтом стен собственными руками, продавала её и переезжала в другую страну. Мой путь начался не с решения стать предпринимателем, а с одного простого обстоятельства: меня зачислили сразу в третий класс в семь лет.</p>
+
+      <h2>Ребёнок, который думает на двух языках</h2>
+      <p>Я четыре года прожила в Америке в детстве и ещё два года — в подростковом возрасте. Из-за этого я стала по-настоящему билингвальной: думаю на том языке, на котором в моменте говорю. Если разговор на русском — думаю на русском, если на английском — на английском, без перевода в голове. Это не зависит от темы или сложности: точно так же и с фильмами — думаешь на языке, на котором идёт кино.</p>
+      <p>При этом мои родители достаточно жёстко следили, чтобы дома мы говорили только на русском — в детском возрасте язык, на котором не говорит среда, теряется очень быстро. Мы с сестрой пытались перейти на английский даже дома, потому что после целого дня в англоязычной школе так было легче, но родители держали планку. Поэтому мой русский остался в таком же хорошем состоянии, как и английский — хотя после рабочего дня на языке у меня иногда проскакивает английская интонация в русской речи.</p>
+
+      <h2>Почему я не боюсь говорить с учениками только на английском</h2>
+      <p>На занятиях мы говорим на английском 100% времени, даже на самых начальных уровнях — и я понимаю, что для многих учеников такой формат пугающий. Люди привыкли к другой модели: сначала долго учить грамматику, потом долго учить слова, и когда-нибудь это всё сойдётся вместе.</p>
+      <p>У нас подход принципиально другой. Уже на диагностике мы предупреждаем: ошибки в начале нас не интересуют, неправильно подобранные слова — тоже. Главное, чтобы была речь, а с грамматикой разберёмся по ходу дела. Мы строим всё на визуализации и объяснениях, и если совсем зашли в тупик — можем перевести одно слово. Но обычно даже это не требуется: нормальная коммуникация выстраивается уже на первом уровне.</p>
+
+      <h2>Как изменилась моя методика за 23 года</h2>
+      <p>Изменилось многое. В 15 лет моими основными клиентами были младшие школьники, которым нужно было подтянуть школьную программу. Сейчас это старшие подростки и взрослые, которым нужен серьёзный язык для работы, обучения или жизни за границей, для путешествий.</p>
+      <p>Изменился и подход. Раньше я подстраивалась под то, чего хочет клиент — подтянуть конкретную тему по школьному учебнику. Сейчас мы работаем от того, куда человек хочет прийти, но выстраиваем маршрут уже со своей позиции. За 23 года было столько разных клиентов и запросов, что теперь мы можем сразу назначить кратчайший путь, а не идти на поводу.</p>
+
+      <h2>Учительница, которая никогда на меня не давила</h2>
+      <p>Родители отдали меня сразу в третий класс в семь лет. Я была самой младшей в классе, но моя учительница не давила и не ставила плохих оценок — она постепенно, аккуратно подводила меня к нужным знаниям, давая мягкую обратную связь.</p>
+      <blockquote>Помимо чисто методической работы, большая часть нашей работы — это моральная поддержка и умение показать ученику, что он сможет, что мы здесь, чтобы ему помогать, а не для того, чтобы укорять его за ошибки.</blockquote>
+      <p>Мне кажется, это был основополагающий момент для всей моей жизни: именно то, что меня в самом начале не задавили, помогло мне потом выбраться в отличницы — я всю жизнь прекрасно училась, с медалями и красными дипломами. Я до сих пор слышу истории о взрослых людях, которые боятся учить английский, потому что в школе учитель бил их книгами по голове. Для меня это что-то абсолютно нереальное. Я считаю, что важно давать ученику посильную нагрузку — чтобы был челлендж, но не что-то непосильное сразу, — и поддерживать морально. Тогда и результат получается хорошим.</p>
+
+      <h2>Самая младшая студентка МГУ</h2>
+      <p>Благодаря тому, что я пошла сразу в третий класс, школу я закончила в 15 лет и поступила в МГУ на лингвистику — преподавание английского и французского. Единственное, что реально мешало из-за возраста: меня не пускали в Ленинскую библиотеку писать курсовую, потому что туда пускали только с 18 лет.</p>
+      <p>В остальном не мешало совсем — у меня уже был опыт учёбы с людьми на два года старше, и всё моё окружение взрослело вместе с ними. Разве что физкультура давалась тяжело: я не очень крупный человек, и когда на первом курсе нужно было десять раз присесть «пистолетиком», у меня не получилось. Пришлось тренироваться все каникулы и пересдавать этот единственный несданный с первого раза экзамен за всю университетскую пору.</p>
+
+      <h2>Как я «уволила себя» из собственной школы</h2>
+      <p>До онлайн-школы у меня была офлайн-школа Baker Street в Протвино — проект, который я вела с самого начала карьеры, ему было около двенадцати лет. Мы в буквальном смысле сами делали ремонт, красили стены, вкладывали в неё душу с нуля.</p>
+      <p>Расстаться с ней было тяжело. Но я вспоминаю фразу из бизнес-литературы: в любом бизнесе рано или поздно наступает момент, когда людей нужно увольнять — и когда-то придёт момент, когда уволить нужно будет себя. Я чётко прочувствовала этот момент: школа стала для меня неэффективной, потому что мне хотелось большего, а Протвино — город с населением 40 000 человек — сильно ограничивал число клиентов. Закрывать школу не хотелось: она работала, приносила прибыль, людям нравилось. Поэтому я обрадовалась, когда нашёлся человек, готовый вложить в неё своё время. Прошло пять лет — школа всё так же работает без меня, и когда мы проезжаем мимо неё с той красной будочкой на входе, навещая родителей, мне всегда приятно на неё посмотреть.</p>
+
+      <h2>Подросток, который заговорил через игры и песни</h2>
+      <p>Один из показательных кейсов — подросток 16 лет, который вообще не хотел заниматься английским, а через полтора года вышел на уровень B2. С подростками самое важное — слушать конкретного человека. На диагностиках часто присутствует родитель, который говорит «подожди, не надо, я сейчас всё скажу» и давит на подростка — и тот, конечно, не хочет учиться, когда его не слышат.</p>
+      <p>Я стараюсь полностью слушать самого ученика, а не только то, чего хотят его родители. Когда подростку уделяешь внимание, слышишь и видишь его — обычно появляется результат, а с ним доволен и родитель.</p>
+
+      <h2>Женщина с нулевым английским, заговорившая с первого занятия</h2>
+      <p>Ещё кейс — женщина 30 лет, вообще не учившая английский, начала говорить простыми диалоговыми фразами уже с первого занятия, а через два года стала работать на английском. Секрет — подобрать тематику маленькими шагами: сначала много визуала, несколько базовых предметов обихода, маленький кусочек грамматики вроде «there is / there are» — из этого уже можно составить много предложений.</p>
+      <p>Главное — не останавливаться на упражнениях, а сразу выводить их в применение: в тот же день попросить провести экскурсию по своему дому на английском. У человека возникает ощущение «вау, я за одно занятие научился проводить экскурсию по дому» — хотя это было всего одно занятие. С каждым разом понемногу достраивается грамматика и лексика, и находится ситуация, где их можно применить в реальной жизни.</p>
+
+      <h2>От 60 баллов по прогнозу учителя до 91 на ЕГЭ</h2>
+      <p>Школьнице говорили, что она сдаст ЕГЭ максимум на 60 баллов — особенно тяжело в это не поверить, когда так говорит твой школьный учитель, который видит тебя каждый день. После занятий со мной она сдала на 91 балл и поступила в топовый лингвистический вуз.</p>
+      <p>Экзамен — это уровень плюс алгоритмы: нужно понимать, что конкретно требуют критерии. Я просто говорила ей, что пока есть время — ничего ещё не решено, и наша задача разложить, где мы можем набрать максимум баллов, опираясь на её сильные стороны. Так же, как учительница у меня в детстве, я не давлю и не критикую за ошибки — это только создаёт лишний стресс. А через поддержку и похвалу за старания вера в себя точно нарастает.</p>
+
+      <h2>Почему я не работаю по методике Бонка</h2>
+      <p>Я не говорю, что с этой методикой что-то не так — она просто не соответствует моим личным ценностям в изучении языка. Я люблю и умею преподавать живой язык, который люди могут использовать для общения, обучения, работы и жизни за границей. А Бонк — это грамматический учебник, построенный на дрилах и повторах. В моём понимании жизнь на языке многогранна и не всегда укладывается в конкретную заученную ситуацию.</p>
+      <p>Если ко мне приходит человек и настаивает именно на этой методике, я не отправляю его «пошёл вон» — я объясняю свою позицию. Многие хотят учиться по конкретной методике просто потому, что так им кто-то посоветовал, и когда рассказываешь, как устроено преподавание языка и какой результат даёт тот или иной упор, люди часто передумывают.</p>
+
+      <h2>Как я узнаю «живой» язык у преподавателя</h2>
+      <p>Мы в основном берём преподавателей с опытом жизни за границей — но это не единственный критерий: есть люди, которые жили за границей, но у них нет системы преподавания, а есть люди с фантастическим языком без единого дня за рубежом. У нас есть такой сотрудник — он утверждает, что никогда не был за границей, и я ему верю, хотя не понимаю, как это произошло.</p>
+      <p>Был случай с сотрудником, у которого оказался акцент определённого лондонского района — мы в шутку решили, что он шпион. А недавно на диагностику пришла девушка с прекрасным произношением, которая объяснила это тем, что в подростковом возрасте фанатела от сериала Gravity Falls и без конца его пересматривала и копировала. Проверяю это я просто разговором: достаточно немного пообщаться с человеком, чтобы понять, насколько его язык используемый, а не переводной и искусственный.</p>
+
+      <h2>Уважение как удержание команды</h2>
+      <p>У меня 12 преподавателей, 3 администратора и очень маленькая текучка. Первая причина — уважение в работе, и к клиентам, и к преподавателям. Если клиент ведёт себя некорректно, нарушает договорённости или преподавателю просто некомфортно с конкретным учеником — мы идём навстречу и подбираем другого преподавателя. Важно, чтобы человека услышали и чтобы у него было ощущение комфорта и безопасности.</p>
+      <p>Вторая причина — экспертность: мы сами уделяем много времени и внимания качеству и выбираем преподавателей, которые тоже готовы в это вкладываться. Поэтому людям приятно работать в школе, которая уважает и методику, и знания языка. У нас недавно один преподаватель попросил несколько недель незапланированного отпуска по личным обстоятельствам — мы, конечно, дали, и он до сих пор периодически пишет и спрашивает, как там наша замечательная школа.</p>
+
+      <h2>Почему жизнь за границей помогает преподавать</h2>
+      <p>Я живу в Португалии и часто путешествую — и это скорее помогает, чем мешает. Я в повседневной жизни чувствую то же самое, что чувствуют мои ученики: понимаю, на каком уровне им нужен английский и в каких ситуациях. Я сама пока не говорю на португальском и периодически сталкиваюсь с теми же сложностями, что и они, — это здорово помогает лучше их понимать.</p>
+
+      <h2>Куда я веду школу дальше</h2>
+      <p>Я планирую удвоение оборота в 2026, 2027 и 2028 годах, чтобы к 2029-му войти в топ-1 школ на GAT course. Это реалистично: многие устали от старого школьного подхода советских времён — учили английский десять лет в школе, пять в университете, а говорить так и не научились. Наши клиенты часто уже живут за границей или путешествуют и сами видят, зачем им нужен язык — какой смысл знать перфект, если не умеешь заказать себе кофе?</p>
+      <p>Через 3–5 лет я вижу школу работающей автономно под управлением отдельного операционного директора с оборотом 120 млн ₽ в год. Сложнее всего будет передать не маркетинг и не продукт, а видение и экспертность в языке — этот директор тоже должен быть человеком в теме, а не просто тем, кто умеет управлять. Даже продажников мы полностью погружаем в продукт: недавно я неделю вводила в курс дела нового продажника без языкового бэкграунда, и к концу недели она сама загорелась учить английский.</p>
+
+      <h2>Почему мы думаем сменить название школы</h2>
+      <p>Сейчас школа называется Acing English — «to ace» значит блестяще справляться, быть лучшим. Но название хорошо считывается только людьми с уже высоким уровнем языка, а мы часто работаем с теми, кто только идёт к этому уровню — у них нет этой ассоциации, и название не «оседает». Поэтому мы думаем про более простое и ёмкое имя, понятное всем.</p>
+
+      <h2>Что бы я сказала себе в 15 лет</h2>
+      <p>В те годы у меня была мысль, что преподавание языка — это скорее побочная профессия, а не главная. Наверное, это шло от отца: он программист и всегда хотел, чтобы я пошла в программирование, — говорил, что учительница английского в лучшем случае заработает 500 долларов. Первые пять-шесть лет в университете я хотела уйти в бизнес, в иностранную компанию, где нужен мой язык, — или в шутку говорила, что стану министром иностранных дел.</p>
+      <p>После университета я год проработала в компании параллельно с преподаванием — и поняла, что это не моё, что я люблю преподавать и у меня это хорошо получается. Через год я открыла свой первый бизнес, потому что не хотела идти в школу. Я бы сказала себе просто поверить, что преподавание — классная профессия, и что у меня в ней всё получится.</p>
+      <p>А взрослым, которые никогда не учили английский и думают, что уже поздновато начинать, я говорю: никогда не поздно. Уровня C2 в 40–50 лет достичь действительно тяжело — я сама сейчас учу португальский и понимаю, что никогда не буду думать на нём так же, как на английском. Но чтобы общаться, чтобы тебя понимали и ты понимал, чтобы смотреть базовые передачи и чувствовать себя в контексте — до этого уровня точно можно дойти. Нужно просто найти того, кто будет прокладывать эту дорогу вместе с тобой.</p>
+
+      <p class="art-signature">Марина Миткалёва,<br>основательница школы английского языка Acing English</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про билингвизм</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🧠 На каком языке я думаю? Меня спрашивают об этом чаще всего</h3>
+        <p>Я 4 года прожила в Америке в детстве и ещё 2 года — подростком. И самый частый вопрос на встречах: «А на каком языке ты думаешь, когда нужна сложная грамматика?»</p>
+        <p>Отвечу честно: дело не в сложности конструкции.</p>
+        <h4>Как это работает на самом деле</h4>
+        <p>Если я говорю на русском — я думаю на русском. Если говорю на английском — думаю на английском, без перевода в голове. Это касается и фильмов: смотришь кино — думаешь на языке, на котором оно идёт.</p>
+        <p>Это то, что называется по-настоящему билингвальным мышлением. Оно не про словарный запас, а про то, на каком языке в моменте «включается» голова.</p>
+        <h4>Но за это пришлось побороться</h4>
+        <p>Мои родители дома жёстко держали русский, хотя нам с сестрой после английской школы было проще перейти на английский и дома. Именно поэтому мой русский не потерялся, хотя после рабочего дня иногда проскакивает английская интонация.</p>
+        <p>🗣 Билингвизм — это не подарок судьбы. Это то, что можно потерять, если не поддерживать оба языка сознательно.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про учительницу из детства</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📚 Меня отдали в 3-й класс в 7 лет. Вот что это дало моей взрослой жизни</h3>
+        <p>Я была самой младшей в классе. И мне очень повезло с учительницей — она не давила и не ставила плохих оценок, а постепенно, аккуратно подводила меня к нужным знаниям.</p>
+        <h4>Почему это оказалось так важно</h4>
+        <p>Мне кажется, именно то, что меня в самом начале «не задавили», помогло мне потом выбраться в отличницы. Я всю жизнь прекрасно училась — с медалями, с красными дипломами во всех учебных заведениях.</p>
+        <p>А ведь я до сих пор слышу истории от взрослых учеников про учителя, который бил их книгами по голове в школе. Для меня это что-то абсолютно нереальное.</p>
+        <h4>Что я забрала себе в методику</h4>
+        <p>Помимо чисто методической работы, большая часть работы преподавателя — это моральная поддержка. Показать ученику, что он сможет. Мы здесь, чтобы помогать, а не укорять за ошибки.</p>
+        <p>Давать посильную нагрузку — чтобы был челлендж, но не что-то непосильное — и поддерживать морально. Тогда и результат хороший.</p>
+        <p>🎓 Иногда лучшее, что может сделать учитель, — это просто не задавить.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс с подростком</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🎮 Подросток вообще не хотел учить английский. Через полтора года — уровень B2</h3>
+        <p>Классическая история: приходит подросток 16 лет на диагностику, а рядом сидит родитель и говорит «подожди, не надо, я сейчас всё скажу».</p>
+        <h4>Проблема не в языке, а в том, что подростка не слышат</h4>
+        <p>Когда родитель давит и говорит за ребёнка, результата не будет — просто потому что человек не хочет учиться, когда его не слышат.</p>
+        <p>Я всегда стараюсь на диагностике слушать именно самого подростка: его игры, его музыку, его сериалы. Не идти на поводу только у того, чего хотят родители.</p>
+        <h4>Что сработало в этом случае</h4>
+        <p>Мы говорили про жизнь, про игры, про песни — то есть на языке, который ему реально интересен. Через полтора года он вышел на уровень B2.</p>
+        <p>💬 Если заинтересовать подростка — будет результат. И родитель в итоге тоже будет доволен.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост о том, как я «уволила себя»</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🔑 Я продала школу, которую строила 12 лет своими руками. Вот почему это было правильно</h3>
+        <p>Когда-то я прочитала фразу из бизнес-литературы: в любом бизнесе рано или поздно наступает момент, когда людей нужно увольнять — и однажды придёт момент, когда уволить нужно будет себя.</p>
+        <h4>Как я поняла, что этот момент настал</h4>
+        <p>Офлайн-школа Baker Street в Протвино — это проект, в который я вложила душу с самого начала карьеры. Мы сами делали ремонт, красили стены. Ему было 12 лет, когда я почувствовала: для этой школы я стала неэффективна.</p>
+        <p>Мне хотелось большего, а маленький город с населением 40 000 человек сильно ограничивал число клиентов. При этом школа работала, приносила прибыль, людям нравилось — закрывать её не хотелось.</p>
+        <h4>Что произошло дальше</h4>
+        <p>Я обрадовалась, когда нашёлся человек, готовый вложить в неё своё время и силы. Прошло 5 лет — школа всё так же работает без меня.</p>
+        <p>Когда мы проезжаем мимо неё, навещая родителей, и видим ту самую красную будочку на входе — мне всегда приятно на неё посмотреть.</p>
+        <p>🚪 Иногда отпустить свой первый проект — это не поражение, а знак того, что ты построил что-то по-настоящему хорошее.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про совет самой себе</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>💵 Отец говорил, что учитель английского заработает максимум 500 долларов</h3>
+        <p>Мне часто задают вопрос: что бы вы сказали себе в юности?</p>
+        <h4>С чем я жила много лет</h4>
+        <p>Мой отец — программист, и он всегда хотел, чтобы я пошла в программирование. Говорил, что преподавание английского — это скорее побочная профессия, а не главная, что я закончу тем, что буду в школе преподавать за максимум 500 долларов.</p>
+        <p>Первые пять-шесть лет в университете я и правда пыталась смотреть в сторону бизнеса — в иностранную компанию, где нужен мой язык. В шутку даже говорила, что стану министром иностранных дел.</p>
+        <h4>Что изменило всё</h4>
+        <p>После университета я год проработала в компании параллельно с преподаванием — и поняла, что это не моё. Я люблю преподавать, и у меня это хорошо получается. Через год после университета я открыла свой первый бизнес.</p>
+        <p>Если бы я могла вернуться и дать себе совет — сказала бы просто поверить, что преподавание — это классная профессия, и что у меня в ней всё получится.</p>
+        <p>✨ Иногда «побочная» профессия оказывается именно той, ради которой всё и было.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/marina-mitkaleva-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Билингвизм: на каком языке я думаю</a></li>
+        <li><a href="#t2">2. Как родители сохранили мой русский</a></li>
+        <li><a href="#t3">3. Почему занятия всегда на английском</a></li>
+        <li><a href="#t4">4. Как изменилась методика за 23 года</a></li>
+        <li><a href="#t5">5. Учительница, которая не давила</a></li>
+        <li><a href="#t6">6. Самая младшая студентка МГУ</a></li>
+        <li><a href="#t7">7. Как я «уволила себя» из своей школы</a></li>
+        <li><a href="#t8">8. Кейс: подросток и B2 за 1,5 года</a></li>
+        <li><a href="#t9">9. Кейс: заговорила с первого занятия</a></li>
+        <li><a href="#t10">10. Кейс: от 60 до 91 балла на ЕГЭ</a></li>
+        <li><a href="#t11">11. Почему я не преподаю по Бонку</a></li>
+        <li><a href="#t12">12. Отбор преподавателей по «живому» языку</a></li>
+        <li><a href="#t13">13. Обратная связь и расставание с педагогами</a></li>
+        <li><a href="#t14">14. Как удерживают команду</a></li>
+        <li><a href="#t15">15. Жизнь за границей и преподавание</a></li>
+        <li><a href="#t16">16. Планы по удвоению оборота</a></li>
+        <li><a href="#t17">17. ЕГЭ и разговорный подход</a></li>
+        <li><a href="#t18">18. Делегирование, ребрендинг и советы</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Билингвизм: на каком языке я думаю</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Марина, я знаю, что вы четыре года прожили в Америке в детстве, ещё потом два года в подростковом возрасте, потом вернулись в Россию и преподаёте английский язык русским людям. На каком языке вы думаете, когда нужно объяснить сложную грамматическую конструкцию?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Мне кажется, здесь вопрос не в том, сложная грамматическая конструкция или несложная. Наверное, из-за того, что у меня есть такой опыт большого долгого проживания в Штатах, и особенно в детском возрасте, ты благодаря этому становишься по факту билингвом — можешь думать на двух языках. И, наверное, у меня это зависит от того, на каком языке я сейчас говорю: если я говорю на русском языке, то я думаю на русском языке, если в текущий момент говорю на английском — я, конечно, не перевожу в голове и говорю просто на английском.</p>
+        <p>Но это не зависит от темы, это касается всего — например, фильмов: когда смотришь, то параллельно думаешь на том или ином языке, на котором идёт фильм.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Как родители сохранили мой русский</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А когда вы вернулись, у вас акцента не было американского?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Ну он до сих пор есть — в английском языке. А в русском — нет. У меня родители достаточно чётко соблюдали русский язык, потому что в детском возрасте очень быстро теряешь тот язык, на котором не говорит среда. Мы с моей сестрой, она на пару лет старше меня, пытались уже переходить на английский язык в семье, потому что когда ты весь день в школе общаешься на английском, легче продолжать говорить на нём и дальше. Но мои родители говорили: нет, мы общаемся только на русском языке дома, чтобы его оставить. Поэтому русский у меня был в таком же состоянии, как и английский.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У моего друга, который живёт в Ирландии, есть дети — они говорят по-русски, но с английскими интонациями, интонируют по-другому.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Это правда. Интонация, мне кажется, самая заметная часть произношения, хотя многие на неё вообще не обращают внимания. У меня тоже есть знакомые, у которых сын в Германии говорит на русском с абсолютно немецкой интонацией — понимаешь, что это именно немецкая интонация, не английская, никакая другая. У меня самой, наверное, бывают и сейчас периоды, когда я могу говорить с английской интонацией на русском — это случается после занятий, после рабочего дня на языке.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Почему занятия всегда на английском</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>На занятиях вы 100% времени говорите на английском языке, даже на начальных уровнях. Многим ученикам с начальным уровнем такой формат может показаться пугающим. Что вы делаете, чтобы снять этот страх?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Да, это правда пугает, потому что немного кто так делает, и многие привыкли к тому, что будет какой-то поступательный процесс: сначала долго учат грамматику, потом долго учат слова, и когда-то это всё сойдётся вместе. У нас подход совсем другой, и мы сразу, на диагностике, когда начинаем говорить на английском, предупреждаем, что так будет — и это окей.</p>
+        <p>Нас реально не интересуют в начале ошибки или неправильно подобранные слова. Главное — чтобы была речь, а с ошибками разберёмся уже по ходу дела. Мы всё строим на визуализации, на объяснениях. На начальных уровнях, если совсем зашли в тупик, можем перевести отдельное слово и продублировать его потом на английском. Но обычно это даже не требуется — уже на уровне один у нас выстраивается нормальная коммуникация.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Как изменилась методика за 23 года</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы преподаёте с 15 лет, уже 23 года. Что за это время поменялось в методике или в подходах?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Много чего. Во-первых, поменялась аудитория: раньше, поначалу, в 15 лет, основные клиенты — это были более младшие школьники, которым нужно было подтянуть школьную программу. Сейчас основные клиенты — старшие подростки, взрослые, кому нужен серьёзный язык для работы, для обучения за границей либо жизни за границей, путешествий.</p>
+        <p>И в связи с этим сильно поменялся подход. Если раньше поначалу ты подстраиваешься под то, чего хочет клиент — подтянуть какую-то тему по школьной книге, — то сейчас мы работаем из того, куда человек хочет прийти, но максимально уже со своей позиции выстраиваем, как его туда привести. За 23 года было много опыта, много клиентов и разных запросов, поэтому, когда клиент говорит, куда он хочет прийти, мы уже можем назначить ему кратчайший путь и не идти на поводу.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Учительница, которая не давила</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас интересный опыт обучения: родители отдали вас в семь лет сразу в третий класс. Учительница там не сильно на вас давила, не ставила плохих оценок, постепенно подводила к нужным знаниям, давала обратную связь аккуратно. Что из этого подхода вы привнесли в свою школу?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Мне кажется, это был основополагающий момент, который был очень важен для моей жизни, потому что именно то, что меня в самом начале не задавили изобилием требований, помогло мне потом выбраться в отличницы. Я, в общем-то, всю жизнь прекрасно училась, с медалями, с красными дипломами заканчивала все свои учебные заведения.</p>
+        <p>И поэтому я правда верю в то, что помимо чисто методической работы, знания языка, большая часть нашей работы — это именно моральная поддержка и умение показать ученику, что он сможет, что мы здесь для того, чтобы ему помогать, а не для того, чтобы укорять за ошибки. Я, к сожалению, часто слышу, что приходит взрослый человек, и у него страх учить сейчас английский, потому что, например, учитель бил книгами по голове в школе. Для меня это что-то абсолютно нереальное. Я считаю, что каждый может, и очень важно просто поддерживать человека, давать ему посильную нагрузку — с одной стороны, чтобы было не очень легко, чтобы был определённый челлендж, чтобы он знал, куда идёт, и чувствовал результат, но при этом не сразу закидывать его чем-то непосильным. Нужно давать правильную нагрузку и поддерживать морально — тогда результат получается хорошим.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Самая младшая студентка МГУ</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Благодаря тому, что вы поступили сразу в третий класс, вы окончили школу в 15 лет и поступили в МГУ на лингвистику, преподавание английского и французского. 15 лет — вы снова были самой младшей. Не мешало ли это учиться в университете?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Единственный случай, который я могу вспомнить, который прямо откровенно мешал, — это то, что когда мне нужно было писать очередную курсовую, меня не пустили в Ленинскую библиотеку, потому что туда пускали только с восемнадцати лет, сказали, что мне пока там нечего делать. Вот это конкретно мешало.</p>
+        <p>А в остальных случаях — нет, потому что у меня был опыт лет обучения с людьми, которые на 2 года старше меня, и всё моё окружение, моё взросление происходило вместе с ними. У меня на этапе школы-университета не было никаких друзей моего возраста. Интеллектуально с языком у меня тоже всё было хорошо. Наверное, одна вещь — мне всегда тяжело давалась физкультура, потому что я в целом не очень крупный человек, и когда нас заставляли соответствовать нормативам, тут мне было тяжелее, чем с английским языком.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А в университете тоже были какие-то нормативы?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Да-да, это был, кстати, за всю университетскую пору единственный экзамен, который я не смогла сдать с первого раза, потому что у меня не получилось приседать «пистолетиком» — нам нужно было присесть так 10 раз. Поэтому я все каникулы потом тренировалась и пересдала его.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Как я «уволила себя» из своей школы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>До онлайн-школы у вас была офлайн-школа Baker Street в Протвино, и вы её продали, при этом школа до сих пор существует. Тяжело было отпустить проект, который вы с нуля построили?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Да, это было тяжело, потому что это был проект, который я вела прямо с самого начала моей карьеры, и ему на тот момент уже было порядка двенадцати лет. Это строилось из того, что мы вначале и сами делали ремонт, красили стены — просто вкладывали сюда всю душу и строили это с самого нуля.</p>
+        <p>Но с другой стороны, я помню, ещё когда у меня была школа, я читала какую-то бизнес-литературу, и там была очень хорошая фраза, что в какой-то момент в любом бизнесе настаёт ситуация, когда людей нужно уволить, и когда-то даже придёт тот момент, когда уволить нужно будет вас. И я прямо чётко прочувствовала этот момент — что на тот момент я уже для школы была неэффективна, потому что понимала, что мне хочется чего-то большего. При этом я была достаточно ограничена: Протвино — это маленький город Московской области населением 40 000 человек, и там ограниченное количество клиентов, того, что мы можем сделать.</p>
+        <p>Поэтому я понимала, что не хочу её закрывать — она работала, нравилась людям, там учились, мы делали классные проекты и она приносила прибыль, просто мне лично уже перестала быть интересной. Поэтому я наоборот радовалась, что нашёлся человек, который готов в неё вкладывать своё время и силы. И я очень рада, потому что прошло с тех пор пять лет, и она всё так же работает без меня. Для меня это знак того, что я построила что-то хорошее. Сейчас я живу в Португалии, но когда мы навещаем родителей и проезжаем мимо школы, а там стоит наша красная будочка на входе — Baker Street, всегда приятно на неё посмотреть.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Кейс: подросток и B2 за 1,5 года</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Один из кейсов — подросток 16 лет, который вообще не хотел заниматься английским, а через полтора года вышел на B2, благодаря тому что вы разговаривали с ним про жизнь, про игры, про песни. Как вы поняли, что конкретно его зацепит?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>С подростками это вообще очень частая ситуация, и тут самое важное — слушать конкретного подростка. Я постоянно провожу диагностики, и крайне частая ситуация — присутствует родитель и говорит: «Подожди, не надо, я сейчас всё скажу», и давит на подростка. Понятно, что в такой ситуации человек не хочет учиться, его не слышат.</p>
+        <p>Поэтому я всегда даже на диагностиках, конечно, слушаю родителей, но полное внимание уделяю и веду диалог с самим человеком, который будет учиться. Мне кажется, что когда подросткам уделяешь такое внимание, их слышишь, видишь и не идёшь только на поводу того, чего хотят их родители, — обычно, если заинтересуешь подростка, будет результат, и родитель тоже будет доволен тем, что результат есть. Слышишь их — они раскрываются, и результат получается.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Кейс: заговорила с первого занятия</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Второй кейс — с женщиной тридцати лет, которая вообще не учила английский. При этом с первого занятия начала говорить простыми диалоговыми фразами, а через два года стала работать на английском. Как сделать так, чтобы человек с полным нулём с первого занятия начал что-то говорить?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Здесь важно подстроить тематику занятия, потому что понятно, что мы не можем сделать так, чтобы он на все темы сразу говорил — у него не хватает ни грамматики, ни вокабуляра. Но если идём маленькими шагами — обычно это делается на первых занятиях именно через много визуала: буквально можем назвать несколько базовых предметов обихода, написать их, показать картинку, выучить маленький кусочек грамматики — допустим, «there is / there are». И так можно на самом деле составить много предложений.</p>
+        <p>Главное — не останавливаться на том, что мы делаем упражнения. Если мы потом это включим, чуть-чуть переделаем упражнение и выведем на то, что они в этот же день проведут экскурсию по своему дому и расскажут, что у них есть, а чего нет, — у них возникает: «Вау, я за одно занятие научился проводить экскурсию по дому». А это всего лишь одно занятие. И так с каждым разом мы чуть-чуть достраиваем грамматику, чуть-чуть подходим к вокабуляру, находим ситуацию, в которой они могут применить это в реальной жизни, — и так вот растём постепенно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Кейс: от 60 до 91 балла на ЕГЭ</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Последний кейс — школьнице говорили, что она сдаст ЕГЭ максимум на 60 баллов. После занятий с вами она сдала на 91 балл, поступила в топовый лингвистический вуз. Как вы заставили её поверить в себя? Ведь когда учителя так говорят, сложно этому не поверить.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Да, я согласна, что сложно, особенно когда тебе это говорит твой школьный учитель, который тебя каждый день видит и знает. Мне главное — понять уровень, и у неё действительно был достаточно неплохой уровень. Дальше вопрос экзамена — это уровень плюс алгоритмы, потому что на экзаменах надо понимать, что от нас требуют, какие критерии. Обе эти вещи важны, и за счёт слаженной работы обоих компонентов мы можем вытащить на максимальный балл.</p>
+        <p>Поэтому я просто говорила ей, что пока у нас есть время — вообще ничего ещё не решено, наша задача сейчас работать, разложить на то, что мы можем сделать за это время, где мы можем набрать максимальные баллы. У каждого человека есть свои сильные и слабые стороны — давить на это, и у нас всё получится. Так же, как и преподаватель, который у меня был в детстве, я не давлю, не критикую за ошибки, не ругаю, потому что, на мой взгляд, это вызывает лишний стресс. А через поддержку, через похвалу за то, что человек делает, за то, что он старается, что у него получается, — вера в себя точно нарастёт.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Почему я не преподаю по Бонку</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы не работаете с теми учениками, которые настаивают на определённой методике, не соответствующей вашим ценностям — например, методике Бонка. Что не так с методикой Бонка и как это происходит, если человек приходит и говорит: «Я хочу учиться по Бонку»?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Я не буду говорить, что с ней что-то не так — просто она не соответствует моим личным представлениям и ценностям об изучении английского языка, потому что я люблю и у меня хорошо получается преподавать именно живой язык, который люди могут использовать для общения, обучения, работы, жизни, путешествий за границей. А Бонк — абсолютно грамматический учебник, который на дрилах, на повторах пытается научить людей говорить. Но в моём понимании жизнь на языке многогранна, она не всегда подпадает под ту конкретную ситуацию, которую мы надрилили. Поэтому я предпочитаю по ней не преподавать — мне кажется, если преподаёшь так, как ты веришь, по той методике, в которую веришь, результат будет лучше, чем если будешь вестись на поводу учеников. Люди всегда смогут найти преподавателя, который работает конкретно по методике Бонка.</p>
+        <p>Если человек приходит и говорит, что ему исключительно хочется по той методике, я, конечно, не говорю ему, чтобы он шёл вон, но я объясняю свою позицию — мне важно понимать, что человек знает, из чего он исходит, потому что многие говорят, что хотят по Бонку только потому, что, например, им знакомый сказал, что он учил по Бонку. И когда расскажешь, как устроено преподавание языка и что упор на что даёт, какой результат, многие могут и передумать.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Отбор преподавателей по «живому» языку</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы, как преподаватели, берёте в основном людей, у которых был опыт жизни за границей? Как вы это проверяете — просите паспорт показать или есть какой-то другой тест?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Я не могу сказать, что это единственный показатель, по которому мы берём, потому что есть люди, которые жили за границей, и у них не очень хороший уровень или нет никакой методики и системы преподавания. Но это важно, потому что при наличии опыта жизни за границей у человека язык становится настоящим, живым, непереводным. Это очень часто слышно, поэтому достаточно немного поговорить с человеком, чтобы стало ясно, насколько у него язык используемый.</p>
+        <p>У нас есть, конечно, случаи, когда у преподавателей абсолютно классный язык без жизни за границей. У нас есть один преподаватель с фантастическим языком, и при этом он утверждает, что никогда за границей не был. Я ему верю, но не понимаю, как это произошло — видимо, очень качественно может наращивать свой уровень просто из контента. Но вообще это обычно видно по людям.</p>
+        <p>У нас был сотрудник с акцентом определённого района Лондона, кажется, кокни. Мы про это узнали, когда мой коллега услышал и говорит: «А чё у вас какой-то британец?» — «Это не британец, это сотрудник». И он утверждал, что выучил английский просто в школе и по фильмам, и в Англии никогда вообще не бывал, никак с ней не связан. Мы, честно говоря, думали, что он шпион и просто это скрывает. Есть люди, у которых правда невероятное чутьё, музыкальный слух, и они могут классно имитировать. У меня даже на диагностики иногда приходят люди с прекрасным произношением — на прошлой неделе была девушка, которая сказала: «Я просто в подростковом возрасте фанатела от Gravity Falls, пересматривала, копировала» — и это действительно приводит к результату, но для этого должны быть хорошие фантастические данные у человека.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Обратная связь и расставание с педагогами</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что если сотрудник ошибается, вы его не наказываете, а даёте аккуратную, уважительную обратную связь. Бывали ли случаи, когда это не срабатывало?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Бывают, конечно, случаи, но тут скорее — когда человек не готов слышать. У нас есть несколько ступенчатый отбор преподавателей: сначала проводим собеседование, потом пробные занятия на нашем внутреннем человеке, потом даём комментарии, что можно исправить. Есть случаи, когда мы сразу отметаем, потому что там слишком много всего исправлять. Но если нам в целом подходит подход человека, мы можем дать комментарий.</p>
+        <p>И тут зависит: некоторые преподаватели говорят «да, я всё понимаю, учитываю», и потом мы даём им примеры того, как я провожу занятия, как другие преподаватели, — и они прекрасно встраиваются в наш стиль. Но есть часть преподавателей, которые считают, что знают лучше, и говорят: «Нет, я буду делать так». Нам важно, как в школе, показывать стабильное качество и понимать, что преподаватели действительно могут принять нашу методику, а не строить исключительно на своём опыте, — поэтому с такими преподавателями мы расстаёмся.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Как удерживают команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас 12 преподавателей, три администратора и очень маленькая текучка. Что вы предлагаете сотрудникам, чтобы они оставались?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Наверное, две вещи. Первая — просто уважение в работе, потому что для меня это большая ценность, чтобы было уважение и к клиентам, и к преподавателям, сотрудникам. Мы часто можем даже встать на сторону преподавателя — если клиент иногда ведёт себя некорректно, нарушает договорённости, или даже иногда просто преподавателю некомфортно заниматься, потому что они не нашли контакт, — они могут обратиться к нам и попросить подобрать другого преподавателя. И мы обычно идём на это, потому что в работе важно иметь понимание, что тебя услышат, что у тебя будет комфорт и безопасность.</p>
+        <p>Вторая вещь — то, что у нас правда большая экспертность. Мы сами много времени и внимания уделяем тому, чтобы показывать качество, и выбираем преподавателей, которые тоже готовы делать этот вклад в качество. Поэтому им, мне кажется, приятнее работать в школе, которая следит за этим и уважает и методику, и знания языка. У нас буквально сейчас один преподаватель попросил по личным обстоятельствам несколько недель незапланированного отпуска — там были достаточно серьёзные обстоятельства, мы дали, и он периодически пишет нам, спрашивает: «Как ваша замечательная школа? Я скоро вернусь». Так что у нас правда всё на уважении основано.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Жизнь за границей и преподавание</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы живёте за границей, часто путешествуете. Это помогает в обучении или скорее мешает?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Мне кажется, помогает, потому что я в повседневной жизни чувствую то же, что чувствуют наши ученики, — понимаю ситуации, в которых они оказываются, когда им нужен английский, на каком уровне им нужен английский. И это на самом деле очень интересно. Плюс благодаря тому, что я живу в неанглоязычной стране, я сама сталкиваюсь с какими-то сложностями — я пока не говорю на португальском языке — и периодически понимаю, с какими сложностями сталкиваются они: что сложно сделать одну вещь или другую. Мне кажется, это здорово помогает.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. Планы по удвоению оборота</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы планируете удвоение оборота в 2026-м, 2027-м и 2028-м годах, чтобы к 2029-му войти в топ-1 школ на GAT course. Но при этом не хотите работать с теми, кто не разделяет ваш подход. Насколько это реалистичный план?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Я думаю, что реалистичный, потому что сейчас правда многие люди устали от предыдущего подхода — такого школьного подхода, который был во времена СССР. Многие к нам приходят с тем, что учили английский много-много лет — 10 лет в школе, 5 лет в университете, потом ещё какие-то попытки — и не научились говорить, поэтому многие готовы к тому, чтобы им предложили другой подход, и многие готовы пробовать.</p>
+        <p>Тем более что наши клиенты многие уже живут за границей или путешествуют, то есть видят, для чего им этот английский нужен. И когда мы говорим о своём подходе, что мы делаем максимальный фокус на речи — потому что если ты на английском не говоришь, то какой во всём этом смысл, какой смысл знать перфект и при этом не уметь заказать себе кофе, — они с нами согласны, потому что чувствуют это в своей жизни.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. ЕГЭ и разговорный подход</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Это понятно про взрослых людей, которые понимают, для чего им это нужно. А если это ребёнок, которому нужно сдавать ЕГЭ, не будет ли для него лучше более традиционный подход — сначала правила, а говорение уже где-то не основным блоком?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Тут, конечно, всё зависит от подхода человека. Но я считаю, что для чего люди сдают ЕГЭ? В основном ЕГЭ по английскому сдают люди, которым предстоит с английским работать, поэтому на сдаче ЕГЭ точно ничего не заканчивается — а только наоборот, начинается. Поэтому, неважно, мы говорим про российские экзамены или международные, к которым мы готовим, самый лучший способ — это поставить сначала хороший уровень. Имея хороший уровень, потом ты можешь идти в любом направлении: хочешь — сдал ЕГЭ, хочешь — переподготовился за несколько месяцев и сдал международный экзамен, а когда понадобится по работе — у тебя он уже есть.</p>
+        <p>А если мы готовимся к ЕГЭ исключительно, это по факту займёт ровно такое же количество времени, но ты научишься делать только тест ЕГЭ. Поэтому как будто имеет больше смысла сначала поработать над уровнем.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t18">
+      <h3>18. Делегирование, ребрендинг и советы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Через 3–5 лет вы видите свою школу работающей автономно под управлением отдельного операционного директора, с оборотом в 120 млн ₽ в год. Что из вашей личной работы сложнее всего будет передать директору?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Наверное, я думаю, что видение и экспертность в языке, потому что маркетинг и продажи — это всё мы можем передать, также как и продукт, который уже сформирован. А видение — это то, что всегда идёт от меня. Поэтому здесь мы, конечно, столкнёмся с тем, что нужно будет найти очень хорошего эксперта именно в языке. И операционным директором тоже должен быть человек, который в теме, а не просто умеет управлять, — который понимает наши особенности, нашу методику и может это настроение и подход передать всем преподавателям, администраторам и даже продажникам.</p>
+        <p>Даже сейчас у нас проходит обучение продажник — человек, который не имеет никакого отношения к продукту, но моя задача была всю эту неделю погружать человека в наш продукт, чтобы он понял, что мы делаем. И было приятно, когда она сегодня сказала: «Я вообще прямо так зарядилась на то, чтобы изучать язык, хотя у меня уровень один — может, у вас есть какие-то специальные скидки для сотрудников, чтобы я тоже училась». Это касается не только методики преподавания, а всех сотрудников — хорошо, когда все понимают, почему мы не какая-то массмаркетная школа английского языка.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сейчас ваша школа называется Acing English, и вы сомневаетесь, что такое название нужно оставить. Что должно произойти, чтобы решили — оставляем или меняем?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Мы решаем сменить название, потому что понимаем, что конкретно для меня и для людей, которые имеют хороший уровень языка, оно имеет смысл — «to ace» в английском значит блестеть, быть классным, быть экспертом в чём-то, и Acing English — это про то, что мы добиваемся такого превосходства в английском языке. Но из-за того, что мы часто работаем с людьми, у которых не очень высокий уровень, а цель — только до него дойти, у них нет этой ассоциации, и название не оседает. Поэтому мы думаем про более ёмкое и простое название, понятное всем.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если бы вы могли вернуться в прошлое и дать совет себе пятнадцатилетней студентке МГУ — какой бы дали?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>У меня почему-то в те времена была мысль, что преподавание языка — это скорее побочная профессия, не главная. Возможно, это шло от родителей: мама тоже преподаватель английского языка, а папа — программист, он мне всегда хотел в сферу программирования, говорил, что это более перспективная работа, что я закончу тем, что буду в школе преподавать английский, зарабатывать максимум 500 долларов — почему-то у него была такая цифра. И я преподавала, мне это нравилось, но первые лет пять-шесть, пока была в университете, хотела либо уйти работать в компанию — мне была интересна экономическая сфера, бизнес, но чтобы это была иностранная компания, где мой язык требовался, — либо у меня была шутка, что я стану министром иностранных дел. К счастью, этого не произошло.</p>
+        <p>После университета я год поработала параллельно с преподаванием в компании, но тогда поняла, что это не моё, что я люблю преподавать, у меня это хорошо получается, надо идти в это. И через год после университета я уже открыла свой первый бизнес, потому что не хотела идти в школу. Поэтому мой совет себе — просто поверь, что преподавание — это классная профессия, и что у тебя в ней всё получится.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что бы вы посоветовали взрослому, который никогда не учил английский и думает, что уже поздновато начинать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Никогда не поздно. Тут, конечно, всё зависит, звучит достаточно банально, от цели. Я признаю, что если человеку, например, 40–50 лет, уровня C2 достичь будет крайне сложно. Если бы я сейчас перекладывала на себя — я планирую учить португальский и понимаю, что я никогда не буду думать на португальском так, как я это делаю на английском. Конечно, в языке возраст важен, но для того чтобы общаться, чтобы люди тебя понимали, чтобы ты понимал, чтобы можно было смотреть какие-то базовые передачи и чувствовать себя в контексте, — до этого уровня точно можно дойти. Просто нужно найти кого-то, кто помогал бы тебе идти, прокладывал бы эту дорогу.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если кто-то из наших слушателей захочет с вами связаться по какому-то вопросу — как это лучше сделать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Марина</div><div class="tr-txt">
+        <p>Вы можете написать нам в Telegram — это самый быстрый способ для связи, школа Acing English. Ссылку можно оставить в описании, в комментариях.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
