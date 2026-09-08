@@ -262,9 +262,14 @@ async function tryGate() {
 }
 
 // ── API helper ──
+// cantor.agency is a plain nginx static host, not the Cloudflare Worker itself, so /api/*
+// has to be called on the Worker's own origin (same pattern as serp-analysis/avito-export/
+// utm-create's API_BASE), relying on the worker's permissive CORS headers.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+
 async function api(path, options = {}, pwOverride, silent) {
   const pw = pwOverride || getPassword();
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     ...options,
     headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw, ...(options.headers || {}) },
   });
