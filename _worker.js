@@ -156,12 +156,14 @@ const DEFAULT_SCHEMA = {
 };
 
 function corsHeaders() {
-  // Same-origin in production (served by this same worker), kept permissive
-  // so the page also works if it's ever fetched from another host during testing.
+  // cantor.agency is a separate static host (nginx, not this worker — see API_BASE in
+  // serp-analysis/avito-export/utm-create/dashboard), so these pages' API calls are always
+  // cross-origin in production, not just during testing. x-dashboard-password is the
+  // dashboard's own auth header (see checkDashboardAuth).
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, x-dashboard-password',
     'Access-Control-Max-Age': '86400',
   };
 }
