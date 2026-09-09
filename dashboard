@@ -98,41 +98,29 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 .status-paused{background:var(--amber-bg);color:var(--amber)}
 .status-done{background:var(--gray-bg);color:var(--gray)}
 
-/* Employees */
-.emp-card .salary{font-size:20px;font-weight:800;color:var(--red);margin-bottom:4px}
-.week-picker{display:flex;align-items:center;gap:8px;margin:12px 0 8px;font-size:12px}
-.week-picker input{border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px}
-.avg-row{display:flex;gap:14px;margin-bottom:10px;font-size:12px;color:var(--muted)}
-.avg-row b{color:var(--text);font-size:14px}
-.history{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
-.history table{width:100%;font-size:11px;border-collapse:collapse}
-.history th,.history td{text-align:left;padding:4px 2px;color:var(--muted)}
-.history th{font-weight:600}
+/* Ratings */
+.week-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.week-nav .arrow{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);flex-shrink:0;transition:all .15s}
+.week-nav .arrow:hover{border-color:var(--red);color:var(--red)}
+.week-nav .label{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800;background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;letter-spacing:.01em;min-width:150px;text-align:center}
+.week-nav .today-btn{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.week-nav .today-btn:hover{color:var(--red-dark)}
 
-/* Sales */
-.sales-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
-@media(max-width:760px){.sales-grid{grid-template-columns:1fr}}
-.sales-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px}
-.sales-card h3{font-size:15px;margin-bottom:2px}
-.sales-card .price{font-size:12px;color:var(--muted);margin-bottom:14px}
-.plan-fact{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pf-box{background:var(--warm-bg);border-radius:var(--r-md);padding:10px 12px}
-.pf-box .l{font-size:11px;color:var(--muted);margin-bottom:6px}
-.pf-box input{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:14px;font-weight:700;margin-bottom:6px}
-.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.kpi-box{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px 20px}
-.kpi-box .l{font-size:12px;color:var(--muted);margin-bottom:6px}
-.kpi-box input{border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:18px;font-weight:800;width:100%}
-
-/* Tasks */
-.task-add{display:flex;gap:8px;margin-bottom:16px}
-.task-add input{flex:1;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;font-size:13px}
-.task{display:flex;align-items:flex-start;gap:12px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:8px}
-.task input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--red)}
-.task .txt{flex:1;font-size:13px}
-.task.done .txt{color:var(--muted);text-decoration:line-through}
-.task .meta{display:flex;gap:8px;font-size:11px;color:var(--muted);margin-top:4px}
-.task select{border:1px solid var(--border);border-radius:6px;font-size:11px;padding:2px 4px}
+.rating-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:22px 22px 6px;box-shadow:var(--shadow-sm)}
+.rating-card h3{font-size:17px;font-weight:700}
+.rating-card .avg-pill{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);color:var(--red-dark);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin:8px 0 16px;letter-spacing:.01em}
+.rater{border-top:1px solid var(--border);padding:16px 0}
+.rater:first-of-type{border-top:none;padding-top:2px}
+.rater-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rater-head .who{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--text)}
+.rater-head .who .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rater-head .score-badge{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--red);min-width:24px;text-align:right}
+.score-scale{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:10px}
+.score-scale button{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--border);background:var(--warm-bg);font-size:12px;font-weight:700;color:var(--muted);transition:all .12s}
+.score-scale button:hover{border-color:var(--red-light);color:var(--red)}
+.score-scale button.on{background:var(--red);border-color:var(--red);color:#fff;box-shadow:var(--shadow-red)}
+textarea.rater-comment{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13px;min-height:52px;resize:vertical}
+textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 
 /* Modal */
 #overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
@@ -164,9 +152,7 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
     <div class="title">Cantor Agency <span>· Дашборд</span></div>
     <nav class="tabs">
       <button class="tab-btn active" data-tab="projects">Проекты</button>
-      <button class="tab-btn" data-tab="employees">Сотрудники</button>
-      <button class="tab-btn" data-tab="sales">Продажи</button>
-      <button class="tab-btn" data-tab="tasks">Задачи</button>
+      <button class="tab-btn" data-tab="ratings">Оценки</button>
     </nav>
   </header>
 
@@ -181,42 +167,16 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
       <div class="grid" id="projectsGrid"></div>
     </section>
 
-    <!-- EMPLOYEES -->
-    <section class="panel" id="panel-employees">
-      <div class="section-head">
-        <h2>Сотрудники</h2>
-        <button class="btn" id="addEmployeeBtn">+ Добавить сотрудника</button>
+    <!-- RATINGS -->
+    <section class="panel" id="panel-ratings">
+      <div class="section-head"><h2>Оценки по проектам</h2></div>
+      <div class="week-nav">
+        <button class="arrow" id="weekPrev" aria-label="Предыдущая неделя">‹</button>
+        <div class="label" id="weekLabel"></div>
+        <button class="arrow" id="weekNext" aria-label="Следующая неделя">›</button>
+        <button class="today-btn" id="weekToday">Текущая неделя</button>
       </div>
-      <div class="grid" id="employeesGrid"></div>
-    </section>
-
-    <!-- SALES -->
-    <section class="panel" id="panel-sales">
-      <div class="section-head"><h2>Продажи</h2></div>
-      <div class="sales-grid">
-        <div class="sales-card" id="salesPrimary"></div>
-        <div class="sales-card" id="salesRepeat"></div>
-      </div>
-      <div class="kpi-row">
-        <div class="kpi-box">
-          <div class="l">Лидов за месяц</div>
-          <input type="number" id="leadsInput" min="0">
-        </div>
-        <div class="kpi-box">
-          <div class="l">Общая база регистраций (накопительно)</div>
-          <input type="number" id="regBaseInput" min="0">
-        </div>
-      </div>
-    </section>
-
-    <!-- TASKS -->
-    <section class="panel" id="panel-tasks">
-      <div class="section-head"><h2>Ключевые задачи агентства</h2></div>
-      <div class="task-add">
-        <input type="text" id="newTaskText" placeholder="Новая задача...">
-        <button class="btn" id="addTaskBtn">Добавить</button>
-      </div>
-      <div id="tasksList"></div>
+      <div class="grid" id="ratingsGrid"></div>
     </section>
   </main>
 </div>
@@ -235,10 +195,13 @@ const MONTHS = [
 ];
 const STATUS_LABELS = { active: 'В работе', paused: 'На паузе', done: 'Завершён' };
 const RATING_LABELS = { result: 'Результат', communication: 'Коммуникация', quality: 'Качество работы' };
-const WEEK_RATING_LABELS = { discipline: 'Дисциплина', communication: 'Коммуникация', skills: 'Навыки' };
+const ROLE_LABELS = { client: 'От клиента', manager: 'От менеджера', specialist: 'От специалиста' };
+const ROLE_DOT = { client: 'var(--red)', manager: 'var(--amber)', specialist: 'var(--green)' };
+const MONTHS_GENITIVE_SHORT = ['янв', 'февр', 'мар', 'апр', 'мая', 'июня', 'июля', 'авг', 'сент', 'окт', 'нояб', 'дек'];
 
-let state = { projects: [], employees: [], analytics: [], ratings: [], sales: {}, registrationBase: { total: 0 }, tasks: [], salePrices: { primary: 50000, repeat: 25000 } };
+let state = { projects: [], employees: [], analytics: [], projectRatings: [], salePrices: { primary: 50000, repeat: 25000 } };
 let currentMonth = MONTHS[MONTHS.length - 1].key;
+let currentRatingWeek = isoMonday(new Date());
 
 // ── Gate ──
 function isUnlocked() { try { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; } catch { return false; } }
@@ -303,9 +266,7 @@ async function boot() {
   state = data;
   renderMonthToggles();
   renderProjects();
-  renderEmployees();
-  renderSales();
-  renderTasks();
+  renderRatings();
 }
 
 if (isUnlocked()) {
@@ -335,7 +296,6 @@ function renderMonthToggles() {
       currentMonth = m.key;
       renderMonthToggles();
       renderProjects();
-      renderSales();
     });
     el.appendChild(b);
   });
@@ -541,7 +501,7 @@ document.getElementById('addProjectBtn').addEventListener('click', () => {
   });
 });
 
-// ══════════════════════ EMPLOYEES ══════════════════════
+// ══════════════════════ RATINGS (по проектам, по неделям) ══════════════════════
 function isoMonday(d) {
   const date = new Date(d);
   const day = date.getDay();
@@ -550,266 +510,107 @@ function isoMonday(d) {
   return date.toISOString().slice(0, 10);
 }
 
-function ratingsFor(employeeId) {
-  return state.ratings.filter((r) => r.employeeId === employeeId).sort((a, b) => (a.weekStart < b.weekStart ? 1 : -1));
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
 }
 
-function renderEmployees() {
-  const grid = document.getElementById('employeesGrid');
+function formatWeekRange(weekStart) {
+  const start = new Date(weekStart + 'T00:00:00');
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const sm = start.getMonth(), em = end.getMonth();
+  if (sm === em) return `${start.getDate()}-${end.getDate()} ${MONTHS_GENITIVE_SHORT[em]}`;
+  return `${start.getDate()} ${MONTHS_GENITIVE_SHORT[sm]} - ${end.getDate()} ${MONTHS_GENITIVE_SHORT[em]}`;
+}
+
+function projectRatingFor(projectId, weekStart) {
+  const found = state.projectRatings.find((r) => r.projectId === projectId && r.weekStart === weekStart);
+  const blank = () => ({ score: 0, comment: '' });
+  return {
+    client: { ...blank(), ...(found && found.client) },
+    manager: { ...blank(), ...(found && found.manager) },
+    specialist: { ...blank(), ...(found && found.specialist) },
+  };
+}
+
+function numberScale(value, onSet) {
+  const wrap = document.createElement('div');
+  wrap.className = 'score-scale';
+  for (let i = 1; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(i);
+    if (i === value) b.classList.add('on');
+    b.addEventListener('click', () => onSet(i));
+    wrap.appendChild(b);
+  }
+  return wrap;
+}
+
+document.getElementById('weekPrev').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, -7); renderRatings(); });
+document.getElementById('weekNext').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, 7); renderRatings(); });
+document.getElementById('weekToday').addEventListener('click', () => { currentRatingWeek = isoMonday(new Date()); renderRatings(); });
+
+function renderRatings() {
+  document.getElementById('weekLabel').textContent = formatWeekRange(currentRatingWeek);
+
+  const grid = document.getElementById('ratingsGrid');
   grid.innerHTML = '';
-  if (!state.employees.length) { grid.innerHTML = '<div class="empty">Пока нет сотрудников</div>'; return; }
+  if (!state.projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
 
-  state.employees.forEach((emp) => {
+  state.projects.forEach((p) => {
+    const draft = projectRatingFor(p.id, currentRatingWeek);
     const card = document.createElement('div');
-    card.className = 'card emp-card';
+    card.className = 'rating-card';
+    card.innerHTML = `<h3>${escapeHtml(p.name)}</h3>`;
 
-    card.innerHTML = `<h3>${escapeHtml(emp.name)}</h3>`;
+    const scores = [draft.client.score, draft.manager.score, draft.specialist.score].filter((s) => s > 0);
+    const avgPill = document.createElement('div');
+    avgPill.className = 'avg-pill';
+    avgPill.textContent = scores.length ? `Средняя за неделю: ${(scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(1)}` : 'Оценок за неделю пока нет';
+    card.appendChild(avgPill);
 
-    const posRow = document.createElement('div');
-    posRow.className = 'field-row';
-    posRow.innerHTML = '<label>Должность</label>';
-    const posInput = document.createElement('input');
-    posInput.type = 'text'; posInput.value = emp.position || '';
-    posInput.addEventListener('blur', () => saveEmployeeField(emp, 'position', posInput.value));
-    posRow.appendChild(posInput);
-    card.appendChild(posRow);
+    Object.entries(ROLE_LABELS).forEach(([role, label]) => {
+      const block = document.createElement('div');
+      block.className = 'rater';
 
-    const salRow = document.createElement('div');
-    salRow.className = 'field-row';
-    salRow.innerHTML = '<label>Зарплата, ₽/мес</label>';
-    const salInput = document.createElement('input');
-    salInput.type = 'number'; salInput.value = emp.salary || 0;
-    salInput.addEventListener('blur', () => saveEmployeeField(emp, 'salary', salInput.value));
-    salRow.appendChild(salInput);
-    card.appendChild(salRow);
+      const head = document.createElement('div');
+      head.className = 'rater-head';
+      head.innerHTML = `<span class="who"><span class="dot" style="background:${ROLE_DOT[role]}"></span>${label}</span><span class="score-badge">${draft[role].score || '—'}</span>`;
+      block.appendChild(head);
 
-    // current week ratings
-    const weekStart = isoMonday(new Date());
-    const existing = state.ratings.find((r) => r.employeeId === emp.id && r.weekStart === weekStart) || { discipline: 0, communication: 0, skills: 0 };
-    const wk = document.createElement('div');
-    wk.className = 'week-picker';
-    wk.innerHTML = '<span>Оценка за неделю с ' + weekStart + '</span>';
-    card.appendChild(wk);
+      block.appendChild(numberScale(draft[role].score, (val) => {
+        draft[role].score = val;
+        save();
+        renderRatings();
+      }));
 
-    const draft = { discipline: existing.discipline || 0, communication: existing.communication || 0, skills: existing.skills || 0 };
-    Object.entries(WEEK_RATING_LABELS).forEach(([key, label]) => {
-      const row = document.createElement('div');
-      row.className = 'rating-row';
-      row.innerHTML = `<span class="l">${label}</span>`;
-      const starsWrap = document.createElement('div');
-      function draw() {
-        starsWrap.innerHTML = '';
-        starsWrap.appendChild(starPicker(key, draft[key], async (val) => {
-          draft[key] = val;
-          draw();
-          const res = await api('/api/dashboard/rating', { method: 'POST', body: JSON.stringify({ employeeId: emp.id, weekStart, ...draft }) });
-          if (res && res.rating) {
-            state.ratings = state.ratings.filter((r) => !(r.employeeId === emp.id && r.weekStart === weekStart));
-            state.ratings.push(res.rating);
-            toast('Оценка сохранена');
-          }
-        }));
-      }
-      draw();
-      row.appendChild(starsWrap);
-      card.appendChild(row);
+      const comment = document.createElement('textarea');
+      comment.className = 'rater-comment';
+      comment.placeholder = 'Комментарий к оценке...';
+      comment.value = draft[role].comment;
+      comment.addEventListener('blur', () => { draft[role].comment = comment.value; save(); });
+      block.appendChild(comment);
+
+      card.appendChild(block);
     });
-
-    // averages + history
-    const hist = ratingsFor(emp.id);
-    if (hist.length) {
-      const avg = (k) => (hist.reduce((s, r) => s + r[k], 0) / hist.length).toFixed(1);
-      const avgRow = document.createElement('div');
-      avgRow.className = 'avg-row';
-      avgRow.style.marginTop = '10px';
-      avgRow.innerHTML = `<span>Дисциплина <b>${avg('discipline')}</b></span><span>Коммуникация <b>${avg('communication')}</b></span><span>Навыки <b>${avg('skills')}</b></span>`;
-      card.appendChild(avgRow);
-
-      const histBlock = document.createElement('div');
-      histBlock.className = 'history';
-      const rows = hist.slice(0, 8).map((r) => `<tr><td>${r.weekStart}</td><td>${r.discipline}</td><td>${r.communication}</td><td>${r.skills}</td></tr>`).join('');
-      histBlock.innerHTML = `<table><thead><tr><th>Неделя</th><th>Дисц.</th><th>Комм.</th><th>Навыки</th></tr></thead><tbody>${rows}</tbody></table>`;
-      card.appendChild(histBlock);
-    }
 
     grid.appendChild(card);
+
+    async function save() {
+      const res = await api('/api/dashboard/project-rating', {
+        method: 'POST',
+        body: JSON.stringify({ projectId: p.id, weekStart: currentRatingWeek, client: draft.client, manager: draft.manager, specialist: draft.specialist }),
+      });
+      if (res && res.projectRating) {
+        state.projectRatings = state.projectRatings.filter((r) => !(r.projectId === p.id && r.weekStart === currentRatingWeek));
+        state.projectRatings.push(res.projectRating);
+        toast('Оценка сохранена');
+      }
+    }
   });
-}
-
-async function saveEmployeeField(emp, field, value) {
-  const body = { id: emp.id, name: emp.name };
-  body[field] = value;
-  const res = await api('/api/dashboard/employee', { method: 'POST', body: JSON.stringify(body) });
-  if (res && res.employee) { Object.assign(emp, res.employee); toast('Сохранено'); }
-}
-
-document.getElementById('addEmployeeBtn').addEventListener('click', () => {
-  openModal(`
-    <h3>Новый сотрудник</h3>
-    <label>Имя</label>
-    <input type="text" id="mEmpName">
-    <label>Должность</label>
-    <input type="text" id="mEmpPosition">
-    <label>Зарплата, ₽/мес</label>
-    <input type="number" id="mEmpSalary" value="0">
-    <div class="actions">
-      <button class="btn secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn" id="mEmpSave">Создать</button>
-    </div>
-  `);
-  document.getElementById('mEmpSave').addEventListener('click', async () => {
-    const name = document.getElementById('mEmpName').value.trim();
-    if (!name) return;
-    const position = document.getElementById('mEmpPosition').value.trim();
-    const salary = document.getElementById('mEmpSalary').value;
-    const res = await api('/api/dashboard/employee', { method: 'POST', body: JSON.stringify({ name, position, salary }) });
-    if (res && res.employee) { state.employees.push(res.employee); renderEmployees(); closeModal(); }
-  });
-});
-
-// ══════════════════════ SALES ══════════════════════
-function renderSalesCard(elId, kind, label, price) {
-  const el = document.getElementById(elId);
-  const record = getSalesRecord(currentMonth);
-  const data = record[kind] || { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 };
-
-  el.innerHTML = `
-    <h3>${label}</h3>
-    <div class="price">Цена: ${price.toLocaleString('ru-RU')} ₽</div>
-    <div class="plan-fact">
-      <div class="pf-box"><div class="l">План, шт/мес</div><input type="number" id="${elId}-planCount" value="${data.planCount}"></div>
-      <div class="pf-box"><div class="l">Факт, шт</div><input type="number" id="${elId}-factCount" value="${data.factCount}"></div>
-      <div class="pf-box"><div class="l">План выручки, ₽</div><input type="number" id="${elId}-planRevenue" value="${data.planRevenue}"></div>
-      <div class="pf-box"><div class="l">Факт выручки, ₽</div><input type="number" id="${elId}-factRevenue" value="${data.factRevenue}"></div>
-    </div>
-  `;
-  ['planCount', 'factCount', 'planRevenue', 'factRevenue'].forEach((f) => {
-    document.getElementById(`${elId}-${f}`).addEventListener('blur', () => saveSales());
-  });
-}
-
-function getSalesRecord(month) {
-  const raw = state.sales;
-  let rec;
-  if (Array.isArray(raw)) rec = raw.find((s) => s.month === month);
-  else rec = raw[month];
-  return rec || { primary: { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 }, repeat: { planCount: 0, factCount: 0, planRevenue: 0, factRevenue: 0 }, leads: 0 };
-}
-
-function setSalesRecord(month, rec) {
-  if (Array.isArray(state.sales)) {
-    state.sales = state.sales.filter((s) => s.month !== month);
-    state.sales.push({ ...rec, month });
-  } else {
-    state.sales[month] = rec;
-  }
-}
-
-async function saveSales() {
-  const p = 'salesPrimary', r = 'salesRepeat';
-  const body = {
-    month: currentMonth,
-    primary: {
-      planCount: document.getElementById(p + '-planCount').value,
-      factCount: document.getElementById(p + '-factCount').value,
-      planRevenue: document.getElementById(p + '-planRevenue').value,
-      factRevenue: document.getElementById(p + '-factRevenue').value,
-    },
-    repeat: {
-      planCount: document.getElementById(r + '-planCount').value,
-      factCount: document.getElementById(r + '-factCount').value,
-      planRevenue: document.getElementById(r + '-planRevenue').value,
-      factRevenue: document.getElementById(r + '-factRevenue').value,
-    },
-    leads: document.getElementById('leadsInput').value,
-  };
-  const res = await api('/api/dashboard/sales', { method: 'POST', body: JSON.stringify(body) });
-  if (res && res.sales) { setSalesRecord(currentMonth, res.sales); toast('Продажи сохранены'); }
-}
-
-function renderSales() {
-  renderSalesCard('salesPrimary', 'primary', 'Первичные продажи', state.salePrices.primary);
-  renderSalesCard('salesRepeat', 'repeat', 'Повторные продажи', state.salePrices.repeat);
-  const rec = getSalesRecord(currentMonth);
-  document.getElementById('leadsInput').value = rec.leads || 0;
-  document.getElementById('leadsInput').onblur = saveSales;
-  document.getElementById('regBaseInput').value = (state.registrationBase && state.registrationBase.total) || 0;
-  document.getElementById('regBaseInput').onblur = async () => {
-    const total = document.getElementById('regBaseInput').value;
-    const res = await api('/api/dashboard/registration-base', { method: 'POST', body: JSON.stringify({ total }) });
-    if (res && res.registrationBase) { state.registrationBase = res.registrationBase; toast('Сохранено'); }
-  };
-}
-
-// ══════════════════════ TASKS ══════════════════════
-function renderTasks() {
-  const list = document.getElementById('tasksList');
-  list.innerHTML = '';
-  if (!state.tasks.length) { list.innerHTML = '<div class="empty">Нет задач</div>'; return; }
-
-  state.tasks.forEach((t) => {
-    const row = document.createElement('div');
-    row.className = 'task' + (t.status === 'done' ? ' done' : '');
-
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = t.status === 'done';
-    cb.addEventListener('change', async () => {
-      const status = cb.checked ? 'done' : 'open';
-      const res = await api('/api/dashboard/task', { method: 'POST', body: JSON.stringify({ id: t.id, text: t.text, status, owner: t.owner, due: t.due }) });
-      if (res && res.task) { Object.assign(t, res.task); renderTasks(); }
-    });
-    row.appendChild(cb);
-
-    const body = document.createElement('div');
-    body.style.flex = '1';
-    const txt = document.createElement('div');
-    txt.className = 'txt';
-    txt.textContent = t.text;
-    body.appendChild(txt);
-
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    const ownerSel = document.createElement('select');
-    const noneOpt = document.createElement('option');
-    noneOpt.value = ''; noneOpt.textContent = 'Без ответственного';
-    ownerSel.appendChild(noneOpt);
-    state.employees.forEach((e) => {
-      const opt = document.createElement('option');
-      opt.value = e.id; opt.textContent = e.name;
-      if (t.owner === e.id) opt.selected = true;
-      ownerSel.appendChild(opt);
-    });
-    ownerSel.addEventListener('change', async () => {
-      const res = await api('/api/dashboard/task', { method: 'POST', body: JSON.stringify({ id: t.id, text: t.text, status: t.status, owner: ownerSel.value || null, due: t.due }) });
-      if (res && res.task) Object.assign(t, res.task);
-    });
-    meta.appendChild(ownerSel);
-    body.appendChild(meta);
-    row.appendChild(body);
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn danger small';
-    delBtn.textContent = '✕';
-    delBtn.addEventListener('click', async () => {
-      await api('/api/dashboard/task?id=' + encodeURIComponent(t.id), { method: 'DELETE' });
-      state.tasks = state.tasks.filter((x) => x.id !== t.id);
-      renderTasks();
-    });
-    row.appendChild(delBtn);
-
-    list.appendChild(row);
-  });
-}
-
-document.getElementById('addTaskBtn').addEventListener('click', addTask);
-document.getElementById('newTaskText').addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
-async function addTask() {
-  const input = document.getElementById('newTaskText');
-  const text = input.value.trim();
-  if (!text) return;
-  const res = await api('/api/dashboard/task', { method: 'POST', body: JSON.stringify({ text }) });
-  if (res && res.task) { state.tasks.unshift(res.task); input.value = ''; renderTasks(); }
 }
 
 // ── util ──

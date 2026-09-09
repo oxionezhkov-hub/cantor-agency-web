@@ -1688,23 +1688,17 @@ async function handleDashboardApi(request, env, url) {
 
   // ── Bootstrap: everything the dashboard needs in one call ──
   if (pathname === '/api/dashboard/bootstrap' && request.method === 'GET') {
-    const [projects, employees, analytics, ratings, sales, registrationBase, tasks] = await Promise.all([
+    const [projects, employees, analytics, projectRatings] = await Promise.all([
       listByPrefix(kv, 'project:'),
       listByPrefix(kv, 'employee:'),
       listByPrefix(kv, 'analytics:'),
-      listByPrefix(kv, 'rating:'),
-      listByPrefix(kv, 'sales:'),
-      kv.get('registrationBase', 'json'),
-      listByPrefix(kv, 'task:'),
+      listByPrefix(kv, 'projectRating:'),
     ]);
     return json({
       projects: projects.sort((a, b) => a.name.localeCompare(b.name, 'ru')),
       employees: employees.sort((a, b) => a.name.localeCompare(b.name, 'ru')),
       analytics,
-      ratings,
-      sales,
-      registrationBase: registrationBase || { total: 0 },
-      tasks: tasks.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+      projectRatings,
       salePrices: SALE_PRICES,
     });
   }
@@ -1741,8 +1735,11 @@ async function handleDashboardApi(request, env, url) {
     const id = url.searchParams.get('id');
     if (!id) return json({ error: 'missing_id' }, 400);
     await kv.delete(`project:${id}`);
-    const list = await kv.list({ prefix: `analytics:${id}:` });
-    await Promise.all(list.keys.map((k) => kv.delete(k.name)));
+    const [analyticsList, ratingsList] = await Promise.all([
+      kv.list({ prefix: `analytics:${id}:` }),
+      kv.list({ prefix: `projectRating:${id}:` }),
+    ]);
+    await Promise.all([...analyticsList.keys, ...ratingsList.keys].map((k) => kv.delete(k.name)));
     return json({ ok: true });
   }
 
@@ -1770,6 +1767,33 @@ async function handleDashboardApi(request, env, url) {
     };
     await kv.put(`analytics:${projectId}:${month}`, JSON.stringify(record));
     return json({ analytics: record });
+  }
+
+  // ── Weekly project ratings (client / manager / specialist, 1-10 + comment) ──
+  if (pathname === '/api/dashboard/project-rating' && request.method === 'POST') {
+    const body = await readJson(request);
+    const projectId = body && String(body.projectId || '').trim();
+    const weekStart = body && String(body.weekStart || '').trim();
+    if (!projectId || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return json({ error: 'missing_project_or_week' }, 400);
+
+    const pickRole = (r) => {
+      const score = Number(r && r.score);
+      return {
+        score: Number.isInteger(score) && score >= 1 && score <= 10 ? score : 0,
+        comment: String((r && r.comment) || '').slice(0, 2000),
+      };
+    };
+    const now = new Date().toISOString();
+    const record = {
+      projectId,
+      weekStart,
+      client: pickRole(body.client),
+      manager: pickRole(body.manager),
+      specialist: pickRole(body.specialist),
+      updatedAt: now,
+    };
+    await kv.put(`projectRating:${projectId}:${weekStart}`, JSON.stringify(record));
+    return json({ projectRating: record });
   }
 
   // ── Employees ──
