@@ -43,8 +43,7 @@ input,textarea,select{font-family:inherit}
 #app{display:none}
 #app.ready{display:block}
 header.top{background:var(--dark);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-header.top .title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800}
-header.top .title span{color:var(--red-light)}
+.top-actions{display:flex;gap:10px;align-items:center;min-height:20px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab-btn{background:none;border:none;color:#bbb;padding:10px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600}
 .tab-btn.active{background:var(--red);color:#fff}
@@ -57,8 +56,6 @@ main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
 .month-toggle button{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;color:var(--muted)}
 .month-toggle button.active{background:var(--dark);color:#fff;border-color:var(--dark)}
 
-.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
-.section-head h2{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:800}
 .btn{background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:10px 16px;font-size:13px;font-weight:600;box-shadow:var(--shadow-red)}
 .btn:hover{background:var(--red-dark)}
 .btn.secondary{background:var(--white);color:var(--text);border:1.5px solid var(--border);box-shadow:none}
@@ -66,6 +63,8 @@ main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
 .btn.small{padding:6px 10px;font-size:12px}
 .btn.danger{background:var(--white);color:var(--red);border:1.5px solid var(--border);box-shadow:none}
 .btn.danger:hover{border-color:var(--red);background:var(--accent-bg)}
+.btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.18);box-shadow:none}
+.btn.ghost:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.32)}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
 .card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-sm)}
@@ -98,19 +97,19 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 .status-paused{background:var(--amber-bg);color:var(--amber)}
 .status-done{background:var(--gray-bg);color:var(--gray)}
 
-/* Ratings */
-.week-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px}
-.week-nav .arrow{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);flex-shrink:0;transition:all .15s}
-.week-nav .arrow:hover{border-color:var(--red);color:var(--red)}
-.week-nav .label{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800;background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;letter-spacing:.01em;min-width:150px;text-align:center}
-.week-nav .today-btn{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.week-nav .today-btn:hover{color:var(--red-dark)}
+/* Ratings + Analytics range nav */
+.range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.range-nav .arrow{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);flex-shrink:0;transition:all .15s}
+.range-nav .arrow:hover{border-color:var(--red);color:var(--red)}
+.range-nav .label{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800;background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;letter-spacing:.01em;min-width:150px;text-align:center}
+.range-nav .today-btn{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.range-nav .today-btn:hover{color:var(--red-dark)}
 
 .rating-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:22px 22px 6px;box-shadow:var(--shadow-sm)}
 .rating-card h3{font-size:17px;font-weight:700}
 .rating-card .avg-pill{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);color:var(--red-dark);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin:8px 0 16px;letter-spacing:.01em}
-.rater{border-top:1px solid var(--border);padding:16px 0}
-.rater:first-of-type{border-top:none;padding-top:2px}
+.rater{padding:16px 0}
+.rater + .rater{border-top:1px solid var(--border)}
 .rater-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .rater-head .who{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--text)}
 .rater-head .who .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -121,6 +120,23 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 .score-scale button.on{background:var(--red);border-color:var(--red);color:#fff;box-shadow:var(--shadow-red)}
 textarea.rater-comment{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13px;min-height:52px;resize:vertical}
 textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
+
+/* Analytics */
+.analytics-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:var(--white)}
+.analytics-table{border-collapse:collapse;width:100%;font-size:13px;min-width:1120px}
+.analytics-table th{background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:13px 12px;text-align:left;white-space:nowrap}
+.analytics-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.analytics-table tbody tr:last-child td{border-bottom:none}
+.analytics-table tbody tr:hover{background:var(--warm-bg)}
+.analytics-table td.name-cell,.analytics-table th.name-th{position:sticky;left:0;background:var(--white);font-weight:700;z-index:1;box-shadow:2px 0 6px rgba(0,0,0,.05)}
+.analytics-table tbody tr:hover td.name-cell{background:var(--warm-bg)}
+.analytics-table th.name-th{background:var(--dark);z-index:2}
+.analytics-table th.group-divider,.analytics-table td.group-divider{border-left:2px solid var(--border)}
+.analytics-table input{width:78px;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:600}
+.analytics-table input:focus{outline:none;border-color:var(--red-light)}
+.analytics-table .derived{font-weight:700;color:var(--text)}
+.analytics-table .derived.empty{color:var(--muted);font-weight:400}
+.analytics-table td.empty{color:var(--muted);text-align:center;white-space:normal}
 
 /* Modal */
 #overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
@@ -149,9 +165,10 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 
 <div id="app">
   <header class="top">
-    <div class="title">Cantor Agency <span>· Дашборд</span></div>
+    <div class="top-actions" id="topActions"></div>
     <nav class="tabs">
       <button class="tab-btn active" data-tab="projects">Проекты</button>
+      <button class="tab-btn" data-tab="analytics">Аналитика</button>
       <button class="tab-btn" data-tab="ratings">Оценки</button>
     </nav>
   </header>
@@ -160,17 +177,25 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
     <!-- PROJECTS -->
     <section class="panel active" id="panel-projects">
       <div class="month-toggle" id="monthToggleProjects"></div>
-      <div class="section-head">
-        <h2>Активные проекты — продвижение на Авито</h2>
-        <button class="btn" id="addProjectBtn">+ Добавить проект</button>
-      </div>
       <div class="grid" id="projectsGrid"></div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="panel" id="panel-analytics">
+      <div class="range-nav">
+        <button class="arrow" id="dayPrev" aria-label="Предыдущий день">‹</button>
+        <div class="label" id="dayLabel"></div>
+        <button class="arrow" id="dayNext" aria-label="Следующий день">›</button>
+        <button class="today-btn" id="dayYesterday">Вчера</button>
+      </div>
+      <div class="analytics-table-wrap">
+        <table class="analytics-table" id="analyticsTable"></table>
+      </div>
     </section>
 
     <!-- RATINGS -->
     <section class="panel" id="panel-ratings">
-      <div class="section-head"><h2>Оценки по проектам</h2></div>
-      <div class="week-nav">
+      <div class="range-nav">
         <button class="arrow" id="weekPrev" aria-label="Предыдущая неделя">‹</button>
         <div class="label" id="weekLabel"></div>
         <button class="arrow" id="weekNext" aria-label="Следующая неделя">›</button>
@@ -199,9 +224,10 @@ const ROLE_LABELS = { client: 'От клиента', manager: 'От менедж
 const ROLE_DOT = { client: 'var(--red)', manager: 'var(--amber)', specialist: 'var(--green)' };
 const MONTHS_GENITIVE_SHORT = ['янв', 'февр', 'мар', 'апр', 'мая', 'июня', 'июля', 'авг', 'сент', 'окт', 'нояб', 'дек'];
 
-let state = { projects: [], employees: [], analytics: [], projectRatings: [], salePrices: { primary: 50000, repeat: 25000 } };
+let state = { projects: [], employees: [], analytics: [], projectRatings: [], dailyMetrics: [], salePrices: { primary: 50000, repeat: 25000 } };
 let currentMonth = MONTHS[MONTHS.length - 1].key;
 let currentRatingWeek = isoMonday(new Date());
+let currentAnalyticsDay = addDays(todayIso(), -1);
 
 // ── Gate ──
 function isUnlocked() { try { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; } catch { return false; } }
@@ -266,7 +292,9 @@ async function boot() {
   state = data;
   renderMonthToggles();
   renderProjects();
+  renderAnalytics();
   renderRatings();
+  renderTopActions('projects');
 }
 
 if (isUnlocked()) {
@@ -281,8 +309,28 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    renderTopActions(btn.dataset.tab);
   });
 });
+
+// ── Top-bar actions (per active tab, replaces the old static site title) ──
+function renderTopActions(tab) {
+  const el = document.getElementById('topActions');
+  el.innerHTML = '';
+  if (tab === 'projects') {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = '+ Добавить проект';
+    btn.addEventListener('click', openAddProjectModal);
+    el.appendChild(btn);
+  } else if (tab === 'analytics') {
+    const btn = document.createElement('button');
+    btn.className = 'btn ghost';
+    btn.textContent = '⬇ Скачать CSV';
+    btn.addEventListener('click', exportDailyMetricsCsv);
+    el.appendChild(btn);
+  }
+}
 
 // ── Month toggle (Projects tab; Sales follows the same currentMonth) ──
 function renderMonthToggles() {
@@ -483,7 +531,7 @@ function renderComputedRow(el, vals) {
   `;
 }
 
-document.getElementById('addProjectBtn').addEventListener('click', () => {
+function openAddProjectModal() {
   openModal(`
     <h3>Новый проект</h3>
     <label>Название клиента</label>
@@ -499,7 +547,157 @@ document.getElementById('addProjectBtn').addEventListener('click', () => {
     const res = await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ name }) });
     if (res && res.project) { state.projects.push(res.project); renderProjects(); closeModal(); }
   });
-});
+}
+
+// ══════════════════════ ANALYTICS (по дням, все клиенты) ══════════════════════
+const WEEKDAYS_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function fmtPct(n) { return n == null ? '—' : `${n.toFixed(1)}%`; }
+function fmtMoney(n) { return n == null ? '—' : `${Math.round(n).toLocaleString('ru-RU')} ₽`; }
+
+function formatDayLabel(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const today = todayIso();
+  const yesterday = addDays(today, -1);
+  let rel = '';
+  if (dateStr === today) rel = 'Сегодня, ';
+  else if (dateStr === yesterday) rel = 'Вчера, ';
+  return `${rel}${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()} ${MONTHS_GENITIVE_SHORT[d.getMonth()]}`;
+}
+
+function dailyMetricFor(projectId, date) {
+  const found = state.dailyMetrics.find((r) => r.projectId === projectId && r.date === date);
+  return found ? found : { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 };
+}
+
+function cumulativeFor(projectId) {
+  return state.dailyMetrics.filter((r) => r.projectId === projectId).reduce((acc, r) => {
+    acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
+    acc.diagnostics += r.diagnostics; acc.sales += r.sales;
+    return acc;
+  }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+
+function deriveStats(c) {
+  return {
+    convAd: c.views > 0 ? (c.contacts / c.views) * 100 : null,
+    convDialog: c.contacts > 0 ? (c.diagnostics / c.contacts) * 100 : null,
+    convDiag: c.diagnostics > 0 ? (c.sales / c.diagnostics) * 100 : null,
+    costContact: c.contacts > 0 ? c.budget / c.contacts : null,
+    costDiag: c.diagnostics > 0 ? c.budget / c.diagnostics : null,
+    costClient: c.sales > 0 ? c.budget / c.sales : null,
+  };
+}
+
+const DERIVED_FMT = { convAd: fmtPct, convDialog: fmtPct, convDiag: fmtPct, costContact: fmtMoney, costDiag: fmtMoney, costClient: fmtMoney };
+
+document.getElementById('dayPrev').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, -1); renderAnalytics(); });
+document.getElementById('dayNext').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, 1); renderAnalytics(); });
+document.getElementById('dayYesterday').addEventListener('click', () => { currentAnalyticsDay = addDays(todayIso(), -1); renderAnalytics(); });
+
+function renderAnalytics() {
+  document.getElementById('dayLabel').textContent = formatDayLabel(currentAnalyticsDay);
+
+  const table = document.getElementById('analyticsTable');
+  table.innerHTML = `
+    <thead><tr>
+      <th class="name-th">Клиент</th>
+      <th>Бюджет</th><th>Просмотры</th><th>Контакты</th><th>Диагностики</th><th>Продажи</th>
+      <th class="group-divider">Конв. объявления</th><th>Конв. диалога</th><th>Конв. диагностики</th>
+      <th class="group-divider">Стоим. контакта</th><th>Стоим. диагностики</th><th>Стоим. клиента</th>
+    </tr></thead>
+    <tbody id="analyticsTbody"></tbody>
+  `;
+  const tbody = document.getElementById('analyticsTbody');
+
+  if (!state.projects.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">Пока нет ни одного проекта</td></tr>';
+    return;
+  }
+
+  state.projects.forEach((p) => {
+    const dayData = dailyMetricFor(p.id, currentAnalyticsDay);
+    const tr = document.createElement('tr');
+    tr.dataset.projectId = p.id;
+
+    const nameTd = document.createElement('td');
+    nameTd.className = 'name-cell';
+    nameTd.textContent = p.name;
+    tr.appendChild(nameTd);
+
+    ['budget', 'views', 'contacts', 'diagnostics', 'sales'].forEach((key) => {
+      const td = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.dataset.key = key;
+      input.value = dayData[key] || '';
+      input.addEventListener('blur', () => saveDailyMetric(p.id, tr));
+      td.appendChild(input);
+      tr.appendChild(td);
+    });
+
+    ['convAd', 'convDialog', 'convDiag', 'costContact', 'costDiag', 'costClient'].forEach((key, i) => {
+      const td = document.createElement('td');
+      td.dataset.derived = key;
+      if (i === 0 || i === 3) td.classList.add('group-divider');
+      td.innerHTML = '<span class="derived"></span>';
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+    fillDerivedRow(tr, p.id);
+  });
+}
+
+function fillDerivedRow(tr, projectId) {
+  const derived = deriveStats(cumulativeFor(projectId));
+  tr.querySelectorAll('td[data-derived]').forEach((td) => {
+    const key = td.dataset.derived;
+    const span = td.querySelector('.derived');
+    span.textContent = DERIVED_FMT[key](derived[key]);
+    span.classList.toggle('empty', derived[key] == null);
+  });
+}
+
+async function saveDailyMetric(projectId, tr) {
+  const vals = {};
+  tr.querySelectorAll('input[data-key]').forEach((inp) => { vals[inp.dataset.key] = inp.value; });
+  const res = await api('/api/dashboard/daily-metric', {
+    method: 'POST',
+    body: JSON.stringify({ projectId, date: currentAnalyticsDay, ...vals }),
+  });
+  if (res && res.dailyMetric) {
+    state.dailyMetrics = state.dailyMetrics.filter((r) => !(r.projectId === projectId && r.date === currentAnalyticsDay));
+    state.dailyMetrics.push(res.dailyMetric);
+    fillDerivedRow(tr, projectId);
+    toast('Сохранено');
+  }
+}
+
+function exportDailyMetricsCsv() {
+  const nameById = Object.fromEntries(state.projects.map((p) => [p.id, p.name]));
+  const header = ['Клиент', 'Дата', 'Бюджет', 'Просмотры', 'Контакты', 'Диагностики', 'Продажи'];
+  const rows = state.dailyMetrics
+    .slice()
+    .sort((a, b) => (nameById[a.projectId] || '').localeCompare(nameById[b.projectId] || '', 'ru') || (a.date < b.date ? -1 : 1))
+    .map((r) => [nameById[r.projectId] || r.projectId, r.date, r.budget, r.views, r.contacts, r.diagnostics, r.sales]);
+  const csvEscape = (v) => { const s = String(v); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = [header, ...rows].map((row) => row.map(csvEscape).join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `analytics_${currentAnalyticsDay}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 // ══════════════════════ RATINGS (по проектам, по неделям) ══════════════════════
 function isoMonday(d) {
@@ -581,9 +779,9 @@ function renderRatings() {
       head.innerHTML = `<span class="who"><span class="dot" style="background:${ROLE_DOT[role]}"></span>${label}</span><span class="score-badge">${draft[role].score || '—'}</span>`;
       block.appendChild(head);
 
-      block.appendChild(numberScale(draft[role].score, (val) => {
+      block.appendChild(numberScale(draft[role].score, async (val) => {
         draft[role].score = val;
-        save();
+        await save();
         renderRatings();
       }));
 
