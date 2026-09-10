@@ -2302,6 +2302,7 @@ async function handleDashboardApi(request, env, url) {
     const id = (body && body.id) || crypto.randomUUID().replace(/-/g, '').slice(0, 10);
     const existing = (await kv.get(`project:${id}`, 'json')) || {};
     const now = new Date().toISOString();
+    const ROW_COLORS = new Set(['', 'green', 'yellow', 'red', 'gray']);
     const project = {
       id,
       name,
@@ -2309,6 +2310,7 @@ async function handleDashboardApi(request, env, url) {
       responsibleId: body && 'responsibleId' in body ? body.responsibleId || null : existing.responsibleId ?? null,
       status: (body && body.status) || existing.status || 'active',
       review: body && 'review' in body ? String(body.review || '') : existing.review || '',
+      rowColor: body && 'rowColor' in body && ROW_COLORS.has(body.rowColor) ? body.rowColor : existing.rowColor || '',
       ratings: {
         result: Number((body && body.ratings && body.ratings.result) ?? existing.ratings?.result ?? 0),
         communication: Number((body && body.ratings && body.ratings.communication) ?? existing.ratings?.communication ?? 0),

@@ -27,6 +27,7 @@
 html{-webkit-text-size-adjust:100%}
 body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
 .hidden{display:none !important}
+.dim{visibility:hidden}
 button{font-family:inherit;cursor:pointer}
 input,textarea,select{font-family:inherit}
 
@@ -124,23 +125,35 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 /* Analytics */
 .analytics-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
 .analytics-toolbar .range-nav{margin-bottom:0}
+#analyticsViewToggle{min-width:172px;text-align:center;flex-shrink:0}
 .analytics-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:var(--white);scrollbar-width:none;-ms-overflow-style:none}
 .analytics-table-wrap::-webkit-scrollbar{display:none;height:0}
-.analytics-table{border-collapse:collapse;width:100%;font-size:13px;min-width:1120px}
+.analytics-table{border-collapse:collapse;width:100%;font-size:13px}
 .analytics-table th{background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:13px 12px;text-align:left;white-space:nowrap}
 .analytics-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.analytics-table tbody tr{cursor:pointer}
 .analytics-table tbody tr:last-child td{border-bottom:none}
 .analytics-table tbody tr:hover{background:var(--warm-bg)}
 .analytics-table td.name-cell,.analytics-table th.name-th{position:sticky;left:0;background:var(--white);font-weight:700;z-index:1;box-shadow:2px 0 6px rgba(0,0,0,.05)}
 .analytics-table tbody tr:hover td.name-cell{background:var(--warm-bg)}
 .analytics-table th.name-th{background:var(--dark);z-index:2}
 .analytics-table th.group-divider,.analytics-table td.group-divider{border-left:2px solid var(--border)}
-.analytics-table input{width:78px;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:600}
+.analytics-table input{width:78px;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:600;cursor:auto}
 .analytics-table input:focus{outline:none;border-color:var(--red-light)}
 .analytics-table .derived{font-weight:700;color:var(--text)}
 .analytics-table .derived.empty{color:var(--muted);font-weight:400}
 .analytics-table .total-value{font-weight:700;color:var(--text)}
-.analytics-table td.empty{color:var(--muted);text-align:center;white-space:normal}
+.analytics-table td.empty{color:var(--muted);text-align:center;white-space:normal;cursor:default}
+
+/* Soft per-row status marker, cycled by clicking the row */
+.analytics-table tbody tr.row-green{background:var(--green-bg)}
+.analytics-table tbody tr.row-yellow{background:var(--amber-bg)}
+.analytics-table tbody tr.row-red{background:var(--accent-bg)}
+.analytics-table tbody tr.row-gray{background:var(--gray-bg)}
+.analytics-table tbody tr.row-green td.name-cell{background:var(--green-bg)}
+.analytics-table tbody tr.row-yellow td.name-cell{background:var(--amber-bg)}
+.analytics-table tbody tr.row-red td.name-cell{background:var(--accent-bg)}
+.analytics-table tbody tr.row-gray td.name-cell{background:var(--gray-bg)}
 
 /* Hide the native up/down stepper on number inputs everywhere in the dashboard */
 input[type=number]::-webkit-outer-spin-button,
@@ -615,16 +628,33 @@ function deriveStats(c) {
   };
 }
 
+const DERIVED_KEYS = ['convAd', 'convDialog', 'convDiag', 'costContact', 'costDiag', 'costClient'];
 const DERIVED_FMT = { convAd: fmtPct, convDialog: fmtPct, convDiag: fmtPct, costContact: fmtMoney, costDiag: fmtMoney, costClient: fmtMoney };
+const DERIVED_LABELS = { convAd: '% Объявления', convDialog: '% Диалога', convDiag: '% Диагностики', costContact: '₽ Контакта', costDiag: '₽ Диагностики', costClient: '₽ Клиента' };
 const RAW_KEYS = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
-const RAW_LABELS_DAY = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
-const RAW_LABELS_TOTAL = { budget: 'Бюджет, всего', views: 'Просмотры, всего', contacts: 'Контакты, всего', diagnostics: 'Диагностики, всего', sales: 'Продажи, всего' };
+const RAW_LABELS = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
 
 // Wound-down clients with sparse history — keep them out of the way at the bottom
 // of the day-entry table instead of sorting alphabetically with active clients.
 const ANALYTICS_PINNED_LAST = new Set(['aydar-ziyazov', 'anna-kramorenko']);
 function orderedAnalyticsProjects() {
   return [...state.projects].sort((a, b) => (ANALYTICS_PINNED_LAST.has(a.id) ? 1 : 0) - (ANALYTICS_PINNED_LAST.has(b.id) ? 1 : 0));
+}
+
+// Soft status marker a row can be clicked through: none -> green -> yellow -> red -> gray -> none.
+const ROW_COLORS = ['', 'green', 'yellow', 'red', 'gray'];
+function nextRowColor(current) {
+  return ROW_COLORS[(ROW_COLORS.indexOf(current || '') + 1) % ROW_COLORS.length];
+}
+function applyRowColor(tr, color) {
+  ROW_COLORS.forEach((c) => { if (c) tr.classList.remove('row-' + c); });
+  if (color) tr.classList.add('row-' + color);
+}
+async function cycleRowColor(p, tr) {
+  const next = nextRowColor(p.rowColor);
+  p.rowColor = next;
+  applyRowColor(tr, next);
+  await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, rowColor: next }) });
 }
 
 let analyticsView = 'day'; // 'day' | 'total'
@@ -639,17 +669,17 @@ document.getElementById('analyticsViewToggle').addEventListener('click', () => {
 
 function renderAnalytics() {
   document.getElementById('dayLabel').textContent = formatDayLabel(currentAnalyticsDay);
-  document.getElementById('analyticsRangeNav').classList.toggle('hidden', analyticsView === 'total');
+  // visibility, not display:none — keeps its layout space so the toggle button never shifts
+  document.getElementById('analyticsRangeNav').classList.toggle('dim', analyticsView === 'total');
   document.getElementById('analyticsViewToggle').textContent = analyticsView === 'day' ? 'Показать за всё время' : 'Показать по дням';
 
-  const rawLabels = analyticsView === 'day' ? RAW_LABELS_DAY : RAW_LABELS_TOTAL;
   const table = document.getElementById('analyticsTable');
+  const colCount = 1 + RAW_KEYS.length + (analyticsView === 'total' ? DERIVED_KEYS.length : 0);
   table.innerHTML = `
     <thead><tr>
       <th class="name-th">Клиент</th>
-      ${RAW_KEYS.map((k) => `<th>${rawLabels[k]}</th>`).join('')}
-      <th class="group-divider">Конв. объявления</th><th>Конв. диалога</th><th>Конв. диагностики</th>
-      <th class="group-divider">Стоим. контакта</th><th>Стоим. диагностики</th><th>Стоим. клиента</th>
+      ${RAW_KEYS.map((k) => `<th>${RAW_LABELS[k]}</th>`).join('')}
+      ${analyticsView === 'total' ? DERIVED_KEYS.map((k, i) => `<th${i === 0 || i === 3 ? ' class="group-divider"' : ''}>${DERIVED_LABELS[k]}</th>`).join('') : ''}
     </tr></thead>
     <tbody id="analyticsTbody"></tbody>
   `;
@@ -657,13 +687,18 @@ function renderAnalytics() {
 
   const projects = orderedAnalyticsProjects();
   if (!projects.length) {
-    tbody.innerHTML = '<tr><td colspan="12" class="empty">Пока нет ни одного проекта</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty">Пока нет ни одного проекта</td></tr>`;
     return;
   }
 
   projects.forEach((p) => {
     const tr = document.createElement('tr');
     tr.dataset.projectId = p.id;
+    applyRowColor(tr, p.rowColor);
+    tr.addEventListener('click', (e) => {
+      if (e.target.closest('input, button, textarea, select')) return;
+      cycleRowColor(p, tr);
+    });
 
     const nameTd = document.createElement('td');
     nameTd.className = 'name-cell';
@@ -690,18 +725,18 @@ function renderAnalytics() {
         td.innerHTML = `<span class="total-value">${key === 'budget' ? fmtMoney(totals[key]) : totals[key].toLocaleString('ru-RU')}</span>`;
         tr.appendChild(td);
       });
+
+      DERIVED_KEYS.forEach((key, i) => {
+        const td = document.createElement('td');
+        td.dataset.derived = key;
+        if (i === 0 || i === 3) td.classList.add('group-divider');
+        td.innerHTML = '<span class="derived"></span>';
+        tr.appendChild(td);
+      });
     }
 
-    ['convAd', 'convDialog', 'convDiag', 'costContact', 'costDiag', 'costClient'].forEach((key, i) => {
-      const td = document.createElement('td');
-      td.dataset.derived = key;
-      if (i === 0 || i === 3) td.classList.add('group-divider');
-      td.innerHTML = '<span class="derived"></span>';
-      tr.appendChild(td);
-    });
-
     tbody.appendChild(tr);
-    fillDerivedRow(tr, p.id);
+    if (analyticsView === 'total') fillDerivedRow(tr, p.id);
   });
 }
 
