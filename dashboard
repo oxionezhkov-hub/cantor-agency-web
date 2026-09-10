@@ -98,7 +98,7 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 .status-done{background:var(--gray-bg);color:var(--gray)}
 
 /* Ratings + Analytics range nav */
-.range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
 .range-nav .arrow{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);flex-shrink:0;transition:all .15s}
 .range-nav .arrow:hover{border-color:var(--red);color:var(--red)}
 .range-nav .label{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800;background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;letter-spacing:.01em;min-width:150px;text-align:center}
@@ -122,7 +122,10 @@ textarea.rater-comment{width:100%;border:1.5px solid var(--border);border-radius
 textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 
 /* Analytics */
-.analytics-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:var(--white)}
+.analytics-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.analytics-toolbar .range-nav{margin-bottom:0}
+.analytics-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:var(--white);scrollbar-width:none;-ms-overflow-style:none}
+.analytics-table-wrap::-webkit-scrollbar{display:none;height:0}
 .analytics-table{border-collapse:collapse;width:100%;font-size:13px;min-width:1120px}
 .analytics-table th{background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:13px 12px;text-align:left;white-space:nowrap}
 .analytics-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
@@ -136,7 +139,13 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 .analytics-table input:focus{outline:none;border-color:var(--red-light)}
 .analytics-table .derived{font-weight:700;color:var(--text)}
 .analytics-table .derived.empty{color:var(--muted);font-weight:400}
+.analytics-table .total-value{font-weight:700;color:var(--text)}
 .analytics-table td.empty{color:var(--muted);text-align:center;white-space:normal}
+
+/* Hide the native up/down stepper on number inputs everywhere in the dashboard */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 /* Modal */
 #overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
@@ -182,11 +191,14 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 
     <!-- ANALYTICS -->
     <section class="panel" id="panel-analytics">
-      <div class="range-nav">
-        <button class="arrow" id="dayPrev" aria-label="Предыдущий день">‹</button>
-        <div class="label" id="dayLabel"></div>
-        <button class="arrow" id="dayNext" aria-label="Следующий день">›</button>
-        <button class="today-btn" id="dayYesterday">Вчера</button>
+      <div class="analytics-toolbar">
+        <div class="range-nav" id="analyticsRangeNav">
+          <button class="arrow" id="dayPrev" aria-label="Предыдущий день">‹</button>
+          <div class="label" id="dayLabel"></div>
+          <button class="arrow" id="dayNext" aria-label="Следующий день">›</button>
+          <button class="today-btn" id="dayYesterday">Вчера</button>
+        </div>
+        <button class="btn secondary small" id="analyticsViewToggle">Показать за всё время</button>
       </div>
       <div class="analytics-table-wrap">
         <table class="analytics-table" id="analyticsTable"></table>
@@ -552,8 +564,18 @@ function openAddProjectModal() {
 // ══════════════════════ ANALYTICS (по дням, все клиенты) ══════════════════════
 const WEEKDAYS_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 
+// Local calendar date as YYYY-MM-DD. Deliberately not .toISOString().slice(0,10):
+// that serializes in UTC, which silently rolls back a day for any positive UTC
+// offset (e.g. Moscow) — "today" and "+/- N days" must stay in local time.
+function ymd(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return ymd(new Date());
 }
 
 function fmtPct(n) { return n == null ? '—' : `${n.toFixed(1)}%`; }
@@ -594,19 +616,38 @@ function deriveStats(c) {
 }
 
 const DERIVED_FMT = { convAd: fmtPct, convDialog: fmtPct, convDiag: fmtPct, costContact: fmtMoney, costDiag: fmtMoney, costClient: fmtMoney };
+const RAW_KEYS = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
+const RAW_LABELS_DAY = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
+const RAW_LABELS_TOTAL = { budget: 'Бюджет, всего', views: 'Просмотры, всего', contacts: 'Контакты, всего', diagnostics: 'Диагностики, всего', sales: 'Продажи, всего' };
+
+// Wound-down clients with sparse history — keep them out of the way at the bottom
+// of the day-entry table instead of sorting alphabetically with active clients.
+const ANALYTICS_PINNED_LAST = new Set(['aydar-ziyazov', 'anna-kramorenko']);
+function orderedAnalyticsProjects() {
+  return [...state.projects].sort((a, b) => (ANALYTICS_PINNED_LAST.has(a.id) ? 1 : 0) - (ANALYTICS_PINNED_LAST.has(b.id) ? 1 : 0));
+}
+
+let analyticsView = 'day'; // 'day' | 'total'
 
 document.getElementById('dayPrev').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, -1); renderAnalytics(); });
 document.getElementById('dayNext').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, 1); renderAnalytics(); });
 document.getElementById('dayYesterday').addEventListener('click', () => { currentAnalyticsDay = addDays(todayIso(), -1); renderAnalytics(); });
+document.getElementById('analyticsViewToggle').addEventListener('click', () => {
+  analyticsView = analyticsView === 'day' ? 'total' : 'day';
+  renderAnalytics();
+});
 
 function renderAnalytics() {
   document.getElementById('dayLabel').textContent = formatDayLabel(currentAnalyticsDay);
+  document.getElementById('analyticsRangeNav').classList.toggle('hidden', analyticsView === 'total');
+  document.getElementById('analyticsViewToggle').textContent = analyticsView === 'day' ? 'Показать за всё время' : 'Показать по дням';
 
+  const rawLabels = analyticsView === 'day' ? RAW_LABELS_DAY : RAW_LABELS_TOTAL;
   const table = document.getElementById('analyticsTable');
   table.innerHTML = `
     <thead><tr>
       <th class="name-th">Клиент</th>
-      <th>Бюджет</th><th>Просмотры</th><th>Контакты</th><th>Диагностики</th><th>Продажи</th>
+      ${RAW_KEYS.map((k) => `<th>${rawLabels[k]}</th>`).join('')}
       <th class="group-divider">Конв. объявления</th><th>Конв. диалога</th><th>Конв. диагностики</th>
       <th class="group-divider">Стоим. контакта</th><th>Стоим. диагностики</th><th>Стоим. клиента</th>
     </tr></thead>
@@ -614,13 +655,13 @@ function renderAnalytics() {
   `;
   const tbody = document.getElementById('analyticsTbody');
 
-  if (!state.projects.length) {
+  const projects = orderedAnalyticsProjects();
+  if (!projects.length) {
     tbody.innerHTML = '<tr><td colspan="12" class="empty">Пока нет ни одного проекта</td></tr>';
     return;
   }
 
-  state.projects.forEach((p) => {
-    const dayData = dailyMetricFor(p.id, currentAnalyticsDay);
+  projects.forEach((p) => {
     const tr = document.createElement('tr');
     tr.dataset.projectId = p.id;
 
@@ -629,17 +670,27 @@ function renderAnalytics() {
     nameTd.textContent = p.name;
     tr.appendChild(nameTd);
 
-    ['budget', 'views', 'contacts', 'diagnostics', 'sales'].forEach((key) => {
-      const td = document.createElement('td');
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.min = '0';
-      input.dataset.key = key;
-      input.value = dayData[key] || '';
-      input.addEventListener('blur', () => saveDailyMetric(p.id, tr));
-      td.appendChild(input);
-      tr.appendChild(td);
-    });
+    if (analyticsView === 'day') {
+      const dayData = dailyMetricFor(p.id, currentAnalyticsDay);
+      RAW_KEYS.forEach((key) => {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.dataset.key = key;
+        input.value = dayData[key] || '';
+        input.addEventListener('blur', () => saveDailyMetric(p.id, tr));
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+    } else {
+      const totals = cumulativeFor(p.id);
+      RAW_KEYS.forEach((key) => {
+        const td = document.createElement('td');
+        td.innerHTML = `<span class="total-value">${key === 'budget' ? fmtMoney(totals[key]) : totals[key].toLocaleString('ru-RU')}</span>`;
+        tr.appendChild(td);
+      });
+    }
 
     ['convAd', 'convDialog', 'convDiag', 'costContact', 'costDiag', 'costClient'].forEach((key, i) => {
       const td = document.createElement('td');
@@ -705,13 +756,13 @@ function isoMonday(d) {
   const day = date.getDay();
   const diff = (day === 0 ? -6 : 1) - day;
   date.setDate(date.getDate() + diff);
-  return date.toISOString().slice(0, 10);
+  return ymd(date);
 }
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return ymd(d);
 }
 
 function formatWeekRange(weekStart) {
