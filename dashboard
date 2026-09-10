@@ -774,14 +774,14 @@ function formatWeekRange(weekStart) {
   return `${start.getDate()} ${MONTHS_GENITIVE_SHORT[sm]} - ${end.getDate()} ${MONTHS_GENITIVE_SHORT[em]}`;
 }
 
+// state.projectRatings is a flat list of independent per-(project, week, role)
+// rows — group the three roles for this project/week here for rendering.
 function projectRatingFor(projectId, weekStart) {
-  const found = state.projectRatings.find((r) => r.projectId === projectId && r.weekStart === weekStart);
-  const blank = () => ({ score: 0, comment: '' });
-  return {
-    client: { ...blank(), ...(found && found.client) },
-    manager: { ...blank(), ...(found && found.manager) },
-    specialist: { ...blank(), ...(found && found.specialist) },
-  };
+  const draft = { client: { score: 0, comment: '' }, manager: { score: 0, comment: '' }, specialist: { score: 0, comment: '' } };
+  state.projectRatings
+    .filter((r) => r.projectId === projectId && r.weekStart === weekStart)
+    .forEach((r) => { draft[r.role] = { score: r.score, comment: r.comment }; });
+  return draft;
 }
 
 function numberScale(value, onSet) {
@@ -804,12 +804,9 @@ function avgScore(scores) {
 }
 
 function allTimeAvgFor(projectId) {
-  const scores = [];
-  state.projectRatings.filter((r) => r.projectId === projectId).forEach((r) => {
-    ['client', 'manager', 'specialist'].forEach((role) => {
-      if (r[role] && r[role].score > 0) scores.push(r[role].score);
-    });
-  });
+  const scores = state.projectRatings
+    .filter((r) => r.projectId === projectId && r.score > 0)
+    .map((r) => r.score);
   return avgScore(scores);
 }
 
@@ -871,21 +868,16 @@ function renderRatings() {
     grid.appendChild(card);
 
     // Client/manager/specialist are three different people, often on three different
-    // devices — send only the role that changed so one person's save can't clobber
-    // another's concurrent rating with a stale local copy of it.
+    // devices — each role is its own independent record server-side (see _worker.js),
+    // so this save can never race with or clobber another role's concurrent save.
     async function save(role) {
       const res = await api('/api/dashboard/project-rating', {
         method: 'POST',
-        body: JSON.stringify({ projectId: p.id, weekStart: currentRatingWeek, [role]: draft[role] }),
+        body: JSON.stringify({ projectId: p.id, weekStart: currentRatingWeek, role, score: draft[role].score, comment: draft[role].comment }),
       });
       if (res && res.projectRating) {
-        state.projectRatings = state.projectRatings.filter((r) => !(r.projectId === p.id && r.weekStart === currentRatingWeek));
+        state.projectRatings = state.projectRatings.filter((r) => !(r.projectId === p.id && r.weekStart === currentRatingWeek && r.role === role));
         state.projectRatings.push(res.projectRating);
-        // resync the whole draft from the server's merged record, in case another
-        // device updated a different role since this card was first rendered
-        draft.client = res.projectRating.client;
-        draft.manager = res.projectRating.manager;
-        draft.specialist = res.projectRating.specialist;
         toast('Оценка сохранена');
       }
     }

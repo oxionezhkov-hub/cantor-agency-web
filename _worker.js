@@ -2255,6 +2255,47 @@ async function ensureDailyMetricsSeed(kv) {
   await kv.put('dailyMetricsSeeded', '1');
 }
 
+// project-rating used to store one KV record per (project, week) holding all three
+// roles together, updated via read-merge-write. That still lost data under
+// Cloudflare KV's eventual consistency: two saves to different roles close together
+// can each read a not-yet-propagated (stale) copy of the record from a different
+// edge location, so the second write's "merge" silently drops the first save. Split
+// into one independent KV key per (project, week, role) so a save is a pure write
+// with no read first — nothing to race. One-time migration of any old combined
+// records into the new per-role shape, guarded independently of other seed flags.
+async function ensureProjectRatingsMigration(kv) {
+  const migrated = await kv.get('ratingsMigratedV2');
+  if (migrated) return;
+
+  const list = await kv.list({ prefix: 'projectRating:' });
+  const oldKeys = list.keys.filter((k) => k.name.split(':').length === 3); // new keys have a 4th :role segment
+  const now = new Date().toISOString();
+  const writes = [];
+  for (const k of oldKeys) {
+    const rec = await kv.get(k.name, 'json');
+    if (!rec) continue;
+    ['client', 'manager', 'specialist'].forEach((role) => {
+      const r = rec[role];
+      if (!r) return;
+      writes.push(() => kv.put(`projectRating:${rec.projectId}:${rec.weekStart}:${role}`, JSON.stringify({
+        projectId: rec.projectId,
+        weekStart: rec.weekStart,
+        role,
+        score: Number(r.score) || 0,
+        comment: String(r.comment || ''),
+        updatedAt: rec.updatedAt || now,
+      })));
+    });
+    writes.push(() => kv.delete(k.name));
+  }
+
+  const BATCH = 50;
+  for (let i = 0; i < writes.length; i += BATCH) {
+    await Promise.all(writes.slice(i, i + BATCH).map((fn) => fn()));
+  }
+  await kv.put('ratingsMigratedV2', '1');
+}
+
 function checkDashboardAuth(request) {
   return request.headers.get('x-dashboard-password') === DASHBOARD_PASSWORD;
 }
@@ -2273,6 +2314,7 @@ async function handleDashboardApi(request, env, url) {
 
   await ensureDashboardSeed(kv);
   await ensureDailyMetricsSeed(kv);
+  await ensureProjectRatingsMigration(kv);
 
   // ── Bootstrap: everything the dashboard needs in one call ──
   if (pathname === '/api/dashboard/bootstrap' && request.method === 'GET') {
@@ -2392,36 +2434,30 @@ async function handleDashboardApi(request, env, url) {
   }
 
   // ── Weekly project ratings (client / manager / specialist, 1-10 + comment) ──
+  // One KV key per (project, week, role) — a pure write, no read-modify-write.
+  // Client/manager/specialist are three different people, typically on three
+  // different devices; a read-first merge is not safe here because Cloudflare KV
+  // is only eventually consistent across edge locations — a save to one role can
+  // read a not-yet-propagated copy of another role's very recent save and merge
+  // over it, silently dropping it. A pure per-role write has nothing to race.
   if (pathname === '/api/dashboard/project-rating' && request.method === 'POST') {
     const body = await readJson(request);
     const projectId = body && String(body.projectId || '').trim();
     const weekStart = body && String(body.weekStart || '').trim();
+    const role = body && String(body.role || '').trim();
     if (!projectId || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) return json({ error: 'missing_project_or_week' }, 400);
+    if (!['client', 'manager', 'specialist'].includes(role)) return json({ error: 'invalid_role' }, 400);
 
-    const pickRole = (r) => {
-      const score = Number(r && r.score);
-      return {
-        score: Number.isInteger(score) && score >= 1 && score <= 10 ? score : 0,
-        comment: String((r && r.comment) || '').slice(0, 2000),
-      };
-    };
-    const blankRole = { score: 0, comment: '' };
-    // Client/manager/specialist are three different people rating the same project,
-    // typically from three different devices — merge each role independently onto
-    // the stored record instead of overwriting all three from one submitter's
-    // (possibly stale) local snapshot, or one person's save can silently erase
-    // another's concurrent rating.
-    const existing = (await kv.get(`projectRating:${projectId}:${weekStart}`, 'json')) || {};
-    const now = new Date().toISOString();
+    const score = Number(body.score);
     const record = {
       projectId,
       weekStart,
-      client: 'client' in body ? pickRole(body.client) : existing.client || blankRole,
-      manager: 'manager' in body ? pickRole(body.manager) : existing.manager || blankRole,
-      specialist: 'specialist' in body ? pickRole(body.specialist) : existing.specialist || blankRole,
-      updatedAt: now,
+      role,
+      score: Number.isInteger(score) && score >= 1 && score <= 10 ? score : 0,
+      comment: String(body.comment || '').slice(0, 2000),
+      updatedAt: new Date().toISOString(),
     };
-    await kv.put(`projectRating:${projectId}:${weekStart}`, JSON.stringify(record));
+    await kv.put(`projectRating:${projectId}:${weekStart}:${role}`, JSON.stringify(record));
     return json({ projectRating: record });
   }
 
