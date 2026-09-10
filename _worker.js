@@ -2370,15 +2370,19 @@ async function handleDashboardApi(request, env, url) {
     if (!projectId || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: 'missing_project_or_date' }, 400);
 
     const nonNegInt = (v) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? Math.round(n) : 0; };
+    // Merge onto whatever is already stored — a POST that only means to change one
+    // field (e.g. one column edited on a shared row) must not blindly zero the rest
+    // out from a client's stale snapshot of the others.
+    const existing = (await kv.get(`dailyMetrics:${projectId}:${date}`, 'json')) || {};
     const now = new Date().toISOString();
     const record = {
       projectId,
       date,
-      budget: nonNegInt(body.budget),
-      views: nonNegInt(body.views),
-      contacts: nonNegInt(body.contacts),
-      diagnostics: nonNegInt(body.diagnostics),
-      sales: nonNegInt(body.sales),
+      budget: 'budget' in body ? nonNegInt(body.budget) : existing.budget || 0,
+      views: 'views' in body ? nonNegInt(body.views) : existing.views || 0,
+      contacts: 'contacts' in body ? nonNegInt(body.contacts) : existing.contacts || 0,
+      diagnostics: 'diagnostics' in body ? nonNegInt(body.diagnostics) : existing.diagnostics || 0,
+      sales: 'sales' in body ? nonNegInt(body.sales) : existing.sales || 0,
       updatedAt: now,
     };
     await kv.put(`dailyMetrics:${projectId}:${date}`, JSON.stringify(record));
@@ -2399,13 +2403,20 @@ async function handleDashboardApi(request, env, url) {
         comment: String((r && r.comment) || '').slice(0, 2000),
       };
     };
+    const blankRole = { score: 0, comment: '' };
+    // Client/manager/specialist are three different people rating the same project,
+    // typically from three different devices — merge each role independently onto
+    // the stored record instead of overwriting all three from one submitter's
+    // (possibly stale) local snapshot, or one person's save can silently erase
+    // another's concurrent rating.
+    const existing = (await kv.get(`projectRating:${projectId}:${weekStart}`, 'json')) || {};
     const now = new Date().toISOString();
     const record = {
       projectId,
       weekStart,
-      client: pickRole(body.client),
-      manager: pickRole(body.manager),
-      specialist: pickRole(body.specialist),
+      client: 'client' in body ? pickRole(body.client) : existing.client || blankRole,
+      manager: 'manager' in body ? pickRole(body.manager) : existing.manager || blankRole,
+      specialist: 'specialist' in body ? pickRole(body.specialist) : existing.specialist || blankRole,
       updatedAt: now,
     };
     await kv.put(`projectRating:${projectId}:${weekStart}`, JSON.stringify(record));
