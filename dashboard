@@ -107,8 +107,9 @@ textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--
 .range-nav .today-btn:hover{color:var(--red-dark)}
 
 .rating-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:22px 22px 6px;box-shadow:var(--shadow-sm)}
-.rating-card h3{font-size:17px;font-weight:700}
-.rating-card .avg-pill{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);color:var(--red-dark);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin:8px 0 16px;letter-spacing:.01em}
+.rating-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.rating-card-head h3{font-size:17px;font-weight:700}
+.rating-card-head .avg-pill{display:inline-flex;align-items:center;background:var(--accent-bg);color:var(--red-dark);font-family:'Unbounded',sans-serif;font-size:13px;font-weight:800;padding:5px 13px;border-radius:20px;letter-spacing:.01em;flex-shrink:0;cursor:default}
 .rater{padding:16px 0}
 .rater + .rater{border-top:1px solid var(--border)}
 .rater-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -125,6 +126,8 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 /* Analytics */
 .analytics-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
 .analytics-toolbar .range-nav{margin-bottom:0}
+.analytics-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.analytics-right .month-toggle{margin-bottom:0}
 #analyticsViewToggle{min-width:172px;text-align:center;flex-shrink:0}
 .analytics-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:var(--white);scrollbar-width:none;-ms-overflow-style:none}
 .analytics-table-wrap::-webkit-scrollbar{display:none;height:0}
@@ -211,7 +214,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <button class="arrow" id="dayNext" aria-label="Следующий день">›</button>
           <button class="today-btn" id="dayYesterday">Вчера</button>
         </div>
-        <button class="btn secondary small" id="analyticsViewToggle">Показать за всё время</button>
+        <div class="analytics-right">
+          <div class="month-toggle" id="analyticsMonthToggle"></div>
+          <button class="btn secondary small" id="analyticsViewToggle">Показать за всё время</button>
+        </div>
       </div>
       <div class="analytics-table-wrap">
         <table class="analytics-table" id="analyticsTable"></table>
@@ -609,12 +615,14 @@ function dailyMetricFor(projectId, date) {
   return found ? found : { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 };
 }
 
-function cumulativeFor(projectId) {
-  return state.dailyMetrics.filter((r) => r.projectId === projectId).reduce((acc, r) => {
-    acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
-    acc.diagnostics += r.diagnostics; acc.sales += r.sales;
-    return acc;
-  }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+function cumulativeFor(projectId, month) {
+  return state.dailyMetrics
+    .filter((r) => r.projectId === projectId && (!month || r.date.slice(0, 7) === month))
+    .reduce((acc, r) => {
+      acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
+      acc.diagnostics += r.diagnostics; acc.sales += r.sales;
+      return acc;
+    }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
 }
 
 function deriveStats(c) {
@@ -634,11 +642,12 @@ const DERIVED_LABELS = { convAd: '% Объявления', convDialog: '% Диа
 const RAW_KEYS = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
 const RAW_LABELS = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
 
-// Wound-down clients with sparse history — keep them out of the way at the bottom
-// of the day-entry table instead of sorting alphabetically with active clients.
-const ANALYTICS_PINNED_LAST = new Set(['aydar-ziyazov', 'anna-kramorenko']);
+// Wound-down clients with sparse history — pinned to the bottom of the Analytics
+// table instead of sorting alphabetically with active clients, and left out of
+// Ratings entirely (nobody is actively rating them week to week any more).
+const WOUND_DOWN_CLIENTS = new Set(['aydar-ziyazov', 'anna-kramorenko']);
 function orderedAnalyticsProjects() {
-  return [...state.projects].sort((a, b) => (ANALYTICS_PINNED_LAST.has(a.id) ? 1 : 0) - (ANALYTICS_PINNED_LAST.has(b.id) ? 1 : 0));
+  return [...state.projects].sort((a, b) => (WOUND_DOWN_CLIENTS.has(a.id) ? 1 : 0) - (WOUND_DOWN_CLIENTS.has(b.id) ? 1 : 0));
 }
 
 // Soft status marker a row can be clicked through: none -> green -> yellow -> red -> gray -> none.
@@ -659,6 +668,15 @@ async function cycleRowColor(p, tr) {
 
 let analyticsView = 'day'; // 'day' | 'total'
 
+// Month filter for the "total" view — matches the range covered by the seeded CSV history.
+const ANALYTICS_MONTHS = [
+  { key: '2026-06', label: 'Июнь' },
+  { key: '2026-07', label: 'Июль' },
+  { key: '2026-08', label: 'Август' },
+  { key: '2026-09', label: 'Сентябрь' },
+];
+let analyticsMonth = ANALYTICS_MONTHS[ANALYTICS_MONTHS.length - 1].key;
+
 document.getElementById('dayPrev').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, -1); renderAnalytics(); });
 document.getElementById('dayNext').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, 1); renderAnalytics(); });
 document.getElementById('dayYesterday').addEventListener('click', () => { currentAnalyticsDay = addDays(todayIso(), -1); renderAnalytics(); });
@@ -667,11 +685,25 @@ document.getElementById('analyticsViewToggle').addEventListener('click', () => {
   renderAnalytics();
 });
 
+function renderAnalyticsMonthToggle() {
+  const el = document.getElementById('analyticsMonthToggle');
+  el.innerHTML = '';
+  if (analyticsView !== 'total') return;
+  ANALYTICS_MONTHS.forEach((m) => {
+    const b = document.createElement('button');
+    b.textContent = m.label;
+    if (m.key === analyticsMonth) b.classList.add('active');
+    b.addEventListener('click', () => { analyticsMonth = m.key; renderAnalytics(); });
+    el.appendChild(b);
+  });
+}
+
 function renderAnalytics() {
   document.getElementById('dayLabel').textContent = formatDayLabel(currentAnalyticsDay);
   // visibility, not display:none — keeps its layout space so the toggle button never shifts
   document.getElementById('analyticsRangeNav').classList.toggle('dim', analyticsView === 'total');
   document.getElementById('analyticsViewToggle').textContent = analyticsView === 'day' ? 'Показать за всё время' : 'Показать по дням';
+  renderAnalyticsMonthToggle();
 
   const table = document.getElementById('analyticsTable');
   const colCount = 1 + RAW_KEYS.length + (analyticsView === 'total' ? DERIVED_KEYS.length : 0);
@@ -719,7 +751,7 @@ function renderAnalytics() {
         tr.appendChild(td);
       });
     } else {
-      const totals = cumulativeFor(p.id);
+      const totals = cumulativeFor(p.id, analyticsMonth);
       RAW_KEYS.forEach((key) => {
         const td = document.createElement('td');
         td.innerHTML = `<span class="total-value">${key === 'budget' ? fmtMoney(totals[key]) : totals[key].toLocaleString('ru-RU')}</span>`;
@@ -741,7 +773,7 @@ function renderAnalytics() {
 }
 
 function fillDerivedRow(tr, projectId) {
-  const derived = deriveStats(cumulativeFor(projectId));
+  const derived = deriveStats(cumulativeFor(projectId, analyticsView === 'total' ? analyticsMonth : null));
   tr.querySelectorAll('td[data-derived]').forEach((td) => {
     const key = td.dataset.derived;
     const span = td.querySelector('.derived');
@@ -833,6 +865,23 @@ function numberScale(value, onSet) {
   return wrap;
 }
 
+function avgScore(scores) {
+  const valid = scores.filter((s) => s > 0);
+  return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+}
+
+function allTimeAvgFor(projectId) {
+  const scores = [];
+  state.projectRatings.filter((r) => r.projectId === projectId).forEach((r) => {
+    ['client', 'manager', 'specialist'].forEach((role) => {
+      if (r[role] && r[role].score > 0) scores.push(r[role].score);
+    });
+  });
+  return avgScore(scores);
+}
+
+function fmtAvg(n) { return n == null ? '—' : String(Math.round(n * 10) / 10); }
+
 document.getElementById('weekPrev').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, -7); renderRatings(); });
 document.getElementById('weekNext').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, 7); renderRatings(); });
 document.getElementById('weekToday').addEventListener('click', () => { currentRatingWeek = isoMonday(new Date()); renderRatings(); });
@@ -842,19 +891,23 @@ function renderRatings() {
 
   const grid = document.getElementById('ratingsGrid');
   grid.innerHTML = '';
-  if (!state.projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
+  const projects = state.projects.filter((p) => !WOUND_DOWN_CLIENTS.has(p.id));
+  if (!projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
 
-  state.projects.forEach((p) => {
+  projects.forEach((p) => {
     const draft = projectRatingFor(p.id, currentRatingWeek);
     const card = document.createElement('div');
     card.className = 'rating-card';
-    card.innerHTML = `<h3>${escapeHtml(p.name)}</h3>`;
 
-    const scores = [draft.client.score, draft.manager.score, draft.specialist.score].filter((s) => s > 0);
-    const avgPill = document.createElement('div');
-    avgPill.className = 'avg-pill';
-    avgPill.textContent = scores.length ? `Средняя за неделю: ${(scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(1)}` : 'Оценок за неделю пока нет';
-    card.appendChild(avgPill);
+    const scores = [draft.client.score, draft.manager.score, draft.specialist.score];
+    const weekAvg = avgScore(scores);
+    const allTimeAvg = allTimeAvgFor(p.id);
+    card.innerHTML = `
+      <div class="rating-card-head">
+        <h3>${escapeHtml(p.name)}</h3>
+        <span class="avg-pill" title="Средняя за неделю / за всё время">${fmtAvg(weekAvg)}/${fmtAvg(allTimeAvg)}</span>
+      </div>
+    `;
 
     Object.entries(ROLE_LABELS).forEach(([role, label]) => {
       const block = document.createElement('div');
