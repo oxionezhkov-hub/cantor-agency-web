@@ -48,12 +48,15 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 .intro-body p:last-child{margin-bottom:0}
 .intro-body strong{color:var(--dark);font-weight:600}
 
-/* FEATURES LIST */
-.intro-features{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:24px 28px;margin:28px auto 0;max-width:560px;text-align:left;box-shadow:var(--shadow-sm)}
-.intro-features-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--red);margin-bottom:14px}
-.intro-features ul{list-style:none;display:flex;flex-direction:column;gap:10px}
-.intro-features li{font-size:13.5px;color:var(--text);display:flex;gap:9px;line-height:1.55}
-.intro-features li::before{content:'→';color:var(--red);flex-shrink:0;font-weight:700}
+/* FEATURES GRID */
+.features-block{margin-top:8px;text-align:center}
+.features-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--red);margin-bottom:16px}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left}
+.feature-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:16px;display:flex;gap:12px;align-items:flex-start;box-shadow:var(--shadow-sm)}
+.feature-icon{width:36px;height:36px;border-radius:10px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feature-icon svg{width:18px;height:18px;stroke:var(--red);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feature-text h4{font-family:'Geologica',sans-serif;font-size:13.5px;font-weight:700;color:var(--dark);margin-bottom:3px;letter-spacing:-0.01em}
+.feature-text p{font-size:12px;color:var(--muted);line-height:1.5}
 
 .intro-divider{width:50px;height:3px;background:var(--red);border-radius:3px;margin:32px auto 0}
 
@@ -87,11 +90,24 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
 .field input::placeholder,.field textarea::placeholder{color:#BDBDBD}
 .field textarea{resize:vertical;min-height:76px}
-.field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
 .fields-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .err-msg{font-size:11.5px;color:var(--red);margin-top:4px;display:none}
-.field.error input,.field.error select,.field.error textarea{border-color:var(--red)}
+.field.error input,.field.error textarea,.field.error .custom-select-trigger{border-color:var(--red)}
 .field.error .err-msg{display:block}
+
+/* CUSTOM SELECT */
+.custom-select{position:relative}
+.custom-select-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 14px;font-size:14px;font-family:'Geologica',sans-serif;color:var(--text);background:white;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;text-align:left}
+.custom-select-trigger.placeholder{color:#BDBDBD}
+.custom-select-trigger:hover{border-color:rgba(232,57,29,0.4)}
+.custom-select.open .custom-select-trigger{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,57,29,0.07)}
+.custom-select-chevron{width:15px;height:15px;stroke:#888;flex-shrink:0;transition:transform 0.2s}
+.custom-select.open .custom-select-chevron{transform:rotate(180deg);stroke:var(--red)}
+.custom-select-panel{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);z-index:20;overflow-y:auto;max-height:260px}
+.custom-select.open .custom-select-panel{display:block}
+.custom-select-option{padding:11px 14px;font-size:14px;color:var(--text);cursor:pointer;transition:background 0.15s}
+.custom-select-option:hover{background:var(--accent-bg)}
+.custom-select-option.selected{background:#FFF4F1;color:var(--red);font-weight:600}
 
 /* OPTION LIST */
 .options-list{display:flex;flex-direction:column;gap:8px}
@@ -146,7 +162,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
 @media(max-width:600px){
   .fields-row{grid-template-columns:1fr}
   .intro{padding:36px 20px 28px}
-  .intro-features{padding:20px 20px}
+  .features-grid{grid-template-columns:1fr}
   .form-outer{padding:8px 16px 48px}
   .step{padding:22px 18px 18px}
 }
@@ -192,15 +208,20 @@ footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
       </div>
       <div class="field" id="f-audience">
         <label>Кто ваши основные ученики? <span class="req">*</span></label>
-        <select id="audience">
-          <option value="">Выберите вариант</option>
-          <option value="school_low">Школьники 1–4 класс</option>
-          <option value="school_mid">Школьники 5–9 класс</option>
-          <option value="school_high">10–11 класс (ЕГЭ/ОГЭ)</option>
-          <option value="students">Студенты вузов</option>
-          <option value="adults">Взрослые</option>
-          <option value="mixed">Разные группы</option>
-        </select>
+        <div class="custom-select" id="audienceSelect">
+          <button type="button" class="custom-select-trigger placeholder" id="audienceTrigger" onclick="toggleAudienceSelect(event)">
+            <span id="audienceTriggerText">Выберите вариант</span>
+            <svg class="custom-select-chevron" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="custom-select-panel" id="audiencePanel">
+            <div class="custom-select-option" data-value="school_low" onclick="selectAudience(this)">Школьники 1–4 класс</div>
+            <div class="custom-select-option" data-value="school_mid" onclick="selectAudience(this)">Школьники 5–9 класс</div>
+            <div class="custom-select-option" data-value="school_high" onclick="selectAudience(this)">10–11 класс (ЕГЭ/ОГЭ)</div>
+            <div class="custom-select-option" data-value="students" onclick="selectAudience(this)">Студенты вузов</div>
+            <div class="custom-select-option" data-value="adults" onclick="selectAudience(this)">Взрослые</div>
+            <div class="custom-select-option" data-value="mixed" onclick="selectAudience(this)">Разные группы</div>
+          </div>
+        </div>
         <div class="err-msg">Выберите вариант</div>
       </div>
       <div class="field" id="f-check">
@@ -323,19 +344,52 @@ footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
     </div>
   </div>
 
-  <div class="intro-features">
-    <div class="intro-features-title">Что входит в работу</div>
-    <ul>
-      <li>Оформление вашего профиля</li>
-      <li>Создание объявлений по нашим моделям</li>
-      <li>Запуск платного продвижения и регулярное тестирование гипотез</li>
-      <li>Ежедневная аналитика и оптимизация</li>
-      <li>Стратегические встречи</li>
-      <li>Оценка от опытных эдвайзеров — распаковка, первичная настройка</li>
-      <li>Перебор стратегий и тестирование форматов, городов, ставок</li>
-      <li>Работа специалистов, менеджеров, эдвайзеров</li>
-      <li>Ежедневные отчёты и 2–4 стратегических встречи</li>
-    </ul>
+  <div class="features-block">
+    <div class="features-title">Что входит в работу</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="feature-text">
+          <h4>Профиль и объявления</h4>
+          <p>Оформляем профиль и делаем объявления по проверенным моделям</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div class="feature-text">
+          <h4>Платное продвижение</h4>
+          <p>Регулярно тестируем гипотезы: форматы, города, ставки</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
+        <div class="feature-text">
+          <h4>Аналитика и отчёты</h4>
+          <p>Ежедневно следим за показателями, отчитываемся каждую неделю</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="feature-text">
+          <h4>Стратегические встречи</h4>
+          <p>2–4 встречи в месяц, чтобы держать курс на результат</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="feature-text">
+          <h4>Экспертная оценка</h4>
+          <p>Разбор и первичная настройка от опытных эдвайзеров агентства</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="feature-text">
+          <h4>Команда на проекте</h4>
+          <p>Специалист, менеджер и эдвайзер ведут ваш проект</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -349,6 +403,7 @@ const progressPct = {1:33,2:66,3:100};
 
 const state = {
   currentStep: 1,
+  audience: '',
   avitoExp: '',
   budget: ''
 };
@@ -376,12 +431,35 @@ function selectOpt(el, name, value) {
   if (errEl) errEl.style.display = 'none';
 }
 
+function toggleAudienceSelect(e) {
+  e.stopPropagation();
+  document.getElementById('audienceSelect').classList.toggle('open');
+}
+
+function selectAudience(el) {
+  const panel = el.parentElement;
+  panel.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  state.audience = el.dataset.value;
+  const trigger = document.getElementById('audienceTrigger');
+  trigger.querySelector('#audienceTriggerText').textContent = el.textContent;
+  trigger.classList.remove('placeholder');
+  document.getElementById('audienceSelect').classList.remove('open');
+  noErr('f-audience');
+}
+
+document.addEventListener('click', (e) => {
+  const select = document.getElementById('audienceSelect');
+  if (select && !select.contains(e.target)) select.classList.remove('open');
+});
+
 function validateStep(step) {
   if (step === 1) {
     let ok = true;
-    ['subject','audience','check','ltv'].forEach(id => {
+    ['subject','check','ltv'].forEach(id => {
       if (!val(id)) { err('f-' + id); ok = false; } else noErr('f-' + id);
     });
+    if (!state.audience) { err('f-audience'); ok = false; } else noErr('f-audience');
     return ok;
   }
   if (step === 2) {
@@ -414,7 +492,7 @@ function submitForm() {
   const fd = new FormData();
   fd.append('timestamp', new Date().toLocaleString('ru-RU'));
   fd.append('subject', val('subject') || '');
-  fd.append('audience', audienceNames[val('audience')] || '');
+  fd.append('audience', audienceNames[state.audience] || '');
   fd.append('check', val('check') || '');
   fd.append('ltv', val('ltv') || '');
   fd.append('avito_exp', avitoExpNames[state.avitoExp] || '');
@@ -426,12 +504,14 @@ function submitForm() {
   fd.append('phone', val('phone') || '');
   fd.append('comment', val('comment') || '');
 
-  fetch(APPS_SCRIPT_URL, { method: 'POST', body: fd })
-    .then(r => r.json())
-    .then(res => {
+  // Apps Script always answers through a script.googleusercontent.com redirect, and reading
+  // that response back can fail intermittently in some browsers even though the write itself
+  // already happened server-side. Firing with no-cors and treating any resolved request as
+  // success avoids showing users a scary error for a submission that actually went through.
+  fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd })
+    .then(() => {
       document.getElementById('loadingOverlay').classList.remove('active');
-      if (res.result === 'success') { showThanks(); }
-      else { alert('Ошибка при отправке. Попробуйте ещё раз или напишите https://t.me/oleg_ezhkov'); btn.disabled = false; }
+      showThanks();
     })
     .catch(() => {
       document.getElementById('loadingOverlay').classList.remove('active');
