@@ -75,24 +75,7 @@ main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
 .field-row label{font-size:12px;color:var(--muted);flex-shrink:0}
 .field-row select,.field-row input[type=text],.field-row input[type=number]{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;width:100%;max-width:190px}
 
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;background:var(--warm-bg);border-radius:var(--r-md);padding:12px 14px;margin:12px 0}
-.metric{display:flex;flex-direction:column}
-.metric .v{font-size:16px;font-weight:700}
-.metric .l{font-size:11px;color:var(--muted)}
-.metric input{border:1.5px solid var(--border);border-radius:6px;padding:4px 6px;font-size:14px;font-weight:700;width:100%}
-
-.computed-row{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;margin:-2px 0 12px;background:var(--accent-bg);border-radius:var(--r-md)}
-.computed-item{display:flex;flex-direction:column;align-items:center;flex:1;text-align:center}
-.computed-item .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
-.computed-item .v{font-size:14px;font-weight:700}
-
-.stars{display:flex;gap:3px}
-.stars button{background:none;border:none;font-size:18px;color:var(--border);padding:0;line-height:1}
-.stars button.on{color:var(--red)}
-.rating-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.rating-row .l{font-size:12px;color:var(--muted)}
-
-textarea.review{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;min-height:60px;resize:vertical;margin-top:6px}
+textarea.field-textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;min-height:70px;resize:vertical;margin-top:6px}
 .status-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
 .status-active{background:var(--green-bg);color:var(--green)}
 .status-paused{background:var(--amber-bg);color:var(--amber)}
@@ -163,6 +146,20 @@ input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
+/* All-clients summary popup */
+.summary-popup{position:fixed;top:78px;left:28px;z-index:950;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);padding:20px 22px;width:300px}
+.summary-popup-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.summary-popup-head h4{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800}
+.popup-close{background:none;border:none;font-size:20px;line-height:1;color:var(--muted);padding:0;width:26px;height:26px;border-radius:50%;flex-shrink:0}
+.popup-close:hover{background:var(--warm-bg);color:var(--text)}
+.summary-rows{display:flex;flex-direction:column;margin-bottom:16px}
+.summary-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none;padding-bottom:0}
+.summary-row .label{font-size:12.5px;color:var(--muted);font-weight:600}
+.summary-row .value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:800;color:var(--text);text-align:right;white-space:nowrap}
+.summary-row .value .derived{display:block;font-family:'Geologica',sans-serif;font-size:11px;font-weight:600;color:var(--red-dark);margin-top:2px}
+#summaryCopyBtn{width:100%}
+
 /* Modal */
 #overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
 #overlay.open{display:flex}
@@ -201,7 +198,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <main>
     <!-- PROJECTS -->
     <section class="panel active" id="panel-projects">
-      <div class="month-toggle" id="monthToggleProjects"></div>
       <div class="grid" id="projectsGrid"></div>
     </section>
 
@@ -241,22 +237,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div class="modal" id="modalBody"></div>
 </div>
 
+<div class="summary-popup hidden" id="summaryPopup">
+  <div class="summary-popup-head">
+    <h4>Сводка по всем клиентам</h4>
+    <button class="popup-close" id="summaryPopupClose" aria-label="Закрыть">×</button>
+  </div>
+  <div class="summary-rows" id="summaryRows"></div>
+  <button class="btn small" id="summaryCopyBtn">⧉ Скопировать</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const ADMIN_STORAGE_KEY = 'agency_dashboard_ok';
-const MONTHS = [
-  { key: '2026-08', label: 'Август' },
-  { key: '2026-09', label: 'Сентябрь' },
-];
-const STATUS_LABELS = { active: 'В работе', paused: 'На паузе', done: 'Завершён' };
-const RATING_LABELS = { result: 'Результат', communication: 'Коммуникация', quality: 'Качество работы' };
 const ROLE_LABELS = { client: 'От клиента', manager: 'От менеджера', specialist: 'От специалиста' };
 const ROLE_DOT = { client: 'var(--red)', manager: 'var(--amber)', specialist: 'var(--green)' };
 const MONTHS_GENITIVE_SHORT = ['янв', 'февр', 'мар', 'апр', 'мая', 'июня', 'июля', 'авг', 'сент', 'окт', 'нояб', 'дек'];
 
 let state = { projects: [], employees: [], analytics: [], projectRatings: [], dailyMetrics: [], salePrices: { primary: 50000, repeat: 25000 } };
-let currentMonth = MONTHS[MONTHS.length - 1].key;
 let currentRatingWeek = isoMonday(new Date());
 let currentAnalyticsDay = addDays(todayIso(), -1);
 
@@ -321,7 +319,6 @@ async function boot() {
   const data = await api('/api/dashboard/bootstrap');
   if (!data) return;
   state = data;
-  renderMonthToggles();
   renderProjects();
   renderAnalytics();
   renderRatings();
@@ -348,6 +345,7 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
 function renderTopActions(tab) {
   const el = document.getElementById('topActions');
   el.innerHTML = '';
+  if (tab !== 'analytics') document.getElementById('summaryPopup').classList.add('hidden');
   if (tab === 'projects') {
     const btn = document.createElement('button');
     btn.className = 'btn';
@@ -355,29 +353,18 @@ function renderTopActions(tab) {
     btn.addEventListener('click', openAddProjectModal);
     el.appendChild(btn);
   } else if (tab === 'analytics') {
-    const btn = document.createElement('button');
-    btn.className = 'btn ghost';
-    btn.textContent = '⬇ Скачать CSV';
-    btn.addEventListener('click', exportDailyMetricsCsv);
-    el.appendChild(btn);
-  }
-}
+    const summaryBtn = document.createElement('button');
+    summaryBtn.className = 'btn ghost';
+    summaryBtn.textContent = 'Σ Сводка';
+    summaryBtn.addEventListener('click', toggleSummaryPopup);
+    el.appendChild(summaryBtn);
 
-// ── Month toggle (Projects tab; Sales follows the same currentMonth) ──
-function renderMonthToggles() {
-  const el = document.getElementById('monthToggleProjects');
-  el.innerHTML = '';
-  MONTHS.forEach((m) => {
-    const b = document.createElement('button');
-    b.textContent = m.label;
-    if (m.key === currentMonth) b.classList.add('active');
-    b.addEventListener('click', () => {
-      currentMonth = m.key;
-      renderMonthToggles();
-      renderProjects();
-    });
-    el.appendChild(b);
-  });
+    const csvBtn = document.createElement('button');
+    csvBtn.className = 'btn ghost';
+    csvBtn.textContent = '⬇ Скачать CSV';
+    csvBtn.addEventListener('click', exportDailyMetricsCsv);
+    el.appendChild(csvBtn);
+  }
 }
 
 // ── Modal helpers ──
@@ -389,22 +376,12 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
 
 // ══════════════════════ PROJECTS ══════════════════════
-function analyticsFor(projectId, month) {
-  return state.analytics.find((a) => a.projectId === projectId && a.month === month) || null;
-}
-
-function starPicker(criterion, value, onSet) {
-  const wrap = document.createElement('div');
-  wrap.className = 'stars';
-  for (let i = 1; i <= 5; i++) {
-    const b = document.createElement('button');
-    b.textContent = '★';
-    if (i <= value) b.classList.add('on');
-    b.addEventListener('click', () => onSet(i));
-    wrap.appendChild(b);
-  }
-  return wrap;
-}
+// Per-project card is intentionally just three free-text fields — everything else
+// (metrics, ratings, day-to-day numbers) now lives in the Аналитика/Оценки tabs.
+const PROJECT_FIELDS = [
+  { key: 'status', label: 'Статус', placeholder: 'Активен, на паузе, завершён...' },
+  { key: 'stage', label: 'Этап работы', placeholder: 'Настройка, тестирование, масштабирование...' },
+];
 
 function renderProjects() {
   const grid = document.getElementById('projectsGrid');
@@ -414,152 +391,40 @@ function renderProjects() {
   state.projects.forEach((p) => {
     const card = document.createElement('div');
     card.className = 'card';
-
-    const a = analyticsFor(p.id, currentMonth);
-
     card.innerHTML = `<h3>${escapeHtml(p.name)}</h3>`;
 
-    const statusRow = document.createElement('div');
-    statusRow.className = 'field-row';
-    statusRow.innerHTML = '<label>Статус</label>';
-    const statusSel = document.createElement('select');
-    Object.entries(STATUS_LABELS).forEach(([k, label]) => {
-      const opt = document.createElement('option');
-      opt.value = k; opt.textContent = label;
-      if (k === p.status) opt.selected = true;
-      statusSel.appendChild(opt);
-    });
-    statusSel.addEventListener('change', async () => {
-      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, status: statusSel.value }) });
-      p.status = statusSel.value;
+    const saveField = async (field, value) => {
+      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, [field]: value }) });
+      p[field] = value;
       toast('Сохранено');
-    });
-    statusRow.appendChild(statusSel);
-    card.appendChild(statusRow);
+    };
 
-    const respRow = document.createElement('div');
-    respRow.className = 'field-row';
-    respRow.innerHTML = '<label>Ответственный</label>';
-    const respSel = document.createElement('select');
-    const noneOpt = document.createElement('option');
-    noneOpt.value = ''; noneOpt.textContent = '— не назначен —';
-    respSel.appendChild(noneOpt);
-    state.employees.forEach((e) => {
-      const opt = document.createElement('option');
-      opt.value = e.id; opt.textContent = e.name;
-      if (p.responsibleId === e.id) opt.selected = true;
-      respSel.appendChild(opt);
-    });
-    respSel.addEventListener('change', async () => {
-      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, responsibleId: respSel.value || null }) });
-      p.responsibleId = respSel.value || null;
-      toast('Сохранено');
-    });
-    respRow.appendChild(respSel);
-    card.appendChild(respRow);
-
-    // Metrics — editable inputs, plus a computed row (conversion/CPL/CAC) below them
-    const metrics = document.createElement('div');
-    metrics.className = 'metrics';
-    const fields = [
-      ['budget', 'Расход, ₽'], ['views', 'Просмотров'], ['contacts', 'Контактов'],
-      ['diagnostics', 'Диагностик'], ['salesCount', 'Продаж'],
-    ];
-    const av = a || { budget: '', views: '', contacts: '', diagnostics: '', salesCount: '' };
-    fields.forEach(([key, label]) => {
-      const m = document.createElement('div');
-      m.className = 'metric';
-      m.innerHTML = `<span class="l">${label}</span>`;
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.dataset.key = key;
-      input.value = av[key] ?? '';
-      input.addEventListener('input', () => renderComputedRow(computedRow, metricsValues(metrics)));
-      input.addEventListener('change', () => saveAnalytics(p.id, metrics, computedRow));
-      m.appendChild(input);
-      metrics.appendChild(m);
-    });
-    card.appendChild(metrics);
-
-    const computedRow = document.createElement('div');
-    computedRow.className = 'computed-row';
-    card.appendChild(computedRow);
-    renderComputedRow(computedRow, metricsValues(metrics));
-
-    // Ratings
-    const ratingsBlock = document.createElement('div');
-    Object.entries(RATING_LABELS).forEach(([key, label]) => {
+    PROJECT_FIELDS.forEach(({ key, label, placeholder }) => {
       const row = document.createElement('div');
-      row.className = 'rating-row';
-      row.innerHTML = `<span class="l">${label}</span>`;
-      row.appendChild(starPicker(key, p.ratings[key] || 0, async (val) => {
-        p.ratings[key] = val;
-        await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, ratings: p.ratings }) });
-        renderProjects();
-        toast('Оценка сохранена');
-      }));
-      ratingsBlock.appendChild(row);
+      row.className = 'field-row';
+      row.innerHTML = `<label>${label}</label>`;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = placeholder;
+      input.value = p[key] || '';
+      input.addEventListener('blur', () => saveField(key, input.value));
+      row.appendChild(input);
+      card.appendChild(row);
     });
-    card.appendChild(ratingsBlock);
 
-    // Review
-    const reviewLabel = document.createElement('div');
-    reviewLabel.className = 'field-row';
-    reviewLabel.innerHTML = '<label>Отзыв клиента</label>';
-    card.appendChild(reviewLabel);
-    const review = document.createElement('textarea');
-    review.className = 'review';
-    review.placeholder = 'Что клиент говорит о сотрудничестве...';
-    review.value = p.review || '';
-    review.addEventListener('blur', async () => {
-      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, review: review.value }) });
-      p.review = review.value;
-      toast('Отзыв сохранён');
-    });
-    card.appendChild(review);
+    const workLabel = document.createElement('div');
+    workLabel.className = 'field-row';
+    workLabel.innerHTML = '<label>Сейчас работаем над</label>';
+    card.appendChild(workLabel);
+    const workArea = document.createElement('textarea');
+    workArea.className = 'field-textarea';
+    workArea.placeholder = 'Кратко: что сейчас делается по проекту...';
+    workArea.value = p.currentWork || '';
+    workArea.addEventListener('blur', () => saveField('currentWork', workArea.value));
+    card.appendChild(workArea);
 
     grid.appendChild(card);
-
-    async function saveAnalytics(projectId, metricsEl, computedRowEl) {
-      const vals = metricsValues(metricsEl);
-      const derived = computeDerived(vals);
-      const body = { projectId, month: currentMonth, ...vals, ...derived };
-      const res = await api('/api/dashboard/analytics', { method: 'POST', body: JSON.stringify(body) });
-      if (res && res.analytics) {
-        state.analytics = state.analytics.filter((x) => !(x.projectId === projectId && x.month === currentMonth));
-        state.analytics.push(res.analytics);
-        renderComputedRow(computedRowEl, vals);
-        toast('Метрики сохранены');
-      }
-    }
   });
-}
-
-function metricsValues(metricsEl) {
-  const vals = {};
-  metricsEl.querySelectorAll('input[data-key]').forEach((inp) => { vals[inp.dataset.key] = inp.value; });
-  return vals;
-}
-
-function computeDerived(vals) {
-  const budget = Number(vals.budget) || 0;
-  const views = Number(vals.views) || 0;
-  const contacts = Number(vals.contacts) || 0;
-  const salesCount = Number(vals.salesCount) || 0;
-  return {
-    conversionPct: views > 0 ? Math.round((contacts / views) * 100) : 0,
-    cpl: contacts > 0 ? Math.round(budget / contacts) : 0,
-    cac: salesCount > 0 ? Math.round(budget / salesCount) : null,
-  };
-}
-
-function renderComputedRow(el, vals) {
-  const { conversionPct, cpl, cac } = computeDerived(vals);
-  el.innerHTML = `
-    <div class="computed-item"><span class="l">Конверсия</span><span class="v">${conversionPct}%</span></div>
-    <div class="computed-item"><span class="l">CPL</span><span class="v">${cpl ? cpl.toLocaleString('ru-RU') + ' ₽' : '—'}</span></div>
-    <div class="computed-item"><span class="l">CAC</span><span class="v">${cac != null ? cac.toLocaleString('ru-RU') + ' ₽' : '—'}</span></div>
-  `;
 }
 
 function openAddProjectModal() {
@@ -819,6 +684,71 @@ function exportDailyMetricsCsv() {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+// ── All-clients summary popup ──
+const SUMMARY_METRICS = [
+  { key: 'budget', label: 'Бюджет' },
+  { key: 'views', label: 'Просмотры', rate: 'CPV' },
+  { key: 'contacts', label: 'Контакты', rate: 'CPL' },
+  { key: 'diagnostics', label: 'Диагностики', rate: 'CPA' },
+  { key: 'sales', label: 'Продажи', rate: 'CAC' },
+];
+
+function allClientsTotals() {
+  return state.dailyMetrics.reduce((acc, r) => {
+    acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
+    acc.diagnostics += r.diagnostics; acc.sales += r.sales;
+    return acc;
+  }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+
+function summaryLines() {
+  const t = allClientsTotals();
+  const n = (v) => Math.round(v).toLocaleString('ru-RU');
+  return SUMMARY_METRICS.map(({ key, label, rate }) => {
+    if (key === 'budget') return { label, value: `${n(t.budget)} руб`, sub: null };
+    const perUnit = t[key] > 0 ? Math.round(t.budget / t[key]) : 0;
+    return { label, value: n(t[key]), sub: `${rate} ${n(perUnit)} руб` };
+  });
+}
+
+function summaryText() {
+  return summaryLines().map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
+}
+
+function renderSummaryPopup() {
+  document.getElementById('summaryRows').innerHTML = summaryLines().map((r) => `
+    <div class="summary-row">
+      <span class="label">${r.label}</span>
+      <span class="value">${r.value}${r.sub ? `<span class="derived">${r.sub}</span>` : ''}</span>
+    </div>
+  `).join('');
+}
+
+function toggleSummaryPopup() {
+  const popup = document.getElementById('summaryPopup');
+  const opening = popup.classList.contains('hidden');
+  if (opening) renderSummaryPopup();
+  popup.classList.toggle('hidden', !opening);
+}
+
+document.getElementById('summaryPopupClose').addEventListener('click', () => {
+  document.getElementById('summaryPopup').classList.add('hidden');
+});
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('summaryPopup');
+  if (popup.classList.contains('hidden')) return;
+  if (popup.contains(e.target) || e.target.closest('#topActions')) return;
+  popup.classList.add('hidden');
+});
+document.getElementById('summaryCopyBtn').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(summaryText());
+    toast('Скопировано');
+  } catch {
+    toast('Не удалось скопировать');
+  }
+});
 
 // ══════════════════════ RATINGS (по проектам, по неделям) ══════════════════════
 function isoMonday(d) {

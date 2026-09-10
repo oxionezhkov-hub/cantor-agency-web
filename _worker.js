@@ -2308,7 +2308,9 @@ async function handleDashboardApi(request, env, url) {
       name,
       service: (body && body.service) || existing.service || 'Продвижение на Авито',
       responsibleId: body && 'responsibleId' in body ? body.responsibleId || null : existing.responsibleId ?? null,
-      status: (body && body.status) || existing.status || 'active',
+      status: body && 'status' in body ? String(body.status || '') : existing.status || '',
+      stage: body && 'stage' in body ? String(body.stage || '') : existing.stage || '',
+      currentWork: body && 'currentWork' in body ? String(body.currentWork || '') : existing.currentWork || '',
       review: body && 'review' in body ? String(body.review || '') : existing.review || '',
       rowColor: body && 'rowColor' in body && ROW_COLORS.has(body.rowColor) ? body.rowColor : existing.rowColor || '',
       ratings: {
