@@ -675,7 +675,7 @@ const ANALYTICS_MONTHS = [
   { key: '2026-08', label: 'Август' },
   { key: '2026-09', label: 'Сентябрь' },
 ];
-let analyticsMonth = ANALYTICS_MONTHS[ANALYTICS_MONTHS.length - 1].key;
+let analyticsMonth = null; // null = every period combined; a month key narrows to just that month
 
 document.getElementById('dayPrev').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, -1); renderAnalytics(); });
 document.getElementById('dayNext').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, 1); renderAnalytics(); });
@@ -693,7 +693,8 @@ function renderAnalyticsMonthToggle() {
     const b = document.createElement('button');
     b.textContent = m.label;
     if (m.key === analyticsMonth) b.classList.add('active');
-    b.addEventListener('click', () => { analyticsMonth = m.key; renderAnalytics(); });
+    // clicking the already-active month deselects it, back to all periods combined
+    b.addEventListener('click', () => { analyticsMonth = analyticsMonth === m.key ? null : m.key; renderAnalytics(); });
     el.appendChild(b);
   });
 }
@@ -919,7 +920,8 @@ function renderRatings() {
       block.appendChild(head);
 
       block.appendChild(numberScale(draft[role].score, async (val) => {
-        draft[role].score = val;
+        // clicking the already-set score again clears it back to unrated
+        draft[role].score = draft[role].score === val ? 0 : val;
         await save();
         renderRatings();
       }));
