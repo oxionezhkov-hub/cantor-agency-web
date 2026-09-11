@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Елена Бурмакова — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1223670134?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Елена Бурмакова - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1223670134" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">«Я возьму»: как студентка филфака МГУ построила онлайн-школу нидерландского языка. Елена Бурмакова</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Елену чуть не отчислили из МГУ за то, что она молчала на занятиях — а спустя годы она построила онлайн-школу редкого языка, на который выучилась почти случайно. В выпуске — как выбрать язык, обучение в Амстердамском университете, методика перевёрнутого класса, поиск преподавателей редкого предмета и то, почему Елена принципиально не стремится к масштабу.
+
+🔗 Онлайн-школа нидерландского языка: [ссылка]
+🔗 Написать Елене в Telegram: [ссылка]
+🔗 Telegram-канал Елены о нидерландском: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, нидерландский язык, репетиторство, изучение языков, переезд в Нидерланды, преподавание онлайн, перевёрнутый класс, Елена Бурмакова</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #нидерландскийязык #EdTech #онлайншкола #языки #иностранныеязыки</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/elena-burmakova-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Меня чуть не отчислили из МГУ за молчание. Теперь я двадцать лет говорю по-нидерландски — и учу этому других</h1>
+
+      <p>На первом курсе МГУ меня чуть не отчислили — не за оценки, а за то, что я молчала на занятиях. После пары меня оставили и спросили: «Елена, а вы уже присматриваете себе другой вуз? Вы же не тянете, вы всё время молчите». Я была в шоке. И в тот момент приняла решение: больше никогда не молчать — отвечать каждый раз, когда меня спрашивают, и даже когда не спрашивают, лишь бы тренироваться говорить. Именно эта многолетняя привычка сработала на третьем курсе, когда на кафедру позвонили и преподаватель спросил: «Кто возьмёт учеников с нуля?» Я тут же сказала: «Я возьму». Так, по сути, началась моя карьера.</p>
+
+      <h2>Первый урок, который помню лучше всего</h2>
+      <p>За двадцать лет и примерно двадцать тысяч уроков лучше всего запоминаются, конечно, собственные ошибки — я неисправимый перфекционист, и промахи на занятиях всплывают из памяти в первую очередь. Но если говорить о чём-то светлом, это мой самый первый урок. Прошло всего несколько минут — и мои первые ученики произнесли свои первые фразы по-нидерландски. Именно это чувство счастья заставляет меня раз за разом вести всё новые и новые уроки — чтобы снова и снова слышать, как мои ученики заговорили.</p>
+
+      <h2>Как я выбрала нидерландский — или он выбрал меня</h2>
+      <p>Выбор языка со стороны выглядит странным: зачем учить нидерландский, если есть английский и немецкий? Многие коллеги на этот вопрос отвечают, что язык выбрал их сам — когда поступаешь на лингвистический факультет, тебе дают язык, и приходится им заниматься. У меня выбор был взаимным. В приёмной комиссии я увидела статистику набора: английский — 20 человек на место, немецкий — 10 человек на место, нидерландский — четыре места на человека. Я подумала: «О, у меня есть шанс!» — и не прогадала. Плюс была расхожая мысль, что нидерландский — это что-то среднее между английским и немецким, а значит, учить его будет проще.</p>
+
+      <h2>Языки с трёх лет: мама-профессор и её эксперимент</h2>
+      <p>Мне повезло: в семье меня рано начали заниматься иностранными языками. Моя мама — профессор, доктор наук, врач олимпийских чемпионов, регулярно ездила на международные конгрессы и выступала там с докладами на английском и немецком. Ей нужно было на ком-то практиковать язык — и этим «кем-то» стала я. С трёх лет она говорила со мной по-немецки, с пяти — по-английски. К моменту поступления в вуз у меня уже был опыт изучения языков, и это помогло сдать вступительные экзамены на филологический факультет.</p>
+
+      <h2>Год в Амстердаме на велосипеде</h2>
+      <p>Обучение нидерландиста устроено серьёзно: Нидерландская языковая ассоциация ежегодно присылает на кафедру носителей языка с разными диалектами, они ведут половину предметов на нидерландском и готовят студентов к международному сертификату уровня C1–C2. Каждое лето отправляют пожить в семье носителей языка в Бельгии или Голландии, поучиться в летней школе. А на пятом курсе я училась в Амстердамском университете — писала там курсовую и дипломную работу, которую потом издали отдельной книгой.</p>
+      <p>Это был опыт, сильно отличающийся от образования в России: можно было свободно посещать или не посещать занятия, зато была настоящая проектная работа в мини-группах с однокурсниками — то, чего мне не хватало в Москве. Двадцать километров на велосипеде до университета каждое утро, в снег, дождь и град, и столько же обратно — и так каждый день полгода. Параллельно я три года ходила заниматься вокалом к чудесной академической певице, жившей на соседней улице, — и практиковала язык через музыку. Именно тот опыт мини-групповой проектной работы я сейчас применяю в своей школе: даю студентам задания, которые они выполняют вместе, — они лучше узнают друг друга, начинают дружить уже после курса и продолжают общаться на нидерландском в жизни.</p>
+
+      <h2>Что подтвердила психология</h2>
+      <p>Позже я получила второе высшее — психолога-консультанта в Институте психологии РАН. Оно не перевернуло мой подход к преподаванию, а скорее подтвердило догадки, которые уже рождались в собственной практике: мозг лучше всего осваивает иностранный язык, когда его как можно больше погружают в звучание языка — без лишних усилий — и используют в общении в повседневных ситуациях. К этим же выводам я приходила и дальше, получая новые квалификации.</p>
+
+      <h2>Когда кажется, что образования не существует</h2>
+      <blockquote>Перед уроком я каждый раз готовлюсь как к стендапу, а не как к уроку — и мне некогда о чём-то отчаиваться.</blockquote>
+      <p>Честно скажу: иногда меня охватывает отчаяние, что образование — это что-то бесполезное. Возможно, дело в собственном опыте: я не помню, чтобы мне удавалось что-то понять, когда объясняет другой преподаватель, — в школе и вузе я просто делала вид, что слушаю и понимаю. Чтобы освоить тему по-настоящему, мне нужно проштудировать десяток источников и сформировать собственное представление. И от этого иногда становится страшно: а вдруг я даю своим ученикам не то, что им действительно нужно и пригодится в жизни?</p>
+      <p>Но потом начинается урок — я вижу перед собой группу из пяти человек, и, как сказала мне недавно моя коллега, новый преподаватель в моей онлайн-школе: «Перед уроком я каждый раз готовлюсь как к стендапу, а не как к уроку» — и мне уже некогда о чём-то отчаиваться.</p>
+
+      <h2>Кто приходит учить нидерландский</h2>
+      <p>С английским люди часто учат язык «на всякий случай, вдруг пригодится». С нидерландским так не бывает — сюда приходят по вполне конкретным жизненным причинам. Первая категория — те, кто уже переехал в Голландию: учится, работает там или приехал к мужу, жене, родственникам и хочет остаться, жить комфортно, интегрироваться и чувствовать себя как дома. Вторая — те, кто только планирует переезд: поступление в вуз, замужество, работа. Изредка встречаются полиглоты, для которых нидерландский — шестой или тринадцатый язык просто в удовольствие, но это скорее исключение.</p>
+
+      <h2>Кейс: с нуля до экзамена за три недели</h2>
+      <p>У меня был ученик, который подготовился к экзамену за три недели — уровень, конечно, был не самый высокий, но само по себе это редкий кейс. Большинство студентов, которым нужно сдавать экзамен, вспоминают об этом в последний момент и приходят с трясущимися руками, страхом и отчаянием — с ними приходится сначала приводить в чувство, а потом уже готовить. А здесь совпало несколько факторов: ученик уже знал английский и немецкий, был замотивирован, позитивно смотрел на результат и был готов ежедневно самостоятельно заниматься по моей методике — практиковаться на языке каждый день и в интенсивном темпе освоить всё необходимое.</p>
+
+      <h2>Кейс: от нуля до экскурсий по искусству за год</h2>
+      <p>Другой ученик за год дошёл с нуля до уровня B1 — и однажды между делом рассказал мне, что его пригласили вести экскурсии по искусству и истории на нидерландском, и попросил проверить презентацию для этой экскурсии. Я была в шоке — приятном. Это был очень любознательный, разносторонний человек: пишет, занимается спортом, интересуется искусством — и с радостью практиковал все эти интересы на нидерландском, обсуждая их со мной на уроках. Именно поэтому его и пригласили говорить о том, что ему интересно, — на языке. У каждого ученика свои таланты, и важно их вовремя заметить, чтобы вести человека к результату через то, что ему действительно интересно.</p>
+
+      <h2>Перевёрнутый класс и видео на минуту</h2>
+      <p>В моей методике студенты изучают материал до урока, а на самом занятии практикуют его. Коллеги часто удивляются, как мне удаётся заставить учеников смотреть видеоуроки перед занятием. На деле если прийти неподготовленным, на уроке будет некомфортно: всё занятие мы говорим только на нидерландском, и без просмотренного видео ты будешь чувствовать себя растерянным. Плюс сами видео очень короткие — одна-две минуты, что хорошо ложится на клиповое мышление: посмотреть пару минут объяснения правила несложно. А ещё студенты говорят, что видео записаны приятным, весёлым голосом, который хочется слушать, — и это тоже снимает страх перед языком.</p>
+
+      <h2>Как я разбираю ошибки, не называя имён</h2>
+      <p>В конце урока я иногда разбираю самые интересные ошибки — но это требует большой осторожности: кто-то из учеников может узнать свою ошибку и обидеться. Поэтому я всегда начинаю с обсуждения успехов — кто что сегодня смог сделать по-новому, чего достиг, — и в первую очередь хвалю студентов. К ошибке возвращаюсь, только если она была сделана многократно или особенно интересна, и никогда не говорю, кто именно её сделал — мы обсуждаем её как занятный случай, своего рода десерт урока. При этом бывают группы более высокого уровня, которые сами просят разбирать их ошибки без всяких экивоков, — им это важно, чтобы прорабатывать материал дома, и здесь я обсуждаю ошибки без всяких ограничений, в любой момент урока.</p>
+
+      <h2>Где живут преподаватели нидерландского</h2>
+      <p>Один из главных вызовов бизнеса — найти преподавателей: предмет редкий, и проблема не столько в том, чтобы отобрать хороших специалистов, сколько в том, чтобы найти место, где они вообще «водятся». Решение нашлось буквально случайно — одна из моих преподавательниц рассказала о профильном чате, куда можно написать и предложить сотрудничество. Уже за первые сутки откликнулись пять преподавателей, и я начала проводить с ними собеседования.</p>
+
+      <h2>Четыре помощника, которых я не представляла полгода назад</h2>
+      <p>Мне непросто просить других людей что-то для меня делать — кажется, что я их этим обременяю. Но я учусь: полгода назад я не могла представить, что у меня будет хоть один ассистент, а сегодня их четверо. Один помогает с подбором преподавателей — у него большой опыт в HR. Другой отвечает за трафик, соцсети, монтаж роликов. Третий — методист, который ищет литературу по методике преподавания и составляет интерактивные игры. Формально это пока ассистенты, а не сотрудники на фиксированных позициях: я смотрю, что у кого лучше получается и с чем интереснее работать, и уже потом, возможно, оформляем это в отдельные роли.</p>
+
+      <h2>Как я ищу проактивных людей</h2>
+      <p>Формальной системы отбора преподавателей и сотрудников у меня пока нет, я выстраиваю её на практике. На первичном интервью хорошо видно разницу: один кандидат говорит «зачем мне ещё учиться, я всё знаю, просто дайте мне группу», а другой — «Елена, я так рада, что вас встретила, я хочу научиться преподавать онлайн так, как вы». Именно второй тип становится моим будущим сотрудником — с ним есть куда расти вместе. После интервью мы проводим пробные уроки — пока не с настоящими учениками, а на моих ассистентах, которые благодаря этому уже все заговорили по-нидерландски. Дальше все участники заполняют опросники о впечатлениях: так я вижу, и как проявляет себя преподаватель, и как чувствует себя «ученик», и выстраиваю систему отбора уже на основе этих наблюдений.</p>
+      <p>Про удержание преподавателей я пока честно могу сказать немного — опыта совместной работы с командой у меня не так много, я учусь этому по ходу дела. Но чем больше опыта набираю, тем яснее понимаю, что я могу дать преподавателям: например, тем, кто устал каждый день физически ходить в школу, хочет уютно работать из дома в Zoom и вести уроки онлайн, — а я делаю это уже много лет и знаю, как этому научить.</p>
+
+      <h2>Нейросети и платформа, которую я сделала сама</h2>
+      <p>В последнее время я активно использую нейросети буквально во всём: они помогают мне составлять план интервью — с их помощью я готовилась и к этому разговору, — писать инструкции для помощников. А недавно я «навойкодила» с Клодом интерактивную платформу для своих учеников — с упражнениями и всеми видеоуроками. Я очень горжусь, что сделала это сама, и это стало возможным именно благодаря нейросетям.</p>
+
+      <h2>Девиз из двадцати лет и умение говорить «нет»</h2>
+      <p>Мой девиз — «Делай, что должен, и будь, что будет». Он появился, когда мне было около двадцати: всё детство я мечтала быть музыкантом и писать песни, но заниматься музыкой мне разрешили только после двадцати лет — тогда я начала брать уроки вокала у голландской академической певицы. В то время, когда все вокруг были заняты серьёзными взрослыми вещами — строили карьеру, писали диссертации, копили на квартиру, — я стеснялась своего хобби. Именно эта фраза меня поддерживала.</p>
+      <p>Тот же принцип срабатывает и в другом: я не работаю с теми, кто грубит или систематически нарушает границы. Если ученик ведёт себя неподобающе — несмотря на то, что он знаком с правилами занятий, — я делаю замечание, и если поведение повторяется, мы расстаёмся. Мой опыт показывает, что лучше прощаться уже после второго нарушения границ, не затягивая: здоровье дороже, группа дороже, моё дело дороже. Своим ученикам я должна быть весёлой, позитивной и вдохновляющей — а не человеком, который терпит.</p>
+
+      <h2>Куда я иду дальше</h2>
+      <p>Я принципиально не хочу гнаться за масштабом любой ценой и буду действовать так, как мне комфортно: если комфортно с четырьмя помощниками — у меня будет четыре, если с тремя преподавателями — будет три. Пусть у кого-то их двадцать пять, а у меня — три, зато это будут люди, с которыми мы смотрим в одну сторону, уважаем друг друга и делаем одно общее любимое дело.</p>
+      <p>Делегирование при этом для меня непростая тема: сигнал, что пора отдавать задачи другим, я чувствую по себе — если я перестаю успевать высыпаться и всё равно не справляюсь с делами, значит, пора просить о помощи. Сейчас, например, я прохожу курс по созданию роликов и физически не успеваю их монтировать сама. Если бы я могла вернуться в прошлое и встретить себя, студентку третьего курса, я бы, наверное, извинилась, что мечта об онлайн-школе исполнилась только спустя двадцать лет, — и пообещала бы сделать всё возможное, чтобы довести дело до конца. А ещё, честно говоря, я бы попросила у неё немного той уверенности, с которой она тогда сказала «я возьму».</p>
+
+      <h2>Как со мной связаться</h2>
+      <p>Взрослым, которые думают об изучении нидерландского, но сомневаются, «потяну ли я», я предлагаю специальный формат — диагностику барьеров в нидерландском. Я составила её на основе сотен интервью со своими учениками и собственных знаний по психологии, коучингу и языку: она помогает понять, к какой категории студентов вы относитесь и что конкретно вам мешает двигаться дальше. Основных категорий несколько — новички, которые панически боятся языка; те, кто уже учил его, но так и не заговорил; те, кому нужно сдать экзамен «ещё вчера»; и перфекционисты, которые гонятся за безупречностью.</p>
+      <p>Написать мне можно напрямую в Telegram, а больше о нидерландском языке я рассказываю в своём Telegram-канале.</p>
+
+      <p class="art-signature">Елена Бурмакова,<br>основательница онлайн-школы нидерландского языка</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про решение всегда отвечать</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🙊 Меня чуть не отчислили из МГУ за то, что я молчала на занятиях</h3>
+        <p>На первом курсе после пары меня оставили и спросили: «Елена, вы уже присматриваете себе другой вуз? Вы же не тянете, вы всё время молчите».</p>
+        <p>Я была в шоке. И приняла решение: больше никогда не молчать. Отвечать каждый раз, когда меня спрашивают, — и даже когда не спрашивают, лишь бы тренироваться говорить. Хотя я интроверт, и меня с детства учили молчать как проявление уважения к другим — каждое слово давалось с трудом.</p>
+        <h4>Как эта привычка изменила всю мою карьеру</h4>
+        <p>На третьем курсе на кафедру позвонили, и преподаватель спросил: «Кто возьмёт учеников с нуля?» Я тут же сказала: «Я возьму» — ещё даже не успев подумать. Именно эта многолетняя тренировка отвечать в любой ситуации сработала в нужный момент. Так, по сути, и началась моя преподавательская карьера — с одной короткой фразы, к которой я готовилась несколько лет.</p>
+        <p>🗣 Иногда самый важный навык в карьере — не какая-то конкретная компетенция, а просто умение вовремя поднять руку.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про выбор редкого языка</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>🎲 Как я выбрала нидерландский язык — почти по конкурсу</h3>
+        <p>Меня часто спрашивают: почему нидерландский, а не что-то более практичное?</p>
+        <h4>Честный ответ — из статистики</h4>
+        <p>Когда я поступала на филфак, в приёмной комиссии висела статистика набора: английский — 20 человек на место, немецкий — 10 человек на место, нидерландский — четыре места на человека. Я подумала: «О, у меня есть шанс!» И не прогадала.</p>
+        <p>Была ещё расхожая мысль, что нидерландский — это что-то среднее между английским и немецким, а значит, учить его будет проще. Как позже выяснилось, это тоже сработало мне на пользу: с трёх лет мама-полиглот говорила со мной по-немецки, а с пяти — по-английски, готовя почву для любого следующего языка.</p>
+        <h4>А дальше — Амстердамский университет и книга</h4>
+        <p>На пятом курсе я год училась в Амстердаме — писала там курсовую и дипломную работу, которую потом издали отдельной книгой. Так случайный выбор с невысоким конкурсом стал делом всей жизни.</p>
+        <p>🇳🇱 Иногда правильный путь начинается не с большого плана, а с трезвого взгляда на цифры конкурса.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про перевёрнутый класс</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🎬 Почему мои ученики сами смотрят домашние видео — без напоминаний</h3>
+        <p>Коллеги часто удивляются: как мне удаётся заставлять студентов смотреть видеоуроки перед занятием? Никак не заставляю. Просто выстроила систему так, что им самим удобнее это сделать.</p>
+        <h4>Секрет в двух вещах</h4>
+        <p>Во-первых, всё занятие мы говорим только на нидерландском. Если ты не посмотрел видео заранее, на уроке будет попросту некомфортно — ты не понимаешь, что происходит, и чувствуешь себя растерянным. Это мотивирует куда сильнее любых напоминаний.</p>
+        <p>Во-вторых, сами видео очень короткие — одна-две минуты. Это отлично ложится на клиповое мышление, которое сейчас у всех: посмотреть пару минут объяснения правила совсем не сложно. Плюс студенты говорят, что запись у меня приятным, весёлым голосом — его хочется слушать, и это тоже снимает страх перед языком.</p>
+        <p>📚 Перевёрнутый класс работает не потому, что студенты стали дисциплинированнее. А потому, что мы убрали причины не готовиться.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про личные границы</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🚪 Я расстаюсь с учениками, которые нарушают границы — и не жалею об этом</h3>
+        <p>У меня есть девиз: «Делай, что должен, и будь, что будет». Он появился, когда мне было около двадцати — тогда мне не разрешали заниматься тем, чем хотелось, и эта фраза меня поддерживала. Сейчас она работает и в другом смысле — там, где нужно себя защищать.</p>
+        <h4>Как это выглядит на практике</h4>
+        <p>Если на занятии ученик ведёт себя неподобающе — грубит, срывается на других участников группы, — хотя он знаком с правилами, я делаю замечание. Если поведение повторяется, мы расстаёмся. Без долгих внушений тет-а-тет, без второго и третьего шанса.</p>
+        <p>Мой опыт показывает: лучше прощаться уже после второго нарушения границ и не затягивать. Здоровье дороже. Группа дороже. Моё дело дороже.</p>
+        <p>✨ Своим ученикам я должна быть весёлой, позитивной и вдохновляющей — а не человеком, который терпит.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про комфорт вместо масштаба</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>🐢 У кого-то 25 преподавателей, а у меня будет три. И это осознанный выбор</h3>
+        <p>Меня часто спрашивают, как я вижу свою школу через 3–5 лет. Отвечаю честно: я не гонюсь за масштабом любой ценой.</p>
+        <h4>Мой принцип простой</h4>
+        <p>Я буду действовать так, как мне комфортно. Если комфортно с четырьмя помощниками — у меня будет четыре. Если с тремя преподавателями — будет три. Пусть у кого-то их двадцать пять, а у меня — три. Зато это будут люди, с которыми мы смотрим в одну сторону, уважаем друг друга и делаем одно общее любимое дело.</p>
+        <h4>Как я понимаю, что пора расти</h4>
+        <p>Сигнал у меня простой: если я перестаю успевать высыпаться и всё равно не справляюсь с задачами — значит, пора делегировать. Не раньше и не по чужому расписанию, а по своему собственному ощущению.</p>
+        <p>🌱 Рост — это не про то, чтобы догнать конкурентов. Это про то, чтобы оставаться в проекте, который тебе действительно в радость.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/elena-burmakova-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Как молчание чуть не стоило мне места в МГУ</a></li>
+        <li><a href="#t2">2. «Я возьму»: стремительный старт карьеры</a></li>
+        <li><a href="#t3">3. Как я выбрала нидерландский — или он выбрал меня</a></li>
+        <li><a href="#t4">4. Языки с трёх лет: мамин эксперимент</a></li>
+        <li><a href="#t5">5. Практика в Москве и год в Амстердаме</a></li>
+        <li><a href="#t6">6. Что подтвердила психология</a></li>
+        <li><a href="#t7">7. Когда кажется, что образования не существует</a></li>
+        <li><a href="#t8">8. Кто приходит учить нидерландский</a></li>
+        <li><a href="#t9">9. Кейс: экзамен за три недели</a></li>
+        <li><a href="#t10">10. Кейс: от нуля до экскурсий за год</a></li>
+        <li><a href="#t11">11. Перевёрнутый класс и минутные видео</a></li>
+        <li><a href="#t12">12. Как разбираются ошибки, никого не называя</a></li>
+        <li><a href="#t13">13. Поиск преподавателей редкого языка</a></li>
+        <li><a href="#t14">14. Четыре помощника и поиск проактивных людей</a></li>
+        <li><a href="#t15">15. Нейросети и платформа, которую я сделала сама</a></li>
+        <li><a href="#t16">16. Девиз из двадцати лет и личные границы</a></li>
+        <li><a href="#t17">17. Комфорт вместо масштаба</a></li>
+        <li><a href="#t18">18. Совет себе, диагностика барьеров и контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Как молчание чуть не стоило мне места в МГУ</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас довольно стремительный старт карьеры. На третьем курсе во время занятия на кафедру позвонили, преподаватель спросил: «Кто возьмёт учеников с нуля?» — и вы сказали: «Я возьму». Откуда такая уверенность?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>У этой истории есть предыстория. На первом курсе меня чуть не выгнали из МГУ за то, что я молчала на уроках. Однажды после занятий меня оставили и спросили: «Елена, а вы уже выбираете себе другой вуз?» Как это — другой вуз? Я была в шоке. «Ну вы же не тянете в МГУ, вы молчите на уроках».</p>
+        <p>С тех пор я приняла решение больше никогда не молчать, хотя я интроверт и каждое слово даётся мне с трудом — в семье меня приучили молчать, потому что это показывает уважение к другим. Но после этого случая я решила отвечать каждый раз, когда меня спрашивают и не спрашивают, — чтобы тренироваться говорить. И именно эта многолетняя подготовка отвечать в любой ситуации сработала и в тот раз, на третьем курсе, — я тоже сразу сказала «да».</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть вы, в принципе, не жалеете об этом выборе — преподавать нидерландский?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Мне часто задают этот вопрос — мол, Елена, ты, наверное, жалеешь, что выбрала преподавать нидерландский. Но для меня он звучит странно, потому что я очень горжусь своим выбором и не пожалела ни разу. Кстати, я работаю строго по своей специальности: у меня в дипломе написано «преподаватель нидерландского языка». Думаю, немногие могут этим похвастаться.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. «Я возьму»: стремительный старт карьеры</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы описываете свой путь как двадцать лет и двадцать тысяч уроков каждый день. Есть урок, который был давно, но вы до сих пор его помните?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Как неисправимому перфекционисту, мне лучше всего запоминаются собственные ошибки и промахи на занятиях — они в первую очередь всплывают из памяти. Но если говорить о чём-то приятном и позитивном — это мой самый первый урок. Спустя всего несколько минут после того, как он начался, мои первые ученики сказали свои первые фразы. В этот момент я почувствовала такое счастье, что именно оно, пожалуй, и заставляет меня раз за разом каждый день вести всё новые и новые уроки — чтобы снова слышать, как мои ученики говорят по-нидерландски.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Как я выбрала нидерландский — или он выбрал меня</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Теперь, собственно, к нидерландскому. Почему такой неочевидный выбор — откуда любовь к Голландии?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Когда я поступала на филфак, я вообще не знала, как звучит нидерландский. Но слышала, что это нечто среднее между английским и немецким, и решила, что мне будет легко и просто его изучать. Обычно все так и говорят, и я тоже так думала.</p>
+        <p>Мои коллеги на вопрос «а почему ты выбрал нидерландский» часто отвечают, что это язык выбрал их: когда поступаешь на лингвистический факультет, тебе дают какой-то язык, и ты вынужден им заниматься. В моём случае выбор был взаимным. В тот год, когда мне нужно было поступать, на филологическом факультете как раз был набор на нидерландский язык. Когда я пришла в приёмную комиссию, увидела статистику: английский — 20 человек на место, немецкий — 10 человек на место, нидерландский — четыре места на человека. Я подумала: «О, у меня есть шанс!» Так и получилось.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Языки с трёх лет: мамин эксперимент</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы закончили МГУ в 2009 году, потом ещё получили образование психолога-консультанта в Институте психологии РАН. А как вообще началась ваша история с иностранными языками?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Так получилось, что в семье меня рано стали заниматься иностранными языками. Моя мама — профессор, доктор наук, врач олимпийских чемпионов. Она регулярно ездила на международные конгрессы и конференции, выступала там с докладами на английском и на немецком, и ей нужно было на ком-то практиковать язык. Этим «кем-то» стала я. С трёх лет она говорила со мной по-немецки, с пяти лет — по-английски. К моменту поступления в вуз у меня уже был опыт изучения языков, и это помогло мне успешно сдать вступительные экзамены на филологический факультет.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Практика в Москве и год в Амстердаме</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Интересно, как вы практиковали ежедневное общение на нидерландском в Москве в двухтысячных?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Во-первых, если учишься на нидерландиста, за тебя берётся Нидерландская языковая ассоциация, которая присылает на кафедру каждый год новых носителей языка с разными диалектами. Они ведут половину предметов на нидерландском, готовят к сдаче экзаменов на сертификат — и ты выходишь с уровнем C1–C2, подтверждённым международным сертификатом. Каждое лето тебя отправляют в Бельгию или Голландию — пожить в семье носителей языка, пройти повышение квалификации, поучиться в летней школе.</p>
+        <p>А на пятом курсе я училась в Амстердамском университете — там тоже все предметы были на английском и на нидерландском. Я писала там курсовую и дипломную работу, которую потом издали отдельной книгой. И на соседней улице в Москве жила чудесная академическая певица, которая учила меня петь, — я ходила к ней три года и занималась музыкой тоже на нидерландском.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>По поводу обучения в Голландии — какие-то подходы из университета вы применяете в своей школе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Это был опыт, сильно отличающийся от образования в России, — можно было свободно посещать или не посещать занятия. Ещё это был потрясающий опыт в буквальном смысле: двадцать километров на велосипеде до Амстердама каждое утро — в снег, дождь, град, а потом обратно, и так каждый день полгода.</p>
+        <p>Главное — это был опыт проектной работы в мини-группах с другими студентами, однокурсниками, чего у меня не было в России. И именно это я применяю сейчас в своих мини-группах: даю студентам задания, которые они выполняют вместе друг с другом. Так они лучше друг с другом знакомятся, используют язык в общении и начинают дружить уже после нашего обучения — в жизни, оффлайн.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Что подтвердила психология</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Второе, психологическое образование как-то изменило ваш подход к обучению?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>С одной стороны, оно только подтвердило мой подход к обучению и какие-то догадки и гипотезы, которые уже рождались в собственной практике, — я скорее успокоилась, что всё делаю правильно. Именно так мозг и осваивает иностранный язык: нужно как можно больше погружать его в звучание языка, но без лишних усилий, а также использовать язык в общении в повседневных ситуациях — так он лучше всего усваивается. К таким же выводам я приходила и дальше, получая новые квалификации и повышение обучения.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Когда кажется, что образования не существует</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что когда совсем отчаиваетесь, вам кажется, что образования вообще не существует, но начинается урок — и сомнения рассеиваются. Что вызывает это отчаяние?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Возможно, это мой личный опыт обучения: честно говоря, я не помню, чтобы мне удавалось что-то понять, когда объясняет другой преподаватель. Когда я училась в школе и в вузе, я просто делала вид, что слушаю лекцию и что-то понимаю. Чтобы мне что-то освоить, нужно проштудировать десять источников информации, проанализировать их и сформировать собственное представление о чём-то.</p>
+        <p>В связи с этим образование, которое длится пять или десять лет, мне иногда кажется чем-то бесполезным — многие предметы никогда тебе не пригодятся, но ты тратишь на это огромное количество часов. И мне бывает страшно, что своим ученикам я даю не то, что им действительно надо, не то, что им в жизни пригодится. В такие моменты я, конечно, отчаиваюсь.</p>
+        <p>Но потом начинается урок, я понимаю, что у меня группа из пяти человек, — и, как сказала мне недавно коллега, мой новый преподаватель в онлайн-школе: «Перед уроком я каждый раз готовлюсь как к стендапу, а не как к уроку» — и мне уже некогда о чём-то заботиться, волноваться и отчаиваться.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Кто приходит учить нидерландский</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А кто приходит в онлайн-школу учить нидерландский язык? Для чего им это — переехать жить в Голландию или что-то ещё?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Наши студенты — это в основном ребята, которые уже переехали в Голландию: учатся, работают там или приехали в семью к мужу, жене, родственникам — и хотят там остаться, жить комфортно, интегрироваться и чувствовать себя как дома. Либо те, кто только планирует переехать: поступать в вуз, выходить замуж, устраиваться на работу. Это два основных контингента.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть такого, как с английским, что «учу на всякий случай», у вас нет?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Здесь учат более осознанно. Вряд ли кто-то пойдёт учить нидерландский просто «вдруг пригодится». Разве что полиглоты, для которых это шестой или тринадцатый язык и им просто в кайф изучать языки, — но это редкость. В основном приходят те, кому это нужно по жизненным показаниям и обстоятельствам.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Кейс: экзамен за три недели</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть кейс — ученик с нуля до уровня и сдачи экзамена подготовился за три недели. Как вообще такое возможно?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Это, конечно, не очень высокий уровень, но всё возможно, и на самом деле всё очень индивидуально. Большинство студентов, которым нужно сдавать экзамены, вспоминают об этом в последний момент и приходят с трясущимися руками, страхом, тревогой и отчаянием — приходится приложить очень много усилий, чтобы привести их в чувство и подготовить к экзамену. А бывают удачные совпадения, когда человек замотивирован, позитивно смотрит на свой будущий результат и готов интенсивно поработать несколько недель, чтобы получить то, что ему нужно. Это был один из таких случаев.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Может быть, у него уже были дополнительные вводные — например, знание немецкого и английского?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Да, скорее всего, это был ученик с английским и немецким, который был готов ежедневно самостоятельно заниматься три недели по моей методике — она позволяет быстро освоить материал, ежедневно практиковаться на иностранном языке и таким образом освоить всё необходимое для сдачи экзамена.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Кейс: от нуля до экскурсий за год</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Другой кейс — с нуля до B1 за год, и ученик уже ведёт экскурсию на нидерландском. Когда вы поняли, что он готов работать на языке?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Я узнала об этом абсолютно неожиданно. Он просто поделился со мной, что его пригласили вести экскурсии по искусству и истории, и обратился с просьбой проверить его презентацию для этой экскурсии. Я была в шоке — ничего себе, как здорово!</p>
+        <p>С этим кейсом ситуация другая: человек очень любознательный, у него много разных интересов, и он с радостью практикует эти интересы на нидерландском — пишет, занимается спортом, искусством и обо всём этом с радостью говорит. Поэтому его и пригласили поговорить о том, что ему интересно, на нидерландском. У каждого ученика свои таланты, и важно их заметить, чтобы использовать их на благо ученику и привести к результату с их помощью.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Перевёрнутый класс и минутные видео</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть методика перевёрнутого класса — ученики изучают материал до урока и практикуют его на занятиях. Как вы мотивируете людей готовиться заранее?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Коллеги тоже всегда удивляются, как это у меня ученики всегда смотрят видеоуроки. На самом деле, если придёшь неподготовленным, на уроке будет очень некомфортно, потому что всё занятие мы говорим на нидерландском, и если ты не посмотрел видеоуроки, будешь чувствовать себя не очень умным человеком. Мне кажется, это мотивирует смотреть видео.</p>
+        <p>С другой стороны, видеоуроки у меня очень короткие — одна-две минутки. Это очень соответствует клиповому мышлению, которое сейчас у всех, — больших усилий, чтобы посмотреть пару минут объяснения правила, прилагать не приходится. Плюс студенты говорят, что мои видеоуроки записаны приятным весёлым голосом, который с удовольствием слушаешь и перестаёшь бояться нидерландского. А потом интересно узнать всё заранее и использовать на уроке в разговорной речи то, что узнал.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Как разбираются ошибки, никого не называя</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы ещё в конце каждого урока разбираете самые интересные ошибки. Нет ли в этом опасности демотивировать людей?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Есть, и нужно быть очень осторожной с обсуждением ошибок. Поэтому я всегда начинаю с обсуждения наших успехов — кто что сегодня смог по-новому сделать, кто чего достиг, что наконец получилось. В первую очередь я, конечно, хвалю студентов. И только если ошибка была сделана многократно или она очень интересная, я тоже вывожу её к сведению студентов — ни в коем случае не говоря, кто её сделал. Мы обсуждаем её скорее как интересный кейс, интересную особенность, и получается что-то вроде десерта урока.</p>
+        <p>А есть группы, которые сами просят: «Пожалуйста, рассказывайте мне, какие я ошибки сделал, мне очень важно это узнать, чтобы проработать их дома». Здесь вообще без проблем обсуждать ошибки — студенты будут только благодарны. Обычно это бывает на высоких уровнях, которые как раз хотят оттачивать свои знания, умения и навыки и избавляться от ошибок. Тогда мы обсуждаем их с удовольствием и в начале урока, и в середине, и в конце.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Поиск преподавателей редкого языка</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что одна из проблем — подобрать преподавателей, хотя у вас самой большой опыт работы с нидерландским. В чём именно проблема?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Проблема многогранна. Во-первых, предмет редкостный, и, возможно, не так сложно подобрать преподавателей, как сложно найти место, где они вообще «водятся». И, по-моему, я такое место нашла буквально вчера: одна из моих преподавательниц рассказала, что есть чатик, куда можно написать и предложить участникам посотрудничать. Действительно, у меня уже откликнулось пять преподавателей, и в тот же день у меня было два собеседования с ними, а на следующий день ещё два. Так что проблема постепенно решается.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как минутные объяснения записываются — в TikTok?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>К сожалению, я его пока не веду, но вы дали мне классную идею — надо начинать. Единственная проблема сейчас — если ты в России, из России довольно сложно выложить видео. Ничего, справимся, у нас есть помощники, которые записывают и монтируют видео. Будем учиться.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Четыре помощника и поиск проактивных людей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Со своей стороны, в чём для вас сложность работы с преподавателями?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Мне сложно заставлять других людей что-то делать для себя — кажется, что если я с ними сотрудничаю, я их как-то утруждаю. Но я тоже делаю успехи в этом направлении. Если полгода назад я не могла представить, что у меня будет ассистент, сегодня их у меня четверо.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А зачем четыре? Что они делают?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Буквально вчера я познакомилась с помощником, у которого большой опыт в HR, — и поиск преподавателей превращается в интересный квест с опытным напарником. Есть помощник по трафику, по SMM, по ведению нескольких соцсетей, по монтажу рилсов и других видео. И методист, который ищет мне литературу по методике преподавания и составляет интерактивные игры на онлайн-платформах. В общем, нам есть чем заняться, мы растём. Пока что это ассистенты, а не сотрудники на фиксированных должностях — я смотрю, что у кого лучше получается, с чем интересно работать, и потом, возможно, оформляем это в новые роли.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Система отбора преподавателей и сотрудников у вас формально пока не выстроена, но вы говорите, что для вас важно, чтобы человек был проактивным. Как вы это проверяете?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Действительно, пока процесс не выстроен, но я его прощупываю на практике. Провожу первичное интервью с кандидатами: один, например, говорит — «зачем мне учиться дальше, мне уже много лет, я всё знаю и умею, просто дайте мне группу, и я буду её вести». А другой кандидат такого же возраста говорит: «Елена, я так рада, что я вас встретила, я столькому могу у вас научиться, вы преподаёте онлайн больше десяти лет, я тоже так хочу — научиться вести уроки интерактивно, интересно, записывать свои курсы». И ты понимаешь, что второй кандидат — это твой будущий сотрудник, с которым есть куда вместе расти.</p>
+        <p>После этого мы проводим пробные уроки — пока не с учениками, а на моих ассистентах. Теперь у меня уже все ассистенты говорят по-нидерландски благодаря этому. После урока они заполняют опросники, где делятся впечатлениями, — и я вижу, и как преподаватель себя показывает, и как ученик себя чувствует в этой роли, и как я сама со стороны вижу занятие. Это даёт мне возможность выстраивать свою систему отбора и работы с преподавателями.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы честно сказали, что пока не знаете, как удержать преподавателей. Откуда такая скромность?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>У меня правда мало опыта в сотрудничестве с другими людьми, с коллегами. И чем больше я его набираюсь, тем больше мне становится понятно, что я могу дать преподавателям, — потому что они сами говорят мне об этом. Например, преподаватель, который хочет научиться работать онлайн, устал каждый день физически ходить в школу, ездить на велосипеде, хочет уютно работать из дома, в Zoom, вести индивидуальные и групповые занятия, — и я понимаю, что действительно делаю всё это уже много лет и могу этому научить. Так мне становится понятнее, что я могу дать преподавателям.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Нейросети и платформа, которую я сделала сама</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В последнее время вы очень увлекаетесь нейросетями — стараетесь всё делать с их помощью, даже песни писать. Как это совмещается с ролью преподавателя-психолога?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Прекрасно совмещается, потому что преподаватель и психолог теперь ещё и владелец онлайн-школы — и сталкивается с необходимостью выстраивать процессы, с которыми никогда раньше не имел дела. А нейросети умеют это делать гораздо лучше. Даже сегодняшнее интервью с преподавателями я готовила с помощью нейросетей — они помогли мне составить план беседы, и мы замечательно побеседовали. Когда мне нужно дать инструкцию помощнику, я тоже составляю её с помощью нейросетей.</p>
+        <p>Сейчас я даже готовлю интерактивную платформу, которую полностью навойкодила сама — точнее, навойкодил её Клод. Там будет вся информация для учеников, интерактивные упражнения, все мои видеоуроки. Я так горжусь, что сделаю это сама, и это возможно только благодаря нейросетям — я просто в восторге.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. Девиз из двадцати лет и личные границы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть девиз: «Делай, что должное, и будь что будет». Почему именно этот девиз?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Честно говоря, я уже не помню точно откуда, но могу догадываться, что он появился, когда мне было лет двадцать. Всё детство я мечтала быть музыкантом и писать песни, но мне не разрешали этого делать, и возможность заниматься музыкой, учиться петь у голландской академической певицы с соседней улицы в Москве появилась только после двадцати лет. Когда я видела, что все вокруг заняты взрослыми серьёзными вещами — строят карьеру, пишут диссертацию, копят на квартиру, заводят семью, — а я хотела писать песни, мне было страшно, я стеснялась своего хобби. И меня поддерживала именно эта фраза: «Делай, что должен, и будь, что будет».</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы не работаете с теми, кто грубит вам или постоянно нарушает ваши границы. Как выглядит момент расставания?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Именно так и выглядит. Например, на занятии в группе я замечаю, что ученик ведёт себя неподобающе — хотя он знает правила занятий, он с ними ознакомился, — начинаются какие-то негативные выпады в мой адрес или, не дай бог, в адрес других учеников. Я делаю ему замечание, и если он не реагирует прекращением таких действий, мы расстаёмся: я говорю, что наше взаимодействие больше невозможно.</p>
+        <p>Промежуточной стадии, вроде отдельного внушения тет-а-тет перед этим, у меня, к сожалению, нет — мой опыт показывает, что лучше расставаться именно после второго нарушения границ, дальше терпеть не стоит, потому что здоровье дороже, группа дороже, и моё дело дороже. Моим ученикам я должна быть весёлой, радостной, позитивной, вдохновляющей — а не человеком, который терпит.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. Комфорт вместо масштаба</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>На вопрос, как вы видите свой проект через 3–5 лет, вы говорите, что не очень хотите отвечать, чтобы не сглазить. Но хотя бы намекните, в какую сторону хотите двигаться?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Скажу только, что я буду действовать так, как мне комфортно. Если мне комфортно, что у меня четыре помощника, — у меня будет четыре помощника. Если комфортно с тремя преподавателями — у меня их будет три. Пусть у кого-то их там двадцать пять, а у меня будет три — зато это будут люди, с которыми мы смотрим в одну сторону, уважаем друг друга и делаем одно общее любимое дело. Я буду действовать по ситуации и прислушиваться к тому, комфортно ли мне.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А будет ли вам комфортно делегировать немного больше, чтобы школа не держалась на вас полностью?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Я буду пробовать и следить за своей реакцией. Сейчас мне очень комфортно, что мне помогают четверо замечательных помощников — возможно, будут помогать и другие люди. Нужно пробовать и смотреть по ощущениям.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А с какой скоростью вообще выглядит процесс делегирования?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Этот вопрос тоже меня всегда волновал, но потом передо мной стали появляться задачи, которые я при всём желании не успеваю делать. Например, сейчас я прохожу курс по созданию рилз — и при всём желании не успеваю их монтировать. Я уже перестала спать, но всё равно не успеваю всё делать. Приходится прибегать к помощи других людей, которых я могу попросить сделать это за меня. Когда появляются новые задачи, с которыми я сама не в состоянии справиться, я прошу кого-то сделать это вместо меня. Принцип такой: если не успеваю спать и всё равно не успеваю делать то, что нужно, — пора делегировать.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t18">
+      <h3>18. Совет себе, диагностика барьеров и контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если бы у нас была машина времени и вы вернулись бы в прошлое, встретили себя, студентку третьего курса — что бы вы сказали самой себе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>«Лена, прости меня, пожалуйста, прошло 20 лет, но я так и не исполнила твою мечту — создать онлайн-школу. Но ты знаешь, оказалось так сложно. Я тебе обещаю, я делаю всё возможное, чтобы у нас с тобой это получилось. Я сделаю всё возможное, чтобы ты, как и мечтала, стала владелицей классной онлайн-школы нидерландского языка. Потерпи немножко».</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если совет какой-то дать — например, один краткий?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>У той девчонки 2009 года она не нуждается в советах — она чётко знает, куда ей нужно двигаться, и идёт в сторону своего успеха. Я бы, наоборот, у неё сама попросила совет — у меня-то опыта на 20 лет больше. Я бы у неё спросила: «Лен, что будем делать? Как ты это делаешь? У меня нет столько уверенности, сколько у тебя».</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если обратиться ко взрослому человеку, который хочет выучить нидерландский, знает, что он ему нужен, но думает — «потяну ли я, с чего начать» — что бы вы посоветовали?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Конечно, я бы посоветовала обратиться ко мне. У меня есть специальный формат работы — «Диагностика барьеров в нидерландском». Я составила эту диагностику на основе сотен интервью со своими учениками, своих знаний по психологии, коучингу и нидерландскому и провела исследование, благодаря которому выделила несколько категорий студентов с определёнными затыками, барьерами, которые их стопорят и не дают достичь успеха. Чтобы понять, что делать конкретно каждому человеку, нужно пройти эту диагностику и узнать, куда двигаться дальше и что мешает.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что это за барьеры — топ-три в изучении нидерландского?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Если выделять несколько категорий изучающих нидерландский, то это новички, которые страшно боятся языка; те, кто уже учил, но так и не заговорил; те, кому нужно было сдать экзамен ещё вчера; и те, кто жаждет совершенства. У каждой категории свои страхи, боли и барьеры.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если наши слушатели, зрители, потенциальные преподаватели или ученики захотят с вами связаться — как это лучше сделать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Лучше всего написать мне в Telegram: Елена, через нижнее подчёркивание, Бурмакова. А ещё у меня есть Telegram-канал про нидерландский — там уже около 5000 подписчиков, приходите в гости, у нас интересно.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
