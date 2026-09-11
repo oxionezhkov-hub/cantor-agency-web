@@ -2749,6 +2749,20 @@ async function handleApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// Only the homepage and the three public questionnaire pages should be indexable by search
+// engines — everything else (knowledge base, dashboards, CRM, client pages, internal tools)
+// gets an explicit noindex header here as a second layer on top of robots.txt and the
+// per-page <meta name="robots"> tags, since this Worker also serves a live copy of the whole
+// site at mainweb.oxion-ezhkov.workers.dev (production cantor.agency is a separate nginx
+// host — see corsHeaders() above — where only the static HTML tags and robots.txt apply).
+const NOINDEX_ALLOWED_PATHS = new Set(['/', '/index.html', '/adviser-anketa', '/avito-anketa', '/club-anketa']);
+
+function withNoIndexHeader(response) {
+  const headers = new Headers(response.headers);
+  headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -2780,11 +2794,12 @@ export default {
     if (url.pathname === '/mba-mybrand' || url.pathname === '/mba-mybrand/') {
       const assetUrl = new URL(request.url);
       assetUrl.pathname = '/mba-mybrand/index.html';
-      return env.ASSETS.fetch(new Request(assetUrl, request));
+      return withNoIndexHeader(await env.ASSETS.fetch(new Request(assetUrl, request)));
     }
 
     if (!url.pathname.startsWith('/api/')) {
-      return env.ASSETS.fetch(request);
+      const response = await env.ASSETS.fetch(request);
+      return NOINDEX_ALLOWED_PATHS.has(url.pathname) ? response : withNoIndexHeader(response);
     }
 
     if (request.method === 'OPTIONS') {
