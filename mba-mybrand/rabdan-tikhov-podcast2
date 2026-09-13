@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рабдан Тихов — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для будущих преподавателей</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1226017326?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Рабдан Тихов - Подкаст 2"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1226017326" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">Мы платим преподавателю, даже если ученик не пришёл. Рабдан Тихов — как устроен отбор в «Тихов Скул»</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Рабдан — кандидат химических наук, преподаёт химию с 2012 года, а с 2025-го строит собственную онлайн-школу подготовки к ОГЭ и ЕГЭ «Тихов Скул». В выпуске — как устроен отбор преподавателей, почему школа платит за занятие, даже если ученик не пришёл, что берёт на себя школа, а что остаётся преподавателю, и как выглядит команда, где отбор не заканчивается на собеседовании.
+
+🔗 Школа «Тихов Скул»: [ссылка]
+🔗 Написать Рабдану: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, подготовка к ОГЭ, подготовка к ЕГЭ, химия, найм преподавателей, вакансия репетитора, репетиторский бизнес, Рабдан Тихов</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #вакансия #репетитор #химия #ЕГЭ #ОГЭ #EdTech #найм</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/rabdan-tikhov-podcast2-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Мы платим преподавателю, даже если ученик не пришёл на занятие — и вот почему для нас это принципиально</h1>
+
+      <p>Я кандидат химических наук и преподаю с 2012 года. А с 2025-го начал потихоньку переносить свой опыт и методику на школу — «Тихов Скул», — чтобы передавать знания не только своим ученикам, но и через обученных преподавателей помогать большему количеству ребят, готовящихся к ОГЭ и ЕГЭ по химии.</p>
+
+      <h2>От химии к управлению командой</h2>
+      <p>Один из аспектов, которые я перенёс из научной деятельности, — умение абстрагироваться от эмоций и отдельных случайностей. Если ученик стабильно пишет пробники каждый месяц и вдруг получает один хороший результат — это ещё ни о чём не говорит: могло просто повезти, мог сыграть случайный фактор. Мы смотрим на всю картину целиком: как ученик писал пробники раньше, какой у него прогресс за месяц, какую обратную связь давали преподаватели, насколько он был вовлечён на занятии.</p>
+      <p>То же самое и в обратную сторону. Если ученик вдруг получил низкий балл, мы не ищем виноватого — ни ученика, ни преподавателя. Мы анализируем причину результата и ищем подход к тому, чтобы это исправить.</p>
+
+      <h2>Что я точно не приму в команду</h2>
+      <p>Один из важнейших факторов при отборе — способность общаться с учеником без давления, без «ты ошибся — значит, ты глупый», без повышения голоса. Возможно, у меня здесь свои флешбэки из школьных лет, когда преподаватель был довольно строгим и мог, что называется, линейкой шлёпнуть. Если речь про дистанционные занятия — это может выражаться в лёгкой грубости, повышенном тоне. Для нашей команды это неприемлемо: в таких условиях ученик просто не раскроет свой потенциал. Поэтому мы в первую очередь ищем людей, которые умеют устанавливать контакт с детьми и искренне заинтересованы в ученике, его развитии и результате.</p>
+
+      <h2>Почему мы платим, даже если ученик не пришёл</h2>
+      <p>Мы оплачиваем преподавателю занятие, даже если ученик не явился. Во-первых, мы уважаем наших преподавателей и чётко распределяем ответственность: преподаватель пришёл на занятие, спланировал свой день, распределил время — то, что ученик не пришёл, не его ответственность. Эти риски берёт на себя школа: обеспечить явку ученика — тоже наша задача.</p>
+      <blockquote>Мы ориентируемся в первую очередь на всестороннее уважение к преподавателю — и, естественно, ждём того же со своей стороны.</blockquote>
+      <p>Если говорить про другие факторы — у нас стабильная и своевременная зарплата, мы полностью соблюдаем изначальные договорённости, которые чётко прописаны с самого начала.</p>
+
+      <h2>Обещания, которые я умею держать</h2>
+      <p>Мы с самого начала ставим такие правила, которые сами сможем соблюдать. Если оплата в определённое время — значит, она будет в это время. Если предоставляем преподавателям учебные материалы — это то, что мы точно можем обеспечить. При этом школа развивающаяся, и изменения возможны — мы всегда предупреждаем преподавателей заранее, обсуждаем это, выслушиваем их аргументы и делаем всё, чтобы им было максимально комфортно в новых условиях.</p>
+
+      <h2>Что берёт на себя школа, а что — преподаватель</h2>
+      <p>Основная роль преподавателя — вести занятия и полностью вкладываться в результат ученика. А зона ответственности школы — найти учеников для загрузки преподавателя, узнать цели ученика, чтобы направить его к правильному человеку, вести общение с родителями и брать на себя ответственность за результат и любые конфликтные ситуации. Преподавателя это практически никогда не касается — разве что уточнить какие-то моменты. Плюс своевременная оплата: преподавателю не нужно думать, заплатит ли ученик или выдадут ли ему зарплату вовремя.</p>
+      <p>При этом ответственность преподавателя остаётся большой: анализ пробников, домашние задания и их проверка, своевременная обратная связь — чтобы школа, ученик и родитель понимали, к чему они вместе движутся. Это совместная работа.</p>
+
+      <h2>Как устроен отбор преподавателей</h2>
+      <p>Систему отбора мы выстроили в несколько шагов. Сначала преподаватель заполняет небольшую анкету — квалификация, опыт, результаты учеников. Дальше короткое тестирование, чтобы понять, как он сам ориентируется в предмете. Потом небольшая «визитка» — чтобы увидеть, как человек общается, насколько чётко отвечает, какая у него манера. И наконец — пробный или диагностический урок, либо записанный самим преподавателем, либо проведённый с нашим учеником. По нему мы оцениваем вовлечённость, реакцию на ошибки, выстраивание взаимодействия и то, насколько комфортно ученику.</p>
+
+      <h2>Отбор не заканчивается на собеседовании</h2>
+      <p>Одно занятие не говорит всего о преподавателе. Поэтому мы продолжаем следить за интересом к преподаванию, качеством работы, пунктуальностью и ответственностью — в том числе за тем, подключается ли он вовремя: это не просто формальность, а вопрос психологической опоры для ученика, который должен понимать, что время занятия чётко зафиксировано.</p>
+      <p>Именно поэтому сейчас в команде четыре преподавателя, хотя в течение прошлого учебного года их было одиннадцать. Мы отслеживаем результаты, качество общения, соблюдение договорённостей — доверие выстраивается постепенно.</p>
+
+      <h2>Что преподаватели ценят в работе с нами</h2>
+      <p>По моим разговорам с преподавателями, для них в первую очередь важна стабильность: всё происходит своевременно, мы соблюдаем свои договорённости. Им не нужно отвлекаться на поиск учеников или переписку с родителями — это тоже мотивирует работать в нашей команде. Плюс методическая поддержка: у преподавателей есть доступ к готовым домашним заданиям на нашей платформе, которые можно взять как есть или адаптировать под себя, и постоянная обратная связь — мы не бросаем преподавателя один на один с процессом.</p>
+      <p>Есть и дополнительные бесплатные открытые вебинары для учеников, готовящихся к ОГЭ и ЕГЭ, — их ведут преподаватели, которым мы уже доверяем. А ежемесячные пробники позволяют отслеживать статистику каждого ученика — и часть этой ответственности мы тоже берём на себя, помогая преподавателю и ученику двигаться к результату вместе.</p>
+
+      <h2>Кейс Наташи: спор из-за оформления реакции</h2>
+      <p>В 90% случаев конфликты мы решаем сами, не привлекая преподавателя. Была ситуация: мама девочки, готовившейся к ОГЭ по химии, написала, что школьный учитель назвал подход репетитора неправильным — не так объяснил, не так оформил, за это снизят балл. Мы не стали сразу вставать на сторону преподавателя — подняли записи занятий, посмотрели, как объясняет преподаватель и насколько это соответствует правилам оформления на ОГЭ.</p>
+      <p>Оказалось, преподаватель был полностью прав: в электронном балансе допустимы оба варианта записи заряда иона, а школьный учитель придерживался только одной методики. Мы объяснили это родителю, даже не привлекая преподавателя к разговору, — он вообще не узнал о ситуации. Конфликт был исчерпан. Если бы вопрос требовал более глубокой проверки, мы бы уже подключили и преподавателя — но такое решается максимально индивидуально.</p>
+
+      <h2>Кейс Леры: две с половиной недели до экзамена</h2>
+      <p>Обычно ученики приходят к нам за год или полгода до экзамена, и результаты соответствующие — есть и 99-балльники, и 95-балльники. Но был особенный случай: Лера дважды не сдала экзамен для перевода из десятого класса в одиннадцатый, и ей дали последнюю попытку — либо сдать, либо переводиться в другую школу. Она пришла к нам за две с половиной недели до этой попытки.</p>
+      <p>Мы не готовили её по общему курсу органической химии — выстроили программу именно под конкретную задачу: что требовалось знать и как оформлять решения для перевода в одиннадцатый класс. Лера была очень мотивирована, преподаватель максимально включилась — и за счёт этой командной работы она получила нужный балл. Сейчас Лера учится в химико-биологическом классе.</p>
+
+      <h2>Чувствуют ли ученики разницу</h2>
+      <p>Любой подросток очень хорошо чувствует, формально преподаватель отрабатывает свой час или искренне заинтересован в результате. Он замечает даже небольшие вещи — например, помнит ли преподаватель о его цели на протяжении всего учебного года. Это сильно упрощает установление контакта между преподавателем и учеником. Если преподаватель настроен просто отработать час, заинтересованности со стороны ученика тоже не будет — а без совместной вовлечённости обеих сторон говорить о результате сложно.</p>
+
+      <h2>Как попасть в команду</h2>
+      <p>Нужно откликнуться на вакансию и заполнить анкету — дальше отбор пройдёт по описанным шагам. Мы смотрим не только на знание предмета, важнее — взаимодействие с учеником и с нами. Я не жду актёрского мастерства и целого шоу на пробном занятии. Если у человека сильное знание предмета, он увлечён им, заинтересован в ученике и соблюдает договорённости — стоит заполнить анкету. Уверен, из этого может получиться хорошее сотрудничество.</p>
+
+      <p class="art-signature">Рабдан Тихов,<br>основатель и руководитель школы «Тихов Скул»</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про оплату преподавателям</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>💸 Мы платим преподавателю, даже если ученик не пришёл на занятие</h3>
+        <p>Многие удивляются, когда узнают об этом правиле. А для нас это принципиальная позиция.</p>
+        <h4>Почему так</h4>
+        <p>Преподаватель явился на занятие, спланировал свой день, распределил время под этот урок. То, что ученик не пришёл, — это не его ответственность. Обеспечить явку ученика — наша задача как школы, и риски за это тоже несём мы, а не преподаватель.</p>
+        <p>Это часть более широкого принципа: мы уважаем наших преподавателей и чётко распределяем ответственность. Стабильная и своевременная зарплата, без исключений, полное соблюдение изначальных договорённостей.</p>
+        <p>🤝 Мы ориентируемся на всестороннее уважение к преподавателю — и ждём того же со своей стороны.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про научное мышление</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>🔬 Один хороший балл на пробнике ещё ничего не значит. Вот что значит на самом деле</h3>
+        <p>Я кандидат химических наук — и один из главных навыков, который я перенёс из науки в управление школой, это умение абстрагироваться от отдельных случайностей.</p>
+        <h4>Как это работает на практике</h4>
+        <p>Если ученик получил один хороший результат на пробнике — это ещё мало что значит. Могло повезти, мог сыграть случайный фактор. Мы смотрим на всю картину: как он писал пробники раньше, какой у него прогресс за месяц, что говорят преподаватели, насколько он вовлечён на занятиях.</p>
+        <p>И то же самое в обратную сторону: если результат вдруг просел, мы не ищем виноватого — ни ученика, ни преподавателя. Мы анализируем причину и ищем, как её устранить.</p>
+        <p>📊 Один факт — это ещё не тенденция. Тенденция — это то, на чём строится реальный прогресс.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор в команду</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🚫 Даже отличное знание химии не спасёт, если человек ведёт себя вот так</h3>
+        <p>Один из важнейших факторов при отборе в команду — способность общаться с учеником без давления.</p>
+        <h4>Что я точно не приму</h4>
+        <p>«Ты ошибся — значит, ты глупый». Повышенный тон. Лёгкая грубость даже на дистанционных занятиях. Возможно, у меня здесь свои флешбэки из школьных лет, когда преподаватель мог линейкой шлёпнуть за ошибку, — но для нашей команды это неприемлемо.</p>
+        <p>В таких условиях ученик просто не раскроет свой потенциал. Поэтому мы в первую очередь ищем людей, которые умеют устанавливать контакт с детьми, терпеливы и искренне заинтересованы в ученике, его развитии и результате.</p>
+        <p>🎓 Знание предмета — это входной билет. А удерживает в команде совсем другое.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про поддержку преподавателя</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🧪 Как мы разрешили конфликт с родителем, даже не сообщив об этом преподавателю</h3>
+        <p>Мама ученицы, готовившейся к ОГЭ по химии, написала нам: школьный учитель сказал, что репетитор всё объясняет неправильно, — не так оформил, за это снизят балл.</p>
+        <h4>Что мы сделали</h4>
+        <p>Не стали сразу вставать на чью-то сторону. Подняли записи занятий, проверили, соответствует ли объяснение преподавателя правилам оформления на ОГЭ. Оказалось — преподаватель был полностью прав: в электронном балансе допустимы оба варианта записи, просто школьный учитель придерживался только одного.</p>
+        <p>Мы объяснили это родителю сами. Преподаватель вообще не узнал, что такая ситуация возникала, — в 90% случаев конфликты мы решаем без его участия.</p>
+        <p>🛡 Это тоже часть нашего подхода: преподаватель должен заниматься преподаванием, а не разбираться с претензиями, в которых сам не виноват.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про то, как попасть в команду</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>📋 Как устроен отбор преподавателей в нашу школу — 4 шага</h3>
+        <p>Мы берём не всех — но и не ищем супергероев. Вот как выглядит путь к нам в команду.</p>
+        <h4>Шаг за шагом</h4>
+        <p>1. Небольшая анкета — квалификация, опыт, результаты учеников.
+2. Короткое тестирование — как вы сами ориентируетесь в предмете.
+3. Короткая «визитка» — как вы общаетесь, насколько чётко отвечаете.
+4. Пробный или диагностический урок — с записью или с нашим учеником.</p>
+        <p>На последнем шаге мы смотрим на вовлечённость, реакцию на ошибки и то, насколько комфортно ученику. И даже это не конец: дальше мы продолжаем следить за качеством работы, пунктуальностью и тем, насколько человек соблюдает договорённости.</p>
+        <p>🙌 Я не жду актёрского мастерства и целого шоу. Если вы сильны в предмете, увлечены им и искренне заинтересованы в ученике — заполняйте анкету.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/rabdan-tikhov-podcast2-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Кандидат химических наук во главе школы</a></li>
+        <li><a href="#t2">2. Научное мышление: не путать один балл с прогрессом</a></li>
+        <li><a href="#t3">3. Что я точно не приму в команду</a></li>
+        <li><a href="#t4">4. Почему мы платим, даже если ученик не пришёл</a></li>
+        <li><a href="#t5">5. Как я держу обещания перед командой</a></li>
+        <li><a href="#t6">6. Что берёт на себя школа, а что — преподаватель</a></li>
+        <li><a href="#t7">7. Как устроен отбор преподавателей</a></li>
+        <li><a href="#t8">8. Сейчас четыре преподавателя, а было одиннадцать</a></li>
+        <li><a href="#t9">9. Что преподаватели ценят в работе с нами</a></li>
+        <li><a href="#t10">10. Кейс Наташи: спор из-за оформления реакции</a></li>
+        <li><a href="#t11">11. Кейс Леры: две с половиной недели до экзамена</a></li>
+        <li><a href="#t12">12. Чувствуют ли ученики разницу</a></li>
+        <li><a href="#t13">13. Как попасть в команду</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Кандидат химических наук во главе школы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>С нами Рабдан Тихов, руководитель школы. Рабдан, для тех, кто вас совсем не знает, — могли бы вкратце рассказать о себе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Я руководитель и основатель школы «Тихов Скул». Я кандидат химических наук и преподаю уже с 2012 года, но с 2025 года начал развивать свою школу, чтобы потихоньку перенести опыт своего преподавания и свою методику на школу в целом — обучать и передавать знания и свой опыт большему количеству учеников, да и преподавателей тоже.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Научное мышление: не путать один балл с прогрессом</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Раз вы кандидат химических наук — что из научного мышления вы сегодня применяете в управлении командой или в подходе к найму?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Один из основных аспектов, которые я перенёс из научной деятельности, — это способность абстрагироваться от эмоций и отдельных фактов и случайностей. Если ученик стабильно пишет пробники каждый месяц и вдруг получает хороший результат на одном пробнике — это единичный случай, он ещё мало что для нас значит. Могло просто повезти, могли сыграть разные факторы. Нужно учитывать всю информацию об ученике: как он писал пробники раньше, какой у него прогресс за месяц, какую обратную связь давали преподаватели, насколько он был вовлечён и мог нормально отвечать. Это формирует общую картину, а не просто отдельный факт, чтобы сказать родителям: «Ой, какой молодец, написал на 90 баллов» — и выдать это за стабильный результат.</p>
+        <p>Это же отвлечённость от эмоций работает и в обратную сторону: если ученик получил, наоборот, очень низкий балл, мы не ищем виноватых — ученика или преподавателя, — а анализируем причину такого результата и ищем подход к тому, чтобы это решить.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Что я точно не приму в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я слышал, что при отборе вы ищете терпение, спокойное общение без давления и способность находить контакт с подростками. Какого человека вы точно не возьмёте в команду, даже если он отлично знает предмет?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Безусловно, один из важнейших факторов — способность общаться с учеником. И общаться не так, что вот он ошибся — значит, он глупый, без повышения голоса и так далее. У меня, возможно, здесь свои флешбэки со своей школы, когда преподаватель был довольно строгий, мог линейкой шлёпнуть. Если говорить про дистанционные занятия, это может выражаться в лёгкой грубости, повышении голоса — что-то такое. Это, конечно, неприемлемо в нашей команде, потому что ученик в таких условиях просто не сможет раскрыть весь свой потенциал.</p>
+        <p>Поэтому мы в команду в первую очередь ищем людей, которые могут устанавливать контакт с детьми, которые участвуют в его развитии, искренне заинтересованы в ученике, его развитии и результате.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Почему мы платим, даже если ученик не пришёл</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я также слышал, что вы платите преподавателям, даже если ученик не пришёл на занятие. Почему для вас это принципиально?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Всё верно. Мы оплачиваем преподавателю занятие даже если ученик не пришёл, потому что мы уважаем наших преподавателей и чётко распределяем ответственность. Преподаватель явился на занятие, распределил своё время, расписал свой день, всё спланировал. То, что ученик не пришёл, — это не ответственность преподавателя. Эти риски берёт на себя школа: обеспечить, чтобы ученик пришёл на само занятие, — это тоже наша часть обязанности. Это такое уважение к преподавателю.</p>
+        <p>Если говорить про другие факторы — естественно, у нас стабильная и своевременная заработная плата, мы полностью соблюдаем свои изначальные договорённости, которые чётко прописаны. В первую очередь мы ориентируемся на всестороннее уважение к преподавателю — и, естественно, ждём того же со своей стороны.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Как я держу обещания перед командой</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вам как руководителю, когда вы обещаете команде что-то, сложно ли сдерживать это обещание? Есть ли тут какие-то моменты?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Хороший вопрос. То, что мы обсуждаем с самого начала, — мы ставим такие правила, которые сами чётко сможем соблюдать. Если оплата в определённое время — значит, она будет в определённое время. То, что мы предоставляем преподавателям материал, на который они могут опираться, ориентироваться и даже полностью вести по нему занятия, — это то, что мы однозначно можем обеспечить.</p>
+        <p>Но нужно помнить, что у нас школа развивающаяся, а в любой развивающейся школе возможны изменения. Мы всегда предупреждаем преподавателей, что могут быть какие-то изменения, которые мы, конечно же, обсудим в процессе. Мы выслушаем аргументы преподавателей и будем делать так, чтобы им в изменившихся реалиях было максимально комфортно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Что берёт на себя школа, а что — преподаватель</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас, кажется, очень чёткая система преподавания: диагностика, подбор преподавателя и формата, регулярные занятия, открытые уроки, ежемесячные пробники, обратная связь для родителей. Что из этого делает преподаватель, а что берёте на себя вы как школа?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Основная роль преподавателя — вести занятия, полностью вложиться в преподавание и в результат ученика, выложиться на максимум так, чтобы ученик раскрылся. А наша зона ответственности — найти ученика преподавателю, чтобы у него была занятость, узнать, какие у ученика цели, чтобы правильно подобрать преподавателя и направить его к правильному человеку. Дальше — работа с родителями, общение с ними. Мы берём на себя ответственность за результат ученика, и если возникают конфликтные ситуации — мы берём это на себя, преподавателя это практически не касается, разве что нужно что-то уточнить у него самого.</p>
+        <p>Естественно, это ещё и своевременная оплата — преподавателю не нужно думать, заплатит ли ученик или выдадут ли ему зарплату вовремя. При этом ответственность преподавателя остаётся довольно большой: анализ пробников, домашние работы, их проверка, своевременная обратная связь, чтобы у нас постоянно был контакт с учеником и его родителем и вся школа понимала, к чему мы вместе движемся. Это совместная работа.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Как устроен отбор преподавателей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Тогда логичный вопрос: а как попасть к вам в школу? Есть ли система отбора, и если да, то какая она?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Да, у нас есть система отбора, мы берём не всех преподавателей. Сначала преподаватель заполняет небольшую анкету с данными о себе — чтобы мы представляли, какая у человека квалификация, вёл ли он занятия и какие были результаты у учеников. Затем небольшое тестирование, чтобы понять, как преподаватель сам ориентируется в предмете, как может развёрнуто отвечать на вопросы по своей теме.</p>
+        <p>Дальше — небольшая «визитка», чтобы мы видели, насколько чётко отвечает преподаватель, как он общается, видели его манеру общения и способность отвечать на поставленные вопросы. И наконец — небольшой пробный урок: либо преподаватель сам присылает запись занятия, либо это диагностическое занятие с нашим учеником. Тогда мы оцениваем его работу, вовлечённость, как он реагирует на ошибки, как выстраивает взаимодействие и насколько комфортно ученику.</p>
+        <p>Но отбор на этом не заканчивается. Одно присланное занятие ещё не всё говорит про преподавателя, потому что важны не только его знания, но и способность держать интерес в ученике и в преподавании на постоянной, долгой основе, чтобы качество не снижалось. Плюс мы оцениваем пунктуальность, ответственность — чтобы он подключался вовремя, потому что это не просто про отработать свой час, а про психологическую опору для самого ученика: чтобы он понимал, что время чётко зафиксировано, и соблюдал эти же правила со своей стороны.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Сейчас четыре преподавателя, а было одиннадцать</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А сколько у вас вообще примерно преподавателей сейчас?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>На данный момент у нас четыре преподавателя, а в течение прошлого учебного года их было одиннадцать. Все проходят через этот отбор, со всеми мы общаемся. Почему сейчас меньше? Потому что в течение учебного года мы всё это отслеживаем — результаты преподавателей, общение и взаимодействие с нами, насколько подробно они дают обратную связь, способность соблюдать изначальные договорённости, в том числе про взаимодействие с учеником или увод учеников. Это то, что доверие должно постепенно выстраивать.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Что преподаватели ценят в работе с нами</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что сами преподаватели ценят в работе у вас — оплату, комфортное общение?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Мы созваниваемся с преподавателями, узнаём, насколько им всё комфортно, всё ли устраивает. Думаю, что им важна в первую очередь стабильность — что всё происходит своевременно, что мы соблюдаем свои договорённости. Важно, что они не отвлекаются на другие моменты: не думают о том, где бы взять учеников, как написать сообщение родителю, — такие вещи мы берём на себя. Плюс есть риски вроде того, что ученик не пришёл на занятие, — это тоже, думаю, хорошая мотивация работать с нами в команде.</p>
+        <p>Если говорить про методику — мы ведём поддержку и для ученика, и для преподавателя. У преподавателей уже есть готовые домашние задания на нашей платформе: если не хотят давать своё, могут взять из нашей базы, что-то добавить или отредактировать. А дальше — постоянная обратная связь, мы не бросаем их в общую массу «делай, что хочешь», а ведём всю систему подготовки. Есть дополнительные открытые вебинары для тех, кто сдаёт ОГЭ и ЕГЭ, — они бесплатны для учеников, и их ведут преподаватели, которым мы уже доверяем. Плюс ежемесячные пробники, статистику по которым мы отслеживаем сами — часть этой ответственности мы принимаем на себя и помогаем в пути к результату и преподавателю, и ученику.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Кейс Наташи: спор из-за оформления реакции</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если взять конкретную ситуацию — случилось недопонимание или конфликт с родителем. Преподаватель же как-то должен быть задействован? Как вы действуете в таких случаях?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>В 90% случаев мы берём это на себя, конфликты решаем самостоятельно. Была ситуация в прошлом году с Наташей — девочкой, которая готовилась к ОГЭ по химии. Нам написала её мама и сказала, что учитель в школе сказал, что то, что даёт репетитор, — неправильно: неправильно объяснил, неправильное оформление, за это снизят балл. Мы не стали сразу кидаться на преподавателя, что он неправ, — подняли записи, посмотрели, как идёт занятие, как Наташа реагирует, работает на занятии, насколько понимает материал, и как сам преподаватель объясняет — насколько это соответствует правилам оформления на ОГЭ.</p>
+        <p>Мы проверили и увидели, что преподаватель всё объяснил правильно, ошибки не было — просто в оформлении окислительно-восстановительных реакций на ОГЭ есть два допустимых варианта записи заряда, скажем, можно написать «хлор минус» или «хлор-1-минус» — оба варианта принимаются, а учитель давал строго одну методику. В этом случае мы разговариваем с родителем и даже не задействуем преподавателя — он вообще не узнал, что такая ситуация возникла. Мы объяснили всё родителю, и на этом конфликт был исчерпан. Если бы было основание для более глубокой проверки, тогда мы начали бы обсуждать это уже и с преподавателем — но здесь всё максимально индивидуально.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Кейс Леры: две с половиной недели до экзамена</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас была ученица Лера, которая пришла, не сдав экзамен по химии дважды, с угрозой отчисления, — и потом всё сложилось хорошо. Расскажете подробнее про этот случай?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>С Лерой это отдельный случай. Ученики с таким запросом — прийти за две с половиной недели до экзамена и подготовиться — бывают не так часто, чаще всего приходят за год или за полгода, и результаты у нас достигаются очень хорошие, есть 99-балльники, 95-балльники. С Лерой был действительно особенный случай: она два раза ходила на сдачу экзамена для перевода из десятого класса в одиннадцатый и провалила его, ей дали последнюю попытку — либо сдать, либо переводиться в другую школу.</p>
+        <p>Мы работали интенсивно две с половиной недели — работала и сама Лера, и преподаватель максимально вовлекалась в занятия, — и она добилась нужного результата, получила нужный балл и перешла в одиннадцатый класс. Здесь нужно чёткое понимание: мы выстраивали определённую методику под конкретный случай, а не готовили по общему курсу органической химии. Мы ориентировались конкретно под эту задачу — перейти в одиннадцатый класс, — видели требования преподавателя школы и по знаниям, и по оформлению, и строили программу с учётом этого. С помощью такой командной работы мы добились, я считаю, действительно яркого результата — сейчас Лера учится в химико-биологическом классе.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Чувствуют ли ученики разницу</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы думаете, ученики чувствуют разницу между преподавателем с формальным отношением к работе — «лишь бы заплатили» — и тем, кому действительно важно найти подход к каждому?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Это критически важный момент. Любой подросток очень хорошо это чувствует. Он видит заинтересованность преподавателя, видит, как преподаватель общается, фиксирует небольшие моменты, которые могут показаться незначительными, но на самом деле играют огромную роль. Например, если преподаватель помнит о цели ученика на протяжении всего учебного года — это супер важно, это сильно упрощает создание контакта между преподавателем и учеником.</p>
+        <p>Если преподаватель относится к работе так, чтобы просто отработать свой час и заняться своими делами, — заинтересованности у самого ученика тоже не будет. В обучении всегда есть две стороны, и без совместной работы, без контакта и заинтересованности в результате и в самом предмете сложно говорить о конечном результате ученика.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Как попасть в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если кто-то из преподавателей химии сейчас смотрит и разделяет ваш подход — что конкретно нужно сделать, чтобы попробовать себя в роли преподавателя в вашей школе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Во-первых, откликнуться на вакансию, заполнить небольшую анкету, пройти отбор. Важно учитывать, что мы смотрим не только на знание предмета, а именно на взаимодействие с учеником и с нами. Я не жду какого-то актёрского мастерства, чтобы человек устраивал целое шоу. Если у него сильное знание предмета — а мы, как я уже упомянул, поможем с материалами при необходимости, — если он увлечён своим предметом, заинтересован в ученике и соблюдает договорённости, — ему точно стоит заполнить анкету.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если кто-то из зрителей заинтересовался или у вас есть знакомые, кто хотел бы попреподавать химию или уже обладает большим опытом — можете написать Рабдану, и, пройдя этапы отбора, у вас может сложиться сотрудничество. Рабдан, спасибо большое, что пришли, что ответили на вопросы, было очень интересно.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Рабдан</div><div class="tr-txt">
+        <p>Спасибо. До свидания.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
