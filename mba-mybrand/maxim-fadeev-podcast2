@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Максим Фадеев — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для будущих преподавателей</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1226015604?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Максим Фадеев - Подкаст 2"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1226015604" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">«Нам нужны преподаватели, которые не могут не преподавать». Максим Фадеев — как устроен отбор в команду</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Максим — кандидат физико-математических наук, выпускник физфака МГУ, готовит школьников к ОГЭ и ЕГЭ по физике и математике. В команде — 20 преподавателей, но берут меньше 2% кандидатов. В выпуске — какого преподавателя точно не возьмут в команду, как устроена диагностика и подбор преподавателя под ученика, какой путь роста проходит преподаватель от индивидуальных занятий до вебинаров и как кейс ученика Сергея — 100 баллов после прогноза «максимум 60–70» — показывает всю систему в деле.
+
+🔗 Школа Максима Фадеева: [ссылка]
+🔗 Написать Максиму: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, подготовка к ОГЭ, подготовка к ЕГЭ, физика, математика, найм преподавателей, вакансия репетитора, репетиторский бизнес, Максим Фадеев</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #вакансия #репетитор #физика #математика #ЕГЭ #ОГЭ #EdTech #найм</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/maxim-fadeev-podcast2-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Нам нужны преподаватели, которые не могут не преподавать</h1>
+
+      <p>Я руководитель собственной школы подготовки к математике и физике. В основном мы работаем со школьниками — ОГЭ и ЕГЭ это то, с чем к нам чаще всего приходят. Но помимо этого мы работаем и с учениками из других европейских стран, а поскольку я сам кандидат физико-математических наук и выпускник физфака МГУ, иногда к нам обращаются и студенты первых курсов. В основном всё же речь идёт про школьников.</p>
+
+      <h2>От студента физфака к наставнику преподавателей</h2>
+      <p>Я начал преподавать ещё будучи первокурсником физфака МГУ. Из научного бэкграунда в управление командой в первую очередь перешла методика преподавания — на физфаке был отдельный предмет с таким названием, и именно эта база легла в основу того, как мы учим наших преподавателей и контролируем качество их работы. Если преподаватель начинающий — а таким студентом когда-то был и я, — ему часто не хватает опыта. Было бы здорово, если бы рядом в тот момент оказался наставник, который подсказал, как обучать других. Вот эту функцию помощи, наставничества, обучения и повышения квалификации мы в том числе на себя и берём.</p>
+
+      <h2>Что я точно не приму в команду</h2>
+      <p>В нашу команду попадает меньше 2% кандидатов. Самое главное, что нам важно в преподавателе, — умение находить общий язык с подростком. Можно замечательно знать свой предмет, но если нет коммуникации, доверительного общения — дальше не пойдёт, и результата не будет. Поэтому мы в первую очередь ищем преподавателей, которые знают, как общаться с подростками, знают особенности возрастной психологии, а иногда и сами недавно прошли путь сдачи экзаменов и на своём опыте знают, как его преодолевать.</p>
+      <p>Знания, конечно, само собой разумеются, но их недостаточно. Можно очень хорошо знать свой предмет и не уметь объяснять — к сожалению, большинство преподавателей именно такие. Мы постоянно ищем хороших специалистов в команду, и их правда мало: больше 90% кандидатов нам не подходят, потому что либо не умеют объяснять простым языком, либо сами не знают предмет, либо технически не умеют проводить занятия. Поэтому мы их, как золото, намываем — и тщательно бережём тех, кого нашли.</p>
+
+      <h2>Дистанция без панибратства</h2>
+      <p>Важно, чтобы дистанция между учеником и преподавателем была минимальна — но здесь легко перепутать это с панибратством, где границы размыты. На самом деле всё проще: ученику должно быть комфортно, он должен хорошо себя чувствовать и понимать, что говорит преподаватель, а преподаватель при этом должен оставаться значимой личностью, авторитетом для ученика. Только тогда будет результат — нам очень важна именно здоровая коммуникация между учеником и преподавателем.</p>
+
+      <h2>Преподаватель — это не говорящая голова</h2>
+      <p>У нас был случай с преподавателем Павлом, которого благодарили родители, — именно за поддержку в трудную минуту, а не только за знания. Такие качества мы в какой-то степени взращиваем как культуру: подростковый период сам по себе непростой, а тут ещё и дополнительные стрессы вроде ЕГЭ — без поддержки не обойтись, и не всегда её можно получить от семьи или сверстников. Поэтому преподаватель у нас — один из тех, кто может эту поддержку дать.</p>
+      <p>Мы прямо говорим об этом с преподавателями: преподаватель — не говорящая голова, которая просто передаёт знания, это намного больше — наставник, который сопровождает к результату. Сюда входит многое: спросить, как дела в школе, вникнуть в интересы и внутреннюю мотивацию ученика — потому что без внутренней мотивации результата не будет. Это всегда очень детальная, индивидуальная работа.</p>
+
+      <h2>Что я обещаю команде</h2>
+      <p>На самом деле обещать особо ничего и не нужно. У нас понятные условия, и мы просто находимся в одинаковой системе ценностей — нацелены на результат, все работают на результат. Это, пожалуй, основное, что интересно и мне, и команде, и родителям, и ученикам. Формальные моменты мы, разумеется, соблюдаем — зарплаты платим вовремя, это само собой разумеется. Но никаких дополнительных систем мотивации и KPI для преподавателей у нас нет — мы просто собираем вокруг себя тех, кто уже мотивирован и заряжен на результат. Им этого достаточно.</p>
+
+      <h2>Диагностика: как подбираем преподавателя под ученика</h2>
+      <p>Диагностика в нашей школе — очень важный входной элемент. Когда к нам обращаются, мы не можем просто назначить преподавателя — нужно понять, какая вообще ситуация, в чём запрос, какой у ребёнка уровень, как он мыслит, какая у него база. На диагностике мы интересуемся его увлечениями, как у него дела в школе, какой контакт с текущим преподавателем, что он думает о поступлении. Также общаемся с родителями — как они видят ситуацию, был ли уже опыт занятий с репетиторами, в каких форматах, какая цель. Это как прийти к врачу и сказать «у меня болит» — пока не разберёмся, что именно, не сделаем снимки, врач ничего не может сделать.</p>
+      <blockquote>Хороший преподаватель — это подходящий преподаватель.</blockquote>
+      <p>И только поняв конкретику, мы, зная состав своих преподавателей, понимаем, кто лучше сработает именно с этим учеником. Важно не только то, что преподаватель закрывает цель и обладает нужными знаниями, — важно, чтобы они подходили друг другу на уровне коммуникации. Кому-то нужен преподаватель помоложе, с меньшей дистанцией и классным неформальным общением, а кому-то — возрастной, чёткий, системный, с академическим подходом. Очень опасно перепутать эти две ситуации: преподаватель может быть со степенями и огромными результатами, но именно этому ученику не подойти. Именно диагностика и большая насмотренность позволяют установить, кто кому подходит — а поскольку у нас есть резерв преподавателей, мы можем выбирать, а не назначать кого попало.</p>
+
+      <h2>Свобода в рамках методики</h2>
+      <p>Наши уроки строятся не на заучивании, а на подведении ученика к самостоятельному решению. При этом мы не скриптуем занятия, как некоторые онлайн-школы, где преподаватель просто должен произносить заготовленный текст по готовой презентации, — по сути это превращается в говорящий учебник, и смысла в этом немного. Мы всегда за индивидуальный подход: преподаватель, хорошо зная предмет и базу, подстраивает её под конкретного ученика.</p>
+      <p>Мы адаптируемся под цель, понимаем, какие темы нужно пройти и в какие сроки, что уже хорошо усвоено, над чем работать. Дальше, понимая общий план, преподаватель сам обеспечивает его реализацию — как именно, уже больше на его стороне. Но мы, конечно, контролируем: рассматриваем занятия, даём обратную связь, у нас есть программа и общие материалы — вся структура наработана годами и даёт очень хорошие результаты. В этом году у нас было два стобалльника по физике — и индивидуальные, и групповые ученики.</p>
+
+      <h2>Что ценят преподаватели в команде из 20 человек</h2>
+      <p>Думаю, у каждого своя причина, но в первую очередь это стабильность: мы даём преподавателям учеников, всегда чётко всё делаем со своей стороны, никогда ничего не задерживаем и все договорённости выполняем — в наше непростое время стабильность и безопасность особенно важны. Кроме того — методический рост: преподавателю всегда есть куда расти. Плох тот преподаватель, который остановился в собственном развитии. Основное, что должно быть, — какая-то живость, интерес даже спустя много лет объяснения одного и того же: физика — это всё, что нас окружает, а значит, постоянный источник нового.</p>
+      <p>Мы взращиваем культуру интереса к предмету — когда преподавателю самому интересно, он в свободное время смотрит обучающие ролики, изучает, как преподают другие, разбирает более сложные задачи, идёт в академическую составляющую. Такой преподаватель транслирует ценность предмета, у него самого горят глаза — и дети это точно считывают. Часто нелюбовь к предмету у ребят складывается именно из скучного, занудного школьного преподавателя. Поэтому преподаватели у нас обмениваются опытом друг с другом, созваниваются, обмениваются материалами, разбирают на планёрках сложные кейсы — потому что одна из проблем изолированного репетитора в том, что у него нет сообщества и окружения, с кем поделиться опытом.</p>
+
+      <h2>Путь роста: от индивидуальных занятий до вебинаров</h2>
+      <p>Самое главное — обеспечивать результат: мы всё больше заинтересованы в тех преподавателях, которыми довольны наши ученики. Обычно преподаватель начинает с индивидуальных занятий, и если он хороший специалист, к нему идёт много учеников, они остаются, он даёт результат — и в какой-то момент у него оказываются заняты все часы. Следующая точка роста — занятия в группах: сначала небольших, из двух-трёх человек, затем более крупных. Это дополнительный вызов, требующий других навыков — вовлекать всех учеников, чтобы никто не отсиживался, работать с соревновательностью и взаимодействием между учениками, — и мы этому тоже обучаем.</p>
+      <p>Если преподаватель очень хорошо развивается и переходит в категорию «звёздности», когда к нему выстраивается очередь желающих, — можно переходить в формат вебинаров и более крупных курсов.</p>
+
+      <h2>Кейс Сергея: 100 баллов после прогноза 60–70</h2>
+      <p>Наш ученик Сергей сдал физику на 100 баллов после того, как другой репетитор предрекал ему максимум 60–70. Здесь много факторов. В первую очередь преподаватель должен быть компетентен — а собеседуя многих репетиторов и школьных учителей, я вижу, что очень немногие знают свой предмет достаточно хорошо. Порог входа в профессию репетитора крайне низкий: можно зарегистрироваться на любом сайте, вспомнить, что хорошо знал в школе, — и вот уже репетитор. Мы работаем только с теми, кто действительно хорошо знает предмет, умеет объяснять и раскрывать его ценность, а также технически умеет вести занятия — для физики это интерактивные лаборатории, видеоуроки, анимации, большой методический материал.</p>
+      <p>Когда Сергей пришёл к нам на первую диагностику, ему как раз накануне другой репетитор нарисовал куда более скромную картину — 60–70 баллов. Мы занимались с ним в мини-группе, готовясь именно к структуре экзамена: зная статистику прошлых лет, все нюансы от составителей ЕГЭ, какие источники надёжны, — хорошая база знаний плюс хорошая система дают адекватный прогноз и понимание, к чему готовиться. Дальше путь простраивается регулярными занятиями и поддержанием мотивации: ученик должен делать домашние задания, и тогда будет результат. У Сергея была отличная дисциплина — он просто делал то, что мы говорили, и достиг максимального результата. Формула, по сути, простая: найти специалиста, которому доверяешь, и делать то, что он говорит.</p>
+      <p>Когда он получил 100 баллов — а по физике это значит, что не было ни единой ошибки ни в одном номере, — он закричал на весь дом от радости и разбудил всех родственников. И в этот момент у преподавателя тоже возникает то самое приятное ощущение — почувствовать результат собственной работы.</p>
+
+      <h2>Чувствуют ли ученики разницу</h2>
+      <p>Да, конечно чувствуют — я думаю, дети даже сильнее нас различают формальные и неформальные отношения. Если преподаватель заинтересован только в деньгах, он не будет вкладываться сверх минимума: пришёл, отговорил ровно положенное время и закончил, а всё, что происходит вне занятий, его не интересует. А преподаватель, направленный на результат, и вне занятий делает многое: общается с учеником, спрашивает, как дела, присылает полезные материалы, помогает с трудностями не только в рамках подготовки к экзамену. Разница в этом принципиальная.</p>
+
+      <h2>Как попасть в команду</h2>
+      <p>В первую очередь нам важно увидеть, как преподаватель на практике ведёт занятие, — мы организуем пробный урок с одним из наших учеников, отсматриваем его и уже на основе этого либо приглашаем к следующему этапу отбора, либо честно говорим, что пока не готовы предложить сотрудничество. Часто первое занятие проходит так, что ученик потом говорит: «Я точно не хочу продолжать» — и если мы видим, что с преподавателем в теории можно поработать и что-то докрутить, пробуем дообучить, но чаще предпочитаем найти преподавателя, который уже хорошо подготовлен.</p>
+      <p>После пробного урока — собеседование, где мы смотрим на уровень знаний и предыдущий опыт, обсуждаем условия и начинаем с одного ученика, чтобы понаблюдать за работой на более долгой дистанции. Когда видим, что всё хорошо, родители довольны и результаты ученика растут, — постепенно увеличиваем нагрузку.</p>
+      <p>Написать стоит тем, кто хочет давать результаты своим ученикам, любит свой предмет и хочет помогать подросткам в этот непростой период жизни — тем, кто не может не преподавать. Нам нужны именно такие преподаватели. И тогда, я думаю, мы сработаемся.</p>
+
+      <p class="art-signature">Максим Фадеев,<br>основатель школы подготовки к ОГЭ и ЕГЭ по физике и математике</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про то, кто нам нужен</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🎯 Нам нужны преподаватели, которые не могут не преподавать</h3>
+        <p>В команду попадает меньше 2% кандидатов. И дело не только в знании предмета.</p>
+        <h4>Что мы ищем на самом деле</h4>
+        <p>Умение находить общий язык с подростком. Можно замечательно знать физику или математику, но если нет доверительного общения — дальше не пойдёт, и результата не будет. Знания при этом само собой разумеются, но их недостаточно: больше 90% кандидатов нам не подходят, потому что либо не умеют объяснять простым языком, либо технически не умеют вести занятия онлайн.</p>
+        <p>Мы ищем тех, кто любит свой предмет, хочет давать результат ученикам и хочет помогать подросткам в непростой для них период — тех, кто, по сути, не может не преподавать.</p>
+        <p>📩 Если это про вас — откликайтесь. Расскажем, как устроен отбор.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про подбор преподавателя</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>🩺 Хороший преподаватель — это подходящий преподаватель</h3>
+        <p>Мы никогда не назначаем ученику первого свободного преподавателя. Сначала — диагностика.</p>
+        <h4>Зачем это нужно</h4>
+        <p>Это как прийти к врачу и сказать «у меня болит» — пока не разберёмся, что именно, снимки не помогут. На диагностике мы смотрим уровень ребёнка, как он мыслит, какая у него база, интересы, отношения с текущим преподавателем. Общаемся и с родителями — какой был опыт, какая цель.</p>
+        <p>И только после этого подбираем преподавателя — причём смотрим не только на то, закрывает ли он цель по знаниям, но и подходят ли они друг другу на уровне коммуникации. Кому-то нужен преподаватель помоложе, с классным неформальным общением, а кому-то — возрастной и академичный. Преподаватель может быть со степенями и огромными результатами — и всё равно не подойти конкретному ученику.</p>
+        <p>🎯 Именно поэтому у нас есть резерв преподавателей — чтобы выбирать, а не назначать кого попало.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс со 100 баллами</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>💯 Наш ученик сдал физику на 100 баллов после того, как другой репетитор предрекал ему максимум 60–70</h3>
+        <p>Сергей пришёл к нам на диагностику сразу после разговора с другим репетитором, который нарисовал ему довольно скромную картину.</p>
+        <h4>Что было по-другому</h4>
+        <p>Мы занимались в мини-группе, готовясь именно к структуре экзамена: статистика прошлых лет, нюансы от составителей ЕГЭ, надёжные источники — хорошая база плюс хорошая система дают адекватный прогноз. А дальше — регулярные занятия и поддержание мотивации.</p>
+        <p>У Сергея была отличная дисциплина: он просто делал то, что мы говорили. Когда он получил 100 баллов — а это значит, что не было ни единой ошибки ни в одном номере, — он закричал на весь дом от радости и разбудил всех родственников.</p>
+        <p>🧪 Формула простая: найти специалиста, которому доверяешь, и делать то, что он говорит.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про рост внутри команды</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>📈 От индивидуальных занятий до вебинаров — путь роста преподавателя у нас</h3>
+        <p>Мы не держим преподавателей на одном уровне годами — если человек хорошо работает, у него всегда есть куда расти.</p>
+        <h4>Как это выглядит</h4>
+        <p>Обычно преподаватель начинает с индивидуальных занятий. Хороший специалист быстро набирает учеников, они остаются — и в какой-то момент все его часы заняты. Следующий шаг — мини-группы, сначала на два-три человека, потом крупнее. Мы обучаем, как вовлекать всех учеников, чтобы никто не отсиживался, и как работать с соревновательностью между ними.</p>
+        <p>А если преподаватель переходит в категорию «звёздности», когда к нему выстраивается очередь желающих заниматься, — открывается формат вебинаров и более крупных курсов.</p>
+        <p>🚀 Самое главное условие роста — результат, которым довольны ученики. Всё остальное прикладывается.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про то, как попасть в команду</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>🎬 Как выглядит отбор в нашу команду — и почему первый шаг не собеседование, а пробный урок</h3>
+        <p>Мы не начинаем с разговора о резюме. Сначала — реальное занятие с настоящим учеником.</p>
+        <h4>Как это устроено</h4>
+        <p>Мы организуем пробный урок с одним из наших учеников и отсматриваем, как преподаватель на практике ведёт занятие. Часто после первого урока ученик говорит: «Я точно не хочу продолжать» — и тогда мы либо пробуем что-то докрутить, либо честно говорим, что пока не готовы предложить сотрудничество.</p>
+        <p>Дальше — собеседование, где смотрим на уровень знаний и опыт, обсуждаем условия и начинаем с одного ученика, чтобы понаблюдать за работой на более долгой дистанции. Когда видим, что родители довольны и результаты растут, — постепенно увеличиваем нагрузку.</p>
+        <p>✉️ Написать стоит тем, кто хочет давать результат ученикам и любит свой предмет. Остальное покажет пробный урок.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/maxim-fadeev-podcast2-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Кто такой Максим Фадеев и чем занимается школа</a></li>
+        <li><a href="#t2">2. От студента физфака к наставнику преподавателей</a></li>
+        <li><a href="#t3">3. Что я точно не приму в команду</a></li>
+        <li><a href="#t4">4. Дистанция без панибратства</a></li>
+        <li><a href="#t5">5. Преподаватель — это не говорящая голова</a></li>
+        <li><a href="#t6">6. Что я обещаю команде</a></li>
+        <li><a href="#t7">7. Диагностика: как подбираем преподавателя под ученика</a></li>
+        <li><a href="#t8">8. Свобода в рамках методики</a></li>
+        <li><a href="#t9">9. Что ценят преподаватели в команде из 20 человек</a></li>
+        <li><a href="#t10">10. Путь роста: от индивидуальных занятий до вебинаров</a></li>
+        <li><a href="#t11">11. Кейс Сергея: 100 баллов после прогноза 60–70</a></li>
+        <li><a href="#t12">12. Чувствуют ли ученики разницу</a></li>
+        <li><a href="#t13">13. Как попасть в команду</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Кто такой Максим Фадеев и чем занимается школа</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Максим, добрый день. Давайте для тех, кто вас совсем не знает, коротко — кто вы и чем занимается ваш образовательный проект?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Меня зовут Фадеев Максим. Я руководитель собственной школы подготовки к математике и физике. В основном мы специализируемся на работе со школьниками — ОГЭ и ЕГЭ это основное, к чему к нам приходят заниматься. Но помимо этого мы сейчас работаем и с учениками из других европейских стран. Поскольку я сам кандидат физико-математических наук, выпускник физфака МГУ, иногда к нам обращаются и студенты на начальных курсах, но в основном всё же речь идёт про школьников.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. От студента физфака к наставнику преподавателей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы упомянули, что вы кандидат физико-математических наук и начали преподавать ещё первокурсникам физфака МГУ. А что из научного бэкграунда вы сегодня применяете в управлении командой преподавателей?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>В первую очередь это касается методики преподавания, потому что у нас на физфаке был непосредственно такой предмет — методика преподавания физики. И именно эта база, основа, ложится в само занятие. Мы учим преподавателей, мы всегда контролируем качество их работы. Если преподаватели начинающие — студенты, коим я как раз и был на первых курсах, — там не хватает опыта. Было бы здорово, чтобы в тот момент был какой-то наставник, который подсказал, как обучать других. Вот эту функцию помощи преподавателям, наставничества, обучения, повышения уровня квалификации мы в том числе на себя и берём.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Что я точно не приму в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас достаточно строгий отбор, и в команду попадает менее 2% кандидатов. Если совсем просто — какого человека вы точно не возьмёте, даже если он блестяще знает предмет?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Самое главное, что нам важно в преподавателе, — умение находить общий язык с подростком. Можно замечательно знать свой предмет, но если нет коммуникации, доверительного общения, дальше не пойдёт и результата из этого не будет. Поэтому мы в первую очередь уделяем внимание преподавателям, которые знают, как общаться с подростками, знают особенности возрастной психологии, а сами, может быть, недавно прошли путь сдачи экзаменов и на своём опыте знают, как этот путь преодолевать.</p>
+        <p>Знания, само собой разумеется, важны, но их просто недостаточно. Можно очень хорошо знать свой предмет, но не уметь объяснять — к сожалению, большинство преподавателей именно такие. Мы постоянно ищем в свою команду хороших преподавателей, и их правда мало: больше 90% нам не подходят, потому что многие не умеют объяснять понятно, простым языком, либо сами не знают предмет, либо технически не умеют проводить занятия. Поэтому мы их, как золото, намываем в свою команду и тщательно бережём и храним.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Дистанция без панибратства</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Да, дистанция, конечно, очень важна в выстраивании отношений. Как вы её выстраиваете?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Чтобы дистанция между учеником и преподавателем была минимальна. Но здесь важно не путать это с панибратством, где границы размыты. Тут просто должно быть комфортно ученику, он должен хорошо себя ощущать и понимать, что говорит преподаватель, а преподаватель должен быть значимой личностью, авторитетом для ученика. И тогда результат будет. Нам очень важна здоровая коммуникация между учеником и преподавателем.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Преподаватель — это не говорящая голова</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что цените не только знания, но и умение поддержать ученика в трудную минуту. С вашим преподавателем Павлом, которого благодарили родители, была как раз такая ситуация. Как вы поощряете такие качества внутри команды?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Мы их в какой-то степени взращиваем как культуру. Мы всегда обращаем на это внимание, ставим во главу угла, что подростковый период сам по себе непростой в жизни учеников, а тут ещё и дополнительные стрессы в виде экзаменов, ЕГЭ. Поэтому без поддержки здесь не обойтись — ребятам такого возраста сложно найти поддержку, не всегда её можно получить от семьи, родителей или сверстников. Поэтому преподаватель — это один из людей, который может эту поддержку дать.</p>
+        <p>Мы с преподавателями об этом и говорим: преподаватель — это не говорящая голова, которая просто передаёт знания. Это намного больше — это наставник, который сопровождает к результату. Эта поддержка — неотъемлемая составляющая для того, чтобы дойти до результата. Сюда входит многое: и поддержка, и «как дела в школе», и вникание в интересы, во внутреннюю мотивацию ученика — потому что без внутренней мотивации результата не будет. Это всегда очень детальная, индивидуальная работа.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Что я обещаю команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что вы как руководитель обещаете команде? Что из этого сложнее всего держать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Я сейчас задумался, что мы обещаем. На самом деле, как будто бы ничего много обещать и не нужно. У нас есть понятные условия, преподаватели к нам приходят, и мы просто находимся в одинаковой системе ценностей — нацелены на результат. Все работают на результат — это, пожалуй, основное, что интересно и мне, и команде, и, разумеется, родителям и ученикам.</p>
+        <p>Поэтому, наверное, ничего много и не обещаю. Мы просто находим людей, которые разделяют наши подходы, ценности и смыслы. Разумеется, мы все формальные моменты соблюдаем — выплачиваем зарплаты вовремя, это само собой разумеется. Но в первую очередь у нас нет каких-то дополнительных систем мотивации, KPI для преподавателей и так далее. Мы просто собираем вокруг себя преподавателей, которые уже мотивированы и заряжены на результат. Им этого достаточно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Диагностика: как подбираем преподавателя под ученика</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Давайте перейдём к тому, как устроена работа. После диагностики вы подбираете ученику преподавателя, который лучше всего подходит под его уровень и цели — как с Павлом, который вёл ученика к 70 баллам по физике. Как устроен этот подбор и что, если преподаватель и ученик не сходятся?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Диагностика в нашей школе — очень важный входной элемент. Когда к нам обращаются, мы не можем просто назначить преподавателя, потому что нам надо понимать, а какая тут вообще ситуация, в чём запрос, какой уровень у ребёнка, как он мыслит, как развивает идею, какая у него база. Без этой информации нельзя просто назначить педагога. На диагностике мы интересуемся его увлечениями, как у него дела в школе, какой контакт с преподавателем, что он думает по поступлению. Также общаемся с родителями, как они видят ситуацию, был ли уже опыт занятий с репетиторами, в каких форматах, какая цель. Это как прийти к врачу и сказать «у меня болит, что делать» — пока не разберёмся, что болит, не сделаем снимки, не посмотрим всю ситуацию, врач же ничего не может сделать.</p>
+        <p>И только поняв конкретику, зная наш преподавательский состав, мы понимаем, кто лучше с этим работает — важно индивидуальное совпадение. Мы смотрим не только на то, чтобы преподаватель закрывал цель и обладал знаниями, но и чтобы они с учеником подходили друг другу на уровне коммуникации. Кому-то нужен преподаватель помоложе, чтобы дистанция была поменьше и было классное общение, а кому-то — возрастной, чёткий, системный, с академическим подходом. Очень опасно перепутать эти две ситуации: преподаватель может быть со степенями, заслуженный, с огромными результатами — но именно этому ученику он не подойдёт.</p>
+        <p>Только диагностика позволяет установить эти связи, кто кому подходит — у нас большая насмотренность, каким типам учеников какие преподаватели подходят. А поскольку у нас есть резерв преподавателей, мы можем выбирать, а не назначать кого попало. Мы знаем хорошо преподавателей, понимаем ситуацию — и связываем, дальше организуем и обеспечиваем процесс обучения.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Свобода в рамках методики</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас уроки строятся не на заучивании, а на подведении ученика к самостоятельному решению. Насколько жёстко преподаватель должен следовать структуре урока и где у него есть свобода вести занятия по-своему?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Мы как раз за определённую свободу преподавания. Мы не скриптуем, как некоторые онлайн-школы, где приходишь, а там есть готовые презентации и просто нужно произносить заготовленный текст, и не приветствуется, когда отходят от этого. Но по сути это получается говорящий учебник, и смысла, и эффективности от такого процесса немного. Поэтому мы всегда за индивидуальный подход: преподаватель, хорошо зная предмет и базу, может подстраивать её под конкретного ученика.</p>
+        <p>Мы адаптируемся под цель, понимаем, какие темы должны быть пройдены, в какие сроки, что уже хорошо усвоено, над чем нужно работать. Понимая генеральный план, дальше преподаватель уже обеспечивает, чтобы он был реализован — как именно, это уже больше на его стороне. Но мы, конечно же, контролируем: рассматриваем какие-то занятия, даём обратную связь, у нас есть программа, общие материалы — вся необходимая база и структура, наработанная годами, и она даёт очень хорошие результаты. В этом году у нас было два стобалльника по физике, которые занимались и индивидуально, и в группе. Дальше преподаватель просто адаптирует методику, исходя из своего подхода и запроса ученика.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Что ценят преподаватели в команде из 20 человек</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сейчас в команде у вас 20 преподавателей. Что, на ваш взгляд, они ценят в работе больше всего — методическую поддержку, возможность расти до руководителя направления, стабильную оплату или атмосферу?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Тут лучше, конечно, спросить у каждого из них — думаю, каждый ценит что-то своё. Но мне кажется, в первую очередь это стабильность. Мы даём преподавателям учеников, и они с ними занимаются, мы всегда со своей стороны всё чётко делаем, никогда ничего не задерживаем, все договорённости выполняем. Стабильность и безопасность в наше непростое время уже очень важны.</p>
+        <p>Кроме того, это методический рост — преподавателю всегда есть куда расти. Плох тот преподаватель, который остановился в собственном развитии. Основное, что должно быть у преподавателя, — какая-то живость, интерес постоянно, даже если много лет объясняешь одно и то же, постоянно находить в этом что-то новое. Поскольку я преподаю физику, всё, что нас окружает, — это предмет для объяснений, и это оживляет занятия, делает их менее скучными.</p>
+        <p>Если преподавателю самому интересно, он в свободное время смотрит обучающие ролики, изучает, как преподают другие, разбирает более сложные задачи, идёт в академическую, научную составляющую — этот преподаватель так или иначе транслирует ценность предмета, у него у самого горят глаза, и дети это точно считывают, они видят отношение преподавателя к предмету. Часто нелюбовь к предмету у ребят складывается из-за скучного, занудного школьного преподавателя. Поэтому мы взращиваем эту культуру: преподаватели обмениваются опытом друг с другом, созваниваются, обмениваются материалами, рассматриваем кейсы на планёрках — если пришёл непростой ученик, как с ним лучше работать. Мне кажется, одна из проблем изолированного репетитора в том, что у него нет сообщества, окружения, чтобы поделиться опытом и понять, как делают другие.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Путь роста: от индивидуальных занятий до вебинаров</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что у сотрудника есть путь роста от небольшого объёма задач до руководителя направления. Как выглядит этот рост на практике? Что нужно сделать преподавателю, чтобы вы доверили ему больше?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Самое главное — обеспечивать результат. Мы всё больше заинтересованы в тех преподавателях, которыми довольны наши ученики, тут всё очень просто. Обычно преподаватель начинает с индивидуальных занятий, и если это хороший специалист, к нему идёт много народу, они остаются, он даёт им результат — и в какой-то момент, скорее всего, окажется, что у него все часы заняты. Следующая точка роста — занятия в группах: сначала небольших, может быть, два-три человека, потом эти группы разрастаются.</p>
+        <p>Это для преподавателя тоже дополнительный вызов, потому что требует других навыков, и мы в этом пути тоже обучаем — как проводить мини-группы, какие там есть особенности, как вовлекать всех учеников, чтобы никто не отсиживался, как играть с соревновательностью, со взаимодействием между самими учениками. Дальше, если преподаватель очень хорошо развивается, он переходит в категорию звёздности, когда у него очень много желающих заниматься с ним, — тогда уже можно переходить в формат вебинаров и более крупных курсов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Кейс Сергея: 100 баллов после прогноза 60–70</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ваш ученик Сергей сдал физику на 100 баллов после того, как другой репетитор предрекал ему максимум 60–70. Что в подходе преподавателя к ученику делает возможными такие результаты там, где другие сдаются раньше времени?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Тут очень много моментов. В первую очередь преподаватель должен быть компетентен. К сожалению, собеседуя многих репетиторов, школьных учителей, я вижу, что очень немногие знают свой предмет достаточно хорошо, потому что репетитором может стать кто угодно — это большая проблема. Любой, кто нас слушает, может зарегистрироваться на любом сайте, разместить анкету, вспомнить, что хорошо знал в школе, — и всё, он уже репетитор. Таких людей немало, порог входа очень простой, и это влечёт за собой много непрофессиональных специалистов. Мы работаем с теми, кто хорошо знает предмет — это необходимо. Дальше это коммуникация с учеником, умение раскрывать ценность предмета, объяснять, и техническое умение вести занятия — например, для физики есть интерактивные лаборатории, наглядные видеоуроки, конспекты, анимации, большой методический материал.</p>
+        <p>Сергей, когда пришёл к нам на самые первые диагностики, пришёл как раз от другого репетитора, который сказал ему, что он напишет на 60–70 баллов, хотя ему точно нужно было больше. Забегая вперёд — он набрал 100 баллов и поступил в бюджет. Он занимался в мини-группе, и мы работали именно с подготовкой к экзамену: зная структуру экзамена, статистику прошлых лет, все нюансы от составителей ЕГЭ, какие бывают слёты учителей физики, какие источники хорошие, а какие нет, — это хорошая база знаний, хорошая система и адекватный прогноз, к чему готовиться, какие нужны материалы. Дальше, когда есть хороший уровень знаний и понимание, к чему мы идём, важно простроить путь — регулярными занятиями и поддержанием мотивации. Ученик должен делать домашнее задание, и тогда результат будет.</p>
+        <p>У Сергея была очень хорошая дисциплина — он просто делал то, что мы говорили делать на занятиях, и достиг максимального результата. С одной стороны, рецепт прост: найти специалиста, в котором вы уверены, что он приведёт вас к результату, и делать то, что он говорит. Когда он получил 100 баллов, он мне потом рассказывал, что прямо на весь дом закричал от радости, разбудил всех родственников, побежал на улицу — а по физике 100 баллов означает, что не было ни единой ошибки ни в одном номере. И в этот момент у преподавателя тоже возникает то приятное ощущение, когда чувствуешь результат от собственной работы.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Чувствуют ли ученики разницу</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Говоря про интерес ученика и преподавателя — как вы думаете, ученики чувствуют разницу между преподавателем, которому просто платят, и преподавателем, которому действительно важен их результат?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Да, конечно, чувствуют. Я думаю, дети даже сильнее нас различают формальные и неформальные отношения. Если преподаватель заинтересован только в деньгах, он не будет вкладываться, и это сказывается на результате: пришёл, отговорил, ровно минута в минуту закончил — и всё, что происходит вне занятий, его, скорее всего, не сильно интересует. А если преподаватель направлен на результат, то он и вне занятий много что делает: общается с учеником, спрашивает, как дела, скидывает полезные материалы, помогает с трудностями в рамках предмета или просто с подготовкой к экзамену. В этом принципиальная разница, конечно, есть.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Как попасть в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Давайте перейдём к тому, как попасть в команду, если человек хочет попробовать себя у вас преподавателем. Как выглядит первый шаг и что нужно, чтобы пройти этот достаточно жёсткий отбор?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>В первую очередь нам важно посмотреть, как преподаватель на практике ведёт занятие. Мы организуем пробный урок — вы позанимаетесь с одним из наших учеников, мы отсматриваем это занятие и, опираясь на это, либо приглашаем вас к дальнейшему этапу отбора, либо говорим, что, к сожалению, пока не готовы предложить сотрудничество. Мы смотрим первое занятие, и очень многие преподаватели проводят его так, что ученик после говорит: «Я точно не хочу продолжать». Если мы видим, что в теории с этим преподавателем можно поработать, что-то докрутить, — можем попробовать дообучить, но в большинстве случаев мы всё-таки предпочитаем найти хорошего преподавателя-специалиста.</p>
+        <p>После пробного урока мы проводим собеседование, смотрим на уровень знаний, предыдущий опыт, обсуждаем все условия и начинаем с одного ученика, чтобы посмотреть, как преподаватель работает на более долгой дистанции. Когда мы видим, что всё хорошо, работа преподавателя нас устраивает, родители довольны и у ученика растут результаты, — мы постепенно увеличиваем нагрузку.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А кому точно стоит написать вам, если он посмотрел этот подкаст и задумался?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Максим</div><div class="tr-txt">
+        <p>Тем преподавателям, которые хотят давать результаты своим ученикам, которые любят свой предмет, которые хотят помогать подросткам в этот непростой период — которые не могут не преподавать. Я бы сказал так: нам нужны преподаватели, которые не могут не преподавать. И тогда мы, я думаю, сработаемся.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
