@@ -97,13 +97,19 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
 .btn-tg-icon:hover{transform:scale(1.12)}
 .btn-tg-icon:disabled{opacity:0.3;cursor:not-allowed}
 
-/* ── styled dropdowns (priority / status) ── */
-.select-wrap{position:relative;display:inline-flex;align-items:center;width:100%;border-radius:100px;border:1.5px solid rgba(0,0,0,0.08);transition:all 0.15s}
-.select-wrap:hover{border-color:rgba(0,0,0,0.2);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-.select-wrap:focus-within{border-color:var(--red)}
-.select-dot{position:absolute;left:12px;width:8px;height:8px;border-radius:50%;pointer-events:none}
-.select-chevron{position:absolute;right:9px;pointer-events:none;opacity:0.65}
-select.cell-select{border:none;background:transparent;border-radius:100px;padding:6px 26px 6px 24px;font-size:11.5px;font-weight:700;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;width:100%}
+/* ── custom dropdown (priority / status pills, opens on hover) ── */
+.dd{position:relative;display:inline-flex;width:100%}
+.dd-trigger{display:flex;align-items:center;gap:7px;width:100%;border:1.5px solid rgba(0,0,0,0.08);border-radius:100px;padding:6px 10px;font-size:11.5px;font-weight:700;font-family:inherit;color:inherit;cursor:pointer;transition:all 0.15s}
+.dd-trigger:hover{border-color:rgba(0,0,0,0.2);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.dd:focus-within .dd-trigger{border-color:var(--red)}
+.dd .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dd-label{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-trigger .chev{flex-shrink:0;opacity:0.6;transition:transform 0.15s}
+.dd:hover .dd-trigger .chev,.dd:focus-within .dd-trigger .chev{transform:rotate(180deg)}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:170px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:6px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(4px);transition:opacity 0.15s ease,transform 0.15s ease}
+.dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+.dd-option{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap}
+.dd-option:hover{background:var(--bg)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
 
 /* ── filter popover ── */
@@ -163,23 +169,11 @@ select.cell-select{border:none;background:transparent;border-radius:100px;paddin
         <div class="filter-panel" id="filterPanel">
           <div class="filter-row">
             <label>Приоритет</label>
-            <div class="select-wrap" id="filterPriorityWrap">
-              <select id="filterPriority" class="cell-select" onchange="onFilterChange()">
-                <option value="">Все</option>
-              </select>
-              <span class="select-dot" id="filterPriorityDot"></span>
-              <svg class="select-chevron" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
+            <div id="filterPriorityCell"></div>
           </div>
           <div class="filter-row">
             <label>Статус</label>
-            <div class="select-wrap" id="filterStatusWrap">
-              <select id="filterStatus" class="cell-select" onchange="onFilterChange()">
-                <option value="">Все</option>
-              </select>
-              <span class="select-dot" id="filterStatusDot"></span>
-              <svg class="select-chevron" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
+            <div id="filterStatusCell"></div>
           </div>
           <button class="filter-reset" onclick="resetFilters()">Сбросить фильтр</button>
         </div>
@@ -251,7 +245,7 @@ const STATUS_FG = {
   'Игнор':'#C62828','Отложенный спрос':'#E65100','Отказ':'#AD1457','Продажа':'#2E7D32',
 };
 const PRIORITIES = ['green','yellow','orange','red'];
-const PRIORITY_LABEL = { green:'🟢 Целевой', yellow:'🟡 Вероятный', orange:'🟠 Сомнительный', red:'🔴 Нецелевой' };
+const PRIORITY_LABEL = { green:'Целевой', yellow:'Вероятный', orange:'Сомнительный', red:'Нецелевой' };
 const PRIORITY_BG = { green:'var(--p-green-bg)', yellow:'var(--p-yellow-bg)', orange:'var(--p-orange-bg)', red:'var(--p-red-bg)' };
 const PRIORITY_FG = { green:'var(--p-green)', yellow:'var(--p-yellow)', orange:'var(--p-orange)', red:'var(--p-red)' };
 
@@ -259,6 +253,8 @@ const STALE_WARN_DAYS = 3;
 const STALE_DANGER_DAYS = 7;
 
 let clients = [];
+let filterPriorityValue = '';
+let filterStatusValue = '';
 
 async function api(path, opts) {
   const res = await fetch(API_BASE + path, {
@@ -317,8 +313,7 @@ if (isAdminUnlocked()) boot();
 async function boot() {
   document.getElementById('adminGate').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  populateFilterSelects();
-  updateFilterColors();
+  renderFilterDropdowns();
   await loadClients();
 }
 
@@ -366,60 +361,63 @@ async function patchClient(id, field, value) {
   }
 }
 
-/* ════════════ FILTERS ════════════ */
-function populateFilterSelects() {
-  const pSel = document.getElementById('filterPriority');
-  const sSel = document.getElementById('filterStatus');
-  PRIORITIES.forEach((p) => {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = PRIORITY_LABEL[p];
-    pSel.appendChild(opt);
-  });
-  STATUSES.forEach((s) => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = s;
-    sSel.appendChild(opt);
-  });
+/* ════════════ DROPDOWNS (priority / status — hover-open, colored options) ════════════ */
+function ddListFor(kind) {
+  return kind === 'priority'
+    ? { list: PRIORITIES, bg: PRIORITY_BG, fg: PRIORITY_FG, labelOf: (v) => PRIORITY_LABEL[v] }
+    : { list: STATUSES, bg: STATUS_BG, fg: STATUS_FG, labelOf: (v) => v };
 }
-function colorizeFilterSelect(selectId, wrapId, dotId, bgMap, fgMap) {
-  const value = document.getElementById(selectId).value;
-  const wrap = document.getElementById(wrapId);
-  const dot = document.getElementById(dotId);
-  if (value) {
-    wrap.style.background = bgMap[value];
-    dot.style.background = fgMap[value];
-    dot.style.display = '';
-  } else {
-    wrap.style.background = 'var(--bg)';
-    dot.style.display = 'none';
-  }
+function ddOptionHtml(fg, label, onclick) {
+  return `<div class="dd-option" onclick="${onclick}"><span class="dot" style="background:${fg}"></span>${escapeHtml(label)}</div>`;
 }
-function updateFilterColors() {
-  colorizeFilterSelect('filterPriority', 'filterPriorityWrap', 'filterPriorityDot', PRIORITY_BG, PRIORITY_FG);
-  colorizeFilterSelect('filterStatus', 'filterStatusWrap', 'filterStatusDot', STATUS_BG, STATUS_FG);
-  const active = document.getElementById('filterPriority').value || document.getElementById('filterStatus').value;
-  document.getElementById('filterDot').classList.toggle('show', Boolean(active));
+function ddTriggerHtml(bg, fg, label, showDot) {
+  return `<button type="button" class="dd-trigger" style="background:${bg};color:${fg}">
+    ${showDot ? `<span class="dot" style="background:${fg}"></span>` : ''}
+    <span class="dd-label">${escapeHtml(label)}</span>
+    <svg class="chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>`;
 }
-function onFilterChange() {
-  updateFilterColors();
+function rowDropdownHtml(kind, clientId, currentValue) {
+  const { list, bg, fg, labelOf } = ddListFor(kind);
+  const options = list.map((v) => ddOptionHtml(fg[v], labelOf(v), `selectRowValue('${clientId}','${kind}','${v}')`)).join('');
+  return `<div class="dd">${ddTriggerHtml(bg[currentValue], fg[currentValue], labelOf(currentValue), true)}<div class="dd-menu">${options}</div></div>`;
+}
+function filterDropdownHtml(kind, currentValue) {
+  const { list, bg, fg, labelOf } = ddListFor(kind);
+  const allOption = ddOptionHtml('var(--border)', 'Все', `selectFilterValue('${kind}','')`);
+  const options = list.map((v) => ddOptionHtml(fg[v], labelOf(v), `selectFilterValue('${kind}','${v}')`)).join('');
+  const bgVal = currentValue ? bg[currentValue] : 'var(--bg)';
+  const fgVal = currentValue ? fg[currentValue] : 'var(--muted)';
+  const label = currentValue ? labelOf(currentValue) : 'Все';
+  return `<div class="dd">${ddTriggerHtml(bgVal, fgVal, label, Boolean(currentValue))}<div class="dd-menu">${allOption}${options}</div></div>`;
+}
+function renderFilterDropdowns() {
+  document.getElementById('filterPriorityCell').innerHTML = filterDropdownHtml('priority', filterPriorityValue);
+  document.getElementById('filterStatusCell').innerHTML = filterDropdownHtml('status', filterStatusValue);
+  document.getElementById('filterDot').classList.toggle('show', Boolean(filterPriorityValue || filterStatusValue));
+}
+function selectFilterValue(kind, value) {
+  if (kind === 'priority') filterPriorityValue = value; else filterStatusValue = value;
+  renderFilterDropdowns();
   renderTable();
 }
 function resetFilters() {
-  document.getElementById('filterPriority').value = '';
-  document.getElementById('filterStatus').value = '';
-  onFilterChange();
+  filterPriorityValue = '';
+  filterStatusValue = '';
+  renderFilterDropdowns();
+  renderTable();
+}
+async function selectRowValue(id, field, value) {
+  const updated = await patchClient(id, field, value);
+  if (updated) renderTable();
 }
 
 /* ════════════ TABLE RENDER ════════════ */
 function renderTable() {
   const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
-  const filterPriority = document.getElementById('filterPriority').value;
-  const filterStatus = document.getElementById('filterStatus').value;
   let rows = clients.filter((c) => {
-    if (filterPriority && c.priority !== filterPriority) return false;
-    if (filterStatus && c.status !== filterStatus) return false;
+    if (filterPriorityValue && c.priority !== filterPriorityValue) return false;
+    if (filterStatusValue && c.status !== filterStatusValue) return false;
     if (!q) return true;
     return [c.name, c.telegram, c.comment].some((v) => String(v || '').toLowerCase().includes(q));
   });
@@ -427,8 +425,6 @@ function renderTable() {
 
   const tbody = document.getElementById('tableBody');
   document.getElementById('emptyState').classList.toggle('hidden', clients.length > 0);
-
-  const chevronSvg = '<svg class="select-chevron" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
 
   tbody.innerHTML = rows.map((c) => {
     const age = daysSince(c.updatedAt);
@@ -452,26 +448,8 @@ function renderTable() {
               onkeydown="if(event.key==='Enter') this.blur()">
           </div>
         </td>
-        <td class="col-priority">
-          <div class="select-wrap" style="background:${PRIORITY_BG[c.priority]}">
-            <select class="cell-select" style="color:${PRIORITY_FG[c.priority]}"
-              onchange="onFieldChange('${c.id}','priority',this.value,this)">
-              ${PRIORITIES.map((p) => `<option value="${p}" ${p === c.priority ? 'selected' : ''}>${PRIORITY_LABEL[p]}</option>`).join('')}
-            </select>
-            <span class="select-dot" style="background:${PRIORITY_FG[c.priority]}"></span>
-            ${chevronSvg}
-          </div>
-        </td>
-        <td class="col-status">
-          <div class="select-wrap" style="background:${STATUS_BG[c.status]}">
-            <select class="cell-select" style="color:${STATUS_FG[c.status]}"
-              onchange="onFieldChange('${c.id}','status',this.value,this)">
-              ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
-            </select>
-            <span class="select-dot" style="background:${STATUS_FG[c.status]}"></span>
-            ${chevronSvg}
-          </div>
-        </td>
+        <td class="col-priority">${rowDropdownHtml('priority', c.id, c.priority)}</td>
+        <td class="col-status">${rowDropdownHtml('status', c.id, c.status)}</td>
         <td class="col-comment">
           <textarea class="cell-input" rows="1" placeholder="Комментарий…"
             onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
@@ -489,15 +467,6 @@ async function onFieldBlur(id, field, value) {
   await patchClient(id, field, value);
   renderTable();
 }
-async function onFieldChange(id, field, value, selectEl) {
-  const updated = await patchClient(id, field, value);
-  if (updated && selectEl) {
-    if (field === 'priority') { selectEl.style.background = PRIORITY_BG[value]; selectEl.style.color = PRIORITY_FG[value]; }
-    if (field === 'status') { selectEl.style.background = STATUS_BG[value]; selectEl.style.color = STATUS_FG[value]; }
-  }
-  renderTable();
-}
-
 /* ════════════ STATS ════════════ */
 function openStats() {
   const total = clients.length;
@@ -581,12 +550,12 @@ async function downloadHistoryCsv() {
 window.logout = logout;
 window.addClient = addClient;
 window.onFieldBlur = onFieldBlur;
-window.onFieldChange = onFieldChange;
 window.openStats = openStats;
 window.closeStats = closeStats;
 window.downloadClientsCsv = downloadClientsCsv;
 window.downloadHistoryCsv = downloadHistoryCsv;
-window.onFilterChange = onFilterChange;
+window.selectRowValue = selectRowValue;
+window.selectFilterValue = selectFilterValue;
 window.resetFilters = resetFilters;
 </script>
 </body>
