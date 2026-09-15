@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM продаж — Cantor Agency</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+  --p-green:#1e8449;--p-green-bg:#eafaf1;
+  --p-yellow:#9a7d00;--p-yellow-bg:#fef9e7;
+  --p-orange:#b8560c;--p-orange-bg:#fef1e6;
+  --p-red:#c0392b;--p-red-bg:#fdf2f2;
+  --stale-warn-bg:#fef9e7;--stale-danger-bg:#fdf2f2;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+button{font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;border-bottom:1.5px solid var(--border);background:var(--white);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.brand{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;letter-spacing:-0.01em;color:var(--dark);text-decoration:none;display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn-red{background:var(--red);color:white;border:none;border-radius:var(--r-md);padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-red:hover{background:var(--red-dark)}
+.btn-red:disabled{opacity:0.55;cursor:wait}
+.btn-outline{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.btn-outline:hover{border-color:var(--red);color:var(--red)}
+.btn-outline.active{border-color:var(--red);color:var(--red);background:var(--accent-bg)}
+.btn-icon{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:all 0.18s}
+.btn-icon:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn-ghost-sm:hover{border-color:var(--red);color:var(--red)}
+.btn-ghost-sm.danger:hover{border-color:#c0392b;color:#c0392b}
+.btn-tg{background:#2AABEE;color:white;border:none;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.btn-tg:hover{background:#1e93d1}
+.btn-tg:disabled{opacity:0.35;cursor:not-allowed}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark);color:white;padding:12px 20px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:all 0.25s ease;display:flex;align-items:center;gap:8px;z-index:200;max-width:80vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── ADMIN GATE ── */
+#adminGate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:380px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:36px 30px;text-align:center}
+.gate-card h1{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.02em}
+.gate-card p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.gate-card input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 14px;font-size:15px;color:var(--text);outline:none;transition:border-color 0.2s;background:white;margin-bottom:12px;text-align:center;letter-spacing:0.1em}
+.gate-card input:focus{border-color:var(--red)}
+.gate-error{font-size:12px;color:var(--red);margin:-4px 0 14px;display:none}
+.gate-error.show{display:block}
+
+/* ── SEARCH BAR ── */
+.searchbar{padding:0 24px;background:var(--white);border-bottom:1.5px solid var(--border);overflow:hidden;max-height:0;transition:max-height 0.2s ease,padding 0.2s ease}
+.searchbar.open{max-height:70px;padding:12px 24px}
+.searchbar input{width:100%;max-width:420px;border:1.5px solid var(--border);border-radius:100px;padding:9px 16px;font-size:13px;outline:none;background:var(--bg)}
+.searchbar input:focus{border-color:var(--red)}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:16px;align-items:center;padding:10px 24px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;border-bottom:1.5px solid var(--border);background:var(--warm-bg)}
+.legend b{color:var(--text)}
+.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+/* ── TABLE ── */
+.wrap{padding:20px 24px 60px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);min-width:960px}
+thead th{background:var(--dark);color:white;font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;padding:11px 12px;text-align:left;white-space:nowrap}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--red-light)}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr.stale-warn{background:var(--stale-warn-bg)}
+tbody tr.stale-danger{background:var(--stale-danger-bg)}
+tbody td{padding:8px 12px;vertical-align:middle;font-size:13px}
+td.col-idx{color:var(--muted);font-size:11.5px;width:28px}
+td.col-updated{white-space:nowrap;font-size:11.5px;color:var(--muted)}
+td.col-actions{width:32px;text-align:center}
+.cell-input{width:100%;min-width:110px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:6px 8px;font-size:13px;background:transparent;outline:none;transition:all 0.15s}
+.cell-input:hover{border-color:var(--border)}
+.cell-input:focus{border-color:var(--red);background:var(--white)}
+textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-height:1.4}
+.tg-cell{display:flex;align-items:center;gap:6px}
+.tg-cell .cell-input{flex:1;min-width:70px}
+select.cell-select{border:1.5px solid transparent;border-radius:100px;padding:6px 12px;font-size:11.5px;font-weight:700;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;transition:all 0.15s;width:100%}
+select.cell-select:hover{border-color:rgba(0,0,0,0.15)}
+select.priority-select{width:auto;padding:6px 10px}
+.row-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:var(--r-sm)}
+.row-del:hover{color:#c0392b;background:var(--p-red-bg)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
+
+/* ── MODAL (stats) ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,10,10,0.45);backdrop-filter:blur(3px);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.modal-card{width:100%;max-width:520px;background:var(--white);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:0;animation:modalIn 0.2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1.5px solid var(--border)}
+.modal-head h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700}
+.modal-body{padding:20px 24px;max-height:70vh;overflow-y:auto}
+.stat-card{background:var(--bg);border-radius:var(--r-lg);padding:16px;margin-bottom:14px}
+.stat-card h3{font-size:12.5px;margin-bottom:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+.stat-big{font-size:30px;font-weight:800;font-family:'Unbounded',sans-serif;color:var(--dark)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+.stat-row .val{font-weight:700}
+
+@media (max-width:640px){
+  .topbar{padding:12px 14px}
+  .wrap{padding:14px}
+  .legend{padding:8px 14px}
+}
+</style>
+</head>
+<body>
+
+<div id="adminGate">
+  <form id="gateForm" class="gate-card">
+    <h1>CRM продаж</h1>
+    <p>Внутренний инструмент. Введите пароль доступа.</p>
+    <input type="password" id="gatePassword" placeholder="Пароль" autocomplete="off" autofocus>
+    <div class="gate-error" id="gateError">Неверный пароль</div>
+    <button type="submit" class="btn-red" style="width:100%">Войти</button>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand">Cantor <span style="color:var(--red)">/ CRM продаж</span></div>
+    <div class="topbar-right">
+      <button class="btn-icon" id="searchToggleBtn" onclick="toggleSearch()" title="Поиск">🔍</button>
+      <button class="btn-outline" onclick="openStats()">📊 Статистика</button>
+      <button class="btn-outline" onclick="downloadClientsCsv()">⬇ Таблица</button>
+      <button class="btn-outline" onclick="downloadHistoryCsv()">⬇ История</button>
+      <button class="btn-red" onclick="addClient()">+ Клиент</button>
+      <button class="btn-outline" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+
+  <div class="searchbar" id="searchbar">
+    <input type="text" id="searchInput" placeholder="Поиск по имени, Telegram или комментарию…" oninput="renderTable()">
+  </div>
+
+  <div class="legend">
+    <span><b>Приоритет:</b></span>
+    <span><span class="legend-dot" style="background:var(--p-green)"></span>целевой</span>
+    <span><span class="legend-dot" style="background:var(--p-yellow)"></span>вероятный</span>
+    <span><span class="legend-dot" style="background:var(--p-orange)"></span>сомнительный</span>
+    <span><span class="legend-dot" style="background:var(--p-red)"></span>нецелевой</span>
+    <span style="margin-left:auto"><span class="legend-dot" style="background:var(--stale-warn-bg);border:1px solid var(--p-yellow)"></span>нет изменений 3+ дня</span>
+    <span><span class="legend-dot" style="background:var(--stale-danger-bg);border:1px solid var(--p-red)"></span>7+ дней</span>
+  </div>
+
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-idx">#</th>
+          <th style="min-width:150px">Имя</th>
+          <th style="min-width:140px">Telegram</th>
+          <th>Приоритет</th>
+          <th style="min-width:150px">Статус</th>
+          <th style="min-width:220px">Комментарий</th>
+          <th class="sortable" onclick="toggleSort()">Обновлено <span id="sortArrow">↑</span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div id="emptyState" class="empty-state hidden">Пока нет клиентов. Нажмите «+ Клиент», чтобы добавить первого.</div>
+  </div>
+</div>
+
+<div id="statsOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeStats()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>📈 Статистика</h2>
+      <button class="btn-icon" onclick="closeStats()">✕</button>
+    </div>
+    <div class="modal-body" id="statsBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const ADMIN_STORAGE_KEY = 'salescrm_admin_ok';
+// Client-side gate only (same convention as /avito-export and /serp-analysis) — not a real
+// auth boundary, just keeps the tool out of casual view.
+const ADMIN_PASSWORD = '12345678';
+// This page can be reached both from cantor.agency (plain nginx, no API) and from the
+// Worker's own host — always call the Worker's own host directly (same pattern as
+// mba-mybrand/serp-analysis/avito-export's API_BASE), relying on its permissive CORS.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+
+const STATUSES = ['Первое сообщение','Вопросы','Формат','Оффер','Игнор','Отложенный спрос','Отказ','Продажа'];
+const STATUS_BG = {
+  'Первое сообщение':'#E8EAED','Вопросы':'#FFF9E6','Формат':'#EDE7F6','Оффер':'#E0F7FA',
+  'Игнор':'#FFEBEE','Отложенный спрос':'#FFF3E0','Отказ':'#FCE4EC','Продажа':'#E8F5E9',
+};
+const STATUS_FG = {
+  'Первое сообщение':'#5F6368','Вопросы':'#F57F17','Формат':'#512DA8','Оффер':'#00838F',
+  'Игнор':'#C62828','Отложенный спрос':'#E65100','Отказ':'#AD1457','Продажа':'#2E7D32',
+};
+const PRIORITIES = ['green','yellow','orange','red'];
+const PRIORITY_LABEL = { green:'🟢 Целевой', yellow:'🟡 Вероятный', orange:'🟠 Сомнительный', red:'🔴 Нецелевой' };
+const PRIORITY_BG = { green:'var(--p-green-bg)', yellow:'var(--p-yellow-bg)', orange:'var(--p-orange-bg)', red:'var(--p-red-bg)' };
+const PRIORITY_FG = { green:'var(--p-green)', yellow:'var(--p-yellow)', orange:'var(--p-orange)', red:'var(--p-red)' };
+
+const STALE_WARN_DAYS = 3;
+const STALE_DANGER_DAYS = 7;
+
+let clients = [];
+let sortAsc = true;
+
+async function api(path, opts) {
+  const res = await fetch(API_BASE + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.error || ('http_' + res.status));
+  }
+  return res.json();
+}
+
+function escapeHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDateTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+}
+function daysSince(iso) {
+  return (Date.now() - new Date(iso).getTime()) / 86400000;
+}
+let toastTimer = null;
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ════════════ GATE ════════════ */
+function isAdminUnlocked() { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; }
+function logout() {
+  localStorage.removeItem(ADMIN_STORAGE_KEY);
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('adminGate').classList.remove('hidden');
+}
+document.getElementById('gateForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('gatePassword');
+  const err = document.getElementById('gateError');
+  if (input.value === ADMIN_PASSWORD) {
+    localStorage.setItem(ADMIN_STORAGE_KEY, '1');
+    input.value = '';
+    err.classList.remove('show');
+    boot();
+  } else {
+    err.classList.add('show');
+  }
+});
+if (isAdminUnlocked()) boot();
+
+async function boot() {
+  document.getElementById('adminGate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  await loadClients();
+}
+
+/* ════════════ DATA ════════════ */
+async function loadClients() {
+  try {
+    const data = await api('/api/salescrm/clients');
+    clients = data.clients || [];
+    renderTable();
+  } catch (err) {
+    showToast('Ошибка загрузки: ' + err.message);
+  }
+}
+
+async function addClient() {
+  try {
+    const client = (await api('/api/salescrm/clients', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Новый клиент' }),
+    })).client;
+    clients.push(client);
+    renderTable();
+    showToast('Клиент добавлен');
+    requestAnimationFrame(() => {
+      const input = document.querySelector(`tr[data-id="${client.id}"] .name-input`);
+      if (input) { input.focus(); input.select(); }
+    });
+  } catch (err) {
+    showToast('Ошибка: ' + err.message);
+  }
+}
+
+async function patchClient(id, field, value) {
+  try {
+    const client = (await api(`/api/salescrm/clients/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ [field]: value }),
+    })).client;
+    const idx = clients.findIndex((c) => c.id === id);
+    if (idx !== -1) clients[idx] = client;
+    return client;
+  } catch (err) {
+    showToast('Не удалось сохранить: ' + err.message);
+    return null;
+  }
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`Удалить «${name || 'клиента'}» из таблицы? История изменений сохранится.`)) return;
+  try {
+    await api(`/api/salescrm/clients/${id}`, { method: 'DELETE' });
+    clients = clients.filter((c) => c.id !== id);
+    renderTable();
+    showToast('Клиент удалён');
+  } catch (err) {
+    showToast('Ошибка: ' + err.message);
+  }
+}
+
+/* ════════════ SEARCH / SORT ════════════ */
+function toggleSearch() {
+  const bar = document.getElementById('searchbar');
+  const btn = document.getElementById('searchToggleBtn');
+  bar.classList.toggle('open');
+  btn.classList.toggle('active');
+  if (bar.classList.contains('open')) document.getElementById('searchInput').focus();
+}
+function toggleSort() {
+  sortAsc = !sortAsc;
+  document.getElementById('sortArrow').textContent = sortAsc ? '↑' : '↓';
+  renderTable();
+}
+
+/* ════════════ TABLE RENDER ════════════ */
+function renderTable() {
+  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  let rows = clients.filter((c) => {
+    if (!q) return true;
+    return [c.name, c.telegram, c.comment].some((v) => String(v || '').toLowerCase().includes(q));
+  });
+  rows = rows.slice().sort((a, b) => {
+    const cmp = a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0;
+    return sortAsc ? cmp : -cmp;
+  });
+
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('emptyState').classList.toggle('hidden', clients.length > 0);
+
+  tbody.innerHTML = rows.map((c, i) => {
+    const age = daysSince(c.updatedAt);
+    const staleClass = age >= STALE_DANGER_DAYS ? 'stale-danger' : age >= STALE_WARN_DAYS ? 'stale-warn' : '';
+    const tgUsername = (c.telegram || '').replace(/^@/, '').replace(/^https?:\/\/t\.me\//i, '');
+    const tgLinkSafe = tgUsername.replace(/[^A-Za-z0-9_]/g, '');
+    return `
+      <tr data-id="${c.id}" class="${staleClass}">
+        <td class="col-idx">${i + 1}</td>
+        <td>
+          <input class="cell-input name-input" value="${escapeHtml(c.name)}"
+            onblur="onFieldBlur('${c.id}','name',this.value)"
+            onkeydown="if(event.key==='Enter') this.blur()">
+        </td>
+        <td>
+          <div class="tg-cell">
+            <input class="cell-input" placeholder="username" value="${escapeHtml(tgUsername)}"
+              onblur="onFieldBlur('${c.id}','telegram',this.value)"
+              onkeydown="if(event.key==='Enter') this.blur()">
+            <button class="btn-tg" ${tgLinkSafe ? '' : 'disabled'} onclick="window.open('https://t.me/${tgLinkSafe}','_blank')" title="Открыть диалог в Telegram">✈</button>
+          </div>
+        </td>
+        <td>
+          <select class="cell-select priority-select" style="background:${PRIORITY_BG[c.priority]};color:${PRIORITY_FG[c.priority]}"
+            onchange="onFieldChange('${c.id}','priority',this.value,this)">
+            ${PRIORITIES.map((p) => `<option value="${p}" ${p === c.priority ? 'selected' : ''}>${PRIORITY_LABEL[p]}</option>`).join('')}
+          </select>
+        </td>
+        <td>
+          <select class="cell-select" style="background:${STATUS_BG[c.status]};color:${STATUS_FG[c.status]}"
+            onchange="onFieldChange('${c.id}','status',this.value,this)">
+            ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+          </select>
+        </td>
+        <td>
+          <textarea class="cell-input" rows="1" placeholder="Комментарий…"
+            onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
+        </td>
+        <td class="col-updated">${fmtDateTime(c.updatedAt)}</td>
+        <td class="col-actions">
+          <button class="row-del" onclick="deleteClient('${c.id}','${escapeHtml(c.name).replace(/'/g,"\\'")}')" title="Удалить">🗑</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function onFieldBlur(id, field, value) {
+  const client = clients.find((c) => c.id === id);
+  if (!client) return;
+  const current = field === 'telegram' ? (client.telegram || '').replace(/^@/, '') : (client[field] || '');
+  if (value === current) return;
+  await patchClient(id, field, value);
+  renderTable();
+}
+async function onFieldChange(id, field, value, selectEl) {
+  const updated = await patchClient(id, field, value);
+  if (updated && selectEl) {
+    if (field === 'priority') { selectEl.style.background = PRIORITY_BG[value]; selectEl.style.color = PRIORITY_FG[value]; }
+    if (field === 'status') { selectEl.style.background = STATUS_BG[value]; selectEl.style.color = STATUS_FG[value]; }
+  }
+  renderTable();
+}
+
+/* ════════════ STATS ════════════ */
+function openStats() {
+  const total = clients.length;
+  const stale = clients.filter((c) => daysSince(c.updatedAt) >= STALE_WARN_DAYS).length;
+  const byStatus = {};
+  STATUSES.forEach((s) => byStatus[s] = 0);
+  clients.forEach((c) => { byStatus[c.status] = (byStatus[c.status] || 0) + 1; });
+  const byPriority = {};
+  PRIORITIES.forEach((p) => byPriority[p] = 0);
+  clients.forEach((c) => { byPriority[c.priority] = (byPriority[c.priority] || 0) + 1; });
+  const sales = byStatus['Продажа'] || 0;
+  const conv = total ? Math.round((sales / total) * 100) : 0;
+
+  document.getElementById('statsBody').innerHTML = `
+    <div class="stat-card"><h3>Всего клиентов</h3><div class="stat-big">${total}</div></div>
+    <div class="stat-card"><h3>Требуют внимания (нет изменений ${STALE_WARN_DAYS}+ дня)</h3><div class="stat-big" style="color:var(--p-red)">${stale}</div></div>
+    <div class="stat-card"><h3>Конверсия в продажу</h3><div class="stat-big">${conv}%</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${sales} из ${total}</div></div>
+    <div class="stat-card"><h3>По статусам</h3>${STATUSES.map((s) => `<div class="stat-row"><span>${escapeHtml(s)}</span><span class="val">${byStatus[s]}</span></div>`).join('')}</div>
+    <div class="stat-card"><h3>По приоритету</h3>${PRIORITIES.map((p) => `<div class="stat-row"><span>${PRIORITY_LABEL[p]}</span><span class="val">${byPriority[p]}</span></div>`).join('')}</div>
+  `;
+  document.getElementById('statsOverlay').classList.remove('hidden');
+}
+function closeStats() { document.getElementById('statsOverlay').classList.add('hidden'); }
+
+/* ════════════ CSV EXPORT ════════════ */
+function csvEscape(v) {
+  const s = String(v == null ? '' : v);
+  return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function downloadCsv(filename, rows) {
+  const csv = '﻿' + rows.map((row) => row.map(csvEscape).join(';')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadClientsCsv() {
+  const rows = [['Имя', 'Telegram', 'Приоритет', 'Статус', 'Комментарий', 'Создан', 'Обновлён']];
+  clients.forEach((c) => {
+    rows.push([
+      c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.comment,
+      fmtDateTime(c.createdAt), fmtDateTime(c.updatedAt),
+    ]);
+  });
+  downloadCsv(`crm-klienty-${new Date().toISOString().slice(0,10)}.csv`, rows);
+  showToast('Таблица скачана');
+}
+
+const HISTORY_ACTION_LABEL = { create: 'Создан', update: 'Изменение', delete: 'Удалён' };
+const HISTORY_FIELD_LABEL = { name: 'Имя', telegram: 'Telegram', priority: 'Приоритет', status: 'Статус', comment: 'Комментарий' };
+function historyValueLabel(field, v) {
+  if (v == null) return '';
+  if (field === 'priority') return PRIORITY_LABEL[v] || v;
+  return v;
+}
+
+async function downloadHistoryCsv() {
+  try {
+    const data = await api('/api/salescrm/history');
+    const history = data.history || [];
+    const rows = [['Дата', 'Клиент', 'Действие', 'Поле', 'Было', 'Стало']];
+    history.forEach((h) => {
+      rows.push([
+        fmtDateTime(h.ts), h.clientName, HISTORY_ACTION_LABEL[h.action] || h.action,
+        HISTORY_FIELD_LABEL[h.field] || h.field || '', historyValueLabel(h.field, h.oldValue), historyValueLabel(h.field, h.newValue),
+      ]);
+    });
+    downloadCsv(`crm-istoriya-${new Date().toISOString().slice(0,10)}.csv`, rows);
+    showToast('История скачана');
+  } catch (err) {
+    showToast('Ошибка: ' + err.message);
+  }
+}
+
+window.logout = logout;
+window.addClient = addClient;
+window.deleteClient = deleteClient;
+window.toggleSearch = toggleSearch;
+window.toggleSort = toggleSort;
+window.onFieldBlur = onFieldBlur;
+window.onFieldChange = onFieldChange;
+window.openStats = openStats;
+window.closeStats = closeStats;
+window.downloadClientsCsv = downloadClientsCsv;
+window.downloadHistoryCsv = downloadHistoryCsv;
+</script>
+</body>
+</html>
