@@ -51,9 +51,6 @@ input,textarea,select{font-family:inherit}
 .btn-ghost-sm{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
 .btn-ghost-sm:hover{border-color:var(--red);color:var(--red)}
 .btn-ghost-sm.danger:hover{border-color:#c0392b;color:#c0392b}
-.btn-tg{background:#2AABEE;color:white;border:none;border-radius:100px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
-.btn-tg:hover{background:#1e93d1}
-.btn-tg:disabled{opacity:0.35;cursor:not-allowed}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark);color:white;padding:12px 20px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:all 0.25s ease;display:flex;align-items:center;gap:8px;z-index:200;max-width:80vw}
@@ -86,21 +83,39 @@ tbody tr:last-child{border-bottom:none}
 tbody tr.stale-warn{background:var(--stale-warn-bg)}
 tbody tr.stale-danger{background:var(--stale-danger-bg)}
 tbody td{padding:8px 12px;vertical-align:middle;font-size:13px}
-td.col-idx{color:var(--muted);font-size:11.5px;width:28px}
-td.col-updated{white-space:nowrap;font-size:11.5px;color:var(--muted)}
-td.col-actions{width:32px;text-align:center}
-.cell-input{width:100%;min-width:110px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:6px 8px;font-size:13px;background:transparent;outline:none;transition:all 0.15s}
+th.col-name,td.col-name{width:170px}
+th.col-tg,td.col-tg{width:190px}
+th.col-priority,td.col-priority{width:150px}
+th.col-status,td.col-status{width:170px}
+th.col-comment,td.col-comment{width:auto}
+.cell-input{width:100%;min-width:80px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:6px 8px;font-size:13px;background:transparent;outline:none;transition:all 0.15s}
 .cell-input:hover{border-color:var(--border)}
 .cell-input:focus{border-color:var(--red);background:var(--white)}
-textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-height:1.4}
-.tg-cell{display:flex;align-items:center;gap:6px}
+textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-height:1.4;width:100%}
+.tg-cell{display:flex;align-items:center;gap:8px}
 .tg-cell .cell-input{flex:1;min-width:70px}
-select.cell-select{border:1.5px solid transparent;border-radius:100px;padding:6px 12px;font-size:11.5px;font-weight:700;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;transition:all 0.15s;width:100%}
-select.cell-select:hover{border-color:rgba(0,0,0,0.15)}
-select.priority-select{width:auto;padding:6px 10px}
-.row-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 6px;border-radius:var(--r-sm)}
-.row-del:hover{color:#c0392b;background:var(--p-red-bg)}
+.btn-tg-icon{background:none;border:none;padding:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;transition:transform 0.15s}
+.btn-tg-icon:hover{transform:scale(1.12)}
+.btn-tg-icon:disabled{opacity:0.3;cursor:not-allowed}
+
+/* ── styled dropdowns (priority / status) ── */
+.select-wrap{position:relative;display:inline-flex;align-items:center;width:100%;border-radius:100px;border:1.5px solid rgba(0,0,0,0.08);transition:all 0.15s}
+.select-wrap:hover{border-color:rgba(0,0,0,0.2);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.select-wrap:focus-within{border-color:var(--red)}
+.select-dot{position:absolute;left:12px;width:8px;height:8px;border-radius:50%;pointer-events:none}
+.select-chevron{position:absolute;right:9px;pointer-events:none;opacity:0.65}
+select.cell-select{border:none;background:transparent;border-radius:100px;padding:6px 26px 6px 24px;font-size:11.5px;font-weight:700;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;width:100%}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
+
+/* ── filter popover ── */
+.filter-wrap{position:relative}
+.filter-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--red);display:none}
+.filter-dot.show{display:block}
+.filter-panel{position:absolute;top:calc(100% + 8px);right:0;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);padding:16px;width:220px;z-index:50;display:flex;flex-direction:column;gap:12px}
+.filter-panel label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);margin-bottom:5px;display:block}
+.filter-panel select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:8px 10px;font-size:13px;outline:none;background:var(--bg)}
+.filter-panel select:focus{border-color:var(--red)}
+.filter-reset{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;padding:2px 0;text-align:left}
 
 /* ── MODAL (stats) ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(10,10,10,0.45);backdrop-filter:blur(3px);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
@@ -142,6 +157,27 @@ select.priority-select{width:auto;padding:6px 10px}
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchInput" placeholder="Поиск…" oninput="renderTable()">
       </div>
+      <div class="filter-wrap">
+        <button class="btn-icon" onclick="toggleFilterPanel(event)" title="Фильтр по приоритету и статусу">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span class="filter-dot" id="filterDot"></span>
+        </button>
+        <div class="filter-panel hidden" id="filterPanel">
+          <div>
+            <label>Приоритет</label>
+            <select id="filterPriority" onchange="onFilterChange()">
+              <option value="">Все</option>
+            </select>
+          </div>
+          <div>
+            <label>Статус</label>
+            <select id="filterStatus" onchange="onFilterChange()">
+              <option value="">Все</option>
+            </select>
+          </div>
+          <button class="filter-reset" onclick="resetFilters()">Сбросить фильтр</button>
+        </div>
+      </div>
       <button class="btn-icon" onclick="openStats()" title="Статистика">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       </button>
@@ -164,14 +200,11 @@ select.priority-select{width:auto;padding:6px 10px}
     <table>
       <thead>
         <tr>
-          <th class="col-idx">#</th>
-          <th style="min-width:150px">Имя</th>
-          <th style="min-width:140px">Telegram</th>
-          <th>Приоритет</th>
-          <th style="min-width:150px">Статус</th>
-          <th style="min-width:220px">Комментарий</th>
-          <th class="sortable" onclick="toggleSort()">Обновлено <span id="sortArrow">↑</span></th>
-          <th></th>
+          <th class="col-name">Имя</th>
+          <th class="col-tg">Telegram</th>
+          <th class="col-priority">Приоритет</th>
+          <th class="col-status">Статус</th>
+          <th class="col-comment">Комментарий</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -220,7 +253,6 @@ const STALE_WARN_DAYS = 3;
 const STALE_DANGER_DAYS = 7;
 
 let clients = [];
-let sortAsc = true;
 
 async function api(path, opts) {
   const res = await fetch(API_BASE + path, {
@@ -279,6 +311,7 @@ if (isAdminUnlocked()) boot();
 async function boot() {
   document.getElementById('adminGate').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
+  populateFilterSelects();
   await loadClients();
 }
 
@@ -326,80 +359,110 @@ async function patchClient(id, field, value) {
   }
 }
 
-async function deleteClient(id, name) {
-  if (!confirm(`Удалить «${name || 'клиента'}» из таблицы? История изменений сохранится.`)) return;
-  try {
-    await api(`/api/salescrm/clients/${id}`, { method: 'DELETE' });
-    clients = clients.filter((c) => c.id !== id);
-    renderTable();
-    showToast('Клиент удалён');
-  } catch (err) {
-    showToast('Ошибка: ' + err.message);
-  }
+/* ════════════ FILTERS ════════════ */
+function populateFilterSelects() {
+  const pSel = document.getElementById('filterPriority');
+  const sSel = document.getElementById('filterStatus');
+  PRIORITIES.forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = p;
+    opt.textContent = PRIORITY_LABEL[p];
+    pSel.appendChild(opt);
+  });
+  STATUSES.forEach((s) => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sSel.appendChild(opt);
+  });
 }
-
-/* ════════════ SEARCH / SORT ════════════ */
-function toggleSort() {
-  sortAsc = !sortAsc;
-  document.getElementById('sortArrow').textContent = sortAsc ? '↑' : '↓';
+function toggleFilterPanel(e) {
+  e.stopPropagation();
+  document.getElementById('filterPanel').classList.toggle('hidden');
+}
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('filterPanel');
+  if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target)) {
+    panel.classList.add('hidden');
+  }
+});
+function updateFilterDot() {
+  const active = document.getElementById('filterPriority').value || document.getElementById('filterStatus').value;
+  document.getElementById('filterDot').classList.toggle('show', Boolean(active));
+}
+function onFilterChange() {
+  updateFilterDot();
   renderTable();
+}
+function resetFilters() {
+  document.getElementById('filterPriority').value = '';
+  document.getElementById('filterStatus').value = '';
+  onFilterChange();
 }
 
 /* ════════════ TABLE RENDER ════════════ */
 function renderTable() {
   const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const filterPriority = document.getElementById('filterPriority').value;
+  const filterStatus = document.getElementById('filterStatus').value;
   let rows = clients.filter((c) => {
+    if (filterPriority && c.priority !== filterPriority) return false;
+    if (filterStatus && c.status !== filterStatus) return false;
     if (!q) return true;
     return [c.name, c.telegram, c.comment].some((v) => String(v || '').toLowerCase().includes(q));
   });
-  rows = rows.slice().sort((a, b) => {
-    const cmp = a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0;
-    return sortAsc ? cmp : -cmp;
-  });
+  rows = rows.slice().sort((a, b) => (a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0));
 
   const tbody = document.getElementById('tableBody');
   document.getElementById('emptyState').classList.toggle('hidden', clients.length > 0);
 
-  tbody.innerHTML = rows.map((c, i) => {
+  const chevronSvg = '<svg class="select-chevron" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  tbody.innerHTML = rows.map((c) => {
     const age = daysSince(c.updatedAt);
     const staleClass = age >= STALE_DANGER_DAYS ? 'stale-danger' : age >= STALE_WARN_DAYS ? 'stale-warn' : '';
     const tgUsername = (c.telegram || '').replace(/^@/, '').replace(/^https?:\/\/t\.me\//i, '');
     const tgLinkSafe = tgUsername.replace(/[^A-Za-z0-9_]/g, '');
     return `
       <tr data-id="${c.id}" class="${staleClass}">
-        <td class="col-idx">${i + 1}</td>
-        <td>
+        <td class="col-name">
           <input class="cell-input name-input" value="${escapeHtml(c.name)}"
             onblur="onFieldBlur('${c.id}','name',this.value)"
             onkeydown="if(event.key==='Enter') this.blur()">
         </td>
-        <td>
+        <td class="col-tg">
           <div class="tg-cell">
+            <button class="btn-tg-icon" ${tgLinkSafe ? '' : 'disabled'} onclick="window.open('https://t.me/${tgLinkSafe}','_blank')" title="Открыть диалог в Telegram">
+              <svg viewBox="0 0 16 16" width="20" height="20" fill="#29A9EB"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 1.962-.378.15-.577.298-.595.442-.03.243.275.339.69.47l.175.055c.408.133.958.288 1.243.294.26.006.549-.1.868-.32 2.179-1.471 3.304-2.214 3.374-2.23.05-.012.12-.026.166.016.047.041.042.12.037.141-.03.129-1.227 1.241-1.846 1.817-.193.18-.33.307-.358.336a8.154 8.154 0 0 1-.188.186c-.38.366-.664.64.015 1.088.327.216.589.393.85.571.284.194.568.387.936.629.093.06.183.125.27.187.331.236.63.448.997.414.214-.02.435-.22.547-.82.265-1.417.786-4.486.906-5.751a1.426 1.426 0 0 0-.013-.315.337.337 0 0 0-.114-.217.526.526 0 0 0-.31-.093c-.3.005-.763.166-2.984 1.09z"/></svg>
+            </button>
             <input class="cell-input" placeholder="username" value="${escapeHtml(tgUsername)}"
               onblur="onFieldBlur('${c.id}','telegram',this.value)"
               onkeydown="if(event.key==='Enter') this.blur()">
-            <button class="btn-tg" ${tgLinkSafe ? '' : 'disabled'} onclick="window.open('https://t.me/${tgLinkSafe}','_blank')" title="Открыть диалог в Telegram">✈</button>
           </div>
         </td>
-        <td>
-          <select class="cell-select priority-select" style="background:${PRIORITY_BG[c.priority]};color:${PRIORITY_FG[c.priority]}"
-            onchange="onFieldChange('${c.id}','priority',this.value,this)">
-            ${PRIORITIES.map((p) => `<option value="${p}" ${p === c.priority ? 'selected' : ''}>${PRIORITY_LABEL[p]}</option>`).join('')}
-          </select>
+        <td class="col-priority">
+          <div class="select-wrap" style="background:${PRIORITY_BG[c.priority]}">
+            <select class="cell-select" style="color:${PRIORITY_FG[c.priority]}"
+              onchange="onFieldChange('${c.id}','priority',this.value,this)">
+              ${PRIORITIES.map((p) => `<option value="${p}" ${p === c.priority ? 'selected' : ''}>${PRIORITY_LABEL[p]}</option>`).join('')}
+            </select>
+            <span class="select-dot" style="background:${PRIORITY_FG[c.priority]}"></span>
+            ${chevronSvg}
+          </div>
         </td>
-        <td>
-          <select class="cell-select" style="background:${STATUS_BG[c.status]};color:${STATUS_FG[c.status]}"
-            onchange="onFieldChange('${c.id}','status',this.value,this)">
-            ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
-          </select>
+        <td class="col-status">
+          <div class="select-wrap" style="background:${STATUS_BG[c.status]}">
+            <select class="cell-select" style="color:${STATUS_FG[c.status]}"
+              onchange="onFieldChange('${c.id}','status',this.value,this)">
+              ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+            </select>
+            <span class="select-dot" style="background:${STATUS_FG[c.status]}"></span>
+            ${chevronSvg}
+          </div>
         </td>
-        <td>
+        <td class="col-comment">
           <textarea class="cell-input" rows="1" placeholder="Комментарий…"
             onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
-        </td>
-        <td class="col-updated">${fmtDateTime(c.updatedAt)}</td>
-        <td class="col-actions">
-          <button class="row-del" onclick="deleteClient('${c.id}','${escapeHtml(c.name).replace(/'/g,"\\'")}')" title="Удалить">🗑</button>
         </td>
       </tr>
     `;
@@ -505,14 +568,15 @@ async function downloadHistoryCsv() {
 
 window.logout = logout;
 window.addClient = addClient;
-window.deleteClient = deleteClient;
-window.toggleSort = toggleSort;
 window.onFieldBlur = onFieldBlur;
 window.onFieldChange = onFieldChange;
 window.openStats = openStats;
 window.closeStats = closeStats;
 window.downloadClientsCsv = downloadClientsCsv;
 window.downloadHistoryCsv = downloadHistoryCsv;
+window.toggleFilterPanel = toggleFilterPanel;
+window.onFilterChange = onFilterChange;
+window.resetFilters = resetFilters;
 </script>
 </body>
 </html>
