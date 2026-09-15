@@ -60,6 +60,18 @@
  *   token:<accountId>       -> { accessToken, expiresAt }  (cached OAuth token, refreshed on expiry)
  *   runlog:<accountId>:<ts> -> { id, accountId, dateFrom, dateTo, startedAt, finishedAt, status, counts, errors }
  *
+ * It also powers /sales-crm: a one-screen, spreadsheet-style CRM for Avito sales leads —
+ * every client is a table row (name, Telegram handle with a jump-to-dialog button, priority
+ * color, dialog-stage status, free-text comment) edited inline, no client-detail page. Every
+ * cell edit is timestamped and diffed into a history log (never rendered in the table, only
+ * pulled by the "download full history" export). Rows with a stale updatedAt are highlighted
+ * client-side so leads don't go cold unnoticed. Shares the AVITO_KV namespace since it's the
+ * same Avito sales-leads domain, under its own key prefix:
+ *
+ * KV keys (binding "AVITO_KV", sales-crm prefix):
+ *   salescrm:client:<id>              -> { id, name, telegram, priority, status, comment, createdAt, updatedAt }
+ *   salescrm:history:<id>:<ts>:<rand> -> { clientId, clientName, ts, action, field, oldValue, newValue }
+ *
  * It also powers /dashboard: the agency-owner dashboard (active Avito-promotion projects,
  * staff cards with weekly 1–5 ratings, sales plan/fact, agency task list). Gated client-side
  * by a shared password (same pattern as /serp-analysis) and additionally by an
@@ -1588,6 +1600,111 @@ async function handleAvitoApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// ── /sales-crm: single-screen table CRM for Avito sales leads ──
+// Every client sits on one row; editing a cell writes the client record and appends one
+// history entry per changed field (never shown in the table itself — pulled only by the
+// "full history" export button for later analysis).
+
+const SALES_CRM_STATUSES = [
+  'Первое сообщение', 'Вопросы', 'Формат', 'Оффер', 'Игнор', 'Отложенный спрос', 'Отказ', 'Продажа',
+];
+const SALES_CRM_PRIORITIES = ['green', 'yellow', 'orange', 'red'];
+const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'comment'];
+
+async function salesCrmHistoryAppend(kv, clientId, clientName, entries) {
+  const now = new Date().toISOString();
+  await Promise.all(entries.map((entry) => {
+    const rand = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+    const record = { clientId, clientName, ts: now, ...entry };
+    return kv.put(`salescrm:history:${clientId}:${now}:${rand}`, JSON.stringify(record));
+  }));
+}
+
+async function handleSalesCrmApi(request, env, url) {
+  const { pathname } = url;
+  const kv = env.AVITO_KV;
+
+  if (pathname === '/api/salescrm/clients' && request.method === 'GET') {
+    const list = await kv.list({ prefix: 'salescrm:client:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    const clients = records.filter(Boolean).sort((a, b) => (a.updatedAt < b.updatedAt ? -1 : 1));
+    return json({ clients });
+  }
+
+  if (pathname === '/api/salescrm/clients' && request.method === 'POST') {
+    const body = await readJson(request);
+    const name = (body && String(body.name || '').trim()) || '';
+    if (!name) return json({ error: 'missing_name' }, 400);
+
+    const now = new Date().toISOString();
+    const id = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    const client = {
+      id,
+      name,
+      telegram: (body && String(body.telegram || '').trim()) || '',
+      priority: SALES_CRM_PRIORITIES.includes(body && body.priority) ? body.priority : 'yellow',
+      status: SALES_CRM_STATUSES.includes(body && body.status) ? body.status : 'Первое сообщение',
+      comment: (body && String(body.comment || '')) || '',
+      createdAt: now,
+      updatedAt: now,
+    };
+    await kv.put(`salescrm:client:${id}`, JSON.stringify(client));
+    await salesCrmHistoryAppend(kv, id, client.name, [{ action: 'create', field: null, oldValue: null, newValue: null }]);
+    return json({ client });
+  }
+
+  const clientMatch = pathname.match(/^\/api\/salescrm\/clients\/([A-Za-z0-9]+)$/);
+  if (clientMatch && request.method === 'PATCH') {
+    const id = clientMatch[1];
+    const existing = await kv.get(`salescrm:client:${id}`, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+
+    const body = await readJson(request);
+    if (!body || typeof body !== 'object') return json({ error: 'invalid_body' }, 400);
+
+    const now = new Date().toISOString();
+    const updated = { ...existing };
+    const historyEntries = [];
+
+    for (const field of SALES_CRM_FIELDS) {
+      if (!(field in body)) continue;
+      let value = body[field];
+      if (field === 'priority' && !SALES_CRM_PRIORITIES.includes(value)) continue;
+      if (field === 'status' && !SALES_CRM_STATUSES.includes(value)) continue;
+      if (field === 'name' || field === 'telegram') value = String(value || '').trim();
+      if (field === 'comment') value = String(value || '');
+      if (value === existing[field]) continue;
+      historyEntries.push({ action: 'update', field, oldValue: existing[field] ?? null, newValue: value });
+      updated[field] = value;
+    }
+
+    if (!historyEntries.length) return json({ client: existing });
+
+    updated.updatedAt = now;
+    await kv.put(`salescrm:client:${id}`, JSON.stringify(updated));
+    await salesCrmHistoryAppend(kv, id, updated.name, historyEntries);
+    return json({ client: updated });
+  }
+
+  if (clientMatch && request.method === 'DELETE') {
+    const id = clientMatch[1];
+    const existing = await kv.get(`salescrm:client:${id}`, 'json');
+    if (!existing) return json({ error: 'not_found' }, 404);
+    await kv.delete(`salescrm:client:${id}`);
+    await salesCrmHistoryAppend(kv, id, existing.name, [{ action: 'delete', field: null, oldValue: null, newValue: null }]);
+    return json({ ok: true });
+  }
+
+  if (pathname === '/api/salescrm/history' && request.method === 'GET') {
+    const list = await kv.list({ prefix: 'salescrm:history:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    const history = records.filter(Boolean).sort((a, b) => (a.ts < b.ts ? 1 : -1));
+    return json({ history });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 // ── /dashboard: agency-owner dashboard ──
 
 const DASHBOARD_PASSWORD = '12345678';
@@ -2594,6 +2711,10 @@ async function handleApi(request, env, url) {
 
   if (pathname.startsWith('/api/avito/')) {
     return handleAvitoApi(request, env, url);
+  }
+
+  if (pathname.startsWith('/api/salescrm/')) {
+    return handleSalesCrmApi(request, env, url);
   }
 
   if (pathname.startsWith('/api/dashboard/')) {
