@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Оксана Бабушкина — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для будущих преподавателей</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <!-- Аудитория этого выпуска — «для партнёров» (уточнено с командой), а не по номеру в названии эмбеда; подписана в плашке в самом верху страницы. -->
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1226936302?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Оксана Бабушкина - Подкаст 2"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1226936302" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">Метод «где именно потерялся»: как Оксана Бабушкина строит методику подготовки к ЕГЭ и обучает своих преподавателей</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">25 лет в математике, путь от обычной школы и лицея для одарённых детей до собственного центра подготовки к ЕГЭ и ОГЭ — Оксана Бабушкина рассказывает, как устроено занятие изнутри, почему «я не понял» — это не диагноз, а сигнал искать конкретный шаг, где ученик потерялся, и как команда каждое лето проходит обучение методике. В выпуске — про кейс, где ученица за два месяца прошла путь от двойки до четвёрки на ОГЭ, систему отчётов для родителей и почему сильная сторона педагога — не только знание предмета.
+
+🔗 Школа Оксаны Бабушкиной: [ссылка]
+🔗 Написать Оксане: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">подготовка к ЕГЭ, подготовка к ОГЭ, репетитор по математике, методика преподавания, обучение преподавателей, мини-группы, отчёты для родителей, найм преподавателей, Оксана Бабушкина</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #образование #математика #ЕГЭ #ОГЭ #репетитор #преподаватели #методика</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/oksana-babushkina-podcast2-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">«Я не понял» — это не диагноз: как устроена наша методика подготовки к ЕГЭ</h1>
+
+      <p>Я преподаю математику с 1998 года — это больше 25 лет. Начинала в обычной школе, потом много лет работала в лицее для одарённых детей на профильном уровне. И постепенно созрело решение создать центр подготовки к ЕГЭ. Сначала мы только готовили к экзамену, а потом расширились и стали помогать ребятам повышать успеваемость с пятого по одиннадцатый класс. Сейчас у нас есть и малыши с первого по четвёртый класс, и предметы, кроме математики: русский, английский, физика, информатика, скоро добавим географию — и будем вводить другие предметы по запросу, там, где есть острая необходимость.</p>
+
+      <h2>Как устроено занятие изнутри</h2>
+      <p>У нас есть формат индивидуального занятия и группового. Групповые занятия — это в большинстве случаев подготовка к ОГЭ и ЕГЭ, и здесь очень важен организационный момент: мы ставим цели и разбиваем детей на группы по целям — тем, кому нужен средний результат, отдельно от тех, кому нужен высокий, и они идут по разным программам.</p>
+      <p>Само занятие начинается с определения точки — в каком месте программы мы находимся. Дети сразу видят: сегодня такая тема, в ней столько-то разделов, на неё столько-то уроков. Расписание и программа на месяц лежат в общем чате, поэтому ребёнок всегда знает, на каком этапе подготовки он находится. Дальше — блок теории, и мы даём только то, что необходимо для решения конкретного типа задач, ничего лишнего. Потом показываем на практике, как эта теория работает, и обязательно большую часть занятия ребята работают самостоятельно, каждый над своей задачей.</p>
+      <p>Это важный момент: посмотрев вебинар, кажется, что всё понял, а когда начинаешь делать сам — возникает масса вопросов, в оформлении или в алгоритме. Поэтому важно прямо на уроке зафиксировать, какие вопросы остались, и точечно ответить каждому ребёнку. Мы работаем на онлайн-доске или через тетрадную камеру — она наводится на рабочий стол ребёнка, и мы в реальном времени видим, что у него в тетради, без пересылки фотографий. В конце обязательно даём обратную связь: что было сложно, что получилось, что узнали нового — и ребёнок уходит закреплять материал на домашнем задании уже с чётким фокусом.</p>
+
+      <h2>Метод «где именно потерялся»</h2>
+      <p>Когда ребёнок говорит «я не понял» — это ничего не значит само по себе. Нужно найти тот момент, с которого он перестал понимать. Мы смотрим его решение конкретной задачи: где были попытки, на каком шаге случилась проблема — на первом, втором, третьем. Доходим до этого шага и начинаем раскладывать его на более мелкие подшаги, чтобы объяснить проще. Если это стереометрия — подключаем GeoGebra: меняем ракурс фигуры, разрезаем её на детали, делаем выносной чертёж, перечисляем нужные теоремы, а если совсем сложно — приводим метафоры из жизни.</p>
+      <p>Если это алгебра, тоже разбиваем на мелкие алгоритмы и точечно ищем, где случился разрыв. Например, когда нужно выбрать метод решения, я говорю: представь, что ты выходишь на прогулку и открываешь шкаф с одеждой — вот спортивная форма, а ты идёшь в театр, не подходит; вот халат — тоже не подходит; а вот костюм — в этом можно пойти. Точно так же в алгебре: перечисляем все инструменты, а потом методом исключения находим тот, что подходит именно для этой задачи. Такие приёмы помогают ребёнку самому преодолеть шаг и понять алгоритм.</p>
+
+      <h2>Прозрачность для родителей</h2>
+      <p>Родители обязательно должны быть в курсе. К нам часто обращаются мамы, у которых был печальный опыт: занимались с репетитором целый год без всякой обратной связи, а в конце года написали пробник — и результат оказался плачевным. Мы этот момент строго контролируем: каждый месяц даём отчёт о прогрессе — сколько тем прошли, на сколько баллов продвинулись. Если это подготовка к ЕГЭ или ОГЭ, план на месяц заранее показывает, над какими номерами заданий мы работаем и сколько баллов должны набрать.</p>
+      <blockquote>Родители видят не только баллы, но и то, как работает ученик на уроке: уверен ли он, стесняется ли — эмоциональные моменты мы тоже описываем.</blockquote>
+      <p>В течение месяца пишутся промежуточные домашние задания в формате ЕГЭ, а в конце — тематический зачёт, который показывает, остались ли пробелы или можно двигаться в следующую тему. У каждого ученика есть журнал-трек, скрин которого мы отправляем маме вместе с текстовым или голосовым сообщением о том, как прошёл урок. Родители пишут благодарности именно за эти отчёты — потому что видят реальную картину и понимают, справляется ли ребёнок.</p>
+
+      <h2>Кейс: от двойки до четвёрки за два месяца</h2>
+      <p>Девятиклассница пришла к нам незадолго до ОГЭ после неудачного пробника. Естественно, за два месяца невозможно изучить материал, который проходят весь учебный год. Но мы провели диагностику и выявили темы, на которые можно максимально быстро подтянуть баллы — есть задания с большим объёмом материала, а есть с меньшим, и в такой ситуации нужно делать ставку именно на те, что можно закрыть в короткий срок.</p>
+      <p>Со второй частью экзамена мы вообще не занимались — это уже не укладывалось во временные рамки. Но отработанных тем хватило, чтобы получить четвёрку вместо неудачного результата. Такой интенсив помог перейти от двойки к четвёрке — но такой рисковый шаг я не рекомендую всем: тут многое зависит от самого ребёнка. В этом случае девочка была очень дисциплинированной, старалась и выполняла все рекомендации. Если готовиться качественно и без спешки, конечно, нужно начинать с сентября — но в экстренных ситуациях мы можем помочь, если ребёнок готов вложить в это много времени.</p>
+
+      <h2>Настоящая победа — не только высокий балл</h2>
+      <p>У меня был ученик, который сдал ЕГЭ на 90 баллов. Но, к сожалению, поступив в вуз, через год он понял, что специальность ему не нравится, и ушёл в другую сферу. Для меня это не победа — эти 90 баллов ничего не значат, если ученик не нашёл себя. А вот настоящая победа — когда ученик заканчивает, поступает и находит профессию по душе. Мы не теряем связь с ребятами даже в студенческие годы: они пишут о своих успехах, поздравляют с праздниками. Именно это — то, кем человек становится впоследствии, — наша настоящая победа как педагогов.</p>
+
+      <h2>Моя сильная сторона: не предмет, а отношение к детям</h2>
+      <p>Скорее всего, моя сильная сторона — умение понять, на каком этапе ребёнок потерялся, и проявить о нём заботу. У меня самой трое детей, и я видела разное отношение учителей к ним: есть педагоги от Бога, которые и преподают прекрасно, и относятся к детям с любовью. А есть те, кто, мягко говоря, детей не любил — и дети таких педагогов тоже не любят, это правда. Для меня очень важно, как я отношусь к ребёнку: я люблю детей, и поэтому, думаю, у меня получается.</p>
+
+      <h2>Над чем я продолжаю работать</h2>
+      <p>В методике я до сих пор перерабатываю материалы: каждый год мы апгрейдим базу — пересматриваем, как объяснить слабому ребёнку, дробим на дополнительные рабочие листы, чтобы было понятно любому уровню. А что касается преподавателей нашей школы — летом мы проводим для них обучение. Я передаю опыт работы в группах и индивидуально, делюсь совершенно безвозмездно — мне нравится делиться тем, что у меня получается.</p>
+      <p>В этом году мы провели большой воркшоп по групповым занятиям и сейчас внедряем его, чтобы педагоги тоже могли подключаться к работе в группах — совместно решаем, что усилить, чтобы занятие было максимально динамичным, комфортным и укладывалось в объём урока. Сейчас усиливаем именно работу в мини-группах, и в этом мы развиваемся.</p>
+
+      <h2>Что заряжает меня в этой работе</h2>
+      <p>Как и любого педагога, меня заряжают успехи учеников. Когда дети пишут «спасибо большое», поздравляют с Днём учителя и обязательно добавляют тёплые слова — это радует, потому что мы создаём для ребёнка ситуацию успеха. Видеть, как он радуется своим достижениям, как шаг за шагом переходит из точки А в точку Б — вот что нужно.</p>
+
+      <h2>Что я говорю родителям ребёнка, который «не способен к математике»</h2>
+      <p>Я бы не спешила соглашаться с этим ярлыком. Многие мамы приходят и говорят: «Нам учительница сказала, что ребёнок не способен к математике». Но если посмотреть глубже, математика — это наука, где всё взаимосвязано, чем-то похожая на историю: нужно просто найти момент, с которого ребёнок перестал понимать, и помочь ему дойти дальше.</p>
+      <p>При этом не всем детям обязательно получать максимальные баллы на экзамене — это далеко не всегда нужно. Есть масса вузов и специальностей, где можно обойтись без профильной математики: сдать базу, получить аттестат и стать прекрасным врачом, бухгалтером, юристом. У каждого своя цель и свой уровень математических способностей — нужно просто поддержать ребёнка, найти этот уровень и довести его до результата.</p>
+
+      <p class="art-signature">Оксана Бабушкина,<br>основательница центра подготовки к ЕГЭ и ОГЭ</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про методику</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🧩 «Я не понял» — это не диагноз. Это сигнал искать конкретный шаг</h3>
+        <p>Когда ребёнок говорит «я не понял», это само по себе ничего не значит.</p>
+        <h4>Что мы делаем вместо того, чтобы объяснять заново с начала</h4>
+        <p>Смотрим его решение конкретной задачи: где была попытка, на каком шаге случилась проблема — на первом, втором, третьем. Доходим до этого шага и раскладываем его на подшаги помельче, чтобы объяснить проще. Если шаг всё равно труден — дробим ещё мельче.</p>
+        <h4>Пример с алгеброй</h4>
+        <p>Когда нужно выбрать метод решения, я говорю: представь, что собираешься на прогулку и открываешь шкаф с одеждой. Вот спортивная форма, а ты идёшь в театр — не подходит. Вот халат — тоже нет. А вот костюм — в этом можно. Точно так же в алгебре: перечисляем все инструменты и методом исключения находим тот, что решает именно эту задачу.</p>
+        <p>🔍 Дело редко в «неспособности к математике». Дело в том, что никто не нашёл тот самый шаг, где случился разрыв.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс ученицы</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📈 От двойки до четвёрки на ОГЭ за два месяца. Как это вообще возможно</h3>
+        <p>Девятиклассница пришла к нам незадолго до экзамена после неудачного пробника.</p>
+        <h4>Сразу оговорюсь</h4>
+        <p>За два месяца невозможно изучить материал, который дети проходят весь учебный год. Мы не обещаем чудес.</p>
+        <h4>Что мы сделали</h4>
+        <p>Провели диагностику и нашли темы, на которые можно максимально быстро подтянуть баллы — есть задания с большим объёмом материала, а есть с маленьким. В такой ситуации ставку нужно делать именно на те, что можно закрыть в короткий срок. Со второй частью экзамена мы вообще не занимались — не укладывались по времени.</p>
+        <h4>Что сыграло решающую роль</h4>
+        <p>Дисциплина самой ученицы: она старалась и выполняла все рекомендации. Такой интенсив — рисковый шаг, и я не рекомендую его всем: тут многое зависит от готовности ребёнка вложить в это время. Но если готовиться качественно и без спешки — начинайте с сентября.</p>
+        <p>🎯 Результат создаёт не только методика. Его создаёт дисциплина ученика — методика лишь показывает, куда именно направить усилия.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отчёты для родителей</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>📋 Мама год не знала, чем занимался её ребёнок с репетитором. Мы построили систему, чтобы такого не было</h3>
+        <p>К нам обратилась мама с печальным опытом: занимались с репетитором целый год, а в конце написали пробник — и результат оказался плачевным.</p>
+        <h4>Что мы делаем иначе</h4>
+        <p>Каждый месяц даём родителю отчёт: сколько тем прошли, на сколько баллов продвинулись. План на месяц заранее показывает, над какими номерами заданий мы работаем и сколько баллов должны набрать — ученик и родитель видят его одновременно.</p>
+        <h4>А ещё мы описываем не только баллы</h4>
+        <p>Скрин журнала-трека — плюс текстовое или голосовое сообщение: как прошёл урок, уверен ли ребёнок, стесняется ли, какая динамика. Родители пишут благодарности именно за эти отчёты — потому что наконец видят реальную картину.</p>
+        <p>✅ Прозрачность — это не бонус к обучению. Это то, чего родителям чаще всего не хватает больше всего.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про настоящую победу</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🏅 У меня был ученик с 90 баллами на ЕГЭ. Я не считаю это своей победой</h3>
+        <p>Прозвучит странно для репетитора, но выслушайте до конца.</p>
+        <h4>Что случилось</h4>
+        <p>Он сдал ЕГЭ на высокий балл, поступил в вуз — а через год понял, что специальность ему не нравится, и ушёл в другую сферу. Эти 90 баллов для меня ничего не значат, если ученик не нашёл себя.</p>
+        <h4>А что я считаю победой</h4>
+        <p>Когда ученик заканчивает, поступает — и находит профессию по душе. Мы не теряем связь с ребятами даже в студенческие годы: они пишут о своих успехах, поздравляют с праздниками.</p>
+        <p>❤️ Настоящий результат педагога — не балл на экзамене. Это то, кем человек станет впоследствии.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про обучение преподавателей</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>🎓 Каждое лето я бесплатно обучаю своих преподавателей всему, что знаю сама</h3>
+        <p>Не потому что так положено. Потому что мне действительно нравится делиться опытом.</p>
+        <h4>Что происходит на этом обучении</h4>
+        <p>Я передаю опыт работы в группах и индивидуально — те вещи, которые получаются у меня. В этом году мы провели большой воркшоп именно по групповым занятиям и сейчас внедряем его, чтобы педагоги тоже могли уверенно вести мини-группы.</p>
+        <h4>Как устроена сама методика, в которую погружаются наши педагоги</h4>
+        <p>Каждый год мы апгрейдим базу материалов: пересматриваем, как объяснить слабому ребёнку, добавляем рабочие листы под разные уровни. Совместно решаем, что усилить, чтобы занятие было динамичным и укладывалось по времени.</p>
+        <p>👩‍🏫 Если вам важно не просто вести уроки, а расти в чёткой системе — вы понимаете, о чём этот пост.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/oksana-babushkina-podcast2-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. О себе и пути к центру подготовки</a></li>
+        <li><a href="#t2">2. Как устроено типичное занятие</a></li>
+        <li><a href="#t3">3. Метод «где именно потерялся»</a></li>
+        <li><a href="#t4">4. Отчёты для родителей</a></li>
+        <li><a href="#t5">5. Кейс: от двойки до четвёрки за два месяца</a></li>
+        <li><a href="#t6">6. Что для неё настоящая победа</a></li>
+        <li><a href="#t7">7. Сильная сторона: любовь к детям</a></li>
+        <li><a href="#t8">8. Над чем продолжает работать</a></li>
+        <li><a href="#t9">9. Что заряжает в преподавании</a></li>
+        <li><a href="#t10">10. Ответ родителям: «не способен к математике»</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. О себе и пути к центру подготовки</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Всем здравствуйте. У нас сегодня Оксана Бабушкина. Оксана, расскажите о себе, кто вы, чему учите в вашей школе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Я преподаватель математики сама. Преподаю с 1998 года, то есть уже более 25 лет. Постепенно я всегда работала в школе, сначала в обычной, затем в лицее для одарённых детей — много лет мы работали с детьми на профильном уровне. И затем созрело решение создать центр подготовки к ЕГЭ.</p>
+        <p>Так постепенно мы сначала только готовили к ЕГЭ, а затем уже расширились и стали помогать ребятам повышать успеваемость с пятого по одиннадцатый класс. Сейчас у нас есть и малыши с первого по четвёртый класс. Также есть другие предметы, кроме математики: русский, английский, физика, информатика. Будем ещё внедрять в этом году географию. И, думаю, по запросу введём другие предметы, в которых есть острая необходимость.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Как устроено типичное занятие</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Расскажите родителям, как у вас выглядит типичное занятие внутри, чем оно отличается от «прошли тему, написали контрольную». Расскажите о внутренних правилах.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>У нас есть формат индивидуального занятия и группового. Групповые занятия — это, в большинстве случаев, подготовка к ОГЭ, ЕГЭ. Здесь важный организационный момент: мы ставим цели и разбиваем детей на группы по целям — детям, которым нужен средний результат, они в одной группе, детям, которым нужен высокий результат, — в другой, и они идут по немного разным программам.</p>
+        <p>Если смотреть на структуру занятия — оно начинается с определения точки, в каком месте программы мы находимся. Дети, заходя на занятие, сразу видят: сегодня такая тема, в ней столько-то разделов, на эту тему столько-то уроков. У них чёткая структура, и в общем чате выкладывается расписание и программа на каждый месяц.</p>
+        <p>После этого начинается первый блок — блок теории, где мы предлагаем только то, что необходимо для решения данного типа задач, ничего лишнего. Потом показываем на практике, как эта теория работает. И обязательно большую часть занятия ребята работают самостоятельно, каждый над своей задачей.</p>
+        <p>Это очень важный момент, потому что, посмотрев вебинар, кажется, что понял, а когда начинаешь делать самостоятельно, возникает много вопросов — либо в оформлении, либо в алгоритме. Поэтому важно прямо на уроке зафиксировать, какие вопросы остались, и точечно для каждого ребёнка на них ответить. Мы работаем на онлайн-доске или на доске Charn с функцией тетрадной камеры — камера настраивается на рабочий стол ребёнка, он пишет в тетради, и не надо отправлять фотографии, мы видим в реальном времени. В конце обязательно делаем обратную связь: подводим итог, акцентируем внимание, что было сложно, что получилось, что узнали нового — и ребёнок уже фокусируется на этих моментах, уходя закреплять материал на домашнем задании.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Метод «где именно потерялся»</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что ребёнок годами может считать себя неспособным к математике, а дело в том, что тему просто не так объяснили. Как вы находите тот самый способ объяснить по-другому, чтобы он был эффективным?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Когда ребёнок приходит и говорит «я не понял», это ничего не значит. Нужно обязательно найти тот момент, с которого он перестал понимать. Если он высылает какой-то тип задачи и говорит «я не понял», я говорю: «Давай посмотрим твоё решение, где ты делал попытки — хотя бы начальный шаг всегда есть». На каком шаге случилась проблема — на первом, на втором, на третьем? Доходим до этого шага, потом начинаем раскладывать на более мелкие подшаги, чтобы ребёнку было легче. Если ему труден этот шаг, дробим ещё мельче.</p>
+        <p>Если это стереометрия — сейчас мы понимаем, что в десятом-одиннадцатом классе дети часто испытывают большие затруднения с ней, — мы подключаем программу GeoGebra: можем поменять ракурс, разрезать фигуру на детальки, сделать выносной чертёж, перечислить теоремы, которые можно подключать, вплоть до того, что приводим метафоры, примеры из жизни.</p>
+        <p>Если это алгебра, мы тоже разбиваем на более мелкие алгоритмы и начинаем точечно искать причину разрыва. Можно привести такой пример: ребёнок выходит на прогулку, открывает шкаф, где определённый набор одежды. Мы говорим: «Вот ты примеряешь — это спортивная форма, а ты идёшь в театр, не подойдёт, обратно вешаем; это халат — не подойдёт; это костюм — вот в этом можно сходить». Так же и в алгебре: если есть несколько инструментов, мы перечисляем — раз, два, три, и потом методом исключения находим, что подойдёт. Оказывается, вот этим вполне можно решить. Много таких примеров помогают ребёнку преодолеть шаг и понять алгоритм.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Отчёты для родителей</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как родитель у вас понимает, что у ребёнка есть прогресс? Что вы показываете или рассказываете после занятий, какую обратную связь даёте родителям?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Родители обязательно должны быть в курсе, потому что в последнее время к нам очень много обращается мам. Была ситуация: мама пришла на диагностику с большим огорчением, потому что они занимались с репетитором целый год, и от репетитора не было никакой обратной связи — мама не в курсе, чем занимались. А потом они написали в конце года пробник, и результат оказался плачевным.</p>
+        <p>Мы обязательно этот момент контролируем: каждый месяц даём отчёты родителю о прогрессе — сколько тем, на сколько баллов продвинулись. Если это подготовка к ЕГЭ, ОГЭ — за месяц у нас есть план, мы предоставляем его и ученикам, и родителям: в этом месяце мы работали над заданием номер таким-то и таким-то, и за этот месяц должны набрать, например, плюс 11 баллов.</p>
+        <p>В течение месяца пишутся промежуточные домашние задания в виде тестов формата ЕГЭ, а в конце месяца проводится тематический зачёт, который показывает, остались ли проблемы, где усилить, или, если тема пройдена, — переходим к следующей. У нас есть журнал, трек каждого ученика, и скрин этого журнала мы обязательно отправляем маме вместе с текстовым или голосовым сообщением: что получилось, как работает ученик на уроке, уверен ли он, стесняется ли — эмоциональные моменты тоже прилагаем. У нас очень много отзывов, родители благодарят именно за эти отчёты, потому что видят явную картину и понимают, справляется ли ребёнок.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Кейс: от двойки до четвёрки за два месяца</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я знаю, что у вас есть кейс: девятиклассница пришла к вам незадолго до ОГЭ после неудачного пробника и получила четыре на самом экзамене. Как за два месяца получилось закрыть то, на что обычно уходит год?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Естественно, надо сказать, что за два месяца невозможно изучить материал, который ребёнок изучает целый год в школе. Обычно это бывает в конце года, когда ребята пишут первые пробники ОГЭ и понимают, что результат очень низок, — обращаются за помощью.</p>
+        <p>Мама обратилась к нам с такой бедой: два месяца осталось, недостаточное количество баллов. Мы провели диагностику и выявили темы, на которые можно максимально быстро подтянуть баллы. Есть задания с большим объёмом материала, есть с меньшим — и в такой ситуации нужно делать ставку именно на темы, которые можно закрыть в максимально короткий срок. Именно эти темы были отработаны с ученицей, и для получения четвёрки на экзамене их оказалось достаточно. Со второй частью мы вообще не занимались, потому что это уже не входило во временные рамки.</p>
+        <p>Такой приём интенсивной подготовки может помочь перейти от двойки к четвёрке за счёт этого инструмента. Конечно, не рекомендуется всем ребятам идти на такой рисковый шаг, потому что тут всё зависит и от ребёнка. Она была очень дисциплинированной, старалась и всегда выполняла все рекомендации педагога, очень интенсивно работала. Поэтому если мы хотим подготовиться качественно, без сжатых сроков, нужно, конечно, готовиться с сентября. Но в экстренных ситуациях можем помочь — для этого ребёнку нужно будет положить очень большое количество времени именно на формирование навыка решения этих заданий.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Что для неё настоящая победа</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А скажите, чем вы гордитесь в своей работе больше всего? Не в общих словах, а конкретным моментом или учеником.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Я всегда получаю большое удовольствие, когда ребята не просто сдали ЕГЭ. В моей практике был ученик, который сдал ЕГЭ на высокий балл — у него было 90 баллов. Но, к сожалению, поступив в вуз и проучившись год, он понял, что ему не нравится эта специальность, и ушёл в другую сферу. Для меня это не победа — эти 90 баллов для нас не победа, потому что ученик не нашёл себя.</p>
+        <p>Победа для меня — когда ученик заканчивает, получает баллы, достигает своей цели, поступает. И мы на протяжении дальнейших студенческих лет не теряем связь: они пишут о своих успехах, о переживаниях, поздравляют с Новым годом, с 8 Марта, с Днём учителя. Это ученики, которые действительно идут дальше и получают профессию по душе. Вот это настоящая наша победа, наш успех как педагогов — когда у ребёнка складывается дальнейшая судьба.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть для вас важен не только балл ученика, а момент, когда ученик перестаёт бояться ошибок и идёт дальше — самый ценный результат для вас это его дальнейшая жизнь, развитие?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt"><p>Да-да-да, это то, кем он станет впоследствии. Обязательно.</p></div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Сильная сторона: любовь к детям</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Расскажите, а в чём ваша сильная сторона как преподавателя математики?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Скорее всего, это понять ребёнка, на каком этапе он потерялся, — проявить такую заботу о ребёнке. Сильная сторона, наверное, это моя любовь к детям. Даже не то, как я преподаю предмет, а то, как я отношусь к детям. У меня самой трое детей, и все они в какой-то момент проходили этот этап в школьные годы.</p>
+        <p>Я видела разное отношение учителей к моим детям лично: некоторые педагоги — это просто педагоги от Бога, они и преподают, и относятся к детям с любовью. А, к сожалению, есть педагоги, которые, мягко говоря, не любили детей или относились посредственно — и, соответственно, дети таких педагогов тоже их не любят, надо признать, такой факт есть. Для меня очень важно, как я отношусь к ребёнку — если я понимаю, что люблю детей, поэтому у меня и получается.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Над чем продолжает работать</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А скажите, над чем вы сейчас продолжаете работать — в методике или в себе как в преподавателе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>В методике я до сих пор перерабатываю материалы: в конце каждого учебного года мы формируем базу, апгрейдим базу материалов для подготовки. Пересматриваем, как ещё слабому ребёнку объяснить, потому что сильным ученикам у нас уже есть хорошие материалы, которые ведут на высокий балл. Стараемся ещё раздробить, ввести дополнительные рабочие листы, чтобы было понятно ребёнку любого уровня — и слабого, и сильного.</p>
+        <p>А что касается педагогов в нашей школе — в летний период мы проводим обучение педагогов, и я передаю этот опыт: работу в группах, индивидуальную работу — те вещи, которые у меня получаются, я делюсь совершенно безвозмездно, мне нравится делиться опытом. И наши педагоги тоже получают этот опыт. В начале этого года мы провели большой воркшоп по групповым занятиям и сейчас внедряем, чтобы педагоги тоже могли подключаться к групповым занятиям. Мы смотрим, что усилить, совместно решаем, как сделать занятие максимально динамичным, комфортным, понятным, чтобы вся программа уложилась в объём урока. Сейчас усиливаем работу в мини-группах.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Что заряжает в преподавании</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Скажите, что вас заряжает в преподавании математики больше?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Я думаю, как и у любого педагога, это успехи нашего ученика. Когда дети пишут «спасибо большое», слова благодарности — например, на День учителя они обязательно указывают: «Спасибо большое, что вы есть», и так далее. Это радует, потому что у ребёнка получилась ситуация успеха, которую мы создаём детям. Что ещё нам надо? Видеть, как у ребёнка получилось, как он радуется своим успехом, как переходит шаг за шагом от точки А к точке Б.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Ответ родителям: «не способен к математике»</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что вы скажете родителям ребёнка, который годами уверен, что не способен к математике?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt">
+        <p>Я бы не спешила соглашаться с этим ярлыком. Многие мамы приходят и говорят: «Нам учительница говорит, что вы не способны к математике», и это часто бывает. Эти ярлычки — это всё, мне кажется, только визуально, потому что если посмотреть глубже, математика начинается с какого-то пробела. Эта наука, наверное, сравнима с историей, потому что здесь всё взаимосвязано — нужно просто найти, с какого момента ребёнок перестал понимать, и помочь ему в этой ситуации дойти дальше.</p>
+        <p>И ещё ведь у детей разные цели. Необязательно всем детям получать максимальные баллы на экзамене — это совсем не нужно и не важно. Есть дети, которым вообще не нужна профильная математика, и есть масса вузов, масса специальностей, в которых можно обойтись без профильной математики: сдать базу, получить аттестат и быть прекрасным врачом, прекрасным бухгалтером, прекрасным юристом. У каждого своя цель, у каждого свой уровень математических способностей. Нужно просто поддержать ребёнка, найти этот уровень и довести его до результата.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Спасибо вам за такие честные, искренние ответы, Оксана. Спасибо.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Оксана</div><div class="tr-txt"><p>Спасибо.</p></div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
