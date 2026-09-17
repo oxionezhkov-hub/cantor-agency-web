@@ -107,8 +107,9 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
 .dd-label{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dd-trigger .chev{flex-shrink:0;opacity:0.6;transition:transform 0.15s}
 .dd:hover .dd-trigger .chev,.dd:focus-within .dd-trigger .chev{transform:rotate(180deg)}
-.dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:170px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:6px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(4px);transition:opacity 0.15s ease,transform 0.15s ease}
-.dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+.dd-menu{position:absolute;top:100%;left:0;margin-top:6px;min-width:170px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:6px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.15s ease}
+.dd::before{content:'';position:absolute;top:100%;left:0;width:100%;height:6px}
+.dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;visibility:visible;pointer-events:auto}
 .dd-option{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap}
 .dd-option:hover{background:var(--bg)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
@@ -429,15 +430,18 @@ async function selectRowValue(id, field, value) {
 
 /* ════════════ TABLE RENDER ════════════ */
 function renderTable() {
+  // Row order is fixed at load time (oldest-updated first) and never re-sorted on edit — an
+  // in-place edit only updates that row's own cells, so the table doesn't jump around under
+  // the pointer mid-interaction. Reload the page (or re-open the tool) to re-sort by the
+  // latest updatedAt.
   const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
-  let rows = clients.filter((c) => {
+  const rows = clients.filter((c) => {
     if (filterGroupValue && c.group !== filterGroupValue) return false;
     if (filterPriorityValue && c.priority !== filterPriorityValue) return false;
     if (filterStatusValue && c.status !== filterStatusValue) return false;
     if (!q) return true;
     return [c.name, c.telegram, c.comment].some((v) => String(v || '').toLowerCase().includes(q));
   });
-  rows = rows.slice().sort((a, b) => (a.updatedAt < b.updatedAt ? -1 : a.updatedAt > b.updatedAt ? 1 : 0));
 
   const tbody = document.getElementById('tableBody');
   document.getElementById('emptyState').classList.toggle('hidden', clients.length > 0);
