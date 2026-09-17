@@ -69,7 +69,8 @@
  * same Avito sales-leads domain, under its own key prefix:
  *
  * KV keys (binding "AVITO_KV", sales-crm prefix):
- *   salescrm:client:<id>              -> { id, name, telegram, priority, status, comment, createdAt, updatedAt }
+ *   salescrm:client:<id>              -> { id, name, telegram, priority, status, group, comment, createdAt, updatedAt }
+ *                                          (group: one of РЕПБИЗ / ВЕБИНАР / НОВЫЕ — lead source)
  *   salescrm:history:<id>:<ts>:<rand> -> { clientId, clientName, ts, action, field, oldValue, newValue }
  *
  * It also powers /dashboard: the agency-owner dashboard (active Avito-promotion projects,
@@ -1609,7 +1610,10 @@ const SALES_CRM_STATUSES = [
   'Первое сообщение', 'Вопросы', 'Формат', 'Оффер', 'Игнор', 'Отложенный спрос', 'Отказ', 'Продажа',
 ];
 const SALES_CRM_PRIORITIES = ['green', 'yellow', 'orange', 'red'];
-const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'comment'];
+// РЕПБИЗ / ВЕБИНАР are the two lead sources bulk-imported from existing sheets; НОВЫЕ is the
+// default for anything added by hand going forward (there were no НОВЫЕ leads at import time).
+const SALES_CRM_GROUPS = ['РЕПБИЗ', 'ВЕБИНАР', 'НОВЫЕ'];
+const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'group', 'comment'];
 
 async function salesCrmHistoryAppend(kv, clientId, clientName, entries) {
   const now = new Date().toISOString();
@@ -1644,6 +1648,7 @@ async function handleSalesCrmApi(request, env, url) {
       telegram: (body && String(body.telegram || '').trim()) || '',
       priority: SALES_CRM_PRIORITIES.includes(body && body.priority) ? body.priority : 'yellow',
       status: SALES_CRM_STATUSES.includes(body && body.status) ? body.status : 'Первое сообщение',
+      group: SALES_CRM_GROUPS.includes(body && body.group) ? body.group : 'НОВЫЕ',
       comment: (body && String(body.comment || '')) || '',
       createdAt: now,
       updatedAt: now,
@@ -1671,6 +1676,7 @@ async function handleSalesCrmApi(request, env, url) {
       let value = body[field];
       if (field === 'priority' && !SALES_CRM_PRIORITIES.includes(value)) continue;
       if (field === 'status' && !SALES_CRM_STATUSES.includes(value)) continue;
+      if (field === 'group' && !SALES_CRM_GROUPS.includes(value)) continue;
       if (field === 'name' || field === 'telegram') value = String(value || '').trim();
       if (field === 'comment') value = String(value || '');
       if (value === existing[field]) continue;

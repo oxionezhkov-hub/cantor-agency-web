@@ -82,6 +82,7 @@ tbody tr:last-child{border-bottom:none}
 tbody tr.stale-warn{background:var(--stale-warn-bg)}
 tbody tr.stale-danger{background:var(--stale-danger-bg)}
 tbody td{padding:8px 12px;vertical-align:middle;font-size:13px}
+th.col-group,td.col-group{width:120px}
 th.col-name,td.col-name{width:170px}
 th.col-tg,td.col-tg{width:190px}
 th.col-priority,td.col-priority{width:150px}
@@ -162,11 +163,15 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
     </div>
     <div class="topbar-right">
       <div class="filter-wrap">
-        <button class="btn-icon" title="Фильтр по приоритету и статусу">
+        <button class="btn-icon" title="Фильтр по группе, приоритету и статусу">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
           <span class="filter-dot" id="filterDot"></span>
         </button>
         <div class="filter-panel" id="filterPanel">
+          <div class="filter-row">
+            <label>Группа</label>
+            <div id="filterGroupCell"></div>
+          </div>
           <div class="filter-row">
             <label>Приоритет</label>
             <div id="filterPriorityCell"></div>
@@ -200,6 +205,7 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
     <table>
       <thead>
         <tr>
+          <th class="col-group">Группа</th>
           <th class="col-name">Имя</th>
           <th class="col-tg">Telegram</th>
           <th class="col-priority">Приоритет</th>
@@ -249,10 +255,15 @@ const PRIORITY_LABEL = { green:'Целевой', yellow:'Вероятный', or
 const PRIORITY_BG = { green:'var(--p-green-bg)', yellow:'var(--p-yellow-bg)', orange:'var(--p-orange-bg)', red:'var(--p-red-bg)' };
 const PRIORITY_FG = { green:'var(--p-green)', yellow:'var(--p-yellow)', orange:'var(--p-orange)', red:'var(--p-red)' };
 
+const GROUPS = ['РЕПБИЗ','ВЕБИНАР','НОВЫЕ'];
+const GROUP_BG = { 'РЕПБИЗ':'#E3F2FD', 'ВЕБИНАР':'#F3E5F5', 'НОВЫЕ':'#E0F2F1' };
+const GROUP_FG = { 'РЕПБИЗ':'#1565C0', 'ВЕБИНАР':'#7B1FA2', 'НОВЫЕ':'#00695C' };
+
 const STALE_WARN_DAYS = 3;
 const STALE_DANGER_DAYS = 7;
 
 let clients = [];
+let filterGroupValue = '';
 let filterPriorityValue = '';
 let filterStatusValue = '';
 
@@ -361,11 +372,11 @@ async function patchClient(id, field, value) {
   }
 }
 
-/* ════════════ DROPDOWNS (priority / status — hover-open, colored options) ════════════ */
+/* ════════════ DROPDOWNS (group / priority / status — hover-open, colored options) ════════════ */
 function ddListFor(kind) {
-  return kind === 'priority'
-    ? { list: PRIORITIES, bg: PRIORITY_BG, fg: PRIORITY_FG, labelOf: (v) => PRIORITY_LABEL[v] }
-    : { list: STATUSES, bg: STATUS_BG, fg: STATUS_FG, labelOf: (v) => v };
+  if (kind === 'priority') return { list: PRIORITIES, bg: PRIORITY_BG, fg: PRIORITY_FG, labelOf: (v) => PRIORITY_LABEL[v] };
+  if (kind === 'group') return { list: GROUPS, bg: GROUP_BG, fg: GROUP_FG, labelOf: (v) => v };
+  return { list: STATUSES, bg: STATUS_BG, fg: STATUS_FG, labelOf: (v) => v };
 }
 function ddOptionHtml(fg, label, onclick) {
   return `<div class="dd-option" onclick="${onclick}"><span class="dot" style="background:${fg}"></span>${escapeHtml(label)}</div>`;
@@ -392,16 +403,20 @@ function filterDropdownHtml(kind, currentValue) {
   return `<div class="dd">${ddTriggerHtml(bgVal, fgVal, label, Boolean(currentValue))}<div class="dd-menu">${allOption}${options}</div></div>`;
 }
 function renderFilterDropdowns() {
+  document.getElementById('filterGroupCell').innerHTML = filterDropdownHtml('group', filterGroupValue);
   document.getElementById('filterPriorityCell').innerHTML = filterDropdownHtml('priority', filterPriorityValue);
   document.getElementById('filterStatusCell').innerHTML = filterDropdownHtml('status', filterStatusValue);
-  document.getElementById('filterDot').classList.toggle('show', Boolean(filterPriorityValue || filterStatusValue));
+  document.getElementById('filterDot').classList.toggle('show', Boolean(filterGroupValue || filterPriorityValue || filterStatusValue));
 }
 function selectFilterValue(kind, value) {
-  if (kind === 'priority') filterPriorityValue = value; else filterStatusValue = value;
+  if (kind === 'group') filterGroupValue = value;
+  else if (kind === 'priority') filterPriorityValue = value;
+  else filterStatusValue = value;
   renderFilterDropdowns();
   renderTable();
 }
 function resetFilters() {
+  filterGroupValue = '';
   filterPriorityValue = '';
   filterStatusValue = '';
   renderFilterDropdowns();
@@ -416,6 +431,7 @@ async function selectRowValue(id, field, value) {
 function renderTable() {
   const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
   let rows = clients.filter((c) => {
+    if (filterGroupValue && c.group !== filterGroupValue) return false;
     if (filterPriorityValue && c.priority !== filterPriorityValue) return false;
     if (filterStatusValue && c.status !== filterStatusValue) return false;
     if (!q) return true;
@@ -433,6 +449,7 @@ function renderTable() {
     const tgLinkSafe = tgUsername.replace(/[^A-Za-z0-9_]/g, '');
     return `
       <tr data-id="${c.id}" class="${staleClass}">
+        <td class="col-group">${rowDropdownHtml('group', c.id, c.group)}</td>
         <td class="col-name">
           <input class="cell-input name-input" value="${escapeHtml(c.name)}"
             onblur="onFieldBlur('${c.id}','name',this.value)"
@@ -477,15 +494,38 @@ function openStats() {
   const byPriority = {};
   PRIORITIES.forEach((p) => byPriority[p] = 0);
   clients.forEach((c) => { byPriority[c.priority] = (byPriority[c.priority] || 0) + 1; });
+  const byGroup = {};
+  GROUPS.forEach((g) => byGroup[g] = 0);
+  clients.forEach((c) => { byGroup[c.group] = (byGroup[c.group] || 0) + 1; });
   const sales = byStatus['Продажа'] || 0;
   const conv = total ? Math.round((sales / total) * 100) : 0;
+
+  const matrixRows = GROUPS.map((g) => {
+    const groupClients = clients.filter((c) => c.group === g);
+    const cells = STATUSES.map((s) => {
+      const n = groupClients.filter((c) => c.status === s).length;
+      return `<td style="text-align:center;color:${n ? 'var(--text)' : 'var(--border)'}">${n}</td>`;
+    }).join('');
+    return `<tr><td style="font-weight:700;color:${GROUP_FG[g]};white-space:nowrap;padding-right:10px">${escapeHtml(g)}</td>${cells}<td style="text-align:center;font-weight:700">${groupClients.length}</td></tr>`;
+  }).join('');
+  const matrixHead = STATUSES.map((s) => `<th style="font-size:9.5px;font-weight:700;color:var(--muted);padding:0 6px 6px;white-space:nowrap;text-align:center">${escapeHtml(s)}</th>`).join('');
 
   document.getElementById('statsBody').innerHTML = `
     <div class="stat-card"><h3>Всего клиентов</h3><div class="stat-big">${total}</div></div>
     <div class="stat-card"><h3>Требуют внимания (нет изменений ${STALE_WARN_DAYS}+ дня)</h3><div class="stat-big" style="color:var(--p-red)">${stale}</div></div>
     <div class="stat-card"><h3>Конверсия в продажу</h3><div class="stat-big">${conv}%</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${sales} из ${total}</div></div>
+    <div class="stat-card"><h3>По группам</h3>${GROUPS.map((g) => `<div class="stat-row"><span style="color:${GROUP_FG[g]};font-weight:700">${escapeHtml(g)}</span><span class="val">${byGroup[g]}</span></div>`).join('')}</div>
     <div class="stat-card"><h3>По статусам</h3>${STATUSES.map((s) => `<div class="stat-row"><span>${escapeHtml(s)}</span><span class="val">${byStatus[s]}</span></div>`).join('')}</div>
     <div class="stat-card"><h3>По приоритету</h3>${PRIORITIES.map((p) => `<div class="stat-row"><span>${PRIORITY_LABEL[p]}</span><span class="val">${byPriority[p]}</span></div>`).join('')}</div>
+    <div class="stat-card">
+      <h3>Группа × статус</h3>
+      <div style="overflow-x:auto">
+        <table style="border-collapse:collapse;font-size:12px;min-width:100%">
+          <thead><tr><th></th>${matrixHead}<th style="font-size:9.5px;font-weight:700;color:var(--muted);padding:0 0 6px;text-align:center">Всего</th></tr></thead>
+          <tbody>${matrixRows}</tbody>
+        </table>
+      </div>
+    </div>
   `;
   document.getElementById('statsOverlay').classList.remove('hidden');
 }
@@ -510,10 +550,10 @@ function downloadCsv(filename, rows) {
 }
 
 function downloadClientsCsv() {
-  const rows = [['Имя', 'Telegram', 'Приоритет', 'Статус', 'Комментарий', 'Создан', 'Обновлён']];
+  const rows = [['Группа', 'Имя', 'Telegram', 'Приоритет', 'Статус', 'Комментарий', 'Создан', 'Обновлён']];
   clients.forEach((c) => {
     rows.push([
-      c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.comment,
+      c.group, c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.comment,
       fmtDateTime(c.createdAt), fmtDateTime(c.updatedAt),
     ]);
   });
@@ -522,7 +562,7 @@ function downloadClientsCsv() {
 }
 
 const HISTORY_ACTION_LABEL = { create: 'Создан', update: 'Изменение', delete: 'Удалён' };
-const HISTORY_FIELD_LABEL = { name: 'Имя', telegram: 'Telegram', priority: 'Приоритет', status: 'Статус', comment: 'Комментарий' };
+const HISTORY_FIELD_LABEL = { name: 'Имя', telegram: 'Telegram', priority: 'Приоритет', status: 'Статус', group: 'Группа', comment: 'Комментарий' };
 function historyValueLabel(field, v) {
   if (v == null) return '';
   if (field === 'priority') return PRIORITY_LABEL[v] || v;
