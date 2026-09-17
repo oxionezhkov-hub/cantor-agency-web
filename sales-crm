@@ -107,8 +107,10 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
 .dd-label{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dd-trigger .chev{flex-shrink:0;opacity:0.6;transition:transform 0.15s}
 .dd:hover .dd-trigger .chev,.dd:focus-within .dd-trigger .chev{transform:rotate(180deg)}
-.dd-menu{position:absolute;top:100%;left:0;margin-top:6px;min-width:170px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:6px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.15s ease}
+.dd-menu{position:absolute;top:100%;left:0;margin-top:6px;min-width:170px;max-height:min(280px,calc(100vh - 24px));overflow-y:auto;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:6px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.15s ease}
 .dd::before{content:'';position:absolute;top:100%;left:0;width:100%;height:6px}
+.dd.dd-flip-up .dd-menu{top:auto;bottom:100%;margin-top:0;margin-bottom:6px}
+.dd.dd-flip-up::before{top:auto;bottom:100%}
 .dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;visibility:visible;pointer-events:auto}
 .dd-option{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap}
 .dd-option:hover{background:var(--bg)}
@@ -374,6 +376,28 @@ async function patchClient(id, field, value) {
 }
 
 /* ════════════ DROPDOWNS (group / priority / status — hover-open, colored options) ════════════ */
+// Menus open downward by default; for a trigger near the bottom of the viewport (the last
+// rows of the table) that would push the menu off-screen, so flip it to open upward instead.
+// Recomputed on every hover/focus since rows are re-rendered (fresh nodes) after each edit.
+function positionDropdownMenu(dd) {
+  const trigger = dd.querySelector('.dd-trigger');
+  const menu = dd.querySelector('.dd-menu');
+  if (!trigger || !menu) return;
+  const triggerRect = trigger.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - triggerRect.bottom;
+  const spaceAbove = triggerRect.top;
+  const flip = spaceBelow < menu.offsetHeight + 14 && spaceAbove > spaceBelow;
+  dd.classList.toggle('dd-flip-up', flip);
+}
+document.addEventListener('mouseover', (e) => {
+  const dd = e.target.closest('.dd');
+  if (dd) positionDropdownMenu(dd);
+});
+document.addEventListener('focusin', (e) => {
+  const dd = e.target.closest('.dd');
+  if (dd) positionDropdownMenu(dd);
+});
+
 function ddListFor(kind) {
   if (kind === 'priority') return { list: PRIORITIES, bg: PRIORITY_BG, fg: PRIORITY_FG, labelOf: (v) => PRIORITY_LABEL[v] };
   if (kind === 'group') return { list: GROUPS, bg: GROUP_BG, fg: GROUP_FG, labelOf: (v) => v };
