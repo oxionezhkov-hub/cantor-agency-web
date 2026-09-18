@@ -33,7 +33,9 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 a{color:var(--red)}
 a:hover{text-decoration:none}
 
-.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
 .logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
 .logo span{color:var(--red)}
 .header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -52,7 +54,9 @@ a:hover{text-decoration:none}
 .featured-card-arrow{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:var(--accent-bg);color:var(--red-dark);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s,color .15s}
 .featured-card:hover .featured-card-arrow{background:var(--red);color:#fff}
 
+.cat-section+.cat-section{margin-top:40px}
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.cat-grid.single{grid-template-columns:1fr}
 .cat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px 26px;text-decoration:none;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
 .cat-card:hover{border-color:var(--red);transform:translateY(-1px)}
 .cat-card-title{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.005em;line-height:1.35}
@@ -70,6 +74,7 @@ a:hover{text-decoration:none}
 </head>
 <body>
 
+<div class="header-trigger"></div>
 <div class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <span class="header-tag">База знаний</span>
@@ -78,56 +83,86 @@ a:hover{text-decoration:none}
 <div class="wrap">
 
   <div class="doc-title">Регламенты работы с клиентами Авито</div>
-  <div class="doc-meta">Каталог всех регламентов: запуск нового клиента, ежедневное сопровождение, коммуникация, еженедельные встречи, работа с эдвайзерами и продажи/продление.</div>
+  <div class="doc-meta">Каталог регламентов по разделам: запуск клиента, ведение кабинета, работа с клиентом, команда и продажи.</div>
 
-  <div class="section-label">Запуск нового клиента</div>
-  <a href="/base/zapusk-novogo-klienta" class="featured-card">
-    <div>
-      <div class="featured-card-title">Регламент работы с новыми клиентами Авито</div>
-      <div class="featured-card-desc">Пошаговый процесс первого месяца работы с новым клиентом: доступы, аудит кабинета, оформление, согласование стратегии, новые объявления, города и ставки, запуск продвижения и контрольные точки завершения онбординга.</div>
+  <div class="cat-section">
+    <div class="section-label">1. Запуск клиента</div>
+    <a href="/base/zapusk-novogo-klienta" class="featured-card">
+      <div>
+        <div class="featured-card-title">Регламент работы с новыми клиентами Авито</div>
+        <div class="featured-card-desc">Пошаговый процесс первого месяца работы с новым клиентом: доступы, аудит кабинета, оформление, согласование стратегии, новые объявления, города и ставки, запуск продвижения и контрольные точки завершения онбординга.</div>
+      </div>
+      <div class="featured-card-arrow">→</div>
+    </a>
+    <div class="cat-grid single" style="margin-top:16px">
+      <a href="/base/reglament-1-zapusk" class="cat-card">
+        <div class="cat-card-title">Запуск нового клиента по Авито (сжатая версия)</div>
+        <div class="cat-card-desc">6 шагов от авторизации и аудита до первых результатов, с ответственными и сроками по дням.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
     </div>
-    <div class="featured-card-arrow">→</div>
-  </a>
+  </div>
 
-  <div class="section-label">Шесть регламентов работы с клиентами</div>
-  <div class="cat-grid">
+  <div class="cat-section">
+    <div class="section-label">2. Ведение кабинета</div>
+    <div class="cat-grid">
+      <a href="/base/reglament-oformlenie-obyavleniy" class="cat-card">
+        <div class="cat-card-title">Оформление и наполнение объявлений</div>
+        <div class="cat-card-desc">Справочник по объявлениям, городам и ставкам: как тестировать гипотезы системно, что делать с проблемным кабинетом и как распределять внимание между кабинетами.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
 
-    <a href="/base/reglament-1-zapusk" class="cat-card">
-      <div class="cat-card-title">Запуск нового клиента по Авито</div>
-      <div class="cat-card-desc">Сжатая версия регламента запуска: 6 шагов от авторизации и аудита до первых результатов, с ответственными и сроками по дням.</div>
-      <div class="cat-card-link">Открыть →</div>
-    </a>
+      <a href="/base/reglament-3-soprovozhdenie" class="cat-card">
+        <div class="cat-card-title">Ежедневное сопровождение клиентов</div>
+        <div class="cat-card-desc">Роли, ежедневные чек-листы специалиста и менеджера, целевые показатели, правила работы с объявлениями и контроль качества.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
+    </div>
+  </div>
 
-    <a href="/base/reglament-2-kommunikaciya" class="cat-card">
-      <div class="cat-card-title">Коммуникация с клиентом по Авито</div>
-      <div class="cat-card-desc">Как выстроена связь с клиентом: бриф, сроки проекта, ежедневные отчёты, сбор обратной связи и передача вопросов специалисту.</div>
-      <div class="cat-card-link">Открыть →</div>
-    </a>
+  <div class="cat-section">
+    <div class="section-label">3. Работа с клиентом</div>
+    <div class="cat-grid">
+      <a href="/base/reglament-dialogi-zayavki" class="cat-card">
+        <div class="cat-card-title">Работа с диалогами и заявками</div>
+        <div class="cat-card-desc">Как отвечать на заявки, чтобы доводить их до диагностики: скорость ответа, повторные касания, скрипты и работа с возражениями.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
 
-    <a href="/base/reglament-3-soprovozhdenie" class="cat-card">
-      <div class="cat-card-title">Ежедневное сопровождение клиентов</div>
-      <div class="cat-card-desc">Роли, ежедневные чек-листы специалиста и менеджера, целевые показатели, правила работы с объявлениями и контроль качества.</div>
-      <div class="cat-card-link">Открыть →</div>
-    </a>
+      <a href="/base/reglament-2-kommunikaciya" class="cat-card">
+        <div class="cat-card-title">Коммуникация с клиентом по Авито</div>
+        <div class="cat-card-desc">Как выстроена связь с клиентом: бриф, сроки проекта, ежедневные отчёты, сбор обратной связи и передача вопросов специалисту.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
 
-    <a href="/base/reglament-4-vstrechi" class="cat-card">
-      <div class="cat-card-title">Проведение еженедельных встреч с клиентами</div>
-      <div class="cat-card-desc">Подготовка, структура и итоги еженедельной встречи с клиентом, фиксация договорённостей.</div>
-      <div class="cat-card-link">Открыть →</div>
-    </a>
+      <a href="/base/reglament-4-vstrechi" class="cat-card">
+        <div class="cat-card-title">Проведение еженедельных встреч с клиентами</div>
+        <div class="cat-card-desc">Подготовка, структура и итоги еженедельной встречи с клиентом, фиксация договорённостей.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
+    </div>
+  </div>
 
-    <a href="/base/reglament-5-advaizery" class="cat-card">
-      <div class="cat-card-title">Сбор опыта авито-экспертов (эдвайзеров)</div>
-      <div class="cat-card-desc">Как находить экспертов по Авито, о чём их спрашивать и как фиксировать их опыт в базе знаний.</div>
-      <div class="cat-card-link">Открыть →</div>
-    </a>
+  <div class="cat-section">
+    <div class="section-label">4. Команда и партнёры</div>
+    <div class="cat-grid single">
+      <a href="/base/reglament-5-advaizery" class="cat-card">
+        <div class="cat-card-title">Сбор опыта авито-экспертов (эдвайзеров)</div>
+        <div class="cat-card-desc">Как находить экспертов по Авито, о чём их спрашивать и как фиксировать их опыт в базе знаний.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
+    </div>
+  </div>
 
-    <a href="/base/reglament-6-prodazhi" class="cat-card">
-      <div class="cat-card-title">Продажи и продление сотрудничества</div>
-      <div class="cat-card-desc">Как проходит первичная продажа новому клиенту и продление сотрудничества с текущим.</div>
-      <div class="cat-card-link">Открыть →</div>
-    </a>
-
+  <div class="cat-section">
+    <div class="section-label">5. Продажи</div>
+    <div class="cat-grid single">
+      <a href="/base/reglament-6-prodazhi" class="cat-card">
+        <div class="cat-card-title">Продажи и продление сотрудничества</div>
+        <div class="cat-card-desc">Как проходит первичная продажа новому клиенту и продление сотрудничества с текущим.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
+    </div>
   </div>
 
 </div>

@@ -34,7 +34,9 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 a{color:var(--red)}
 a:hover{text-decoration:none}
 
-.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
 .logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
 .logo span{color:var(--red)}
 .header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
@@ -44,6 +46,11 @@ a:hover{text-decoration:none}
 
 .doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
 .doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
 
 .reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
 .reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
@@ -89,6 +96,7 @@ table.data-table tr:last-child td{border-bottom:none}
 </head>
 <body>
 
+<div class="header-trigger"></div>
 <div class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <a href="/base" class="header-tag">← База знаний</a>
@@ -99,16 +107,31 @@ table.data-table tr:last-child td{border-bottom:none}
   <div class="doc-title">Сбор опыта авито-экспертов (эдвайзеров)</div>
   <div class="doc-meta">Как находить эдвайзеров, что им писать, как действовать по каждому статусу ответа и как фиксировать их опыт в базе знаний.</div>
 
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#s1">Кто такие эдвайзеры</a>
+        <a href="#s2">Где искать эдвайзеров</a>
+        <a href="#s3">Рабочая таблица эдвайзеров</a>
+        <a href="#s4">Как действовать по статусу ответа</a>
+        <a href="#s5">Кто мы и как начинать диалог</a>
+        <a href="#s6">Форматы общения</a>
+        <a href="#s7">Что спрашивать</a>
+        <a href="#s8">Как благодарить</a>
+        <a href="#s9">Как фиксировать опыт</a>
+    </div>
+  </div>
+
   <div class="reg-card">
     <div class="reg-title">Сбор опыта авито-экспертов (эдвайзеров)</div>
     <div class="reg-goal">Цель: собирать и систематизировать лучшие практики и кейсы для улучшения работы с клиентами.</div>
 
-    <div class="step">
+    <div class="step" id="s1">
       <div class="step-title">Кто такие эдвайзеры</div>
       <p>Внешние или внутренние эксперты по продвижению на Авито, у которых мы перенимаем опыт: нестандартные стратегии, новые фичи платформы, успешные кейсы. Часто это опытные репетиторы, которые уже прошли через большой рекламный бюджет на Авито и готовы делиться, что у них сработало, а что нет.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s2">
       <div class="step-title">Где искать эдвайзеров</div>
       <ul>
         <li>Внутренняя база — сотрудники и подрядчики агентства, у которых есть опыт работы с Авито.</li>
@@ -119,7 +142,7 @@ table.data-table tr:last-child td{border-bottom:none}
       </ul>
     </div>
 
-    <div class="step">
+    <div class="step" id="s3">
       <div class="step-title">Рабочая таблица эдвайзеров</div>
       <p>У нас есть общая таблица (Google Sheets), где ведётся вся история обращений — ссылку на неё берите у руководителя или в рабочем чате, если её ещё нет под рукой. Таблица ведётся не с первого дня: часть контактов там уже отмечена с прошлых попыток — по кому-то есть развёрнутый ответ, кто-то прочитал сообщение и не ответил, кто-то отказался общаться, с кем-то ещё не связывались вовсе. Прежде чем писать новому эдвайзеру или продолжать переписку со старым — сначала смотрим его текущий статус в таблице, чтобы не дублировать чужую работу и не писать повторно тому, кто уже отказался.</p>
       <div class="table-scroll">
@@ -138,7 +161,7 @@ table.data-table tr:last-child td{border-bottom:none}
       <p>Обновляем статус сразу после каждого контакта — это экономит время всей команде: не только вам, но и коллегам, которые потом тоже могут писать этому эдвайзеру.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s4">
       <div class="step-title">Как действовать по статусу ответа</div>
       <div class="table-scroll">
         <table class="data-table">
@@ -157,7 +180,7 @@ table.data-table tr:last-child td{border-bottom:none}
       <p>Общее правило: мы пишем повторно не больше одного раза после паузы в 2 дня. Если реакции нет — не давим и не пишем чаще, это только портит отношение к агентству.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s5">
       <div class="step-title">Кто мы и как начинать диалог</div>
       <p>Контакты первых эдвайзеров и вводные по формату общения даёт руководитель — это отдельно проговаривается с новым сотрудником, прежде чем он начнёт писать сам.</p>
       <p>Когда представляемся — говорим примерно так:</p>
@@ -179,7 +202,7 @@ table.data-table tr:last-child td{border-bottom:none}
       <p>Если эдвайзер уже ответил и готов общаться — дальше уточняем, что именно хотим получить: консультацию, разбор конкретного кейса, совет по стратегии; и что предлагаем взамен (см. раздел «Как благодарить»).</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s6">
       <div class="step-title">Форматы общения</div>
       <p>Не решаем за эдвайзера, как ему удобнее — предлагаем на выбор и подстраиваемся под ответ:</p>
       <ul>
@@ -189,7 +212,7 @@ table.data-table tr:last-child td{border-bottom:none}
       </ul>
     </div>
 
-    <div class="step">
+    <div class="step" id="s7">
       <div class="step-title">Что спрашивать</div>
       <p>Важно опираться не только на общий опыт по Авито, но и на нишевые практики репетиторства (математика, физика, языки и т. д.) — конкретные вопросы и рекомендации: как писать первым, как представляться, что делать с проблемными направлениями.</p>
       <ul>
@@ -208,7 +231,7 @@ table.data-table tr:last-child td{border-bottom:none}
       </ul>
     </div>
 
-    <div class="step">
+    <div class="step" id="s8">
       <div class="step-title">Как благодарить</div>
       <ul>
         <li><strong>Публичная благодарность</strong> — упоминание в кейсах, статьях, соцсетях агентства (с согласия).</li>
@@ -219,7 +242,7 @@ table.data-table tr:last-child td{border-bottom:none}
       </ul>
     </div>
 
-    <div class="step">
+    <div class="step" id="s9">
       <div class="step-title">Как фиксировать опыт</div>
       <p>После каждой консультации — КМ или специалист составляет конспект: дата, имя эдвайзера; вопросы, которые обсуждали; ключевые выводы и рекомендации; применимость к нашим клиентам.</p>
       <p>Можно сначала просто сохранять заметки в свободном формате (документ, файл), а затем периодически оформлять их в структурированном виде, чтобы любой специалист мог быстро найти ответ на конкретный вопрос или подсказку по стратегии. Раз в месяц — ревизия базы: что применили, что дало результат, что нет.</p>

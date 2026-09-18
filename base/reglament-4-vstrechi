@@ -34,7 +34,9 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 a{color:var(--red)}
 a:hover{text-decoration:none}
 
-.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
 .logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
 .logo span{color:var(--red)}
 .header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
@@ -44,6 +46,11 @@ a:hover{text-decoration:none}
 
 .doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
 .doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
 
 .reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
 .reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
@@ -78,6 +85,7 @@ li:last-child{margin-bottom:0}
 </head>
 <body>
 
+<div class="header-trigger"></div>
 <div class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <a href="/base" class="header-tag">← База знаний</a>
@@ -88,11 +96,21 @@ li:last-child{margin-bottom:0}
   <div class="doc-title">Проведение еженедельных встреч с клиентами</div>
   <div class="doc-meta">Подготовка, структура и итоги регулярной встречи с клиентом, фиксация договорённостей.</div>
 
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#s1">Подготовка</a>
+        <a href="#s2">Проведение встречи</a>
+        <a href="#s3">После встречи</a>
+        <a href="#s4">Расписание</a>
+    </div>
+  </div>
+
   <div class="reg-card">
     <div class="reg-title">Проведение еженедельных встреч с клиентами</div>
     <div class="reg-goal">Цель: подвести итоги недели, согласовать план на следующую, собрать обратную связь.</div>
 
-    <div class="step">
+    <div class="step" id="s1">
       <div class="step-title">Подготовка</div>
       <div class="step-meta">За 1 день до встречи</div>
       <p>КМ формирует отчёт за неделю:</p>
@@ -111,7 +129,7 @@ li:last-child{margin-bottom:0}
       <p>Отчёт и план отправляются клиенту заранее — за день до встречи, чтобы клиент мог ознакомиться.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s2">
       <div class="step-title">Проведение встречи</div>
       <div class="step-meta">30–45 минут</div>
       <p><strong>Итоги недели (10–15 минут):</strong> КМ презентует метрики и динамику, обсуждает, что сработало, что нет.</p>
@@ -121,7 +139,7 @@ li:last-child{margin-bottom:0}
       <p><strong>Фиксация договорённостей (5 минут):</strong> КМ проговаривает вслух все принятые решения и задачи, назначает ответственных и сроки.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s3">
       <div class="step-title">После встречи</div>
       <p>В течение 1 рабочего часа КМ отправляет клиенту протокол встречи: что обсудили; что решили; кто что делает и к какому сроку. Задачи заносятся в таск-трекер с дедлайнами.</p>
       <p>Если на встрече принято решение, требующее изменений в бюджете или стратегии — КМ оформляет это отдельным документом и отправляет на финальное согласование.</p>
@@ -135,7 +153,7 @@ li:last-child{margin-bottom:0}
       <p>Такой протокол проще присылать по итогам не только еженедельной встречи, но и любого промежуточного созвона с клиентом — формат одинаковый.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s4">
       <div class="step-title">Расписание</div>
       <ul>
         <li>Встречи проводятся в один и тот же день недели для каждого клиента.</li>
@@ -147,7 +165,7 @@ li:last-child{margin-bottom:0}
   </div>
 
   <div class="doc-nav">
-    <a href="/base/reglament-3-soprovozhdenie">← Регламент 3. Ежедневное сопровождение</a>
+    <a href="/base/reglament-2-kommunikaciya">← Коммуникация с клиентом по Авито</a>
     <a href="/base/reglament-5-advaizery">Регламент 5. Опыт эдвайзеров →</a>
   </div>
   <div class="doc-nav" style="margin-top:6px">

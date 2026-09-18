@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Регламент. Работа с диалогами и заявками на Авито — База знаний Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--red)}
+a:hover{text-decoration:none}
+
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
+.logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
+.logo span{color:var(--red)}
+.header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
+.header-tag:hover{color:var(--red)}
+
+.wrap{max-width:820px;margin:0 auto;padding:44px 24px 60px}
+
+.doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
+.doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
+
+.reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
+.reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
+.reg-goal{font-size:15px;color:var(--muted);margin-bottom:22px;font-style:italic}
+
+.step{border-top:1px solid var(--border);padding:22px 0}
+.reg-card > .step:first-of-type{border-top:none;padding-top:2px}
+.step-title{font-size:16.5px;font-weight:700;color:var(--dark);margin-bottom:4px;letter-spacing:-0.005em}
+.step-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+.step h4{font-size:13px;font-weight:700;color:var(--red-dark);text-transform:uppercase;letter-spacing:.03em;margin:16px 0 8px}
+.step h4:first-of-type{margin-top:0}
+.step p{font-size:15px;color:var(--text);margin-bottom:10px}
+.step p:last-child{margin-bottom:0}
+ul,ol{padding-left:20px;margin-bottom:10px}
+li{font-size:15px;color:var(--text);margin-bottom:6px;line-height:1.65}
+li:last-child{margin-bottom:0}
+.result-box{background:var(--accent-bg);border-radius:var(--r-md);padding:12px 16px;font-size:14px;color:var(--dark2);margin-top:14px}
+.result-box strong{color:var(--red-dark)}
+.sample-box{background:var(--bg);border:1px dashed var(--border);border-radius:var(--r-md);padding:16px 18px;font-size:14px;color:var(--dark2);margin:10px 0 14px;white-space:pre-line}
+.sample-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px}
+
+.doc-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;flex-wrap:wrap}
+.doc-nav a{font-size:13.5px;font-weight:700;color:var(--red-dark);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.doc-nav a:hover{color:var(--red)}
+.doc-nav .to-catalog{color:var(--muted)}
+.doc-nav .to-catalog:hover{color:var(--red)}
+
+
+@media(max-width:640px){
+  .header{padding:14px 20px}
+  .wrap{padding:30px 16px 50px}
+  .reg-card{padding:24px 20px 6px}
+  .doc-nav{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div class="header-trigger"></div>
+<div class="header">
+  <a href="/" class="logo">Cantor <span>Agency</span></a>
+  <a href="/base" class="header-tag">← База знаний</a>
+</div>
+
+<div class="wrap">
+
+  <div class="doc-title">Работа с диалогами и заявками на Авито</div>
+  <div class="doc-meta">Как отвечать на заявки, чтобы доводить их до диагностики: скорость ответа, повторные касания, скрипты и что делать, если диалоги временно ведёт агентство.</div>
+
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#s1">Зона ответственности агентства и репетитора</a>
+        <a href="#s2">Решения по цифрам, а не на глаз</a>
+        <a href="#s3">Каждое сообщение — с вопросом</a>
+        <a href="#s4">Скорость ответа</a>
+        <a href="#s5">Алгоритм повторных касаний</a>
+        <a href="#s6">Когда агентство временно ведёт диалоги</a>
+        <a href="#s7">Не останавливать продвижение на время отъезда</a>
+        <a href="#s8">Работа с возражениями</a>
+        <a href="#s9">Онбординг нового человека на диалоги</a>
+        <a href="#s10">Инструменты и отчётность</a>
+    </div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-title">Работа с диалогами и заявками на Авито</div>
+    <div class="reg-goal">Цель: агентство отвечает за показы и контакты, но нам важно, чтобы у репетитора были продажи и он оставался доволен результатом — поэтому мы помогаем и с диалогами, а иногда временно берём их полностью на себя.</div>
+
+    <div class="step" id="s1">
+      <div class="step-title">Зона ответственности агентства и репетитора</div>
+      <p>Как команда мы отвечаем за объявления и их продвижение — то есть за просмотры на Авито и за количество контактов. Что происходит с контактами дальше — весь диалог, доведение до диагностики, сама продажа — по умолчанию ведёт репетитор: исторически агентство не давало формального регламента общения, рассчитывая, что репетиторы это умеют сами, и многие действительно умеют.</p>
+      <p>На практике диалоги всё равно регулярно разбираются на стратегических встречах с клиентом — что можно улучшить, как не называть цену слишком рано, как выстраивать напоминания. А если по кабинету видно, что диагностик мало при достаточном количестве контактов, агентство подключается к диалогам активнее — вплоть до того, чтобы временно вести их полностью самим (см. <a href="#s6">ниже</a>). Итоговая цель одна: чтобы у репетитора были продажи, он был доволен результатом и продлевал сотрудничество — поэтому просмотры и контакты сами по себе не финальная метрика.</p>
+    </div>
+
+    <div class="step" id="s2">
+      <div class="step-title">Решения по цифрам, а не на глаз</div>
+      <p>Любое решение по диалогам — как и по объявлениям — принимается на основе цифр: сколько заявок пришло, сколько получили ответ, сколько дошло до записи на диагностику. Никто не верит на слово, что «мы стараемся» — важны факт и план: сколько заявок было и сколько из них довели до диагностики.</p>
+      <p>Если по клиенту ноль диагностик за период — это повод действовать сразу, а не ждать и объяснять паузу сезоном или рынком. Если мало заявок при хорошем количестве просмотров — сразу подсвечиваем это в рабочем чате и ищем решение, а не оставляем плохой результат без реакции.</p>
+    </div>
+
+    <div class="step" id="s3">
+      <div class="step-title">Каждое сообщение — с вопросом</div>
+      <p>Сообщение без вопроса почти всегда остаётся без ответа. Если лид прочитал сообщение и замолчал — чаще всего дело не в том, что его не устроил ответ, а в том, что в последнем сообщении не было прямого вопроса, на который легко ответить «да» или «нет».</p>
+      <p>Правило: заканчивать сообщение конкретным закрытым вопросом — про удобное время, формат или следующий шаг, а не общей фразой вроде «ждём вашего ответа».</p>
+      <div class="sample-label">Пример</div>
+      <div class="sample-box">Вместо: «Хорошо, будем ждать от вас информацию»
+Лучше: «Удобно ли вам созвониться сегодня в [время]? Обсудим формат занятий и запишу вас на диагностику»</div>
+    </div>
+
+    <div class="step" id="s4">
+      <div class="step-title">Скорость ответа</div>
+      <p>Первые 10–15 минут после сообщения лида — критичны: если ответить позже, человек нередко уже успевает согласиться на диагностику с другим репетитором либо просто теряет диалог среди других открытых чатов. Проверять неотвеченные сообщения нужно несколько раз в течение дня, а не раз утром и раз вечером.</p>
+      <p>Если лид не отвечает и на быстрый ответ — это тоже нормально: не любой лид готов продолжать сразу, для этого есть повторные касания (см. ниже).</p>
+    </div>
+
+    <div class="step" id="s5">
+      <div class="step-title">Алгоритм повторных касаний</div>
+      <p>Если лид замолчал после ответа — не бросаем диалог сразу:</p>
+      <ul>
+        <li>если ответа нет несколько часов — пишем короткое вежливое напоминание с вопросом;</li>
+        <li>если тишина продолжается — пишем ещё раз вечером, когда человек, скорее всего, уже свободен и может зайти на Авито;</li>
+        <li>если и на это нет ответа — пишем ещё раз на следующий день;</li>
+        <li>если после этого ответа всё ещё нет — считаем диалог закрытым, больше не пишем.</li>
+      </ul>
+      <p>Исключение — если лид явно написал отказ («неинтересно», «нашли другого преподавателя», «занимаемся очно, онлайн не подходит» без готовности обсуждать) — в этом случае повторно не пишем, отказ уважаем сразу.</p>
+    </div>
+
+    <div class="step" id="s6">
+      <div class="step-title">Когда агентство временно ведёт диалоги за клиента</div>
+      <p>Если по клиенту диагностик стабильно мало при хорошем количестве заявок, либо репетитор временно недоступен (поездка, высокая личная нагрузка) — агентство может на неделю-две полностью взять на себя ответы в диалогах по этому кабинету, по договорённости с клиентом.</p>
+      <p>В этом случае — не ограничиваемся парой сообщений и не «успокаиваемся» на середине: нужно пройтись по всем доступным контактам за месяц, а не только по нескольким. Если после первого прохода получили ответ лишь от части лидов (например, 5 из 25) — проход повторяем, при необходимости несколько раз за день, пока не исчерпаем всех, кому есть смысл писать. Пропускаем только тех, кто уже явно отказался или написал, что нашёл другого преподавателя.</p>
+      <p>Чтобы ответы звучали естественно для конкретного репетитора, используем историю его собственной переписки — тот же стиль и формулировки, а не универсальный шаблон. Для координации, кому и когда назначена диагностика, используем общую таблицу или календарь с отметками свободного времени репетитора (см. <a href="#s10">Инструменты</a>).</p>
+    </div>
+
+    <div class="step" id="s7">
+      <div class="step-title">Не останавливать продвижение на время отъезда клиента</div>
+      <p>Если репетитор уезжает или временно недоступен — не ставим дневной лимит кабинета в ноль: Авито критично относится к таким паузам и может занизить позиции или обнулить продвижение. Правильнее продолжать откручивать бюджет как обычно, а диалоги в это время вести силами агентства (см. выше), просто предлагая лидам ближайшие доступные слоты по календарю репетитора — не обязательно на сегодня.</p>
+    </div>
+
+    <div class="step" id="s8">
+      <div class="step-title">Работа с возражениями</div>
+      <ul>
+        <li><strong>Возражение по цене</strong> — не называем точную стоимость слишком рано, особенно в первых сообщениях. Если лид прямо просит цену или сомневается, что дорого, — можно предложить более дешёвый вводный формат (пробное занятие, короткая диагностика или недорогой ознакомительный материал), чтобы не терять лида на этапе цены, а познакомить с форматом занятий.</li>
+        <li><strong>Возражение по формату</strong> (например, лид хочет очно, а репетитор работает онлайн, или наоборот) — не переубеждаем в объявлении, а обсуждаем формат уже в диалоге или на диагностике: «Давайте созвонимся, обсудим формат и посмотрим, что вам будет удобнее» — предлагать альтернативу как вариант, а не как единственный путь.</li>
+        <li><strong>Лид прочитал и замолчал</strong> — почти всегда означает, что в последнем сообщении не было прямого вопроса (см. <a href="#s3">выше</a>): возвращаемся и задаём его.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="s9">
+      <div class="step-title">Онбординг нового человека на диалоги</div>
+      <p>Быстрее всего человек учится не на инструкции, а с готовыми материалами под рукой: даём доступ к истории переписки конкретного репетитора, чтобы новый человек видел, как отвечать в его стиле, и мог по вопросу клиента сразу найти похожий пример.</p>
+      <p>Помимо этого — 2–3 короткие ознакомительные встречи с владельцем/репетитором: кто его целевой ученик, с кем он не работает, какой у него ценовой сегмент, какие ценности важны в общении. Одних скриптов недостаточно — они помогают только когда человек уже понимает продукт и может сориентироваться в нестандартной ситуации, а не просто копировать шаблон.</p>
+      <p>Пока идёт активная передача диалогов — ежедневный (или хотя бы вечерний) отчёт: сколько заявок было, скольким ответили, сколько записали на диагностику (план/факт). Так сразу видно, если человек не справляется с объёмом или отвечает слишком медленно.</p>
+    </div>
+
+    <div class="step" id="s10">
+      <div class="step-title">Инструменты и отчётность</div>
+      <p>Общая таблица или календарь для координации: кто и когда писал лиду, статус диалога, доступное время репетитора для диагностик — по аналогии с таблицей эдвайзеров (см. <a href="/base/reglament-5-advaizery">Регламент по эдвайзерам</a>) и таблицей лидов из <a href="/base/reglament-3-soprovozhdenie">Регламента ежедневного сопровождения</a>. Если диалоги временно ведёт несколько человек — таблица обязательна, чтобы не писать одному лиду дважды и не терять историю.</p>
+    </div>
+  </div>
+
+  <div class="doc-nav">
+    <a href="/base/reglament-3-soprovozhdenie">← Ежедневное сопровождение клиентов</a>
+    <a href="/base/reglament-2-kommunikaciya">Коммуникация с клиентом по Авито →</a>
+  </div>
+  <div class="doc-nav" style="margin-top:6px">
+    <a href="/base" class="to-catalog">← К каталогу регламентов</a>
+  </div>
+
+</div>
+
+
+</body>
+</html>
