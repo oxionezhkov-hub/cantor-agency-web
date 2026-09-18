@@ -1,40 +1,38 @@
-# Заявки со свет­ланы-идрисовой в Google Таблицу
+# Заявки со Светланы Идрисовой → Google Таблица + письмо
 
-Эта функция принимает POST-запрос с формы `client/svetlana-idrisova`
-(«Записаться на пробное занятие») и добавляет строку в Google Таблицу.
-Код уже готов — здесь описано, что нужно настроить вручную в Google Cloud
-и Yandex Cloud, потому что это требует доступа к вашим аккаунтам.
+Функция принимает POST с формы `client/svetlana-idrisova`
+(«Записаться на пробное занятие»), дописывает строку в Google Таблицу и
+шлёт письмо о новой заявке через Resend — сделано по образцу функции
+для сайта Анны Дейнеги, с тем же сервисным аккаунтом Google, но новой
+таблицей.
 
-## 1. Google Sheets: сервисный аккаунт
+## 1. Google Таблица
 
-1. Откройте https://console.cloud.google.com/ (можно в существующем проекте
-   или создайте новый).
-2. **APIs & Services → Library** → найдите **Google Sheets API** → **Enable**.
-3. **APIs & Services → Credentials → Create Credentials → Service account**.
-   Имя — например `svetlana-idrisova-form`. Роль не обязательна (доступ
-   даётся отдельно, на саму таблицу).
-4. Откройте созданный сервисный аккаунт → вкладка **Keys → Add Key →
-   Create new key → JSON**. Скачается файл вида
-   `project-name-xxxxx.json` — он понадобится на шаге 3.
-5. Создайте Google Таблицу (или используйте существующую) для заявок.
-   Добавьте в неё лист с названием **«Заявки»** и, по желанию, шапку в
-   первой строке:
-   `Дата | Имя ученика | Фамилия ученика | Класс | Формат | Цель | Родитель | Телефон | Email | Согласие на рекламу`
-6. Скопируйте **ID таблицы** — это часть ссылки между `/d/` и `/edit`:
+Сервисный аккаунт уже существует (тот же, что у Анны Дейнеги) — новый не
+нужен. Нужно только:
+
+1. Создайте новую Google Таблицу для заявок Светланы.
+2. Добавьте в неё лист с названием **«Заявки»** (или своё — тогда укажите
+   его в `SHEET_NAME`), а в первой строке — шапку из 10 колонок (A–J):
+
+   | A | B | C | D | E | F | G | H | I | J |
+   |---|---|---|---|---|---|---|---|---|---|
+   | Дата | Имя ученика | Фамилия ученика | Класс | Формат занятий | Цель и описание ситуации | Имя и отчество родителя | Телефон | Email | Согласие на рекламную рассылку |
+
+   Функция сама допишет данные под шапку — порядок колонок должен
+   совпадать с этим списком.
+3. **Настройки доступа (Share)** → добавьте email сервисного аккаунта
+   (тот же `client_email`, что использовался для таблицы Анны — посмотрите
+   его в JSON-ключе сервисного аккаунта или в списке доступа её таблицы) с
+   правами **Редактор**.
+4. Скопируйте **ID таблицы** — часть ссылки между `/d/` и `/edit`:
    `https://docs.google.com/spreadsheets/d/ЭТОТ_ID/edit`
-7. Откройте таблицу → **Настройки доступа (Share)** → добавьте email
-   сервисного аккаунта (поле `client_email` из скачанного JSON, вида
-   `svetlana-idrisova-form@project-name.iam.gserviceaccount.com`) с правами
-   **Редактор**.
 
 ## 2. Разверните функцию в Yandex Cloud
 
-Понадобится [Yandex Cloud CLI](https://yandex.cloud/ru/docs/cli/quickstart)
-(`yc`), уже авторизованный на ваш аккаунт.
-
 ```bash
 cd yc-svetlana-idrisova-form
-npm install --omit=dev   # подтягивает jsonwebtoken в node_modules
+npm install --omit=dev
 
 yc serverless function create --name=svetlana-idrisova-form
 
@@ -45,45 +43,47 @@ yc serverless function version create \
   --memory=128m \
   --execution-timeout=10s \
   --source-path=. \
-  --environment GOOGLE_SERVICE_ACCOUNT_EMAIL="<client_email из JSON>" \
-  --environment GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="<private_key из JSON, с \n вместо переносов строк>" \
-  --environment GOOGLE_SHEET_ID="<ID таблицы с шага 1.6>"
+  --environment GOOGLE_SERVICE_ACCOUNT_KEY='<весь JSON-ключ сервисного аккаунта одной строкой>' \
+  --environment SPREADSHEET_ID='<ID таблицы с шага 1.4>' \
+  --environment SHEET_NAME='Заявки' \
+  --environment RESEND_API_KEY='<ключ с resend.com/api-keys>' \
+  --environment MAIL_FROM='Заявки с сайта <leads@cantor.agency>' \
+  --environment MAIL_TO='<email(а) Светланы через запятую>'
 
 # Разрешить вызовы без авторизации (форма на сайте зовёт функцию напрямую из браузера):
 yc serverless function allow-unauthenticated-invoke --name=svetlana-idrisova-form
 ```
 
-Про `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`: в JSON-файле значение выглядит как
-`"-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"` —
-скопируйте это значение **как есть**, вместе с символами `\n` (не настоящими
-переносами строк) — функция сама заменит их на переносы.
+### Какие секреты вписать
 
-После деплоя команда выведет **HTTP-адрес функции**, либо посмотрите его в
-консоли: **Cloud Functions → svetlana-idrisova-form → Обзор → HTTP-адрес**
-(вида `https://functions.yandexcloud.net/xxxxxxxxxxxxxxxxxxxx`).
+| Переменная | Что это | Откуда взять |
+|---|---|---|
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | JSON-ключ сервисного аккаунта, **целиком, в одну строку** | Тот же, что уже используется в функции Анны Дейнеги — скопируйте оттуда же (из настроек её функции в Yandex Cloud Console, вкладка «Переменные окружения», значение уже там) |
+| `SPREADSHEET_ID` | ID **новой** таблицы Светланы | Из ссылки на таблицу, шаг 1.4 выше |
+| `SHEET_NAME` | Название листа | `Заявки` (если назвали лист иначе — впишите так же) |
+| `RESEND_API_KEY` | Ключ Resend-аккаунта, с которого уходят письма | Тот же ключ, что использует функция Анны Дейнеги — скопируйте оттуда же |
+| `MAIL_FROM` | Адрес отправителя (должен быть на домене, подтверждённом в Resend) | Обычно тот же, что уже используется у других сайтов агентства, например `leads@cantor.agency` |
+| `MAIL_TO` | Куда слать письмо о новой заявке | Email Светланы для заявок (например `kotenok8595@mail.ru`), можно несколько через запятую |
+
+`GOOGLE_SERVICE_ACCOUNT_KEY` и `RESEND_API_KEY` — это ровно те же значения,
+что уже стоят в функции Анны Дейнеги (общий сервисный аккаунт и общий
+Resend-аккаунт агентства), их не нужно создавать заново — только
+скопировать. Уникальные для Светланы — это `SPREADSHEET_ID`, `MAIL_TO` и,
+при желании, `MAIL_FROM`/`SHEET_NAME`.
+
+После деплоя команда выведет **HTTP-адрес функции** (или посмотрите его в
+консоли: **Cloud Functions → svetlana-idrisova-form → Обзор →
+HTTP-адрес**, вида `https://functions.yandexcloud.net/xxxxxxxxxxxxxxxxxxxx`).
 
 ## 3. Подключите адрес к сайту
 
-Пришлите мне этот HTTP-адрес (или сами замените в
-`client/svetlana-idrisova` константу `API_BASE` рядом с функцией
-`submitForm()` — сейчас там стоит комментарий-заглушка) — и заявки с формы
-начнут падать строками в вашу таблицу.
+Пришлите мне этот HTTP-адрес — я подставлю его в константу `API_BASE`
+рядом с функцией `submitForm()` в `client/svetlana-idrisova` и запушу.
+После этого заявки с формы начнут появляться строками в таблице и письмом
+на почту.
 
 ## Обновление функции
 
-После любых правок в `index.js`:
-
-```bash
-yc serverless function version create \
-  --function-name=svetlana-idrisova-form \
-  --runtime=nodejs18 \
-  --entrypoint=index.handler \
-  --memory=128m \
-  --execution-timeout=10s \
-  --source-path=. \
-  --environment GOOGLE_SERVICE_ACCOUNT_EMAIL="..." \
-  --environment GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="..." \
-  --environment GOOGLE_SHEET_ID="..."
-```
-
-(переменные окружения нужно указывать заново при каждой новой версии).
+После любых правок в `index.js` создайте новую версию той же командой из
+шага 2 (переменные окружения нужно указывать заново при каждой новой
+версии).
