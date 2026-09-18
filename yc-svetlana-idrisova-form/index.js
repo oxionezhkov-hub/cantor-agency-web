@@ -6,10 +6,6 @@ const { google } = require('googleapis');
 //   GOOGLE_SERVICE_ACCOUNT_KEY  — весь JSON-ключ сервисного аккаунта, в одну строку (тот же, что у Анны Дейнеги)
 //   SPREADSHEET_ID              — ID новой таблицы Светланы (из её ссылки, между /d/ и /edit)
 //   SHEET_NAME                  — название листа, куда писать строки (например "Заявки"), необязательно, по умолчанию "Заявки"
-//   RESEND_API_KEY              — ключ вашего аккаунта Resend (resend.com/api-keys)
-//   MAIL_FROM                   — адрес отправителя, ОБЯЗАТЕЛЬНО на домене, подтверждённом в Resend
-//                                  (например "Заявки с сайта <leads@cantor.agency>")
-//   MAIL_TO                     — куда слать письмо о новой заявке (можно несколько через запятую)
 
 function corsHeaders() {
   return {
@@ -77,37 +73,6 @@ async function appendToSheet(fields) {
   return { skipped: false };
 }
 
-async function sendEmail(fields) {
-  const { RESEND_API_KEY, MAIL_TO, MAIL_FROM } = process.env;
-  if (!RESEND_API_KEY || !MAIL_TO || !MAIL_FROM) {
-    return { skipped: true, reason: 'missing_resend_env' };
-  }
-
-  const rows = Object.entries(fields)
-    .filter(([, value]) => value)
-    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#667;white-space:nowrap;"><b>${label}</b></td><td style="padding:4px 0;">${value}</td></tr>`)
-    .join('');
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({
-      from: MAIL_FROM,
-      to: MAIL_TO.split(',').map((s) => s.trim()),
-      subject: 'Новая заявка — сайт Светланы Идрисовой',
-      html: `<table cellspacing="0" cellpadding="0">${rows}</table>`,
-      text: Object.entries(fields).map(([label, value]) => `${label}: ${value}`).join('\n'),
-    }),
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(`resend_${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
-  }
-
-  return { skipped: false, id: data && data.id };
-}
-
 module.exports.handler = async function (event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsHeaders(), body: '' };
@@ -129,20 +94,13 @@ module.exports.handler = async function (event) {
     return jsonResponse(400, { error: 'empty_fields' });
   }
 
-  const results = { sheet: null, email: null };
+  let sheetResult;
   try {
-    results.sheet = await appendToSheet(cleanFields);
+    sheetResult = await appendToSheet(cleanFields);
   } catch (err) {
     console.error('sheet_append_failed', err && err.message);
-    results.sheet = { error: String(err && err.message) };
+    return jsonResponse(502, { error: 'sheet_append_failed' });
   }
 
-  try {
-    results.email = await sendEmail(cleanFields);
-  } catch (err) {
-    console.error('email_send_failed', err && err.message);
-    results.email = { error: String(err && err.message) };
-  }
-
-  return jsonResponse(200, { ok: true, results });
+  return jsonResponse(200, { ok: true, sheet: sheetResult });
 };
