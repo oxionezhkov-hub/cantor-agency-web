@@ -82,7 +82,7 @@ tbody tr:last-child{border-bottom:none}
 tbody tr.stale-warn{background:var(--stale-warn-bg)}
 tbody tr.stale-danger{background:var(--stale-danger-bg)}
 tbody td{padding:8px 12px;vertical-align:middle;font-size:13px}
-th.col-group,td.col-group{width:120px}
+th.col-group,td.col-group{width:44px;text-align:center}
 th.col-name,td.col-name{width:170px}
 th.col-tg,td.col-tg{width:190px}
 th.col-priority,td.col-priority{width:150px}
@@ -114,6 +114,10 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
 .dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;visibility:visible;pointer-events:auto}
 .dd-option{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap}
 .dd-option:hover{background:var(--bg)}
+.col-group .dd{width:auto;display:inline-flex}
+.dd-trigger-compact{width:26px;height:26px;padding:0;border-radius:50%;border:1.5px solid rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s}
+.dd-trigger-compact:hover{border-color:rgba(0,0,0,0.25);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.dd:focus-within .dd-trigger-compact{border-color:var(--red)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
 
 /* ── filter popover ── */
@@ -138,6 +142,17 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
 .stat-big{font-size:30px;font-weight:800;font-family:'Unbounded',sans-serif;color:var(--dark)}
 .stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
 .stat-row .val{font-weight:700}
+
+/* Narrower window: drop the Telegram username field (keep just the jump button) and
+   collapse the priority/status pills down to their color dot only. */
+@media (max-width:900px){
+  .tg-cell input{display:none}
+  th.col-tg,td.col-tg{width:44px;text-align:center}
+  th.col-priority,td.col-priority{width:44px}
+  th.col-status,td.col-status{width:44px}
+  .wrap .dd-trigger{width:26px;height:26px;padding:0;border-radius:50%;justify-content:center;gap:0}
+  .wrap .dd-trigger .dd-label,.wrap .dd-trigger .chev{display:none}
+}
 
 @media (max-width:640px){
   .topbar{padding:12px 14px}
@@ -290,6 +305,13 @@ function fmtDateTime(iso) {
   const d = new Date(iso);
   return d.toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'2-digit' }) + ' ' + d.toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
 }
+// tg:// hands off straight to the Telegram desktop app without ever opening a browser tab —
+// unlike a https://t.me/... link, which leaves a tab behind that has to be closed or switched
+// back from. Falls back to doing nothing if no app is registered for the tg: scheme.
+function openTelegram(username) {
+  if (!username) return;
+  window.location.href = 'tg://resolve?domain=' + encodeURIComponent(username);
+}
 function daysSince(iso) {
   return (Date.now() - new Date(iso).getTime()) / 86400000;
 }
@@ -360,19 +382,30 @@ async function addClient() {
   }
 }
 
-async function patchClient(id, field, value) {
-  try {
-    const client = (await api(`/api/salescrm/clients/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ [field]: value }),
-    })).client;
-    const idx = clients.findIndex((c) => c.id === id);
-    if (idx !== -1) clients[idx] = client;
-    return client;
-  } catch (err) {
-    showToast('Не удалось сохранить: ' + err.message);
-    return null;
-  }
+// Edits on the same row can fire close together (e.g. blurring a comment textarea by
+// clicking straight into that row's status dropdown) — two concurrent PATCH requests for the
+// same client would each read-modify-write from their own stale snapshot, so whichever
+// request's write lands last could silently wipe out the other's change. Chaining every patch
+// for a given id onto the same promise makes them run one at a time instead.
+const patchQueue = new Map();
+function patchClient(id, field, value) {
+  const prior = patchQueue.get(id) || Promise.resolve();
+  const run = prior.then(async () => {
+    try {
+      const client = (await api(`/api/salescrm/clients/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ [field]: value }),
+      })).client;
+      const idx = clients.findIndex((c) => c.id === id);
+      if (idx !== -1) clients[idx] = client;
+      return client;
+    } catch (err) {
+      showToast('Не удалось сохранить: ' + err.message);
+      return null;
+    }
+  });
+  patchQueue.set(id, run.catch(() => {}));
+  return run;
 }
 
 /* ════════════ DROPDOWNS (group / priority / status — hover-open, colored options) ════════════ */
@@ -413,10 +446,17 @@ function ddTriggerHtml(bg, fg, label, showDot) {
     <svg class="chev" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
   </button>`;
 }
-function rowDropdownHtml(kind, clientId, currentValue) {
+function ddTriggerCompactHtml(bg, fg, label) {
+  const letter = String(label || '?').trim().charAt(0).toUpperCase();
+  return `<button type="button" class="dd-trigger-compact" style="background:${bg};color:${fg}" title="${escapeHtml(label)}">${escapeHtml(letter)}</button>`;
+}
+function rowDropdownHtml(kind, clientId, currentValue, compact) {
   const { list, bg, fg, labelOf } = ddListFor(kind);
   const options = list.map((v) => ddOptionHtml(fg[v], labelOf(v), `selectRowValue('${clientId}','${kind}','${v}')`)).join('');
-  return `<div class="dd">${ddTriggerHtml(bg[currentValue], fg[currentValue], labelOf(currentValue), true)}<div class="dd-menu">${options}</div></div>`;
+  const trigger = compact
+    ? ddTriggerCompactHtml(bg[currentValue], fg[currentValue], labelOf(currentValue))
+    : ddTriggerHtml(bg[currentValue], fg[currentValue], labelOf(currentValue), true);
+  return `<div class="dd">${trigger}<div class="dd-menu">${options}</div></div>`;
 }
 function filterDropdownHtml(kind, currentValue) {
   const { list, bg, fg, labelOf } = ddListFor(kind);
@@ -477,7 +517,7 @@ function renderTable() {
     const tgLinkSafe = tgUsername.replace(/[^A-Za-z0-9_]/g, '');
     return `
       <tr data-id="${c.id}" class="${staleClass}">
-        <td class="col-group">${rowDropdownHtml('group', c.id, c.group)}</td>
+        <td class="col-group">${rowDropdownHtml('group', c.id, c.group, true)}</td>
         <td class="col-name">
           <input class="cell-input name-input" value="${escapeHtml(c.name)}"
             onblur="onFieldBlur('${c.id}','name',this.value)"
@@ -485,7 +525,7 @@ function renderTable() {
         </td>
         <td class="col-tg">
           <div class="tg-cell">
-            <button class="btn-tg-icon" ${tgLinkSafe ? '' : 'disabled'} onclick="window.open('https://t.me/${tgLinkSafe}','_blank')" title="Открыть диалог в Telegram">
+            <button class="btn-tg-icon" ${tgLinkSafe ? '' : 'disabled'} onclick="openTelegram('${tgLinkSafe}')" title="Открыть диалог в Telegram">
               <svg viewBox="0 0 16 16" width="20" height="20" fill="#29A9EB"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.287 5.906c-.778.324-2.334.994-4.666 1.962-.378.15-.577.298-.595.442-.03.243.275.339.69.47l.175.055c.408.133.958.288 1.243.294.26.006.549-.1.868-.32 2.179-1.471 3.304-2.214 3.374-2.23.05-.012.12-.026.166.016.047.041.042.12.037.141-.03.129-1.227 1.241-1.846 1.817-.193.18-.33.307-.358.336a8.154 8.154 0 0 1-.188.186c-.38.366-.664.64.015 1.088.327.216.589.393.85.571.284.194.568.387.936.629.093.06.183.125.27.187.331.236.63.448.997.414.214-.02.435-.22.547-.82.265-1.417.786-4.486.906-5.751a1.426 1.426 0 0 0-.013-.315.337.337 0 0 0-.114-.217.526.526 0 0 0-.31-.093c-.3.005-.763.166-2.984 1.09z"/></svg>
             </button>
             <input class="cell-input" placeholder="username" value="${escapeHtml(tgUsername)}"
@@ -625,6 +665,7 @@ window.downloadHistoryCsv = downloadHistoryCsv;
 window.selectRowValue = selectRowValue;
 window.selectFilterValue = selectFilterValue;
 window.resetFilters = resetFilters;
+window.openTelegram = openTelegram;
 </script>
 </body>
 </html>
