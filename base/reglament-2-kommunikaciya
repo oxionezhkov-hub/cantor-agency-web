@@ -34,7 +34,9 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 a{color:var(--red)}
 a:hover{text-decoration:none}
 
-.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
 .logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
 .logo span{color:var(--red)}
 .header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
@@ -44,6 +46,11 @@ a:hover{text-decoration:none}
 
 .doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
 .doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
 
 .reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
 .reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
@@ -82,6 +89,7 @@ li:last-child{margin-bottom:0}
 </head>
 <body>
 
+<div class="header-trigger"></div>
 <div class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <a href="/base" class="header-tag">← База знаний</a>
@@ -92,11 +100,26 @@ li:last-child{margin-bottom:0}
   <div class="doc-title">Коммуникация с клиентом по Авито</div>
   <div class="doc-meta">Как выстроена связь с клиентом: зона ответственности агентства, бриф, сроки проекта, ежедневные отчёты, сбор обратной связи и передача вопросов специалисту.</div>
 
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#s1">Зона ответственности агентства</a>
+        <a href="#s2">Бриф клиента</a>
+        <a href="#s3">Согласование сроков проекта</a>
+        <a href="#s4">Ежедневные отчёты клиенту</a>
+        <a href="#s5">Сбор информации по диагностикам и продажам</a>
+        <a href="#s6">Обсуждение изменений в кабинете</a>
+        <a href="#s7">Согласование стратегии</a>
+        <a href="#s8">Передача вопросов клиента специалисту</a>
+        <a href="#s9">Сбор обратной связи</a>
+    </div>
+  </div>
+
   <div class="reg-card">
     <div class="reg-title">Коммуникация с клиентом по Авито</div>
     <div class="reg-goal">Цель: выстроить системную, прозрачную и предсказуемую коммуникацию с клиентом на протяжении всего сотрудничества.</div>
 
-    <div class="step">
+    <div class="step" id="s1">
       <div class="step-title">Зона ответственности агентства</div>
       <p>Агентство отвечает за всё, что происходит до момента переписки: найти нужное объявление под запрос, убедиться, что оно подходит клиенту (ученику), и добиться того, чтобы он написал преподавателю. Дальше сам диалог, доведение до диагностики и продажу ведёт клиент — агентство в переписку не вмешивается.</p>
       <p>При этом мы всячески помогаем: если видим, что конверсия в диалогах просела, разбираем причины вместе с клиентом и подсказываем, как улучшить ситуацию по диагностикам. Ориентир по экономике — вложения в продвижение должны окупаться, в идеале в 4–5 раз; для клиентов с длинным циклом обучения (например, абонемент на несколько месяцев) окупаемость считаем по LTV ученика, а не по одной первой оплате. Бюджеты и сложность ниши у клиентов очень разные (например, «математика» и «физика» — заметно сложнее и дороже по контактам, чем «английский» или «русский язык»), поэтому результаты разных кабинетов не сравниваем напрямую — оцениваем каждого клиента относительно его собственной экономики и целей.</p>
@@ -104,7 +127,7 @@ li:last-child{margin-bottom:0}
       <p><strong>Часы работы:</strong> команда на связи с клиентом по будням с 10:00 до 18:00 по МСК — в этот интервал клиент может рассчитывать на оперативный ответ в рабочем чате.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s2">
       <div class="step-title">Бриф клиента</div>
       <p>После заключения договора КМ отправляет клиенту бриф (Google-форма или документ) с вопросами:</p>
       <ul>
@@ -122,7 +145,7 @@ li:last-child{margin-bottom:0}
       <p>Дедлайн на заполнение — 2 рабочих дня. Если клиент не ответил — КМ повторяет запрос через день. После получения брифа — КМ изучает, задаёт уточняющие вопросы, прикладывает к проектному делу.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s3">
       <div class="step-title">Согласование сроков проекта</div>
       <p>На основе брифа и аудита кабинета КМ составляет календарный план:</p>
       <ul>
@@ -134,7 +157,7 @@ li:last-child{margin-bottom:0}
       <p>План отправляется клиенту на согласование в течение 1 рабочего дня после составления. Любые изменения в сроках — фиксируются письменно и согласуются с клиентом не позднее чем за 1 день до дедлайна.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s4">
       <div class="step-title">Ежедневные отчёты клиенту</div>
       <p>Каждый рабочий день до 12:00 КМ отправляет клиенту краткий отчёт в мессенджер (WhatsApp/Telegram) или на почту — по выбору клиента. Формат отчёта:</p>
       <ol>
@@ -167,7 +190,7 @@ li:last-child{margin-bottom:0}
       <p>Продажей в отчётах и в «Воронке продаж клиента» считаем только фактически поступившую оплату — устная договорённость или бесплатный тест без денег в статистику продаж не идёт.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s5">
       <div class="step-title">Сбор информации по диагностикам и продажам</div>
       <p>Раз в неделю КМ запрашивает у клиента данные по фактическим продажам:</p>
       <ul>
@@ -179,7 +202,7 @@ li:last-child{margin-bottom:0}
       <p>Запрос отправляется в виде короткой формы или голосовым сообщением — удобно для клиента. Данные заносятся в таблицу «Воронка продаж клиента» — обновляется еженедельно. На основе данных — корректируется стратегия: ставки, города, тексты, категории.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s6">
       <div class="step-title">Обсуждение изменений в кабинете</div>
       <p>Любое изменение, которое влияет на бюджет, видимость или контент объявлений — согласуется с клиентом заранее. КМ отправляет описание планируемых изменений: что меняем, зачем, ожидаемый эффект.</p>
       <p>Согласование — в течение 1 рабочего дня. Если клиент не ответил — изменения не вносятся. Мелкие правки (опечатки, обновление цены на 5%) — вносятся с уведомлением в ежедневном отчёте. Все изменения фиксируются в журнале изменений кабинета.</p>
@@ -187,19 +210,19 @@ li:last-child{margin-bottom:0}
       <p>Исключение — если объявление явно «сливает» бюджет без единого результата: тогда специалист вносит срочные правки сразу, не дожидаясь согласования, а клиенту сообщают об этом постфактум в тот же день, с объяснением, что и почему изменили.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s7">
       <div class="step-title">Согласование стратегии</div>
       <p>Раз в месяц КМ инициирует пересмотр стратегии: что сработало, что нет; данные по ROI; рекомендации на следующий месяц. Документ «Отчёт за месяц + план на следующий месяц» отправляется за 3 дня до ежемесячной встречи. На встрече — обсуждение, корректировки, фиксация нового плана.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s8">
       <div class="step-title">Передача вопросов клиента специалисту</div>
       <p>КМ — единая точка контакта для клиента. Специалист не общается с клиентом напрямую и не добавляется в чаты с клиентами — там слишком много переписки и текучки, а актуальный контекст проще получить у КМ. Если у клиента технический вопрос (настройки, баги, особенности тарифов) — КМ фиксирует его и передаёт специалисту во внутренний таск-трекер. Специалист отвечает КМ в течение 4 рабочих часов, КМ формулирует ответ клиенту понятным языком и отправляет.</p>
       <p>Если специалисту нужна история переписки с клиентом или дополнительный контекст по кабинету — это запрашивается у клиентского менеджера в общем рабочем чате, а не напрямую у клиента.</p>
       <p>Срочные вопросы (кабинет заблокирован, деньги не расходуются) — обрабатываются в приоритете, ответ в течение 1 часа.</p>
     </div>
 
-    <div class="step">
+    <div class="step" id="s9">
       <div class="step-title">Сбор обратной связи</div>
       <p>Раз в 2 недели КМ отправляет клиенту короткий опрос (3–5 вопросов):</p>
       <ul>
@@ -213,8 +236,8 @@ li:last-child{margin-bottom:0}
   </div>
 
   <div class="doc-nav">
-    <a href="/base/reglament-1-zapusk">← Регламент 1. Запуск нового клиента</a>
-    <a href="/base/reglament-3-soprovozhdenie">Регламент 3. Ежедневное сопровождение →</a>
+    <a href="/base/reglament-dialogi-zayavki">← Работа с диалогами и заявками</a>
+    <a href="/base/reglament-4-vstrechi">Регламент 4. Еженедельные встречи →</a>
   </div>
   <div class="doc-nav" style="margin-top:6px">
     <a href="/base" class="to-catalog">← К каталогу регламентов</a>

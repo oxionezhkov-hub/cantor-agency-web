@@ -34,7 +34,9 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 a{color:var(--red)}
 a:hover{text-decoration:none}
 
-.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
 .logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
 .logo span{color:var(--red)}
 .header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
@@ -44,6 +46,11 @@ a:hover{text-decoration:none}
 
 .doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
 .doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
 
 .reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
 .reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
@@ -80,6 +87,7 @@ li:last-child{margin-bottom:0}
 </head>
 <body>
 
+<div class="header-trigger"></div>
 <div class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <a href="/base" class="header-tag">← База знаний</a>
@@ -90,11 +98,23 @@ li:last-child{margin-bottom:0}
   <div class="doc-title">Запуск нового клиента по Авито</div>
   <div class="doc-meta">Сжатая версия регламента запуска: 6 шагов от авторизации и аудита до первых результатов, с ответственными и сроками по дням.</div>
 
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#s1">Шаг 1. Авторизация и аудит кабинета</a>
+        <a href="#s2">Шаг 2. Оформление кабинета</a>
+        <a href="#s3">Шаг 3. Согласование стратегии на первый месяц</a>
+        <a href="#s4">Шаг 4. Составление новых объявлений</a>
+        <a href="#s5">Шаг 5. Пополнение баланса и запуск</a>
+        <a href="#s6">Шаг 6. Первые результаты</a>
+    </div>
+  </div>
+
   <div class="reg-card">
     <div class="reg-title">Запуск нового клиента по Авито</div>
     <div class="reg-goal">Цель: запустить кабинет клиента, настроить продвижение и собрать первые результаты тестов. Ответственные: клиентский менеджер (КМ), Avito-специалист.</div>
 
-    <div class="step">
+    <div class="step" id="s1">
       <div class="step-title">Шаг 1. Авторизация и аудит кабинета</div>
       <div class="step-meta">День 1</div>
       <ul>
@@ -107,7 +127,7 @@ li:last-child{margin-bottom:0}
       <div class="result-box"><strong>Результат:</strong> внутренний документ «Аудит кабинета» с текущим состоянием и списком проблем.</div>
     </div>
 
-    <div class="step">
+    <div class="step" id="s2">
       <div class="step-title">Шаг 2. Оформление кабинета</div>
       <div class="step-meta">Дни 1–2</div>
       <ul>
@@ -118,7 +138,7 @@ li:last-child{margin-bottom:0}
       </ul>
     </div>
 
-    <div class="step">
+    <div class="step" id="s3">
       <div class="step-title">Шаг 3. Согласование стратегии на первый месяц</div>
       <div class="step-meta">Дни 2–3 · установочная встреча с клиентом, 30–60 минут, видео-звонок</div>
       <p>На встрече согласовать:</p>
@@ -135,7 +155,7 @@ li:last-child{margin-bottom:0}
       <div class="result-box"><strong>Результат:</strong> утверждённый клиентом «План работ на месяц».</div>
     </div>
 
-    <div class="step">
+    <div class="step" id="s4">
       <div class="step-title">Шаг 4. Составление новых объявлений</div>
       <div class="step-meta">Дни 3–5</div>
       <ul>
@@ -148,7 +168,7 @@ li:last-child{margin-bottom:0}
       </ul>
     </div>
 
-    <div class="step">
+    <div class="step" id="s5">
       <div class="step-title">Шаг 5. Пополнение баланса и запуск</div>
       <div class="step-meta">Дни 5–7</div>
       <ul>
@@ -160,7 +180,7 @@ li:last-child{margin-bottom:0}
       <div class="result-box"><strong>Результат:</strong> кабинет запущен, продвижение работает, деньги расходуются.</div>
     </div>
 
-    <div class="step">
+    <div class="step" id="s6">
       <div class="step-title">Шаг 6. Первые результаты</div>
       <div class="step-meta">Дни 7–14</div>
       <ul>
@@ -175,7 +195,7 @@ li:last-child{margin-bottom:0}
 
   <div class="doc-nav">
     <a href="/base/zapusk-novogo-klienta">← Регламент запуска (детальный)</a>
-    <a href="/base/reglament-2-kommunikaciya">Регламент 2. Коммуникация →</a>
+    <a href="/base/reglament-oformlenie-obyavleniy">Оформление и наполнение объявлений →</a>
   </div>
   <div class="doc-nav" style="margin-top:6px">
     <a href="/base" class="to-catalog">← К каталогу регламентов</a>
