@@ -1,117 +1,106 @@
-// Yandex Cloud Function: receives the "trial lesson" form submission from
-// client/svetlana-idrisova and appends a row to a Google Sheet.
-//
-// Required environment variables (set in the Yandex Cloud Function config):
-//   GOOGLE_SERVICE_ACCOUNT_EMAIL     — the service account's client_email
-//   GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY — the service account's private_key,
-//                                        with real newlines replaced by \n
-//   GOOGLE_SHEET_ID                  — the spreadsheet ID (from its URL)
-//   GOOGLE_SHEET_RANGE               — optional, defaults to "Заявки!A:J"
-//
-// See README.md in this folder for the full setup walkthrough.
+'use strict';
 
-const jwt = require('jsonwebtoken');
+const { google } = require('googleapis');
 
-const SHEET_RANGE = process.env.GOOGLE_SHEET_RANGE || 'Заявки!A:J';
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+// ── env vars you set in Yandex Cloud Console → your function → Редактор → Переменные окружения ──
+//   GOOGLE_SERVICE_ACCOUNT_KEY  — весь JSON-ключ сервисного аккаунта, в одну строку (тот же, что у Анны Дейнеги)
+//   SPREADSHEET_ID              — ID новой таблицы Светланы (из её ссылки, между /d/ и /edit)
+//   SHEET_NAME                  — название листа, куда писать строки (например "Заявки"), необязательно, по умолчанию "Заявки"
 
-async function getAccessToken() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = (process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '').replace(/\\n/g, '\n');
-  if (!email || !privateKey) {
-    throw new Error('missing_google_service_account_env');
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  const assertion = jwt.sign(
-    {
-      iss: email,
-      scope: 'https://www.googleapis.com/auth/spreadsheets',
-      aud: 'https://oauth2.googleapis.com/token',
-      iat: now,
-      exp: now + 3600,
-    },
-    privateKey,
-    { algorithm: 'RS256' }
-  );
-
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }),
-  });
-  if (!res.ok) {
-    throw new Error('google_token_exchange_failed: ' + (await res.text()));
-  }
-  const data = await res.json();
-  return data.access_token;
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 }
 
-async function appendRow(values) {
-  const sheetId = process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) throw new Error('missing_google_sheet_id_env');
+function jsonResponse(statusCode, body) {
+  return {
+    statusCode,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders() },
+    body: JSON.stringify(body),
+  };
+}
 
-  const accessToken = await getAccessToken();
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(SHEET_RANGE)}:append?valueInputOption=USER_ENTERED`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ values: [values] }),
-  });
-  if (!res.ok) {
-    throw new Error('sheets_append_failed: ' + (await res.text()));
+function parseBody(event) {
+  if (!event.body) return {};
+  const raw = event.isBase64Encoded
+    ? Buffer.from(event.body, 'base64').toString('utf-8')
+    : event.body;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
   }
+}
+
+async function appendToSheet(fields) {
+  const keyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const spreadsheetId = process.env.SPREADSHEET_ID;
+  if (!keyJson || !spreadsheetId) return { skipped: true, reason: 'missing_google_env' };
+
+  const credentials = JSON.parse(keyJson);
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const sheetName = process.env.SHEET_NAME || 'Заявки';
+  const now = new Date().toISOString();
+  const row = [
+    now,
+    fields['Имя ученика'] || '',
+    fields['Фамилия ученика'] || '',
+    fields['Класс'] || '',
+    fields['Формат занятий'] || '',
+    fields['Цель и описание ситуации'] || '',
+    fields['Имя и отчество родителя'] || '',
+    fields['Телефон'] || '',
+    fields['Email'] || '',
+    fields['Согласие на рекламную рассылку'] || '',
+  ];
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: `${sheetName}!A:J`,
+    valueInputOption: 'USER_ENTERED',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: { values: [row] },
+  });
+
+  return { skipped: false };
 }
 
 module.exports.handler = async function (event) {
-  const method = (event.httpMethod || '').toUpperCase();
-
-  if (method === 'OPTIONS') {
-    return { statusCode: 204, headers: CORS_HEADERS, body: '' };
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders(), body: '' };
+  }
+  if (event.httpMethod !== 'POST') {
+    return jsonResponse(405, { error: 'method_not_allowed' });
   }
 
-  if (method !== 'POST') {
-    return { statusCode: 405, headers: CORS_HEADERS, body: JSON.stringify({ error: 'method_not_allowed' }) };
+  const body = parseBody(event);
+  const fields = body && typeof body.fields === 'object' ? body.fields : {};
+
+  const cleanFields = {};
+  for (const [label, value] of Object.entries(fields)) {
+    const clean = String(value || '').trim();
+    if (clean) cleanFields[label] = clean;
   }
 
-  let payload;
+  if (Object.keys(cleanFields).length === 0) {
+    return jsonResponse(400, { error: 'empty_fields' });
+  }
+
+  let sheetResult;
   try {
-    const raw = event.isBase64Encoded ? Buffer.from(event.body || '', 'base64').toString('utf8') : (event.body || '{}');
-    payload = JSON.parse(raw);
+    sheetResult = await appendToSheet(cleanFields);
   } catch (err) {
-    return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: 'invalid_json' }) };
+    console.error('sheet_append_failed', err && err.message);
+    return jsonResponse(502, { error: 'sheet_append_failed' });
   }
 
-  const f = payload.fields || {};
-  const row = [
-    new Date().toISOString(),
-    f['Имя ученика'] || '',
-    f['Фамилия ученика'] || '',
-    f['Класс'] || '',
-    f['Формат занятий'] || '',
-    f['Цель и описание ситуации'] || '',
-    f['Имя и отчество родителя'] || '',
-    f['Телефон'] || '',
-    f['Email'] || '',
-    f['Согласие на рекламную рассылку'] || '',
-  ];
-
-  try {
-    await appendRow(row);
-  } catch (err) {
-    console.error(err);
-    return { statusCode: 502, headers: CORS_HEADERS, body: JSON.stringify({ error: 'append_failed' }) };
-  }
-
-  return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify({ ok: true }) };
+  return jsonResponse(200, { ok: true, sheet: sheetResult });
 };
