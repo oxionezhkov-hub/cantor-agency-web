@@ -91,7 +91,7 @@ th.col-comment,td.col-comment{width:auto}
 .cell-input{width:100%;min-width:80px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:6px 8px;font-size:13px;background:transparent;outline:none;transition:all 0.15s}
 .cell-input:hover{border-color:var(--border)}
 .cell-input:focus{border-color:var(--red);background:var(--white)}
-textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-height:1.4;width:100%}
+textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inherit;line-height:1.4;width:100%}
 .tg-cell{display:flex;align-items:center;gap:8px}
 .tg-cell .cell-input{flex:1;min-width:70px}
 .btn-tg-icon{background:none;border:none;padding:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;transition:transform 0.15s}
@@ -150,8 +150,15 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
   th.col-tg,td.col-tg{width:44px;text-align:center}
   th.col-priority,td.col-priority{width:44px}
   th.col-status,td.col-status{width:44px}
+  th.col-name,td.col-name{width:130px}
   .wrap .dd-trigger{width:26px;height:26px;padding:0;border-radius:50%;justify-content:center;gap:0}
   .wrap .dd-trigger .dd-label,.wrap .dd-trigger .chev{display:none}
+  /* The column headers above these now-icon-only cells would otherwise sit awkwardly wide
+     over a tiny column — hide the label text so the header just shows blank space there. */
+  th.col-group .th-label,th.col-tg .th-label,th.col-priority .th-label,th.col-status .th-label{display:none}
+  /* Every column above now fits in a fraction of its full-width size, so the table itself no
+     longer needs the wide minimum — let it shrink to the viewport instead of scrolling. */
+  table{min-width:0}
 }
 
 @media (max-width:640px){
@@ -223,11 +230,11 @@ textarea.cell-input{resize:vertical;min-height:34px;font-family:inherit;line-hei
     <table>
       <thead>
         <tr>
-          <th class="col-group">Группа</th>
+          <th class="col-group"><span class="th-label">Группа</span></th>
           <th class="col-name">Имя</th>
-          <th class="col-tg">Telegram</th>
-          <th class="col-priority">Приоритет</th>
-          <th class="col-status">Статус</th>
+          <th class="col-tg"><span class="th-label">Telegram</span></th>
+          <th class="col-priority"><span class="th-label">Приоритет</span></th>
+          <th class="col-status"><span class="th-label">Статус</span></th>
           <th class="col-comment">Комментарий</th>
         </tr>
       </thead>
@@ -537,11 +544,20 @@ function renderTable() {
         <td class="col-status">${rowDropdownHtml('status', c.id, c.status)}</td>
         <td class="col-comment">
           <textarea class="cell-input" rows="1" placeholder="Комментарий…"
+            oninput="autoGrow(this)"
             onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
         </td>
       </tr>
     `;
   }).join('');
+  tbody.querySelectorAll('textarea.cell-input').forEach(autoGrow);
+}
+
+// Comment textareas size to their content instead of a fixed row count, so a long note is
+// always fully visible without the user having to drag-resize it.
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
 }
 
 async function onFieldBlur(id, field, value) {
@@ -666,6 +682,7 @@ window.selectRowValue = selectRowValue;
 window.selectFilterValue = selectFilterValue;
 window.resetFilters = resetFilters;
 window.openTelegram = openTelegram;
+window.autoGrow = autoGrow;
 </script>
 </body>
 </html>
