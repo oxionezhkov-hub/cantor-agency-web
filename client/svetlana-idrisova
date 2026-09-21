@@ -1258,6 +1258,15 @@
     margin-top: 0.25rem;
     color: rgba(255,255,255,0.45);
   }
+  .footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .footer-info div {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+  }
   .footer-links {
     display: flex;
     gap: 1.5rem;
@@ -1282,6 +1291,80 @@
     font-size: 0.75rem;
     text-align: center;
     color: rgba(255,255,255,0.3);
+  }
+
+  /* COOKIE BANNER */
+  .cookie-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 150;
+    padding: 1.1rem var(--page-padding) calc(1.1rem + env(safe-area-inset-bottom, 0px));
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 32px rgba(122,93,168,0.14);
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.35s ease, opacity 0.35s ease;
+  }
+  .cookie-banner.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cookie-banner-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .cookie-banner-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--text-soft);
+    max-width: 640px;
+  }
+  .cookie-banner-text a {
+    color: var(--teal-600);
+    text-decoration: underline;
+  }
+  .cookie-banner-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .cookie-btn {
+    padding: 0.65rem 1.3rem;
+    border-radius: 40px;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .cookie-btn-accept {
+    background: var(--teal-400);
+    color: white;
+    border-color: var(--teal-400);
+  }
+  .cookie-btn-accept:hover { background: var(--teal-600); border-color: var(--teal-600); }
+  .cookie-btn-decline {
+    background: transparent;
+    color: var(--text-soft);
+    border-color: var(--border);
+  }
+  .cookie-btn-decline:hover { border-color: var(--teal-400); color: var(--teal-600); }
+  @media (max-width: 768px) {
+    .cookie-banner-inner { flex-direction: column; align-items: stretch; }
+    .cookie-banner-actions { width: 100%; }
+    .cookie-btn { flex: 1; text-align: center; }
   }
 
   /* TOAST */
@@ -2314,11 +2397,21 @@
       <div class="footer-sub">Репетитор по химии</div>
     </div>
     <div class="footer-col">
+      <div class="footer-col-title">Информация об организации</div>
+      <div class="footer-info">
+        <div>ИП Идрисова Светлана Валерьевна</div>
+        <div>ИНН 071002279072</div>
+        <div>ОГРНИП 326070000032314</div>
+      </div>
+    </div>
+    <div class="footer-col">
       <div class="footer-col-title">Контакты</div>
       <div class="footer-links footer-links--col">
+        <a href="tel:+79287221923">+7 928 722-19-23</a>
+        <a href="mailto:kotenok8595@mail.ru">kotenok8595@mail.ru</a>
         <a href="https://telegram.me/SvetlanaIdrisova061017" target="_blank" rel="noopener">Telegram</a>
-        <a href="#form">Записаться</a>
         <a href="https://max.ru/join/VjHFZJvXUFb5HE9gtgcbT5nPLJFfGEHHFeaELlyCSNM" target="_blank" rel="noopener noreferrer">Max</a>
+        <a href="#form">Записаться</a>
       </div>
     </div>
     <div class="footer-col">
@@ -2328,6 +2421,7 @@
         <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openDataConsentModal(event)">Согласие на обработку ПД</a>
         <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openDataTransferModal(event)">Согласие на передачу ПД</a>
         <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openAdConsentModal(event)">Согласие на рекламную рассылку</a>
+        <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openCookieModal(event)">Политика Cookie</a>
         <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openOfferModal(event)">Оферта</a>
         <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openLicenseModal(event)">Лицензия</a>
       </div>
@@ -2337,6 +2431,18 @@
     © 2026 Светлана Идрисова — репетитор по химии. Онлайн, вся Россия.
   </div>
 </footer>
+
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Уведомление об использовании cookie">
+  <div class="cookie-banner-inner">
+    <div class="cookie-banner-text">
+      Мы используем файлы cookie для корректной работы сайта и, при вашем согласии, для аналитики. Подробнее — в <a href="https://svetlana-idrisova.ru/" target="_blank" rel="noopener noreferrer" onclick="return openCookieModal(event)">Политике использования cookie-файлов</a>. Вы можете отключить необязательные cookie.
+    </div>
+    <div class="cookie-banner-actions">
+      <button type="button" class="cookie-btn cookie-btn-decline" onclick="setCookieConsent(false)">Только необходимые</button>
+      <button type="button" class="cookie-btn cookie-btn-accept" onclick="setCookieConsent(true)">Принять все</button>
+    </div>
+  </div>
+</div>
 
 <div class="sticky-cta" id="stickyCta">
   <a href="#form" class="sticky-cta-btn">Записаться на пробное занятие</a>
@@ -2614,6 +2720,38 @@
   </div>
 </div>
 
+<div class="policy-modal" id="cookieModal">
+  <div class="policy-modal-overlay" onclick="closeCookieModal(event)"></div>
+  <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cookieModalTitle">
+    <button type="button" class="policy-modal-close" onclick="closeCookieModal(event)" aria-label="Закрыть">&times;</button>
+    <h3 id="cookieModalTitle">Политика использования cookie-файлов</h3>
+    <p class="policy-modal-meta">Идрисова Светлана Валерьевна, репетитор по химии</p>
+    <div class="policy-modal-body">
+      <p>Настоящая Политика описывает, какие cookie-файлы использует сайт svetlana-idrisova.ru, для чего они нужны и как от них можно отказаться.</p>
+
+      <h4>1. Что такое cookie</h4>
+      <p>Cookie-файл — небольшой фрагмент данных, который сайт запрашивает у браузера посетителя. Он отражает предпочтения и действия посетителя, а также сведения об устройстве, дате и времени сессии, и хранится локально — посетитель может удалить эти файлы в настройках браузера.</p>
+
+      <h4>2. Какие cookie используются</h4>
+      <p><strong>2.1. Строго необходимые</strong> — обеспечивают базовую работу сайта: сохраняют факт согласия с этой Политикой, работу формы записи и навигацию по странице. Отключить их нельзя без потери части функций сайта.</p>
+      <p><strong>2.2. Аналитические</strong> — используются только с согласия посетителя, чтобы понимать посещаемость и улучшать содержание сайта. На данный момент аналитические системы на Сайте не подключены; если они будут подключены (например, Яндекс.Метрика), настоящая Политика будет обновлена, а согласие запрошено заново.</p>
+
+      <h4>3. Согласие и отказ</h4>
+      <p>3.1. При первом посещении Сайта показывается баннер с выбором: принять все cookie или оставить только строго необходимые.</p>
+      <p>3.2. Посетитель может в любой момент изменить решение в настройках браузера — отключить cookie можно там, но это может привести к некорректной работе отдельных функций Сайта.</p>
+
+      <h4>4. Изменения Политики</h4>
+      <p>Оператор вправе обновлять эту Политику. Действующая редакция всегда доступна в подвале главной страницы Сайта.</p>
+    </div>
+    <div class="policy-requisites">
+      <div class="policy-requisites-title">Реквизиты оператора</div>
+      <div class="policy-req-row"><span class="policy-req-label">ИП</span><span class="policy-req-val">Идрисова Светлана Валерьевна</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ИНН</span><span class="policy-req-val">071002279072</span></div>
+      <div class="policy-req-row"><span class="policy-req-label">ОГРНИП</span><span class="policy-req-val">326070000032314</span></div>
+    </div>
+  </div>
+</div>
+
 <div class="policy-modal" id="reviewModal">
   <div class="policy-modal-overlay" onclick="closeReviewModal(event)"></div>
   <div class="policy-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
@@ -2705,7 +2843,7 @@
 
   function updateStickyCta() {
     if (!stickyCta || !heroSection) return;
-    if (window.innerWidth > 768) {
+    if (window.innerWidth > 768 || document.body.classList.contains('cookie-banner-open')) {
       stickyCta.classList.remove('visible');
       document.body.classList.remove('has-sticky-cta');
       return;
@@ -2722,6 +2860,32 @@
   window.addEventListener('scroll', updateStickyCta, { passive: true });
   window.addEventListener('resize', updateStickyCta);
   updateStickyCta();
+
+  // Cookie consent banner
+  const COOKIE_CONSENT_KEY = 'cookieConsent';
+  const cookieBanner = document.getElementById('cookieBanner');
+
+  function setCookieConsent(analyticsAllowed) {
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify({ analytics: analyticsAllowed, date: new Date().toISOString() }));
+    } catch (err) {}
+    if (cookieBanner) cookieBanner.classList.remove('visible');
+    document.body.classList.remove('cookie-banner-open');
+    // No analytics script is wired up yet — when one is added, load it here
+    // behind `if (analyticsAllowed) { ... }`, matching this stored consent.
+    updateStickyCta();
+  }
+
+  (function initCookieBanner() {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(COOKIE_CONSENT_KEY)); } catch (err) {}
+    if (stored && typeof stored.analytics === 'boolean') return;
+    if (cookieBanner) {
+      document.body.classList.add('cookie-banner-open');
+      requestAnimationFrame(() => cookieBanner.classList.add('visible'));
+      updateStickyCta();
+    }
+  })();
 
   // Custom selects — dropdown stays within form width
   function closeAllSelects() {
@@ -2881,6 +3045,18 @@
   function closeAdConsentModal(e) {
     if (e) e.preventDefault();
     document.getElementById('adConsentModal').classList.remove('open');
+    document.body.style.overflow = '';
+    return false;
+  }
+  function openCookieModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('cookieModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    return false;
+  }
+  function closeCookieModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('cookieModal').classList.remove('open');
     document.body.style.overflow = '';
     return false;
   }
