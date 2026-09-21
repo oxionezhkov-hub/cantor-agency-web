@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мария Дудорова — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для будущих преподавателей</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <!-- Аудитория этого выпуска — «для партнёров» (уточнено с командой), а не по номеру в названии эмбеда; подписана в плашке в самом верху страницы. -->
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1226939363?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Мария Дудорова - Подкаст 2"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1226939363" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">«Глупых учеников не бывает»: Мария Дудорова о ценностях, отборе преподавателей и школе «Формула будущего»</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Преподаватель математики с 17-летним стажем Мария Дудорова рассказывает, как построила онлайн-школу «Формула будущего», почему никогда не возьмёт в команду преподавателя, который хоть как-то обесценивает ученика, и что для неё значит не бросать ребёнка даже после нескольких месяцев лени. В выпуске — про реальный кейс со скачком с 11 до 90 баллов на ЕГЭ, разницу между индивидуальным и групповым форматом и то, кому точно стоит написать, если он устал от пренебрежительного отношения к ученикам.
+
+🔗 Школа «Формула будущего»: [ссылка]
+🔗 Написать Марии: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, подготовка к ЕГЭ, репетитор по математике, найм преподавателей, ценности в команде, мини-группы, подкаст для преподавателей, Мария Дудорова</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #образование #математика #ЕГЭ #репетитор #преподаватели #найм #онлайншкола</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/maria-dudorova-podcast2-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">«Глупых учеников не бывает»: какие ценности я ищу в преподавателях своей команды</h1>
+
+      <p>Я преподаватель с семнадцатилетним стажем, преподаватель математики. Сейчас развиваю свою онлайн-школу «Формула будущего». Основное направление — математика, но у нас есть и все школьные предметы. Мы помогаем ребятам повышать знания, растим их до высоких баллов на ЕГЭ и разбираем весь комплекс поступления, помогая достичь целей.</p>
+
+      <h2>Урок, который я вынесла из школы</h2>
+      <p>После университета — я закончила специальность учитель математики и информатики — я пошла проходить практику в школу. И там мне очень важный момент подсветили: к сожалению, в наших российских школах есть ситуация, когда учитель «скапотит» учителей. Посмотрев изнутри работу в школе, я поняла, что не хочу измениться сама в будущем, если буду находиться в таком же коллективе.</p>
+      <p>Я хочу по-прежнему ценить учеников, хочу открыто и добросовестно им помогать, искренне понимать, что нужно именно ученику — не то, что хотят родители, а что сам ученик хочет, какие у него цели и планы. И хочу вести этих детей в ту жизнь, которая принесёт им счастье и в которой они будут добиваться тех целей, которые захотят себе поставить. Поэтому, когда я сейчас работаю со своими преподавателями, мне очень важно, чтобы у них были такие же ценности, как у меня: важность каждого ученика и никогда — обесценивание.</p>
+
+      <h2>Кого я точно не возьму в команду</h2>
+      <p>Если посмотреть с позиции уровня знаний — есть преподаватели с университетской подачей, академической, жёсткими терминами, когда ученик к такому часто не готов. Таких преподавателей, если они не умеют перестраиваться и рассказывать на уровне понимания ученика, я, скорее всего, не возьму. Единственное исключение — если действительно есть запрос на повышение академического уровня, тогда с таким преподавателем можно работать. Но чаще ребята приходят из школы, и им нужна именно перестройка разговора под их уровень.</p>
+      <blockquote>Я вообще считаю, что глупых детей нет, есть те, с которыми просто не нашли нужного преподавателя, который бы им помог.</blockquote>
+      <p>Второй момент — уважительное отношение к ребёнку. Это для меня прямо табу. У меня аллергия на преподавателей, которые хоть какой-то фразой обесценивают ученика. На собеседовании это сразу считывается — пренебрежительное отношение к ученику, к родителю. Если по ценностям не сходимся, сразу ставлю себе пометку «нет». А если уважение присутствует и есть желание развиваться — велком.</p>
+
+      <h2>Что я обещаю команде — и что сложнее всего сдержать</h2>
+      <p>Я обещаю своей команде прозрачность и безопасность работы: все процессы и условия прозрачны, никаких скрытых мотивов и смыслов нет, всё обсуждается. Поэтому предсказуемость для преподавателей у нас очень высокая — работать спокойно и понятно.</p>
+      <p>А что сложно выдерживать — это когда преподаватели переквалифицируют искреннее желание помочь в то, что кто-то другой, например я, должен сделать за них. Я всегда хочу всем помочь, и мне тяжело не начать делать за них — это мой собственный принцип, мои «тараканы». Но если вы готовы работать и понимаете свою ответственность, здесь достаточно безопасно, предсказуемо и, я думаю, прибыльно.</p>
+
+      <h2>Как проходит онбординг нового преподавателя</h2>
+      <p>Когда приходит соискатель, первое — базовый разговор, собеседование, на котором мы понимаем ценности друг друга. Я стараюсь донести ценности школы и одновременно узнать ценности преподавателя, чтобы они коннектились — если ценности одинаковые, конфликтных ситуаций не бывает, потому что мы на одной волне.</p>
+      <p>После этого — пробные уроки, где смотрим, как преподаватель ведёт занятие, базовые вещи. И только потом даём первых учеников. Мы работаем в единой системе, где содержится вся базовая методология, и там же передаём знания друг другу, чтобы постоянно улучшать подготовку.</p>
+
+      <h2>Свобода в индивидуальном и групповом форматах</h2>
+      <p>В индивидуальном формате — полное подключение к конкретному ученику. В начале — диагностика, чтобы понять уровень знаний и, самое важное, причины, почему у ученика возникли проблемы. Передавая ученика преподавателю, я обязательно объясняю, какие у него базовые проблемы и с чего нужно начинать. Дальше преподаватель ведёт ученика сам — мы держим контроль результатов, чтобы вовремя скорректировать подготовку. Свободы у преподавателя здесь достаточно много.</p>
+      <p>В групповом формате система более жёсткая: есть полная методика годовой группы, и преподаватель ведёт по ней. При этом он всегда на связи с учениками. Группы у нас небольшие, до пяти человек, поэтому индивидуальная работа с каждым сохраняется даже внутри группы — а в последние два месяца перед экзаменом у каждого ученика появляется свой индивидуальный трек. Свобода есть, но и методика, чтобы правильно заложить нужные академические знания, тоже присутствует — а вот как именно давать эти знания, решает уже сам преподаватель.</p>
+
+      <h2>Что преподаватели ценят больше всего</h2>
+      <p>Понятность и прозрачность работы. Мы стараемся сделать максимально качественный и удобный график для преподавателей и учеников, чтобы не было дискомфорта в проведении занятий. Оплаты всегда вовремя. Если у преподавателя есть переживания, он всегда может прийти и рассказать — мы не отмахнёмся, а подумаем, как решить это так, чтобы было комфортно и нам, и ему.</p>
+
+      <h2>Кейс: скачок с 11 до 90 баллов за год</h2>
+      <p>У нас был ученик Лев, который вырос с 11 до 90 баллов на ЕГЭ по математике — это очень серьёзный скачок, потому что профильный экзамен базово сложный для максимальных баллов. Для такого результата нужна грамотно выстроенная методологическая система знаний, и именно работа с этой системой в рамках группы помогла Льву.</p>
+      <p>Мне этот кейс нравится, потому что он показывает философию большой части школьников в России. Лев начал заниматься чётко по системе, выполнял домашку. А к зиме — то ли влюбился, то ли что-то ещё случилось — начал халтурить. Мы это не оставили без внимания: разговаривали с ним, с родителями, возвращали его в процесс. Он продолжал ходить на занятия регулярно, никогда не пропускал, но занимался спустя рукава. К концу зимы, ближе к весне, он взялся за голову — и вот тут как раз пригодился индивидуальный трек внутри группы: усиление под конец года было своё для каждого ученика. Он стал делать домашки, задавать очень много вопросов — и в итоге 90 баллов, несмотря на примерно три месяца лени. Я считаю, он большущий молодец, но и заслуга преподавателя в том, что мы не бросаем учеников, какая бы ни была у них ситуация — рассказываем всё как есть и стараемся помочь.</p>
+
+      <h2>Разговоры про будущее, а не только про синусы</h2>
+      <p>Мы ещё и беседы про будущее с ребятами ведём, чтобы они задумывались: а как они будут учиться в университете, а зачем им вообще математика? Это любимый вопрос — «зачем мне синусы в будущем». Я сама люблю говорить с ребятами на эту философскую тему, и преподаватели мою философию поддерживают. Комплексно работают принципы преподавателей и желание самого ученика реально достичь результата — и вот такие замечательные кейсы у нас случаются.</p>
+
+      <h2>Чувствует ли ученик разницу</h2>
+      <p>Я сама преподаю 17 лет, и у меня был большой опыт частной практики. Ко мне приходили ученики, которые сидели, прижав уши, — учитель математики всегда представляется злым. Я начинала с ними разговаривать как со взрослыми, независимо от класса, и реально спрашивала: что ты сейчас чувствуешь, тебе не нравится, ты злишься, или ты просто не понимаешь? Из-за этих вопросов я видела удивление в глазах некоторых ребят — «а почему меня об этом спрашивают?». Разница колоссальная, когда учитель реально хочет понять ученика — это видно с первого урока по элементарным вопросам. Поэтому ученики у нас и остаются, и учиться в нашей школе для них ценно.</p>
+
+      <h2>Как я вижу ценности уже на первом собеседовании</h2>
+      <p>По первым словам — про ценности, про то, как работали, про опыт. Когда преподаватели начинают рассказывать про свой опыт, сразу видно отношение к ученикам. Отбор проходят только те, кто реально разделяет мою философию — потому что иначе будет некомфортно и мне, и ученику. Поэтому отсев достаточно сильный.</p>
+
+      <h2>Как попасть в команду</h2>
+      <p>Нужно найти наш сайт «Формула будущего» — Мария Дудорова, он обычно первым выскакивает в поисковике. Можно написать в Instagram — по запросу «Формула будущего Дудорова Мария» тоже сразу выдаёт меня. Также можно найти в Max и в Telegram-канале — просто по базовому поиску «Формула будущего — Дудорова Мария». В любом из этих мест напишите, и мы обязательно ответим и продолжим диалог.</p>
+      <p>Написать стоит тем, кому важны мои ценности, кто устал от пренебрежительного отношения к ученикам, кто хочет простой и понятной работы, кто устал закрывать административные задачи и разбираться с иногда неадекватным взаимодействием с родителями. Если вы хотите просто качественно преподавать и растить ребят — приходите к нами, мы возьмём на себя все академические и административные моменты, общение с родителями, чтобы вы могли спокойно удовлетворять свою жажду преподавать. И это касается не только математики — у нас есть информатика, физика, русский язык, и преподаватели этих предметов тоже нужны.</p>
+
+      <p class="art-signature">Мария Дудорова,<br>основательница онлайн-школы «Формула будущего»</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про ценности в команде</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🚫 У меня аллергия на преподавателей, которые обесценивают учеников. Вот почему это моё главное табу</h3>
+        <p>Я считаю, что глупых детей не бывает. Есть те, с которыми просто не нашли нужного преподавателя.</p>
+        <h4>Что я вижу на собеседовании сразу</h4>
+        <p>Пренебрежительное отношение к ученику или родителю считывается моментально — по тому, как человек рассказывает о своём опыте. Если по ценностям не сходимся, сразу ставлю себе пометку «нет». Никакие знания предмета этого не перевешивают.</p>
+        <h4>Откуда это у меня</h4>
+        <p>Когда я сама только закончила университет и пришла на практику в школу, увидела изнутри неприятную вещь: в наших школах учителя иногда «скапотят» друг друга. Я поняла, что не хочу меняться сама, если останусь в таком коллективе — и решила строить команду на других принципах.</p>
+        <p>❤️ Если уважение к ученику есть и есть желание развиваться — велком в команду.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс ученика</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📈 От 11 до 90 баллов на ЕГЭ за год. И три месяца из этого года ученик откровенно ленился</h3>
+        <p>Расскажу честно, как есть — без прикрас.</p>
+        <h4>Что случилось</h4>
+        <p>Лев занимался у нас в группе, чётко по системе, выполнял домашку. А к зиме — то ли влюбился, то ли ещё что — начал халтурить. Мы это не оставили без внимания: разговаривали с ним, с родителями, возвращали в процесс. Он продолжал ходить на занятия регулярно, но спустя рукава.</p>
+        <h4>Что сработало</h4>
+        <p>К концу зимы он взялся за голову сам. И вот тут пригодился индивидуальный трек, который сохраняется даже внутри группы, — усиление под конец года у каждого ученика своё. Он начал делать домашки, задавать очень много вопросов. Итог — 90 баллов, несмотря на три месяца лени.</p>
+        <p>🎯 Мы не бросаем учеников, какая бы ни была у них ситуация. Именно поэтому такие скачки случаются.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор преподавателей</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🎓 Как я ввожу нового преподавателя в свою систему. Спойлер — не сразу к ученикам</h3>
+        <p>Найм у меня построен не на «умеет ли человек хорошо объяснять», а на другом порядке шагов.</p>
+        <h4>Шаг первый — базовый разговор</h4>
+        <p>На собеседовании я стараюсь донести ценности школы и одновременно понять ценности самого преподавателя. Если они коннектятся — конфликтных ситуаций дальше почти не бывает, потому что мы на одной волне.</p>
+        <h4>Шаг второй — пробные уроки</h4>
+        <p>Смотрю, как преподаватель реально ведёт занятие, базовые вещи. И только после этого — первые ученики, с передачей всей базовой методологии, которую мы постоянно улучшаем вместе.</p>
+        <p>🤝 Ценности первичны. Методику освоить можно, а вот отношение к ученику — нет.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про свободу преподавателя</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>⚖️ Сколько свободы у преподавателя в моей команде? Зависит от формата</h3>
+        <p>В индивидуальных занятиях и мини-группах свобода работает по-разному.</p>
+        <h4>Индивидуальный формат</h4>
+        <p>Здесь свободы много. После диагностики я объясняю преподавателю, какие у ученика базовые проблемы и с чего начинать, а дальше он ведёт ученика сам — я лишь держу контроль результатов, чтобы вовремя скорректировать подход.</p>
+        <h4>Групповой формат</h4>
+        <p>Система строже: есть полная методика годовой группы, и по ней нужно вести занятия — группы у нас небольшие, до пяти человек, поэтому индивидуальный подход к каждому сохраняется даже внутри группы. А вот как именно давать материал внутри этой методики — уже на усмотрение преподавателя.</p>
+        <p>🧩 Структура держит результат. А как её наполнить живым уроком — решает сам преподаватель.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отношение к ученикам</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>😨 Ко мне приходили ученики, которые сидели, прижав уши — «учитель математики всегда злой»</h3>
+        <p>Я преподаю 17 лет, и разница между равнодушным и неравнодушным учителем видна детям сразу.</p>
+        <h4>Что я делаю иначе</h4>
+        <p>Разговариваю с учениками как со взрослыми, независимо от класса — пятый, шестой, одиннадцатый, неважно. Реально спрашиваю: что ты сейчас чувствуешь? Тебе не нравится? Ты злишься или просто не понимаешь?</p>
+        <h4>Что происходит в ответ</h4>
+        <p>Я видела удивление в глазах некоторых ребят — «а почему меня вообще об этом спрашивают?». Именно из этих элементарных вопросов с первого урока видно, хочет учитель реально понять ученика или просто отвести занятие.</p>
+        <p>💬 Разница колоссальная. И именно поэтому ученики у нас остаются надолго.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/maria-dudorova-podcast2-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. О себе и школе «Формула будущего»</a></li>
+        <li><a href="#t2">2. Урок, который вынесла из школы</a></li>
+        <li><a href="#t3">3. Кого точно не возьмёт в команду</a></li>
+        <li><a href="#t4">4. Что обещает команде</a></li>
+        <li><a href="#t5">5. Как проходит онбординг преподавателя</a></li>
+        <li><a href="#t6">6. Свобода в индивидуальном и групповом форматах</a></li>
+        <li><a href="#t7">7. Что преподаватели ценят больше всего</a></li>
+        <li><a href="#t8">8. Кейс: скачок с 11 до 90 баллов</a></li>
+        <li><a href="#t9">9. Разговоры про будущее, а не только про синусы</a></li>
+        <li><a href="#t10">10. Чувствует ли ученик разницу</a></li>
+        <li><a href="#t11">11. Как видит ценности на собеседовании</a></li>
+        <li><a href="#t12">12. Как попасть в команду и контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. О себе и школе «Формула будущего»</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Здравствуйте. Сегодня у нас в гостях Мария Дудорова, руководитель онлайн-школы «Формула будущего». Прежде чем мы будем обсуждать другие вопросы, расскажите коротко, кто вы, чем занимаетесь и о своей школе.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Здравствуйте, очень рада быть здесь. Я преподаватель с семнадцатилетним стажем, преподаватель по математике. Сейчас развиваю свою онлайн-школу «Формула будущего». Моя школа помогает ребятам, основное направление — это, конечно, математика, но также все школьные предметы у нас в школе есть.</p>
+        <p>Мы повышаем знания ребятам, если нужна такая цель, растим их до высоких баллов на ЕГЭ и разбираем весь комплекс поступления, помогаем достичь целей.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Урок, который вынесла из школы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы преподаёте математику уже 17 лет. Что из того опыта, который вы пронесли через эти годы, применяете, когда руководите своей командой педагогов?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>У меня есть такой опыт: после университета, где я закончила специальность учитель математики и информатики, я пошла проходить практику в школу. И мне очень важный момент там подсветили — к сожалению, в наших российских школах есть такая ситуация, что учитель «скапотит» учителей.</p>
+        <p>Посмотрев изнутри работу в школе, я поняла, что не хочу сама измениться в будущем, если буду находиться в таком же коллективе. Я хочу по-прежнему ценить учеников, хочу открыто и добросовестно им помогать, искренне понимать, что нужно именно ученику — не то, что хотят родители, а что сам ученик хочет, какие у него цели и планы. И хочу вести этих детей в ту жизнь, которая принесёт им счастье и в которой они будут добиваться тех целей, которые захотят себе поставить. Поэтому, когда я сейчас работаю с преподавателями, мне очень важно, чтобы у них были такие же ценности, как у меня. Это важность каждого ученика и никогда никакое обесценивание — например, что он какой-то, не дай бог сказать, глупый. Это прямо табу.</p>
+        <p>Я вообще считаю, что глупых детей нет, есть те, с которыми просто не нашли нужного преподавателя, который бы им помог. Поэтому мне нужны такие преподаватели, разделяющие мои ценности и уважительно относящиеся ко всем людям вокруг себя.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Кого точно не возьмёт в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Мы знаем, что есть преподаватели, которые отлично знают предмет, но дети их не очень любят из-за каких-то личных качеств. Скажите, какого преподавателя вы точно не возьмёте в команду, даже если он прямо отличный педагог и знает, как преподавать? Какие личные качества вам чужды?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Если посмотреть с позиции уровня знаний — допустим, если преподаватель более университетский, у которого подача академическая, жёсткими терминами, когда ученик к такому часто не готов. Таких преподавателей, если они не умеют перестраиваться и рассказывать ученику на его уровне понимания, я, скорее всего, не возьму. Единственное — бывает, если запрос действительно на повышение академического уровня, тогда с таким преподавателем можно работать. Но, как показывает практика, чаще ребята приходят из школы, и им нужна именно перестройка разговора под их уровень, иногда даже спускание до простых терминов, чтобы ученик понял.</p>
+        <p>Второй момент, как я уже говорила, — это уважительное отношение к ребёнку. Это для меня прямо табу. У меня аллергия на преподавателей, которые хоть какой-то фразой обесценивают ученика. На собеседовании, когда с преподавателем разговариваешь, задаёшь вопросы, это сразу считывается — пренебрежительное отношение к ученику, к родителю. Поэтому это тоже табу, нет. Я сразу в таких собеседованиях себе помечаю: по ценностям не сходимся. Если уважение присутствует, если желание развиваться есть — велком.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Что обещает команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Что вы как руководитель обещаете команде? И что из этого обещания вам сложнее всего сдержать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Это интересный вопрос. Во-первых, я своей команде обещаю прозрачность и безопасность работы — все процессы и условия, которые мы предлагаем, прозрачны, никаких скрытых мотивов и смыслов у нас нет. Всё это обсуждается, и тем самым предсказуемость для преподавателей у нас очень высокая — работать у нас очень спокойно и понятно.</p>
+        <p>А что сложно выдерживать — это когда преподаватели искреннее желание им помочь переквалифицируют в то, что я, например, или кто-то другой должен сделать за них. Это иногда сложно, потому что, к сожалению, люди иногда приходят такого формата. Но я бы даже сказала так — это мой принцип: я всегда хочу всем помочь, и поэтому мне тяжело не начать делать за них. Это самое сложное, это мои тараканы, так скажем. Поэтому, если вы готовы работать, если вы понимаете свою ответственность, то здесь достаточно безопасно, предсказуемо и, я думаю, прибыльно тоже.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Как проходит онбординг преподавателя</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы вводите нового преподавателя в свою систему, в свою школу, под свою методику? Как этот процесс происходит?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Когда нам приходит соискатель, первое — это базовый разговор, собеседование, в котором мы понимаем ценности друг друга. Я стараюсь донести до преподавателя ценности школы, которые мы преследуем, и также стараюсь узнать ценности преподавателя, чтобы они коннектились — потому что если ценности одинаковые, то конфликтных ситуаций, как следствие, не бывает, мы на одной волне.</p>
+        <p>После этого — пробные уроки, смотрим непосредственно, как преподаватель ведёт, базовые вещи. И уже после этого даём первых учеников. Мы работаем сейчас в единой системе, где содержится вся базовая методология, и там уже мы передаём знания друг другу, чтобы постоянно улучшать нашу подготовку.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Свобода в индивидуальном и групповом форматах</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас форматы индивидуальных занятий и форматы мини-групп, и преподаватели работают и в том, и в другом. Сколько свободы тогда у преподавателя при ведении занятий по своему формату? То есть его методика — как внедряется, включается в вашу систему?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Если говорить про индивидуальный формат — это тот формат, где полное подключение на конкретного ученика. У нас в начале идёт диагностика ученика, чтобы понять уровень знаний. А самое важное — на этой диагностике мы понимаем причины, почему у ученика возникли эти проблемы. И, соответственно, передавая ученика преподавателю, я обязательно объясняю, что за ученик пришёл, какие у него базовые проблемы или основные вещи, с чего нужно ему помогать, и передаю эти базовые методические знания. Дальше преподаватель уже ведёт ученика сам, мы ведём контроль результатов, чтобы вовремя провести корректировку подготовки. Поэтому достаточно много свободы у преподавателя на этих индивидуальных уроках, единственное — это контроль успехов и результатов учеников и своевременная смена подхода, если это необходимо.</p>
+        <p>Что касается группового формата, здесь, конечно, система более жёсткая, потому что групповой формат подразумевает, что нужно чётко выстраивать систему, и ученики уже в этой системе учатся. У нас есть полностью методика годовой группы, и преподаватель ведёт по этой методике, при этом он всегда в контакте с учениками. Группы у нас небольшие, до пяти человек, и поэтому в рамках этих групп индивидуальная работа с каждым сохраняется. Даже в конце года, когда сдаём экзамены, — последние два месяца в рамках группы у каждого ученика индивидуальный трек. Поэтому свобода есть, но и методика, чтобы академические нужные знания правильно заложить в систему ученику, тоже есть — а как эти знания давать, это уже на волю преподавателей.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Что преподаватели ценят больше всего</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>На ваш взгляд, что преподаватели ценят больше всего в работе с вашей командой?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Я бы сказала, как раз понятность и прозрачность работы. Мы всегда стараемся сделать максимально качественный и удобный график преподавателям и ученикам, чтобы не было никакого дискомфорта в проведении занятий. Прозрачность, безопасность, вовремя все оплаты мы проводим — то есть базовая безопасность и предсказуемость, я вот это называю прозрачностью в нашей системе.</p>
+        <p>На любые вопросы мы ответим, которые интересуют преподавателя. Если какие-то переживания у преподавателя есть, он всегда может прийти и рассказать — вот такая есть ситуация. И мы обязательно не отмахнёмся от неё, а подумаем, как это решить так, чтобы было комфортно и нам, и вам.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Кейс: скачок с 11 до 90 баллов</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас был кейс: ученик Лев вырос с 11 баллов до девяности на ЕГЭ. Такой высокий результат — что в подходе преподавателя делает такой скачок возможным?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Если смотреть на математику — у нас профильный ЕГЭ достаточно базово сложный, чтобы получить максимальные баллы. Чтобы вообще сделать такой скачок с 11 до девяноста за год, должна быть базовая, грамотно выстроенная методологическая система знаний, чтобы именно эта система у ученика сформировалась. И работа с этой системой в рамках группы как раз и помогла Льву добиться этих результатов.</p>
+        <p>Мне этот кейс нравится, потому что он показывает философию большой части школьников в России. Этот ученик пришёл и начал сначала чётко заниматься по системе, выполнять домашку. Не знаю, что случилось у него к зиме — по-моему, влюбился или что-то такое — и начал халтурить, честно рассказываю, как есть. Мы это, конечно, не оставляли без внимания — родители об этом знали, мы с ними разговаривали, с ним разговаривали, вводили его обратно. Но он, слава богу, ходил регулярно и занимался на уроках, никогда не пропускал, занимался в группе.</p>
+        <p>Уже к весне, в конце зимы, он взялся за голову. И вот как раз, как я говорила в начале, в рамках группы у нас всё равно сохраняется индивидуальный трек. И в той ситуации весной, когда он уже прохалтурил несколько месяцев и нужно было что-то делать, мы выстраивали с ним индивидуальный трек — он ходил, работал в группе, усиление у каждого ученика было своё под конец года. Он, конечно, здесь молодец, стал всё делать, домашки, задавать очень много вопросов. И как итог — 90 баллов. Это очень хороший скачок, ещё и с примерно тремя месяцами лени у него. Я считаю, он большущий молодец. Но и преподаватель, конечно, здесь тоже заслуга — потому что мы не бросаем, какие бы ни были ученики, какая бы у них ни была ситуация. Мы рассказываем всё как есть и объясняем, стараемся помочь. И я считаю, что это наша сильная сторона.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Разговоры про будущее, а не только про синусы</h3>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Мы ещё и беседы про будущее с ними говорим, чтобы они вообще задумывались — а как они потом будут учиться в университете, а вообще зачем им математика? Это, кстати, любимый вопрос: зачем мне синусы в будущем? Я прямо тоже люблю эту философию с ребятами обсуждать сама, и преподаватели, на мой взгляд, мою философию эту поддерживают. Поэтому всё комплексно: принципы преподавателей, сам ученик, его желание реально достичь результата — всё это в комплексе работает, и вот такие замечательные кейсы у нас случаются.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Чувствует ли ученик разницу</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Это же очень важно, когда педагог поддерживает ученика не только с точки зрения образования, но и даёт ему личную поддержку жизненную. Как вы считаете, ученик вообще чувствует разницу между преподавателем, которому не всё равно, который вкладывает душу, и преподавателем, который приходит просто отработать своё рабочее время за зарплату?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Да, это вообще интересно. Я бы рассказала свой опыт здесь. Я сама преподаю уже 17 лет, у меня самой очень большой опыт преподавания. Меня уже это не так удивляет, но раньше удивляло очень сильно. Ко мне приходил ученик, когда я сама ещё вела частную практику, уроки, и они сидят иногда, уши прижали — страшно, учитель математики всегда злой обычно в школе. И что-то такое, они приходят, а я начинаю с ними разговаривать, задаю им вопросы, общаюсь с ними как со взрослыми — неважно, какой класс: пятый, шестой, седьмой, одиннадцатый. Я реально спрашиваю: а что ты сейчас чувствуешь, я могу спросить? Тебе не нравится, ты злишься, или ты сейчас просто не понимаешь?</p>
+        <p>И из-за того, что я эти вопросы задавала, я видела удивление у некоторых ребят в глазах — типа что, а почему меня спрашивают об этом? И поэтому я считаю, что разница колоссальная, когда учитель реально хочет понять ученика и реально ему не всё равно — это видно по элементарным вопросам сразу с первого урока. Поэтому ученики у нас и остаются, поэтому им ценно работать с нами, учиться в нашей школе. Это тоже один из моих принципов работы.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Как видит ценности на собеседовании</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я думаю, что вы сразу видите этих педагогов, наверное, уже на первом собеседовании?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Первые слова про ценности, как работали, какие-то опыты. И когда преподаватели начинают рассказывать про опыты, это же видно — видно отношение к ученикам. Поэтому, конечно, проходят отбор только те преподаватели, которые реально разделяют мою философию. Потому что я понимаю, что ни мне некомфортно с этим человеком будет, если он не разделяет мои ценности, ни ученику. И поэтому это достаточно сильный отсев получается.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Как попасть в команду и контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Скажите, если педагог захочет вступить в вашу команду, какой первый шаг он должен сделать? Что должно произойти, чтобы попасть к вам и работать вместе с вами плечом к плечу?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Конечно же, нужно найти наш сайт, например, «Формула будущего» Марии Дудоровой — думаю, он первым будет выскакивать в поисковике. Также можно написать в Instagram — сразу тоже в поиске «Формула будущего» Дудорова Мария сразу выдаёт меня. Также можно найти в Max, в Telegram-канале, просто базовый поиск: «Формула будущего — Дудорова Мария». И в любом месте написать, и мы обязательно ответим, свяжемся и продолжим диалог.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Кому точно стоит написать вам, если он посмотрел такой подкаст и задумался?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Мария</div><div class="tr-txt">
+        <p>Тем, кому как раз важны, нужны мои ценности, кто устал от пренебрежительного отношения к ученикам, кто хочет простой, понятной работы, кто устал закрывать административные задачи при обучении или взаимодействие с родителями — часто бывают ситуации неадекватные. Если вы хотите просто качественно преподавать и растить ребят — приходите к нам, мы возьмём на себя закрытие всех этих академических административных моментов, общение с родителями тоже берём на себя. И тем самым вы можете спокойно удовлетворять свою жажду преподавать. Я реально получаю кайф, когда учу ребят, и они достигают каких-то вещей, радуются, что у них что-то получается. И если вам тоже это важно — приходите, мы создадим все условия для этого, сняв бюрократические моменты.</p>
+        <p>И ещё хочу добавить: мы весь диалог разговаривали про математику, но у нас, ребята, есть и информатика, и физика, и русский — основные предметы. Преподаватели тоже точно такие же грамотные, качественные. Поэтому, если вас интересуют другие предметы, тоже приходите, обязательно рассмотрим ваши кандидатуры, потому что школа у нас многопредметная.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
