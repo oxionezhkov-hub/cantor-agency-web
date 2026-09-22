@@ -85,6 +85,26 @@ li:last-child{margin-bottom:0}
   .reg-card{padding:24px 20px 6px}
   .doc-nav{flex-direction:column;align-items:flex-start}
 }
+.feedback-btn{position:fixed;top:16px;right:16px;z-index:110;width:42px;height:42px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red-dark);transition:transform .15s,border-color .15s;padding:0}
+.feedback-btn:hover{border-color:var(--red);transform:scale(1.06)}
+.feedback-btn svg{width:20px;height:20px}
+.feedback-panel{position:fixed;top:66px;right:16px;z-index:110;width:300px;max-width:calc(100vw - 32px);background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:16px;display:none}
+.feedback-panel.open{display:block}
+.feedback-panel-label{font-size:13.5px;color:var(--text);margin-bottom:10px;line-height:1.5}
+.feedback-textarea{width:100%;min-height:90px;resize:vertical;font-family:inherit;font-size:14px;color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;box-sizing:border-box}
+.feedback-textarea:focus{outline:none;border-color:var(--red)}
+.feedback-actions{display:flex;justify-content:flex-end;gap:8px}
+.feedback-btn-cancel{font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;padding:8px 10px}
+.feedback-btn-cancel:hover{color:var(--text)}
+.feedback-btn-send{font-size:13px;font-weight:700;color:#fff;background:var(--red);border:none;border-radius:999px;padding:8px 16px;cursor:pointer}
+.feedback-btn-send:hover{background:var(--red-dark)}
+.feedback-btn-send:disabled{opacity:.6;cursor:default}
+.feedback-status{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+@media(max-width:640px){
+  .feedback-btn{top:12px;right:12px}
+  .feedback-panel{top:60px;right:12px}
+}
 </style>
 </head>
 <body>
@@ -93,6 +113,19 @@ li:last-child{margin-bottom:0}
 <div class="header">
   <a href="/" class="logo">Cantor <span>Agency</span></a>
   <a href="/base" class="header-tag">← База знаний</a>
+</div>
+
+<button type="button" class="feedback-btn" id="feedback-btn" aria-label="Оставить комментарий">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.27 16.5 14.14 18.18 21 12 17.27 5.82 21 7.5 14.14 2 9.27 8.91 8.63 12 2"></polygon></svg>
+</button>
+<div class="feedback-panel" id="feedback-panel">
+  <div class="feedback-panel-label">Напишите что хотите уточнить — добавим это в базу знаний</div>
+  <textarea class="feedback-textarea" id="feedback-text" placeholder="Ваш комментарий…"></textarea>
+  <div class="feedback-actions">
+    <button type="button" class="feedback-btn-cancel" id="feedback-cancel">Закрыть</button>
+    <button type="button" class="feedback-btn-send" id="feedback-send">Отправить</button>
+  </div>
+  <div class="feedback-status" id="feedback-status" hidden></div>
 </div>
 
 <div class="wrap">
@@ -246,6 +279,88 @@ li:last-child{margin-bottom:0}
 
 </div>
 
+
+
+<script>
+(function(){
+  var FEEDBACK_URL = 'ВСТАВЬТЕ_ССЫЛКУ_ЯНДЕКС_ФУНКЦИИ';
+
+  var btn = document.getElementById('feedback-btn');
+  var panel = document.getElementById('feedback-panel');
+  var textarea = document.getElementById('feedback-text');
+  var sendBtn = document.getElementById('feedback-send');
+  var cancelBtn = document.getElementById('feedback-cancel');
+  var statusEl = document.getElementById('feedback-status');
+  var currentCtx = null;
+
+  function nearestBlock(){
+    var titleEl = document.querySelector('.doc-title');
+    var regulation = titleEl ? titleEl.textContent.trim() : document.title;
+    var blocks = document.querySelectorAll('.step-title, .cat-card-title, .featured-card-title, .section-label, .reg-title');
+    var block = '';
+    var threshold = window.innerHeight * 0.4;
+    for (var i = 0; i < blocks.length; i++){
+      var rect = blocks[i].getBoundingClientRect();
+      if (rect.top <= threshold) block = blocks[i].textContent.trim();
+      else break;
+    }
+    if (!block && blocks.length) block = blocks[0].textContent.trim();
+    return { regulation: regulation, block: block };
+  }
+
+  function closePanel(){
+    panel.classList.remove('open');
+    statusEl.hidden = true;
+    statusEl.textContent = '';
+  }
+
+  btn.addEventListener('click', function(){
+    var opening = !panel.classList.contains('open');
+    panel.classList.toggle('open');
+    if (opening) {
+      currentCtx = nearestBlock();
+      textarea.focus();
+    }
+  });
+  cancelBtn.addEventListener('click', closePanel);
+  document.addEventListener('click', function(e){
+    if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      closePanel();
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closePanel();
+  });
+
+  sendBtn.addEventListener('click', function(){
+    var comment = textarea.value.trim();
+    if (!comment) { textarea.focus(); return; }
+    var ctx = currentCtx || nearestBlock();
+    sendBtn.disabled = true;
+    statusEl.hidden = false;
+    statusEl.textContent = 'Отправляем…';
+    fetch(FEEDBACK_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        comment: comment,
+        regulation: ctx.regulation,
+        block: ctx.block,
+        url: window.location.href
+      })
+    }).then(function(r){
+      if (!r.ok) throw new Error('bad status');
+      statusEl.textContent = 'Спасибо, отправлено!';
+      textarea.value = '';
+      setTimeout(closePanel, 1200);
+    }).catch(function(){
+      statusEl.textContent = 'Не получилось отправить. Попробуйте ещё раз.';
+    }).finally(function(){
+      sendBtn.disabled = false;
+    });
+  });
+})();
+</script>
 
 </body>
 </html>
