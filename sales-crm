@@ -181,13 +181,17 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
 /* Narrower window: drop the Telegram username field (keep just the jump button) and
    collapse the priority/status pills down to their color dot only. */
 @media (max-width:900px){
-  .tg-cell input{display:none}
+  /* Scoped to the table, not just .wrap — #cardsGrid is also a child of .wrap, and its cards
+     have their own full-width layout regardless of viewport width, so collapsing every
+     .dd-trigger in .wrap was shrinking the card view's priority/status pills down to blank
+     26px circles too, leaving big empty gaps around them. */
+  .wrap table .tg-cell input{display:none}
   th.col-tg,td.col-tg{width:44px;text-align:center}
   th.col-priority,td.col-priority{width:44px}
   th.col-status,td.col-status{width:44px}
   th.col-name,td.col-name{width:130px}
-  .wrap .dd-trigger{width:26px;height:26px;padding:0;border-radius:var(--r-md);justify-content:center;gap:0}
-  .wrap .dd-trigger .dd-label,.wrap .dd-trigger .chev{display:none}
+  .wrap table .dd-trigger{width:26px;height:26px;padding:0;border-radius:var(--r-md);justify-content:center;gap:0}
+  .wrap table .dd-trigger .dd-label,.wrap table .dd-trigger .chev{display:none}
   /* The column headers above these now-icon-only cells would otherwise sit awkwardly wide
      over a tiny column — hide the label text so the header just shows blank space there. */
   th.col-tg .th-label,th.col-priority .th-label,th.col-status .th-label{display:none}
