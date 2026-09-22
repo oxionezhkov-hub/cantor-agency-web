@@ -401,7 +401,6 @@ table.data-table tr:last-child td{border-bottom:none}
   var sendBtn = document.getElementById('feedback-send');
   var cancelBtn = document.getElementById('feedback-cancel');
   var statusEl = document.getElementById('feedback-status');
-  var currentCtx = null;
 
   function nearestBlock(){
     var titleEl = document.querySelector('.doc-title');
@@ -428,7 +427,6 @@ table.data-table tr:last-child td{border-bottom:none}
     var opening = !panel.classList.contains('open');
     panel.classList.toggle('open');
     if (opening) {
-      currentCtx = nearestBlock();
       textarea.focus();
     }
   });
@@ -445,7 +443,7 @@ table.data-table tr:last-child td{border-bottom:none}
   sendBtn.addEventListener('click', function(){
     var comment = textarea.value.trim();
     if (!comment) { textarea.focus(); return; }
-    var ctx = currentCtx || nearestBlock();
+    var ctx = nearestBlock();
     sendBtn.disabled = true;
     statusEl.hidden = false;
     statusEl.textContent = 'Отправляем…';
