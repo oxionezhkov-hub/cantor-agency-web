@@ -121,14 +121,17 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
 
 /* ── card view (alternative to the table) ── */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+/* auto-fit (not auto-fill) so unused column tracks collapse to 0 instead of sitting there as
+   blank space — auto-fill keeps every track it can fit even with no card left to put in it,
+   which is exactly the "lots of empty space" look at in-between widths. */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .lead-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:10px}
 .lead-card.stale-warn{background:var(--stale-warn-bg)}
 .lead-card.stale-danger{background:var(--stale-danger-bg)}
 .lead-card-head{display:flex;align-items:center;gap:8px}
 .lead-card-head .name-input{flex:1;font-weight:700;min-width:0}
-.lead-card-dd{display:flex;gap:8px}
-.lead-card-dd .dd{width:auto;flex:1}
+.lead-card-dd{display:flex;gap:8px;flex-wrap:wrap}
+.lead-card-dd .dd{width:auto;flex:1;min-width:110px}
 .group-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;padding:3px 8px;border-radius:var(--r-sm);white-space:nowrap;flex-shrink:0}
 
 /* ── filter popover ── */
@@ -156,9 +159,24 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
 .modal-body{padding:20px 24px;max-height:70vh;overflow-y:auto}
 .stat-card{background:var(--bg);border-radius:var(--r-lg);padding:16px;margin-bottom:14px}
 .stat-card h3{font-size:12.5px;margin-bottom:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
-.stat-big{font-size:30px;font-weight:800;font-family:'Unbounded',sans-serif;color:var(--dark)}
-.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
-.stat-row .val{font-weight:700}
+.stat-big{font-size:26px;font-weight:800;font-family:'Unbounded',sans-serif;color:var(--dark);line-height:1.15}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi-card{background:var(--bg);border-radius:var(--r-lg);padding:14px 8px;text-align:center}
+.kpi-card h3{font-size:10px;margin-bottom:6px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
+.bar-row{display:grid;grid-template-columns:minmax(80px,110px) 1fr 26px;align-items:center;gap:10px;padding:4px 0;font-size:12px}
+.bar-row-label{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{height:8px;background:var(--white);border-radius:100px;overflow:hidden}
+.bar-fill{height:100%;border-radius:100px;transition:width 0.3s ease;min-width:2px}
+.bar-row-val{text-align:right;font-weight:700;color:var(--muted)}
+.group-bar-row{margin-bottom:10px}
+.group-bar-row:last-child{margin-bottom:0}
+.group-bar-label{font-size:12.5px;font-weight:700;margin-bottom:5px}
+.group-bar-label .muted{color:var(--muted);font-weight:600}
+.stack-track{display:flex;height:16px;border-radius:100px;overflow:hidden;background:var(--white)}
+.stack-seg{height:100%}
+.stat-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.legend-item{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.legend-item .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
 /* Narrower window: drop the Telegram username field (keep just the jump button) and
    collapse the priority/status pills down to their color dot only. */
@@ -182,6 +200,8 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
   .topbar{padding:12px 14px}
   .wrap{padding:14px}
   .search-field input{width:90px}
+  .kpi-card .stat-big{font-size:20px}
+  .bar-row{grid-template-columns:minmax(64px,90px) 1fr 22px;gap:6px}
 }
 </style>
 </head>
@@ -650,6 +670,16 @@ async function onFieldBlur(id, field, value) {
   renderTable();
 }
 /* ════════════ STATS ════════════ */
+function statBarRow(label, count, total, color) {
+  const pct = total ? Math.round((count / total) * 100) : 0;
+  return `
+    <div class="bar-row">
+      <div class="bar-row-label">${escapeHtml(label)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="bar-row-val">${count}</div>
+    </div>`;
+}
+
 function openStats() {
   const total = clients.length;
   const stale = clients.filter((c) => daysSince(c.updatedAt) >= STALE_WARN_DAYS).length;
@@ -659,37 +689,44 @@ function openStats() {
   const byPriority = {};
   PRIORITIES.forEach((p) => byPriority[p] = 0);
   clients.forEach((c) => { byPriority[c.priority] = (byPriority[c.priority] || 0) + 1; });
-  const byGroup = {};
-  GROUPS.forEach((g) => byGroup[g] = 0);
-  clients.forEach((c) => { byGroup[c.group] = (byGroup[c.group] || 0) + 1; });
   const sales = byStatus['Продажа'] || 0;
   const conv = total ? Math.round((sales / total) * 100) : 0;
 
-  const matrixRows = GROUPS.map((g) => {
+  const statusBars = STATUSES.map((s) => statBarRow(s, byStatus[s], total, STATUS_FG[s])).join('');
+  const priorityBars = PRIORITIES.map((p) => statBarRow(PRIORITY_LABEL[p], byPriority[p], total, PRIORITY_FG[p])).join('');
+
+  // A dense numeric table ("сколько из какой группы на каком статусе") is hard to scan at a
+  // glance — a stacked bar per group (segment width = share of that group's own leads) shows
+  // the same breakdown as a shape you can compare in one look, with exact counts on hover.
+  const groupBars = GROUPS.map((g) => {
     const groupClients = clients.filter((c) => c.group === g);
-    const cells = STATUSES.map((s) => {
+    const gTotal = groupClients.length;
+    const segments = STATUSES.map((s) => {
       const n = groupClients.filter((c) => c.status === s).length;
-      return `<td style="text-align:center;color:${n ? 'var(--text)' : 'var(--border)'}">${n}</td>`;
+      if (!n) return '';
+      const pct = gTotal ? (n / gTotal * 100) : 0;
+      return `<div class="stack-seg" style="width:${pct}%;background:${STATUS_FG[s]}" title="${escapeHtml(s)}: ${n}"></div>`;
     }).join('');
-    return `<tr><td style="font-weight:700;color:${GROUP_FG[g]};white-space:nowrap;padding-right:10px">${escapeHtml(g)}</td>${cells}<td style="text-align:center;font-weight:700">${groupClients.length}</td></tr>`;
+    return `
+      <div class="group-bar-row">
+        <div class="group-bar-label" style="color:${GROUP_FG[g]}">${escapeHtml(g)} <span class="muted">— ${gTotal}</span></div>
+        <div class="stack-track">${segments}</div>
+      </div>`;
   }).join('');
-  const matrixHead = STATUSES.map((s) => `<th style="font-size:9.5px;font-weight:700;color:var(--muted);padding:0 6px 6px;white-space:nowrap;text-align:center">${escapeHtml(s)}</th>`).join('');
+  const statusLegend = STATUSES.map((s) => `<span class="legend-item"><span class="dot" style="background:${STATUS_FG[s]}"></span>${escapeHtml(s)}</span>`).join('');
 
   document.getElementById('statsBody').innerHTML = `
-    <div class="stat-card"><h3>Всего клиентов</h3><div class="stat-big">${total}</div></div>
-    <div class="stat-card"><h3>Требуют внимания (нет изменений ${STALE_WARN_DAYS}+ дня)</h3><div class="stat-big" style="color:var(--p-red)">${stale}</div></div>
-    <div class="stat-card"><h3>Конверсия в продажу</h3><div class="stat-big">${conv}%</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${sales} из ${total}</div></div>
-    <div class="stat-card"><h3>По группам</h3>${GROUPS.map((g) => `<div class="stat-row"><span style="color:${GROUP_FG[g]};font-weight:700">${escapeHtml(g)}</span><span class="val">${byGroup[g]}</span></div>`).join('')}</div>
-    <div class="stat-card"><h3>По статусам</h3>${STATUSES.map((s) => `<div class="stat-row"><span>${escapeHtml(s)}</span><span class="val">${byStatus[s]}</span></div>`).join('')}</div>
-    <div class="stat-card"><h3>По приоритету</h3>${PRIORITIES.map((p) => `<div class="stat-row"><span>${PRIORITY_LABEL[p]}</span><span class="val">${byPriority[p]}</span></div>`).join('')}</div>
+    <div class="kpi-row">
+      <div class="kpi-card"><h3>Всего</h3><div class="stat-big">${total}</div></div>
+      <div class="kpi-card"><h3>Внимание ${STALE_WARN_DAYS}+ дня</h3><div class="stat-big" style="color:var(--p-red)">${stale}</div></div>
+      <div class="kpi-card"><h3>В продажу</h3><div class="stat-big">${conv}%</div><div style="font-size:11px;color:var(--muted)">${sales} из ${total}</div></div>
+    </div>
+    <div class="stat-card"><h3>По статусам</h3>${statusBars}</div>
+    <div class="stat-card"><h3>По приоритету</h3>${priorityBars}</div>
     <div class="stat-card">
       <h3>Группа × статус</h3>
-      <div style="overflow-x:auto">
-        <table style="border-collapse:collapse;font-size:12px;min-width:100%">
-          <thead><tr><th></th>${matrixHead}<th style="font-size:9.5px;font-weight:700;color:var(--muted);padding:0 0 6px;text-align:center">Всего</th></tr></thead>
-          <tbody>${matrixRows}</tbody>
-        </table>
-      </div>
+      ${groupBars}
+      <div class="stat-legend">${statusLegend}</div>
     </div>
   `;
   document.getElementById('statsOverlay').classList.remove('hidden');
