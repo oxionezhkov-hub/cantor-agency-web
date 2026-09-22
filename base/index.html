@@ -55,19 +55,32 @@ a:hover{text-decoration:none}
 .featured-card:hover .featured-card-arrow{background:var(--red);color:#fff}
 
 .cat-section+.cat-section{margin-top:40px}
-.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.cat-grid.single{grid-template-columns:1fr}
-.cat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px 26px;text-decoration:none;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
+.cat-grid{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:16px}
+.cat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px 26px;text-decoration:none;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;flex:1 1 250px}
 .cat-card:hover{border-color:var(--red);transform:translateY(-1px)}
 .cat-card-title{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.005em;line-height:1.35}
 .cat-card-desc{font-size:13.5px;color:var(--muted);line-height:1.6;flex:1}
 .cat-card-link{font-size:13px;font-weight:700;color:var(--red-dark);margin-top:14px;display:inline-flex;align-items:center;gap:5px}
 
+.search-box{position:relative;margin-bottom:32px}
+.search-input{width:100%;font-family:inherit;font-size:15px;color:var(--text);background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 44px 14px 18px;box-shadow:var(--shadow-sm)}
+.search-input:focus{outline:none;border-color:var(--red)}
+.search-clear{display:none;position:absolute;top:50%;right:10px;transform:translateY(-50%);width:26px;height:26px;border:none;background:var(--bg);color:var(--muted);border-radius:50%;font-size:14px;cursor:pointer;align-items:center;justify-content:center}
+.search-clear.visible{display:flex}
+.search-clear:hover{background:var(--accent-bg);color:var(--red-dark)}
+.search-results{display:flex;flex-direction:column;gap:14px;margin-bottom:8px}
+.search-result{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 24px;text-decoration:none;display:block;transition:border-color .15s,transform .15s}
+.search-result:hover{border-color:var(--red);transform:translateY(-1px)}
+.search-result-title{font-size:16px;font-weight:700;color:var(--dark);margin-bottom:8px;letter-spacing:-0.005em}
+.search-result-snippet{font-size:13.5px;color:var(--muted);line-height:1.6}
+.search-result-snippet mark{background:var(--accent-bg);color:var(--red-dark);font-weight:700;padding:0 2px;border-radius:3px}
+.search-status{font-size:14px;color:var(--muted);padding:4px 2px 8px}
+
 
 @media(max-width:640px){
   .header{padding:14px 20px}
   .wrap{padding:30px 16px 60px}
-  .cat-grid{grid-template-columns:1fr}
+  .cat-card{flex-basis:100%}
   .featured-card{flex-direction:column;align-items:flex-start;padding:24px 20px}
 }
 </style>
@@ -83,10 +96,20 @@ a:hover{text-decoration:none}
 <div class="wrap">
 
   <div class="doc-title">Регламенты работы с клиентами Авито</div>
-  <div class="doc-meta">Каталог регламентов по разделам: запуск клиента, ведение кабинета, работа с клиентом, команда и продажи.</div>
+  <div class="doc-meta">Каталог регламентов по разделам: начало работы, продвижение кабинета, коммуникация, эдвайзеры.</div>
+
+  <div class="search-box">
+    <input type="text" id="search-input" class="search-input" placeholder="Поиск по регламентам — например, «цена в диалоге» или «дубли объявлений»" autocomplete="off">
+    <button type="button" id="search-clear" class="search-clear" aria-label="Очистить поиск">✕</button>
+  </div>
+
+  <div id="search-status" class="search-status" hidden></div>
+  <div id="search-results" class="search-results" hidden></div>
+
+  <div id="catalog-sections">
 
   <div class="cat-section">
-    <div class="section-label">1. Запуск клиента</div>
+    <div class="section-label">Начало работы</div>
     <a href="/base/zapusk-novogo-klienta" class="featured-card">
       <div>
         <div class="featured-card-title">Регламент работы с новыми клиентами Авито</div>
@@ -94,7 +117,7 @@ a:hover{text-decoration:none}
       </div>
       <div class="featured-card-arrow">→</div>
     </a>
-    <div class="cat-grid single" style="margin-top:16px">
+    <div class="cat-grid" style="margin-top:16px">
       <a href="/base/reglament-1-zapusk" class="cat-card">
         <div class="cat-card-title">Запуск нового клиента по Авито (сжатая версия)</div>
         <div class="cat-card-desc">6 шагов от авторизации и аудита до первых результатов, с ответственными и сроками по дням.</div>
@@ -104,11 +127,17 @@ a:hover{text-decoration:none}
   </div>
 
   <div class="cat-section">
-    <div class="section-label">2. Ведение кабинета</div>
+    <div class="section-label">Продвижение кабинета</div>
     <div class="cat-grid">
       <a href="/base/reglament-oformlenie-obyavleniy" class="cat-card">
         <div class="cat-card-title">Оформление и наполнение объявлений</div>
         <div class="cat-card-desc">Справочник по объявлениям, городам и ставкам: как тестировать гипотезы системно, что делать с проблемным кабинетом и как распределять внимание между кабинетами.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
+
+      <a href="/base/reglament-dialogi-zayavki" class="cat-card">
+        <div class="cat-card-title">Работа с диалогами и заявками</div>
+        <div class="cat-card-desc">Как отвечать на заявки, чтобы доводить их до диагностики: скорость ответа, повторные касания, скрипты и работа с возражениями.</div>
         <div class="cat-card-link">Открыть →</div>
       </a>
 
@@ -121,14 +150,8 @@ a:hover{text-decoration:none}
   </div>
 
   <div class="cat-section">
-    <div class="section-label">3. Работа с клиентом</div>
+    <div class="section-label">Коммуникация</div>
     <div class="cat-grid">
-      <a href="/base/reglament-dialogi-zayavki" class="cat-card">
-        <div class="cat-card-title">Работа с диалогами и заявками</div>
-        <div class="cat-card-desc">Как отвечать на заявки, чтобы доводить их до диагностики: скорость ответа, повторные касания, скрипты и работа с возражениями.</div>
-        <div class="cat-card-link">Открыть →</div>
-      </a>
-
       <a href="/base/reglament-2-kommunikaciya" class="cat-card">
         <div class="cat-card-title">Коммуникация с клиентом по Авито</div>
         <div class="cat-card-desc">Как выстроена связь с клиентом: бриф, сроки проекта, ежедневные отчёты, сбор обратной связи и передача вопросов специалисту.</div>
@@ -140,23 +163,7 @@ a:hover{text-decoration:none}
         <div class="cat-card-desc">Подготовка, структура и итоги еженедельной встречи с клиентом, фиксация договорённостей.</div>
         <div class="cat-card-link">Открыть →</div>
       </a>
-    </div>
-  </div>
 
-  <div class="cat-section">
-    <div class="section-label">4. Команда и партнёры</div>
-    <div class="cat-grid single">
-      <a href="/base/reglament-5-advaizery" class="cat-card">
-        <div class="cat-card-title">Сбор опыта авито-экспертов (эдвайзеров)</div>
-        <div class="cat-card-desc">Как находить экспертов по Авито, о чём их спрашивать и как фиксировать их опыт в базе знаний.</div>
-        <div class="cat-card-link">Открыть →</div>
-      </a>
-    </div>
-  </div>
-
-  <div class="cat-section">
-    <div class="section-label">5. Продажи</div>
-    <div class="cat-grid single">
       <a href="/base/reglament-6-prodazhi" class="cat-card">
         <div class="cat-card-title">Продажи и продление сотрудничества</div>
         <div class="cat-card-desc">Как проходит первичная продажа новому клиенту и продление сотрудничества с текущим.</div>
@@ -165,8 +172,163 @@ a:hover{text-decoration:none}
     </div>
   </div>
 
+  <div class="cat-section">
+    <div class="section-label">Эдвайзеры</div>
+    <div class="cat-grid">
+      <a href="/base/reglament-5-advaizery" class="cat-card">
+        <div class="cat-card-title">Сбор опыта авито-экспертов (эдвайзеров)</div>
+        <div class="cat-card-desc">Как находить экспертов по Авито, о чём их спрашивать и как фиксировать их опыт в базе знаний.</div>
+        <div class="cat-card-link">Открыть →</div>
+      </a>
+    </div>
+  </div>
+
+  </div>
+
 </div>
 
+<script>
+(function(){
+  var catalogEl = document.getElementById('catalog-sections');
+  var resultsEl = document.getElementById('search-results');
+  var statusEl = document.getElementById('search-status');
+  var input = document.getElementById('search-input');
+  var clearBtn = document.getElementById('search-clear');
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function escapeRegExp(s){
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  var links = [];
+  Array.prototype.forEach.call(catalogEl.querySelectorAll('a.featured-card, a.cat-card'), function(a){
+    var url = a.getAttribute('href');
+    if (links.some(function(l){ return l.url === url; })) return;
+    var titleEl = a.querySelector('.featured-card-title, .cat-card-title');
+    links.push({url: url, title: titleEl ? titleEl.textContent.trim() : url});
+  });
+
+  var indexPromise = null;
+  function buildIndex(){
+    if (indexPromise) return indexPromise;
+    indexPromise = Promise.all(links.map(function(link){
+      return fetch(link.url).then(function(r){ return r.text(); }).then(function(html){
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var titleEl = doc.querySelector('.doc-title');
+        var contentEl = doc.querySelector('.reg-card') || doc.body;
+        var text = (contentEl.textContent || '').replace(/\s+/g, ' ').trim();
+        return {
+          url: link.url,
+          title: titleEl ? titleEl.textContent.trim() : link.title,
+          text: text
+        };
+      }).catch(function(){
+        return {url: link.url, title: link.title, text: ''};
+      });
+    }));
+    return indexPromise;
+  }
+
+  function makeSnippet(text, words){
+    var lower = text.toLowerCase();
+    var firstIdx = -1;
+    words.forEach(function(w){
+      var i = lower.indexOf(w);
+      if (i !== -1 && (firstIdx === -1 || i < firstIdx)) firstIdx = i;
+    });
+    if (firstIdx === -1) firstIdx = 0;
+    var start = Math.max(0, firstIdx - 70);
+    var end = Math.min(text.length, firstIdx + 170);
+    var snippet = text.slice(start, end).trim();
+    if (start > 0) snippet = '…' + snippet;
+    if (end < text.length) snippet = snippet + '…';
+    var escaped = escapeHtml(snippet);
+    var pattern = new RegExp('(' + words.map(escapeRegExp).join('|') + ')', 'gi');
+    return escaped.replace(pattern, '<mark>$1</mark>');
+  }
+
+  function search(query){
+    return buildIndex().then(function(pages){
+      var rawWords = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      var significant = rawWords.filter(function(w){ return w.length >= 3; });
+      var words = significant.length ? significant : rawWords;
+      if (!words.length) return [];
+      var matches = pages.filter(function(p){
+        var hay = (p.title + ' ' + p.text).toLowerCase();
+        return words.every(function(w){ return hay.indexOf(w) !== -1; });
+      });
+      matches.forEach(function(p){
+        var titleHit = words.some(function(w){ return p.title.toLowerCase().indexOf(w) !== -1; });
+        var textLower = p.text.toLowerCase();
+        var occurrences = words.reduce(function(sum, w){
+          return sum + (textLower.split(w).length - 1);
+        }, 0);
+        p._score = (titleHit ? 1000 : 0) + occurrences;
+        p._snippet = makeSnippet(p.text, words);
+        var titlePattern = new RegExp('(' + words.map(escapeRegExp).join('|') + ')', 'gi');
+        p._titleHtml = escapeHtml(p.title).replace(titlePattern, '<mark>$1</mark>');
+      });
+      matches.sort(function(a, b){ return b._score - a._score; });
+      return matches;
+    });
+  }
+
+  function render(matches, query){
+    if (!matches.length) {
+      statusEl.hidden = false;
+      statusEl.textContent = 'Ничего не найдено по запросу «' + query + '»';
+      resultsEl.hidden = true;
+      resultsEl.innerHTML = '';
+      return;
+    }
+    statusEl.hidden = true;
+    resultsEl.hidden = false;
+    resultsEl.innerHTML = matches.map(function(p){
+      return '<a class="search-result" href="' + p.url + '">' +
+        '<div class="search-result-title">' + p._titleHtml + '</div>' +
+        '<div class="search-result-snippet">' + p._snippet + '</div>' +
+        '</a>';
+    }).join('');
+  }
+
+  var debounceTimer = null;
+  function handleInput(){
+    var query = input.value.trim();
+    clearBtn.classList.toggle('visible', query.length > 0);
+    clearTimeout(debounceTimer);
+    if (query.length < 2) {
+      catalogEl.hidden = false;
+      resultsEl.hidden = true;
+      statusEl.hidden = true;
+      return;
+    }
+    statusEl.hidden = false;
+    statusEl.textContent = 'Ищем…';
+    resultsEl.hidden = true;
+    catalogEl.hidden = true;
+    debounceTimer = setTimeout(function(){
+      search(query).then(function(matches){
+        if (input.value.trim() !== query) return;
+        render(matches, query);
+      });
+    }, 150);
+  }
+
+  input.addEventListener('input', handleInput);
+  clearBtn.addEventListener('click', function(){
+    input.value = '';
+    clearBtn.classList.remove('visible');
+    catalogEl.hidden = false;
+    resultsEl.hidden = true;
+    statusEl.hidden = true;
+    input.focus();
+  });
+})();
+</script>
 
 </body>
 </html>
