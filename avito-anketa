@@ -33,6 +33,7 @@
   --shadow-red:0 8px 28px rgba(232,57,29,0.28);
   --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
 }
+html{scroll-behavior:smooth}
 body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
 
 /* INTRO */
@@ -156,6 +157,49 @@ body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);l
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{color:white;font-size:15px;font-weight:600;font-family:'Geologica',sans-serif}
 
+/* RESULTS / PRINCIPLES / CASES */
+.section{margin-top:56px}
+.section-title{font-family:'Unbounded',sans-serif;font-size:clamp(18px,3.4vw,24px);font-weight:700;color:var(--dark);letter-spacing:-0.02em;line-height:1.25;text-align:center;margin-bottom:10px}
+.section-title em{font-style:normal;color:var(--red)}
+.section-sub{font-size:14px;color:#4a4a4a;line-height:1.7;text-align:center;max-width:560px;margin:0 auto 22px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat-card{background:var(--dark);color:white;border-radius:var(--r-lg);padding:20px 12px;text-align:center}
+.stat-num{font-family:'Unbounded',sans-serif;font-size:clamp(24px,5vw,34px);font-weight:900;color:var(--red-light);line-height:1;margin-bottom:8px;letter-spacing:-0.02em}
+.stat-label{font-size:12.5px;color:rgba(255,255,255,0.75);line-height:1.4}
+.niches-note{font-size:13.5px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6}
+.principles{display:flex;flex-direction:column;gap:12px}
+.principle{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;display:flex;gap:16px;align-items:flex-start;box-shadow:var(--shadow-sm)}
+.principle-num{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:900;color:var(--red);line-height:1;flex-shrink:0;width:34px}
+.principle h4{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:4px;letter-spacing:-0.01em}
+.principle p{font-size:13.5px;color:#555;line-height:1.6}
+.cases{display:flex;flex-direction:column;gap:14px}
+.case-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.case-head{padding:16px 20px;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.case-name{font-size:16px;font-weight:700;color:var(--dark);letter-spacing:-0.01em}
+.case-niche{font-size:12px;font-weight:600;color:var(--red);background:var(--accent-bg);border-radius:100px;padding:3px 10px;margin-left:6px;white-space:nowrap}
+.case-period{font-size:12px;color:var(--muted)}
+.case-highlights{display:grid;grid-template-columns:repeat(3,1fr);background:var(--warm-bg);border-bottom:1.5px solid var(--border)}
+.case-hl{padding:14px 12px;text-align:center}
+.case-hl + .case-hl{border-left:1.5px solid var(--border)}
+.case-hl-val{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;color:var(--dark);white-space:nowrap}
+.case-hl-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:4px}
+.case-funnel{list-style:none;padding:8px 20px 14px}
+.case-funnel li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:13.5px;border-bottom:1px dashed var(--border)}
+.case-funnel li:last-child{border-bottom:none}
+.case-funnel span{color:var(--muted)}
+.case-funnel b{font-weight:600;color:var(--text);text-align:right}
+.case-funnel b small{font-size:12px;font-weight:500;color:var(--muted)}
+.selection{background:var(--dark);color:white;border-radius:var(--r-xl);padding:32px 24px;text-align:center}
+.selection .section-title{color:white}
+.selection .section-sub{color:rgba(255,255,255,0.72)}
+.selection-steps{list-style:none;display:flex;flex-direction:column;gap:10px;text-align:left;max-width:480px;margin:0 auto 24px;counter-reset:sel}
+.selection-steps li{counter-increment:sel;display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.9)}
+.selection-steps li::before{content:counter(sel);width:26px;height:26px;border-radius:50%;background:var(--red);color:white;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.selection-steps a{color:var(--red-light);text-decoration:none;font-weight:600}
+.selection-steps a:hover{text-decoration:underline}
+.btn-cta{display:inline-block;background:var(--red);color:white;text-decoration:none;border-radius:var(--r-md);padding:14px 28px;font-size:14px;font-weight:700;box-shadow:var(--shadow-red);transition:all 0.2s}
+.btn-cta:hover{background:var(--red-dark);transform:translateY(-1px)}
+
 /* FOOTER */
 footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
 
@@ -165,6 +209,15 @@ footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
   .features-grid{grid-template-columns:1fr}
   .form-outer{padding:8px 16px 48px}
   .step{padding:22px 18px 18px}
+  .stats-grid{gap:8px}
+  .stat-card{padding:16px 6px}
+  .stat-label{font-size:11.5px}
+  .principle{padding:16px}
+  .case-head,.case-funnel{padding-left:16px;padding-right:16px}
+  .case-hl{padding:12px 6px}
+  .case-hl-val{font-size:13px}
+  .case-hl-label{font-size:10px}
+  .selection{padding:28px 18px}
 }
 </style>
 </head>
@@ -187,7 +240,7 @@ footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
 </div>
 
 <!-- FORM -->
-<div class="form-outer">
+<div class="form-outer" id="top">
   <div class="form-card">
     <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:33%"></div></div>
     <div class="progress-info">
@@ -390,6 +443,89 @@ footer{text-align:center;padding:20px;font-size:12px;color:var(--muted)}
         </div>
       </div>
     </div>
+  </div>
+  <!-- RESULTS -->
+  <div class="section">
+    <div class="section-title">Максимум учеников <em>с Авито</em></div>
+    <div class="section-sub">Начав работу этим летом, для репетиторов и онлайн-школ из Schoolsmart мы уже получили:</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">534</div><div class="stat-label">заявки</div></div>
+      <div class="stat-card"><div class="stat-num">108</div><div class="stat-label">проведённых диагностик</div></div>
+      <div class="stat-card"><div class="stat-num">44</div><div class="stat-label">оплаты от учеников</div></div>
+    </div>
+    <div class="niches-note">Берём всю работу по кабинету на себя в любых нишах — от русского языка и математики до итальянского и логопедии.</div>
+  </div>
+
+  <!-- PRINCIPLES -->
+  <div class="section">
+    <div class="section-title">Три принципа, которые дают <em>результат</em></div>
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-num">01</div>
+        <div>
+          <h4>Собираем весь опыт рынка</h4>
+          <p>Каждый день собираем знания от эдвайзеров, репетиторов с результатами и специалистов. Всё это используется в кабинетах клиентов и повышает эффективность продвижения.</p>
+        </div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">02</div>
+        <div>
+          <h4>Главное — экономика репетитора</h4>
+          <p>Репетиторы доверяют нам бюджеты, потому что понимают, за счёт чего и как окупятся вложения. Стоимость каждого ученика не превышает 10–20% от LTV.</p>
+        </div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">03</div>
+        <div>
+          <h4>Команда с горящими глазами</h4>
+          <p>Талантливые специалисты погружаются в каждый кабинет. Не ждут команд, а сами принимают решения и выбирают стратегию, которая приведёт учеников.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CASES -->
+  <div class="section">
+    <div class="section-title">Недавние <em>кейсы</em></div>
+    <div class="section-sub">Цифры из рекламных кабинетов клиентов на Авито.</div>
+    <div class="cases">
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-name">Оксана Алексеева<span class="case-niche">Русский язык</span></div>
+          <div class="case-period">1–21 сентября</div>
+        </div>
+        <div class="case-highlights"><div class="case-hl"><div class="case-hl-val">99 000 ₽</div><div class="case-hl-label">Продажи</div></div><div class="case-hl"><div class="case-hl-val">7</div><div class="case-hl-label">Учеников</div></div><div class="case-hl"><div class="case-hl-val">136 800 ₽</div><div class="case-hl-label">LTV</div></div></div>
+        <ul class="case-funnel"><li><span>Бюджет</span><b>19 244 ₽</b></li><li><span>Просмотров</span><b>277</b></li><li><span>Заявок</span><b>21 <small>· CPL 916 ₽</small></b></li><li><span>Диагностик</span><b>10</b></li><li><span>Привлечено учеников</span><b>7 <small>· CAC 2 749 ₽</small></b></li><li><span>Средний чек продажи</span><b>14 100 ₽</b></li></ul>
+      </div>
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-name">Светлана Соболева<span class="case-niche">Английский язык</span></div>
+          <div class="case-period">1–21 сентября</div>
+        </div>
+        <div class="case-highlights"><div class="case-hl"><div class="case-hl-val">57 600 ₽</div><div class="case-hl-label">Продажи</div></div><div class="case-hl"><div class="case-hl-val">6</div><div class="case-hl-label">Учеников</div></div><div class="case-hl"><div class="case-hl-val">76 800 ₽</div><div class="case-hl-label">LTV</div></div></div>
+        <ul class="case-funnel"><li><span>Бюджет</span><b>86 684 ₽</b></li><li><span>Просмотров</span><b>778</b></li><li><span>Заявок</span><b>85 <small>· CPL 1 020 ₽</small></b></li><li><span>Диагностик</span><b>12</b></li><li><span>Привлечено учеников</span><b>6 <small>· CAC 14 447 ₽</small></b></li><li><span>Средний чек продажи</span><b>9 600 ₽</b></li></ul>
+      </div>
+      <div class="case-card">
+        <div class="case-head">
+          <div class="case-name">Елена Добрынина<span class="case-niche">Русский язык</span></div>
+          <div class="case-period">1–31 августа</div>
+        </div>
+        <div class="case-highlights"><div class="case-hl"><div class="case-hl-val">41</div><div class="case-hl-label">Заявок</div></div><div class="case-hl"><div class="case-hl-val">11</div><div class="case-hl-label">Учеников</div></div><div class="case-hl"><div class="case-hl-val">167 000 ₽</div><div class="case-hl-label">LTV</div></div></div>
+        <ul class="case-funnel"><li><span>Бюджет</span><b>46 047 ₽</b></li><li><span>Просмотров</span><b>704</b></li><li><span>Заявок</span><b>41 <small>· CPL 1 123 ₽</small></b></li><li><span>Диагностик</span><b>14</b></li><li><span>Привлечено учеников</span><b>11 <small>· CAC 4 186 ₽</small></b></li></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SELECTION -->
+  <div class="section selection">
+    <div class="section-title">Как попасть в работу</div>
+    <div class="section-sub">Ресурсы команды ограничены, поэтому берём в работу только те проекты, где точно получится сделать крутой кейс и выйти на хорошие продажи.</div>
+    <ol class="selection-steps">
+      <li><span>Заполните анкету отбора на этой странице</span></li>
+      <li><span>Обсудите эффективность Авито для вашей ниши с руководителем Олегом Ежковым — <a href="https://t.me/oleg_ezhkov" target="_blank">@oleg_ezhkov</a></span></li>
+      <li><span>Получите приглашение в Клуб Первых и одобрение запуска работы</span></li>
+    </ol>
+    <a href="#top" class="btn-cta">Заполнить анкету ↑</a>
   </div>
 </div>
 
