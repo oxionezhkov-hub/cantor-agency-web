@@ -3767,7 +3767,7 @@ async function botOnMessage(env, msg, edited) {
   const t = msg.date * 1000;
   const replyTo = msg.reply_to_message && !msg.reply_to_message.forum_topic_created ? msg.reply_to_message.message_id : null;
   await botAppendLog(kv, chat.id, threadId, {
-    id: msg.message_id, t, from: botUserName(msg.from), fromId, team: isTeam, text: text.slice(0, 4000), reply: replyTo, edited: edited || undefined,
+    id: msg.message_id, t, from: botUserName(msg.from), fromId, team: isTeam, text: botRedactSecrets(text).slice(0, 4000), reply: replyTo, edited: edited || undefined,
   }, t);
   const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
   if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
@@ -4287,8 +4287,100 @@ async function botAnswerQuestion(env, question) {
   }
 }
 
+// One-time history import from a Telegram Desktop export (the bot can't read messages sent before
+// it joined). Loads the logs, topic names and already-known open tasks, and moves each topic's AI
+// cursor past the imported messages so the history isn't re-billed to the AI. Sent in chunks
+// (one or a few topics per request) to stay within a Worker invocation's KV-operation limit.
+//   POST /api/tgbot/import  (x-dashboard-password)
+//   { chatId?, topics: { <threadId>: name }, entries: [{ thread, id, t, from, text, reply }], tasks: [...] }
+function botRedactSecrets(text) {
+  // API keys / client secrets pasted into chats: long unbroken letter+digit runs.
+  return String(text || '').replace(/\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{16,}\b/g, '[скрыто]');
+}
+async function handleBotImport(request, env) {
+  if (!checkDashboardAuth(request)) return json({ error: 'unauthorized' }, 401);
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const body = await readJson(request);
+  if (!body) return json({ error: 'bad_json' }, 400);
+  let chatRec = body.chatId ? await kv.get(`bot:chat:${body.chatId}`, 'json') : null;
+  if (!chatRec) {
+    const forums = (await listByPrefix(kv, 'bot:chat:')).filter((c) => c.isForum);
+    if (forums.length !== 1) return json({ error: 'chat_unknown', message: 'Добавьте бота в рабочий чат (или передайте chatId)', forums: forums.map((c) => ({ id: c.id, title: c.title })) }, 409);
+    chatRec = forums[0];
+  }
+  const chatId = chatRec.id;
+  const result = { chatId, topics: 0, days: 0, entries: 0, tasks: 0 };
+
+  for (const [thread, name] of Object.entries(body.topics || {})) {
+    const key = `bot:topic:${chatId}:${thread}`;
+    const known = await kv.get(key, 'json');
+    if (!known || /^Топик \d+$/.test(known.name)) { await botSetTopicName(kv, chatId, thread, name); result.topics += 1; }
+  }
+
+  const groups = new Map();
+  for (const e of Array.isArray(body.entries) ? body.entries : []) {
+    if (!e || !Number.isFinite(e.id) || !Number.isFinite(e.t)) continue;
+    const thread = String(e.thread || 0);
+    const k = `${thread}|${botMsk(e.t).date}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push({ id: e.id, t: e.t, from: String(e.from || '?'), fromId: null, team: true, text: botRedactSecrets(e.text).slice(0, 4000), reply: e.reply || null, imported: true });
+  }
+  const maxIdByThread = {};
+  for (const [k, list] of groups) {
+    const [thread, date] = k.split('|');
+    const key = `bot:log:${chatId}:${thread}:${date}`;
+    const existing = (await kv.get(key, 'json')) || [];
+    const byId = new Map(existing.map((x) => [x.id, x]));
+    for (const x of list) if (!byId.has(x.id)) byId.set(x.id, x);
+    const merged = [...byId.values()].sort((a, b) => a.t - b.t);
+    await kv.put(key, JSON.stringify(merged), { expirationTtl: BOT_LOG_TTL });
+    result.days += 1;
+    result.entries += list.length;
+    maxIdByThread[thread] = Math.max(maxIdByThread[thread] || 0, ...list.map((x) => x.id));
+  }
+  for (const [thread, maxId] of Object.entries(maxIdByThread)) {
+    const key = `bot:cursor:${chatId}:${thread}`;
+    const cur = Number(await kv.get(key)) || 0;
+    if (maxId > cur) await kv.put(key, String(maxId));
+  }
+
+  const nowIso = new Date().toISOString();
+  for (const t of Array.isArray(body.tasks) ? body.tasks : []) {
+    if (!t || !t.text || !t.importKey) continue;
+    const id = `imp${t.importKey}`;
+    if (await kv.get(`task:${id}`)) continue;
+    const topic = await kv.get(`bot:topic:${chatId}:${t.thread || 0}`, 'json');
+    const dueMs = botParseMskDateTime(t.due);
+    await kv.put(`task:${id}`, JSON.stringify({
+      id,
+      text: String(t.text).slice(0, 300),
+      status: 'open',
+      owner: t.owner || null,
+      due: dueMs ? botIsoMsk(dueMs) : null,
+      projectId: (topic && topic.projectId) || null,
+      topicName: topic ? topic.name : null,
+      source: 'bot',
+      origin: 'import',
+      chatId,
+      threadId: Number(t.thread || 0),
+      msgId: t.msgId || null,
+      link: t.msgId ? botMessageLink(chatId, t.thread, t.msgId) : null,
+      author: t.author || null,
+      note: t.note || null,
+      startedAt: Number.isFinite(t.t) ? new Date(t.t).toISOString() : nowIso,
+      // Old backlog: counted in /summary and /tasks, but no individual "no deadline" pings.
+      notified: { noDue: nowIso, overdue: dueMs && dueMs < Date.now() ? nowIso : undefined },
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    }));
+    result.tasks += 1;
+  }
+  return json({ ok: true, ...result });
+}
+
 async function handleBotApi(request, env, url) {
   if (url.pathname === '/api/tgbot/webhook' && request.method === 'POST') return handleBotWebhook(request, env);
+  if (url.pathname === '/api/tgbot/import' && request.method === 'POST') return handleBotImport(request, env);
   // Manual re-setup (normally the cron does it): GET /api/tgbot/setup?key=<dashboard password>
   if (url.pathname === '/api/tgbot/setup') {
     if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
