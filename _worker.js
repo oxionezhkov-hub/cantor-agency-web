@@ -3522,18 +3522,22 @@ function botIsOwner(env, userId) {
   return botOwnerIds(env).includes(String(userId));
 }
 // Long texts are split on line breaks to stay under Telegram's 4096-char limit.
-async function botNotifyOwner(env, text, extra = {}) {
+// Telegram rejects messages over 4096 chars, so long texts go out in several messages,
+// split on line breaks (every line is self-contained HTML).
+async function botSend(env, chatId, text, extra = {}) {
   const chunks = [];
   let cur = '';
   for (const line of String(text).split('\n')) {
     if ((cur + '\n' + line).length > 3800 && cur) { chunks.push(cur); cur = line; } else { cur = cur ? cur + '\n' + line : line; }
   }
   if (cur) chunks.push(cur);
-  for (const id of botOwnerIds(env)) {
-    for (const chunk of chunks) {
-      await botApi(env, 'sendMessage', { chat_id: id, text: chunk, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
-    }
+  for (const chunk of chunks) {
+    const res = await botApi(env, 'sendMessage', { chat_id: chatId, text: chunk, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
+    if (!res || !res.ok) console.error('control bot sendMessage failed', res && res.description);
   }
+}
+async function botNotifyOwner(env, text, extra = {}) {
+  for (const id of botOwnerIds(env)) await botSend(env, id, text, extra);
 }
 async function botOnce(kv, key, ttlSeconds) {
   const k = `bot:once:${key}`;
@@ -3795,7 +3799,7 @@ async function botOnMessage(env, msg, edited) {
 async function botOnOwnerMessage(env, msg) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const text = String(msg.text || '').trim();
-  const reply = (body) => botApi(env, 'sendMessage', { chat_id: msg.chat.id, text: body, parse_mode: 'HTML', disable_web_page_preview: true });
+  const reply = (body) => botSend(env, msg.chat.id, body);
   const [cmdRaw, ...args] = text.split(/\s+/);
   const cmd = cmdRaw.startsWith('/') ? cmdRaw.slice(1).split('@')[0].toLowerCase() : null;
 
@@ -3805,7 +3809,7 @@ async function botOnOwnerMessage(env, msg) {
       'Я молча читаю рабочий чат (и чаты клиентов, куда меня добавят), сам нахожу задачи, сроки и выполнение и пишу только вам.',
       '',
       '/summary — просрочено, без срока, сделано но не сообщили клиенту',
-      '/tasks — открытые задачи по клиентам',
+      '/tasks — открытые задачи по клиентам (/tasks Агешина — только один клиент)',
       '/overdue — просроченные',
       '/metrics — проверка метрик из дашборда',
       '/topics — какие чаты и топики к каким клиентам привязаны',
@@ -3817,7 +3821,7 @@ async function botOnOwnerMessage(env, msg) {
     ].join('\n'));
   }
   if (cmd === 'summary') return reply(await botBuildSummary(env, Date.now()));
-  if (cmd === 'tasks') return reply(await botBuildTaskList(env, 'open'));
+  if (cmd === 'tasks') return reply(await botBuildTaskList(env, 'open', args.join(' ')));
   if (cmd === 'overdue') return reply(await botBuildTaskList(env, 'overdue'));
   if (cmd === 'metrics') return reply((await botBuildMetricsReport(env, Date.now())) || 'По метрикам всё спокойно: данные за вчера внесены, аномалий нет.');
   if (cmd === 'topics') return reply(await botBuildTopicsList(env));
@@ -3865,14 +3869,16 @@ function botStatusLabel(task) {
 async function botAllTasks(kv) {
   return (await listByPrefix(kv, 'task:')).filter((t) => t.source === 'bot');
 }
-function botTaskLine(task, projectsById, nowMs) {
+function botTaskClient(task, projectsById) {
+  return task.projectId && projectsById[task.projectId] ? projectsById[task.projectId].name : task.topicName || 'без клиента';
+}
+function botTaskLine(task, projectsById, nowMs, withClient = true) {
   const due = botDueMs(task);
-  const client = task.projectId && projectsById[task.projectId] ? projectsById[task.projectId].name : task.topicName || 'без клиента';
-  const parts = [`• <b>${escapeHtml(client)}</b>: ${escapeHtml(task.text)}`];
+  const parts = [withClient ? `• <b>${escapeHtml(botTaskClient(task, projectsById))}</b>: ${escapeHtml(task.text)}` : `• ${escapeHtml(task.text)}`];
   if (task.owner) parts.push(`— ${escapeHtml(task.owner)}`);
   if (due) parts.push(due < nowMs ? `⏰ был срок ${botFmtDate(due)}` : `срок ${botFmtDate(due)}`);
   else parts.push('без срока');
-  if (task.link) parts.push(`<a href="${escapeHtml(task.link)}">сообщение</a>`);
+  if (task.link) parts.push(`<a href="${escapeHtml(task.link)}">↗</a>`);
   parts.push(`<code>${escapeHtml(task.id)}</code>`);
   return parts.join(' ');
 }
@@ -3881,16 +3887,30 @@ async function botProjectsById(kv) {
   for (const p of await botProjects(kv)) byId[p.id] = p;
   return byId;
 }
-async function botBuildTaskList(env, mode) {
+async function botBuildTaskList(env, mode, clientFilter) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const now = Date.now();
   const byId = await botProjectsById(kv);
   let tasks = (await botAllTasks(kv)).filter((t) => t.status === 'open');
+  // "/tasks Агешина" — one client (matched on a word stem, so declensions work too).
+  const stem = botNorm(clientFilter).split(' ').filter((w) => w.length > 2).map((w) => w.slice(0, Math.max(3, w.length - 2)));
+  if (stem.length) tasks = tasks.filter((t) => { const n = ` ${botNorm(botTaskClient(t, byId))}`; return stem.every((w) => n.includes(` ${w}`)); });
   if (mode === 'overdue') tasks = tasks.filter((t) => botDueMs(t) && botDueMs(t) < now);
   if (!tasks.length) return mode === 'overdue' ? 'Просроченных задач нет 👌' : 'Открытых задач нет.';
-  tasks.sort((a, b) => String(a.projectId).localeCompare(String(b.projectId)) || (botDueMs(a) || Infinity) - (botDueMs(b) || Infinity));
-  const title = mode === 'overdue' ? `🔴 Просрочено: ${tasks.length}` : `📋 Открытые задачи: ${tasks.length}`;
-  return [title, ...tasks.map((t) => botTaskLine(t, byId, now))].join('\n');
+  // Grouped by client, most tasks first; within a client by deadline.
+  const groups = new Map();
+  for (const t of tasks) {
+    const name = botTaskClient(t, byId);
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(t);
+  }
+  const lines = [mode === 'overdue' ? `🔴 <b>Просрочено: ${tasks.length}</b>` : `📋 <b>Открытые задачи: ${tasks.length}</b>`];
+  for (const [name, list] of [...groups].sort((a, b) => b[1].length - a[1].length)) {
+    list.sort((a, b) => (botDueMs(a) || Infinity) - (botDueMs(b) || Infinity));
+    lines.push('', `<b>${escapeHtml(name)}</b> (${list.length})`, ...list.map((t) => botTaskLine(t, byId, now, false)));
+  }
+  lines.push('', 'Закрыть: /done &lt;id&gt; · клиенту сообщили: /informed &lt;id&gt; · не нужна: /cancel &lt;id&gt;');
+  return lines.join('\n');
 }
 async function botBuildTopicsList(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -4129,9 +4149,16 @@ async function botBuildSummary(env, nowMs) {
   const state = (await kv.get('bot:ai', 'json')) || {};
   const lines = [`<b>Сводка на ${botFmtDate(nowMs)}</b>`];
   if (state.limited) lines.push('🔴 ИИ на лимите — новые сообщения ещё не разобраны.');
-  lines.push('', `🔴 <b>Просрочено: ${overdue.length}</b>`, ...overdue.map((t) => botTaskLine(t, byId, nowMs)));
-  lines.push('', `⚪ <b>Без срока дольше 2 рабочих часов: ${noDue.length}</b>`, ...noDue.map((t) => botTaskLine(t, byId, nowMs)));
-  lines.push('', `📨 <b>Сделано, но клиенту не сообщили: ${notInformed.length}</b>`, ...notInformed.map((t) => botTaskLine(t, byId, nowMs)));
+  // Short sections list every task; long ones collapse to per-client counts (full list: /tasks).
+  const section = (list) => {
+    if (list.length <= 12) return list.map((t) => botTaskLine(t, byId, nowMs));
+    const counts = {};
+    for (const t of list) { const n = botTaskClient(t, byId); counts[n] = (counts[n] || 0) + 1; }
+    return [Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([n, c]) => `${escapeHtml(n)} ${c}`).join(', '), 'Список — /tasks'];
+  };
+  lines.push('', `🔴 <b>Просрочено: ${overdue.length}</b>`, ...section(overdue));
+  lines.push('', `⚪ <b>Без срока дольше 2 рабочих часов: ${noDue.length}</b>`, ...section(noDue));
+  lines.push('', `📨 <b>Сделано, но клиенту не сообщили: ${notInformed.length}</b>`, ...section(notInformed));
   if (pending.length) lines.push('', `💬 <b>Клиент ждёт ответа: ${pending.length}</b>`, ...pending);
   lines.push('', `📋 Всего открыто: ${open.length}${Object.keys(perClient).length ? ' — ' + Object.entries(perClient).map(([n, c]) => `${escapeHtml(n)} ${c}`).join(', ') : ''}`);
   return lines.join('\n');
