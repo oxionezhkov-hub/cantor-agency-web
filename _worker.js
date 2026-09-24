@@ -2448,12 +2448,13 @@ async function handleDashboardApi(request, env, url) {
 
   // ── Bootstrap: everything the dashboard needs in one call ──
   if (pathname === '/api/dashboard/bootstrap' && request.method === 'GET') {
-    const [projects, employees, analytics, projectRatings, dailyMetrics] = await Promise.all([
+    const [projects, employees, analytics, projectRatings, dailyMetrics, tasks] = await Promise.all([
       listByPrefix(kv, 'project:'),
       listByPrefix(kv, 'employee:'),
       listByPrefix(kv, 'analytics:'),
       listByPrefix(kv, 'projectRating:'),
       listByPrefix(kv, 'dailyMetrics:'),
+      listByPrefix(kv, 'task:'),
     ]);
     return json({
       projects: projects.sort((a, b) => a.name.localeCompare(b.name, 'ru')),
@@ -2461,6 +2462,7 @@ async function handleDashboardApi(request, env, url) {
       analytics,
       projectRatings,
       dailyMetrics,
+      tasks,
       salePrices: SALE_PRICES,
     });
   }
@@ -2689,6 +2691,7 @@ async function handleDashboardApi(request, env, url) {
     const existing = (await kv.get(`task:${id}`, 'json')) || {};
     const now = new Date().toISOString();
     const task = {
+      ...existing, // bot-created tasks carry extra fields (projectId, link, …) that must survive edits
       id,
       text,
       status: (body && body.status) || existing.status || 'open',
@@ -3369,6 +3372,931 @@ async function handleReportJobCallback(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// ── Control bot (Telegram): keeps agency tasks and deadlines from getting lost ──
+//
+// A Telegram bot (token in the CONTROL_BOT_TOKEN secret, never in wrangler.jsonc) that sits
+// silently in the agency's work chat (a forum supergroup: one topic per client) and, later, in
+// the client chats. It never writes into groups: everything goes to the owner's private chat
+// (CONTROL_BOT_OWNER_IDS). Every message is logged to KV and queued; the cron trigger feeds the
+// queue to Workers AI (free tier), which turns messages into tasks (who, what, by when, done,
+// reported to the client). Tasks are stored as the dashboard's own `task:<id>` records, so they
+// show up on /dashboard. When the free AI allocation runs out the bot tells the owner (🔴),
+// keeps logging, and works through the backlog once the limit resets (🟢).
+//
+// KV keys (binding "AGENCY_DASHBOARD_KV", "bot:" prefix):
+//   bot:setup                              -> BOT_SETUP_VERSION once webhook/profile/commands are set
+//   bot:chat:<chatId>                      -> { id, title, isForum, kind: 'work'|'client', projectId, addedAt }
+//   bot:topic:<chatId>:<threadId>          -> { name, projectId }
+//   bot:member:<userId>                    -> { id, name, seenAt }  (people who write in the work chat = team)
+//   bot:log:<chatId>:<threadId>:<YYYY-MM-DD> -> [{ id, t, from, fromId, text, reply }]  (MSK day, 180-day TTL)
+//   bot:dirty:<chatId>:<threadId>          -> "1" while a topic/chat has messages the AI hasn't seen
+//   bot:cursor:<chatId>:<threadId>         -> last message id the AI has processed there
+//   bot:attempts:<chatId>:<threadId>       -> failed AI attempts on the current batch
+//   bot:ai                                 -> { limited, since, processedWhileLimited }
+//   bot:pending:<chatId>                   -> { since, msgId, text }  (client message not answered yet)
+//   bot:report:<chatId>:<YYYY-MM-DD>       -> "1" once today's report to that client was seen
+//   bot:once:<key>                         -> "1" dedupe for notifications (TTL)
+//   task:<id> (shared with the dashboard)  -> { id, text, status, owner, due, projectId, source: 'bot',
+//                                              origin, chatId, threadId, msgId, link, author,
+//                                              doneAt, informedAt, notified, createdAt, updatedAt }
+
+const BOT_SETUP_VERSION = '1';
+const BOT_WORKER_ORIGIN = 'https://mainweb.oxion-ezhkov.workers.dev';
+const BOT_AI_MODEL_DEFAULT = '@cf/qwen/qwen3-30b-a3b-fp8';
+const BOT_LOG_TTL = 60 * 60 * 24 * 180;
+const BOT_MSK_OFFSET_MS = 3 * 60 * 60 * 1000;
+const BOT_WORK_START_H = 10;
+const BOT_WORK_END_H = 18;
+const BOT_NO_DUE_AFTER_WMIN = 120;      // task without a deadline after 2 working hours
+const BOT_CLIENT_REPLY_WMIN = 30;       // client message unanswered for 30 working minutes
+const BOT_NOT_INFORMED_WMIN = 8 * 60;   // done but not reported to the client after 1 working day
+const BOT_AI_BATCH_GROUPS = 6;          // topics per cron run
+const BOT_AI_BATCH_MESSAGES = 60;       // messages per topic per AI call
+const BOT_AI_MAX_ATTEMPTS = 5;
+
+// Topic ids of the existing work chat «Авито», from its export (thread id = id of the
+// "created topic" service message). Used until the bot sees a topic's name itself.
+const BOT_SEED_TOPICS = {
+  2: 'Ольга Агешина', 17: 'Оксана Алексеева', 21: 'Светлана Соболева', 23: 'Валентин Волков',
+  25: 'Лариса Ромашова', 27: 'Алексей Шевчук', 31: 'Галина Симагина', 55: 'Иван Кариентиди',
+  57: 'Елена Добрынина', 61: 'Ирина Армбристер', 842: 'Эдвайзеры', 1192: 'Наталина Сасс',
+};
+
+const BOT_STRANGER_REPLY = 'Здравствуйте! Это служебный бот команды Cantor Agency — он помогает не терять ваши запросы. '
+  + 'По любым вопросам пишите вашему менеджеру в рабочий чат, мы ответим в рабочее время (будни 10:00–18:00 МСК).';
+
+const BOT_OWNER_COMMANDS = [
+  { command: 'summary', description: 'Сводка: просрочено, без срока, не сообщили клиенту' },
+  { command: 'tasks', description: 'Открытые задачи по клиентам' },
+  { command: 'overdue', description: 'Просроченные задачи' },
+  { command: 'metrics', description: 'Проверка метрик из дашборда' },
+  { command: 'topics', description: 'Чаты и топики → клиенты' },
+  { command: 'ai', description: 'Статус ИИ и очереди' },
+  { command: 'help', description: 'Что умеет бот' },
+];
+
+// ── time helpers (all business logic is in Moscow time, UTC+3, no DST) ──
+function botMsk(ms) {
+  const d = new Date(ms + BOT_MSK_OFFSET_MS);
+  return {
+    date: d.toISOString().slice(0, 10),
+    hh: d.getUTCHours(),
+    mm: d.getUTCMinutes(),
+    dow: d.getUTCDay(), // 0 = Sunday
+  };
+}
+function botMskStartOfDay(ms) {
+  const d = new Date(ms + BOT_MSK_OFFSET_MS);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - BOT_MSK_OFFSET_MS;
+}
+function botIsWorkday(ms) {
+  const { dow } = botMsk(ms);
+  return dow >= 1 && dow <= 5;
+}
+// Working minutes (weekdays 10:00–18:00 MSK) between two instants.
+function botWorkingMinutes(fromMs, toMs) {
+  if (!(toMs > fromMs)) return 0;
+  let total = 0;
+  let day = botMskStartOfDay(fromMs);
+  while (day < toMs) {
+    if (botIsWorkday(day + 12 * 3600000)) {
+      const ws = day + BOT_WORK_START_H * 3600000;
+      const we = day + BOT_WORK_END_H * 3600000;
+      const s = Math.max(ws, fromMs);
+      const e = Math.min(we, toMs);
+      if (e > s) total += (e - s) / 60000;
+    }
+    day += 24 * 3600000;
+  }
+  return Math.round(total);
+}
+function botFmtDate(ms) {
+  if (!ms) return '—';
+  const d = new Date(ms + BOT_MSK_OFFSET_MS);
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mi = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${dd}.${mo} ${hh}:${mi}`;
+}
+// "YYYY-MM-DD HH:MM" (MSK, as the AI returns it) -> epoch ms, or null.
+function botParseMskDateTime(value) {
+  const m = String(value || '').match(/(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+  const ms = Date.UTC(+m[1], +m[2] - 1, +m[3], m[4] != null ? +m[4] : BOT_WORK_END_H, m[5] != null ? +m[5] : 0) - BOT_MSK_OFFSET_MS;
+  return Number.isFinite(ms) ? ms : null;
+}
+function botDueMs(task) {
+  if (!task || !task.due) return null;
+  const ms = Date.parse(task.due);
+  return Number.isFinite(ms) ? ms : null;
+}
+function botIsoMsk(ms) {
+  return new Date(ms + BOT_MSK_OFFSET_MS).toISOString().slice(0, 19) + '+03:00';
+}
+
+// ── Telegram API ──
+async function botApi(env, method, body) {
+  const token = env.CONTROL_BOT_TOKEN;
+  if (!token) return { ok: false, description: 'CONTROL_BOT_TOKEN is not set' };
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+      signal: AbortSignal.timeout(10000),
+    });
+    return (await res.json().catch(() => null)) || { ok: false, description: `HTTP ${res.status}` };
+  } catch (err) {
+    return { ok: false, description: String(err && err.message) };
+  }
+}
+function botOwnerIds(env) {
+  return parseChatIds(env.CONTROL_BOT_OWNER_IDS);
+}
+function botIsOwner(env, userId) {
+  return botOwnerIds(env).includes(String(userId));
+}
+// Long texts are split on line breaks to stay under Telegram's 4096-char limit.
+async function botNotifyOwner(env, text, extra = {}) {
+  const chunks = [];
+  let cur = '';
+  for (const line of String(text).split('\n')) {
+    if ((cur + '\n' + line).length > 3800 && cur) { chunks.push(cur); cur = line; } else { cur = cur ? cur + '\n' + line : line; }
+  }
+  if (cur) chunks.push(cur);
+  for (const id of botOwnerIds(env)) {
+    for (const chunk of chunks) {
+      await botApi(env, 'sendMessage', { chat_id: id, text: chunk, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
+    }
+  }
+}
+async function botOnce(kv, key, ttlSeconds) {
+  const k = `bot:once:${key}`;
+  if (await kv.get(k)) return false;
+  await kv.put(k, '1', { expirationTtl: Math.max(60, ttlSeconds || 60 * 60 * 24 * 30) });
+  return true;
+}
+function botMessageLink(chatId, threadId, msgId) {
+  const s = String(chatId);
+  if (!s.startsWith('-100') || !msgId) return null;
+  const internal = s.slice(4);
+  return threadId && String(threadId) !== '0'
+    ? `https://t.me/c/${internal}/${threadId}/${msgId}`
+    : `https://t.me/c/${internal}/${msgId}`;
+}
+async function botWebhookSecret(token) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`cantor-control-bot:${token}`));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 48);
+}
+
+// Webhook, bot profile and command menu. Runs from the cron whenever BOT_SETUP_VERSION changes,
+// so the owner only has to add the token secret — or by hand via /api/tgbot/setup.
+async function botSetup(env) {
+  const token = env.CONTROL_BOT_TOKEN;
+  if (!token) return { ok: false, error: 'CONTROL_BOT_TOKEN is not set' };
+  const results = {};
+  results.webhook = await botApi(env, 'setWebhook', {
+    url: `${BOT_WORKER_ORIGIN}/api/tgbot/webhook`,
+    secret_token: await botWebhookSecret(token),
+    allowed_updates: ['message', 'edited_message', 'my_chat_member'],
+    max_connections: 1, // one update at a time, so the per-day log read-modify-write never races
+  });
+  results.name = await botApi(env, 'setMyName', { name: 'Cantor Agency · помощник' });
+  results.description = await botApi(env, 'setMyDescription', {
+    description: 'Рабочий помощник команды Cantor Agency. Следит, чтобы ваши запросы не терялись. '
+      + 'По всем вопросам пишите вашему менеджеру в рабочий чат.',
+  });
+  results.shortDescription = await botApi(env, 'setMyShortDescription', {
+    short_description: 'Рабочий помощник Cantor Agency: следит, чтобы запросы не терялись.',
+  });
+  // No command menu for anyone (clients in groups, strangers) — only in the owners' private chats.
+  results.clearDefault = await botApi(env, 'deleteMyCommands', {});
+  results.clearGroups = await botApi(env, 'setMyCommands', { commands: [], scope: { type: 'all_group_chats' } });
+  results.owner = [];
+  for (const id of botOwnerIds(env)) {
+    results.owner.push(await botApi(env, 'setMyCommands', { commands: BOT_OWNER_COMMANDS, scope: { type: 'chat', chat_id: Number(id) } }));
+  }
+  const ok = !!(results.webhook && results.webhook.ok);
+  if (ok) await env.AGENCY_DASHBOARD_KV.put('bot:setup', BOT_SETUP_VERSION);
+  return { ok, results };
+}
+
+// ── projects / topics / chats ──
+function botNorm(value) {
+  return String(value || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+// A topic/chat title maps to the dashboard project whose full name (first + last) it contains;
+// failing that, to the only project whose surname stem appears in it ("Агешина / Cantor",
+// "Чат с Агешиной").
+function botMatchProject(title, projects) {
+  const t = ` ${botNorm(title)} `;
+  let best = null;
+  for (const p of projects) {
+    const words = botNorm(p.name).split(' ').filter((w) => w.length > 1);
+    if (!words.length) continue;
+    if (words.every((w) => t.includes(` ${w} `))) {
+      if (!best || words.length > botNorm(best.name).split(' ').length) best = p;
+    }
+  }
+  if (best) return best;
+  const bySurname = projects.filter((p) => {
+    const words = botNorm(p.name).split(' ');
+    const surname = words[words.length - 1] || '';
+    return surname.length > 3 && t.includes(` ${surname.slice(0, surname.length - 1)}`);
+  });
+  return bySurname.length === 1 ? bySurname[0] : null;
+}
+async function botProjects(kv) {
+  return listByPrefix(kv, 'project:');
+}
+async function botGetChat(kv, chat) {
+  const key = `bot:chat:${chat.id}`;
+  let rec = await kv.get(key, 'json');
+  const isForum = !!chat.is_forum;
+  const title = chat.title || '';
+  if (!rec || rec.title !== title || rec.isForum !== isForum) {
+    const projects = await botProjects(kv);
+    const project = isForum ? null : botMatchProject(title, projects);
+    rec = {
+      ...(rec || {}),
+      id: chat.id,
+      title,
+      isForum,
+      kind: isForum ? 'work' : 'client',
+      projectId: rec && rec.projectLocked ? rec.projectId : project ? project.id : (rec && rec.projectId) || null,
+      addedAt: (rec && rec.addedAt) || new Date().toISOString(),
+    };
+    await kv.put(key, JSON.stringify(rec));
+  }
+  return rec;
+}
+async function botGetTopic(kv, chatRec, threadId) {
+  if (!chatRec.isForum) return { name: chatRec.title, projectId: chatRec.projectId };
+  const key = `bot:topic:${chatRec.id}:${threadId}`;
+  let rec = await kv.get(key, 'json');
+  if (!rec) {
+    const seeded = chatRec.title === 'Авито' ? BOT_SEED_TOPICS[threadId] : null;
+    const name = String(threadId) === '0' ? 'Общий' : seeded || `Топик ${threadId}`;
+    rec = await botSetTopicName(kv, chatRec.id, threadId, name);
+  }
+  return rec;
+}
+async function botSetTopicName(kv, chatId, threadId, name) {
+  const key = `bot:topic:${chatId}:${threadId}`;
+  const prev = (await kv.get(key, 'json')) || {};
+  const project = botMatchProject(name, await botProjects(kv));
+  const rec = { name, projectId: prev.projectLocked ? prev.projectId : project ? project.id : null, projectLocked: !!prev.projectLocked };
+  await kv.put(key, JSON.stringify(rec));
+  return rec;
+}
+
+// ── message log ──
+function botMessageText(msg) {
+  let text = msg.text || msg.caption || '';
+  const media = msg.photo ? '[фото]' : msg.video ? '[видео]' : msg.voice ? '[голосовое]' : msg.video_note ? '[кружок]'
+    : msg.document ? `[файл ${msg.document.file_name || ''}]` : msg.sticker ? `[стикер ${msg.sticker.emoji || ''}]` : '';
+  if (media) text = text ? `${media} ${text}` : media;
+  return text;
+}
+function botUserName(user) {
+  if (!user) return '?';
+  return [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || String(user.id);
+}
+async function botAppendLog(kv, chatId, threadId, entry, dateMs) {
+  const key = `bot:log:${chatId}:${threadId}:${botMsk(dateMs).date}`;
+  const list = (await kv.get(key, 'json')) || [];
+  const idx = list.findIndex((e) => e.id === entry.id);
+  if (idx >= 0) list[idx] = { ...list[idx], ...entry }; else list.push(entry);
+  await kv.put(key, JSON.stringify(list), { expirationTtl: BOT_LOG_TTL });
+}
+async function botReadLogs(kv, chatId, threadId, fromMs, toMs) {
+  const out = [];
+  for (let day = botMskStartOfDay(fromMs); day <= toMs; day += 24 * 3600000) {
+    const list = await kv.get(`bot:log:${chatId}:${threadId}:${botMsk(day).date}`, 'json');
+    if (list) out.push(...list);
+  }
+  return out.filter((e) => e.t >= fromMs && e.t <= toMs).sort((a, b) => a.t - b.t);
+}
+
+// ── webhook ──
+async function handleBotWebhook(request, env) {
+  const token = env.CONTROL_BOT_TOKEN;
+  if (!token) return json({ ok: false }, 503);
+  if (request.headers.get('X-Telegram-Bot-Api-Secret-Token') !== await botWebhookSecret(token)) {
+    return json({ ok: false }, 403);
+  }
+  const update = await readJson(request);
+  try {
+    if (update && update.my_chat_member) await botOnMembership(env, update.my_chat_member);
+    else if (update && update.message) await botOnMessage(env, update.message, false);
+    else if (update && update.edited_message) await botOnMessage(env, update.edited_message, true);
+  } catch (err) {
+    console.error('control bot update failed', err && err.stack);
+  }
+  return json({ ok: true }); // always 200, so Telegram doesn't redeliver the same update forever
+}
+
+async function botOnMembership(env, upd) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const chat = upd.chat;
+  if (!chat || chat.type === 'private') return;
+  const status = upd.new_chat_member && upd.new_chat_member.status;
+  const title = escapeHtml(chat.title || chat.id);
+  if (status === 'left' || status === 'kicked') {
+    await botNotifyOwner(env, `ℹ️ Бота убрали из чата «${title}» (${escapeHtml(botUserName(upd.from))}).`);
+    return;
+  }
+  if (!botIsOwner(env, upd.from && upd.from.id) && !(await kv.get(`bot:chat:${chat.id}`))) {
+    await botApi(env, 'leaveChat', { chat_id: chat.id });
+    await botNotifyOwner(env, `⚠️ ${escapeHtml(botUserName(upd.from))} добавил(а) бота в «${title}». Бот вышел: добавлять его может только владелец.`);
+    return;
+  }
+  const rec = await botGetChat(kv, chat);
+  const adminHint = status === 'administrator' ? '' : '\nСделайте бота администратором группы — иначе он видит не все сообщения.';
+  const kindText = rec.kind === 'work' ? 'рабочий чат (топики = клиенты)' : `чат клиента${rec.projectId ? ` → ${escapeHtml(rec.projectId)}` : ' (клиент не определён — см. /topics)'}`;
+  await botNotifyOwner(env, `✅ Бот подключён к «${title}»: ${kindText}.${adminHint}`);
+}
+
+async function botOnMessage(env, msg, edited) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const chat = msg.chat;
+  if (!chat) return;
+
+  if (chat.type === 'private') {
+    if (edited) return;
+    if (botIsOwner(env, msg.from && msg.from.id)) return botOnOwnerMessage(env, msg);
+    await botApi(env, 'sendMessage', { chat_id: chat.id, text: BOT_STRANGER_REPLY });
+    if (await botOnce(kv, `stranger:${msg.from && msg.from.id}`, 60 * 60 * 24)) {
+      const who = msg.from && msg.from.username ? ` (@${escapeHtml(msg.from.username)})` : '';
+      await botNotifyOwner(env, `👀 ${escapeHtml(botUserName(msg.from))}${who} открыл(а) бота и написал(а): «${escapeHtml(botMessageText(msg).slice(0, 200))}». Ответил стандартной отбивкой.`, { disable_notification: true });
+    }
+    return;
+  }
+  if (chat.type !== 'group' && chat.type !== 'supergroup') return;
+
+  const chatRec = await botGetChat(kv, chat);
+  const threadId = chatRec.isForum ? (msg.is_topic_message && msg.message_thread_id) || 0 : 0;
+
+  if (msg.forum_topic_created) {
+    await botSetTopicName(kv, chat.id, msg.message_thread_id || msg.message_id, msg.forum_topic_created.name);
+    return;
+  }
+  if (msg.forum_topic_edited && msg.forum_topic_edited.name) {
+    await botSetTopicName(kv, chat.id, msg.message_thread_id || threadId, msg.forum_topic_edited.name);
+    return;
+  }
+  // Learn a topic's name from the topic root a message replies to.
+  const root = msg.reply_to_message && msg.reply_to_message.forum_topic_created;
+  if (root && threadId) {
+    const known = await kv.get(`bot:topic:${chat.id}:${threadId}`, 'json');
+    if (!known || known.name !== root.name) await botSetTopicName(kv, chat.id, threadId, root.name);
+  }
+
+  if (!msg.from || msg.from.is_bot) return;
+  const text = botMessageText(msg);
+  if (!text) return;
+
+  const fromId = msg.from.id;
+  const isTeam = chatRec.kind === 'work' || botIsOwner(env, fromId) || !!(await kv.get(`bot:member:${fromId}`));
+  // KV writes are the scarce resource on the free plan, so every "flag" below is read first.
+  if (chatRec.kind === 'work' && !edited && !(await kv.get(`bot:member:${fromId}`))) {
+    await kv.put(`bot:member:${fromId}`, JSON.stringify({ id: fromId, name: botUserName(msg.from), seenAt: new Date().toISOString() }));
+  }
+
+  const t = msg.date * 1000;
+  const replyTo = msg.reply_to_message && !msg.reply_to_message.forum_topic_created ? msg.reply_to_message.message_id : null;
+  await botAppendLog(kv, chat.id, threadId, {
+    id: msg.message_id, t, from: botUserName(msg.from), fromId, team: isTeam, text: text.slice(0, 4000), reply: replyTo, edited: edited || undefined,
+  }, t);
+  const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
+  if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
+
+  if (chatRec.kind === 'client' && !edited) {
+    const pendingKey = `bot:pending:${chat.id}`;
+    if (isTeam) {
+      if (await kv.get(pendingKey)) await kv.delete(pendingKey);
+      const { date, hh } = botMsk(t);
+      const reportKey = `bot:report:${chat.id}:${date}`;
+      if (hh < 13 && /отч[её]т|бюджет[\s\S]*контакт/i.test(text) && !(await kv.get(reportKey))) {
+        await kv.put(reportKey, '1', { expirationTtl: 60 * 60 * 24 * 7 });
+      }
+    } else if (!(await kv.get(pendingKey))) {
+      await kv.put(pendingKey, JSON.stringify({ since: t, msgId: msg.message_id, text: text.slice(0, 300) }));
+    }
+  }
+}
+
+// ── owner's private chat ──
+async function botOnOwnerMessage(env, msg) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const text = String(msg.text || '').trim();
+  const reply = (body) => botApi(env, 'sendMessage', { chat_id: msg.chat.id, text: body, parse_mode: 'HTML', disable_web_page_preview: true });
+  const [cmdRaw, ...args] = text.split(/\s+/);
+  const cmd = cmdRaw.startsWith('/') ? cmdRaw.slice(1).split('@')[0].toLowerCase() : null;
+
+  if (cmd === 'start' || cmd === 'help') {
+    return reply([
+      '<b>Помощник Cantor Agency</b>',
+      'Я молча читаю рабочий чат (и чаты клиентов, куда меня добавят), сам нахожу задачи, сроки и выполнение и пишу только вам.',
+      '',
+      '/summary — просрочено, без срока, сделано но не сообщили клиенту',
+      '/tasks — открытые задачи по клиентам',
+      '/overdue — просроченные',
+      '/metrics — проверка метрик из дашборда',
+      '/topics — какие чаты и топики к каким клиентам привязаны',
+      '/ai — статус ИИ и очереди',
+      '/done &lt;id&gt; · /informed &lt;id&gt; · /cancel &lt;id&gt; — поправить задачу вручную',
+      '/map &lt;чат:топик&gt; &lt;id клиента&gt; — привязать топик или чат к клиенту',
+      '',
+      'Любой другой текст — вопрос по переписке, например: «что мы обещали Агешиной на этой неделе?»',
+    ].join('\n'));
+  }
+  if (cmd === 'summary') return reply(await botBuildSummary(env, Date.now()));
+  if (cmd === 'tasks') return reply(await botBuildTaskList(env, 'open'));
+  if (cmd === 'overdue') return reply(await botBuildTaskList(env, 'overdue'));
+  if (cmd === 'metrics') return reply((await botBuildMetricsReport(env, Date.now())) || 'По метрикам всё спокойно: данные за вчера внесены, аномалий нет.');
+  if (cmd === 'topics') return reply(await botBuildTopicsList(env));
+  if (cmd === 'ai') {
+    const state = (await kv.get('bot:ai', 'json')) || {};
+    const queue = await kv.list({ prefix: 'bot:dirty:' });
+    return reply(`ИИ: ${state.limited ? '🔴 лимит исчерпан с ' + botFmtDate(state.since) : '🟢 работает'}\nМодель: ${escapeHtml(env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT)}\nТопиков/чатов с неразобранными сообщениями: ${queue.keys.length}`);
+  }
+  if (cmd === 'done' || cmd === 'informed' || cmd === 'cancel') {
+    const task = args[0] && (await kv.get(`task:${args[0]}`, 'json'));
+    if (!task) return reply('Не нашёл задачу с таким id. Id есть в /tasks.');
+    const now = new Date().toISOString();
+    if (cmd === 'done') Object.assign(task, { status: 'done', doneAt: task.doneAt || now });
+    if (cmd === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || now, informedAt: now });
+    if (cmd === 'cancel') task.status = 'cancelled';
+    task.updatedAt = now;
+    await kv.put(`task:${task.id}`, JSON.stringify(task));
+    return reply(`Готово: «${escapeHtml(task.text)}» → ${botStatusLabel(task)}.`);
+  }
+  if (cmd === 'map') {
+    const [target, projectId] = args;
+    const m = String(target || '').match(/^(-?\d+)(?::(\d+))?$/);
+    if (!m || !projectId) return reply('Формат: /map &lt;чат:топик&gt; &lt;id клиента&gt; — оба значения есть в /topics.');
+    if (!(await kv.get(`project:${projectId}`))) return reply(`В дашборде нет клиента с id ${escapeHtml(projectId)}.`);
+    if (m[2]) {
+      const key = `bot:topic:${m[1]}:${m[2]}`;
+      const rec = (await kv.get(key, 'json')) || { name: `Топик ${m[2]}` };
+      await kv.put(key, JSON.stringify({ ...rec, projectId, projectLocked: true }));
+    } else {
+      const key = `bot:chat:${m[1]}`;
+      const rec = await kv.get(key, 'json');
+      if (!rec) return reply('Такого чата бот не знает.');
+      await kv.put(key, JSON.stringify({ ...rec, projectId, projectLocked: true }));
+    }
+    return reply(`Привязал ${escapeHtml(target)} → ${escapeHtml(projectId)}.`);
+  }
+  if (cmd) return reply('Не знаю такой команды. /help — список.');
+  if (!text) return;
+  return reply(await botAnswerQuestion(env, text));
+}
+
+function botStatusLabel(task) {
+  return { open: 'открыта', done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[task.status] || task.status;
+}
+async function botAllTasks(kv) {
+  return (await listByPrefix(kv, 'task:')).filter((t) => t.source === 'bot');
+}
+function botTaskLine(task, projectsById, nowMs) {
+  const due = botDueMs(task);
+  const client = task.projectId && projectsById[task.projectId] ? projectsById[task.projectId].name : task.topicName || 'без клиента';
+  const parts = [`• <b>${escapeHtml(client)}</b>: ${escapeHtml(task.text)}`];
+  if (task.owner) parts.push(`— ${escapeHtml(task.owner)}`);
+  if (due) parts.push(due < nowMs ? `⏰ был срок ${botFmtDate(due)}` : `срок ${botFmtDate(due)}`);
+  else parts.push('без срока');
+  if (task.link) parts.push(`<a href="${escapeHtml(task.link)}">сообщение</a>`);
+  parts.push(`<code>${escapeHtml(task.id)}</code>`);
+  return parts.join(' ');
+}
+async function botProjectsById(kv) {
+  const byId = {};
+  for (const p of await botProjects(kv)) byId[p.id] = p;
+  return byId;
+}
+async function botBuildTaskList(env, mode) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const now = Date.now();
+  const byId = await botProjectsById(kv);
+  let tasks = (await botAllTasks(kv)).filter((t) => t.status === 'open');
+  if (mode === 'overdue') tasks = tasks.filter((t) => botDueMs(t) && botDueMs(t) < now);
+  if (!tasks.length) return mode === 'overdue' ? 'Просроченных задач нет 👌' : 'Открытых задач нет.';
+  tasks.sort((a, b) => String(a.projectId).localeCompare(String(b.projectId)) || (botDueMs(a) || Infinity) - (botDueMs(b) || Infinity));
+  const title = mode === 'overdue' ? `🔴 Просрочено: ${tasks.length}` : `📋 Открытые задачи: ${tasks.length}`;
+  return [title, ...tasks.map((t) => botTaskLine(t, byId, now))].join('\n');
+}
+async function botBuildTopicsList(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const byId = await botProjectsById(kv);
+  const chats = await listByPrefix(kv, 'bot:chat:');
+  if (!chats.length) return 'Бот пока не добавлен ни в один чат.';
+  const lines = [];
+  for (const c of chats) {
+    if (c.isForum) {
+      lines.push(`<b>${escapeHtml(c.title)}</b> (рабочий чат, ${c.id})`);
+      const topicKeys = await kv.list({ prefix: `bot:topic:${c.id}:` });
+      for (const k of topicKeys.keys) {
+        const rec = await kv.get(k.name, 'json');
+        const thread = k.name.split(':').pop();
+        lines.push(`  • ${escapeHtml(rec && rec.name)} → ${rec && rec.projectId ? escapeHtml((byId[rec.projectId] || {}).name || rec.projectId) : '❔ не привязан'} <code>${c.id}:${thread}</code>`);
+      }
+    } else {
+      lines.push(`<b>${escapeHtml(c.title)}</b> → ${c.projectId ? escapeHtml((byId[c.projectId] || {}).name || c.projectId) : '❔ не привязан'} <code>${c.id}</code>`);
+    }
+  }
+  lines.push('', 'Клиенты в дашборде: ' + Object.values(byId).map((p) => `${escapeHtml(p.name)} <code>${escapeHtml(p.id)}</code>`).join(', '));
+  return lines.join('\n');
+}
+
+// ── Workers AI ──
+function botIsLimitError(err) {
+  const s = String((err && (err.message || err)) || '');
+  return /neuron|allocation|quota|limit|exceeded|4006|capacity|429/i.test(s);
+}
+async function botAi(env, system, user, maxTokens) {
+  if (!env.AI) throw new Error('AI binding is not configured');
+  const res = await env.AI.run(env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT, {
+    messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
+    max_tokens: maxTokens || 1500,
+    temperature: 0.1,
+  });
+  let out = '';
+  if (typeof res === 'string') out = res;
+  else if (res && typeof res.response === 'string') out = res.response;
+  else if (res && res.response && typeof res.response === 'object') out = JSON.stringify(res.response);
+  else if (res && res.choices && res.choices[0]) out = (res.choices[0].message && res.choices[0].message.content) || res.choices[0].text || '';
+  return String(out).replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+}
+function botParseJson(text) {
+  const s = String(text || '');
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start < 0 || end <= start) return null;
+  try { return JSON.parse(s.slice(start, end + 1)); } catch { return null; }
+}
+async function botSetAiLimited(env, limited, extra = {}) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const state = (await kv.get('bot:ai', 'json')) || {};
+  if (limited && !state.limited) {
+    await kv.put('bot:ai', JSON.stringify({ limited: true, since: Date.now() }));
+    await botNotifyOwner(env, '🔴🔴🔴 <b>Лимит ИИ исчерпан.</b>\nСообщения продолжаю сохранять, но задачи из них пока не разбираю. Как только лимит обновится (обычно в 03:00 МСК), разберу всё накопившееся и напишу 🟢.');
+  } else if (!limited && state.limited) {
+    await kv.put('bot:ai', JSON.stringify({ limited: false, since: Date.now() }));
+    await botNotifyOwner(env, `🟢 <b>ИИ снова работает.</b> Разбираю накопившиеся сообщения${extra.backlog ? ` (в очереди ${extra.backlog})` : ''}.`);
+  }
+}
+
+const BOT_EXTRACT_SYSTEM = [
+  'Ты помощник руководителя агентства Cantor Agency (продвижение репетиторов на Авито).',
+  'Роли: «Олег Ежков» — руководитель; «Менеджер — Cantor Agency» (КМ) — общается с клиентами и передаёт задачи;',
+  'остальные в рабочем чате — специалисты по Авито. Задача = просьба что-то сделать для клиента или в его кабинете Авито',
+  '(правки объявлений, фото, ставки, города, отчёт, ответ на вопрос клиента, проверка и т.п.). Болтовня, благодарности,',
+  'статистика без просьбы — не задачи.',
+  'Тебе дают новые сообщения из одного топика/чата, контекст до них и список открытых задач этого клиента.',
+  'Верни ТОЛЬКО JSON без пояснений:',
+  '{"events":[',
+  ' {"type":"new_task","msg":<id сообщения>,"text":"<суть задачи до 15 слов>","assignee":"<имя исполнителя или null>","due":"<YYYY-MM-DD HH:MM или null>"},',
+  ' {"type":"update","task":"<id открытой задачи>","msg":<id сообщения>,"status":"taken|done|informed|cancelled","assignee":"<имя или null>","due":"<YYYY-MM-DD HH:MM или null>"}',
+  ']}',
+  'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
+  'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
+  '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
+  'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если событий нет — {"events":[]}.',
+].join('\n');
+
+function botFormatLogLines(entries) {
+  return entries.map((e) => `[${e.id}] ${botFmtDate(e.t)} ${e.from}${e.team === false ? ' (клиент)' : ''}${e.reply ? ` (ответ на ${e.reply})` : ''}: ${String(e.text).replace(/\s+/g, ' ').slice(0, 700)}`).join('\n');
+}
+
+// Feeds new messages to the AI, a few topics per cron run. The dirty flag is cleared before the
+// log is read, so a message arriving mid-run re-flags its topic; the cursor (last processed
+// message id) keeps anything from being processed twice.
+async function botProcessQueue(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const listing = await kv.list({ prefix: 'bot:dirty:', limit: 100 });
+  if (!listing.keys.length) return { processed: 0 };
+  const state = (await kv.get('bot:ai', 'json')) || {};
+  const projectsById = await botProjectsById(kv);
+  let allTasks = null;
+  let processed = 0;
+  for (const k of listing.keys.slice(0, BOT_AI_BATCH_GROUPS)) {
+    const [, , chatId, threadId] = k.name.split(':');
+    await kv.delete(k.name);
+    const chatRec = await kv.get(`bot:chat:${chatId}`, 'json');
+    if (!chatRec) continue;
+    const topic = await botGetTopic(kv, chatRec, threadId);
+    if (!topic.projectId && chatRec.isForum && !topic.projectLocked) {
+      // The client may have been added to the dashboard after the topic was first seen.
+      const match = botMatchProject(topic.name, Object.values(projectsById));
+      if (match) {
+        topic.projectId = match.id;
+        await kv.put(`bot:topic:${chatId}:${threadId}`, JSON.stringify(topic));
+      }
+    }
+    const cursorKey = `bot:cursor:${chatId}:${threadId}`;
+    const cursor = Number(await kv.get(cursorKey)) || 0;
+    const now = Date.now();
+    const logs = await botReadLogs(kv, chatId, threadId, now - 10 * 24 * 3600000, now);
+    const unseen = logs.filter((e) => e.id > cursor);
+    if (!unseen.length) continue;
+    const fresh = unseen.slice(0, BOT_AI_BATCH_MESSAGES);
+    if (unseen.length > fresh.length) await kv.put(k.name, '1'); // the rest goes next run
+    const context = logs.filter((e) => e.id <= cursor).slice(-15);
+
+    if (!allTasks) allTasks = await botAllTasks(kv);
+    const openTasks = allTasks.filter((t) => (t.status === 'open' || t.status === 'done')
+      && ((topic.projectId && t.projectId === topic.projectId) || (String(t.chatId) === String(chatId) && String(t.threadId) === String(threadId))));
+    const projectName = topic.projectId && projectsById[topic.projectId] ? projectsById[topic.projectId].name : topic.name;
+    const user = [
+      `Сейчас: ${botFmtDate(now)}.${botMsk(now).date.slice(0, 4)} (МСК). Сегодня ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][botMsk(now).dow]}.`,
+      `Чат: ${chatRec.kind === 'work' ? 'рабочий чат агентства, топик клиента' : 'чат с клиентом'} «${projectName}».`,
+      `Открытые задачи клиента:\n${openTasks.length ? openTasks.map((t) => `- id=${t.id} [${botStatusLabel(t)}] ${t.text} (исполнитель: ${t.owner || '—'}, срок: ${t.due ? botFmtDate(botDueMs(t)) : '—'})`).join('\n') : '—'}`,
+      `Контекст (уже разобрано):\n${context.length ? botFormatLogLines(context) : '—'}`,
+      `НОВЫЕ сообщения:\n${botFormatLogLines(fresh)}`,
+    ].join('\n\n');
+
+    let parsed = null;
+    try {
+      parsed = botParseJson(await botAi(env, BOT_EXTRACT_SYSTEM, user, 1500));
+    } catch (err) {
+      if (botIsLimitError(err)) {
+        await kv.put(k.name, '1');
+        await botSetAiLimited(env, true);
+        return { processed, limited: true };
+      }
+      console.error('control bot AI failed', err && err.message);
+    }
+    const attemptsKey = `bot:attempts:${chatId}:${threadId}`;
+    if (!parsed) {
+      // Failed/unparseable: retry next run; after a few tries skip this batch so it can't block the topic.
+      const attempts = (Number(await kv.get(attemptsKey)) || 0) + 1;
+      if (attempts >= BOT_AI_MAX_ATTEMPTS) {
+        await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
+        await kv.delete(attemptsKey);
+      } else {
+        await kv.put(attemptsKey, String(attempts), { expirationTtl: 60 * 60 * 24 * 3 });
+        await kv.put(k.name, '1');
+      }
+      continue;
+    }
+    if (state.limited) {
+      await botSetAiLimited(env, false, { backlog: listing.keys.length });
+      state.limited = false;
+    }
+    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks });
+    await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
+    processed += fresh.length;
+  }
+  return { processed };
+}
+
+async function botApplyEvents(env, events, ctx) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
+  const openById = new Map(ctx.openTasks.map((t) => [t.id, t]));
+  const nowIso = new Date().toISOString();
+  for (const ev of Array.isArray(events) ? events : []) {
+    if (!ev || typeof ev !== 'object') continue;
+    const src = byMsg.get(Number(ev.msg));
+    const dueMs = botParseMskDateTime(ev.due);
+    if (ev.type === 'new_task' && ev.text) {
+      const msgId = src ? src.id : ctx.fresh[ctx.fresh.length - 1].id;
+      const id = `bot${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`;
+      const task = {
+        id,
+        text: String(ev.text).slice(0, 300),
+        status: 'open',
+        owner: ev.assignee && ev.assignee !== 'null' ? String(ev.assignee).slice(0, 80) : null,
+        due: dueMs ? botIsoMsk(dueMs) : null,
+        projectId: ctx.topic.projectId || null,
+        topicName: ctx.topic.name,
+        source: 'bot',
+        origin: ctx.chatRec.kind,
+        chatId: ctx.chatRec.id,
+        threadId: Number(ctx.threadId),
+        msgId,
+        link: botMessageLink(ctx.chatRec.id, ctx.chatRec.isForum ? ctx.threadId : null, msgId),
+        author: src ? src.from : null,
+        startedAt: src ? new Date(src.t).toISOString() : nowIso,
+        notified: {},
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      await kv.put(`task:${id}`, JSON.stringify(task));
+      openById.set(id, task);
+      ctx.openTasks.push(task);
+    } else if (ev.type === 'update' && openById.has(String(ev.task))) {
+      const task = openById.get(String(ev.task));
+      if (ev.assignee && ev.assignee !== 'null') task.owner = String(ev.assignee).slice(0, 80);
+      if (dueMs) task.due = botIsoMsk(dueMs);
+      if (ev.status === 'taken' && !task.takenAt) task.takenAt = src ? new Date(src.t).toISOString() : nowIso;
+      if (ev.status === 'done' && task.status === 'open') Object.assign(task, { status: 'done', doneAt: src ? new Date(src.t).toISOString() : nowIso });
+      if (ev.status === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || nowIso, informedAt: src ? new Date(src.t).toISOString() : nowIso });
+      if (ev.status === 'cancelled') task.status = 'cancelled';
+      task.updatedAt = nowIso;
+      await kv.put(`task:${task.id}`, JSON.stringify(task));
+    }
+  }
+}
+
+// ── checks & summaries ──
+async function botBuildSummary(env, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const byId = await botProjectsById(kv);
+  const tasks = await botAllTasks(kv);
+  const open = tasks.filter((t) => t.status === 'open');
+  const overdue = open.filter((t) => botDueMs(t) && botDueMs(t) < nowMs);
+  const noDue = open.filter((t) => !botDueMs(t) && botWorkingMinutes(Date.parse(t.startedAt || t.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN);
+  const notInformed = tasks.filter((t) => t.status === 'done' && t.doneAt && botWorkingMinutes(Date.parse(t.doneAt), nowMs) >= BOT_NOT_INFORMED_WMIN);
+  const pending = [];
+  for (const k of (await kv.list({ prefix: 'bot:pending:' })).keys) {
+    const p = await kv.get(k.name, 'json');
+    const chat = await kv.get(`bot:chat:${k.name.split(':').pop()}`, 'json');
+    if (p && chat && botWorkingMinutes(p.since, nowMs) >= BOT_CLIENT_REPLY_WMIN) pending.push(`• <b>${escapeHtml(chat.title)}</b>: «${escapeHtml(p.text.slice(0, 120))}» — ждёт с ${botFmtDate(p.since)}`);
+  }
+  const perClient = {};
+  for (const t of open) {
+    const name = (t.projectId && byId[t.projectId] && byId[t.projectId].name) || t.topicName || 'без клиента';
+    perClient[name] = (perClient[name] || 0) + 1;
+  }
+  const state = (await kv.get('bot:ai', 'json')) || {};
+  const lines = [`<b>Сводка на ${botFmtDate(nowMs)}</b>`];
+  if (state.limited) lines.push('🔴 ИИ на лимите — новые сообщения ещё не разобраны.');
+  lines.push('', `🔴 <b>Просрочено: ${overdue.length}</b>`, ...overdue.map((t) => botTaskLine(t, byId, nowMs)));
+  lines.push('', `⚪ <b>Без срока дольше 2 рабочих часов: ${noDue.length}</b>`, ...noDue.map((t) => botTaskLine(t, byId, nowMs)));
+  lines.push('', `📨 <b>Сделано, но клиенту не сообщили: ${notInformed.length}</b>`, ...notInformed.map((t) => botTaskLine(t, byId, nowMs)));
+  if (pending.length) lines.push('', `💬 <b>Клиент ждёт ответа: ${pending.length}</b>`, ...pending);
+  lines.push('', `📋 Всего открыто: ${open.length}${Object.keys(perClient).length ? ' — ' + Object.entries(perClient).map(([n, c]) => `${escapeHtml(n)} ${c}`).join(', ') : ''}`);
+  return lines.join('\n');
+}
+
+// Daily metrics come from the dashboard (dailyMetrics:<projectId>:<date>), filled in by the team.
+async function botBuildMetricsReport(env, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const projects = (await botProjects(kv)).filter((p) => !p.status || /activ|актив/i.test(p.status));
+  let prev = botMskStartOfDay(nowMs) - 24 * 3600000;
+  while (!botIsWorkday(prev + 12 * 3600000)) prev -= 24 * 3600000;
+  const yesterday = botMsk(prev).date;
+  const missing = [];
+  const alerts = [];
+  for (const p of projects) {
+    const days = [];
+    for (let i = 0; i < 8; i += 1) days.push(botMsk(prev - i * 24 * 3600000).date);
+    const recs = await Promise.all(days.map((d) => kv.get(`dailyMetrics:${p.id}:${d}`, 'json')));
+    const y = recs[0];
+    if (!y) { missing.push(p.name); continue; }
+    const before = recs.slice(1).find(Boolean); // previous day with data (skips weekends)
+    if (y.budget > 0 && !y.contacts && before && before.budget > 0 && !before.contacts) {
+      alerts.push(`• <b>${escapeHtml(p.name)}</b>: 0 контактов два дня подряд при расходе ${y.budget + before.budget} ₽`);
+    }
+    const week = recs.slice(1).filter(Boolean);
+    const wBudget = week.reduce((s, r) => s + (r.budget || 0), 0);
+    const wContacts = week.reduce((s, r) => s + (r.contacts || 0), 0);
+    if (y.contacts > 0 && wContacts > 0) {
+      const cpl = y.budget / y.contacts;
+      const avg = wBudget / wContacts;
+      if (cpl > avg * 1.3) alerts.push(`• <b>${escapeHtml(p.name)}</b>: CPL ${Math.round(cpl)} ₽ — на ${Math.round((cpl / avg - 1) * 100)}% выше среднего за 7 дней (${Math.round(avg)} ₽)`);
+    }
+  }
+  if (!missing.length && !alerts.length) return null;
+  const lines = [`<b>Метрики за ${yesterday.slice(8, 10)}.${yesterday.slice(5, 7)}</b>`];
+  if (missing.length) lines.push(`📝 Не внесены в дашборд: ${missing.map(escapeHtml).join(', ')}`);
+  if (alerts.length) lines.push('⚠️ Аномалии:', ...alerts);
+  return lines.join('\n');
+}
+
+async function botRunChecks(env, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const byId = await botProjectsById(kv);
+  const { date, hh, mm } = botMsk(nowMs);
+  const workday = botIsWorkday(nowMs);
+  const inHours = workday && hh >= BOT_WORK_START_H && hh < BOT_WORK_END_H;
+
+  if (inHours) {
+    // Newly overdue / still-without-deadline tasks, one message per kind per run.
+    const overdue = [];
+    const noDue = [];
+    for (const task of (await botAllTasks(kv)).filter((t) => t.status === 'open')) {
+      task.notified = task.notified || {};
+      const due = botDueMs(task);
+      let changed = false;
+      if (due && due < nowMs && !task.notified.overdue) {
+        overdue.push(botTaskLine(task, byId, nowMs));
+        task.notified.overdue = new Date(nowMs).toISOString();
+        changed = true;
+      }
+      if (!due && !task.notified.noDue && botWorkingMinutes(Date.parse(task.startedAt || task.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN) {
+        noDue.push(botTaskLine(task, byId, nowMs));
+        task.notified.noDue = new Date(nowMs).toISOString();
+        changed = true;
+      }
+      if (changed) await kv.put(`task:${task.id}`, JSON.stringify(task));
+    }
+    if (overdue.length) await botNotifyOwner(env, [`🔴 <b>Срок вышел: ${overdue.length}</b>`, ...overdue].join('\n'));
+    if (noDue.length) await botNotifyOwner(env, [`⚪ <b>Без срока уже 2+ рабочих часа: ${noDue.length}</b>`, ...noDue].join('\n'), { disable_notification: true });
+    // Client waiting for an answer.
+    for (const k of (await kv.list({ prefix: 'bot:pending:' })).keys) {
+      const p = await kv.get(k.name, 'json');
+      if (!p || botWorkingMinutes(p.since, nowMs) < BOT_CLIENT_REPLY_WMIN) continue;
+      const chatId = k.name.split(':').pop();
+      if (!(await botOnce(kv, `pending:${chatId}:${p.msgId}`, 60 * 60 * 24 * 7))) continue;
+      const chat = await kv.get(`bot:chat:${chatId}`, 'json');
+      const link = botMessageLink(chatId, null, p.msgId);
+      await botNotifyOwner(env, `💬 <b>${escapeHtml(chat ? chat.title : chatId)}</b>: клиент ждёт ответа больше 30 рабочих минут\n«${escapeHtml(p.text)}»${link ? ` <a href="${link}">сообщение</a>` : ''}`);
+    }
+  }
+  if (!workday) return;
+  // 10:00 — morning summary.
+  if (hh >= 10 && hh < 12 && (await botOnce(kv, `summary:${date}`, 60 * 60 * 36))) {
+    await botNotifyOwner(env, await botBuildSummary(env, nowMs));
+  }
+  // 11:00 — metrics from the dashboard.
+  if (hh >= 11 && hh < 13 && (await botOnce(kv, `metrics:${date}`, 60 * 60 * 36))) {
+    const report = await botBuildMetricsReport(env, nowMs);
+    if (report) await botNotifyOwner(env, report);
+  }
+  // 13:05 — daily report to each connected client chat.
+  if ((hh > 13 || (hh === 13 && mm >= 5)) && hh < 15 && (await botOnce(kv, `reports:${date}`, 60 * 60 * 36))) {
+    const missing = [];
+    for (const c of (await listByPrefix(kv, 'bot:chat:')).filter((c) => c.kind === 'client')) {
+      if (!(await kv.get(`bot:report:${c.id}:${date}`))) missing.push(c.title);
+    }
+    if (missing.length) await botNotifyOwner(env, `📊 <b>Отчёт до 13:00 не отправлен:</b> ${missing.map(escapeHtml).join(', ')}`);
+  }
+}
+
+async function botScheduled(env) {
+  if (!env.CONTROL_BOT_TOKEN || !env.AGENCY_DASHBOARD_KV) return;
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if ((await kv.get('bot:setup')) !== BOT_SETUP_VERSION) {
+    const res = await botSetup(env);
+    if (res.ok) await botNotifyOwner(env, '👋 Бот запущен и настроен. Добавьте его администратором в рабочий чат — дальше я всё делаю сам. /help — что я умею.');
+    else console.error('control bot setup failed', JSON.stringify(res));
+  }
+  try {
+    await botProcessQueue(env);
+  } catch (err) {
+    console.error('control bot queue failed', err && err.stack);
+  }
+  await botRunChecks(env, Date.now());
+}
+
+// Free-text question from the owner, answered from the last two weeks of logs.
+async function botAnswerQuestion(env, question) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const now = Date.now();
+  const byId = await botProjectsById(kv);
+  const chats = await listByPrefix(kv, 'bot:chat:');
+  const sources = [];
+  for (const c of chats) {
+    if (c.isForum) {
+      for (const k of (await kv.list({ prefix: `bot:topic:${c.id}:` })).keys) {
+        const rec = await kv.get(k.name, 'json');
+        sources.push({ chatId: c.id, threadId: k.name.split(':').pop(), name: (rec && rec.projectId && byId[rec.projectId] && byId[rec.projectId].name) || (rec && rec.name) || '' });
+      }
+      sources.push({ chatId: c.id, threadId: '0', name: 'Общий топик' });
+    } else {
+      sources.push({ chatId: c.id, threadId: '0', name: (c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title });
+    }
+  }
+  const q = ` ${botNorm(question)} `;
+  // Match on surname stems ("Агешиной" → "агешин") so declensions still hit.
+  const focused = sources.filter((s) => botNorm(s.name).split(' ').some((w) => w.length > 3 && q.includes(w.slice(0, Math.max(4, w.length - 2)))));
+  const picked = focused.length ? focused : sources;
+  const days = focused.length ? 30 : 7;
+  let transcript = '';
+  for (const s of picked) {
+    const logs = await botReadLogs(kv, s.chatId, s.threadId, now - days * 24 * 3600000, now);
+    if (!logs.length) continue;
+    transcript += `\n### ${s.name}\n${botFormatLogLines(logs)}\n`;
+  }
+  if (!transcript) return 'В сохранённой переписке пока ничего нет — бот видит только сообщения после того, как его добавили в чат.';
+  if (transcript.length > 45000) transcript = transcript.slice(-45000);
+  try {
+    const answer = await botAi(env,
+      'Ты помощник руководителя агентства Cantor Agency. Отвечай по-русски, коротко и по делу, только по переписке ниже. '
+      + 'Ссылайся на сообщения в формате [id]. Если ответа в переписке нет — так и скажи.',
+      `Вопрос: ${question}\n\nПереписка (формат: [id] дата автор: текст):\n${transcript}`, 900);
+    return escapeHtml(answer || 'Не получилось сформулировать ответ.');
+  } catch (err) {
+    if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится.'; }
+    return `Ошибка ИИ: ${escapeHtml(err && err.message)}`;
+  }
+}
+
+async function handleBotApi(request, env, url) {
+  if (url.pathname === '/api/tgbot/webhook' && request.method === 'POST') return handleBotWebhook(request, env);
+  // Manual re-setup (normally the cron does it): GET /api/tgbot/setup?key=<dashboard password>
+  if (url.pathname === '/api/tgbot/setup') {
+    if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
+    return json(await botSetup(env));
+  }
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleApi(request, env, url) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
@@ -3395,6 +4323,10 @@ async function handleApi(request, env, url) {
 
   if (pathname.startsWith('/api/dashboard/')) {
     return handleDashboardApi(request, env, url);
+  }
+
+  if (pathname.startsWith('/api/tgbot/')) {
+    return handleBotApi(request, env, url);
   }
 
   // ── Leads: notify by email ──
@@ -3608,5 +4540,10 @@ export default {
     } catch (err) {
       return json({ error: 'server_error', message: String(err && err.message) }, 500);
     }
+  },
+
+  // Cron trigger (wrangler.jsonc "triggers") — drives the control bot: AI queue, deadline checks, summaries.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
   },
 };

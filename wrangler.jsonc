@@ -33,7 +33,18 @@
     // secret; the matching API token (claude.ai/code/routines -> this routine -> Edit ->
     // Add another trigger -> API -> Generate token, "sk-ant-oat01-...") IS, and goes in as
     // the encrypted secret REPORT_ROUTINE_TOKEN via the Cloudflare dashboard, same as above.
-    "REPORT_ROUTINE_ID": "trig_01T7Ua8weKggatH72JZD5G2c"
+    "REPORT_ROUTINE_ID": "trig_01T7Ua8weKggatH72JZD5G2c",
+    // Control bot (see "Control bot" in _worker.js): who gets its messages. Its token lives in
+    // the CONTROL_BOT_TOKEN secret (dashboard -> Variables and Secrets, "Encrypt"), never here.
+    "CONTROL_BOT_OWNER_IDS": "1326867567"
+  },
+  // Workers AI (free daily allocation) — the control bot's task extraction and Q&A.
+  "ai": {
+    "binding": "AI"
+  },
+  // Control bot: AI queue, deadline checks and the 10:00 / 11:00 / 13:05 MSK summaries.
+  "triggers": {
+    "crons": ["*/10 * * * *"]
   },
   "kv_namespaces": [
     {
