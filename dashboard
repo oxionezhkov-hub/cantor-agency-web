@@ -166,6 +166,39 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .summary-row .value .derived{display:block;font-family:'Geologica',sans-serif;font-size:11px;font-weight:600;color:var(--red-dark);margin-top:2px}
 #summaryCopyBtn{width:100%}
 
+/* Avito "вчера" side panel (beta) */
+.side-panel{position:fixed;top:78px;right:20px;bottom:20px;z-index:950;width:min(620px,calc(100vw - 32px));background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden}
+.side-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:18px 20px 12px;border-bottom:1px solid var(--border)}
+.side-panel-head h4{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800}
+.side-panel-head .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.beta-pill{display:inline-block;font-family:'Geologica',sans-serif;font-size:10px;font-weight:700;background:var(--accent-bg);color:var(--red-dark);padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.side-panel-body{overflow:auto;flex:1}
+.side-panel-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border)}
+.mini-table{border-collapse:collapse;width:100%;font-size:13px}
+.mini-table th{position:sticky;top:0;background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:10px;text-align:right;white-space:nowrap}
+.mini-table th:first-child,.mini-table td:first-child{text-align:left}
+.mini-table td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+.mini-table td.muted{color:var(--muted);font-size:12px}
+.mini-table tr.total td{font-weight:800;background:var(--warm-bg)}
+.mini-table .warn{color:var(--amber);cursor:help;margin-left:4px}
+.mini-table .src{display:block;font-size:10px;color:var(--muted);font-weight:400}
+
+.modal.wide{max-width:720px;max-height:calc(100vh - 40px);overflow:auto}
+.modal .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.modal textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:12.5px;min-height:130px;font-family:ui-monospace,Menlo,monospace}
+.modal .date-row{display:flex;gap:10px}
+.modal .date-row>div{flex:1}
+.link-list{border:1.5px solid var(--border);border-radius:var(--r-sm);max-height:260px;overflow:auto;margin-top:6px}
+.link-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px}
+.link-row:last-child{border-bottom:none}
+.link-row select{max-width:260px;padding:5px 8px;font-size:12px}
+.import-result{font-size:12px;padding:4px 0}
+.import-result.ok{color:var(--green)}
+.import-result.bad{color:var(--red-dark)}
+.job-status{margin-top:14px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warm-bg);font-size:13px;line-height:1.5}
+.job-status a{color:var(--red)}
+.job-status ul{margin:6px 0 0 18px;font-size:12px;color:var(--amber)}
+
 /* Modal */
 #overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
 #overlay.open{display:flex}
@@ -266,6 +299,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   </div>
   <div class="summary-rows" id="summaryRows"></div>
   <button class="btn small" id="summaryCopyBtn">⧉ Скопировать</button>
+</div>
+
+<div class="side-panel hidden" id="avitoPanel">
+  <div class="side-panel-head">
+    <div>
+      <h4>Авито за вчера<span class="beta-pill">бета</span></h4>
+      <div class="sub" id="avitoPanelSub"></div>
+    </div>
+    <button class="popup-close" id="avitoPanelClose" aria-label="Закрыть">×</button>
+  </div>
+  <div class="side-panel-body"><table class="mini-table" id="avitoPanelTable"></table></div>
+  <div class="side-panel-foot">
+    <button class="btn secondary small" id="avitoPanelRefresh">↻ Обновить</button>
+    <button class="btn small" id="avitoPanelApply">Внести в таблицу</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -369,6 +417,7 @@ function renderTopActions(tab) {
   const el = document.getElementById('topActions');
   el.innerHTML = '';
   if (tab !== 'analytics') document.getElementById('summaryPopup').classList.add('hidden');
+  if (tab !== 'analytics') document.getElementById('avitoPanel').classList.add('hidden');
   if (tab === 'projects') {
     const btn = document.createElement('button');
     btn.className = 'btn';
@@ -387,11 +436,30 @@ function renderTopActions(tab) {
     csvBtn.textContent = '⬇ Скачать CSV';
     csvBtn.addEventListener('click', exportDailyMetricsCsv);
     el.appendChild(csvBtn);
+
+    const avitoBtn = document.createElement('button');
+    avitoBtn.className = 'btn ghost';
+    avitoBtn.textContent = '⚡ Авито: вчера';
+    avitoBtn.addEventListener('click', toggleAvitoPanel);
+    el.appendChild(avitoBtn);
+
+    const reportBtn = document.createElement('button');
+    reportBtn.className = 'btn ghost';
+    reportBtn.textContent = '📄 Ежедневный отчёт';
+    reportBtn.addEventListener('click', openReportModal);
+    el.appendChild(reportBtn);
+
+    const keysBtn = document.createElement('button');
+    keysBtn.className = 'btn ghost';
+    keysBtn.textContent = '🔑 Кабинеты Авито';
+    keysBtn.addEventListener('click', openAvitoKeysModal);
+    el.appendChild(keysBtn);
   }
 }
 
 // ── Modal helpers ──
 function openModal(html) {
+  document.getElementById('modalBody').classList.remove('wide');
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('overlay').classList.add('open');
 }
@@ -772,6 +840,251 @@ document.getElementById('summaryCopyBtn').addEventListener('click', async () => 
     toast('Не удалось скопировать');
   }
 });
+
+// ══════════════════════ AVITO: ВЧЕРА (бета) ══════════════════════
+// Pulls yesterday's views / contacts / spend + current advance straight from each client's
+// Avito cabinet (linked via "🔑 Кабинеты Авито"), one request per client so rows fill in
+// as they arrive, in the same order as the Analytics table.
+let avitoLinks = null; // { accounts, links }
+let avitoRows = {}; // projectId -> response of /avito-yesterday
+let avitoDate = null;
+
+async function loadAvitoLinks() {
+  const res = await api('/api/dashboard/avito-links');
+  if (res) avitoLinks = res;
+  return avitoLinks;
+}
+function linkedAccountId(projectId) {
+  const l = avitoLinks && avitoLinks.links.find((x) => x.projectId === projectId);
+  return l ? l.accountId : null;
+}
+
+function toggleAvitoPanel() {
+  const panel = document.getElementById('avitoPanel');
+  if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
+  document.getElementById('summaryPopup').classList.add('hidden');
+  panel.classList.remove('hidden');
+  loadAvitoYesterday();
+}
+
+async function loadAvitoYesterday() {
+  avitoDate = addDays(todayIso(), -1);
+  avitoRows = {};
+  document.getElementById('avitoPanelSub').textContent = `${formatDayLabel(avitoDate)} · загружаю…`;
+  renderAvitoPanel();
+  await loadAvitoLinks();
+  renderAvitoPanel();
+  const queue = orderedAnalyticsProjects().filter((p) => linkedAccountId(p.id));
+  const worker = async () => {
+    while (queue.length) {
+      const p = queue.shift();
+      const res = await api(`/api/dashboard/avito-yesterday?projectId=${encodeURIComponent(p.id)}&date=${avitoDate}`, {}, null, false);
+      avitoRows[p.id] = res || { errors: ['Сервер не ответил'] };
+      renderAvitoPanel();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  const linked = orderedAnalyticsProjects().filter((p) => linkedAccountId(p.id)).length;
+  document.getElementById('avitoPanelSub').textContent = `${formatDayLabel(avitoDate)} · подключено кабинетов: ${linked} из ${state.projects.length}`;
+}
+
+function renderAvitoPanel() {
+  const table = document.getElementById('avitoPanelTable');
+  const n = (v) => (v == null ? '—' : Math.round(v).toLocaleString('ru-RU'));
+  const total = { views: 0, contacts: 0, spend: 0 };
+  const rows = orderedAnalyticsProjects().map((p) => {
+    if (!avitoLinks) return `<tr><td>${escapeHtml(p.name)}</td><td colspan="4" class="muted">…</td></tr>`;
+    if (!linkedAccountId(p.id)) return `<tr><td>${escapeHtml(p.name)}</td><td colspan="4" class="muted">кабинет не подключен</td></tr>`;
+    const r = avitoRows[p.id];
+    if (!r) return `<tr><td>${escapeHtml(p.name)}</td><td colspan="4" class="muted">загрузка…</td></tr>`;
+    ['views', 'contacts', 'spend'].forEach((k) => { if (r[k] != null) total[k] += r[k]; });
+    const warn = r.errors && r.errors.length ? `<span class="warn" title="${escapeHtml(r.errors.join('\n'))}">⚠</span>` : '';
+    const advance = r.advance != null
+      ? `${n(r.advance)} ₽`
+      : r.wallet != null ? `${n(r.wallet)} ₽<span class="src">кошелёк</span>` : '—';
+    return `<tr><td>${escapeHtml(p.name)}${warn}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : `${n(r.spend)} ₽`}</td><td>${advance}</td></tr>`;
+  });
+  table.innerHTML = `
+    <thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th>Аванс</th></tr></thead>
+    <tbody>${rows.join('')}
+      <tr class="total"><td>Итого</td><td>${n(total.views)}</td><td>${n(total.contacts)}</td><td>${n(total.spend)} ₽</td><td></td></tr>
+    </tbody>`;
+}
+
+// Writes the pulled numbers into the Analytics table for that day (only fields Avito
+// actually returned — a missing spend never overwrites a hand-entered budget with 0).
+async function applyAvitoToTable() {
+  const entries = Object.entries(avitoRows).filter(([, r]) => r && r.linked);
+  if (!entries.length) { toast('Нечего вносить'); return; }
+  if (!confirm(`Внести просмотры, контакты и бюджет за ${formatDayLabel(avitoDate)} в таблицу аналитики? Уже внесённые за этот день значения будут заменены.`)) return;
+  let saved = 0;
+  for (const [projectId, r] of entries) {
+    const body = { projectId, date: avitoDate };
+    if (r.views != null) body.views = r.views;
+    if (r.contacts != null) body.contacts = r.contacts;
+    if (r.spend != null) body.budget = r.spend;
+    if (Object.keys(body).length === 2) continue;
+    const res = await api('/api/dashboard/daily-metric', { method: 'POST', body: JSON.stringify(body) });
+    if (res && res.dailyMetric) {
+      state.dailyMetrics = state.dailyMetrics.filter((m) => !(m.projectId === projectId && m.date === avitoDate));
+      state.dailyMetrics.push(res.dailyMetric);
+      saved += 1;
+    }
+  }
+  currentAnalyticsDay = avitoDate;
+  renderAnalytics();
+  toast(`Внесено клиентов: ${saved}`);
+}
+
+document.getElementById('avitoPanelClose').addEventListener('click', () => document.getElementById('avitoPanel').classList.add('hidden'));
+document.getElementById('avitoPanelRefresh').addEventListener('click', loadAvitoYesterday);
+document.getElementById('avitoPanelApply').addEventListener('click', applyAvitoToTable);
+
+// ── Кабинеты Авито: bulk paste of keys + manual linking ──
+async function openAvitoKeysModal() {
+  openModal(`
+    <h3>Кабинеты Авито</h3>
+    <div class="hint">Вставьте ключи сразу по всем клиентам — по одной строке на клиента: имя (можно только фамилию), client_id, client_secret и, если есть, user id. Подойдёт копия строк из таблицы (Excel/Google Sheets) или просто через пробел / «;». User id можно не указывать — он подтянется из Авито сам.</div>
+    <textarea id="mKeysText" placeholder="Алексей Шевчук	a1b2c3d4e5f6g7h8i9j0	s3cr3ts3cr3ts3cr3ts3cr3t&#10;Соболева; k1l2m3n4o5p6q7r8s9t0; an0th3rs3cr3tan0th3rs3cr3t; 123456789"></textarea>
+    <div id="mKeysResults"></div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn" id="mKeysImport">Подключить</button>
+    </div>
+    <label>Подключения по клиентам</label>
+    <div class="link-list" id="mKeysLinks"><div class="empty">Загрузка…</div></div>
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Закрыть</button>
+    </div>
+  `);
+  document.getElementById('modalBody').classList.add('wide');
+  document.getElementById('mKeysImport').addEventListener('click', async () => {
+    const text = document.getElementById('mKeysText').value;
+    if (!text.trim()) return;
+    const btn = document.getElementById('mKeysImport');
+    btn.disabled = true; btn.textContent = 'Проверяю ключи в Авито…';
+    const res = await api('/api/dashboard/avito-import', { method: 'POST', body: JSON.stringify({ text }) });
+    btn.disabled = false; btn.textContent = 'Подключить';
+    if (!res) return;
+    avitoLinks = { accounts: res.accounts, links: res.links };
+    document.getElementById('mKeysResults').innerHTML = res.results.map((r) =>
+      `<div class="import-result ${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓' : '✕'} Строка ${r.line}: ${escapeHtml(r.project || r.name || '')} — ${escapeHtml(r.message)}</div>`
+    ).join('');
+    if (res.results.every((r) => r.ok)) document.getElementById('mKeysText').value = '';
+    renderAvitoLinksList();
+  });
+  await loadAvitoLinks();
+  renderAvitoLinksList();
+}
+
+function renderAvitoLinksList() {
+  const el = document.getElementById('mKeysLinks');
+  if (!el || !avitoLinks) return;
+  const options = (selected) => ['<option value="">— не подключен —</option>',
+    ...avitoLinks.accounts.map((a) => `<option value="${a.id}"${a.id === selected ? ' selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.userId || '')})</option>`)].join('');
+  el.innerHTML = orderedAnalyticsProjects().map((p) =>
+    `<div class="link-row"><span>${linkedAccountId(p.id) ? '🟢' : '⚪'} ${escapeHtml(p.name)}</span><select data-project="${p.id}">${options(linkedAccountId(p.id))}</select></div>`
+  ).join('');
+  el.querySelectorAll('select').forEach((sel) => sel.addEventListener('change', async () => {
+    const res = await api('/api/dashboard/avito-link', { method: 'POST', body: JSON.stringify({ projectId: sel.dataset.project, accountId: sel.value || null }) });
+    if (res) { avitoLinks = res; renderAvitoLinksList(); toast('Сохранено'); }
+  }));
+}
+
+// ══════════════════════ ЕЖЕДНЕВНЫЙ ОТЧЁТ (через рутину Claude Code) ══════════════════════
+// The worker snapshots the Analytics table for the period, fires the Claude Code routine,
+// and the routine posts back "Текущие наблюдения" per client; the .docx is then assembled
+// by the worker in the agency's usual format. Polled here until the routine answers.
+let reportPollTimer = null;
+
+async function openReportModal() {
+  const info = await api('/api/dashboard/report-last');
+  const yesterday = addDays(todayIso(), -1);
+  // Default period: everything since the last generated report (covers weekends / skipped
+  // days, which the report then shows as "За DD–DD месяц"), capped to a week back.
+  let from = yesterday;
+  if (info && info.lastTo && info.lastTo < yesterday) {
+    const next = addDays(info.lastTo, 1);
+    if (next >= addDays(yesterday, -6)) from = next;
+  }
+  openModal(`
+    <h3>Ежедневный отчёт</h3>
+    <div class="hint">Цифры берутся из таблицы аналитики. Если период больше одного дня — в отчёте будет блок «За DD–DD месяц» вместо «Вчера».</div>
+    <div class="date-row">
+      <div><label>С</label><input type="date" id="mRepFrom" value="${from}"></div>
+      <div><label>По</label><input type="date" id="mRepTo" value="${yesterday}"></div>
+    </div>
+    <div id="mRepStatus"></div>
+    <div class="actions">
+      <button class="btn secondary" id="mRepClose">Закрыть</button>
+      <button class="btn" id="mRepGo">Сформировать</button>
+    </div>
+  `);
+  document.getElementById('mRepClose').addEventListener('click', () => { clearTimeout(reportPollTimer); closeModal(); });
+  document.getElementById('mRepGo').addEventListener('click', async () => {
+    const dateFrom = document.getElementById('mRepFrom').value;
+    const dateTo = document.getElementById('mRepTo').value;
+    const btn = document.getElementById('mRepGo');
+    btn.disabled = true;
+    const res = await api('/api/dashboard/report-job', { method: 'POST', body: JSON.stringify({ dateFrom, dateTo }) });
+    btn.disabled = false;
+    if (res && res.job) pollReportJob(res.job, Date.now());
+  });
+}
+
+function renderReportStatus(job) {
+  const el = document.getElementById('mRepStatus');
+  if (!el) return;
+  const labels = {
+    queued: '⏳ Запускаю рутину Claude Code…',
+    sent: '⏳ Рутина Claude Code запущена, ждём ответа…',
+    running: '✍️ Claude пишет наблюдения по клиентам…',
+    done: '✅ Отчёт готов',
+    not_configured: '⚠️ Рутина не подключена',
+    failed: '⚠️ Рутина не ответила',
+  };
+  const finished = ['done', 'not_configured', 'failed'].includes(job.status);
+  el.innerHTML = `<div class="job-status">
+    <b>${labels[job.status] || job.status}</b> · ${escapeHtml(job.periodLabel)}, клиентов: ${job.clientsCount}
+    ${job.sessionUrl ? `<br><a href="${escapeHtml(job.sessionUrl)}" target="_blank" rel="noopener">Открыть сессию Claude</a>` : ''}
+    ${job.error ? `<br>${escapeHtml(job.error)}` : ''}
+    ${job.warnings && job.warnings.length ? `<ul>${job.warnings.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : ''}
+    <div class="actions" style="margin-top:12px">
+      <button class="btn ${job.status === 'done' ? '' : 'secondary'} small" id="mRepDownload">
+        ⬇ ${job.status === 'done' ? 'Скачать отчёт' : finished ? 'Скачать с авто-наблюдениями' : 'Скачать черновик сейчас'}
+      </button>
+    </div>
+  </div>`;
+  document.getElementById('mRepDownload').addEventListener('click', () => downloadReport(job));
+}
+
+async function pollReportJob(job, startedAt) {
+  clearTimeout(reportPollTimer);
+  renderReportStatus(job);
+  if (['done', 'not_configured', 'failed'].includes(job.status)) return;
+  if (Date.now() - startedAt > 15 * 60 * 1000) {
+    renderReportStatus({ ...job, status: 'failed', error: 'Рутина не ответила за 15 минут.' });
+    return;
+  }
+  reportPollTimer = setTimeout(async () => {
+    if (!document.getElementById('overlay').classList.contains('open') || !document.getElementById('mRepStatus')) return;
+    const res = await api(`/api/dashboard/report-job?id=${job.id}`);
+    pollReportJob((res && res.job) || job, startedAt);
+  }, 5000);
+}
+
+async function downloadReport(job) {
+  const res = await fetch(`${API_BASE}/api/dashboard/report-job/file?id=${job.id}`, { headers: { 'x-dashboard-password': getPassword() } });
+  if (!res.ok) { toast('Не удалось скачать'); return; }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = job.fileName || 'report.docx';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 // ══════════════════════ RATINGS (по проектам, по неделям) ══════════════════════
 function isoMonday(d) {
