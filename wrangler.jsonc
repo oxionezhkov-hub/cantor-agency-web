@@ -28,7 +28,18 @@
   "vars": {
     "ADMIN_EMAIL": "oxion.ezhkov@gmail.com,yuliayanson-27@yandex.ru",
     "OPS_ALERT_EMAIL": "oxion.ezhkov@gmail.com",
-    "TELEGRAM_CHAT_IDS_KARLOVA": "6295628819,1326867567"
+    "TELEGRAM_CHAT_IDS_KARLOVA": "6295628819,1326867567",
+    // Control bot (see "Control bot" in _worker.js): who gets its messages. Its token lives in
+    // the CONTROL_BOT_TOKEN secret (dashboard -> Variables and Secrets, "Encrypt"), never here.
+    "CONTROL_BOT_OWNER_IDS": "1326867567"
+  },
+  // Workers AI (free daily allocation) — the control bot's task extraction and Q&A.
+  "ai": {
+    "binding": "AI"
+  },
+  // Control bot: AI queue, deadline checks and the 10:00 / 11:00 / 13:05 MSK summaries.
+  "triggers": {
+    "crons": ["*/10 * * * *"]
   },
   "kv_namespaces": [
     {

@@ -80,6 +80,12 @@ textarea.field-textarea{width:100%;border:1.5px solid var(--border);border-radiu
 .status-active{background:var(--green-bg);color:var(--green)}
 .status-paused{background:var(--amber-bg);color:var(--amber)}
 .status-done{background:var(--gray-bg);color:var(--gray)}
+.status-overdue{background:var(--accent-bg);color:var(--red)}
+.tasks-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tasks-toolbar select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;background:var(--white)}
+.tasks-table td.task-text{white-space:normal;min-width:260px;max-width:460px}
+.tasks-table tbody tr{cursor:default}
+.tasks-table a{color:var(--red);text-decoration:none;font-weight:600}
 
 /* Ratings + Analytics range nav */
 .range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
@@ -192,6 +198,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <button class="tab-btn active" data-tab="projects">Проекты</button>
       <button class="tab-btn" data-tab="analytics">Аналитика</button>
       <button class="tab-btn" data-tab="ratings">Оценки</button>
+      <button class="tab-btn" data-tab="tasks">Задачи</button>
     </nav>
   </header>
 
@@ -230,6 +237,21 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       </div>
       <div class="grid" id="ratingsGrid"></div>
     </section>
+
+    <!-- TASKS (found in the Telegram chats by the control bot — see "Control bot" in _worker.js) -->
+    <section class="panel" id="panel-tasks">
+      <div class="tasks-toolbar">
+        <select id="tasksProjectFilter"></select>
+        <select id="tasksStatusFilter">
+          <option value="active">Открытые и не сообщённые клиенту</option>
+          <option value="overdue">Только просроченные</option>
+          <option value="all">Все</option>
+        </select>
+      </div>
+      <div class="analytics-table-wrap">
+        <table class="analytics-table tasks-table" id="tasksTable"></table>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -254,7 +276,7 @@ const ROLE_LABELS = { client: 'От клиента', manager: 'От менедж
 const ROLE_DOT = { client: 'var(--red)', manager: 'var(--amber)', specialist: 'var(--green)' };
 const MONTHS_GENITIVE_SHORT = ['янв', 'февр', 'мар', 'апр', 'мая', 'июня', 'июля', 'авг', 'сент', 'окт', 'нояб', 'дек'];
 
-let state = { projects: [], employees: [], analytics: [], projectRatings: [], dailyMetrics: [], salePrices: { primary: 50000, repeat: 25000 } };
+let state = { projects: [], employees: [], analytics: [], projectRatings: [], dailyMetrics: [], tasks: [], salePrices: { primary: 50000, repeat: 25000 } };
 let currentRatingWeek = isoMonday(new Date());
 let currentAnalyticsDay = addDays(todayIso(), -1);
 
@@ -322,6 +344,7 @@ async function boot() {
   renderProjects();
   renderAnalytics();
   renderRatings();
+  renderTasks();
   renderTopActions('projects');
 }
 
@@ -815,6 +838,67 @@ function fmtAvg(n) { return n == null ? '—' : String(Math.round(n * 10) / 10);
 document.getElementById('weekPrev').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, -7); renderRatings(); });
 document.getElementById('weekNext').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, 7); renderRatings(); });
 document.getElementById('weekToday').addEventListener('click', () => { currentRatingWeek = isoMonday(new Date()); renderRatings(); });
+
+// ══════════════════════ TASKS ══════════════════════
+// Read-only view of the tasks the control bot extracts from the work chat and client chats;
+// the owner corrects them from the bot itself (/done, /informed, /cancel).
+const TASK_STATUS = {
+  open: ['Открыта', 'status-active'],
+  done: ['Сделана, клиенту не сообщили', 'status-paused'],
+  closed: ['Закрыта', 'status-done'],
+  cancelled: ['Отменена', 'status-done'],
+};
+document.getElementById('tasksProjectFilter').addEventListener('change', renderTasks);
+document.getElementById('tasksStatusFilter').addEventListener('change', renderTasks);
+
+function taskDueMs(t) { const ms = Date.parse(t.due || ''); return Number.isFinite(ms) ? ms : null; }
+function fmtTaskDate(ms) {
+  if (!ms) return '—';
+  return new Date(ms).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function renderTasks() {
+  const tasks = (state.tasks || []).filter((t) => t.source === 'bot');
+  const projectName = (id) => (state.projects.find((p) => p.id === id) || {}).name;
+  const filterEl = document.getElementById('tasksProjectFilter');
+  const current = filterEl.value;
+  const ids = [...new Set(tasks.map((t) => t.projectId || ''))];
+  filterEl.innerHTML = '<option value="">Все клиенты</option>' + ids
+    .map((id) => [id, id ? projectName(id) || id : 'Без клиента'])
+    .sort((a, b) => a[1].localeCompare(b[1], 'ru'))
+    .map(([id, name]) => `<option value="${escapeHtml(id || '__none')}">${escapeHtml(name)}</option>`).join('');
+  filterEl.value = current;
+
+  const status = document.getElementById('tasksStatusFilter').value;
+  const now = Date.now();
+  const rows = tasks.filter((t) => {
+    if (filterEl.value && (t.projectId || '__none') !== filterEl.value) return false;
+    if (status === 'active') return t.status === 'open' || t.status === 'done';
+    if (status === 'overdue') return t.status === 'open' && taskDueMs(t) && taskDueMs(t) < now;
+    return true;
+  }).sort((a, b) => (taskDueMs(a) || Infinity) - (taskDueMs(b) || Infinity) || String(b.createdAt).localeCompare(String(a.createdAt)));
+
+  const table = document.getElementById('tasksTable');
+  const head = '<thead><tr><th class="name-th">Клиент</th><th>Задача</th><th>Исполнитель</th><th>Срок</th><th>Статус</th><th>Поставлена</th><th></th></tr></thead>';
+  if (!rows.length) {
+    table.innerHTML = head + '<tbody><tr><td class="empty" colspan="7">Задач нет — бот добавляет их сюда сам из рабочего чата</td></tr></tbody>';
+    return;
+  }
+  table.innerHTML = head + '<tbody>' + rows.map((t) => {
+    const due = taskDueMs(t);
+    const overdue = t.status === 'open' && due && due < now;
+    const [label, cls] = overdue ? ['Просрочена', 'status-overdue'] : TASK_STATUS[t.status] || [t.status, ''];
+    return `<tr>
+      <td class="name-cell">${escapeHtml(projectName(t.projectId) || t.topicName || '—')}</td>
+      <td class="task-text">${escapeHtml(t.text)}</td>
+      <td>${escapeHtml(t.owner || '—')}</td>
+      <td>${due ? fmtTaskDate(due) : 'без срока'}</td>
+      <td><span class="status-badge ${cls}">${escapeHtml(label)}</span></td>
+      <td>${fmtTaskDate(Date.parse(t.startedAt || t.createdAt))}${t.author ? ' · ' + escapeHtml(t.author) : ''}</td>
+      <td>${t.link ? `<a href="${escapeHtml(t.link)}" target="_blank" rel="noopener">в чате ↗</a>` : ''}</td>
+    </tr>`;
+  }).join('') + '</tbody>';
+}
 
 function renderRatings() {
   document.getElementById('weekLabel').textContent = formatWeekRange(currentRatingWeek);
