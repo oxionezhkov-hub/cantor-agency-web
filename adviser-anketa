@@ -572,6 +572,119 @@ input[type="checkbox"]:checked + .channel-label .check-mark {
 }
 .error-banner.show { display: block; }
 
+/* ── LOADING OVERLAY ── */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,15,15,0.55);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+.loading-overlay.active { display: flex; }
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { color: white; font-size: 15px; font-weight: 600; }
+
+/* ── SEND FAILED ── */
+.send-failed {
+  display: none;
+  padding: 32px 24px 28px;
+  text-align: center;
+}
+.send-failed.active { display: block; }
+.sf-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 auto 14px;
+}
+.sf-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--dark);
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+}
+.sf-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 440px;
+  margin: 0 auto 20px;
+}
+.sf-sub a { color: var(--red); font-weight: 600; text-decoration: none; }
+.sf-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.sf-btn {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 13px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  box-shadow: 0 6px 20px rgba(232,57,29,0.3);
+  transition: all 0.2s;
+}
+.sf-btn:hover { background: var(--red-dark); transform: translateY(-1px); }
+.sf-btn.secondary {
+  background: white;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  box-shadow: none;
+}
+.sf-btn.secondary:hover { border-color: var(--red); color: var(--red); background: white; }
+.sf-copied { font-size: 12.5px; color: #2E7D32; min-height: 18px; margin-bottom: 14px; }
+.sf-answers {
+  text-align: left;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text);
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.sf-retry {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: 'Manrope', sans-serif;
+}
+.sf-retry:hover { color: var(--red); }
+
 /* ── BENEFITS SECTION ── */
 .benefits-section {
   margin-top: 64px;
@@ -726,6 +839,9 @@ input[type="checkbox"]:checked + .channel-label .check-mark {
   .btn-row { flex-direction: column; align-items: stretch; }
   .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
   .steps-labels { display: none; }
+  .send-failed { padding: 28px 18px 24px; }
+  .sf-actions { flex-direction: column; }
+  .sf-btn { width: 100%; text-align: center; }
 }
 @media (max-width: 420px) {
   .channels-grid { grid-template-columns: 1fr; }
@@ -734,6 +850,12 @@ input[type="checkbox"]:checked + .channel-label .check-mark {
 </style>
 </head>
 <body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Отправляем анкету…</div>
+</div>
 
 <!-- ══ THANK YOU (hidden initially) ══ -->
 <div id="thank-you">
@@ -868,6 +990,21 @@ input[type="checkbox"]:checked + .channel-label .check-mark {
           </div>
 
         </form>
+
+        <!-- SEND FAILED -->
+        <div class="send-failed" id="send-failed">
+          <div class="sf-icon">!</div>
+          <div class="sf-title">Анкета не отправилась</div>
+          <p class="sf-sub">Похоже, мешает соединение. Ваши ответы не потерялись: скопируйте их или скачайте файлом и отправьте напрямую Олегу Ежкову в Telegram — <a href="https://t.me/oleg_ezhkov" target="_blank">@oleg_ezhkov</a>.</p>
+          <div class="sf-actions">
+            <button type="button" class="sf-btn" onclick="copyAnswers()">Скопировать ответы</button>
+            <button type="button" class="sf-btn secondary" onclick="downloadAnswers()">Скачать .doc</button>
+            <a href="https://t.me/oleg_ezhkov" target="_blank" class="sf-btn secondary" style="text-decoration:none">Написать Олегу →</a>
+          </div>
+          <div class="sf-copied" id="sf-copied"></div>
+          <div class="sf-answers" id="sf-answers"></div>
+          <button type="button" class="sf-retry" onclick="retrySubmit()">Попробовать отправить ещё раз</button>
+        </div>
       </div>
     </div>
 
@@ -1081,9 +1218,102 @@ function sendToAppsScript(fields) {
   return fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
 }
 
-document.getElementById('adviser-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+// Тексты вопросов в порядке анкеты — для копирования / .doc, если отправка не удалась.
+// Направления результатов подставляются динамически, по факту того, что отметил человек.
+function answersQuestions(fields) {
+  const questions = [
+    ['name', 'Имя'],
+    ['telegram', 'Telegram'],
+    ['phone', 'Телефон'],
+    ['channels', 'Направления'],
+  ];
+  CHANNELS.forEach(ch => {
+    if (fields['result_' + ch.id]) questions.push(['result_' + ch.id, 'Результаты — ' + ch.name]);
+  });
+  return questions;
+}
 
+function answersText(fields) {
+  const lines = ['Анкета эдвайзера — Cantor Agency', ''];
+  answersQuestions(fields).forEach(([key, q]) => {
+    lines.push(q);
+    lines.push(fields[key] ? fields[key] : '—');
+    lines.push('');
+  });
+  return lines.join('\n').trim();
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+// Word-совместимый .doc (HTML внутри) — открывается в Word, Google Docs, Pages.
+function downloadAnswers() {
+  const fields = lastFields || collectFields();
+  const rows = answersQuestions(fields).map(([key, q]) =>
+    '<p style="margin:0 0 4px"><b>' + escapeHtml(q) + '</b></p>' +
+    '<p style="margin:0 0 14px;white-space:pre-wrap">' + escapeHtml(fields[key] || '—') + '</p>'
+  ).join('');
+  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Анкета эдвайзера</title></head>' +
+    '<body style="font-family:Arial,sans-serif;font-size:12pt"><h2>Анкета эдвайзера — Cantor Agency</h2>' +
+    '<p style="color:#666">' + escapeHtml(fields.timestamp || '') + '</p>' + rows +
+    '<p style="color:#666">Отправьте этот файл Олегу Ежкову в Telegram: https://t.me/oleg_ezhkov</p></body></html>';
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  // Латиница: часть браузеров заменяет кириллическое имя файла на «download».
+  a.download = 'Cantor_Adviser_anketa.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function copyAnswers() {
+  const text = answersText(lastFields || collectFields());
+  const done = ok => {
+    document.getElementById('sf-copied').textContent = ok
+      ? '✓ Ответы скопированы — вставьте их в чат с Олегом'
+      : 'Не получилось скопировать автоматически — выделите текст ниже и скопируйте вручную';
+  };
+  const legacy = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    done(ok);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => done(true), legacy);
+  } else {
+    legacy();
+  }
+}
+
+function showSendFailed(fields) {
+  document.getElementById('adviser-form').style.display = 'none';
+  document.getElementById('sf-answers').textContent = answersText(fields);
+  document.getElementById('sf-copied').textContent = '';
+  document.getElementById('send-failed').classList.add('active');
+  document.getElementById('send-failed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function retrySubmit() {
+  document.getElementById('send-failed').classList.remove('active');
+  document.getElementById('adviser-form').style.display = '';
+  submitForm();
+}
+
+let lastFields = null;
+
+async function submitForm() {
   // Validate step 3
   const name = document.getElementById('f-name').value.trim();
   const phone = document.getElementById('f-phone').value.trim();
@@ -1096,30 +1326,38 @@ document.getElementById('adviser-form').addEventListener('submit', async (e) => 
     document.getElementById('error-banner').classList.add('show');
     return;
   }
+  document.getElementById('error-banner').classList.remove('show');
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Отправка...`;
+  document.getElementById('loading-overlay').classList.add('active');
 
   const fields = collectFields();
+  lastFields = fields;
 
   try {
+    await sendToYandex(fields);
+  } catch (ycErr) {
+    console.warn('yc_send_failed', ycErr);
     try {
-      await sendToYandex(fields);
-    } catch (ycErr) {
-      console.warn('yc_send_failed', ycErr);
       await sendToAppsScript(fields);
+    } catch (asErr) {
+      document.getElementById('loading-overlay').classList.remove('active');
+      btn.disabled = false;
+      showSendFailed(fields);
+      return;
     }
-    document.getElementById('main-page').style.display = 'none';
-    document.getElementById('thank-you').classList.add('show');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch (err) {
-    console.error(err);
-    document.getElementById('error-banner').textContent = 'Ошибка отправки. Попробуйте ещё раз или напишите напрямую: @oleg_ezhkov';
-    document.getElementById('error-banner').classList.add('show');
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Отправить анкету`;
   }
+
+  document.getElementById('loading-overlay').classList.remove('active');
+  document.getElementById('main-page').style.display = 'none';
+  document.getElementById('thank-you').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('adviser-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  submitForm();
 });
 
 // ── INIT ──
