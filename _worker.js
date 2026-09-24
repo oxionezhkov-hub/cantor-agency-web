@@ -93,6 +93,13 @@
  *                                         leads, updatedAt }
  *   registrationBase               -> { total, updatedAt }  (cumulative count, never resets monthly)
  *   task:<id>                      -> { id, text, status, owner, due, createdAt, updatedAt }
+ *   project:<id>.avitoAccountId    -> AVITO_KV "account:<id>" whose cabinet feeds the
+ *                                     "⚡ Авито: вчера" popup (bulk-linked via "🔑 Кабинеты Авито")
+ *   reportJob:<id>                 -> { id, token, status, dateFrom, dateTo, report, observations,
+ *                                        sessionUrl, error, createdAt, updatedAt } (14-day TTL) —
+ *                                     one "📄 Ежедневный отчёт" request; the Claude Code routine
+ *                                     (REPORT_ROUTINE_ID) reads/answers it via /api/report-jobs/<id>
+ *   reportLastTo                   -> "YYYY-MM-DD", end date of the last requested report
  */
 
 const SCHEMA_KEY = 'schema';
@@ -2478,6 +2485,7 @@ async function handleDashboardApi(request, env, url) {
       currentWork: body && 'currentWork' in body ? String(body.currentWork || '') : existing.currentWork || '',
       review: body && 'review' in body ? String(body.review || '') : existing.review || '',
       rowColor: body && 'rowColor' in body && ROW_COLORS.has(body.rowColor) ? body.rowColor : existing.rowColor || '',
+      avitoAccountId: existing.avitoAccountId || null,
       ratings: {
         result: Number((body && body.ratings && body.ratings.result) ?? existing.ratings?.result ?? 0),
         communication: Number((body && body.ratings && body.ratings.communication) ?? existing.ratings?.communication ?? 0),
@@ -2700,6 +2708,661 @@ async function handleDashboardApi(request, env, url) {
     return json({ ok: true });
   }
 
+
+  // ── Avito cabinets linked to projects (for the "Авито: вчера" popup) ──
+  if (pathname === '/api/dashboard/avito-links' && request.method === 'GET') {
+    return json(await dashboardAvitoLinks(env, kv));
+  }
+
+  if (pathname === '/api/dashboard/avito-link' && request.method === 'POST') {
+    const body = await readJson(request);
+    const projectId = body && String(body.projectId || '').trim();
+    const project = projectId && (await kv.get(`project:${projectId}`, 'json'));
+    if (!project) return json({ error: 'not_found' }, 404);
+    const accountId = body.accountId ? String(body.accountId) : null;
+    if (accountId && !(await env.AVITO_KV.get(`account:${accountId}`))) return json({ error: 'account_not_found' }, 404);
+    await kv.put(`project:${projectId}`, JSON.stringify({ ...project, avitoAccountId: accountId, updatedAt: new Date().toISOString() }));
+    return json(await dashboardAvitoLinks(env, kv));
+  }
+
+  if (pathname === '/api/dashboard/avito-import' && request.method === 'POST') {
+    const body = await readJson(request);
+    const text = body && String(body.text || '');
+    if (!text.trim()) return json({ error: 'empty' }, 400);
+    const results = await importAvitoCredentials(env, kv, text);
+    return json({ results, ...(await dashboardAvitoLinks(env, kv)) });
+  }
+
+  if (pathname === '/api/dashboard/avito-yesterday' && request.method === 'GET') {
+    const projectId = url.searchParams.get('projectId');
+    const project = projectId && (await kv.get(`project:${projectId}`, 'json'));
+    if (!project) return json({ error: 'not_found' }, 404);
+    const date = url.searchParams.get('date') || mskYesterday();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: 'bad_date' }, 400);
+    if (!project.avitoAccountId) return json({ projectId, date, linked: false });
+    const account = await env.AVITO_KV.get(`account:${project.avitoAccountId}`, 'json');
+    if (!account) return json({ projectId, date, linked: false });
+    try {
+      return json({ projectId, date, linked: true, ...(await fetchAvitoDaySummary(env, account, date)) });
+    } catch (e) {
+      return json({ projectId, date, linked: true, errors: [String(e && e.message)] });
+    }
+  }
+
+  // ── Daily report via the Claude Code routine ──
+  if (pathname === '/api/dashboard/report-job' && request.method === 'POST') {
+    const body = await readJson(request);
+    const dateTo = (body && body.dateTo) || mskYesterday();
+    const dateFrom = (body && body.dateFrom) || dateTo;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateFrom) || !/^\d{4}-\d{2}-\d{2}$/.test(dateTo) || dateFrom > dateTo) {
+      return json({ error: 'bad_dates', message: 'Неверный период' }, 400);
+    }
+    const report = await buildDailyReportData(kv, dateFrom, dateTo);
+    const now = new Date().toISOString();
+    const job = {
+      id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
+      token: crypto.randomUUID().replace(/-/g, ''),
+      status: 'queued',
+      dateFrom,
+      dateTo,
+      report,
+      observations: null,
+      sessionUrl: null,
+      error: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await putReportJob(kv, job);
+    await kv.put('reportLastTo', dateTo);
+    await fireReportRoutine(env, kv, job, url.origin);
+    return json({ job: publicReportJob(job) });
+  }
+
+  if (pathname === '/api/dashboard/report-job' && request.method === 'GET') {
+    const job = await kv.get(`reportJob:${url.searchParams.get('id')}`, 'json');
+    if (!job) return json({ error: 'not_found' }, 404);
+    return json({ job: publicReportJob(job) });
+  }
+
+  if (pathname === '/api/dashboard/report-last' && request.method === 'GET') {
+    return json({ lastTo: await kv.get('reportLastTo'), yesterday: mskYesterday() });
+  }
+
+  if (pathname === '/api/dashboard/report-job/file' && request.method === 'GET') {
+    const job = await kv.get(`reportJob:${url.searchParams.get('id')}`, 'json');
+    if (!job) return json({ error: 'not_found' }, 404);
+    // Without the routine's observations (not configured / still running / failed) the
+    // file falls back to the rule-based draft sentence computed for every client.
+    const bytes = buildDailyReportDocx(job.report, job.observations || {});
+    return new Response(bytes, {
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Disposition': `attachment; filename="report.docx"; filename*=UTF-8''${encodeURIComponent(reportFileName(job))}`,
+        ...corsHeaders(),
+      },
+    });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+/* ═══════════════ Dashboard: Avito auto-pull + daily report routine ═══════════════ */
+
+// The agency works on Moscow time — "вчера" must not roll over at 03:00 MSK (UTC midnight).
+function mskToday() {
+  return new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+}
+function mskYesterday() {
+  return avitoAddDays(mskToday(), -1);
+}
+
+function normalizePersonName(s) {
+  return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Matches a free-typed client name ("Шевчук", "Алексей Шевчук", "шевчук алексей") to a
+// dashboard project: exact normalized match first, then "every word of the typed name
+// appears in the project name" (so a lone surname works), and only if that's unambiguous.
+function matchProjectByName(projects, rawName) {
+  const name = normalizePersonName(rawName);
+  if (!name) return null;
+  const exact = projects.filter((p) => normalizePersonName(p.name) === name);
+  if (exact.length === 1) return exact[0];
+  const words = name.split(' ');
+  const partial = projects.filter((p) => {
+    const pWords = normalizePersonName(p.name).split(' ');
+    return words.every((w) => pWords.includes(w));
+  });
+  return partial.length === 1 ? partial[0] : null;
+}
+
+async function dashboardAvitoLinks(env, kv) {
+  const [projects, accountRecords] = await Promise.all([listByPrefix(kv, 'project:'), listByPrefix(env.AVITO_KV, 'account:')]);
+  const accounts = accountRecords.map(maskAvitoAccount).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const byId = Object.fromEntries(accounts.map((a) => [a.id, a]));
+  return {
+    accounts: accounts.map((a) => ({ id: a.id, name: a.name, clientId: a.clientId, userId: a.userId })),
+    links: projects.map((p) => ({
+      projectId: p.id,
+      accountId: p.avitoAccountId && byId[p.avitoAccountId] ? p.avitoAccountId : null,
+    })),
+  };
+}
+
+// Parses a pasted block of credentials — one client per line, in whatever shape the
+// agency's notes/spreadsheet happen to be in:
+//   "Алексей Шевчук<TAB>client_id<TAB>client_secret[<TAB>user_id]"   (copied from a sheet)
+//   "Шевчук; client_id; client_secret"                               (; , | separated)
+//   "Шевчук client_id client_secret 123456789"                       (just spaces)
+// Credential-looking tokens (long, no spaces) are picked out wherever they sit; a pure
+// digit token is the Avito user id; everything else on the line is the client name.
+function parseAvitoCredentialLines(text) {
+  const rows = [];
+  String(text).split(/\r?\n/).forEach((line, idx) => {
+    const raw = line.trim();
+    if (!raw) return;
+    if (/client[_ ]?id|клиент\s*id/i.test(raw) && /secret/i.test(raw)) return; // header row
+    const tokens = raw.split(/[\t;,|]+|\s+/).map((t) => t.trim()).filter(Boolean);
+    const nameParts = [];
+    const creds = [];
+    let userId = '';
+    tokens.forEach((t) => {
+      if (/^\d{5,}$/.test(t)) userId = t;
+      else if (t.length >= 16 && /^[A-Za-z0-9_\-.]+$/.test(t)) creds.push(t);
+      else nameParts.push(t);
+    });
+    rows.push({ line: idx + 1, raw, name: nameParts.join(' '), clientId: creds[0] || '', clientSecret: creds[1] || '', userId });
+  });
+  return rows;
+}
+
+async function importAvitoCredentials(env, kv, text) {
+  const avitoKv = env.AVITO_KV;
+  const projects = await listByPrefix(kv, 'project:');
+  const accounts = await listByPrefix(avitoKv, 'account:');
+  const results = [];
+
+  for (const row of parseAvitoCredentialLines(text)) {
+    const base = { line: row.line, name: row.name };
+    if (!row.clientId || !row.clientSecret) {
+      results.push({ ...base, ok: false, message: 'Не нашёл client_id и client_secret в строке' });
+      continue;
+    }
+    const project = matchProjectByName(projects, row.name);
+    if (!project) {
+      results.push({ ...base, ok: false, message: `Клиент «${row.name || '?'}» не найден среди проектов дашборда` });
+      continue;
+    }
+
+    let userId = row.userId;
+    if (!userId) {
+      try {
+        userId = await avitoLookupUserId(row.clientId, row.clientSecret);
+      } catch (e) {
+        results.push({ ...base, project: project.name, ok: false, message: `Авито не принял ключи: ${String(e && e.message).slice(0, 120)}` });
+        continue;
+      }
+    }
+
+    // Reuse the cabinet if these credentials (or this project's cabinet) were already
+    // added — e.g. via /avito-export — instead of creating a duplicate account record.
+    const now = new Date().toISOString();
+    let account = accounts.find((a) => a.clientId === row.clientId) || accounts.find((a) => a.id === project.avitoAccountId);
+    if (account) {
+      const secretChanged = account.clientSecret !== row.clientSecret;
+      account = { ...account, clientId: row.clientId, clientSecret: row.clientSecret, userId, updatedAt: now };
+      await avitoKv.put(`account:${account.id}`, JSON.stringify(account));
+      if (secretChanged) await avitoKv.delete(`token:${account.id}`);
+    } else {
+      account = {
+        id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
+        name: project.name, clientId: row.clientId, clientSecret: row.clientSecret, userId,
+        createdAt: now, updatedAt: now, lastExportAt: null,
+      };
+      await avitoKv.put(`account:${account.id}`, JSON.stringify(account));
+      accounts.push(account);
+    }
+    project.avitoAccountId = account.id;
+    await kv.put(`project:${project.id}`, JSON.stringify({ ...project, updatedAt: now }));
+    results.push({ ...base, project: project.name, ok: true, message: `Подключено (user id ${userId})` });
+  }
+  return results;
+}
+
+// Walks any JSON shape collecting numeric metric values by name — Avito's v2 stats and CPA
+// balance responses aren't documented anywhere reachable from here, so rather than hard-code
+// one nesting we accept both { slug: 'views', value: 12 } entries and plain { views: 12 } keys.
+function collectAvitoNumbers(node, wanted, acc = {}) {
+  if (Array.isArray(node)) {
+    node.forEach((n) => collectAvitoNumbers(n, wanted, acc));
+  } else if (node && typeof node === 'object') {
+    const slug = node.slug || node.name || node.metric;
+    if (typeof slug === 'string' && wanted.includes(slug) && typeof node.value === 'number') {
+      acc[slug] = (acc[slug] || 0) + node.value;
+    }
+    Object.entries(node).forEach(([k, v]) => {
+      if (wanted.includes(k) && typeof v === 'number') acc[k] = (acc[k] || 0) + v;
+      else if (v && typeof v === 'object') collectAvitoNumbers(v, wanted, acc);
+    });
+  }
+  return acc;
+}
+
+// One cabinet, one day: views, contacts, spend and the cabinet's current advance/balance.
+// Every piece degrades independently (errors[] explains what's missing) so one Avito
+// endpoint being unavailable on a cabinet doesn't blank out the rest of the row.
+async function fetchAvitoDaySummary(env, account, date) {
+  const errors = [];
+  const sources = {};
+  const token = await avitoGetToken(env, account);
+  const userId = account.userId;
+  const out = { views: null, contacts: null, spend: null, advance: null, wallet: null };
+
+  // 1) Avito stats v2 — the only documented place that reports spend per period.
+  try {
+    const data = await avitoJson(token, `/stats/v2/accounts/${userId}/items`, {
+      method: 'POST',
+      body: JSON.stringify({ dateFrom: date, dateTo: date, grouping: 'totals', metrics: ['views', 'contacts', 'allSpending'], limit: 1000, offset: 0 }),
+    });
+    const n = collectAvitoNumbers(data, ['views', 'contacts', 'allSpending']);
+    if (n.views != null) { out.views = n.views; sources.views = 'stats_v2'; }
+    if (n.contacts != null) { out.contacts = n.contacts; sources.contacts = 'stats_v2'; }
+    if (n.allSpending != null) { out.spend = Math.round(n.allSpending); sources.spend = 'stats_v2'; }
+  } catch (e) {
+    errors.push(`Статистика v2: ${String(e.message).slice(0, 160)}`);
+  }
+
+  // 2) Views/contacts fallback: the per-listing v1 stats /avito-export already uses.
+  if (out.views == null || out.contacts == null) {
+    try {
+      const items = await fetchAllAvitoItems(token);
+      const daily = await fetchAvitoDailyStats(token, userId, items.map((it) => it.id).filter(Boolean), date, date, errors);
+      const s = sumAvitoStatDaysInRange(Object.values(daily).flat(), date, date);
+      if (out.views == null) { out.views = s.views; sources.views = 'stats_v1'; }
+      if (out.contacts == null) { out.contacts = s.contacts; sources.contacts = 'stats_v1'; }
+    } catch (e) {
+      errors.push(`Статистика v1: ${String(e.message).slice(0, 160)}`);
+    }
+  }
+
+  // 3) Spend fallback: the wallet's operations history for that day (everything that isn't
+  // a top-up / refund is money written off for placement or promotion).
+  if (out.spend == null) {
+    try {
+      const data = await avitoJson(token, '/core/v1/accounts/operations_history/', {
+        method: 'POST',
+        body: JSON.stringify({ dateTimeFrom: `${date}T00:00:00`, dateTimeTo: `${date}T23:59:59` }),
+      });
+      const ops = (data.result && data.result.operations) || data.operations || [];
+      const spent = ops
+        .filter((op) => !/пополн|возврат|зачисл|refund|deposit/i.test(`${op.operationType || ''} ${op.operationName || ''}`))
+        .reduce((sum, op) => sum + Math.abs(Number(op.amountTotal ?? (Number(op.amountRub || 0) + Number(op.amountBonus || 0))) || 0), 0);
+      out.spend = Math.round(spent);
+      sources.spend = 'operations_history';
+    } catch (e) {
+      errors.push(`История операций: ${String(e.message).slice(0, 160)}`);
+    }
+  }
+
+  // 4) Advance ("аванс") — lives in the CPA balance; amounts there are in kopecks.
+  for (const version of ['v3', 'v2']) {
+    try {
+      const data = await avitoJson(token, `/cpa/${version}/balanceInfo`, { method: 'POST', body: '{}', headers: { 'X-Source': 'cantor-dashboard' } });
+      const n = collectAvitoNumbers(data, ['advance', 'balance']);
+      const kopecks = n.advance ?? n.balance;
+      if (kopecks != null) { out.advance = Math.round(kopecks / 100); sources.advance = `cpa_${version}_${n.advance != null ? 'advance' : 'balance'}`; break; }
+    } catch (e) {
+      if (version === 'v2') errors.push(`Аванс (CPA): ${String(e.message).slice(0, 160)}`);
+    }
+  }
+
+  // 5) Plain wallet balance — shown when the cabinet has no CPA advance.
+  try {
+    const bal = await fetchAvitoBalance(token, userId);
+    out.wallet = Math.round(Number(bal.real || 0) + Number(bal.bonus || 0));
+  } catch (e) {
+    errors.push(`Кошелёк: ${String(e.message).slice(0, 160)}`);
+  }
+
+  return { ...out, sources, errors, accountName: account.name };
+}
+
+/* ── Daily report data (same rules as the manual "ежедневный отчёт" methodology) ── */
+
+// Report-excluded (no activity since mid-July) — also pinned last in the Analytics table.
+const REPORT_WOUND_DOWN = new Set(['aydar-ziyazov', 'anna-kramorenko']);
+// Their campaigns started on the 31st, so their month is counted from the 31st of the
+// previous month instead of the 1st.
+const REPORT_EARLY_MONTH_START = new Set(['galina-simagina', 'olga-simagina', 'oksana-alekseeva']);
+const MONTHS_RU_GENITIVE = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+function reportMonthStart(projectId, dateTo) {
+  const first = avitoMonthStart(dateTo);
+  if (!REPORT_EARLY_MONTH_START.has(projectId)) return first;
+  const prevLast = avitoAddDays(first, -1);
+  return prevLast.endsWith('-31') ? prevLast : first;
+}
+
+function reportPeriodLabel(dateFrom, dateTo) {
+  const [, m1, d1] = dateFrom.split('-').map(Number);
+  const [, m2, d2] = dateTo.split('-').map(Number);
+  if (dateFrom === dateTo) return `Вчера, ${String(d2).padStart(2, '0')}.${String(m2).padStart(2, '0')}`;
+  if (m1 === m2) return `За ${d1}–${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+  return `За ${d1} ${MONTHS_RU_GENITIVE[m1 - 1]} – ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+}
+
+function sumDaily(rows, from, to) {
+  return rows
+    .filter((r) => r.date >= from && r.date <= to)
+    .reduce((acc, r) => {
+      acc.budget += r.budget || 0; acc.views += r.views || 0; acc.contacts += r.contacts || 0;
+      acc.diagnostics += r.diagnostics || 0; acc.sales += r.sales || 0;
+      return acc;
+    }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+
+function fmtRuInt(n) {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+function fmtRuPct(n) {
+  return (Math.round(n * 10) / 10).toString().replace('.', ',');
+}
+
+// Rule-based "Текущие наблюдения" — the routine rewrites it in natural wording, and this
+// is also what the file falls back to if the routine isn't configured or hasn't answered.
+function draftObservation(month, last3) {
+  const parts = [];
+  if (month.contacts > 0 && month.views > 0) {
+    const conv = (month.contacts / month.views) * 100;
+    let convLabel = 'в целевом диапазоне';
+    if (conv > 12) convLabel = 'выше целевого диапазона';
+    else if (conv < 8) convLabel = 'ниже целевой';
+    else if (conv < 10) convLabel = 'чуть ниже целевой';
+    parts.push(`Конверсия ${fmtRuPct(conv)}% — ${convLabel} (10–12%)`);
+    const cpl = month.budget / month.contacts;
+    let cplLabel = 'в пределах целевого диапазона';
+    if (cpl > 1500) cplLabel = 'выше целевого диапазона';
+    else if (cpl < 1000) cplLabel = 'ниже целевого';
+    parts.push(`CPL ${fmtRuInt(cpl)} руб — ${cplLabel} (1000–1500 руб)`);
+  } else {
+    parts.push('Контактов за месяц пока нет, конверсия и CPL не считаются');
+  }
+  const v = last3.map((d) => d.views);
+  let trend = 'колеблются';
+  if (v.every((x) => x === v[0])) trend = 'стабильны';
+  else if (v[0] < v[1] && v[1] < v[2]) trend = 'растут';
+  else if (v[0] > v[1] && v[1] > v[2]) trend = 'снижаются';
+  parts.push(`просмотры за последние 3 дня: ${v.join(', ')} — ${trend}`);
+  return `${parts.join('; ')}.`;
+}
+
+async function buildDailyReportData(kv, dateFrom, dateTo) {
+  const [projects, daily] = await Promise.all([listByPrefix(kv, 'project:'), listByPrefix(kv, 'dailyMetrics:')]);
+  const ordered = projects
+    .filter((p) => !REPORT_WOUND_DOWN.has(p.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+  const clients = [];
+  const warnings = [];
+  for (const p of ordered) {
+    const rows = daily.filter((r) => r.projectId === p.id);
+    const monthFrom = reportMonthStart(p.id, dateTo);
+    const month = sumDaily(rows, monthFrom, dateTo);
+    if (!(month.budget > 0)) continue; // methodology: only clients with spend this month
+
+    const period = sumDaily(rows, dateFrom, dateTo);
+    const last3 = [-2, -1, 0].map((delta) => {
+      const d = avitoAddDays(dateTo, delta);
+      return { date: d, views: sumDaily(rows, d, d).views };
+    });
+    const lastDay = rows.find((r) => r.date === dateTo);
+    if (!lastDay || !lastDay.budget) {
+      warnings.push(`${p.name}: за ${dateTo.split('-').reverse().join('.')} бюджет пустой — возможно, данные ещё не внесены`);
+    }
+    const conversionPct = month.views > 0 ? Math.round((month.contacts / month.views) * 1000) / 10 : null;
+    const cpl = month.contacts > 0 ? Math.round(month.budget / month.contacts) : null;
+    const cac = month.sales > 0 ? Math.round(month.budget / month.sales) : null;
+    clients.push({
+      projectId: p.id,
+      name: p.name,
+      monthFrom,
+      period: { budget: period.budget, views: period.views, contacts: period.contacts },
+      month: { ...month, conversionPct, cpl, cac },
+      last3,
+      draftObservation: draftObservation(month, last3),
+    });
+  }
+  return { dateFrom, dateTo, periodLabel: reportPeriodLabel(dateFrom, dateTo), clients, warnings };
+}
+
+/* ── Minimal .docx writer (stored zip, no dependencies) ── */
+
+const CRC32_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i += 1) c = CRC32_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function zipStore(files) {
+  const enc = new TextEncoder();
+  const local = [];
+  const central = [];
+  let offset = 0;
+  files.forEach(({ name, data }) => {
+    const nameBytes = enc.encode(name);
+    const body = typeof data === 'string' ? enc.encode(data) : data;
+    const crc = crc32(body);
+    const header = new DataView(new ArrayBuffer(30));
+    header.setUint32(0, 0x04034b50, true);
+    header.setUint16(4, 20, true);
+    header.setUint16(6, 0x0800, true); // UTF-8 names
+    header.setUint16(8, 0, true); // stored
+    header.setUint32(14, crc, true);
+    header.setUint32(18, body.length, true);
+    header.setUint32(22, body.length, true);
+    header.setUint16(26, nameBytes.length, true);
+    local.push(new Uint8Array(header.buffer), nameBytes, body);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true);
+    cd.setUint16(4, 20, true);
+    cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0x0800, true);
+    cd.setUint32(16, crc, true);
+    cd.setUint32(20, body.length, true);
+    cd.setUint32(24, body.length, true);
+    cd.setUint16(28, nameBytes.length, true);
+    cd.setUint32(42, offset, true);
+    central.push(new Uint8Array(cd.buffer), nameBytes);
+    offset += 30 + nameBytes.length + body.length;
+  });
+  const centralSize = central.reduce((s, b) => s + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, centralSize, true);
+  end.setUint32(16, offset, true);
+  const parts = [...local, ...central, new Uint8Array(end.buffer)];
+  const out = new Uint8Array(parts.reduce((s, b) => s + b.length, 0));
+  let pos = 0;
+  parts.forEach((b) => { out.set(b, pos); pos += b.length; });
+  return out;
+}
+
+function xmlEscape(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+// Paragraph of runs: each run is a string or { text, bold, size, br } (br = line break before).
+function docxParagraph(runs, { style, pageBreakBefore } = {}) {
+  const pPr = `${style ? `<w:pStyle w:val="${style}"/>` : ''}${pageBreakBefore ? '<w:pageBreakBefore/>' : ''}`;
+  const body = runs.map((r) => {
+    const run = typeof r === 'string' ? { text: r } : r;
+    const rPr = `${run.bold ? '<w:b/>' : ''}${run.size ? `<w:sz w:val="${run.size}"/>` : ''}`;
+    return `<w:r>${rPr ? `<w:rPr>${rPr}</w:rPr>` : ''}${run.br ? '<w:br/>' : ''}<w:t xml:space="preserve">${xmlEscape(run.text)}</w:t></w:r>`;
+  }).join('');
+  return `<w:p>${pPr ? `<w:pPr>${pPr}</w:pPr>` : ''}${body}</w:p>`;
+}
+
+function buildDailyReportDocx(report, observations) {
+  const n = fmtRuInt;
+  const paras = [];
+  report.clients.forEach((c, i) => {
+    const m = c.month;
+    const obs = String((observations && observations[c.projectId]) || c.draftObservation).trim();
+    let contactsLine = `Контактов: ${n(m.contacts)}`;
+    const extras = [];
+    if (m.conversionPct != null) extras.push(`конверсия ${fmtRuPct(m.conversionPct)}%`);
+    if (m.cpl != null) extras.push(`CPL ${n(m.cpl)} руб`);
+    if (extras.length) contactsLine += ` (${extras.join(', ')})`;
+
+    paras.push(docxParagraph([c.name], { style: 'Heading1', pageBreakBefore: i > 0 }));
+    paras.push(docxParagraph([{ text: 'ЕЖЕДНЕВНЫЙ ОТЧЕТ', bold: true, size: 28 }]));
+    paras.push(docxParagraph([{ text: report.periodLabel, bold: true }]));
+    paras.push(docxParagraph([`Бюджет: ${n(c.period.budget)} руб`]));
+    paras.push(docxParagraph([`Просмотров: ${n(c.period.views)}`]));
+    paras.push(docxParagraph([`Контактов: ${n(c.period.contacts)}`]));
+    paras.push(docxParagraph([{ text: 'Текущие наблюдения:', bold: true }, { text: obs, br: true }]));
+    paras.push(docxParagraph([{ text: 'Суммарно за месяц', bold: true }]));
+    paras.push(docxParagraph([`Бюджет: ${n(m.budget)} руб`]));
+    paras.push(docxParagraph([`Просмотров: ${n(m.views)}`]));
+    paras.push(docxParagraph([contactsLine]));
+    paras.push(docxParagraph([`Диагностик: ${n(m.diagnostics)}`]));
+    paras.push(docxParagraph([`Продаж: ${n(m.sales)}${m.cac != null ? ` (CAC ${n(m.cac)} руб)` : ''}`]));
+  });
+  if (!report.clients.length) paras.push(docxParagraph(['Нет клиентов с бюджетом за этот месяц.']));
+
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W}><w:body>${paras.join('')}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="850" w:bottom="1134" w:left="1701" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="24"/><w:lang w:val="ru-RU"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="240"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style></w:styles>`;
+  return zipStore([
+    { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>' },
+    { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+    { name: 'word/_rels/document.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+    { name: 'word/document.xml', data: document },
+    { name: 'word/styles.xml', data: styles },
+  ]);
+}
+
+function reportFileName(job) {
+  const d = (s) => s.split('-').reverse().slice(0, 2).join('.');
+  // ASCII on purpose: some browsers silently drop a Cyrillic <a download> name.
+  return job.dateFrom === job.dateTo ? `Otchet_${d(job.dateTo)}.docx` : `Otchet_${d(job.dateFrom)}-${d(job.dateTo)}.docx`;
+}
+
+/* ── Report jobs + the Claude Code routine callback ── */
+
+const REPORT_JOB_TTL = 14 * 24 * 3600;
+
+async function putReportJob(kv, job) {
+  await kv.put(`reportJob:${job.id}`, JSON.stringify(job), { expirationTtl: REPORT_JOB_TTL });
+}
+
+function publicReportJob(job) {
+  const { token, report, observations, ...rest } = job;
+  return {
+    ...rest,
+    periodLabel: report.periodLabel,
+    clientsCount: report.clients.length,
+    warnings: report.warnings,
+    hasObservations: Boolean(observations),
+    fileName: reportFileName(job),
+  };
+}
+
+// Fires the "Ежедневный отчёт" routine (see README note in wrangler.jsonc): its saved
+// prompt tells it to GET the job below, write "Текущие наблюдения" for each client and
+// POST them back. REPORT_ROUTINE_ID is a plain var, REPORT_ROUTINE_TOKEN an encrypted secret.
+async function fireReportRoutine(env, kv, job, origin) {
+  if (!env.REPORT_ROUTINE_ID || !env.REPORT_ROUTINE_TOKEN) {
+    job.status = 'not_configured';
+    job.error = 'Рутина Claude Code не подключена (нет REPORT_ROUTINE_ID / REPORT_ROUTINE_TOKEN) — можно скачать отчёт с автоматическими наблюдениями.';
+    job.updatedAt = new Date().toISOString();
+    await putReportJob(kv, job);
+    return;
+  }
+  const base = `${origin}/api/report-jobs/${job.id}`;
+  const text = [
+    'Запрос из дашборда Cantor Agency: ежедневный отчёт по клиентам Авито.',
+    `JOB_ID: ${job.id}`,
+    `PERIOD: ${job.dateFrom} — ${job.dateTo}`,
+    `DATA_URL: ${base}?token=${job.token}`,
+    `SUBMIT_URL: ${base}/observations?token=${job.token}`,
+  ].join('\n');
+  try {
+    const res = await fetch(`https://api.anthropic.com/v1/claude_code/routines/${env.REPORT_ROUTINE_ID}/fire`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.REPORT_ROUTINE_TOKEN}`,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(`routine_fire_${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
+    job.status = 'sent';
+    job.sessionUrl = (data && data.claude_code_session_url) || null;
+  } catch (e) {
+    job.status = 'failed';
+    job.error = `Не удалось запустить рутину: ${String(e && e.message)}`;
+  }
+  job.updatedAt = new Date().toISOString();
+  await putReportJob(kv, job);
+}
+
+// Called by the routine's cloud session — authorised by the per-job random token that was
+// only ever sent inside the routine fire payload (not by the dashboard password).
+async function handleReportJobCallback(request, env, url) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const match = url.pathname.match(/^\/api\/report-jobs\/([a-f0-9]{12})(\/observations)?$/);
+  if (!match) return json({ error: 'not_found' }, 404);
+  const job = await kv.get(`reportJob:${match[1]}`, 'json');
+  if (!job || !url.searchParams.get('token') || url.searchParams.get('token') !== job.token) {
+    return json({ error: 'not_found' }, 404);
+  }
+
+  if (!match[2] && request.method === 'GET') {
+    if (job.status === 'sent') {
+      job.status = 'running';
+      job.updatedAt = new Date().toISOString();
+      await putReportJob(kv, job);
+    }
+    return json({
+      jobId: job.id,
+      instructions: 'Для каждого клиента из clients[] напиши одно предложение «Текущие наблюдения» по правилам из промпта рутины (опираясь на month.conversionPct, month.cpl и last3). draftObservation — механический черновик, его можно улучшить формулировкой, но не менять факты. Отправь POST на SUBMIT_URL: {"observations": {"<projectId>": "<текст>", ...}}.',
+      report: job.report,
+    });
+  }
+
+  if (match[2] && request.method === 'POST') {
+    const body = await readJson(request);
+    const obs = body && body.observations;
+    if (!obs || typeof obs !== 'object') return json({ error: 'missing_observations' }, 400);
+    const known = new Set(job.report.clients.map((c) => c.projectId));
+    const clean = {};
+    Object.entries(obs).forEach(([id, text]) => {
+      if (known.has(id) && typeof text === 'string' && text.trim()) clean[id] = text.trim().slice(0, 600);
+    });
+    job.observations = clean;
+    job.status = 'done';
+    job.error = null;
+    job.updatedAt = new Date().toISOString();
+    await putReportJob(kv, job);
+    return json({ ok: true, accepted: Object.keys(clean).length, missing: [...known].filter((id) => !clean[id]) });
+  }
+
   return json({ error: 'not_found' }, 404);
 }
 
@@ -2721,6 +3384,10 @@ async function handleApi(request, env, url) {
 
   if (pathname.startsWith('/api/salescrm/')) {
     return handleSalesCrmApi(request, env, url);
+  }
+
+  if (pathname.startsWith('/api/report-jobs/')) {
+    return handleReportJobCallback(request, env, url);
   }
 
   if (pathname.startsWith('/api/dashboard/')) {
