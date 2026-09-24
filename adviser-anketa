@@ -1025,13 +1025,66 @@ function prevStep(from) {
 }
 
 // ── FORM SUBMIT ──
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPk5CHyT_oDsWYZINg_bQTwXg64tJr4-3PugEpi_KU-56ix1lwTmdkkKIUOB-fAOOXeg/exec?sheet=ЭДВАЙЗЕРЫ';
+// Основной канал — функция в Yandex Cloud (см. yc-adviser-anketa-form/README.md):
+// доступна из РФ и с VPN, и без. Пока адрес пустой, анкета сразу идёт напрямую в Apps Script.
+const YC_FUNCTION_URL = '';
+// Запасной канал — напрямую в Google Apps Script.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPk5CHyT_oDsWYZINg_bQTwXg64tJr4-3PugEpi_KU-56ix1lwTmdkkKIUOB-fAOOXeg/exec?sheet=ЭДВАЙЗЕРЫ';
+
+// Одна колонка на направление (по id, не по названию) — порядок стабилен
+// независимо от того, что человек отметил в анкете.
+function collectFields() {
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const tg = document.getElementById('f-tg').value.trim();
+  const checked = getCheckedChannels();
+
+  const fields = {
+    timestamp: new Date().toLocaleString('ru-RU'),
+    name,
+    telegram: tg,
+    phone,
+    channels: checked.map(c => c.name).join(', '),
+  };
+  checked.forEach(ch => {
+    fields['result_' + ch.id] = document.getElementById('res-' + ch.id)?.value?.trim() || '';
+  });
+  return fields;
+}
+
+// 1) Яндекс-функция: успех, только если она ответила {ok:true}.
+function sendToYandex(fields) {
+  if (!YC_FUNCTION_URL) return Promise.reject(new Error('yc_not_configured'));
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 12000) : null;
+  return fetch(YC_FUNCTION_URL, {
+    method: 'POST',
+    // text/plain — «простой» запрос без CORS-preflight; функция всё равно парсит тело как JSON.
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: JSON.stringify({ fields }),
+    signal: ctrl ? ctrl.signal : undefined
+  })
+    .then(r => r.json().catch(() => ({})).then(data => {
+      if (!r.ok || !data.ok) throw new Error('yc_failed_' + r.status);
+    }))
+    .finally(() => { if (timer) clearTimeout(timer); });
+}
+
+// 2) Запасной канал — напрямую в Apps Script.
+// Apps Script always answers through a script.googleusercontent.com redirect, and reading
+// that response back can fail intermittently in some browsers even though the write itself
+// already happened server-side. Firing with no-cors and treating any resolved request as
+// success avoids showing users a scary error for a submission that actually went through.
+function sendToAppsScript(fields) {
+  const fd = new FormData();
+  Object.keys(fields).forEach(k => fd.append(k, fields[k]));
+  return fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+}
 
 document.getElementById('adviser-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   // Validate step 3
-  let valid = true;
   const name = document.getElementById('f-name').value.trim();
   const phone = document.getElementById('f-phone').value.trim();
   const tg = document.getElementById('f-tg').value.trim();
@@ -1048,28 +1101,18 @@ document.getElementById('adviser-form').addEventListener('submit', async (e) => 
   btn.disabled = true;
   btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Отправка...`;
 
+  const fields = collectFields();
+
   try {
-    const formData = new FormData(e.target);
-    // Collect checked channels as readable string
-    const channels = getCheckedChannels().map(c => c.name).join(', ');
-    formData.append('channels', channels);
-
-    // Collect result fields
-    getCheckedChannels().forEach(ch => {
-      const val = document.getElementById('res-'+ch.id)?.value?.trim() || '';
-      formData.append('result_' + ch.name, val);
-    });
-
-    const response = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
-    const result = await response.json();
-
-    if (result.result === 'success') {
-      document.getElementById('main-page').style.display = 'none';
-      document.getElementById('thank-you').classList.add('show');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      throw new Error(result.error || 'Unknown error');
+    try {
+      await sendToYandex(fields);
+    } catch (ycErr) {
+      console.warn('yc_send_failed', ycErr);
+      await sendToAppsScript(fields);
     }
+    document.getElementById('main-page').style.display = 'none';
+    document.getElementById('thank-you').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (err) {
     console.error(err);
     document.getElementById('error-banner').textContent = 'Ошибка отправки. Попробуйте ещё раз или напишите напрямую: @oleg_ezhkov';
