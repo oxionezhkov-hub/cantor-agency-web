@@ -2954,6 +2954,10 @@ function collectAvitoNumbers(node, wanted, acc = {}) {
 // One cabinet, one day: views, contacts, spend and the cabinet's current advance/balance.
 // Every piece degrades independently (errors[] explains what's missing) so one Avito
 // endpoint being unavailable on a cabinet doesn't blank out the rest of the row.
+// Flat daily tariff every client cabinet pays (agency's own numbers: the table's daily budget
+// is exactly stats v2 allSpending + 100 руб for every client).
+const AVITO_DAILY_TARIFF_RUB = 100;
+
 async function fetchAvitoDaySummary(env, account, date) {
   const errors = [];
   const sources = {};
@@ -2971,9 +2975,9 @@ async function fetchAvitoDaySummary(env, account, date) {
     if (n.views != null) { out.views = n.views; sources.views = 'stats_v2'; }
     if (n.contacts != null) { out.contacts = n.contacts; sources.contacts = 'stats_v2'; }
     // allSpending comes back in kopecks (checked against real cabinets: 80400 for a day the
-    // table has as ~804-904 руб). It covers listing placement/promotion only — the flat
-    // 100 руб/day the table also shows isn't part of any stats v2 spending metric.
-    if (n.allSpending != null) { out.spend = Math.round(n.allSpending / 100); sources.spend = 'stats_v2'; }
+    // table has as 904 руб). It covers listing placement/promotion only — the flat daily
+    // tariff fee isn't part of any stats v2 spending metric, so it's added on top.
+    if (n.allSpending != null) { out.spend = Math.round(n.allSpending / 100) + AVITO_DAILY_TARIFF_RUB; sources.spend = 'stats_v2'; }
   } catch (e) {
     errors.push(`Статистика v2: ${String(e.message).slice(0, 160)}`);
   }
