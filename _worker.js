@@ -2967,7 +2967,10 @@ async function fetchAvitoDaySummary(env, account, date) {
     const n = collectAvitoNumbers(data, ['views', 'contacts', 'allSpending']);
     if (n.views != null) { out.views = n.views; sources.views = 'stats_v2'; }
     if (n.contacts != null) { out.contacts = n.contacts; sources.contacts = 'stats_v2'; }
-    if (n.allSpending != null) { out.spend = Math.round(n.allSpending); sources.spend = 'stats_v2'; }
+    // allSpending comes back in kopecks (checked against real cabinets: 80400 for a day the
+    // table has as ~804-904 руб). It covers listing placement/promotion only — the flat
+    // 100 руб/day the table also shows isn't part of any stats v2 spending metric.
+    if (n.allSpending != null) { out.spend = Math.round(n.allSpending / 100); sources.spend = 'stats_v2'; }
   } catch (e) {
     errors.push(`Статистика v2: ${String(e.message).slice(0, 160)}`);
   }
