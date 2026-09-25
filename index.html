@@ -14,106 +14,122 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cantor Agency — продвижение на Авито для репетиторов и онлайн-школ</title>
-<meta name="description" content="Продвижение на Авито для репетиторов, онлайн-школ и образовательных проектов. Ведение кабинета, объявления, тестирование городов и форматов, аналитика и работа с экономикой проекта.">
+<title>Cantor Agency — ученики с Авито для репетиторов и онлайн-школ</title>
+<meta name="description" content="Ведём Авито для репетиторов и онлайн-школ под ключ: объявления, города, ставки, тесты и ежедневная аналитика. Считаем не заявки, а оплаты учеников. Запуск за 5–7 дней, тестовый месяц.">
 <link rel="canonical" href="https://cantor.agency/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Cantor Agency — продвижение на Авито для репетиторов и онлайн-школ">
-<meta property="og:description" content="Берём на себя кабинет, объявления и продвижение на Авито. Смотрим не только на заявки, но и на диагностики и продажи.">
+<meta property="og:title" content="Cantor Agency — ученики с Авито для репетиторов и онлайн-школ">
+<meta property="og:description" content="534 заявки, 108 диагностик и 44 оплаты от учеников с лета 2026. Ведём кабинет Авито под ключ и отвечаем за экономику, а не за клики.">
 <meta property="og:url" content="https://cantor.agency/">
 <meta property="og:locale" content="ru_RU">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
-<link rel="apple-touch-icon" href="/Frame 1000011449.svg">
+<meta name="theme-color" content="#F6F5F2">
+<!-- Шрифты лежат на нашем домене (/fonts), см. fonts/README.md -->
+<link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/unbounded-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/images/brand/favicon.svg">
 <style>
 /* ============================================================
-   CANTOR — design tokens
+   CANTOR — design tokens (общие с /avito-anketa)
    ============================================================ */
 :root{
-  --red:#D2321F;
-  --red-dark:#A82415;
-  --red-text:#BE2C19;
-  --ink:#181818;
-  --bg:#F7F5F0;
-  --paper:#F1EDE4;
-  --muted:#6E6A62;
-  --line:#D8D2C7;
-  --dark:#24342E;
-  --dark-ink:#EDE8DC;
-  --dark-muted:#A9B3AD;
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --red-bg:#FFF1EC;
+  --ink:#141414;
+  --text:#1C1C1C;
+  --muted:#6F6B66;
+  --bg:#F6F5F2;
+  --paper:#EFEDE8;
   --white:#fff;
+  --line:#E2E0DC;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --dark-line:rgba(255,255,255,.1);
+  --dark-muted:#A3A09B;
 
-  --font-display:'Fraunces',Georgia,'Times New Roman',serif;
-  --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-display:'Unbounded','Arial Black',sans-serif;
+  --font-body:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
   --container:1200px;
   --r-sm:10px;
   --r-md:16px;
   --r-lg:24px;
+  --r-xl:32px;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.05);
+  --shadow-md:0 18px 50px rgba(0,0,0,.08);
+  --shadow-red:0 10px 30px rgba(232,57,29,.3);
 
   --s1:8px; --s2:12px; --s3:16px; --s4:24px; --s5:32px; --s6:48px; --s7:72px;
-  --section-y:clamp(60px,8vw,112px);
+  --section-y:clamp(64px,8vw,120px);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;scroll-padding-top:84px;-webkit-text-size-adjust:100%}
 body{
   font-family:var(--font-body);font-size:17px;line-height:1.6;
-  color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
-img,svg{max-width:100%}
+img,svg{max-width:100%;display:block}
 a{color:inherit}
-h1,h2,h3{font-family:var(--font-display);font-weight:700;line-height:1.12;letter-spacing:-0.02em}
-:focus-visible{outline:2.5px solid var(--red);outline-offset:3px;border-radius:2px}
+h1,h2,h3{font-family:var(--font-display);font-weight:800;line-height:1.12;letter-spacing:-0.03em;color:var(--ink)}
+em{font-style:normal;color:var(--red)}
+:focus-visible{outline:2.5px solid var(--red);outline-offset:3px;border-radius:4px}
 
 .container{width:100%;max-width:var(--container);margin:0 auto;padding-inline:24px}
 .section{padding-block:var(--section-y)}
 .section--paper{background:var(--paper)}
-.h2{font-size:clamp(28px,4vw,44px);max-width:20ch}
-.lead{margin-top:var(--s4);font-size:clamp(16.5px,1.4vw,18.5px);color:var(--muted);max-width:58ch}
+.section--dark{background:var(--dark);color:#EDEBE7}
+.section--dark h2,.section--dark h3{color:#fff}
+.eyebrow{
+  display:inline-block;font-family:var(--font-display);font-size:12px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:var(--s3)
+}
+.h2{font-size:clamp(26px,3.6vw,44px);max-width:22ch}
+.lead{margin-top:var(--s3);font-size:clamp(16.5px,1.4vw,19px);color:var(--muted);max-width:60ch}
+.section--dark .lead{color:var(--dark-muted)}
+.sec-head{margin-bottom:clamp(36px,5vw,64px)}
 
 /* ---------- buttons ---------- */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
-  min-height:50px;padding:14px 28px;border-radius:100px;border:1.5px solid transparent;
-  font-family:var(--font-body);font-size:15.5px;font-weight:600;line-height:1.2;
-  text-decoration:none;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s;
+  min-height:52px;padding:14px 28px;border-radius:14px;border:1.5px solid transparent;
+  font-family:var(--font-body);font-size:16px;font-weight:600;line-height:1.2;
+  text-decoration:none;cursor:pointer;transition:background-color .2s,border-color .2s,color .2s,transform .2s,box-shadow .2s;
 }
-.btn--primary{background:var(--red);color:#fff}
-.btn--primary:hover{background:var(--red-dark)}
+.btn--primary{background:var(--red);color:#fff;box-shadow:var(--shadow-red)}
+.btn--primary:hover{background:var(--red-dark);transform:translateY(-1px)}
 .btn--ghost{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn--ghost:hover{border-color:var(--ink)}
-.btn--lg{min-height:56px;padding:17px 32px;font-size:16px}
+.btn--light{background:#fff;color:var(--ink)}
+.btn--light:hover{background:#F1EFEA}
+.btn--lg{min-height:58px;padding:17px 32px;font-size:16.5px}
 .btn--block{width:100%}
-.btn:disabled{opacity:.6;cursor:not-allowed}
-.tlink{
-  display:inline-flex;align-items:center;gap:7px;font-size:15.5px;font-weight:500;
-  color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--line);padding-bottom:2px;
-  transition:color .2s,border-color .2s;
-}
-.tlink:hover{color:var(--red-text);border-color:var(--red)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
 /* ============================================================
    HEADER
    ============================================================ */
 .header{
-  position:sticky;top:0;z-index:60;background:rgba(247,245,240,.93);
-  backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid transparent;transition:border-color .2s;
+  position:sticky;top:0;z-index:60;background:rgba(246,245,242,.9);
+  backdrop-filter:saturate(140%) blur(10px);-webkit-backdrop-filter:saturate(140%) blur(10px);
+  border-bottom:1px solid transparent;transition:border-color .2s;
 }
 .header.is-stuck{border-bottom-color:var(--line)}
 .header-inner{display:flex;align-items:center;gap:var(--s4);min-height:72px;padding-block:10px}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none;margin-right:auto}
-.brand__mark{width:38px;height:38px;flex:none;border-radius:10px;display:block}
-.brand__name{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;margin-right:auto;color:var(--ink)}
+.brand__logo{height:30px;width:auto}
+.brand__name{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:-0.01em;line-height:1.05;white-space:nowrap}
+.brand__name small{display:block;font-family:var(--font-body);font-size:11.5px;font-weight:500;letter-spacing:0;color:var(--muted)}
 .nav{display:flex;gap:26px}
 .nav a{font-size:15px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
 .nav a:hover{color:var(--ink)}
 .header-actions{display:flex;align-items:center;gap:18px}
 .header-tg{font-size:14.5px;font-weight:500;color:var(--muted);text-decoration:none;transition:color .2s}
 .header-tg:hover{color:var(--ink)}
-.header .btn{min-height:44px;padding:11px 22px;font-size:14.5px}
+.header .btn{min-height:44px;padding:11px 20px;font-size:14.5px;border-radius:12px;box-shadow:none}
 .burger{display:none;width:46px;height:46px;border:1px solid var(--line);border-radius:12px;background:none;cursor:pointer;align-items:center;justify-content:center}
 .burger span{display:block;width:18px;height:1.6px;background:var(--ink);position:relative}
 .burger span::before,.burger span::after{content:'';position:absolute;left:0;width:18px;height:1.6px;background:var(--ink)}
@@ -124,184 +140,304 @@ h1,h2,h3{font-family:var(--font-display);font-weight:700;line-height:1.12;letter
 .drawer__top{display:flex;align-items:center;justify-content:space-between;min-height:72px}
 .drawer__close{width:46px;height:46px;border:1px solid var(--line);border-radius:12px;background:none;font-size:24px;line-height:1;cursor:pointer;color:var(--ink)}
 .drawer__nav{display:flex;flex-direction:column;margin-top:var(--s4)}
-.drawer__nav a{font-family:var(--font-display);font-size:26px;font-weight:700;text-decoration:none;padding:15px 0;border-bottom:1px solid var(--line)}
+.drawer__nav a{font-family:var(--font-display);font-size:22px;font-weight:700;text-decoration:none;padding:16px 0;border-bottom:1px solid var(--line);color:var(--ink)}
 .drawer__actions{display:flex;flex-direction:column;gap:14px;margin-top:auto;padding-top:var(--s6)}
 .drawer__tg{text-align:center;font-size:15px;color:var(--muted);text-decoration:none}
 
 /* ============================================================
    HERO
    ============================================================ */
-.hero{padding-top:clamp(40px,5vw,72px);padding-bottom:clamp(52px,6.5vw,96px)}
+.hero{padding-top:clamp(36px,5vw,72px);padding-bottom:clamp(56px,7vw,104px);position:relative}
 .hero-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(32px,5vw,72px);align-items:center}
-.hero h1{font-size:clamp(34px,4.9vw,64px);letter-spacing:-0.03em;line-height:1.07}
-.hero h1 em{font-style:normal;color:var(--red)}
-.hero__lead{margin-top:var(--s4);font-size:clamp(16.5px,1.4vw,19px);color:var(--muted);max-width:52ch}
-.hero__cta{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:var(--s6)}
-.hero__aud{margin-top:var(--s5);font-size:14.5px;color:var(--muted)}
+.badge{
+  display:inline-flex;align-items:center;gap:10px;background:var(--dark);color:#fff;
+  font-size:13.5px;font-weight:500;padding:8px 16px 8px 12px;border-radius:100px;margin-bottom:var(--s4)
+}
+.badge i{width:8px;height:8px;border-radius:50%;background:var(--red-light);box-shadow:0 0 0 0 rgba(255,99,71,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,99,71,.55)}70%{box-shadow:0 0 0 9px rgba(255,99,71,0)}100%{box-shadow:0 0 0 0 rgba(255,99,71,0)}}
+.hero h1{font-size:clamp(30px,4.1vw,56px);font-weight:900;line-height:1.06}
+.hero__lead{margin-top:var(--s4);font-size:clamp(17px,1.45vw,19.5px);color:var(--muted);max-width:54ch}
+.hero__lead b{color:var(--ink);font-weight:600}
+.hero__cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:var(--s5)}
+.hero__facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:var(--s5);list-style:none}
+.hero__facts li{
+  display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--ink);
+  background:var(--white);border:1px solid var(--line);border-radius:100px;padding:7px 14px 7px 10px
+}
+.hero__facts li::before{content:'';width:18px;height:18px;border-radius:50%;flex:none;
+  background:var(--red-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E8391D' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/11px no-repeat}
 
-/* типографический брендовый объект вместо имитации кабинета */
+/* карточка-воронка */
 .hero-card{
-  background:var(--dark);color:var(--dark-ink);border-radius:var(--r-lg);
-  padding:clamp(28px,3.2vw,40px);
+  position:relative;background:var(--dark);color:#EDEBE7;border-radius:var(--r-xl);
+  padding:clamp(26px,3vw,38px);box-shadow:0 30px 80px rgba(15,15,15,.25);overflow:hidden
 }
-.hero-card__label{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dark-muted)}
-.hero-card__flow{list-style:none;margin:var(--s5) 0 0}
-.hero-card__flow li{font-family:var(--font-display);font-size:clamp(26px,2.9vw,36px);font-weight:700;line-height:1.15;letter-spacing:-0.02em}
-.hero-card__flow li:last-child{color:#F0806E}
-.hero-card__arrow{display:block;color:#7E8F87;font-size:18px;line-height:1;margin:6px 0 6px 2px}
-.hero-card__foot{margin-top:var(--s5);padding-top:var(--s4);border-top:1px solid rgba(237,232,220,.18);font-size:14px;color:var(--dark-muted)}
+.hero-card::after{
+  content:'';position:absolute;right:-90px;top:-90px;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,57,29,.45),rgba(232,57,29,0) 70%);pointer-events:none
+}
+.hero-card__label{position:relative;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark-muted)}
+.hero-card__title{position:relative;margin-top:6px;font-size:15px;color:#fff}
+.fbars{position:relative;list-style:none;margin-top:var(--s5);display:grid;gap:14px}
+.fbar__top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:7px}
+.fbar__num{font-family:var(--font-display);font-size:clamp(28px,3.2vw,40px);font-weight:800;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.fbar__name{font-size:14px;color:var(--dark-muted);text-align:right}
+.fbar__track{height:10px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden}
+.fbar__fill{height:100%;border-radius:10px;background:#fff;width:var(--w)}
+.fbar--mid .fbar__fill{background:var(--red-light)}
+.fbar--end .fbar__fill{background:var(--red)}
+.fbar--end .fbar__num{color:var(--red-light)}
+.hero-card__foot{position:relative;margin-top:var(--s5);padding-top:var(--s4);border-top:1px solid var(--dark-line);font-size:13.5px;color:var(--dark-muted);line-height:1.5}
 
 /* ============================================================
-   КЕЙС
+   БОЛИ
    ============================================================ */
-.case{background:var(--dark);color:var(--dark-ink)}
-.case-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px,4.5vw,64px);align-items:center}
-.case h2{font-size:clamp(26px,3.2vw,38px);color:var(--dark-ink);max-width:15ch}
-.case__facts{list-style:none;margin-top:var(--s5)}
-.case__facts li{padding:11px 0;border-top:1px solid rgba(237,232,220,.16);font-size:14.5px;color:var(--dark-muted)}
-.funnel{display:flex;align-items:flex-start;gap:clamp(14px,2.4vw,36px);flex-wrap:wrap}
-.funnel__step{flex:1 1 130px}
-.funnel__num{font-family:var(--font-display);font-size:clamp(48px,7vw,86px);font-weight:700;line-height:.95;color:#fff;font-variant-numeric:tabular-nums}
-.funnel__step:last-child .funnel__num{color:#F0806E}
-.funnel__label{margin-top:10px;font-size:15px;color:var(--dark-muted)}
-.funnel__arrow{align-self:center;color:#7E8F87;font-size:24px;padding-top:12px}
-.case__note{margin-top:var(--s5);font-size:14px;color:#9AA49E;max-width:64ch}
+.pains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4)}
+.pain{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(24px,2.6vw,32px);box-shadow:var(--shadow-sm)}
+.pain__q{font-family:var(--font-display);font-size:clamp(17px,1.6vw,19px);font-weight:700;line-height:1.3;color:var(--ink)}
+.pain__a{margin-top:var(--s3);padding-top:var(--s3);border-top:1px dashed var(--line);font-size:15.5px;color:var(--muted)}
+.pain__a b{display:block;color:var(--red);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
 
 /* ============================================================
-   ЧТО ДЕЛАЕМ ВМЕСТО ВАС
+   РЕЗУЛЬТАТЫ
    ============================================================ */
-.does{list-style:none;margin-top:var(--s7)}
-.does li{
-  display:grid;grid-template-columns:64px minmax(0,1fr) minmax(0,1.3fr);gap:var(--s4);
-  align-items:baseline;padding:var(--s5) 0;border-top:1px solid var(--line);
-}
-.does li:last-child{border-bottom:1px solid var(--line)}
-.does__num{font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--red-text)}
-.does h3{font-size:clamp(20px,2.2vw,26px)}
-.does p{color:var(--muted);font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--dark-line);border-bottom:1px solid var(--dark-line)}
+.stat{padding:clamp(28px,3.5vw,44px) clamp(8px,2vw,32px) clamp(28px,3.5vw,44px) 0}
+.stat + .stat{padding-left:clamp(20px,3vw,40px);border-left:1px solid var(--dark-line)}
+.stat__num{font-family:var(--font-display);font-size:clamp(48px,7.5vw,104px);font-weight:900;line-height:.95;letter-spacing:-0.04em;color:#fff;font-variant-numeric:tabular-nums}
+.stat:last-child .stat__num{color:var(--red-light)}
+.stat__label{margin-top:12px;font-size:16px;color:#fff;font-weight:500}
+.stat__sub{font-size:14px;color:var(--dark-muted)}
+.stats-note{margin-top:var(--s4);font-size:14px;color:var(--dark-muted);max-width:70ch}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4);margin-top:var(--s6)}
+.kpi{background:var(--dark2);border:1px solid var(--dark-line);border-radius:var(--r-md);padding:22px 24px}
+.kpi__v{font-family:var(--font-display);font-size:clamp(20px,2vw,24px);font-weight:800;color:#fff}
+.kpi__t{margin-top:6px;font-size:14.5px;color:var(--dark-muted);line-height:1.5}
 
 /* ============================================================
-   КАК РАБОТАЕМ
+   КЕЙСЫ
    ============================================================ */
-.steps{list-style:none;margin-top:var(--s7);counter-reset:st}
-.steps li{
-  display:grid;grid-template-columns:56px minmax(0,1fr);gap:var(--s4);align-items:baseline;
-  padding:var(--s4) 0;border-top:1px solid var(--line);
-}
-.steps__num{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--red-text)}
-.steps b{font-family:var(--font-display);font-size:clamp(19px,2vw,23px);font-weight:700;display:block;margin-bottom:4px}
-.steps span{color:var(--muted);font-size:15.5px}
-.trust{display:flex;flex-wrap:wrap;gap:var(--s3) var(--s6);margin-top:var(--s6)}
-.trust p{font-size:15.5px;color:var(--muted);max-width:38ch;padding-left:16px;border-left:2px solid var(--red)}
+.cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4)}
+.case{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(24px,2.6vw,30px);box-shadow:var(--shadow-sm)}
+.case__top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.case__tag{font-size:12.5px;font-weight:600;color:var(--red);background:var(--red-bg);padding:5px 11px;border-radius:100px}
+.case__period{font-size:13px;color:var(--muted)}
+.case__name{margin-top:var(--s3);font-size:clamp(18px,1.7vw,21px)}
+.case__hl{margin-top:var(--s3);font-family:var(--font-display);font-size:clamp(26px,2.7vw,34px);font-weight:900;line-height:1.05;letter-spacing:-0.03em;color:var(--ink)}
+.case__hl-sub{margin-top:6px;font-size:14.5px;color:var(--muted)}
+.case__funnel{list-style:none;margin-top:var(--s4);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.case__funnel li{background:var(--bg);border-radius:12px;padding:12px 8px;text-align:center}
+.case__funnel b{display:block;font-family:var(--font-display);font-size:clamp(15px,1.4vw,18px);font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.case__funnel span{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);line-height:1.25}
+.case__funnel li:last-child{background:var(--red-bg)}
+.case__funnel li:last-child b{color:var(--red)}
+.case__meta{list-style:none;margin-top:auto;padding-top:var(--s4)}
+.case__meta li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px;color:var(--muted)}
+.case__meta li b{color:var(--ink);font-weight:600;white-space:nowrap}
+.cases-note{margin-top:var(--s4);font-size:14px;color:var(--muted);max-width:70ch}
+
+/* ============================================================
+   ЧТО ДЕЛАЕМ
+   ============================================================ */
+.services{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4)}
+.service{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(24px,2.6vw,30px);transition:transform .25s,box-shadow .25s,border-color .25s}
+.service:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:transparent}
+.service__ic{width:48px;height:48px;border-radius:14px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin-bottom:var(--s4)}
+.service__ic svg{width:24px;height:24px;stroke:var(--red);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.service h3{font-size:clamp(17px,1.5vw,19px);font-weight:700;letter-spacing:-0.02em;line-height:1.25}
+.service p{margin-top:10px;font-size:15.5px;color:var(--muted)}
+
+/* ============================================================
+   ЗАПУСК — таймлайн
+   ============================================================ */
+.timeline{list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--s3);position:relative}
+.timeline::before{content:'';position:absolute;left:0;right:0;top:19px;height:2px;background:linear-gradient(90deg,var(--red),var(--line))}
+.tl{position:relative}
+.tl__dot{position:relative;width:40px;height:40px;border-radius:50%;background:var(--bg);border:2px solid var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--red)}
+.section--paper .tl__dot{background:var(--paper)}
+.tl:last-child .tl__dot{background:var(--red);color:#fff}
+.tl__when{margin-top:var(--s3);font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+.tl h3{margin-top:6px;font-size:clamp(16px,1.45vw,18px);font-weight:700;letter-spacing:-0.02em;line-height:1.25}
+.tl p{margin-top:8px;font-size:14.5px;color:var(--muted);line-height:1.5}
+.month{margin-top:var(--s6);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s3)}
+.month__w{background:var(--white);border:1px solid var(--line);border-radius:var(--r-md);padding:18px 20px}
+.month__w b{display:block;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--red);letter-spacing:.04em}
+.month__w span{display:block;margin-top:6px;font-size:15px;color:var(--ink);line-height:1.45}
+
+/* ============================================================
+   СТАНДАРТЫ
+   ============================================================ */
+.std-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px,5vw,72px);align-items:start}
+.report{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-md);overflow:hidden;position:sticky;top:96px}
+.report__head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:#FBFAF8}
+.report__av{width:36px;height:36px;border-radius:50%;background:var(--dark);display:flex;align-items:center;justify-content:center;flex:none}
+.report__av img{width:26px;height:auto}
+.report__who{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.2}
+.report__who small{display:block;font-size:12.5px;font-weight:400;color:var(--muted)}
+.report__time{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.report__body{padding:20px}
+.report__row{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.report__row:last-child{border-bottom:0}
+.report__row i{font-style:normal;flex:none;width:24px}
+.report__row b{font-weight:600;color:var(--ink)}
+.report__row span{color:var(--muted)}
+.report__foot{padding:14px 20px;background:var(--red-bg);font-size:13.5px;color:var(--red-dark);font-weight:500}
+.rules{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.rule{background:var(--white);border:1px solid var(--line);border-radius:var(--r-md);padding:22px 22px 20px}
+.rule__v{font-family:var(--font-display);font-size:clamp(22px,2.2vw,28px);font-weight:900;letter-spacing:-0.03em;color:var(--red);line-height:1}
+.rule h3{margin-top:12px;font-size:16px;font-weight:700;letter-spacing:-0.01em;line-height:1.3}
+.rule p{margin-top:6px;font-size:14.5px;color:var(--muted);line-height:1.5}
+
+/* ============================================================
+   ЭКОНОМИКА
+   ============================================================ */
+.econ{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:clamp(32px,5vw,72px);align-items:center}
+.calc{background:var(--dark);color:#EDEBE7;border-radius:var(--r-xl);padding:clamp(26px,3vw,40px)}
+.calc__label{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark-muted)}
+.calc__row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid var(--dark-line);font-size:15.5px}
+.calc__row span{color:var(--dark-muted)}
+.calc__row b{font-family:var(--font-display);font-weight:700;color:#fff;font-size:clamp(16px,1.6vw,19px);white-space:nowrap}
+.calc__row--total{border-bottom:0;padding-top:20px}
+.calc__row--total span{color:#fff;font-weight:500}
+.calc__row--total b{color:var(--red-light);font-size:clamp(24px,2.6vw,32px);font-weight:900}
+.calc__note{margin-top:var(--s3);font-size:13.5px;color:var(--dark-muted)}
+.checks{list-style:none;margin-top:var(--s5);display:grid;gap:14px}
+.checks li{display:flex;gap:14px;align-items:flex-start;font-size:16px}
+.checks li::before{content:'';flex:none;width:24px;height:24px;border-radius:50%;margin-top:1px;
+  background:var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/13px no-repeat}
+.checks b{color:var(--ink);font-weight:600}
 
 /* ============================================================
    КОМАНДА
    ============================================================ */
-.team-grid{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr);gap:clamp(28px,4.5vw,64px);align-items:start;margin-top:var(--s7)}
-.portrait{position:relative;aspect-ratio:4/5;border-radius:var(--r-lg);background:var(--paper);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.team-grid{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:clamp(28px,4.5vw,64px);align-items:start}
+.portrait{position:relative;aspect-ratio:4/5;border-radius:var(--r-xl);background:var(--paper);overflow:hidden;display:flex;align-items:center;justify-content:center}
 .portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.portrait__mono{font-family:var(--font-display);font-size:56px;font-weight:700;color:var(--red)}
-.person__name{font-size:clamp(26px,3vw,34px)}
-.person__role{margin-top:5px;font-size:15px;font-weight:600;color:var(--red-text)}
-.person__bio{margin-top:var(--s4);font-size:16.5px;color:var(--muted);max-width:54ch}
-.person__facts{list-style:none;margin-top:var(--s4)}
-.person__facts li{padding:10px 0;border-top:1px solid var(--line);font-size:15.5px;display:flex;gap:12px;align-items:baseline}
-.person__facts li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--red);flex:none;transform:translateY(-3px)}
-.org{margin-top:var(--s6);padding-top:var(--s5);border-top:1px solid var(--line)}
-.org__chain{display:flex;flex-wrap:wrap;align-items:center;gap:10px var(--s2)}
-.org__node{font-family:var(--font-display);font-size:clamp(16px,1.8vw,19px);font-weight:700}
-.org__node--you{color:var(--red)}
-.org__sep{color:var(--muted);font-size:17px}
-.org p{margin-top:var(--s3);font-size:15.5px;color:var(--muted);max-width:56ch}
+.portrait__mono{font-family:var(--font-display);font-size:56px;font-weight:900;color:var(--red)}
+.portrait__cap{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-radius:14px;padding:12px 16px}
+.portrait__cap b{display:block;font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--ink)}
+.portrait__cap span{font-size:13px;color:var(--muted)}
+.person__bio{font-size:17px;color:var(--muted);max-width:58ch}
+.person__bio b{color:var(--ink);font-weight:600}
+.person__facts{list-style:none;margin-top:var(--s4);display:flex;flex-wrap:wrap;gap:8px}
+.person__facts li{font-size:14px;font-weight:500;background:var(--white);border:1px solid var(--line);border-radius:100px;padding:7px 14px}
+.roles{list-style:none;margin-top:var(--s5);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.role{background:var(--white);border:1px solid var(--line);border-radius:var(--r-md);padding:20px 22px}
+.role--you{background:var(--red);border-color:var(--red);color:#fff}
+.role.role--you h3{color:#fff}
+.role.role--you p{color:rgba(255,255,255,.88)}
+.role__n{font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--red);letter-spacing:.06em}
+.role--you .role__n{color:rgba(255,255,255,.75)}
+.role h3{margin-top:8px;font-size:17px;font-weight:700;letter-spacing:-0.02em}
+.role p{margin-top:6px;font-size:14.5px;color:var(--muted);line-height:1.5}
+
+/* ============================================================
+   ОТБОР
+   ============================================================ */
+.select{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px,5vw,72px);align-items:start}
+.select .h2,.std-grid .h2{font-size:clamp(26px,3vw,38px)}
+.sel-steps{list-style:none;counter-reset:sel;display:grid;gap:var(--s3)}
+.sel-steps li{counter-increment:sel;display:grid;grid-template-columns:52px minmax(0,1fr);gap:var(--s3);align-items:start;background:var(--dark2);border:1px solid var(--dark-line);border-radius:var(--r-md);padding:20px 22px}
+.sel-steps li::before{content:counter(sel);width:40px;height:40px;border-radius:12px;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:16px}
+.sel-steps b{display:block;color:#fff;font-size:17px;font-weight:600}
+.sel-steps span{display:block;margin-top:4px;color:var(--dark-muted);font-size:15px;line-height:1.5}
+.sel-steps a{color:#fff}
 
 /* ============================================================
    FAQ
    ============================================================ */
-.faq{max-width:860px;margin-inline:auto}
-.faq-list{margin-top:var(--s6);border-top:1px solid var(--line)}
-.faq-item{border-bottom:1px solid var(--line)}
+.faq{max-width:880px;margin-inline:auto}
+.faq-list{display:grid;gap:10px}
+.faq-item{background:var(--white);border:1px solid var(--line);border-radius:var(--r-md);transition:border-color .2s}
+.faq-item.is-open{border-color:var(--ink)}
 .faq-q{
   width:100%;background:none;border:none;cursor:pointer;text-align:left;
-  display:flex;align-items:flex-start;justify-content:space-between;gap:20px;
-  padding:22px 0;font-family:var(--font-display);font-size:clamp(18px,1.9vw,22px);font-weight:600;
-  color:var(--ink);line-height:1.3;min-height:48px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:20px 22px;font-family:var(--font-body);font-size:clamp(16.5px,1.6vw,18px);font-weight:600;
+  color:var(--ink);line-height:1.35;min-height:48px;
 }
-.faq-q .sign{flex:none;width:22px;height:22px;position:relative;margin-top:4px}
-.faq-q .sign::before,.faq-q .sign::after{content:'';position:absolute;background:var(--red);left:50%;top:50%;transform:translate(-50%,-50%)}
-.faq-q .sign::before{width:14px;height:1.8px}
-.faq-q .sign::after{width:1.8px;height:14px;transition:opacity .2s}
+.faq-q .sign{flex:none;width:32px;height:32px;border-radius:50%;background:var(--bg);position:relative;transition:background .2s}
+.faq-q .sign::before,.faq-q .sign::after{content:'';position:absolute;background:var(--red);left:50%;top:50%;transform:translate(-50%,-50%);border-radius:2px}
+.faq-q .sign::before{width:12px;height:2px}
+.faq-q .sign::after{width:2px;height:12px;transition:opacity .2s}
+.faq-item.is-open .sign{background:var(--red-bg)}
 .faq-item.is-open .sign::after{opacity:0}
-.faq-a{display:none;padding:0 44px 22px 0;font-size:16px;color:var(--muted);max-width:66ch}
+.faq-a{display:none;padding:0 22px 22px;font-size:16px;color:var(--muted);max-width:70ch}
 .faq-item.is-open .faq-a{display:block}
 
 /* ============================================================
    FINAL CTA + FORM
    ============================================================ */
-.final-head{text-align:center;max-width:680px;margin:0 auto var(--s7)}
-.final-head h2{font-size:clamp(28px,4vw,46px);margin-bottom:var(--s4)}
-.final-head p{color:var(--muted);font-size:17px}
-.form-card{max-width:620px;margin-inline:auto;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(22px,2.8vw,36px)}
+.apply-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(32px,5vw,72px);align-items:start}
+.apply-grid h2{font-size:clamp(26px,3.4vw,42px)}
+.apply-grid .lead{max-width:44ch}
+.apply-list{list-style:none;margin-top:var(--s5);display:grid;gap:12px}
+.apply-list li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--ink)}
+.apply-list li::before{content:'→';color:var(--red);font-weight:700;flex:none}
+.apply-alt{margin-top:var(--s5);font-size:15px;color:var(--muted)}
+.apply-alt a{color:var(--ink);font-weight:600}
+.form-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r-xl);padding:clamp(22px,2.8vw,36px);box-shadow:var(--shadow-md)}
 .bar{display:flex;gap:8px;margin-bottom:var(--s5)}
-.bar div{flex:1;height:3px;border-radius:3px;background:var(--line);transition:background .3s}
+.bar div{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .3s}
 .bar div.is-done{background:var(--red)}
 .step-meta{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:var(--s4)}
-.step-meta h3{font-size:21px}
+.step-meta h3{font-size:20px}
 .step-meta span{font-size:13px;color:var(--muted);white-space:nowrap}
 .fstep{display:none}
 .fstep.is-active{display:block}
 .field{margin-bottom:16px}
-.field > label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
-.field .req{color:var(--red-text)}
+.field > label{display:block;font-size:14px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.field .req{color:var(--red)}
 .field .opt{font-weight:400;color:var(--muted);font-size:13px}
 .field input,.field select,.field textarea{
-  width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;
-  font-size:16px;font-family:var(--font-body);color:var(--ink);background:var(--bg);min-height:48px;
-  transition:border-color .2s,box-shadow .2s;
+  width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 15px;
+  font-size:16px;font-family:var(--font-body);color:var(--ink);background:#FBFAF8;min-height:50px;
+  transition:border-color .2s,box-shadow .2s,background .2s;
 }
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(210,50,31,.1)}
-.field select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236E6A62' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 15px center;padding-right:42px}
-.err-msg{font-size:12.5px;color:var(--red-text);margin-top:5px;display:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--red);background:#fff;box-shadow:0 0 0 4px rgba(232,57,29,.1)}
+.field select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236F6B66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 15px center;padding-right:42px}
+.err-msg{font-size:12.5px;color:var(--red);margin-top:5px;display:none}
 .field.error input,.field.error select{border-color:var(--red)}
 .field.error .err-msg{display:block}
-.budget{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:16px}
-.budget-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.budget-value{font-family:var(--font-display);font-size:21px;font-weight:700;color:var(--red-text);white-space:nowrap}
+.budget{background:#FBFAF8;border:1.5px solid var(--line);border-radius:var(--r-md);padding:16px}
+.budget-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.budget-value{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--red);white-space:nowrap}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--line);cursor:pointer;min-height:0;padding:0;border:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 2px 8px rgba(24,24,24,.25);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 2px 8px rgba(24,24,24,.25);cursor:pointer}
-.budget-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:7px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 2px 8px rgba(20,20,20,.25);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 2px 8px rgba(20,20,20,.25);cursor:pointer}
+.budget-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
 .form-nav{display:flex;gap:12px;align-items:center;margin-top:var(--s5)}
 .form-nav .btn{flex:1}
 .btn-back{background:none;border:none;color:var(--muted);font-size:14.5px;cursor:pointer;padding:12px 4px;font-family:var(--font-body);min-height:48px}
 .btn-back:hover{color:var(--ink)}
 .privacy{font-size:12.5px;color:var(--muted);text-align:center;margin-top:14px}
-.privacy a{color:var(--red-text)}
-.form-status{margin-top:12px;font-size:14px;color:var(--red-text);text-align:center}
+.privacy a{color:var(--red)}
+.form-status{margin-top:12px;font-size:14px;color:var(--red);text-align:center}
 .thanks{display:none;text-align:center;padding:8px 0}
 .thanks.is-active{display:block}
-.thanks h3{font-size:25px;margin-bottom:12px}
+.thanks h3{font-size:24px;margin-bottom:12px}
 .thanks p{color:var(--muted);max-width:42ch;margin:0 auto var(--s5)}
 
 /* ============================================================
    FOOTER
    ============================================================ */
-.footer{background:var(--paper);border-top:1px solid var(--line);padding-block:var(--s6) var(--s4)}
+.footer{background:var(--dark);color:var(--dark-muted);padding-block:var(--s6) var(--s4)}
 .footer-inner{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:var(--s6);align-items:start}
-.footer .brand{margin-right:0}
-.footer__about{font-size:14px;color:var(--muted);max-width:34ch;margin-top:14px}
-.footer h4{font-family:var(--font-body);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.footer .brand{margin-right:0;color:#fff}
+.footer .brand__name small{color:var(--dark-muted)}
+.footer .brand__logo{background:#fff;border-radius:10px;padding:6px 8px;height:40px}
+.footer__about{font-size:14px;max-width:36ch;margin-top:16px}
+.footer h4{font-family:var(--font-body);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#fff;margin-bottom:14px}
 .footer-links{list-style:none;display:grid;gap:9px}
-.footer-links a,.footer-links li{font-size:14.5px;color:var(--muted);text-decoration:none}
-.footer-links a:hover{color:var(--red-text)}
-.footer-bottom{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;font-size:13px;color:var(--muted)}
-.footer-bottom a{text-decoration:none}
-.footer-bottom a:hover{color:var(--red-text)}
+.footer-links a,.footer-links li{font-size:14.5px;color:var(--dark-muted);text-decoration:none}
+.footer-links a:hover{color:#fff}
+.footer-bottom{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--dark-line);display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;font-size:13px}
 
 /* ============================================================
    REVEAL (только при включённом JS)
    ============================================================ */
-.js .reveal{opacity:0;transform:translateY(16px)}
-.js .reveal.is-in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
+.js .reveal{opacity:0;transform:translateY(18px)}
+.js .reveal.is-in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s ease}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   .js .reveal,.js .reveal.is-in{opacity:1;transform:none;transition:none}
@@ -309,35 +445,48 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
 }
 
 /* ============================================================
-   RESPONSIVE — mobile first проверялось на 360/390/430
+   RESPONSIVE
    ============================================================ */
-@media(max-width:900px){
-  .nav,.header-tg{display:none}
-  .burger{display:flex}
-  .hero-grid,.case-grid,.team-grid,.footer-inner{grid-template-columns:minmax(0,1fr)}
-  .does li{grid-template-columns:40px minmax(0,1fr);gap:var(--s2) var(--s3);padding:var(--s4) 0}
-  .does h3{grid-column:2}
-  .does p{grid-column:2}
-  .footer-inner{gap:var(--s5)}
-  .portrait{max-width:320px}
-  .faq-a{padding-right:0}
+@media(max-width:1060px){
+  .nav{gap:18px}
+  .header-tg{display:none}
+  .timeline{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:var(--s5)}
+  .timeline::before{display:none}
+  .cases,.services,.pains{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-width:620px){
+@media(max-width:900px){
+  .nav{display:none}
+  .burger{display:flex}
+  .hero-grid,.std-grid,.econ,.team-grid,.select,.apply-grid,.footer-inner{grid-template-columns:minmax(0,1fr)}
+  .report{position:static}
+  .kpis{grid-template-columns:minmax(0,1fr)}
+  .month{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .portrait{max-width:340px}
+  .footer-inner{gap:var(--s5)}
+}
+@media(max-width:680px){
   body{font-size:16px}
   .header-inner{min-height:64px;gap:12px}
   .header .btn{display:none}
-  .steps li{grid-template-columns:34px minmax(0,1fr);gap:var(--s3)}
-  .funnel{gap:14px}
-  .funnel__arrow{display:none}
-  .funnel__step{flex:1 1 84px}
-  /* цепочка команды идёт вертикально — иначе стрелка повисает в конце строки */
-  .org__chain{flex-direction:column;align-items:flex-start;gap:5px}
-  .org__sep{font-size:0;line-height:1}
-  .org__sep::after{content:'↓';font-size:16px}
+  .brand__name small{display:none}
+  .cases,.services,.pains,.rules,.roles{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:minmax(0,1fr)}
+  .stat{padding:24px 0}
+  .stat + .stat{padding-left:0;border-left:0;border-top:1px solid var(--dark-line)}
+  .timeline{grid-template-columns:minmax(0,1fr);gap:0}
+  .tl{display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:var(--s3);padding-bottom:var(--s4)}
+  .tl::before{content:'';position:absolute;left:19px;top:40px;bottom:0;width:2px;background:var(--line)}
+  .tl:last-child::before{display:none}
+  .tl__dot{grid-row:1 / span 3}
+  .tl__when{margin-top:8px}
+  .month{grid-template-columns:minmax(0,1fr)}
+  .faq-q{padding:18px}
+  .faq-a{padding:0 18px 18px}
 }
 @media(max-width:400px){
   .btn{padding-inline:20px}
   .hero__cta .btn{width:100%}
+  .case__funnel{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 <script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.className+=' js'}</script>
@@ -347,17 +496,19 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
 <header class="header" id="header">
   <div class="container header-inner">
     <a href="/" class="brand" aria-label="Cantor Agency — на главную">
-      <img src="/Frame 1000011449.svg" alt="" class="brand__mark" width="38" height="38">
-      <span class="brand__name">Cantor Agency</span>
+      <img src="/images/brand/logo.svg" alt="" class="brand__logo" width="56" height="30">
+      <span class="brand__name">Cantor Agency<small>Авито для репетиторов</small></span>
     </a>
     <nav class="nav" aria-label="Основная навигация">
-      <a href="#process">Как работаем</a>
-      <a href="#case" data-track="case_click">Кейс</a>
+      <a href="#results" data-track="case_click">Результаты</a>
+      <a href="#services">Что делаем</a>
+      <a href="#launch">Запуск</a>
       <a href="#team">Команда</a>
+      <a href="#faq">Вопросы</a>
     </nav>
     <div class="header-actions">
       <a href="https://t.me/m/VgeEywMJY2U6" target="_blank" rel="noopener" class="header-tg" data-track="telegram_click">Telegram</a>
-      <a href="#apply" class="btn btn--primary" data-track="header_cta_click">Разобрать проект →</a>
+      <a href="#apply" class="btn btn--primary" data-track="header_cta_click">Разобрать проект</a>
       <button class="burger" type="button" id="burger" aria-label="Открыть меню" aria-expanded="false" aria-controls="drawer"><span></span></button>
     </div>
   </div>
@@ -366,16 +517,17 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
 <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Меню">
   <div class="drawer__top">
     <a href="/" class="brand">
-      <img src="/Frame 1000011449.svg" alt="" class="brand__mark" width="38" height="38">
+      <img src="/images/brand/logo.svg" alt="" class="brand__logo" width="56" height="30">
       <span class="brand__name">Cantor Agency</span>
     </a>
     <button class="drawer__close" type="button" id="drawerClose" aria-label="Закрыть меню">&times;</button>
   </div>
   <nav class="drawer__nav" aria-label="Меню">
-    <a href="#process">Как работаем</a>
-    <a href="#case" data-track="case_click">Кейс</a>
+    <a href="#results" data-track="case_click">Результаты</a>
+    <a href="#services">Что делаем</a>
+    <a href="#launch">Запуск</a>
     <a href="#team">Команда</a>
-    <a href="#faq">FAQ</a>
+    <a href="#faq">Вопросы</a>
   </nav>
   <div class="drawer__actions">
     <a href="#apply" class="btn btn--primary btn--lg btn--block" data-track="header_cta_click">Разобрать проект →</a>
@@ -389,171 +541,466 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="hero container">
     <div class="hero-grid">
       <div>
-        <h1>Приводим учеников с Авито. Вы занимаетесь образованием — <em>мы ведём канал</em>.</h1>
-        <p class="hero__lead">Cantor Agency — агентство для репетиторов и образовательных проектов. Берём на себя кабинет, объявления и продвижение, тестируем гипотезы и смотрим не только на заявки, но и на диагностики и продажи.</p>
+        <span class="badge"><i aria-hidden="true"></i>Авито для репетиторов и онлайн-школ</span>
+        <h1>Приводим учеников с Авито. Считаем не заявки, а&nbsp;<em>оплаты</em>.</h1>
+        <p class="hero__lead">Берём кабинет под ключ: объявления, города, ставки, тесты и аналитику. <b>Вы отвечаете на заявки и проводите диагностики — всё остальное делаем мы.</b> Каждое решение — по цифрам, а ученик обходится не дороже 20% от того, что он вам принесёт.</p>
         <div class="hero__cta">
           <a href="#apply" class="btn btn--primary btn--lg" data-track="hero_cta_click">Разобрать мой проект →</a>
-          <a href="#case" class="tlink" data-track="case_click">Смотреть кейс</a>
+          <a href="#results" class="btn btn--ghost btn--lg" data-track="case_click">Смотреть кейсы</a>
         </div>
-        <p class="hero__aud">Репетиторы · онлайн-школы · языковые школы</p>
+        <ul class="hero__facts">
+          <li>Запуск за 5–7 дней</li>
+          <li>Отчёт каждый день до 12:00</li>
+          <li>Первый месяц — тестовый</li>
+        </ul>
       </div>
 
-      <div class="hero-card">
-        <span class="hero-card__label">Авито / образование</span>
-        <ul class="hero-card__flow">
-          <li>Заявка</li>
-          <li><span class="hero-card__arrow" aria-hidden="true">↓</span>Диагностика</li>
-          <li><span class="hero-card__arrow" aria-hidden="true">↓</span>Ученик</li>
+      <div class="hero-card" aria-label="Результаты агентства с лета 2026">
+        <span class="hero-card__label">Наши клиенты · с лета 2026</span>
+        <p class="hero-card__title">Путь от объявления до оплаты</p>
+        <ul class="fbars">
+          <li class="fbar">
+            <div class="fbar__top"><span class="fbar__num">534</span><span class="fbar__name">заявки из Авито</span></div>
+            <div class="fbar__track"><div class="fbar__fill" style="--w:100%"></div></div>
+          </li>
+          <li class="fbar fbar--mid">
+            <div class="fbar__top"><span class="fbar__num">108</span><span class="fbar__name">проведённых диагностик</span></div>
+            <div class="fbar__track"><div class="fbar__fill" style="--w:20.2%"></div></div>
+          </li>
+          <li class="fbar fbar--end">
+            <div class="fbar__top"><span class="fbar__num">44</span><span class="fbar__name">оплаты от учеников</span></div>
+            <div class="fbar__track"><div class="fbar__fill" style="--w:8.2%"></div></div>
+          </li>
         </ul>
-        <p class="hero-card__foot">Ведём весь путь до первого сообщения: кабинет, объявления, города, ставки и продвижение.</p>
+        <p class="hero-card__foot">Русский, математика, английский, итальянский, логопедия — репетиторы и онлайн-школы из сообщества Schoolsmart.</p>
       </div>
     </div>
   </section>
 
-  <!-- ============ КЕЙС ============ -->
-  <section class="section case" id="case">
-    <div class="container case-grid reveal">
-      <div>
-        <h2>Один из проектов на Авито</h2>
-        <ul class="case__facts">
-          <li>Источник: Авито</li>
-          <li>Вели: кабинет · объявления · города · продвижение</li>
-          <li>Считали: заявки → диагностики → оплаты</li>
-        </ul>
-      </div>
-      <div>
-        <div class="funnel">
-          <div class="funnel__step">
-            <div class="funnel__num">381</div>
-            <div class="funnel__label">заявка</div>
-          </div>
-          <div class="funnel__arrow" aria-hidden="true">→</div>
-          <div class="funnel__step">
-            <div class="funnel__num">75</div>
-            <div class="funnel__label">диагностик</div>
-          </div>
-          <div class="funnel__arrow" aria-hidden="true">→</div>
-          <div class="funnel__step">
-            <div class="funnel__num">29</div>
-            <div class="funnel__label">продаж</div>
-          </div>
-        </div>
-        <p class="case__note">Результат зависит от ниши, города, бюджета и экономики проекта.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ ЧТО ДЕЛАЕМ ВМЕСТО ВАС ============ -->
-  <section class="section container" id="does">
-    <h2 class="h2 reveal">Что мы делаем вместо вас</h2>
-    <ul class="does reveal">
-      <li>
-        <span class="does__num">01</span>
-        <h3>Ведём кабинет</h3>
-        <p>Профиль, объявления, города, ставки и продвижение.</p>
-      </li>
-      <li>
-        <span class="does__num">02</span>
-        <h3>Постоянно тестируем</h3>
-        <p>Тексты, фото, форматы, города и гипотезы.</p>
-      </li>
-      <li>
-        <span class="does__num">03</span>
-        <h3>Смотрим на продажи</h3>
-        <p>Заявки → диагностики → оплаты → экономика ученика.</p>
-      </li>
-    </ul>
-  </section>
-
-  <!-- ============ КАК РАБОТАЕМ ============ -->
-  <section class="section section--paper" id="process">
+  <!-- ============ БОЛИ ============ -->
+  <section class="section section--paper" id="why">
     <div class="container">
-      <h2 class="h2 reveal">Первый месяц: от аудита до работающей связки.</h2>
-      <ol class="steps reveal">
-        <li><span class="steps__num">01</span><span><b>Разбираем проект</b><span>Ниша, чек, LTV, города, прошлый опыт.</span></span></li>
-        <li><span class="steps__num">02</span><span><b>Аудируем Авито</b><span>Кабинет, объявления, статистика, продвижение.</span></span></li>
-        <li><span class="steps__num">03</span><span><b>Собираем стратегию</b><span>KPI, бюджет и план тестов.</span></span></li>
-        <li><span class="steps__num">04</span><span><b>Запускаем и тестируем</b><span>Объявления, города, ставки, форматы.</span></span></li>
-        <li><span class="steps__num">05</span><span><b>Усиливаем</b><span>Отключаем слабое, масштабируем рабочее.</span></span></li>
+      <div class="sec-head reveal">
+        <span class="eyebrow">Почему Авито «не работает»</span>
+        <h2 class="h2">Авито приводит учеников. Но только если вести его как отдельный канал продаж.</h2>
+      </div>
+      <div class="pains reveal">
+        <div class="pain">
+          <p class="pain__q">«Деньги списываются, а заявок почти нет»</p>
+          <p class="pain__a"><b>Что делаем</b>Отказываемся от автобидера — Авито выгодно взять с вас побольше. Держим объявления в топ-20, а не в дорогом топ-3, и проверяем позиции вручную.</p>
+        </div>
+        <div class="pain">
+          <p class="pain__q">«Объявления висят, но их никто не видит»</p>
+          <p class="pain__a"><b>Что делаем</b>Слабые объявления тянут вниз весь кабинет. Каждую неделю отключаем то, что не даёт контактов, и масштабируем рабочие связки на новые города.</p>
+        </div>
+        <div class="pain">
+          <p class="pain__q">«Заявки есть, а учеников — нет»</p>
+          <p class="pain__a"><b>Что делаем</b>Смотрим всю воронку до оплаты: помогаем с диалогами и скриптами, считаем конверсию в диагностику и продажу. Продажа для нас — только поступившие деньги.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ РЕЗУЛЬТАТЫ ============ -->
+  <section class="section section--dark" id="results">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Результаты</span>
+        <h2 class="h2">Что Авито уже дал нашим клиентам — в цифрах, которые можно проверить.</h2>
+      </div>
+      <div class="stats reveal">
+        <div class="stat">
+          <div class="stat__num">534</div>
+          <div class="stat__label">заявки</div>
+          <div class="stat__sub">написали или позвонили из объявлений</div>
+        </div>
+        <div class="stat">
+          <div class="stat__num">108</div>
+          <div class="stat__label">диагностик</div>
+          <div class="stat__sub">пробных занятий, которые реально состоялись</div>
+        </div>
+        <div class="stat">
+          <div class="stat__num">44</div>
+          <div class="stat__label">оплаты</div>
+          <div class="stat__sub">ученика начали заниматься за деньги</div>
+        </div>
+      </div>
+      <p class="stats-note reveal">Суммарно по репетиторам и онлайн-школам, с которыми работаем с лета 2026. Результат конкретного проекта зависит от ниши, города, чека и бюджета — поэтому экономику считаем до запуска.</p>
+
+      <div class="kpis reveal">
+        <div class="kpi">
+          <div class="kpi__v">10–12%</div>
+          <div class="kpi__t">целевая конверсия просмотра в контакт. На старте у кабинетов обычно 5–8%.</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__v">1 000–1 400 ₽</div>
+          <div class="kpi__t">ориентир стоимости одной заявки. Рост на 30%+ за неделю — сигнал разобраться сразу.</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__v">≤ 20% LTV</div>
+          <div class="kpi__t">предельная стоимость ученика. Реклама должна окупаться в 4–5 раз.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ КЕЙСЫ ============ -->
+  <section class="section" id="cases">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Кейсы</span>
+        <h2 class="h2">Три проекта — от бюджета до учеников.</h2>
+        <p class="lead">Реальные цифры из рекламных кабинетов и воронок продаж наших клиентов. Разные предметы, разные бюджеты — одинаковый подход.</p>
+      </div>
+      <div class="cases reveal">
+        <article class="case">
+          <div class="case__top"><span class="case__tag">Русский язык</span><span class="case__period">1–21 сентября</span></div>
+          <h3 class="case__name">Оксана Алексеева</h3>
+          <div class="case__hl">99 000 ₽</div>
+          <p class="case__hl-sub">оплат от учеников за 3 недели при рекламном бюджете 19 244 ₽</p>
+          <ul class="case__funnel">
+            <li><b>277</b><span>просмотров</span></li>
+            <li><b>21</b><span>заявка</span></li>
+            <li><b>10</b><span>диагностик</span></li>
+            <li><b>7</b><span>учеников</span></li>
+          </ul>
+          <ul class="case__meta">
+            <li>Стоимость заявки<b>916 ₽</b></li>
+            <li>Стоимость ученика<b>2 749 ₽</b></li>
+            <li>LTV учеников<b>136 800 ₽</b></li>
+          </ul>
+        </article>
+        <article class="case">
+          <div class="case__top"><span class="case__tag">Русский язык</span><span class="case__period">Август</span></div>
+          <h3 class="case__name">Елена Добрынина</h3>
+          <div class="case__hl">11 учеников</div>
+          <p class="case__hl-sub">за месяц: из 14 диагностик до оплаты дошли 11</p>
+          <ul class="case__funnel">
+            <li><b>704</b><span>просмотра</span></li>
+            <li><b>41</b><span>заявка</span></li>
+            <li><b>14</b><span>диагностик</span></li>
+            <li><b>11</b><span>учеников</span></li>
+          </ul>
+          <ul class="case__meta">
+            <li>Бюджет<b>46 047 ₽</b></li>
+            <li>Стоимость заявки<b>1 123 ₽</b></li>
+            <li>Стоимость ученика<b>4 186 ₽</b></li>
+          </ul>
+        </article>
+        <article class="case">
+          <div class="case__top"><span class="case__tag">Английский язык</span><span class="case__period">1–21 сентября</span></div>
+          <h3 class="case__name">Светлана Соболева</h3>
+          <div class="case__hl">85 заявок</div>
+          <p class="case__hl-sub">за 3 недели — масштабировали кабинет на крупный бюджет</p>
+          <ul class="case__funnel">
+            <li><b>778</b><span>просмотров</span></li>
+            <li><b>85</b><span>заявок</span></li>
+            <li><b>12</b><span>диагностик</span></li>
+            <li><b>6</b><span>учеников</span></li>
+          </ul>
+          <ul class="case__meta">
+            <li>Бюджет<b>86 684 ₽</b></li>
+            <li>Стоимость заявки<b>1 020 ₽</b></li>
+            <li>Оплаты учеников<b>57 600 ₽</b></li>
+          </ul>
+        </article>
+      </div>
+      <p class="cases-note reveal">Периоды — 2026 год. Стоимость ученика = рекламный бюджет ÷ число оплативших.</p>
+    </div>
+  </section>
+
+  <!-- ============ ЧТО ДЕЛАЕМ ============ -->
+  <section class="section section--paper" id="services">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Что входит в работу</span>
+        <h2 class="h2">Ведём Авито целиком — до первого сообщения ученика.</h2>
+        <p class="lead">Вы ничего не настраиваете сами: каждое изменение в кабинете делаем мы и показываем в отчёте.</p>
+      </div>
+      <div class="services reveal">
+        <div class="service">
+          <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h6"/></svg></div>
+          <h3>Профиль и объявления</h3>
+          <p>Оформляем профиль и пишем объявления по проверенным моделям: 10 фото, оффер с бесплатной диагностикой, кейсы учеников с цифрами.</p>
+        </div>
+        <div class="service">
+          <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/></svg></div>
+          <h3>Города и ставки</h3>
+          <p>30–40 городов на старте, до 150 при масштабировании. Подбираем города под предмет и управляем ставками вручную, без автобидера.</p>
+        </div>
+        <div class="service">
+          <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg></div>
+          <h3>Постоянные тесты</h3>
+          <p>Тексты, фото, заголовки, форматы. Меняем один фактор за раз, ведём таблицу гипотез и масштабируем только то, что доказало результат.</p>
+        </div>
+        <div class="service">
+          <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <h3>Ежедневная аналитика</h3>
+          <p>Каждое утро проверяем кабинет и присылаем отчёт: бюджет, просмотры, контакты, конверсия и стоимость заявки против цели.</p>
+        </div>
+        <div class="service">
+          <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 12h5"/></svg></div>
+          <h3>Помощь с диалогами</h3>
+          <p>Разбираем переписки и даём скрипты: отвечать за 15–30 минут, не называть цену до диагностики, заканчивать сообщение вопросом.</p>
+        </div>
+        <div class="service">
+          <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>
+          <h3>Опыт рынка и эдвайзеры</h3>
+          <p>Подключаем репетиторов, которые уже прошли через большие бюджеты на Авито в вашей нише, и переносим их находки в ваш кабинет.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ЗАПУСК ============ -->
+  <section class="section" id="launch">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Как запускаемся</span>
+        <h2 class="h2">От доступа к кабинету до первых заявок — за неделю.</h2>
+        <p class="lead">Если кабинет уже есть, заново ничего не создаём: сначала аудит, рабочее оставляем и усиливаем.</p>
+      </div>
+      <ol class="timeline reveal">
+        <li class="tl">
+          <span class="tl__dot">1</span>
+          <p class="tl__when">День 1</p>
+          <h3>Аудит кабинета</h3>
+          <p>Получаем доступы и разбираем объявления, статистику и прошлые траты.</p>
+        </li>
+        <li class="tl">
+          <span class="tl__dot">2</span>
+          <p class="tl__when">Дни 2–3</p>
+          <h3>Установочная встреча</h3>
+          <p>Ниша, чек, LTV, цели. Утверждаем план работ на месяц и KPI.</p>
+        </li>
+        <li class="tl">
+          <span class="tl__dot">3</span>
+          <p class="tl__when">Дни 3–5</p>
+          <h3>Профиль и объявления</h3>
+          <p>Оформляем профиль, пишем новые объявления, собираем фото и кейсы.</p>
+        </li>
+        <li class="tl">
+          <span class="tl__dot">4</span>
+          <p class="tl__when">Дни 5–7</p>
+          <h3>Запуск</h3>
+          <p>Включаем продвижение и в первый день проверяем кабинет каждые 2–3 часа.</p>
+        </li>
+        <li class="tl">
+          <span class="tl__dot">5</span>
+          <p class="tl__when">Дни 7–14</p>
+          <h3>Первые результаты</h3>
+          <p>Первые данные и мини-отчёт: что работает, что отключаем, куда масштабируем.</p>
+        </li>
       </ol>
-      <div class="trust reveal">
-        <p>Ежедневно — отчёт по работе и ключевым метрикам.</p>
-        <p>Регулярно — разбор результатов и план следующих тестов.</p>
+      <div class="month reveal">
+        <div class="month__w"><b>Неделя 1</b><span>Аудит, оформление, стратегия</span></div>
+        <div class="month__w"><b>Неделя 2</b><span>Запуск и первые тесты</span></div>
+        <div class="month__w"><b>Неделя 3</b><span>Отключаем слабое, усиливаем рабочее</span></div>
+        <div class="month__w"><b>Неделя 4</b><span>Итоги месяца и план на следующий</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ СТАНДАРТЫ ============ -->
+  <section class="section section--paper" id="standards">
+    <div class="container std-grid">
+      <div class="reveal">
+        <span class="eyebrow">Прозрачность</span>
+        <h2 class="h2" style="margin-bottom:var(--s5)">Вы всегда знаете, что происходит с деньгами.</h2>
+        <div class="report" aria-label="Как выглядит ежедневный отчёт">
+          <div class="report__head">
+            <span class="report__av"><img src="/images/brand/logo.svg" alt="" width="26" height="14" style="filter:brightness(0) invert(1)"></span>
+            <span class="report__who">Клиентский менеджер<small>Cantor Agency · рабочий чат</small></span>
+            <span class="report__time">до 12:00</span>
+          </div>
+          <div class="report__body">
+            <div class="report__row"><i aria-hidden="true">📊</i><span><b>Вчера:</b> бюджет, просмотры, контакты</span></div>
+            <div class="report__row"><i aria-hidden="true">🎯</i><span><b>Против цели:</b> конверсия и стоимость заявки</span></div>
+            <div class="report__row"><i aria-hidden="true">📅</i><span><b>Итоги месяца:</b> диагностики, продажи, стоимость ученика</span></div>
+            <div class="report__row"><i aria-hidden="true">🛠</i><span><b>Что изменили</b> в кабинете и почему</span></div>
+          </div>
+          <div class="report__foot">Формат ежедневного отчёта — читается за 15 секунд</div>
+        </div>
+      </div>
+      <ul class="rules reveal">
+        <li class="rule">
+          <div class="rule__v">12:00</div>
+          <h3>Отчёт каждый рабочий день</h3>
+          <p>Короткий и по делу. Если изменений нет — так и пишем: «кабинет работает штатно».</p>
+        </li>
+        <li class="rule">
+          <div class="rule__v">30 мин</div>
+          <h3>Ответ на вопрос по отчёту</h3>
+          <p>На связи по будням с 10:00 до 18:00 МСК. Один менеджер держит весь контекст проекта.</p>
+        </li>
+        <li class="rule">
+          <div class="rule__v">1 час</div>
+          <h3>Реакция на блокировку</h3>
+          <p>Заблокированное объявление должны заметить мы, а не вы. Срочные ситуации решаем в течение часа.</p>
+        </li>
+        <li class="rule">
+          <div class="rule__v">20–30 мин</div>
+          <h3>Встреча каждую неделю</h3>
+          <p>Итоги, тесты, план. Слабые места называем прямо, ваши идеи попадают в список задач.</p>
+        </li>
+        <li class="rule">
+          <div class="rule__v">3 дня</div>
+          <h3>Предупреждаем о балансе заранее</h3>
+          <p>Продвижение не останавливается внезапно, а перерасход сверх плана сразу гасим ставками.</p>
+        </li>
+        <li class="rule">
+          <div class="rule__v">₽ = ₽</div>
+          <h3>Продажа — это оплата</h3>
+          <p>Не «горячий лид» и не «записался». В отчёт идут только деньги, которые реально поступили.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ ЭКОНОМИКА ============ -->
+  <section class="section" id="economics">
+    <div class="container econ">
+      <div class="reveal">
+        <span class="eyebrow">Экономика</span>
+        <h2 class="h2">Сначала считаем, окупится ли Авито. Потом запускаем.</h2>
+        <p class="lead">Главное — экономика репетитора, а не количество заявок. Поэтому ещё до старта определяем, сколько можно платить за ученика, и держим эту планку весь проект.</p>
+        <ul class="checks">
+          <li><span><b>Стоимость ученика — до 20% от LTV.</b> Реклама окупается в 4–5 раз.</span></li>
+          <li><span><b>Цели на заявку, диагностику и ученика</b> фиксируем на установочной встрече.</span></li>
+          <li><span><b>Если экономика не сходится</b> — скажем об этом сразу, до оплаты работы.</span></li>
+        </ul>
+      </div>
+      <div class="calc reveal" aria-label="Пример расчёта допустимой стоимости ученика">
+        <span class="calc__label">Пример расчёта</span>
+        <div class="calc__row"><span>Цена занятия</span><b>2 000 ₽</b></div>
+        <div class="calc__row"><span>Занятий в месяц</span><b>× 4</b></div>
+        <div class="calc__row"><span>Сколько месяцев учится</span><b>× 9</b></div>
+        <div class="calc__row"><span>LTV ученика</span><b>72 000 ₽</b></div>
+        <div class="calc__row calc__row--total"><span>Ученик должен стоить не дороже</span><b>14 400 ₽</b></div>
+        <p class="calc__note">20% от LTV. Для каждого проекта считаем по его реальным цифрам.</p>
       </div>
     </div>
   </section>
 
   <!-- ============ КОМАНДА ============ -->
-  <section class="section container" id="team">
-    <h2 class="h2 reveal">В проекте работает не один специалист, а команда.</h2>
-    <div class="team-grid reveal">
-      <figure class="portrait">
-        <img src="/images/team/oleg.jpg" alt="Олег Ежков, руководитель Cantor Agency"
-             loading="lazy" decoding="async" onerror="this.remove()">
-        <span class="portrait__mono" aria-hidden="true">ОЕ</span>
-      </figure>
-      <div>
-        <h3 class="person__name">Олег Ежков</h3>
-        <div class="person__role">Руководитель Cantor Agency</div>
-        <p class="person__bio">Олег работает на стыке маркетинга, онлайн-школ, агентских услуг и построения команд. За его плечами — лидогенерация, воронки, сайты, аналитика, CRM и управление командами.</p>
-        <ul class="person__facts">
-          <li>Основатель агентства по внедрению игровых воронок</li>
-          <li>Сооснователь EGA Academy</li>
-          <li>CMO Systematika</li>
-          <li>CMO Content Hunter</li>
-          <li>CEO TGtron</li>
-        </ul>
-        <div class="org">
-          <div class="org__chain">
-            <span class="org__node org__node--you">Вы</span>
-            <span class="org__sep" aria-hidden="true">→</span>
-            <span class="org__node">Клиентский менеджер</span>
-            <span class="org__sep" aria-hidden="true">→</span>
-            <span class="org__node">Avito-специалист</span>
-            <span class="org__sep" aria-hidden="true">→</span>
-            <span class="org__node">Эдвайзер</span>
-          </div>
-          <p>Один человек держит контекст проекта, специалист работает с Авито, эдвайзер подключает нишевой опыт.</p>
+  <section class="section section--paper" id="team">
+    <div class="container">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Команда</span>
+        <h2 class="h2">На вашем проекте работает команда, а не один фрилансер.</h2>
+      </div>
+      <div class="team-grid reveal">
+        <figure class="portrait">
+          <img src="/images/team/oleg.jpg" alt="Олег Ежков, руководитель Cantor Agency"
+               loading="lazy" decoding="async" onerror="this.remove()">
+          <span class="portrait__mono" aria-hidden="true">ОЕ</span>
+          <figcaption class="portrait__cap"><b>Олег Ежков</b><span>Руководитель Cantor Agency</span></figcaption>
+        </figure>
+        <div>
+          <p class="person__bio">Олег работает на стыке <b>маркетинга, онлайн-школ и построения команд</b>: лидогенерация, воронки, аналитика, CRM. Лично разбирает каждый новый проект перед запуском и отвечает за результат.</p>
+          <ul class="person__facts">
+            <li>Сооснователь EGA Academy</li>
+            <li>CMO Systematika</li>
+            <li>CMO Content Hunter</li>
+            <li>CEO TGtron</li>
+            <li>Агентство игровых воронок</li>
+          </ul>
+          <ul class="roles">
+            <li class="role role--you">
+              <span class="role__n">ВЫ</span>
+              <h3>Ведёте учеников</h3>
+              <p>Отвечаете на заявки, проводите диагностики и продаёте.</p>
+            </li>
+            <li class="role">
+              <span class="role__n">01</span>
+              <h3>Клиентский менеджер</h3>
+              <p>Единая точка контакта: отчёты, встречи, ответы на вопросы.</p>
+            </li>
+            <li class="role">
+              <span class="role__n">02</span>
+              <h3>Специалист по Авито</h3>
+              <p>Ведёт кабинет: объявления, города, ставки и тесты.</p>
+            </li>
+            <li class="role">
+              <span class="role__n">03</span>
+              <h3>Эдвайзер</h3>
+              <p>Практик из вашей ниши, который уже масштабировался на Авито.</p>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- ============ ОТБОР ============ -->
+  <section class="section section--dark" id="select">
+    <div class="container select">
+      <div class="reveal">
+        <span class="eyebrow">Как попасть в работу</span>
+        <h2 class="h2">Берём не всех. Только проекты, где можем сделать сильный результат.</h2>
+        <p class="lead">Ресурсы команды ограничены, а мы отвечаем за экономику, а не за клики. Поэтому сначала разбираем проект — и честно говорим, есть ли смысл запускаться.</p>
+      </div>
+      <ol class="sel-steps reveal">
+        <li><div><b>Оставляете заявку</b><span>Короткая форма ниже — 2 минуты. Или подробная <a href="/avito-anketa">анкета для запуска</a>.</span></div></li>
+        <li><div><b>Разговор с Олегом Ежковым</b><span>Обсуждаем нишу, чек, опыт с Авито и считаем, может ли канал окупиться.</span></div></li>
+        <li><div><b>Одобрение и запуск</b><span>Первый месяц — тестовый. Через 5–7 дней после старта — первые объявления в работе.</span></div></li>
+      </ol>
+    </div>
+  </section>
+
   <!-- ============ FAQ ============ -->
-  <section class="section section--paper" id="faq">
+  <section class="section" id="faq">
     <div class="container faq">
-      <h2 class="h2 reveal" style="max-width:none">Частые вопросы</h2>
+      <div class="sec-head reveal" style="text-align:center">
+        <span class="eyebrow">Вопросы</span>
+        <h2 class="h2" style="max-width:none">Частые вопросы</h2>
+      </div>
       <div class="faq-list reveal">
         <div class="faq-item">
           <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa1"><span>У меня уже есть кабинет. Его придётся создавать заново?</span><span class="sign" aria-hidden="true"></span></button>
-          <div class="faq-a" id="fa1">Нет. Начинаем с аудита текущего кабинета: рабочие города и форматы оставляем и тестируем дальше вместе с новыми гипотезами.</div>
+          <div class="faq-a" id="fa1">Нет. Начинаем с аудита текущего кабинета: рабочие объявления и города оставляем и усиливаем, слабые — переделываем или отключаем.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa2"><span>Что нужно делать мне самому?</span><span class="sign" aria-hidden="true"></span></button>
-          <div class="faq-a" id="fa2">Отвечать на входящие обращения и доводить ученика до диагностики и оплаты. Кабинет и объявления ведём мы.</div>
+          <div class="faq-a" id="fa2">Быстро отвечать на входящие заявки и доводить ученика до диагностики и оплаты. Кабинет, объявления, ставки и аналитику ведём мы. С диалогами тоже помогаем: разбираем переписки и даём скрипты.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa3"><span>Как часто я получаю отчёт?</span><span class="sign" aria-hidden="true"></span></button>
-          <div class="faq-a" id="fa3">Каждый день — короткий отчёт по работе и метрикам. Регулярно — встреча с разбором результатов и планом тестов.</div>
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa3"><span>Как быстро будут первые заявки?</span><span class="sign" aria-hidden="true"></span></button>
+          <div class="faq-a" id="fa3">Запуск — через 5–7 дней после получения доступов. Первые данные появляются через 3–5 дней после старта, мини-отчёт с выводами — на 7–14 день. Новое объявление стабилизируется 1–2 недели, поэтому устойчивый поток обычно выстраивается к концу первого месяца.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa4"><span>Можно начать с тестового месяца?</span><span class="sign" aria-hidden="true"></span></button>
-          <div class="faq-a" id="fa4">Да, базовый формат — первый месяц как тестовый. В отдельных случаях согласовываем тестовую неделю.</div>
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa4"><span>Какой нужен рекламный бюджет?</span><span class="sign" aria-hidden="true"></span></button>
+          <div class="faq-a" id="fa4">Зависит от ниши и целей — считаем его на разборе, исходя из вашего чека и LTV. Бюджет вы пополняете сами в своём кабинете Авито, он не проходит через нас. Мы следим, чтобы деньги тратились по плану, и предупреждаем о низком балансе минимум за 3 дня.</div>
         </div>
         <div class="faq-item">
-          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa5"><span>Как понять, окупится ли Авито?</span><span class="sign" aria-hidden="true"></span></button>
-          <div class="faq-a" id="fa5">До запуска считаем нишу, чек, LTV и бюджет и прикидываем целевую стоимость заявки, диагностики и ученика. Если экономика не сходится, скажем об этом сразу.</div>
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa5"><span>Как часто я получаю отчёт?</span><span class="sign" aria-hidden="true"></span></button>
+          <div class="faq-a" id="fa5">Каждый рабочий день до 12:00 — короткий отчёт по ключевым метрикам. Раз в неделю — встреча на 20–30 минут с разбором результатов и планом тестов. Раз в месяц — пересмотр стратегии и окупаемости.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa6"><span>Можно начать с тестового периода?</span><span class="sign" aria-hidden="true"></span></button>
+          <div class="faq-a" id="fa6">Да, первый месяц работы — тестовый. В отдельных случаях согласовываем тестовую неделю. Если решите остановиться, передадим доступы и все материалы или поставим проект на паузу с сохранением настроек.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa7"><span>Как понять, окупится ли Авито в моей нише?</span><span class="sign" aria-hidden="true"></span></button>
+          <div class="faq-a" id="fa7">До запуска считаем нишу, чек, LTV и бюджет и задаём целевую стоимость заявки, диагностики и ученика. Мы работаем с разными предметами — от русского и математики до итальянского и логопедии. Если экономика не сходится, скажем об этом сразу.</div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ============ FINAL CTA + ФОРМА ============ -->
-  <section class="section" id="apply">
-    <div class="container">
-      <div class="final-head reveal">
-        <h2>Давайте посмотрим, есть ли у вашего проекта экономика на Авито.</h2>
-        <p>Расскажите о нише, текущем опыте и бюджете. Посмотрим исходную ситуацию и скажем, есть ли смысл масштабировать канал.</p>
+  <section class="section section--paper" id="apply">
+    <div class="container apply-grid">
+      <div class="reveal">
+        <span class="eyebrow">Разбор проекта</span>
+        <h2>Посмотрим, сколько учеников может дать Авито именно вам.</h2>
+        <p class="lead">Расскажите о нише, опыте и бюджете — это 2 минуты. Свяжемся в течение 2 рабочих часов.</p>
+        <ul class="apply-list">
+          <li>Оценим текущий кабинет или стартовую ситуацию</li>
+          <li>Прикинем целевую стоимость заявки и ученика</li>
+          <li>Скажем честно, есть ли смысл запускаться</li>
+        </ul>
+        <p class="apply-alt">Удобнее переписываться? <a href="https://t.me/m/VgeEywMJY2U6" target="_blank" rel="noopener" data-track="telegram_click">Напишите в Telegram →</a></p>
       </div>
 
       <div class="form-card reveal">
@@ -665,16 +1112,17 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
     <div class="footer-inner">
       <div>
         <a href="/" class="brand">
-          <img src="/Frame 1000011449.svg" alt="" class="brand__mark" width="38" height="38" loading="lazy">
-          <span class="brand__name">Cantor Agency</span>
+          <img src="/images/brand/logo.svg" alt="" class="brand__logo" width="75" height="40" loading="lazy">
+          <span class="brand__name">Cantor Agency<small>Авито для репетиторов</small></span>
         </a>
-        <p class="footer__about">Продвижение на Авито для репетиторов, онлайн-школ и образовательных проектов.</p>
+        <p class="footer__about">Маркетинговое агентство для репетиторов и онлайн-школ. Приводим учеников с Авито и отвечаем за экономику канала.</p>
       </div>
       <div>
         <h4>Связь</h4>
         <ul class="footer-links">
           <li><a href="https://t.me/m/VgeEywMJY2U6" target="_blank" rel="noopener" data-track="telegram_click">Telegram</a></li>
           <li><a href="#apply">Разобрать проект</a></li>
+          <li><a href="/avito-anketa">Анкета для запуска</a></li>
         </ul>
       </div>
       <div>
@@ -700,7 +1148,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   var TELEGRAM_URL = 'https://t.me/m/VgeEywMJY2U6';
   // Endpoint не менять: та же таблица, что и раньше.
   var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPk5CHyT_oDsWYZINg_bQTwXg64tJr4-3PugEpi_KU-56ix1lwTmdkkKIUOB-fAOOXeg/exec?sheet=КЛУБ';
-  var LANDING_VERSION = 'home-v2-2026-09';
+  var LANDING_VERSION = 'home-v3-2026-09';
 
   /* ---------- аналитика ---------- */
   var fired = {};
