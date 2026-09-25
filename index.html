@@ -83,10 +83,6 @@ em{font-style:normal;color:var(--red)}
 .section--paper{background:var(--paper)}
 .section--dark{background:var(--dark);color:#EDEBE7}
 .section--dark h2,.section--dark h3{color:#fff}
-.eyebrow{
-  display:inline-block;font-family:var(--font-display);font-size:12px;font-weight:700;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:var(--s3)
-}
 .h2{font-size:clamp(26px,3.6vw,44px);max-width:22ch}
 .lead{margin-top:var(--s3);font-size:clamp(16.5px,1.4vw,19px);color:var(--muted);max-width:60ch}
 .section--dark .lead{color:var(--dark-muted)}
@@ -113,11 +109,12 @@ em{font-style:normal;color:var(--red)}
    HEADER
    ============================================================ */
 .header{
-  position:sticky;top:0;z-index:60;background:rgba(246,245,242,.9);
+  position:fixed;top:0;left:0;right:0;z-index:60;transform:translateY(-105%);
+  transition:transform .35s cubic-bezier(.2,.7,.2,1),border-color .2s;background:rgba(246,245,242,.9);
   backdrop-filter:saturate(140%) blur(10px);-webkit-backdrop-filter:saturate(140%) blur(10px);
-  border-bottom:1px solid transparent;transition:border-color .2s;
+  border-bottom:1px solid var(--line);
 }
-.header.is-stuck{border-bottom-color:var(--line)}
+.header.is-visible{transform:none}
 .header-inner{display:flex;align-items:center;gap:var(--s4);min-height:72px;padding-block:10px}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none;margin-right:auto;color:var(--ink)}
 .brand__logo{height:30px;width:auto}
@@ -147,25 +144,31 @@ em{font-style:normal;color:var(--red)}
 /* ============================================================
    HERO
    ============================================================ */
-.hero{padding-top:clamp(36px,5vw,72px);padding-bottom:clamp(56px,7vw,104px);position:relative}
-.hero-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(32px,5vw,72px);align-items:center}
-.badge{
-  display:inline-flex;align-items:center;gap:10px;background:var(--dark);color:#fff;
-  font-size:13.5px;font-weight:500;padding:8px 16px 8px 12px;border-radius:100px;margin-bottom:var(--s4)
-}
-.badge i{width:8px;height:8px;border-radius:50%;background:var(--red-light);box-shadow:0 0 0 0 rgba(255,99,71,.6);animation:pulse 2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,99,71,.55)}70%{box-shadow:0 0 0 9px rgba(255,99,71,0)}100%{box-shadow:0 0 0 0 rgba(255,99,71,0)}}
-.hero h1{font-size:clamp(30px,4.1vw,56px);font-weight:900;line-height:1.06}
-.hero__lead{margin-top:var(--s4);font-size:clamp(17px,1.45vw,19.5px);color:var(--muted);max-width:54ch}
-.hero__lead b{color:var(--ink);font-weight:600}
-.hero__cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:var(--s5)}
-.hero__facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:var(--s5);list-style:none}
+.hero{position:relative;overflow:hidden;
+  background:radial-gradient(900px 520px at 88% 30%,rgba(232,57,29,.10),rgba(232,57,29,0) 70%),var(--bg)}
+.hero__inner{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;padding-top:clamp(18px,2.5vw,28px);padding-bottom:clamp(20px,3vw,32px)}
+.hero__logo{display:inline-flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);align-self:flex-start}
+.hero__logo img{height:clamp(30px,3vw,38px);width:auto}
+.hero-grid{flex:1;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(32px,5vw,80px);align-items:center;padding-block:clamp(24px,4vh,48px)}
+.hero h1{font-size:clamp(34px,5.6vw,80px);font-weight:900;line-height:1.02;letter-spacing:-0.04em}
+.hero__lead{margin-top:clamp(16px,2.4vh,28px);font-size:clamp(17px,1.6vw,21px);color:var(--muted);max-width:32ch;line-height:1.5}
+.hero__cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:clamp(24px,4vh,40px)}
+.hero__facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:clamp(18px,3vh,28px);list-style:none}
 .hero__facts li{
   display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--ink);
-  background:var(--white);border:1px solid var(--line);border-radius:100px;padding:7px 14px 7px 10px
+  background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:100px;padding:6px 14px 6px 9px
 }
 .hero__facts li::before{content:'';width:18px;height:18px;border-radius:50%;flex:none;
   background:var(--red-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E8391D' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/11px no-repeat}
+.hero__scroll{align-self:center;width:28px;height:44px;border:2px solid var(--line);border-radius:20px;position:relative;display:block;transition:border-color .2s}
+.hero__scroll:hover{border-color:var(--ink)}
+.hero__scroll span{position:absolute;left:50%;top:8px;width:4px;height:8px;margin-left:-2px;border-radius:2px;background:var(--red);animation:scrollDot 1.8s ease-in-out infinite}
+@keyframes scrollDot{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(16px)}}
+
+/* появление первого экрана */
+.js .hero__in{opacity:0;transform:translateY(22px);animation:heroIn .8s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:var(--d,0s)}
+@keyframes heroIn{to{opacity:1;transform:none}}
+.js .hero__logo{animation:heroIn .6s ease forwards;opacity:0}
 
 /* карточка-воронка */
 .hero-card{
@@ -177,13 +180,17 @@ em{font-style:normal;color:var(--red)}
   background:radial-gradient(circle,rgba(232,57,29,.45),rgba(232,57,29,0) 70%);pointer-events:none
 }
 .hero-card__label{position:relative;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dark-muted)}
-.hero-card__title{position:relative;margin-top:6px;font-size:15px;color:#fff}
 .fbars{position:relative;list-style:none;margin-top:var(--s5);display:grid;gap:14px}
 .fbar__top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:7px}
 .fbar__num{font-family:var(--font-display);font-size:clamp(28px,3.2vw,40px);font-weight:800;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
 .fbar__name{font-size:14px;color:var(--dark-muted);text-align:right}
 .fbar__track{height:10px;border-radius:10px;background:rgba(255,255,255,.08);overflow:hidden}
-.fbar__fill{height:100%;border-radius:10px;background:#fff;width:var(--w)}
+.fbar__fill{height:100%;border-radius:10px;background:#fff;width:var(--w);transform-origin:left}
+.js .fbar__fill{transform:scaleX(0);animation:grow 1.4s cubic-bezier(.2,.7,.2,1) forwards}
+.js .fbar:nth-child(1) .fbar__fill{animation-delay:.6s}.js .fbar:nth-child(2) .fbar__fill{animation-delay:.8s}.js .fbar:nth-child(3) .fbar__fill{animation-delay:1s}
+@keyframes grow{to{transform:none}}
+.hero-card{animation:float 7s ease-in-out 1.6s infinite}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -8px}}
 .fbar--mid .fbar__fill{background:var(--red-light)}
 .fbar--end .fbar__fill{background:var(--red)}
 .fbar--end .fbar__num{color:var(--red-light)}
@@ -225,10 +232,10 @@ em{font-style:normal;color:var(--red)}
 .case__name{margin-top:var(--s3);font-size:clamp(18px,1.7vw,21px)}
 .case__hl{margin-top:var(--s3);font-family:var(--font-display);font-size:clamp(26px,2.7vw,34px);font-weight:900;line-height:1.05;letter-spacing:-0.03em;color:var(--ink)}
 .case__hl-sub{margin-top:6px;font-size:14.5px;color:var(--muted)}
-.case__funnel{list-style:none;margin-top:var(--s4);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.case__funnel li{background:var(--bg);border-radius:12px;padding:12px 8px;text-align:center}
-.case__funnel b{display:block;font-family:var(--font-display);font-size:clamp(15px,1.4vw,18px);font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-.case__funnel span{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);line-height:1.25}
+.case__funnel{list-style:none;margin-top:var(--s4);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.case__funnel li{background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.case__funnel b{font-family:var(--font-display);font-size:clamp(15px,1.4vw,18px);font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.case__funnel span{font-size:13px;color:var(--muted);line-height:1.25}
 .case__funnel li:last-child{background:var(--red-bg)}
 .case__funnel li:last-child b{color:var(--red)}
 .case__meta{list-style:none;margin-top:auto;padding-top:var(--s4)}
@@ -438,8 +445,23 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
    ============================================================ */
 .js .reveal{opacity:0;transform:translateY(18px)}
 .js .reveal.is-in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s ease}
+.js .reveal.stagger{opacity:1;transform:none}
+.js .stagger > *{opacity:0;transform:translateY(26px)}
+.js .stagger.is-in > *{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--i,0) * 90ms)}
+.js .stagger.is-done > *{transition-delay:0s}
+.js .timeline::before{transform:scaleX(0);transform-origin:left;transition:transform 1.4s cubic-bezier(.2,.7,.2,1) .2s}
+.js .timeline.is-in::before{transform:none}
+.case,.pain,.rule,.kpi,.role,.month__w{transition:transform .25s,box-shadow .25s,border-color .25s}
+.js .stagger.is-in > .case:hover,.js .stagger.is-in > .pain:hover,.js .stagger.is-in > .rule:hover,.js .stagger.is-in > .role:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.service__ic{transition:transform .3s}
+.service:hover .service__ic{transform:rotate(-8deg) scale(1.08)}
+.btn--primary::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-120%);animation:shine 4.5s ease-in-out 2s infinite}
+.btn--primary{position:relative;overflow:hidden}
+@keyframes shine{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
+  .js .hero__in,.js .hero__logo,.js .stagger > *{opacity:1;transform:none;animation:none}
+  .js .fbar__fill,.js .timeline::before{transform:none;animation:none}
   .js .reveal,.js .reveal.is-in{opacity:1;transform:none;transition:none}
   *{animation-duration:.001ms !important;transition-duration:.001ms !important}
 }
@@ -466,6 +488,21 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
 }
 @media(max-width:680px){
   body{font-size:16px}
+  .hero-grid{align-items:start;align-content:center;gap:28px;padding-block:20px 8px}
+  .hero__scroll{display:none}
+  .hero h1{font-size:clamp(34px,10.4vw,56px)}
+  .hero__facts{gap:6px}
+  .hero__facts li{padding:5px 11px 5px 7px;gap:6px}
+  .hero__cases{display:none}
+  .hero__cta .btn{width:100%}
+  .hero-card{padding:20px;border-radius:var(--r-lg)}
+  .hero-card__label{font-size:11px}
+  .fbars{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px;gap:10px}
+  .fbar__top{flex-direction:column;align-items:flex-start;gap:2px;margin-bottom:8px}
+  .fbar__name{text-align:left;font-size:13px}
+  .fbar__track{height:6px}
+  .hero-card__foot{display:none}
+  .hero__facts li{font-size:13px}
   .header-inner{min-height:64px;gap:12px}
   .header .btn{display:none}
   .brand__name small{display:none}
@@ -483,10 +520,18 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   .faq-q{padding:18px}
   .faq-a{padding:0 18px 18px}
 }
+@media(max-width:680px) and (max-height:700px){
+  .hero h1{font-size:30px}
+  .hero__lead{font-size:16px;margin-top:12px}
+  .hero__cta{margin-top:18px}
+  .hero__cta .btn{min-height:52px;padding-block:14px}
+  .hero__facts{margin-top:14px}
+  .hero__facts li{font-size:12.5px}
+  .hero-grid{gap:18px;padding-block:14px 0}
+}
 @media(max-width:400px){
   .btn{padding-inline:20px}
   .hero__cta .btn{width:100%}
-  .case__funnel{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 <script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.className+=' js'}</script>
@@ -538,42 +583,47 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
 <main>
 
   <!-- ============ HERO ============ -->
-  <section class="hero container">
-    <div class="hero-grid">
-      <div>
-        <span class="badge"><i aria-hidden="true"></i>Авито для репетиторов и онлайн-школ</span>
-        <h1>Приводим учеников с Авито. Считаем не заявки, а&nbsp;<em>оплаты</em>.</h1>
-        <p class="hero__lead">Берём кабинет под ключ: объявления, города, ставки, тесты и аналитику. <b>Вы отвечаете на заявки и проводите диагностики — всё остальное делаем мы.</b> Каждое решение — по цифрам, а ученик обходится не дороже 20% от того, что он вам принесёт.</p>
-        <div class="hero__cta">
-          <a href="#apply" class="btn btn--primary btn--lg" data-track="hero_cta_click">Разобрать мой проект →</a>
-          <a href="#results" class="btn btn--ghost btn--lg" data-track="case_click">Смотреть кейсы</a>
+  <section class="hero" id="top">
+    <div class="container hero__inner">
+      <a href="/" class="hero__logo" aria-label="Cantor Agency">
+        <img src="/images/brand/logo.svg" alt="" width="64" height="34">
+        <span class="brand__name">Cantor Agency<small>Авито для репетиторов</small></span>
+      </a>
+      <div class="hero-grid">
+        <div class="hero__text">
+          <h1 class="hero__in" style="--d:.05s">Ученики с&nbsp;Авито —<br><em>под ключ</em></h1>
+          <p class="hero__lead hero__in" style="--d:.2s">Ведём ваш кабинет целиком и отвечаем за оплаты учеников, а&nbsp;не&nbsp;за&nbsp;клики.</p>
+          <div class="hero__cta hero__in" style="--d:.35s">
+            <a href="#apply" class="btn btn--primary btn--lg" data-track="hero_cta_click">Разобрать мой проект →</a>
+            <a href="#cases" class="btn btn--ghost btn--lg hero__cases" data-track="case_click">Смотреть кейсы</a>
+          </div>
+          <ul class="hero__facts hero__in" style="--d:.5s">
+            <li>Запуск за 5–7 дней</li>
+            <li>Отчёт каждый день</li>
+            <li>Тестовый месяц</li>
+          </ul>
         </div>
-        <ul class="hero__facts">
-          <li>Запуск за 5–7 дней</li>
-          <li>Отчёт каждый день до 12:00</li>
-          <li>Первый месяц — тестовый</li>
-        </ul>
-      </div>
 
-      <div class="hero-card" aria-label="Результаты агентства с лета 2026">
-        <span class="hero-card__label">Наши клиенты · с лета 2026</span>
-        <p class="hero-card__title">Путь от объявления до оплаты</p>
-        <ul class="fbars">
-          <li class="fbar">
-            <div class="fbar__top"><span class="fbar__num">534</span><span class="fbar__name">заявки из Авито</span></div>
-            <div class="fbar__track"><div class="fbar__fill" style="--w:100%"></div></div>
-          </li>
-          <li class="fbar fbar--mid">
-            <div class="fbar__top"><span class="fbar__num">108</span><span class="fbar__name">проведённых диагностик</span></div>
-            <div class="fbar__track"><div class="fbar__fill" style="--w:20.2%"></div></div>
-          </li>
-          <li class="fbar fbar--end">
-            <div class="fbar__top"><span class="fbar__num">44</span><span class="fbar__name">оплаты от учеников</span></div>
-            <div class="fbar__track"><div class="fbar__fill" style="--w:8.2%"></div></div>
-          </li>
-        </ul>
-        <p class="hero-card__foot">Русский, математика, английский, итальянский, логопедия — репетиторы и онлайн-школы из сообщества Schoolsmart.</p>
+        <div class="hero-card hero__in" style="--d:.3s" aria-label="Результаты наших клиентов с лета 2026">
+          <span class="hero-card__label">Наши клиенты · с лета 2026</span>
+          <ul class="fbars">
+            <li class="fbar">
+              <div class="fbar__top"><span class="fbar__num" data-count="534">534</span><span class="fbar__name">заявки</span></div>
+              <div class="fbar__track"><div class="fbar__fill" style="--w:100%"></div></div>
+            </li>
+            <li class="fbar fbar--mid">
+              <div class="fbar__top"><span class="fbar__num" data-count="108">108</span><span class="fbar__name">диагностик</span></div>
+              <div class="fbar__track"><div class="fbar__fill" style="--w:20.2%"></div></div>
+            </li>
+            <li class="fbar fbar--end">
+              <div class="fbar__top"><span class="fbar__num" data-count="44">44</span><span class="fbar__name">оплаты</span></div>
+              <div class="fbar__track"><div class="fbar__fill" style="--w:8.2%"></div></div>
+            </li>
+          </ul>
+          <p class="hero-card__foot">Русский, математика, английский, итальянский, логопедия</p>
+        </div>
       </div>
+      <a href="#why" class="hero__scroll" aria-label="Листать дальше"><span></span></a>
     </div>
   </section>
 
@@ -581,10 +631,9 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--paper" id="why">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow">Почему Авито «не работает»</span>
         <h2 class="h2">Авито приводит учеников. Но только если вести его как отдельный канал продаж.</h2>
       </div>
-      <div class="pains reveal">
+      <div class="pains reveal stagger">
         <div class="pain">
           <p class="pain__q">«Деньги списываются, а заявок почти нет»</p>
           <p class="pain__a"><b>Что делаем</b>Отказываемся от автобидера — Авито выгодно взять с вас побольше. Держим объявления в топ-20, а не в дорогом топ-3, и проверяем позиции вручную.</p>
@@ -605,29 +654,28 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--dark" id="results">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow">Результаты</span>
         <h2 class="h2">Что Авито уже дал нашим клиентам — в цифрах, которые можно проверить.</h2>
       </div>
-      <div class="stats reveal">
+      <div class="stats reveal stagger">
         <div class="stat">
-          <div class="stat__num">534</div>
+          <div class="stat__num" data-count="534">534</div>
           <div class="stat__label">заявки</div>
           <div class="stat__sub">написали или позвонили из объявлений</div>
         </div>
         <div class="stat">
-          <div class="stat__num">108</div>
+          <div class="stat__num" data-count="108">108</div>
           <div class="stat__label">диагностик</div>
           <div class="stat__sub">пробных занятий, которые реально состоялись</div>
         </div>
         <div class="stat">
-          <div class="stat__num">44</div>
+          <div class="stat__num" data-count="44">44</div>
           <div class="stat__label">оплаты</div>
           <div class="stat__sub">ученика начали заниматься за деньги</div>
         </div>
       </div>
       <p class="stats-note reveal">Суммарно по репетиторам и онлайн-школам, с которыми работаем с лета 2026. Результат конкретного проекта зависит от ниши, города, чека и бюджета — поэтому экономику считаем до запуска.</p>
 
-      <div class="kpis reveal">
+      <div class="kpis reveal stagger">
         <div class="kpi">
           <div class="kpi__v">10–12%</div>
           <div class="kpi__t">целевая конверсия просмотра в контакт. На старте у кабинетов обычно 5–8%.</div>
@@ -648,11 +696,10 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section" id="cases">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow">Кейсы</span>
         <h2 class="h2">Три проекта — от бюджета до учеников.</h2>
         <p class="lead">Реальные цифры из рекламных кабинетов и воронок продаж наших клиентов. Разные предметы, разные бюджеты — одинаковый подход.</p>
       </div>
-      <div class="cases reveal">
+      <div class="cases reveal stagger">
         <article class="case">
           <div class="case__top"><span class="case__tag">Русский язык</span><span class="case__period">1–21 сентября</span></div>
           <h3 class="case__name">Оксана Алексеева</h3>
@@ -713,11 +760,10 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--paper" id="services">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow">Что входит в работу</span>
         <h2 class="h2">Ведём Авито целиком — до первого сообщения ученика.</h2>
         <p class="lead">Вы ничего не настраиваете сами: каждое изменение в кабинете делаем мы и показываем в отчёте.</p>
       </div>
-      <div class="services reveal">
+      <div class="services reveal stagger">
         <div class="service">
           <div class="service__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h6"/></svg></div>
           <h3>Профиль и объявления</h3>
@@ -756,11 +802,10 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section" id="launch">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow">Как запускаемся</span>
         <h2 class="h2">От доступа к кабинету до первых заявок — за неделю.</h2>
         <p class="lead">Если кабинет уже есть, заново ничего не создаём: сначала аудит, рабочее оставляем и усиливаем.</p>
       </div>
-      <ol class="timeline reveal">
+      <ol class="timeline reveal stagger">
         <li class="tl">
           <span class="tl__dot">1</span>
           <p class="tl__when">День 1</p>
@@ -792,7 +837,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
           <p>Первые данные и мини-отчёт: что работает, что отключаем, куда масштабируем.</p>
         </li>
       </ol>
-      <div class="month reveal">
+      <div class="month reveal stagger">
         <div class="month__w"><b>Неделя 1</b><span>Аудит, оформление, стратегия</span></div>
         <div class="month__w"><b>Неделя 2</b><span>Запуск и первые тесты</span></div>
         <div class="month__w"><b>Неделя 3</b><span>Отключаем слабое, усиливаем рабочее</span></div>
@@ -805,7 +850,6 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--paper" id="standards">
     <div class="container std-grid">
       <div class="reveal">
-        <span class="eyebrow">Прозрачность</span>
         <h2 class="h2" style="margin-bottom:var(--s5)">Вы всегда знаете, что происходит с деньгами.</h2>
         <div class="report" aria-label="Как выглядит ежедневный отчёт">
           <div class="report__head">
@@ -822,7 +866,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
           <div class="report__foot">Формат ежедневного отчёта — читается за 15 секунд</div>
         </div>
       </div>
-      <ul class="rules reveal">
+      <ul class="rules reveal stagger">
         <li class="rule">
           <div class="rule__v">12:00</div>
           <h3>Отчёт каждый рабочий день</h3>
@@ -861,10 +905,9 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section" id="economics">
     <div class="container econ">
       <div class="reveal">
-        <span class="eyebrow">Экономика</span>
         <h2 class="h2">Сначала считаем, окупится ли Авито. Потом запускаем.</h2>
         <p class="lead">Главное — экономика репетитора, а не количество заявок. Поэтому ещё до старта определяем, сколько можно платить за ученика, и держим эту планку весь проект.</p>
-        <ul class="checks">
+        <ul class="checks stagger">
           <li><span><b>Стоимость ученика — до 20% от LTV.</b> Реклама окупается в 4–5 раз.</span></li>
           <li><span><b>Цели на заявку, диагностику и ученика</b> фиксируем на установочной встрече.</span></li>
           <li><span><b>Если экономика не сходится</b> — скажем об этом сразу, до оплаты работы.</span></li>
@@ -886,7 +929,6 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--paper" id="team">
     <div class="container">
       <div class="sec-head reveal">
-        <span class="eyebrow">Команда</span>
         <h2 class="h2">На вашем проекте работает команда, а не один фрилансер.</h2>
       </div>
       <div class="team-grid reveal">
@@ -905,7 +947,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
             <li>CEO TGtron</li>
             <li>Агентство игровых воронок</li>
           </ul>
-          <ul class="roles">
+          <ul class="roles stagger">
             <li class="role role--you">
               <span class="role__n">ВЫ</span>
               <h3>Ведёте учеников</h3>
@@ -936,11 +978,10 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--dark" id="select">
     <div class="container select">
       <div class="reveal">
-        <span class="eyebrow">Как попасть в работу</span>
         <h2 class="h2">Берём не всех. Только проекты, где можем сделать сильный результат.</h2>
         <p class="lead">Ресурсы команды ограничены, а мы отвечаем за экономику, а не за клики. Поэтому сначала разбираем проект — и честно говорим, есть ли смысл запускаться.</p>
       </div>
-      <ol class="sel-steps reveal">
+      <ol class="sel-steps reveal stagger">
         <li><div><b>Оставляете заявку</b><span>Короткая форма ниже — 2 минуты. Или подробная <a href="/avito-anketa">анкета для запуска</a>.</span></div></li>
         <li><div><b>Разговор с Олегом Ежковым</b><span>Обсуждаем нишу, чек, опыт с Авито и считаем, может ли канал окупиться.</span></div></li>
         <li><div><b>Одобрение и запуск</b><span>Первый месяц — тестовый. Через 5–7 дней после старта — первые объявления в работе.</span></div></li>
@@ -952,10 +993,9 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section" id="faq">
     <div class="container faq">
       <div class="sec-head reveal" style="text-align:center">
-        <span class="eyebrow">Вопросы</span>
         <h2 class="h2" style="max-width:none">Частые вопросы</h2>
       </div>
-      <div class="faq-list reveal">
+      <div class="faq-list reveal stagger">
         <div class="faq-item">
           <button class="faq-q" type="button" aria-expanded="false" aria-controls="fa1"><span>У меня уже есть кабинет. Его придётся создавать заново?</span><span class="sign" aria-hidden="true"></span></button>
           <div class="faq-a" id="fa1">Нет. Начинаем с аудита текущего кабинета: рабочие объявления и города оставляем и усиливаем, слабые — переделываем или отключаем.</div>
@@ -992,7 +1032,6 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   <section class="section section--paper" id="apply">
     <div class="container apply-grid">
       <div class="reveal">
-        <span class="eyebrow">Разбор проекта</span>
         <h2>Посмотрим, сколько учеников может дать Авито именно вам.</h2>
         <p class="lead">Расскажите о нише, опыте и бюджете — это 2 минуты. Свяжемся в течение 2 рабочих часов.</p>
         <ul class="apply-list">
@@ -1179,7 +1218,7 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
   /* ---------- header ---------- */
   var header = document.getElementById('header');
   window.addEventListener('scroll', function () {
-    header.classList.toggle('is-stuck', window.scrollY > 8);
+    header.classList.toggle('is-visible', window.scrollY > 40);
   }, { passive: true });
 
   /* ---------- мобильное меню ---------- */
@@ -1213,17 +1252,51 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;bac
 
   /* ---------- появление секций ---------- */
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Каскад: каждому ребёнку .stagger — свой порядковый номер для задержки.
+  Array.prototype.forEach.call(document.querySelectorAll('.stagger'), function (list) {
+    Array.prototype.forEach.call(list.children, function (el, i) { el.style.setProperty('--i', i); });
+  });
+
+  // Счётчики: число в разметке — итоговое, анимируем от нуля только при включённом JS.
+  function countUp(el) {
+    var target = Number(el.getAttribute('data-count'));
+    if (!target || reduce) return;
+    var start = null, dur = 1400;
+    function frame(ts) {
+      if (start === null) start = ts;
+      var k = Math.min(1, (ts - start) / dur);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - k, 3))).toLocaleString('ru-RU');
+      if (k < 1) requestAnimationFrame(frame);
+    }
+    el.textContent = '0';
+    requestAnimationFrame(frame);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.hero [data-count]'), function (el) {
+    setTimeout(function () { countUp(el); }, 500);
+  });
+
+  function show(el) {
+    el.classList.add('is-in');
+    Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), countUp);
+    if (el.classList.contains('stagger')) {
+      // после каскада убираем задержки, чтобы hover срабатывал сразу
+      setTimeout(function () { el.classList.add('is-done'); }, 600 + el.children.length * 90);
+    }
+  }
+
+  var watched = document.querySelectorAll('.reveal, .stagger');
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (!en.isIntersecting) return;
-        en.target.classList.add('is-in');
+        show(en.target);
         io.unobserve(en.target);
       });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
-    Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function (el) { io.observe(el); });
+    Array.prototype.forEach.call(watched, function (el) { io.observe(el); });
   } else {
-    Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function (el) { el.classList.add('is-in'); });
+    Array.prototype.forEach.call(watched, function (el) { el.classList.add('is-in'); });
   }
 
   /* ---------- utm + referrer ---------- */
