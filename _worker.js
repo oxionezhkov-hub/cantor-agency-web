@@ -2430,7 +2430,20 @@ function checkDashboardAuth(request) {
   return request.headers.get('x-dashboard-password') === DASHBOARD_PASSWORD;
 }
 
-async function handleDashboardApi(request, env, url) {
+// One-time: clients the owner marked as no longer active (2026-09-25). Afterwards the
+// flag is edited per project in the Projects tab.
+const INITIAL_INACTIVE_CLIENTS = ['aydar-ziyazov', 'anna-kramorenko', 'valentin-volkov'];
+async function ensureInactiveClientsSeed(kv) {
+  if (await kv.get('inactiveSeedV1')) return;
+  const now = new Date().toISOString();
+  for (const id of INITIAL_INACTIVE_CLIENTS) {
+    const p = await kv.get(`project:${id}`, 'json');
+    if (p && !p.inactive) await kv.put(`project:${id}`, JSON.stringify({ ...p, inactive: true, updatedAt: now }));
+  }
+  await kv.put('inactiveSeedV1', '1');
+}
+
+async function handleDashboardApi(request, env, url, ctx) {
   const { pathname } = url;
   const kv = env.AGENCY_DASHBOARD_KV;
 
@@ -2445,6 +2458,7 @@ async function handleDashboardApi(request, env, url) {
   await ensureDashboardSeed(kv);
   await ensureDailyMetricsSeed(kv);
   await ensureProjectRatingsMigration(kv);
+  await ensureInactiveClientsSeed(kv);
 
   // ── Bootstrap: everything the dashboard needs in one call ──
   if (pathname === '/api/dashboard/bootstrap' && request.method === 'GET') {
@@ -2488,6 +2502,9 @@ async function handleDashboardApi(request, env, url) {
       review: body && 'review' in body ? String(body.review || '') : existing.review || '',
       rowColor: body && 'rowColor' in body && ROW_COLORS.has(body.rowColor) ? body.rowColor : existing.rowColor || '',
       avitoAccountId: existing.avitoAccountId || null,
+      // Inactive clients sink to the bottom of the Analytics table and are left out of the
+      // daily report, Ratings and the Avito pull — history stays, nothing is deleted.
+      inactive: body && 'inactive' in body ? Boolean(body.inactive) : Boolean(existing.inactive),
       ratings: {
         result: Number((body && body.ratings && body.ratings.result) ?? existing.ratings?.result ?? 0),
         communication: Number((body && body.ratings && body.ratings.communication) ?? existing.ratings?.communication ?? 0),
@@ -2734,6 +2751,22 @@ async function handleDashboardApi(request, env, url) {
     if (!text.trim()) return json({ error: 'empty' }, 400);
     const results = await importAvitoCredentials(env, kv, text);
     return json({ results, ...(await dashboardAvitoLinks(env, kv)) });
+  }
+
+  // Background "Авито за вчера": the pull runs server-side (waitUntil + the cron picks up
+  // whatever didn't fit), so the page can be closed and reopened to the finished result.
+  if (pathname === '/api/dashboard/avito-pull' && request.method === 'GET') {
+    const date = url.searchParams.get('date') || mskYesterday();
+    return json({ pull: await kv.get(`avitoPull:${date}`, 'json') });
+  }
+
+  if (pathname === '/api/dashboard/avito-pull' && request.method === 'POST') {
+    const body = await readJson(request);
+    const date = (body && body.date) || mskYesterday();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: 'bad_date' }, 400);
+    const pull = await startAvitoPull(env, date, Boolean(body && body.force));
+    if (pull.pending.length && ctx) ctx.waitUntil(processAvitoPull(env, date));
+    return json({ pull });
   }
 
   if (pathname === '/api/dashboard/avito-yesterday' && request.method === 'GET') {
@@ -3037,6 +3070,67 @@ async function fetchAvitoDaySummary(env, account, date) {
   return { ...out, sources, errors, accountName: account.name };
 }
 
+/* ── Background Avito pull (one KV record per day, results for every linked cabinet) ── */
+
+const AVITO_PULL_TTL = 7 * 24 * 3600;
+const AVITO_PULL_BUDGET_MS = 25000; // stay inside waitUntil's ~30s; the cron finishes the rest
+const AVITO_PULL_CONCURRENCY = 4; // different cabinets — Avito's 1/min stats limit is per cabinet
+const AVITO_PULL_AUTOSTART_HOUR_MSK = 7; // cron prepares yesterday's numbers every morning
+
+async function startAvitoPull(env, date, force) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const existing = await kv.get(`avitoPull:${date}`, 'json');
+  const fresh = existing && Date.now() - Date.parse(existing.startedAt) < 10 * 60 * 1000;
+  if (existing && (!force || (existing.status === 'running' && fresh))) return existing;
+  const projects = await listByPrefix(kv, 'project:');
+  const pull = {
+    date,
+    status: 'running',
+    startedAt: new Date().toISOString(),
+    finishedAt: null,
+    pending: projects.filter((p) => p.avitoAccountId && !p.inactive).map((p) => p.id),
+    results: {},
+  };
+  if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = pull.startedAt; }
+  await kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
+  return pull;
+}
+
+async function processAvitoPull(env, date) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const pull = await kv.get(`avitoPull:${date}`, 'json');
+  if (!pull || pull.status !== 'running' || !pull.pending.length) return;
+  const deadline = Date.now() + AVITO_PULL_BUDGET_MS;
+  const queue = [...pull.pending];
+  const worker = async () => {
+    while (queue.length && Date.now() < deadline) {
+      const projectId = queue.shift();
+      const project = await kv.get(`project:${projectId}`, 'json');
+      const account = project && project.avitoAccountId && (await env.AVITO_KV.get(`account:${project.avitoAccountId}`, 'json'));
+      let result;
+      if (!account) result = { linked: false };
+      else {
+        try { result = { linked: true, ...(await fetchAvitoDaySummary(env, account, date)) }; }
+        catch (e) { result = { linked: true, errors: [String(e && e.message)] }; }
+      }
+      pull.results[projectId] = result;
+      pull.pending = pull.pending.filter((id) => id !== projectId);
+    }
+  };
+  await Promise.all(Array.from({ length: AVITO_PULL_CONCURRENCY }, worker));
+  if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = new Date().toISOString(); }
+  await kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
+}
+
+async function avitoPullCron(env) {
+  if (!env.AGENCY_DASHBOARD_KV) return;
+  const date = mskYesterday();
+  const pull = await env.AGENCY_DASHBOARD_KV.get(`avitoPull:${date}`, 'json');
+  const hourMsk = new Date(Date.now() + 3 * 3600 * 1000).getUTCHours();
+  if (!pull && hourMsk >= AVITO_PULL_AUTOSTART_HOUR_MSK) await startAvitoPull(env, date, false);
+  await processAvitoPull(env, date);
+}
+
 /* ── Daily report data (same rules as the manual "ежедневный отчёт" methodology) ── */
 
 // Report-excluded (no activity since mid-July) — also pinned last in the Analytics table.
@@ -3109,7 +3203,7 @@ function draftObservation(month, last3) {
 async function buildDailyReportData(kv, dateFrom, dateTo) {
   const [projects, daily] = await Promise.all([listByPrefix(kv, 'project:'), listByPrefix(kv, 'dailyMetrics:')]);
   const ordered = projects
-    .filter((p) => !REPORT_WOUND_DOWN.has(p.id))
+    .filter((p) => !REPORT_WOUND_DOWN.has(p.id) && !p.inactive)
     .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 
   const clients = [];
@@ -4420,7 +4514,7 @@ async function handleBotApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
-async function handleApi(request, env, url) {
+async function handleApi(request, env, url, ctx) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
 
@@ -4445,7 +4539,7 @@ async function handleApi(request, env, url) {
   }
 
   if (pathname.startsWith('/api/dashboard/')) {
-    return handleDashboardApi(request, env, url);
+    return handleDashboardApi(request, env, url, ctx);
   }
 
   if (pathname.startsWith('/api/tgbot/')) {
@@ -4616,7 +4710,7 @@ function withNoIndexHeader(response) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     const redirectMatch = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)$/);
@@ -4659,7 +4753,7 @@ export default {
     }
 
     try {
-      return await handleApi(request, env, url);
+      return await handleApi(request, env, url, ctx);
     } catch (err) {
       return json({ error: 'server_error', message: String(err && err.message) }, 500);
     }
@@ -4668,5 +4762,6 @@ export default {
   // Cron trigger (wrangler.jsonc "triggers") — drives the control bot: AI queue, deadline checks, summaries.
   async scheduled(event, env, ctx) {
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
+    ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
   },
 };

@@ -123,7 +123,6 @@ textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 .analytics-table{border-collapse:collapse;width:100%;font-size:13px}
 .analytics-table th{background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:13px 12px;text-align:left;white-space:nowrap}
 .analytics-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
-.analytics-table tbody tr{cursor:pointer}
 .analytics-table tbody tr:last-child td{border-bottom:none}
 .analytics-table tbody tr:hover{background:var(--warm-bg)}
 .analytics-table td.name-cell,.analytics-table th.name-th{position:sticky;left:0;background:var(--white);font-weight:700;z-index:1;box-shadow:2px 0 6px rgba(0,0,0,.05)}
@@ -200,7 +199,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .job-status ul{margin:6px 0 0 18px;font-size:12px;color:var(--amber)}
 
 /* Modal */
-#overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
+#overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
 #overlay.open{display:flex}
 .modal{background:#fff;border-radius:var(--r-lg);padding:26px;width:100%;max-width:380px;box-shadow:var(--shadow-md)}
 .modal h3{font-family:'Unbounded',sans-serif;font-size:15px;margin-bottom:16px}
@@ -209,6 +208,48 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 
 .empty{color:var(--muted);font-size:13px;padding:20px;text-align:center}
+/* Icons + icon buttons (top bar); labels hide on phones */
+.ic{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top-actions .btn,.tab-btn{display:inline-flex;align-items:center;gap:7px}
+.top-actions .btn{padding:9px 13px}
+.icon-btn{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
+.icon-btn:hover{border-color:var(--red);color:var(--red)}
+@media (max-width:760px){
+  header.top{padding:12px 14px}
+  .top-actions .btn .lbl,.tab-btn .lbl{display:none}
+  .top-actions .btn{padding:9px 10px}
+  .tab-btn{padding:10px 12px}
+  main{padding:18px 14px 80px}
+  .summary-popup{left:14px;right:14px;width:auto;top:70px}
+  .side-panel{top:70px;right:8px;left:8px;width:auto}
+}
+
+/* Background-job notices (report export, Avito pull) — bottom right, stay until closed */
+.notices{position:fixed;right:20px;bottom:20px;z-index:1050;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 32px))}
+.notice{background:var(--white);border:1.5px solid var(--border);border-left:4px solid var(--amber);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:12px 14px;font-size:13px;line-height:1.45}
+.notice.ok{border-left-color:var(--green)}
+.notice.bad{border-left-color:var(--red)}
+.notice-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.notice-head b{font-size:13px}
+.notice .popup-close{width:22px;height:22px;font-size:17px}
+.notice-text{color:var(--muted);font-size:12px;margin-top:3px;white-space:pre-line}
+.notice-actions{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;margin-right:6px;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Project card: row colour for Analytics + inactive flag */
+.swatches{display:flex;gap:6px}
+.swatch{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);padding:0}
+.swatch.on{outline:2px solid var(--text);outline-offset:2px}
+.swatch[data-color=""]{background:var(--white);background-image:linear-gradient(135deg,transparent 45%,var(--border) 45%,var(--border) 55%,transparent 55%)}
+.swatch[data-color=green]{background:var(--green-bg);border-color:var(--green)}
+.swatch[data-color=yellow]{background:var(--amber-bg);border-color:var(--amber)}
+.swatch[data-color=red]{background:var(--accent-bg);border-color:var(--red)}
+.swatch[data-color=gray]{background:var(--gray-bg);border-color:var(--gray)}
+.card.inactive{opacity:.6}
+.inactive-toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:12px;cursor:pointer}
+.analytics-table td.name-cell .inactive-tag{font-weight:400;font-size:11px;color:var(--muted);margin-left:6px}
+
 .toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;border-radius:var(--r-sm);font-size:13px;z-index:1100;opacity:0;transform:translateY(8px);transition:all .2s}
 .toast.show{opacity:1;transform:translateY(0)}
 </style>
@@ -228,10 +269,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <header class="top">
     <div class="top-actions" id="topActions"></div>
     <nav class="tabs">
-      <button class="tab-btn active" data-tab="projects">Проекты</button>
-      <button class="tab-btn" data-tab="analytics">Аналитика</button>
-      <button class="tab-btn" data-tab="ratings">Оценки</button>
-      <button class="tab-btn" data-tab="tasks">Задачи</button>
+      <button class="tab-btn active" data-tab="projects" title="Проекты"><svg class="ic" data-icon="folder"></svg><span class="lbl">Проекты</span></button>
+      <button class="tab-btn" data-tab="analytics" title="Аналитика"><svg class="ic" data-icon="chart"></svg><span class="lbl">Аналитика</span></button>
+      <button class="tab-btn" data-tab="ratings" title="Оценки"><svg class="ic" data-icon="star"></svg><span class="lbl">Оценки</span></button>
+      <button class="tab-btn" data-tab="tasks" title="Задачи"><svg class="ic" data-icon="tasks"></svg><span class="lbl">Задачи</span></button>
     </nav>
   </header>
 
@@ -307,15 +348,19 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       <h4>Авито за вчера<span class="beta-pill">бета</span></h4>
       <div class="sub" id="avitoPanelSub"></div>
     </div>
-    <button class="popup-close" id="avitoPanelClose" aria-label="Закрыть">×</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="icon-btn" id="avitoPanelSettings" title="Кабинеты Авито: ключи и подключения" aria-label="Кабинеты Авито"><svg class="ic" data-icon="settings"></svg></button>
+      <button class="popup-close" id="avitoPanelClose" aria-label="Закрыть">×</button>
+    </div>
   </div>
   <div class="side-panel-body"><table class="mini-table" id="avitoPanelTable"></table></div>
   <div class="side-panel-foot">
-    <button class="btn secondary small" id="avitoPanelRefresh">↻ Обновить</button>
+    <button class="btn secondary small" id="avitoPanelRefresh">Загрузить заново</button>
     <button class="btn small" id="avitoPanelApply">Внести в таблицу</button>
   </div>
 </div>
 
+<div class="notices" id="notices"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -353,14 +398,53 @@ async function tryGate() {
 // cantor.agency is a plain nginx static host, not the Cloudflare Worker itself, so /api/*
 // has to be called on the Worker's own origin (same pattern as serp-analysis/avito-export/
 // utm-create's API_BASE), relying on the worker's permissive CORS headers.
+//
+// Without a VPN *.workers.dev often doesn't load from Russia, while with a VPN cantor.agency
+// (reg.ru) doesn't — so on cantor.agency the API goes through a Yandex Cloud function
+// (yc-dashboard-api-proxy, reachable from anywhere) and falls back to the Worker directly;
+// opened on the Worker's own domain (the VPN case) it talks to the Worker same-origin.
 const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const API_PROXY_URL = ''; // HTTP address of the yc-dashboard-api-proxy function — see its README
+
+const API_ROUTES = (() => {
+  const direct = (path) => API_BASE + path;
+  const proxy = (path) => `${API_PROXY_URL}?p=${encodeURIComponent(path)}`;
+  if (location.hostname.endsWith('workers.dev')) return [(path) => location.origin + path, proxy];
+  return API_PROXY_URL ? [proxy, direct] : [direct];
+})().filter((r, i) => i === 0 || API_PROXY_URL);
+let apiRouteIndex = 0;
+
+// fetch() against the API with automatic failover between the proxy and the Worker:
+// a route that fails at the network level (blocked / timed out) is swapped for the other
+// one and the choice sticks for the rest of the session.
+async function apiFetch(path, init) {
+  let lastErr;
+  for (let attempt = 0; attempt < API_ROUTES.length; attempt += 1) {
+    const idx = (apiRouteIndex + attempt) % API_ROUTES.length;
+    try {
+      const res = await fetch(API_ROUTES[idx](path), { ...init, signal: AbortSignal.timeout(35000) });
+      apiRouteIndex = idx;
+      return res;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
 
 async function api(path, options = {}, pwOverride, silent) {
   const pw = pwOverride || getPassword();
-  const res = await fetch(API_BASE + path, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw, ...(options.headers || {}) },
-  });
+  let res;
+  try {
+    res = await apiFetch(path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw, ...(options.headers || {}) },
+    });
+  } catch {
+    if (silent) return false;
+    toast('Нет связи с сервером — попробуйте ещё раз');
+    return null;
+  }
   if (res.status === 401) {
     if (silent) return false;
     try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch {}
@@ -384,22 +468,24 @@ function toast(msg) {
 }
 
 // ── Boot ──
+let currentTab = 'projects';
+let bootstrapped = false;
+
 async function boot() {
   document.getElementById('app').classList.add('ready');
+  renderTopActions(currentTab);
   const data = await api('/api/dashboard/bootstrap');
   if (!data) return;
   state = data;
+  bootstrapped = true;
   renderProjects();
   renderAnalytics();
   renderRatings();
   renderTasks();
-  renderTopActions('projects');
+  renderTopActions(currentTab); // whatever tab the user moved to while data was loading
+  resumeBackgroundJobs();
 }
 
-if (isUnlocked()) {
-  document.getElementById('gate').style.display = 'none';
-  boot();
-}
 
 // ── Tabs ──
 document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -408,53 +494,102 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-    renderTopActions(btn.dataset.tab);
+    currentTab = btn.dataset.tab;
+    renderTopActions(currentTab);
   });
 });
 
-// ── Top-bar actions (per active tab, replaces the old static site title) ──
+// ── Icons (inline SVG, lucide-style strokes) ──
+const ICON_PATHS = {
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  tasks: '<path d="M9 11l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  sum: '<path d="M18 5H6l6 7-6 7h12"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  avito: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  report: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+};
+function icon(name) { return `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name] || ''}</svg>`; }
+document.querySelectorAll('svg[data-icon]').forEach((el) => { el.outerHTML = icon(el.dataset.icon); });
+
+// Per-tab actions. Always rendered for currentTab (also before data arrives), so the bar
+// can never keep a previous tab's buttons.
+const TOP_ACTIONS = {
+  projects: [{ icon: 'plus', label: 'Новый проект', primary: true, run: () => openAddProjectModal() }],
+  analytics: [
+    { icon: 'sum', label: 'Итоги по клиентам', run: () => toggleSummaryPopup() },
+    { icon: 'download', label: 'Экспорт в CSV', run: () => exportDailyMetricsCsv() },
+    { icon: 'avito', label: 'Авито за вчера', run: () => toggleAvitoPanel() },
+    { icon: 'report', label: 'Выгрузка отчёта', run: () => openReportModal() },
+  ],
+};
+
 function renderTopActions(tab) {
   const el = document.getElementById('topActions');
   el.innerHTML = '';
-  if (tab !== 'analytics') document.getElementById('summaryPopup').classList.add('hidden');
-  if (tab !== 'analytics') document.getElementById('avitoPanel').classList.add('hidden');
-  if (tab === 'projects') {
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.textContent = '+ Добавить проект';
-    btn.addEventListener('click', openAddProjectModal);
-    el.appendChild(btn);
-  } else if (tab === 'analytics') {
-    const summaryBtn = document.createElement('button');
-    summaryBtn.className = 'btn ghost';
-    summaryBtn.textContent = 'Σ Сводка';
-    summaryBtn.addEventListener('click', toggleSummaryPopup);
-    el.appendChild(summaryBtn);
-
-    const csvBtn = document.createElement('button');
-    csvBtn.className = 'btn ghost';
-    csvBtn.textContent = '⬇ Скачать CSV';
-    csvBtn.addEventListener('click', exportDailyMetricsCsv);
-    el.appendChild(csvBtn);
-
-    const avitoBtn = document.createElement('button');
-    avitoBtn.className = 'btn ghost';
-    avitoBtn.textContent = '⚡ Авито: вчера';
-    avitoBtn.addEventListener('click', toggleAvitoPanel);
-    el.appendChild(avitoBtn);
-
-    const reportBtn = document.createElement('button');
-    reportBtn.className = 'btn ghost';
-    reportBtn.textContent = '📄 Ежедневный отчёт';
-    reportBtn.addEventListener('click', openReportModal);
-    el.appendChild(reportBtn);
-
-    const keysBtn = document.createElement('button');
-    keysBtn.className = 'btn ghost';
-    keysBtn.textContent = '🔑 Кабинеты Авито';
-    keysBtn.addEventListener('click', openAvitoKeysModal);
-    el.appendChild(keysBtn);
+  if (tab !== 'analytics') {
+    document.getElementById('summaryPopup').classList.add('hidden');
+    document.getElementById('avitoPanel').classList.add('hidden');
   }
+  (TOP_ACTIONS[tab] || []).forEach((a) => {
+    const btn = document.createElement('button');
+    btn.className = a.primary ? 'btn' : 'btn ghost';
+    btn.title = a.label;
+    btn.setAttribute('aria-label', a.label);
+    btn.innerHTML = `${icon(a.icon)}<span class="lbl">${a.label}</span>`;
+    btn.addEventListener('click', () => {
+      if (!bootstrapped) { toast('Данные ещё загружаются…'); return; }
+      a.run();
+    });
+    el.appendChild(btn);
+  });
+}
+
+// ── Notices: background jobs report here, so any tab stays usable meanwhile ──
+function notice(id, { title, text = '', kind = '', busy = false, actions = [] }) {
+  const box = document.getElementById('notices');
+  let el = document.getElementById(`notice-${id}`);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = `notice-${id}`;
+    box.appendChild(el);
+  }
+  el.className = `notice ${kind}`;
+  el.innerHTML = `<div class="notice-head"><b>${busy ? '<span class="spin"></span>' : ''}${escapeHtml(title)}</b><button class="popup-close" aria-label="Закрыть">×</button></div>
+    ${text ? `<div class="notice-text">${escapeHtml(text)}</div>` : ''}
+    ${actions.length ? '<div class="notice-actions"></div>' : ''}`;
+  el.querySelector('.popup-close').addEventListener('click', () => dismissNotice(id));
+  actions.forEach((a) => {
+    const b = document.createElement('button');
+    b.className = `btn small ${a.secondary ? 'secondary' : ''}`;
+    b.textContent = a.label;
+    b.addEventListener('click', a.run);
+    el.querySelector('.notice-actions').appendChild(b);
+  });
+}
+const noticeCloseHooks = {};
+function dismissNotice(id) {
+  const el = document.getElementById(`notice-${id}`);
+  if (el) el.remove();
+  if (noticeCloseHooks[id]) noticeCloseHooks[id]();
+}
+
+function storedJob(key, value) {
+  try {
+    if (value === undefined) return JSON.parse(localStorage.getItem(key) || 'null');
+    if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value));
+  } catch { return null; }
+  return value;
+}
+
+function resumeBackgroundJobs() {
+  const report = storedJob('dash_report_job');
+  if (report && report.id) trackReportJob(report.id);
+  const pull = storedJob('dash_avito_pull');
+  if (pull && pull.date) trackAvitoPull(pull.date);
 }
 
 // ── Modal helpers ──
@@ -479,9 +614,9 @@ function renderProjects() {
   grid.innerHTML = '';
   if (!state.projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
 
-  state.projects.forEach((p) => {
+  orderedAnalyticsProjects().forEach((p) => {
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = `card${p.inactive ? ' inactive' : ''}`;
     card.innerHTML = `<h3>${escapeHtml(p.name)}</h3>`;
 
     const saveField = async (field, value) => {
@@ -513,6 +648,38 @@ function renderProjects() {
     workArea.value = p.currentWork || '';
     workArea.addEventListener('blur', () => saveField('currentWork', workArea.value));
     card.appendChild(workArea);
+
+    // Row colour shown in the Analytics table (set here, no longer by clicking the row there).
+    const colorRow = document.createElement('div');
+    colorRow.className = 'field-row';
+    colorRow.style.marginTop = '12px';
+    colorRow.innerHTML = '<label>Цвет в аналитике</label><div class="swatches"></div>';
+    const COLOR_TITLES = { '': 'Без цвета', green: 'Зелёный', yellow: 'Жёлтый', red: 'Красный', gray: 'Серый' };
+    ROW_COLORS.forEach((c) => {
+      const sw = document.createElement('button');
+      sw.className = `swatch${(p.rowColor || '') === c ? ' on' : ''}`;
+      sw.dataset.color = c;
+      sw.title = COLOR_TITLES[c];
+      sw.setAttribute('aria-label', COLOR_TITLES[c]);
+      sw.addEventListener('click', async () => {
+        await saveField('rowColor', c);
+        colorRow.querySelectorAll('.swatch').forEach((x) => x.classList.toggle('on', x.dataset.color === c));
+        renderAnalytics();
+      });
+      colorRow.querySelector('.swatches').appendChild(sw);
+    });
+    card.appendChild(colorRow);
+
+    const inactiveLabel = document.createElement('label');
+    inactiveLabel.className = 'inactive-toggle';
+    inactiveLabel.innerHTML = `<input type="checkbox"${p.inactive ? ' checked' : ''}> Неактивный клиент (внизу аналитики, не попадает в отчёт)`;
+    inactiveLabel.querySelector('input').addEventListener('change', async (e) => {
+      await saveField('inactive', e.target.checked);
+      renderProjects();
+      renderAnalytics();
+      renderRatings();
+    });
+    card.appendChild(inactiveLabel);
 
     grid.appendChild(card);
   });
@@ -602,24 +769,16 @@ const RAW_LABELS = { budget: 'Бюджет', views: 'Просмотры', contac
 // table instead of sorting alphabetically with active clients, and left out of
 // Ratings entirely (nobody is actively rating them week to week any more).
 const WOUND_DOWN_CLIENTS = new Set(['aydar-ziyazov', 'anna-kramorenko']);
+function isInactive(p) { return Boolean(p.inactive) || WOUND_DOWN_CLIENTS.has(p.id); }
 function orderedAnalyticsProjects() {
-  return [...state.projects].sort((a, b) => (WOUND_DOWN_CLIENTS.has(a.id) ? 1 : 0) - (WOUND_DOWN_CLIENTS.has(b.id) ? 1 : 0));
+  return [...state.projects].sort((a, b) => (isInactive(a) ? 1 : 0) - (isInactive(b) ? 1 : 0));
 }
 
-// Soft status marker a row can be clicked through: none -> green -> yellow -> red -> gray -> none.
+// Soft per-client status colour for the Analytics row, picked on the client's Projects card.
 const ROW_COLORS = ['', 'green', 'yellow', 'red', 'gray'];
-function nextRowColor(current) {
-  return ROW_COLORS[(ROW_COLORS.indexOf(current || '') + 1) % ROW_COLORS.length];
-}
 function applyRowColor(tr, color) {
   ROW_COLORS.forEach((c) => { if (c) tr.classList.remove('row-' + c); });
   if (color) tr.classList.add('row-' + color);
-}
-async function cycleRowColor(p, tr) {
-  const next = nextRowColor(p.rowColor);
-  p.rowColor = next;
-  applyRowColor(tr, next);
-  await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, rowColor: next }) });
 }
 
 let analyticsView = 'day'; // 'day' | 'total'
@@ -684,14 +843,11 @@ function renderAnalytics() {
     const tr = document.createElement('tr');
     tr.dataset.projectId = p.id;
     applyRowColor(tr, p.rowColor);
-    tr.addEventListener('click', (e) => {
-      if (e.target.closest('input, button, textarea, select')) return;
-      cycleRowColor(p, tr);
-    });
 
     const nameTd = document.createElement('td');
     nameTd.className = 'name-cell';
     nameTd.textContent = p.name;
+    if (isInactive(p)) nameTd.insertAdjacentHTML('beforeend', '<span class="inactive-tag">неактивный</span>');
     tr.appendChild(nameTd);
 
     if (analyticsView === 'day') {
@@ -842,12 +998,15 @@ document.getElementById('summaryCopyBtn').addEventListener('click', async () => 
 });
 
 // ══════════════════════ AVITO: ВЧЕРА (бета) ══════════════════════
-// Pulls yesterday's views / contacts / spend + current advance straight from each client's
-// Avito cabinet (linked via "🔑 Кабинеты Авито"), one request per client so rows fill in
-// as they arrive, in the same order as the Analytics table.
+// Yesterday's views / contacts / spend + current advance from every linked Avito cabinet.
+// The pull runs on the server (and is prepared automatically every morning), so the panel
+// just shows its state: press "Авито за вчера", go do something else, and a notice pops up
+// when all cabinets are done — or reopen the panel later, the result is kept for the day.
 let avitoLinks = null; // { accounts, links }
-let avitoRows = {}; // projectId -> response of /avito-yesterday
+let avitoRows = {}; // projectId -> per-cabinet result from the pull
 let avitoDate = null;
+let avitoPull = null;
+let avitoPollTimer = null;
 
 async function loadAvitoLinks() {
   const res = await api('/api/dashboard/avito-links');
@@ -859,50 +1018,92 @@ function linkedAccountId(projectId) {
   return l ? l.accountId : null;
 }
 
-function toggleAvitoPanel() {
+async function toggleAvitoPanel() {
   const panel = document.getElementById('avitoPanel');
   if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
   document.getElementById('summaryPopup').classList.add('hidden');
   panel.classList.remove('hidden');
-  loadAvitoYesterday();
-}
-
-async function loadAvitoYesterday() {
   avitoDate = addDays(todayIso(), -1);
-  avitoRows = {};
-  document.getElementById('avitoPanelSub').textContent = `${formatDayLabel(avitoDate)} · загружаю…`;
   renderAvitoPanel();
   await loadAvitoLinks();
+  const res = await api(`/api/dashboard/avito-pull?date=${avitoDate}`);
+  if (res && res.pull) {
+    applyAvitoPull(res.pull);
+    if (res.pull.status !== 'done') trackAvitoPull(res.pull.date); // e.g. the morning auto-pull still running
+  } else startAvitoPull(false); // nothing prepared for yesterday yet — start it now
   renderAvitoPanel();
-  const queue = orderedAnalyticsProjects().filter((p) => linkedAccountId(p.id));
-  const worker = async () => {
-    while (queue.length) {
-      const p = queue.shift();
-      const res = await api(`/api/dashboard/avito-yesterday?projectId=${encodeURIComponent(p.id)}&date=${avitoDate}`, {}, null, false);
-      avitoRows[p.id] = res || { errors: ['Сервер не ответил'] };
-      renderAvitoPanel();
+}
+
+async function startAvitoPull(force) {
+  avitoDate = addDays(todayIso(), -1);
+  const res = await api('/api/dashboard/avito-pull', { method: 'POST', body: JSON.stringify({ date: avitoDate, force }) });
+  if (res && res.pull) { applyAvitoPull(res.pull); trackAvitoPull(avitoDate); }
+}
+
+function applyAvitoPull(pull) {
+  avitoPull = pull;
+  avitoRows = pull.results || {};
+  renderAvitoPanel();
+}
+
+// Polls the server-side pull until it's done, then leaves a notice with a short per-cabinet
+// summary. Remembered in localStorage so a reload keeps tracking it.
+function trackAvitoPull(date) {
+  storedJob('dash_avito_pull', { date });
+  clearTimeout(avitoPollTimer);
+  const tick = async () => {
+    const res = await api(`/api/dashboard/avito-pull?date=${date}`, {}, null, false);
+    const pull = res && res.pull;
+    if (!pull) { storedJob('dash_avito_pull', null); dismissNotice('avito'); return; }
+    if (date === avitoDate) applyAvitoPull(pull);
+    const total = Object.keys(pull.results || {}).length + (pull.pending || []).length;
+    if (pull.status !== 'done') {
+      notice('avito', { title: 'Авито за вчера: собираю данные', text: `Готово кабинетов: ${Object.keys(pull.results || {}).length} из ${total}. Можно работать в других разделах.`, busy: true });
+      avitoPollTimer = setTimeout(tick, 5000);
+      return;
     }
+    storedJob('dash_avito_pull', null);
+    const failed = Object.entries(pull.results || {}).filter(([, r]) => r.errors && r.errors.length);
+    const nameOf = (id) => (state.projects.find((p) => p.id === id) || {}).name || id;
+    notice('avito', {
+      title: 'Авито за вчера: готово',
+      kind: failed.length ? 'bad' : 'ok',
+      text: failed.length
+        ? `Получено: ${total - failed.length} из ${total}.\nС ошибками: ${failed.map(([id]) => nameOf(id)).join(', ')}`
+        : `Все ${total} кабинетов загружены.`,
+      actions: [{ label: 'Открыть', run: () => { dismissNotice('avito'); if (document.getElementById('avitoPanel').classList.contains('hidden')) openAnalyticsAnd(toggleAvitoPanel); } }],
+    });
   };
-  await Promise.all([worker(), worker(), worker()]);
-  const linked = orderedAnalyticsProjects().filter((p) => linkedAccountId(p.id)).length;
-  document.getElementById('avitoPanelSub').textContent = `${formatDayLabel(avitoDate)} · подключено кабинетов: ${linked} из ${state.projects.length}`;
+  tick();
+}
+
+function openAnalyticsAnd(fn) {
+  const tabBtn = document.querySelector('.tab-btn[data-tab="analytics"]');
+  if (currentTab !== 'analytics') tabBtn.click();
+  fn();
 }
 
 function renderAvitoPanel() {
   const table = document.getElementById('avitoPanelTable');
+  const sub = document.getElementById('avitoPanelSub');
   const n = (v) => (v == null ? '—' : Math.round(v).toLocaleString('ru-RU'));
   const total = { views: 0, contacts: 0, spend: 0 };
+  const pending = new Set((avitoPull && avitoPull.pending) || []);
+  if (!avitoPull) sub.textContent = `${formatDayLabel(avitoDate || addDays(todayIso(), -1))} · загрузка…`;
+  else if (avitoPull.status !== 'done') sub.textContent = `${formatDayLabel(avitoPull.date)} · собираю данные, можно закрыть окно — придёт уведомление`;
+  else sub.textContent = `${formatDayLabel(avitoPull.date)} · собрано ${new Date(avitoPull.finishedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
   const rows = orderedAnalyticsProjects().map((p) => {
-    if (!avitoLinks) return `<tr><td>${escapeHtml(p.name)}</td><td colspan="4" class="muted">…</td></tr>`;
-    if (!linkedAccountId(p.id)) return `<tr><td>${escapeHtml(p.name)}</td><td colspan="4" class="muted">кабинет не подключен</td></tr>`;
+    const name = `${escapeHtml(p.name)}${isInactive(p) ? ' <span class="src">неактивный</span>' : ''}`;
+    if (!avitoLinks) return `<tr><td>${name}</td><td colspan="4" class="muted">…</td></tr>`;
+    if (!linkedAccountId(p.id)) return `<tr><td>${name}</td><td colspan="4" class="muted">кабинет не подключен</td></tr>`;
     const r = avitoRows[p.id];
-    if (!r) return `<tr><td>${escapeHtml(p.name)}</td><td colspan="4" class="muted">загрузка…</td></tr>`;
+    if (!r) return `<tr><td>${name}</td><td colspan="4" class="muted">${pending.has(p.id) ? 'в очереди…' : isInactive(p) ? 'не загружается' : '—'}</td></tr>`;
     ['views', 'contacts', 'spend'].forEach((k) => { if (r[k] != null) total[k] += r[k]; });
     const warn = r.errors && r.errors.length ? `<span class="warn" title="${escapeHtml(r.errors.join('\n'))}">⚠</span>` : '';
     const advance = r.advance != null
       ? `${n(r.advance)} ₽`
       : r.wallet != null ? `${n(r.wallet)} ₽<span class="src">кошелёк</span>` : '—';
-    return `<tr><td>${escapeHtml(p.name)}${warn}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : `${n(r.spend)} ₽`}</td><td>${advance}</td></tr>`;
+    return `<tr><td>${name}${warn}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : `${n(r.spend)} ₽`}</td><td>${advance}</td></tr>`;
   });
   table.innerHTML = `
     <thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th>Аванс</th></tr></thead>
@@ -931,13 +1132,17 @@ async function applyAvitoToTable() {
       saved += 1;
     }
   }
-  currentAnalyticsDay = avitoDate;
+  currentAnalyticsDay = avitoDate || currentAnalyticsDay;
   renderAnalytics();
   toast(`Внесено клиентов: ${saved}`);
 }
 
 document.getElementById('avitoPanelClose').addEventListener('click', () => document.getElementById('avitoPanel').classList.add('hidden'));
-document.getElementById('avitoPanelRefresh').addEventListener('click', loadAvitoYesterday);
+document.getElementById('avitoPanelRefresh').addEventListener('click', () => {
+  if (avitoPull && avitoPull.status !== 'done') { toast('Уже собираю — дождитесь уведомления'); return; }
+  startAvitoPull(true);
+});
+document.getElementById('avitoPanelSettings').addEventListener('click', () => openAvitoKeysModal());
 document.getElementById('avitoPanelApply').addEventListener('click', applyAvitoToTable);
 
 // ── Кабинеты Авито: bulk paste of keys + manual linking ──
@@ -986,15 +1191,17 @@ function renderAvitoLinksList() {
   ).join('');
   el.querySelectorAll('select').forEach((sel) => sel.addEventListener('change', async () => {
     const res = await api('/api/dashboard/avito-link', { method: 'POST', body: JSON.stringify({ projectId: sel.dataset.project, accountId: sel.value || null }) });
-    if (res) { avitoLinks = res; renderAvitoLinksList(); toast('Сохранено'); }
+    if (res) { avitoLinks = res; renderAvitoLinksList(); renderAvitoPanel(); toast('Сохранено'); }
   }));
 }
 
-// ══════════════════════ ЕЖЕДНЕВНЫЙ ОТЧЁТ (через рутину Claude Code) ══════════════════════
+// ══════════════════════ ВЫГРУЗКА ОТЧЁТА (через рутину Claude Code) ══════════════════════
 // The worker snapshots the Analytics table for the period, fires the Claude Code routine,
 // and the routine posts back "Текущие наблюдения" per client; the .docx is then assembled
-// by the worker in the agency's usual format. Polled here until the routine answers.
+// by the worker in the agency's usual format. The modal closes right after "Сформировать";
+// progress and the download button live in a notice, so every tab stays usable meanwhile.
 let reportPollTimer = null;
+const REPORT_TIMEOUT_MS = 15 * 60 * 1000;
 
 async function openReportModal() {
   const info = await api('/api/dashboard/report-last');
@@ -1007,74 +1214,75 @@ async function openReportModal() {
     if (next >= addDays(yesterday, -6)) from = next;
   }
   openModal(`
-    <h3>Ежедневный отчёт</h3>
-    <div class="hint">Цифры берутся из таблицы аналитики. Если период больше одного дня — в отчёте будет блок «За DD–DD месяц» вместо «Вчера».</div>
+    <h3>Выгрузка отчёта</h3>
+    <div class="hint">Цифры берутся из таблицы аналитики, неактивные клиенты в отчёт не попадают. Если период больше одного дня — в отчёте будет блок «За DD–DD месяц» вместо «Вчера». Отчёт готовится в фоне — когда будет готов, появится уведомление с кнопкой «Скачать».</div>
     <div class="date-row">
       <div><label>С</label><input type="date" id="mRepFrom" value="${from}"></div>
       <div><label>По</label><input type="date" id="mRepTo" value="${yesterday}"></div>
     </div>
-    <div id="mRepStatus"></div>
     <div class="actions">
-      <button class="btn secondary" id="mRepClose">Закрыть</button>
+      <button class="btn secondary" onclick="closeModal()">Отмена</button>
       <button class="btn" id="mRepGo">Сформировать</button>
     </div>
   `);
-  document.getElementById('mRepClose').addEventListener('click', () => { clearTimeout(reportPollTimer); closeModal(); });
   document.getElementById('mRepGo').addEventListener('click', async () => {
     const dateFrom = document.getElementById('mRepFrom').value;
     const dateTo = document.getElementById('mRepTo').value;
-    const btn = document.getElementById('mRepGo');
-    btn.disabled = true;
+    closeModal();
+    notice('report', { title: 'Выгрузка отчёта: запускаю…', busy: true });
     const res = await api('/api/dashboard/report-job', { method: 'POST', body: JSON.stringify({ dateFrom, dateTo }) });
-    btn.disabled = false;
-    if (res && res.job) pollReportJob(res.job, Date.now());
+    if (!res || !res.job) { notice('report', { title: 'Выгрузка отчёта не запустилась', kind: 'bad', text: 'Попробуйте ещё раз.' }); return; }
+    storedJob('dash_report_job', { id: res.job.id, startedAt: Date.now() });
+    trackReportJob(res.job.id);
   });
 }
 
-function renderReportStatus(job) {
-  const el = document.getElementById('mRepStatus');
-  if (!el) return;
-  const labels = {
-    queued: '⏳ Запускаю рутину Claude Code…',
-    sent: '⏳ Рутина Claude Code запущена, ждём ответа…',
-    running: '✍️ Claude пишет наблюдения по клиентам…',
-    done: '✅ Отчёт готов',
-    not_configured: '⚠️ Рутина не подключена',
-    failed: '⚠️ Рутина не ответила',
-  };
-  const finished = ['done', 'not_configured', 'failed'].includes(job.status);
-  el.innerHTML = `<div class="job-status">
-    <b>${labels[job.status] || job.status}</b> · ${escapeHtml(job.periodLabel)}, клиентов: ${job.clientsCount}
-    ${job.sessionUrl ? `<br><a href="${escapeHtml(job.sessionUrl)}" target="_blank" rel="noopener">Открыть сессию Claude</a>` : ''}
-    ${job.error ? `<br>${escapeHtml(job.error)}` : ''}
-    ${job.warnings && job.warnings.length ? `<ul>${job.warnings.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : ''}
-    <div class="actions" style="margin-top:12px">
-      <button class="btn ${job.status === 'done' ? '' : 'secondary'} small" id="mRepDownload">
-        ⬇ ${job.status === 'done' ? 'Скачать отчёт' : finished ? 'Скачать с авто-наблюдениями' : 'Скачать черновик сейчас'}
-      </button>
-    </div>
-  </div>`;
-  document.getElementById('mRepDownload').addEventListener('click', () => downloadReport(job));
-}
-
-async function pollReportJob(job, startedAt) {
+function trackReportJob(id) {
   clearTimeout(reportPollTimer);
-  renderReportStatus(job);
-  if (['done', 'not_configured', 'failed'].includes(job.status)) return;
-  if (Date.now() - startedAt > 15 * 60 * 1000) {
-    renderReportStatus({ ...job, status: 'failed', error: 'Рутина не ответила за 15 минут.' });
-    return;
-  }
-  reportPollTimer = setTimeout(async () => {
-    if (!document.getElementById('overlay').classList.contains('open') || !document.getElementById('mRepStatus')) return;
-    const res = await api(`/api/dashboard/report-job?id=${job.id}`);
-    pollReportJob((res && res.job) || job, startedAt);
-  }, 5000);
+  const started = (storedJob('dash_report_job') || {}).startedAt || Date.now();
+  const tick = async () => {
+    const res = await api(`/api/dashboard/report-job?id=${id}`, {}, null, false);
+    const job = res && res.job;
+    if (!job) { storedJob('dash_report_job', null); dismissNotice('report'); return; }
+    const period = `${job.periodLabel}, клиентов: ${job.clientsCount}`;
+    const warnings = job.warnings && job.warnings.length ? `\n${job.warnings.join('\n')}` : '';
+    const download = { label: 'Скачать', run: () => downloadReport(job) };
+    const session = job.sessionUrl ? [{ label: 'Сессия Claude', secondary: true, run: () => window.open(job.sessionUrl, '_blank', 'noopener') }] : [];
+    if (job.status === 'done') {
+      storedJob('dash_report_job', null);
+      notice('report', { title: 'Отчёт готов', kind: 'ok', text: period + warnings, actions: [download] });
+      return;
+    }
+    const timedOut = Date.now() - started > REPORT_TIMEOUT_MS;
+    if (job.status === 'not_configured' || job.status === 'failed' || timedOut) {
+      storedJob('dash_report_job', null);
+      notice('report', {
+        title: timedOut ? 'Claude не ответил за 15 минут' : job.status === 'not_configured' ? 'Рутина Claude не подключена' : 'Рутина Claude не запустилась',
+        kind: 'bad',
+        text: `${period}\nМожно скачать отчёт с автоматическими наблюдениями.${warnings}`,
+        actions: [{ ...download, label: 'Скачать с авто-наблюдениями' }, ...session],
+      });
+      return;
+    }
+    notice('report', {
+      title: job.status === 'running' ? 'Claude пишет наблюдения…' : 'Отчёт готовится…',
+      text: `${period}. Можно работать в других разделах — здесь появится кнопка «Скачать».`,
+      busy: true,
+      actions: [{ label: 'Скачать черновик сейчас', secondary: true, run: () => downloadReport(job) }, ...session],
+    });
+    reportPollTimer = setTimeout(tick, 5000);
+  };
+  tick();
 }
+noticeCloseHooks.report = () => { clearTimeout(reportPollTimer); storedJob('dash_report_job', null); };
+noticeCloseHooks.avito = () => { clearTimeout(avitoPollTimer); storedJob('dash_avito_pull', null); };
 
 async function downloadReport(job) {
-  const res = await fetch(`${API_BASE}/api/dashboard/report-job/file?id=${job.id}`, { headers: { 'x-dashboard-password': getPassword() } });
-  if (!res.ok) { toast('Не удалось скачать'); return; }
+  let res;
+  try {
+    res = await apiFetch(`/api/dashboard/report-job/file?id=${job.id}`, { headers: { 'x-dashboard-password': getPassword() } });
+  } catch { res = null; }
+  if (!res || !res.ok) { toast('Не удалось скачать'); return; }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1083,7 +1291,7 @@ async function downloadReport(job) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 // ══════════════════════ RATINGS (по проектам, по неделям) ══════════════════════
@@ -1218,7 +1426,7 @@ function renderRatings() {
 
   const grid = document.getElementById('ratingsGrid');
   grid.innerHTML = '';
-  const projects = state.projects.filter((p) => !WOUND_DOWN_CLIENTS.has(p.id));
+  const projects = state.projects.filter((p) => !isInactive(p));
   if (!projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
 
   projects.forEach((p) => {
@@ -1284,6 +1492,12 @@ function renderRatings() {
 // ── util ──
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Auto-login last, once every const above (icons, top-bar actions…) is initialised.
+if (isUnlocked()) {
+  document.getElementById('gate').style.display = 'none';
+  boot();
 }
 </script>
 </body>
