@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Елена Лимперис — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для партнёров</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1230295402?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Елена Лимперис - Подкаст 1"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1230295402" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">«Хвастаться пока нечем»: Елена Лимперис о том, как за год построить школу LINGRAVIA и не приукрашивать результаты</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Елена Лимперис — преподаватель иностранных языков с почти 20-летним стажем, за год построившая онлайн-школу греческого языка LINGRAVIA с командой из 12–15 человек и 70 учениками. В выпуске — честно, без приукрашивания: почему именно греческий, как упаковать личный опыт в продукт школы, как отбирать и мотивировать преподавателей, и какие продукты выведут школу на выручку в 100 000 € в месяц за три года.
+
+🔗 Школа LINGRAVIA: [ссылка]
+🔗 Написать Елене: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">онлайн-школа, EdTech, подкаст для предпринимателей, найм преподавателей, школа греческого языка, репетиторский бизнес, управление школой, Елена Лимперис, LINGRAVIA</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #предприниматель #образование #греческийязык #EdTech #найм #онлайншкола #бизнесобразование</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/elena-limperis-podcast1-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">«Хвастаться пока нечем»: почему я не стала приукрашивать результаты своей годовалой школы</h1>
+
+      <p>Почти 20 лет я преподаю иностранные языки — начинала ещё студенткой и всё это время работала как индивидуальный предприниматель. А в августе-сентябре прошлого года решила основать свою школу — LINGRAVIA. Причина была простая: масштабироваться дальше в одиночку было некуда, свободных часов больше не было, а хотелось делиться знаниями с большим количеством людей. Единственным выходом оказалось открыть школу.</p>
+
+      <h2>Почему я не стала приукрашивать результаты школы</h2>
+      <p>В анкете для этого подкаста я прямо написала, что пока хвастаться нечем — хотя предприниматели часто приукрашивают на старте. Но, если честно, я, наверное, даже немного поскромничала: за год у нас уже довольно хорошие результаты, просто ещё не было большого объёма подтверждённых сертификатов — я раньше готовила к экзаменам и знаю, как это делать, но показать, скажем, 100–200 пройденных экзаменов пока не могу. И мне кажется, нет смысла приукрашивать: мне вообще нравится начинать что-то новое, и это нормально — постоянно находиться в начале какого-то пути.</p>
+
+      <h2>Почему именно греческий язык</h2>
+      <p>LINGRAVIA начиналась именно с греческого, хотя 17 лет до этого я преподавала английский. Я почувствовала, что на греческий есть спрос — плюс мне действительно интересно его преподавать: я живу в Греции с 2006 года, уже двадцать лет. Мои предсказания оправдались, когда я начала над этим работать. Но на самом деле мы позиционируем себя как школа иностранных языков в целом, а греческий — это модель, которую мы сейчас апробируем: рынок совсем не самый большой, если смотреть в разрезе языков, зато довольно обеспеченный — особенно если учесть Кипр, где без знания греческого сейчас не дают гражданство.</p>
+
+      <h2>Как я упаковала личный опыт в продукт школы</h2>
+      <p>У меня два высших образования — переводчик английского языка в Омске и преподаватель иностранных языков с фокусом на новые технологии в МГУ. Это очень хорошая база, плюс опыт, плюс, наверное, и талант — желание работать именно в этой сфере. Но когда люди ищут себе преподавателя или школу, для них важен не только факт, что человек живёт в стране и учил язык лично — всем важно, что преподаватель профессионален: у него есть методическая база, он знает разные методы и умеет их применять под разные ситуации. Клиенты всегда спрашивают, действительно ли перед ними преподаватели, — и это вызывает доверие.</p>
+
+      <h2>Опыт взрослого изучения языка с нуля</h2>
+      <p>В 2006 году я переехала в Грецию уже взрослым человеком и начала учить греческий с нуля — и этот опыт очень сильно помогает выстраивать обучение в школе. Разница между изучением языка в детстве и во взрослом возрасте большая: взрослому важен не просто набор знаний, а то, как их можно применить в жизни — зачем тебе этот язык, как работают правила и лексика. Ты сразу общаешься, выполняешь реальные коммуникативные задачи, живёшь в среде — и от этого даже зависит отношение к тебе местных жителей.</p>
+
+      <h2>Метод: минимум теории, много практики</h2>
+      <p>Наш подход — коммуникативный: немного грамматики и много практики. Был случай с очень сильным, мотивированным и талантливым учеником, который раньше занимался по курсу, построенному почти целиком на новых грамматических темах каждый урок, — а этого недостаточно для языка. Это как заниматься спортом и постоянно смотреть новые упражнения, ни разу их не выполнив: нужна практика. У нас наоборот — минимум теории, зато её сразу отрабатываем и закрепляем, поэтому человек сразу чувствует, что может пользоваться языком, а не просто накапливает знания. Мы не ставим цель просто сдать экзамен уровня A2 — это бытовой язык, где грамматика лишь небольшая часть, и мы дозированно даём информацию, а дальше практикуем её через упражнения, диалоги и повторения.</p>
+
+      <h2>Кейс: ошибки, которые ученица не замечала за собой</h2>
+      <p>Был и другой, более сложный кейс: девушка была уверена, что уже хорошо говорит по-гречески, а на самом деле говорила с кучей ошибок. Убедить человека, что дело не «немножко не так», а «совсем не так», — тонкая история, чисто человеческая. Она жила в стране и была уверена, что её понимают, — а когда работаешь в окружении профессионалов, недостаточно, чтобы тебя просто понимал муж: на работе нужно говорить без ошибок, иначе окружающие невольно занижают впечатление о человеке, каким бы умным он ни был.</p>
+      <p>На уроках это решается снижением темпа: когда человек начинает говорить с ошибками, я его немного притормаживаю и повторяю вместе с ним правильные формы. Постепенно человек сам начинает понимать, что долго говорил неправильно, — и это был не единичный случай: абсолютно во всех подобных случаях люди начинают замедляться сами и понимают, что это им на пользу.</p>
+
+      <h2>Как я отбираю и оцениваю преподавателей</h2>
+      <p>Оценить уровень греческого мне на самом деле просто: достаточно поговорить с человеком на языке, провести интервью — и если он говорит правильно, без ошибок, это уже очень важная составляющая. Важно и профессиональное образование — чтобы человек не просто «приобрёл» язык, переехав в страну, а действительно изучал его, прошёл определённое количество уроков по грамматике и лексике.</p>
+      <p>Для начинающих уровней мы сотрудничаем с билингвами — им важно, чтобы объяснения на русском звучали грамотно, а не на ломаном языке, при этом греческий у билингва тоже на высоте. Для более высоких уровней уже отбираем чистых носителей — там нет соблазна переключиться на русский на уроке.</p>
+
+      <h2>Что я ценю в людях, которых нанимаю</h2>
+      <p>Я ценю доброту, старания, желание помочь коллегам — но это не значит, что мы отбираем только по личным качествам. Всё-таки вначале самое важное — профессионализм, и только если он есть, я смотрю, совпадаем ли мы по ценностям. Доброта здесь — это готовность действительно помочь ученику, а не просто отработать часы. Мы работаем со взрослой аудиторией, и часто у людей нет времени на домашнее задание — у них работа, семья, — и очень важно войти в положение, быть готовым ещё раз объяснить.</p>
+      <blockquote>Нужно работать над собой — даже случайная подработка может перерасти во что-то более масштабное, в дело всей жизни. Главное — не останавливаться, расти и использовать возможности, которые появляются.</blockquote>
+
+      <h2>Пробный период: что происходит, если не сработалось</h2>
+      <p>Несовпадения случаются нечасто, но бывают. Обычно мы обсуждаем с преподавателем, в чём проблема, — и моя задача как руководителя понять, чем недоволен клиент. Преподаватели обычно идут навстречу и исправляются, поэтому проблемы решаются. Но иногда преподавателя приходится менять не потому, что он плохой специалист — просто случается личная несовместимость с конкретным клиентом, вплоть до темперамента. Как таковых увольнений у нас практически нет: если заявок много, я скорее отдам предпочтение преподавателю, у которого стабильно держатся ученики и небольшой отток.</p>
+
+      <h2>Куда мы растём: цифровой курс, новые языки, новые страны</h2>
+      <p>Сейчас у нас около 70 постоянных учеников, штат — 12–15 человек, включая семь преподавателей, а выручка — 10–15 тысяч евро в месяц. В пересчёте на сотрудника это скромная цифра, и я знаю, на чём сфокусироваться: наш основной продукт — уроки, индивидуальные или групповые, — и чтобы масштабировать знания на большую аудиторию непропорционально росту часов преподавателей, нужно добавить продукт. Сейчас я работаю над цифровым курсом на платформе — с поддержкой кураторов и преподавателей, — который мы уже тестируем.</p>
+      <p>Если считать не просто умножением на три года, а с ускорением, через три года выручка должна быть минимум 100 000 евро в месяц — я считаю, что это реалистично. При этом хочу, чтобы штат преподавателей рос непропорционально росту числа учеников — за счёт новых продуктов вроде разговорных клубов и дополнительных курсов, которые могут покупать даже клиенты других школ, не отказываясь от своих текущих преподавателей. Помимо роста продуктов, мы сейчас подключаем испанский, немецкий и английский языки — с прицелом на экспатов уже в других странах, а не только в Греции и на Кипре.</p>
+
+      <h2>Как со мной связаться</h2>
+      <p>Проще всего написать мне в Telegram — ссылка есть на нашем канале, это моё имя и фамилия через подчёркивание. Можно и в WhatsApp, там я тоже быстро отвечаю. Пишите по любым вопросам — я открыта к сотрудничеству, будь то партнёрство, инвестиции или что угодно ещё.</p>
+
+      <p class="art-signature">Елена Лимперис,<br>основатель школы LINGRAVIA</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про честность в бизнесе</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🙈 В анкете для подкаста я написала: «хвастаться пока нечем». Хотя предприниматели обычно приукрашивают</h3>
+        <p>Моей школе LINGRAVIA чуть больше года. И я решила не рисовать красивую картинку, которой пока нет.</p>
+        <h4>Если честно, я даже поскромничала</h4>
+        <p>За год у нас уже неплохие результаты — я 17 лет готовила к экзаменам и знаю, как это делать. Просто пока нет большого объёма подтверждённых сертификатов, чтобы показать конкретную цифру вроде «100–200 сданных экзаменов».
+
+И знаете что? Мне кажется, нет смысла приукрашивать. Мне вообще нравится начинать что-то новое — и это нормально: постоянно находиться в начале какого-то пути.</p>
+        <p>💬 Честность про то, чего у тебя пока нет, — работает лучше глянцевой картинки.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про метод обучения</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📚 Ко мне пришёл сильный, мотивированный ученик — совершенно демотивированный языком. Вот в чём была причина</h3>
+        <p>До нас у него был курс, где почти каждый урок — новая грамматическая тема. Знаний он набрал много. А пользоваться языком так и не научился.</p>
+        <h4>В чём разница</h4>
+        <p>Это как заниматься спортом и смотреть новые упражнения одно за другим, ни разу их не выполнив. Нужна практика — а не бесконечный поток теории.
+
+У нас наоборот: минимум теории, но её мы сразу отрабатываем и закрепляем. Через упражнения, диалоги, повторения — прежде чем двигаться дальше.</p>
+        <p>Человек сразу чувствует, что может пользоваться языком, — а не просто накапливает знания, которыми боится воспользоваться.</p>
+        <p>🎯 Меньше новой теории. Больше практики того, что уже дали.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс с ошибками</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>😳 Ученица была уверена, что хорошо говорит по-гречески. А говорила с кучей ошибок</h3>
+        <p>Сложный кейс: как объяснить человеку, что дело не «немножко не так», а «совсем не так» — и не потерять его как клиента?</p>
+        <h4>Это чисто человеческая история</h4>
+        <p>Она жила в стране и была уверена, что её понимают, — и это правда, муж поймёт и не осудит. Но на работе, в окружении профессионалов, этого недостаточно: там нужно говорить без ошибок, иначе окружающие невольно занижают впечатление о человеке, каким бы умным он ни был.</p>
+        <p>На уроке я просто снижаю темп, когда человек начинает ошибаться, и повторяю вместе с ним правильную форму. Постепенно он сам понимает, что долго говорил неправильно — и это работает абсолютно во всех похожих случаях, не только в этом одном.</p>
+        <p>🤝 Иногда самое сложное в преподавании — не объяснить тему, а мягко сказать правду.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про отбор преподавателей</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🎙 Как я оцениваю уровень греческого у кандидата в преподаватели? Просто разговариваю с ним</h3>
+        <p>Никакого сложного теста. Мне достаточно провести интервью на греческом — и сразу понятно, говорит человек правильно или нет.</p>
+        <h4>Но одного языка мало</h4>
+        <p>Важно, чтобы преподаватель действительно изучал язык — прошёл определённое количество уроков по грамматике и лексике, — а не просто «приобрёл» его, переехав жить в страну. Это разные вещи.
+
+Для начинающих уровней мы берём билингвов: им важно, чтобы объяснения на русском звучали грамотно, а не на ломаном языке. А для более высоких уровней — уже чистых носителей, там нет соблазна перейти на русский.</p>
+        <p>✅ Профессиональная база — это не формальность. Это то, что отличает знание языка от умения его преподавать.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про рост школы</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>📈 Наша выручка сейчас — 10–15 тысяч евро в месяц. Через три года хочу минимум 100 000</h3>
+        <p>У нас 70 учеников, команда из 12–15 человек, включая семь преподавателей. В пересчёте на сотрудника цифра скромная — и я точно знаю, что с этим делать.</p>
+        <h4>Дело не в том, чтобы просто нанять больше людей</h4>
+        <p>Сейчас наш продукт — это уроки, индивидуальные или групповые. Чтобы масштабировать знания на большую аудиторию непропорционально росту часов преподавателей, нужно добавить продукт, а не просто увеличивать штат.
+
+Поэтому сейчас я работаю над цифровым курсом на платформе — с поддержкой кураторов и преподавателей. Плюс подключаем испанский, немецкий, английский — с прицелом на экспатов уже не только в Греции и на Кипре.</p>
+        <p>🚀 Рост — это не «умножить на три». Это ускорение за счёт новых продуктов.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/elena-limperis-podcast1-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. С чего началась школа LINGRAVIA</a></li>
+        <li><a href="#t2">2. Честность вместо приукрашивания</a></li>
+        <li><a href="#t3">3. Сколько сейчас учеников и почему именно греческий</a></li>
+        <li><a href="#t4">4. Образование и личный опыт изучения языка</a></li>
+        <li><a href="#t5">5. Дополнительные услуги и команда школы</a></li>
+        <li><a href="#t6">6. Как удалось быстро набрать команду</a></li>
+        <li><a href="#t7">7. Выручка и фокус на расширение продуктов</a></li>
+        <li><a href="#t8">8. Метод: минимум теории, много практики</a></li>
+        <li><a href="#t9">9. Кейс: ошибки, которые не замечает сам человек</a></li>
+        <li><a href="#t10">10. Отбор преподавателей и носители языка</a></li>
+        <li><a href="#t11">11. Личные качества при найме</a></li>
+        <li><a href="#t12">12. Пробный период и несовпадения</a></li>
+        <li><a href="#t13">13. Личное: фортепиано, теннис и бизнес без себя</a></li>
+        <li><a href="#t14">14. Видение через 3–5 лет</a></li>
+        <li><a href="#t15">15. Выход за пределы ниши экспатов</a></li>
+        <li><a href="#t16">16. Совет самой себе много лет назад</a></li>
+        <li><a href="#t17">17. Контент и контакты</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. С чего началась школа LINGRAVIA</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы преподаёте языки почти 20 лет, начинали ещё студенткой и всё это время работали как индивидуальный предприниматель. А в августе-сентябре решили основать свою школу. С чем связан такой переход?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Да, действительно, я очень долго преподавала и просто в какой-то момент уже осознала, что масштабироваться мне уже некуда, потому что у меня уже не было свободных часов. А хотелось, как всегда, поделиться знаниями, помочь большему количеству людей. И единственный выход, который я нашла, — это основание школы.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть на самом деле, чтобы больше отдыхать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Ну, не совсем так. Появилась возможность масштабировать.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. Честность вместо приукрашивания</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В анкете вы прямо сказали, что пока хвастаться нечем в школе, потому что в самом начале. А предприниматели часто приукрашивают. Почему вы решили вот так прямо правду сказать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Ну я, наверное, может быть, даже немного поскромничала, потому что всё равно за год я считаю, что уже довольно хорошие результаты. Просто ещё пока не было сертификатов, полученных в таком большом объёме. Конечно, я раньше готовила к экзаменам, знаю, как это делать. Но вот прямо чтобы показать какое-то количество, там 100–200 пройденных экзаменов, — не было ещё такого.</p>
+        <p>И потом нет в этом смысла, мне кажется, приукрашивать, потому что мне нравится всегда начинать что-то новое. И мне кажется, это нормально — всегда находиться в начале какого-то пути. Поэтому я думаю, что нет смысла что-то приукрашивать.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Сколько сейчас учеников и почему именно греческий</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А сколько у вас учеников сейчас, преподавателей?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Сейчас учеников у нас прямо вот постоянных, которые сейчас учатся летом, потому что сейчас небольшой спад, люди на каникулах, в отпусках, — около 70 учеников.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Уже прилично. LINGRAVIA — это школа греческого языка для русскоязычных экспатов в Греции и на Кипре. Такая узкая ниша, при том что вы обучали английскому языку семнадцать лет. Почему именно греческий?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Именно греческий, потому что я почувствовала, что есть спрос на греческий. Помимо того, что мне, конечно же, интересно преподавать греческий, потому что я живу здесь уже много лет — с 2006 года, то есть ровно 20 лет в этом году. И мои предсказания оправдались, когда я начала над этим работать. Поэтому именно с греческого мы начали, но это всего лишь небольшая ниша на самом деле.</p>
+        <p>На самом деле мы себя позиционируем как школа иностранных языков, а мы просто апробируем пока модель на греческом языке. Это не самый большой рынок, если смотреть в разрезе языков.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Мне кажется, довольно обеспеченный — если учитывать Кипр и то, что люди, которые там живут, очень хотят получить кипрское гражданство, а без знания греческого сейчас не дают.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>В настоящее время да, мы прямо в тему попали.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Образование и личный опыт изучения языка</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас два высших образования — переводчик английского языка в Омске и преподаватель иностранных языков с фокусом на новые технологии в МГУ. Эти образования вам сильно помогли в основании школы?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Да, конечно, очень сильно. Это очень хорошая база — оба моих образования, плюс опыт, плюс, наверное, и талант тоже, то есть желание работать в этой сфере. Всё сыграло большую роль.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как вы упаковали опыт? То есть окей, опыт есть, вы можете индивидуально преподавать, но вам нужно это передать в школу.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Да, конечно. Когда люди ищут себе преподавателя или школу, для них важен не только тот факт, что человек живёт в стране и что у него есть опыт личного изучения языка. Всем важно, что преподаватель профессионален, то есть у него есть методическая база, что он знает разные методы, умеет ими оперировать, подстраивать под разные ситуации. Это всегда обязательно — клиенты спрашивают, действительно ли вы преподаватель. Поэтому это очень помогает, это вызывает доверие.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В 2006 году вы переехали в Грецию уже взрослым человеком, самостоятельно начали учить греческий с нуля. Помогает ли такой опыт выстраивать обучение греческому в вашей школе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Несомненно, это очень сильно помогает, потому что разница большая. Когда ты учишь язык во взрослом возрасте, ты уже понимаешь, что тебе важен не просто набор знаний, а именно как их можно применить в жизни — для чего тебе нужен этот язык, как работают правила, вся эта лексика, вся эта грамматика. Ты сразу же общаешься, выполняешь коммуникативные задачи, живёшь в среде — от этого даже зависит отношение к тебе местных жителей.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Дополнительные услуги и команда школы</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы занимаетесь только обучением иностранных языков, или есть какие-то дополнительные услуги — типа помощи в получении гражданства?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>В настоящее время нет, потому что мы действительно ещё молодая школа. В перспективе, возможно, да, потому что мы находимся в этой стране и у нас есть доступ к юристам. В силу того что мы знаем язык, мы можем быстро разузнать необходимую информацию о разных требованиях и их изменениях, которые часто происходят. Мы, конечно же, даём советы, но это уже бонус нашим клиентам.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сейчас в LINGRAVIA двенадцать или пятнадцать сотрудников — сколько точно?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>12–15 — это непостоянный штат, потому что есть точечные задачи, которые нужно выполнять, — например, дизайнер. Есть постоянные — администратор школы, маркетологи, с которыми мы сотрудничаем с самого начала, преподаватели. Мы ещё сейчас добираем преподавателей, но основной штат у нас уже сформировался.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Как удалось быстро набрать команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>И семь преподавателей. При этом школа открылась только в двадцать пятом году, меньше года назад. Как удалось набрать такую команду так быстро?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Из-за того что есть спрос. Я считаю, что в тот момент, когда я стала сотрудничать с маркетологами, мы стали выходить на рынок, и спрос шёл, поэтому приходилось набирать новых преподавателей.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Выручка и фокус на расширение продуктов</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорили, что доход школы сейчас — €10–15 000 в месяц. При этом штат уже достаточно приличный, и в пересчёте на сотрудника это скромная цифра. На чём вы сейчас готовы сфокусироваться, чтобы это изменить?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Чтобы увеличить спрос — во-первых, самая основная сейчас задача у нас это расширение продуктов. Потому что в настоящее время основной продукт — это уроки, либо индивидуальные, либо в группах. Чтобы масштабировать знания на большую аудиторию, и чтобы это было непропорционально росту часов преподавателей, придётся добавить продукт.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А то что, например, — другие языки?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Это тоже, но чуть позже, над этим мы тоже работаем, но я бы не сказала, что это сейчас наш основной фокус. Основной фокус — это создание цифрового курса. У нас уже опробована методика в живых уроках и в индивидуальных, есть материалы, и сейчас я работаю над курсом на платформе, где люди смогут самостоятельно изучать язык, плюс у них будет поддержка кураторов, преподавателей, — таким образом аудитория будет расширена.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Метод: минимум теории, много практики</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ваш метод обучения — коммуникативный подход, немного грамматики и много практики. Расскажите про ученика, который пришёл демотивированным, потому что запутался в грамматике, а вы за несколько месяцев изменили его отношение к языку.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Да, я могу привести такой пример, причём это очень сильный, очень мотивированный, талантливый ученик. До этого у него был опыт изучения языка, когда курс был построен почти полностью на грамматических правилах — практически каждый урок новая грамматическая тема. Но этого недостаточно для языка. Это как заниматься спортом и смотреть какие-то упражнения постоянно новые и новые и не выполнять их — нужна практика.</p>
+        <p>Этот момент был упущен, а у нас как раз построено на том, что очень много практики. Мы берём минимум теории, её отрабатываем, закрепляем — и человек сразу чувствует, что может пользоваться языком, а не просто накапливает знания. У него сразу это всё выходит в умения, в навыки.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как это на практике выглядит — вы даёте задание, допустим, пойди в булочную, купи круассан?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Нет, не так. Мы не стараемся создавать какие-то сложные программы — мы ставим реальные цели. У нас нет цели просто сдать экзамен уровня A2 — а уровень A2, знаете, это бытовой язык, там не надо знать все нюансы грамматики. Язык — это всегда комплексное изучение, и грамматика — это всего лишь часть, особенно на начальных уровнях, небольшая часть. Многие часто это упускают из виду и стараются загрузить грамматикой, так же происходит и с лексикой.</p>
+        <p>Здесь важно очень дозированно давать информацию и её практиковать — через упражнения, через диалоги, через разговоры на уроке, через повторения. Но люди должны понимать, что нужно время, чтобы усвоить эту информацию, и потом двигаться дальше.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Кейс: ошибки, которые не замечает сам человек</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы рассказывали ещё про другой кейс — совсем не похожий: к вам пришла девушка, уверенная, что она уже хорошо говорит по-гречески, но при этом говорила с кучей ошибок. Сложный кейс, потому что человек уверен, что у него всё хорошо. Как вам удалось изменить её отношение и не потерять клиента при этом?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Это, знаете, чисто уже человеческое отношение. Когда ты понимаешь, что человек живёт в стране и, видимо, уже убеждён, что понимает много, потому что слышит речь, или даже думает, что может что-то сказать и его поймут. Но когда ты понимаешь, что человек, в принципе, окружён профессионалами, — ему нужно говорить не просто, допустим, с мужем, который окей поймёт, не осудит. Когда нужно на работе использовать язык, нужно всё-таки говорить без ошибок.</p>
+        <p>Даже мы, если кто-то будет по-русски говорить с ошибками, у нас непроизвольно будет другое впечатление об этом человеке — он может быть умнейшим человеком, но когда он говорит с кучей ошибок, сразу же появляется какое-то снисхождение у людей. Я думаю, это чисто человеческий момент, когда хочется помочь этого избежать, когда видишь потенциал человека. Во время уроков это происходит обычно просто снижением темпа: когда человек начинает говорить с ошибками, ты его немного притормаживаешь и повторяешь вместе с ним правильные формы.</p>
+        <p>И постепенно человек сам уже начинает понимать, что действительно он долго говорил неправильно. И это был не единичный случай — абсолютно во всех подобных случаях люди потом начинают тоже замедляться и понимают, что это им на пользу, и вместе уже исправляют ошибки, стараются говорить правильно, а не просто набирать объём слов и оперировать ими неправильно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Отбор преподавателей и носители языка</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы сами отбираете преподавателей в школу и проверяете уровень владения языком?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Обязательно, да. Но мне это очень просто сделать: достаточно поговорить на греческом с человеком, провести интервью, познакомиться с ним, и если я вижу, что человек говорит действительно правильно, без ошибок, — это уже очень важная составляющая. Конечно же, важно и то, что у него есть профессиональное образование, есть база — что он изучал язык, а не просто, приехав в страну, его приобрёл. Пройдено определённое количество уроков по грамматике, он знает лексику. Тогда он сможет и научить.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А бывает, что носитель языка приходит — как вы оцениваете уровень владения языком у носителя?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Мы сотрудничаем с билингвами — это тоже моя такая линия. Почему? Потому что у нас очень много начинающих изучающих язык, им важно, чтобы им могли объяснить всё по-русски понятно и правильно, а не на ломаном русском. А с другой стороны, этот человек билингв, у него и греческий язык на высоте.</p>
+        <p>Кроме билингвов, у нас есть и чисто носители — их мы отбираем для более высоких уровней, когда есть такой плюс, что на уроках нет возможности перейти на русский язык. Но это обычно происходит на более высоких уровнях.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Личные качества при найме</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что в людях, которых нанимаете, цените доброту, старания, желание помочь коллегам — это скорее человеческие качества, чем профессиональные. Нет риска, что эти качества не сработают и команда в целом не сработается, потому что вы отбираете только по личным качествам?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Нет, это не совсем так. Всё-таки вначале самое важное, конечно же, это профессионализм. И если это есть, то уже дальше я смотрю, совпадаем ли мы по ценностям, действительно ли человек добр — в плане того, что он хочет помочь ученикам, а не просто приходит отработать, рассказать теорию.</p>
+        <p>Бывает много случаев, особенно среди взрослых — мы работаем со взрослой аудиторией, — когда у них нет времени сделать домашнее задание. Здесь очень важно войти в положение людей: у них нет времени, у них много работы, у них есть семьи. Поэтому мы говорим о доброте в том смысле, что человек готов сделать скидку, готов ещё раз что-то объяснить, понять. Это очень важно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Пробный период и несовпадения</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть пробный период, в течение которого нужно присмотреться к преподавателю. Как часто бывает, что он прошёл собеседование, всё хорошо с личными качествами, а на пробном периоде выясняется, что не подходит?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Не часто, но бывает. Мы всегда обсуждаем, как нужно преподавать, и если такие случаи бывают, мы ещё раз обсуждаем, в чём проблема. Моя задача как руководителя — понять, в чём именно проблема, в чём недовольство клиента, что его не устраивает. Преподаватели обычно идут навстречу, исправляются, и мы решаем эти проблемы.</p>
+        <p>Но иногда нужно поменять преподавателя не потому, что он плох, — он всё равно профессионален, — а бывает несовместимость по каким-то личным качествам или ожиданиям ученика. Это скорее исключения. У нас нет как таковых увольнений: когда идут заявки, я предпочтение отдам преподавателю, у которого стабильные ученики и небольшой отток. Ещё большую роль играет совместимость — даже темперамент, это видно, заметно.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Личное: фортепиано, теннис и бизнес без себя</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Несколько личных вопросов — про ваше увлечение игрой на фортепиано и теннисом. Удаётся ли сейчас находить время для увлечений? И помогает ли опыт из них переноситься на управление бизнесом?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Да, очень даже. Параллели для меня очевидны — и теннис, как любой спорт, и игра на фортепиано — это не просто заучивание каких-то правил, как и в языке, это всегда практика в большей степени. Я думаю, это основная схожесть между ними, и это очень помогает.</p>
+        <p>Чтобы поиграть на фортепиано, мне достаточно найти минимум 15 минут в день — но это необходимо, такое переключение с рабочих задач на что-то совсем другое. С теннисом сложнее — я живу в небольшом городе, теннисный корт в пяти минутах от дома, но сейчас лето, пляжный сезон, а как только он закончится, снова начнётся теннис.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы описываете бизнес как частично работающий без вас. Что нужно сделать прямо сейчас, чтобы он полностью работал без вас?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Это, наверное, мой основной челлендж сейчас, потому что многое зависит от меня. Но, честно говоря, уже получилось передать маркетинг команде — я нашла очень хороших маркетологов. Также и преподаватели — большинство работают самостоятельно, с моей стороны нет постоянного или прямого контроля, хотя я, конечно, слежу, как они проходят программу, смотрю переписку в чатах.</p>
+        <p>Я поняла, что когда подбираешь человека на должность, нужно смотреть не только на то, что он профессионал и может выполнять задачи, но и на то, как он общается с другими — например, если это администратор, как он вместе работает с маркетологами, с менеджером по продажам. Мне ещё нужны новые специалисты по продукту, нужна помощь в создании курса, в продажах пока не закрыта проблема — есть один менеджер по продажам, но со временем мы это решим. Чаще всего задача сводится именно к поиску человека.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Видение через 3–5 лет</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Через три-пять лет вы видите LINGRAVIA как узнаваемый бренд с цифровыми продуктами, курсами, разговорными клубами, материалами для самостоятельного обучения. Какой из этих продуктов вы бы сделали первым, если бы завтра нужно было срочно бежать к этой цели?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>О чём я говорила ранее — платформа. Я над ней сейчас работаю, мы её уже тестируем, и я вижу, что на неё будет спрос. Главное сейчас — выстроить все процессы.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если в цифрах — через 3–5 лет, узнаваемый бренд с цифровыми продуктами, это сколько учеников, преподавателей, денег?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Если судить по одному году, который прошёл, и что удалось выйти за этот год на выручку до €15 000. За три года — я не просто умножаю на три, потому что помимо наращивания клиентов нужно наращивать скорость, должно быть какое-то ускорение. Поэтому, если говорим о трёх годах, выручка должна быть минимум 100 000 — я думаю, это реалистично.</p>
+        <p>Конечно, нужно будет вырасти и штату преподавателей, но я склоняюсь к тому, чтобы это не было пропорционально росту количества учеников — за счёт создания новых продуктов, типа цифрового курса, даже нескольких курсов. Плюс есть дополнительные курсы в рамках одного курса, когда клиенты других школ могут покупать, не отказываясь от своих преподавателей, какую-то дополнительную поддержку, которой им не хватает в другом месте. У нас такое уже было. Расти за счёт таких дополнительных продуктов — разговорных клубов, цифровых курсов.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Выход за пределы ниши экспатов</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас сейчас две основные категории клиентов — русскоязычные экспаты на Кипре и в Греции. Я подозреваю, что для целей через 3–5 лет понадобится больше учеников. Как вы будете выходить за пределы этой ниши?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Во-первых, как мы уже говорили, за счёт роста числа продуктов. Во-вторых, за счёт роста аудитории — мы можем те же самые продукты, я имею в виду греческий язык в разных проявлениях, курс или индивидуальные уроки, преподавать и иностранцам на английском языке.</p>
+        <p>И второй путь — расширение базы языков. Мы сейчас как раз над этим работаем: подключаем испанский язык, немецкий, также английский — для экспатов в разных странах. Мы начали именно с греческого, потому что это было наиболее логичным началом для меня — я живу в Греции и хорошо её знаю. А дальше я вижу, что эту модель можно переносить на другие страны, работать с экспатами там же. Там есть различия — приходится узнавать, для чего нужен язык в каждой стране: где-то он нужен для вида на жительство или гражданства, для интеграции больше, чем на Кипре, где многие люди годами живут, не зная местного языка, обходясь русским и английским. А, допустим, в Испании действительно нужно знать язык для интеграции.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t16">
+      <h3>16. Совет самой себе много лет назад</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если представить машину времени, и вы можете вернуться в прошлое к себе — когда подрабатывали репетитором на четвёртом курсе — с теми знаниями, которые есть сейчас, что бы вы хотели передать этой девушке?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Я бы, наверное, ей сказала, что нужно работать над собой, что даже случайная подработка может перерасти во что-то более масштабное, во что-то более грандиозное — в дело всей жизни. Главное — не останавливаться, расти, следить за тенденциями, которые происходят вокруг тебя, и использовать возможности, которые появляются. Главное — работать, главное — становиться лучше в профессиональном плане.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t17">
+      <h3>17. Контент и контакты</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас есть Telegram-канал и YouTube «Греческий шаг за шагом». Что из контента, который вы выкладываете, лучше всего показывает ваш метод обучения?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Я бы сказала, что это YouTube-канал — там я выкладываю мини-уроки, где объясняю грамматические темы. Хоть это всего лишь часть, там виден подход: никакого сложного объяснения, потому что мы ориентируемся на наших учеников — а мы обучаем не филологов, а в основном специалистов в области IT и других сфер, экспатов. Язык и речь должны быть простыми, живыми. Мои преподаватели тоже — я иногда смотрю записи — объясняют очень понятно, очень живо, по-человечески. Это, наверное, основное.</p>
+        <p>Telegram-канал ведут в основном маркетологи, но с моего одобрения — мы выстраиваем стратегию, направление, и там тоже важен комплексный подход и отношение к языку как к чему-то живому: какие-то праздники, что происходит в стране, юмор — как греки реагируют в разных ситуациях.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>И последний вопрос: если кто-то из слушателей захочет с вами связаться — инвестор, партнёр или просто человек, — как это лучше сделать и по каким вопросам можно обратиться?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Елена</div><div class="tr-txt">
+        <p>Самый лёгкий способ — через Telegram, ссылка есть у нас на канале, это моё имя и фамилия через подчёркивание. Можно написать в WhatsApp, там я тоже быстрее всего отреагирую. По любым вопросам — я открыта к сотрудничеству, можно задать любой вопрос.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
