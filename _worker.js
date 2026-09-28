@@ -2765,7 +2765,10 @@ async function handleDashboardApi(request, env, url, ctx) {
     const date = (body && body.date) || mskYesterday();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: 'bad_date' }, 400);
     const pull = await startAvitoPull(env, date, Boolean(body && body.force));
-    if (pull.pending.length && ctx) ctx.waitUntil(processAvitoPull(env, date));
+    // Only the request that created this pull processes it — a repeat click on a running
+    // pull must not start a second parallel pass (Avito allows 1 stats call/min per cabinet).
+    if (pull.created && pull.pending.length && ctx) ctx.waitUntil(processAvitoPull(env, date));
+    delete pull.created;
     return json({ pull });
   }
 
@@ -3093,7 +3096,7 @@ async function startAvitoPull(env, date, force) {
   };
   if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = pull.startedAt; }
   await kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
-  return pull;
+  return { ...pull, created: true };
 }
 
 async function processAvitoPull(env, date) {
@@ -3123,12 +3126,16 @@ async function processAvitoPull(env, date) {
 }
 
 async function avitoPullCron(env) {
-  if (!env.AGENCY_DASHBOARD_KV) return;
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv) return;
   const date = mskYesterday();
-  const pull = await env.AGENCY_DASHBOARD_KV.get(`avitoPull:${date}`, 'json');
+  const pull = await kv.get(`avitoPull:${date}`, 'json');
   const hourMsk = new Date(Date.now() + 3 * 3600 * 1000).getUTCHours();
   if (!pull && hourMsk >= AVITO_PULL_AUTOSTART_HOUR_MSK) await startAvitoPull(env, date, false);
-  await processAvitoPull(env, date);
+  // Finish any day's pull that didn't fit in its request's waitUntil — yesterday's or one
+  // the owner started for an earlier date from the panel (pull records expire after 7 days).
+  const { keys } = await kv.list({ prefix: 'avitoPull:' });
+  for (const k of keys) await processAvitoPull(env, k.name.slice('avitoPull:'.length));
 }
 
 /* ── Daily report data (same rules as the manual "ежедневный отчёт" methodology) ── */

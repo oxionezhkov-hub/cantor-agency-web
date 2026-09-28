@@ -224,6 +224,11 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   .side-panel{top:70px;right:8px;left:8px;width:auto}
 }
 
+/* Date picker in the Avito panel head */
+.avito-date-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.avito-date-row label{font-size:12px;color:var(--muted)}
+.avito-date-row input{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;font-size:13px}
+
 /* Background-job notices (report export, Avito pull) — bottom right, stay until closed */
 .notices{position:fixed;right:20px;bottom:20px;z-index:1050;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 32px))}
 .notice{background:var(--white);border:1.5px solid var(--border);border-left:4px solid var(--amber);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:12px 14px;font-size:13px;line-height:1.45}
@@ -345,7 +350,8 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 <div class="side-panel hidden" id="avitoPanel">
   <div class="side-panel-head">
     <div>
-      <h4>Авито за вчера<span class="beta-pill">бета</span></h4>
+      <h4>Аналитика из Авито<span class="beta-pill">бета</span></h4>
+      <div class="avito-date-row"><label for="avitoPanelDate">За дату</label><input type="date" id="avitoPanelDate"></div>
       <div class="sub" id="avitoPanelSub"></div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
@@ -522,7 +528,7 @@ const TOP_ACTIONS = {
   analytics: [
     { icon: 'sum', label: 'Итоги по клиентам', run: () => toggleSummaryPopup() },
     { icon: 'download', label: 'Экспорт в CSV', run: () => exportDailyMetricsCsv() },
-    { icon: 'avito', label: 'Авито за вчера', run: () => toggleAvitoPanel() },
+    { icon: 'avito', label: 'Аналитика из Авито', run: () => toggleAvitoPanel() },
     { icon: 'report', label: 'Выгрузка отчёта', run: () => openReportModal() },
   ],
 };
@@ -672,7 +678,7 @@ function renderProjects() {
 
     const inactiveLabel = document.createElement('label');
     inactiveLabel.className = 'inactive-toggle';
-    inactiveLabel.innerHTML = `<input type="checkbox"${p.inactive ? ' checked' : ''}> Неактивный клиент (внизу аналитики, не попадает в отчёт)`;
+    inactiveLabel.innerHTML = `<input type="checkbox"${p.inactive ? ' checked' : ''}> Неактивный клиент`;
     inactiveLabel.querySelector('input').addEventListener('change', async (e) => {
       await saveField('inactive', e.target.checked);
       renderProjects();
@@ -1023,19 +1029,29 @@ async function toggleAvitoPanel() {
   if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
   document.getElementById('summaryPopup').classList.add('hidden');
   panel.classList.remove('hidden');
-  avitoDate = addDays(todayIso(), -1);
-  renderAvitoPanel();
   await loadAvitoLinks();
-  const res = await api(`/api/dashboard/avito-pull?date=${avitoDate}`);
+  await showAvitoDate(addDays(todayIso(), -1)); // yesterday by default, another day via the date field
+}
+
+// Shows the stored pull for a day, starting one if that day was never pulled.
+async function showAvitoDate(date) {
+  avitoDate = date;
+  avitoPull = null;
+  avitoRows = {};
+  const input = document.getElementById('avitoPanelDate');
+  input.value = date;
+  input.max = addDays(todayIso(), -1);
+  renderAvitoPanel();
+  const res = await api(`/api/dashboard/avito-pull?date=${date}`);
+  if (avitoDate !== date) return; // the user picked another day meanwhile
   if (res && res.pull) {
     applyAvitoPull(res.pull);
     if (res.pull.status !== 'done') trackAvitoPull(res.pull.date); // e.g. the morning auto-pull still running
-  } else startAvitoPull(false); // nothing prepared for yesterday yet — start it now
+  } else startAvitoPull(false); // nothing prepared for this day yet — start it now
   renderAvitoPanel();
 }
 
 async function startAvitoPull(force) {
-  avitoDate = addDays(todayIso(), -1);
   const res = await api('/api/dashboard/avito-pull', { method: 'POST', body: JSON.stringify({ date: avitoDate, force }) });
   if (res && res.pull) { applyAvitoPull(res.pull); trackAvitoPull(avitoDate); }
 }
@@ -1056,9 +1072,10 @@ function trackAvitoPull(date) {
     const pull = res && res.pull;
     if (!pull) { storedJob('dash_avito_pull', null); dismissNotice('avito'); return; }
     if (date === avitoDate) applyAvitoPull(pull);
+    const dayLabel = date === addDays(todayIso(), -1) ? 'вчера' : date.split('-').reverse().slice(0, 2).join('.');
     const total = Object.keys(pull.results || {}).length + (pull.pending || []).length;
     if (pull.status !== 'done') {
-      notice('avito', { title: 'Авито за вчера: собираю данные', text: `Готово кабинетов: ${Object.keys(pull.results || {}).length} из ${total}. Можно работать в других разделах.`, busy: true });
+      notice('avito', { title: `Авито за ${dayLabel}: собираю данные`, text: `Готово кабинетов: ${Object.keys(pull.results || {}).length} из ${total}. Можно работать в других разделах.`, busy: true });
       avitoPollTimer = setTimeout(tick, 5000);
       return;
     }
@@ -1066,12 +1083,16 @@ function trackAvitoPull(date) {
     const failed = Object.entries(pull.results || {}).filter(([, r]) => r.errors && r.errors.length);
     const nameOf = (id) => (state.projects.find((p) => p.id === id) || {}).name || id;
     notice('avito', {
-      title: 'Авито за вчера: готово',
+      title: `Авито за ${dayLabel}: готово`,
       kind: failed.length ? 'bad' : 'ok',
       text: failed.length
         ? `Получено: ${total - failed.length} из ${total}.\nС ошибками: ${failed.map(([id]) => nameOf(id)).join(', ')}`
         : `Все ${total} кабинетов загружены.`,
-      actions: [{ label: 'Открыть', run: () => { dismissNotice('avito'); if (document.getElementById('avitoPanel').classList.contains('hidden')) openAnalyticsAnd(toggleAvitoPanel); } }],
+      actions: [{ label: 'Открыть', run: async () => {
+        dismissNotice('avito');
+        if (document.getElementById('avitoPanel').classList.contains('hidden')) await openAnalyticsAnd(toggleAvitoPanel);
+        if (avitoDate !== date) showAvitoDate(date);
+      } }],
     });
   };
   tick();
@@ -1080,7 +1101,7 @@ function trackAvitoPull(date) {
 function openAnalyticsAnd(fn) {
   const tabBtn = document.querySelector('.tab-btn[data-tab="analytics"]');
   if (currentTab !== 'analytics') tabBtn.click();
-  fn();
+  return fn();
 }
 
 function renderAvitoPanel() {
@@ -1106,7 +1127,7 @@ function renderAvitoPanel() {
     return `<tr><td>${name}${warn}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : `${n(r.spend)} ₽`}</td><td>${advance}</td></tr>`;
   });
   table.innerHTML = `
-    <thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th>Аванс</th></tr></thead>
+    <thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th title="Текущий аванс в кабинете, не на выбранную дату">Аванс сейчас</th></tr></thead>
     <tbody>${rows.join('')}
       <tr class="total"><td>Итого</td><td>${n(total.views)}</td><td>${n(total.contacts)}</td><td>${n(total.spend)} ₽</td><td></td></tr>
     </tbody>`;
@@ -1143,6 +1164,11 @@ document.getElementById('avitoPanelRefresh').addEventListener('click', () => {
   startAvitoPull(true);
 });
 document.getElementById('avitoPanelSettings').addEventListener('click', () => openAvitoKeysModal());
+document.getElementById('avitoPanelDate').addEventListener('change', (e) => {
+  const date = e.target.value;
+  if (!date || date > addDays(todayIso(), -1)) { e.target.value = avitoDate; toast('Можно выбрать вчера или раньше'); return; }
+  showAvitoDate(date);
+});
 document.getElementById('avitoPanelApply').addEventListener('click', applyAvitoToTable);
 
 // ── Кабинеты Авито: bulk paste of keys + manual linking ──
