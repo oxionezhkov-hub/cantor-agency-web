@@ -2823,6 +2823,16 @@ async function handleDashboardApi(request, env, url, ctx) {
     return json({ job: publicReportJob(job) });
   }
 
+  // Recent report requests (reportJob records live 14 days) — the "Готовые отчёты" list in
+  // the export modal, so a finished file can be re-downloaded after a page reload.
+  if (pathname === '/api/dashboard/report-jobs' && request.method === 'GET') {
+    const jobs = (await listByPrefix(kv, 'reportJob:'))
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .slice(0, 10)
+      .map(publicReportJob);
+    return json({ jobs });
+  }
+
   if (pathname === '/api/dashboard/report-last' && request.method === 'GET') {
     return json({ lastTo: await kv.get('reportLastTo'), yesterday: mskYesterday() });
   }
