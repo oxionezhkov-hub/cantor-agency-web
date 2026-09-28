@@ -1250,7 +1250,10 @@ async function openReportModal() {
       <button class="btn secondary" onclick="closeModal()">Отмена</button>
       <button class="btn" id="mRepGo">Сформировать</button>
     </div>
+    <label>Готовые отчёты</label>
+    <div class="link-list" id="mRepHistory"><div class="empty">Загрузка…</div></div>
   `);
+  loadReportHistory();
   document.getElementById('mRepGo').addEventListener('click', async () => {
     const dateFrom = document.getElementById('mRepFrom').value;
     const dateTo = document.getElementById('mRepTo').value;
@@ -1260,6 +1263,38 @@ async function openReportModal() {
     if (!res || !res.job) { notice('report', { title: 'Выгрузка отчёта не запустилась', kind: 'bad', text: 'Попробуйте ещё раз.' }); return; }
     storedJob('dash_report_job', { id: res.job.id, startedAt: Date.now() });
     trackReportJob(res.job.id);
+  });
+}
+
+const REPORT_STATUS_LABELS = {
+  done: 'готов',
+  not_configured: 'с авто-наблюдениями',
+  failed: 'с авто-наблюдениями',
+  queued: 'готовится…',
+  sent: 'готовится…',
+  running: 'готовится…',
+};
+
+// Every report requested in the last 14 days, newest first, each with its own download
+// button — the place to find a file again after reloading the page.
+async function loadReportHistory() {
+  const el = document.getElementById('mRepHistory');
+  const res = await api('/api/dashboard/report-jobs');
+  if (!el || !document.body.contains(el)) return;
+  const jobs = (res && res.jobs) || [];
+  if (!jobs.length) { el.innerHTML = '<div class="empty">Пока нет ни одного отчёта</div>'; return; }
+  el.innerHTML = '';
+  jobs.forEach((job) => {
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    const created = new Date(job.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    row.innerHTML = `<span>${escapeHtml(job.periodLabel)} <span class="src" style="display:inline">· создан ${created} · ${REPORT_STATUS_LABELS[job.status] || job.status}</span></span>`;
+    const btn = document.createElement('button');
+    btn.className = 'btn small secondary';
+    btn.textContent = 'Скачать';
+    btn.addEventListener('click', () => downloadReport(job));
+    row.appendChild(btn);
+    el.appendChild(row);
   });
 }
 
@@ -1275,13 +1310,12 @@ function trackReportJob(id) {
     const download = { label: 'Скачать', run: () => downloadReport(job) };
     const session = job.sessionUrl ? [{ label: 'Сессия Claude', secondary: true, run: () => window.open(job.sessionUrl, '_blank', 'noopener') }] : [];
     if (job.status === 'done') {
-      storedJob('dash_report_job', null);
+      // Kept in localStorage until this notice is closed, so a reload shows it again.
       notice('report', { title: 'Отчёт готов', kind: 'ok', text: period + warnings, actions: [download] });
       return;
     }
     const timedOut = Date.now() - started > REPORT_TIMEOUT_MS;
     if (job.status === 'not_configured' || job.status === 'failed' || timedOut) {
-      storedJob('dash_report_job', null);
       notice('report', {
         title: timedOut ? 'Claude не ответил за 15 минут' : job.status === 'not_configured' ? 'Рутина Claude не подключена' : 'Рутина Claude не запустилась',
         kind: 'bad',
