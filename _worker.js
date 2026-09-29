@@ -69,8 +69,9 @@
  * same Avito sales-leads domain, under its own key prefix:
  *
  * KV keys (binding "AVITO_KV", sales-crm prefix):
- *   salescrm:client:<id>              -> { id, name, telegram, priority, status, group, comment, createdAt, updatedAt }
- *                                          (group: one of РЕПБИЗ / ВЕБИНАР / НОВЫЕ — lead source)
+ *   salescrm:client:<id>              -> { id, name, telegram, priority, status, group, comment, nextActionDate, createdAt, updatedAt }
+ *                                          (group: one of РЕПБИЗ / ВЕБИНАР / НОВЫЕ — lead source;
+ *                                           nextActionDate: "YYYY-MM-DD" or "" — next follow-up date, checked by the control bot cron)
  *   salescrm:history:<id>:<ts>:<rand> -> { clientId, clientName, ts, action, field, oldValue, newValue }
  *
  * It also powers /dashboard: the agency-owner dashboard (active Avito-promotion projects,
@@ -1620,7 +1621,8 @@ const SALES_CRM_PRIORITIES = ['green', 'yellow', 'orange', 'red'];
 // РЕПБИЗ / ВЕБИНАР are the two lead sources bulk-imported from existing sheets; НОВЫЕ is the
 // default for anything added by hand going forward (there were no НОВЫЕ leads at import time).
 const SALES_CRM_GROUPS = ['РЕПБИЗ', 'ВЕБИНАР', 'НОВЫЕ'];
-const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'group', 'comment'];
+const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'group', 'comment', 'nextActionDate'];
+const SALES_CRM_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 async function salesCrmHistoryAppend(kv, clientId, clientName, entries) {
   const now = new Date().toISOString();
@@ -1657,6 +1659,7 @@ async function handleSalesCrmApi(request, env, url) {
       status: SALES_CRM_STATUSES.includes(body && body.status) ? body.status : 'Первое сообщение',
       group: SALES_CRM_GROUPS.includes(body && body.group) ? body.group : 'НОВЫЕ',
       comment: (body && String(body.comment || '')) || '',
+      nextActionDate: SALES_CRM_DATE_RE.test(body && body.nextActionDate) ? body.nextActionDate : '',
       createdAt: now,
       updatedAt: now,
     };
@@ -1686,6 +1689,10 @@ async function handleSalesCrmApi(request, env, url) {
       if (field === 'group' && !SALES_CRM_GROUPS.includes(value)) continue;
       if (field === 'name' || field === 'telegram') value = String(value || '').trim();
       if (field === 'comment') value = String(value || '');
+      if (field === 'nextActionDate') {
+        value = String(value || '').trim();
+        if (value && !SALES_CRM_DATE_RE.test(value)) continue;
+      }
       if (value === existing[field]) continue;
       historyEntries.push({ action: 'update', field, oldValue: existing[field] ?? null, newValue: value });
       updated[field] = value;
@@ -4310,6 +4317,33 @@ async function botBuildMetricsReport(env, nowMs) {
   return lines.join('\n');
 }
 
+// CRM (/sales-crm): leads whose next-action date is overdue, today, or coming up in 2 days.
+async function botBuildCrmReminders(env, nowMs) {
+  const kv = env.AVITO_KV;
+  if (!kv) return null;
+  const list = await kv.list({ prefix: 'salescrm:client:' });
+  const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+  const today = botMsk(nowMs).date;
+  const soonBy = botMsk(nowMs + 2 * 24 * 3600000).date;
+  const overdue = [];
+  const dueToday = [];
+  const soon = [];
+  for (const c of records.filter(Boolean)) {
+    if (!c.nextActionDate || !SALES_CRM_DATE_RE.test(c.nextActionDate)) continue;
+    if (c.status === 'Продажа' || c.status === 'Отказ') continue;
+    if (c.nextActionDate < today) overdue.push(c);
+    else if (c.nextActionDate === today) dueToday.push(c);
+    else if (c.nextActionDate <= soonBy) soon.push(c);
+  }
+  if (!overdue.length && !dueToday.length && !soon.length) return null;
+  const line = (c) => `• <b>${escapeHtml(c.name)}</b>${c.telegram ? ` (@${escapeHtml(c.telegram)})` : ''} — ${c.nextActionDate}`;
+  const lines = ['📋 <b>CRM: даты следующих действий</b>'];
+  if (overdue.length) lines.push(`🔴 Просрочено: ${overdue.length}`, ...overdue.map(line));
+  if (dueToday.length) lines.push(`🟠 Сегодня: ${dueToday.length}`, ...dueToday.map(line));
+  if (soon.length) lines.push(`🟡 Скоро (2 дня): ${soon.length}`, ...soon.map(line));
+  return lines.join('\n');
+}
+
 async function botRunChecks(env, nowMs) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byId = await botProjectsById(kv);
@@ -4354,6 +4388,11 @@ async function botRunChecks(env, nowMs) {
   // 10:00 — morning summary.
   if (hh >= 10 && hh < 12 && (await botOnce(kv, `summary:${date}`, 60 * 60 * 36))) {
     await botNotifyOwner(env, await botBuildSummary(env, nowMs));
+  }
+  // 10:00 — CRM: leads due for a follow-up today, overdue, or coming up soon.
+  if (hh >= 10 && hh < 12 && (await botOnce(kv, `crm:${date}`, 60 * 60 * 36))) {
+    const report = await botBuildCrmReminders(env, nowMs);
+    if (report) await botNotifyOwner(env, report);
   }
   // 11:00 — metrics from the dashboard.
   if (hh >= 11 && hh < 13 && (await botOnce(kv, `metrics:${date}`, 60 * 60 * 36))) {
