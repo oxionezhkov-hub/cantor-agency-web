@@ -79,7 +79,7 @@ p { margin: 0; }
 .progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .3s, box-shadow .3s; }
 .hdr.is-solid { background: rgba(243, 238, 230, .9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
-.hdr.is-hidden, .hdr.is-away { transform: translateY(-110%); }
+.hdr.is-away { transform: translateY(-110%); }
 .hdr.is-away { pointer-events: none; }
 .hdr-in { display: flex; align-items: center; gap: 28px; height: 74px; }
 .logo { font-family: var(--f-display); font-size: 24px; font-weight: 600; letter-spacing: .01em; }
@@ -214,7 +214,7 @@ p { margin: 0; }
 
 /* ── Media ── */
 .media { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
-.video { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--dark); border-radius: var(--r); }
+.video { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--dark); border-radius: var(--r); }
 .video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transition: transform 1s var(--ease); }
 .video:hover img { transform: scale(1.04); }
 .video-play { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: clamp(20px, 3vw, 32px); text-align: left; color: var(--card); background: linear-gradient(180deg, rgba(47, 38, 32, 0) 40%, rgba(47, 38, 32, .88)); }
@@ -417,6 +417,7 @@ p { margin: 0; }
       <div>
         <h1 class="hero-name"><span>Анна</span><span>Алёшина</span></h1>
         <p class="hero-role">Кандидат экономических наук, доцент МГУ</p>
+        <p class="hero-desc">Основатель онлайн-школы «Будет 100 баллов» и руководитель научного департамента Института экспериментальной экономики и финансов МГУ. Автор учебников по обществознанию и информатике для 10–11 классов.</p>
         <div class="hero-actions">
           <a href="#contact" class="btn btn-dark">Связаться <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           <a href="#projects" class="btn btn-line">Проекты</a>
@@ -557,12 +558,11 @@ p { margin: 0; }
 
 <section class="sec" id="media">
   <div class="wrap media">
-    <div class="video rv" data-video="https://player.vimeo.com/video/1203420289?h=75e32f9618&amp;badge=0&amp;autopause=0&amp;autoplay=1" data-title="Как поступить в вуз по результатам олимпиады?">
+    <div class="video rv" data-video="https://player.vimeo.com/video/1231403858?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Анна Алёшина">
       <img src="images/anna-aleshina/photo_2026-06-26_09-44-00.jpg" alt="" loading="lazy">
-      <button class="video-play" type="button" aria-label="Смотреть интервью «Как поступить в вуз по результатам олимпиады?»">
+      <button class="video-play" type="button" aria-label="Смотреть интервью с Анной Алёшиной">
         <span class="pbtn"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-        <strong>Как поступить в вуз по результатам олимпиады?</strong>
-        <span>Эфир с преподавателем МГУ</span>
+        <strong>Интервью с Анной Алёшиной</strong>
       </button>
     </div>
     <div class="rv">
@@ -694,22 +694,12 @@ p { margin: 0; }
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
   const progress = $('.progress');
-  const heroEl = $('.hero');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
-  let lastY = window.scrollY;
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
-      if (revealHdr) {
-        const limit = heroEl ? heroEl.offsetHeight * 0.6 : 320;
-        hdr.classList.toggle('is-away', window.innerWidth > 980 && y < limit);
-      }
-      const dy = y - lastY;
-      if (Math.abs(dy) > 6) {
-        hdr.classList.toggle('is-hidden', dy > 0 && y > 520 && !document.body.classList.contains('menu-open'));
-        lastY = y;
-      }
+      if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
     }
     if (progress) {
       const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -730,7 +720,6 @@ p { margin: 0; }
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
     document.body.classList.toggle('menu-open', open);
-    if (open && hdr) hdr.classList.remove('is-hidden');
   }
   if (burger && menu) {
     burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
