@@ -7,6 +7,8 @@
 <title>Анна Алёшина · Аудитория</title>
 <meta name="description" content="Анна Алёшина — кандидат экономических наук, доцент МГУ, основатель онлайн-школы «Будет 100 баллов», руководитель научного департамента ИЭЭФ МГУ.">
 <meta name="theme-color" content="#0C1322">
+<link rel="icon" type="image/png" href="images/anna-aleshina/245.png">
+<link rel="apple-touch-icon" href="images/anna-aleshina/245.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,6 +28,7 @@
   --paper-ink: #111B30;
   --paper-ink-2: #4A5268;
   --danger:  #F08A7A;
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
 
   --f-display: 'Old Standard TT', 'Times New Roman', Georgia, serif;
   --f-body:    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -38,7 +41,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; font-family: var(--f-body); font-weight: 300; font-size: 17px; line-height: 1.7;
   color: var(--parch); background: var(--night); overflow-x: hidden; -webkit-font-smoothing: antialiased;
@@ -86,10 +89,10 @@ p { margin: 0; }
 .progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .4s, border-color .4s; border-bottom: 1px solid transparent; }
 .hdr.is-solid { background: rgba(12, 19, 34, .82); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom-color: var(--line); }
-.hdr.is-hidden { transform: translateY(-110%); }
+.hdr.is-hidden, .hdr.is-away { transform: translateY(-110%); }
+.hdr.is-away { pointer-events: none; }
 .hdr-in { display: flex; align-items: center; gap: 32px; height: 80px; }
-.logo { display: flex; align-items: baseline; gap: 10px; font-family: var(--f-display); font-size: 22px; }
-.logo i { color: var(--gold); }
+.logo { font-family: var(--f-display); font-size: 22px; color: var(--parch); }
 .nav { display: flex; gap: 28px; margin-left: auto; }
 .nav a { position: relative; font-size: 14px; font-weight: 400; color: var(--parch-2); padding-block: 6px; transition: color .25s; }
 .nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--gold); transform: scaleX(0); transform-origin: 100% 50%; transition: transform .4s var(--ease); }
@@ -116,13 +119,13 @@ p { margin: 0; }
 .mnav .btn { margin-top: auto; }
 
 /* ── Hero ── */
-.hero { position: relative; overflow: hidden; min-height: min(920px, 100svh); display: flex; align-items: flex-end; padding-top: calc(120px + env(safe-area-inset-top, 0px)); padding-bottom: clamp(40px, 6vw, 72px); background: radial-gradient(120% 90% at 78% 30%, #1d2a44 0%, var(--night) 62%); }
+.hero { position: relative; overflow: hidden; min-height: min(920px, 100svh); display: flex; align-items: flex-end; padding-top: calc(72px + env(safe-area-inset-top, 0px)); padding-bottom: clamp(40px, 6vw, 72px); background: radial-gradient(120% 90% at 78% 30%, #1d2a44 0%, var(--night) 62%); }
 .hero-photo { position: absolute; top: 0; bottom: 0; right: 0; width: min(58%, 820px); }
 .hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; filter: saturate(.9) contrast(1.02); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 34%, #000 82%, transparent 100%), linear-gradient(0deg, transparent 0%, #000 22%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 34%, #000 82%, transparent 100%), linear-gradient(0deg, transparent 0%, #000 22%); mask-composite: intersect; animation: portrait 2.2s var(--ease) both; }
 .hero-in { position: relative; z-index: 2; width: 100%; }
 .hero-kicker { color: var(--gold); display: flex; flex-wrap: wrap; gap: 10px 18px; animation: fadeUp 1s .15s var(--ease) both; }
 .hero-kicker span + span::before { content: '·'; margin-right: 18px; color: var(--parch-3); }
-.hero-name { margin-top: 28px; font-size: clamp(64px, 11.5vw, 184px); line-height: .86; letter-spacing: -.02em; }
+.hero-name { margin-top: 0; font-size: clamp(64px, 11.5vw, 184px); line-height: .86; letter-spacing: -.02em; }
 .hero-name .ln { display: block; overflow: hidden; padding-bottom: .08em; }
 .hero-name .ln > span { display: block; animation: rise 1.3s var(--ease) both; }
 .hero-name .ln:nth-child(1) > span { font-style: italic; color: var(--gold-2); animation-delay: .1s; }
@@ -153,7 +156,7 @@ p { margin: 0; }
 .proj-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: auto; padding-top: 28px; border-top: 1px solid var(--line); }
 .ps-num { font-family: var(--f-display); font-size: clamp(36px, 3.6vw, 54px); line-height: 1; color: var(--gold-2); font-variant-numeric: lining-nums tabular-nums; }
 .ps-label { margin-top: 8px; font-size: 13px; color: var(--parch-3); line-height: 1.4; }
-.link { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; color: var(--parch); font-size: 15px; padding-bottom: 4px; background: linear-gradient(var(--gold), var(--gold)) 0 100% / 100% 1px no-repeat; transition: background-size .5s var(--ease), color .2s; }
+.link { margin-top: -8px; display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; color: var(--parch); font-size: 15px; padding-bottom: 4px; background: linear-gradient(var(--gold), var(--gold)) 0 100% / 100% 1px no-repeat; transition: background-size .5s var(--ease), color .2s; }
 .link:hover { color: var(--gold-2); background-size: 30% 1px; }
 
 /* ── About ── */
@@ -173,7 +176,7 @@ p { margin: 0; }
 .about-body { color: var(--parch-2); margin-top: 28px; max-width: 58ch; }
 .about-body + .about-body { margin-top: 16px; }
 .cv { list-style: none; margin: 0; padding: 0; }
-.cv li { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 18px; padding: 20px 0; border-top: 1px solid var(--line); }
+.cv li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 18px; padding: 20px 0; border-top: 1px solid var(--line); }
 .cv li:last-child { border-bottom: 1px solid var(--line); }
 .cv-y { color: var(--gold); padding-top: 4px; }
 .cv strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 21px; line-height: 1.2; color: var(--parch); }
@@ -185,10 +188,9 @@ p { margin: 0; }
 .num { padding: 36px 28px 8px 0; min-width: 0; }
 .num + .num { border-left: 1px solid var(--line); padding-left: 28px; }
 .num-v { font-family: var(--f-display); font-size: clamp(52px, 6.4vw, 104px); line-height: .9; color: var(--parch); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.02em; }
-.num:nth-child(odd) .num-v { font-style: italic; color: var(--gold-2); }
 .num p { margin-top: 18px; color: var(--parch-2); font-size: 15px; line-height: 1.5; max-width: 26ch; }
 .olymp { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px 40px; align-items: center; padding: 28px 32px; border: 1px solid var(--line); background: linear-gradient(90deg, rgba(207, 170, 94, .08), transparent 60%); }
-.olymp-v { font-family: var(--f-display); font-size: clamp(56px, 6vw, 88px); line-height: .9; color: var(--gold); }
+.olymp-v { font-family: var(--f-display); font-size: clamp(56px, 6vw, 88px); line-height: .9; color: var(--parch); }
 .olymp p { color: var(--parch-2); }
 .olymp strong { color: var(--parch); font-weight: 500; }
 
@@ -206,8 +208,7 @@ p { margin: 0; }
 .car-bar { max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
 .car-bar > div { height: 1px; background: var(--line); }
 .car-thumb { display: block; height: 1px; background: var(--gold); transition: transform .12s linear; }
-.rev { scroll-snap-align: start; flex: 0 0 min(440px, 84vw); display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 3vw, 40px); background: var(--night-2); border: 1px solid var(--line); transition: border-color .4s, transform .5s var(--ease), background-color .4s; }
-.rev:hover { border-color: rgba(207, 170, 94, .55); background: var(--night-3); transform: translateY(-6px); }
+.rev { scroll-snap-align: start; flex: 0 0 min(440px, 84vw); display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 3vw, 40px); background: var(--night-2); border: 1px solid var(--line); }
 .rev-mark { font-family: var(--f-display); font-size: 72px; line-height: .5; height: 28px; color: var(--gold); }
 .rev blockquote { margin: 0; font-family: var(--f-display); font-size: clamp(19px, 1.6vw, 22px); line-height: 1.45; color: var(--parch); }
 .rev-foot { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: end; }
@@ -239,11 +240,11 @@ p { margin: 0; }
 .video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; opacity: .72; transition: transform 1.2s var(--ease), opacity .6s; }
 .video:hover img { transform: scale(1.05); opacity: .85; }
 .video-play { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 8px; padding: clamp(20px, 3vw, 36px); text-align: left; background: linear-gradient(180deg, transparent 35%, rgba(7, 11, 20, .9)); }
-.pbtn { position: absolute; top: 50%; left: 50%; width: 104px; height: 104px; margin: -52px 0 0 -52px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; color: var(--gold); transition: background-color .4s, color .4s, transform .5s var(--ease); }
+.pbtn { position: absolute; top: clamp(18px, 3vw, 32px); right: clamp(18px, 3vw, 32px); width: 88px; height: 88px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; color: var(--gold); transition: background-color .4s, color .4s, transform .5s var(--ease); }
 .pbtn::after { content: ''; position: absolute; inset: 8px; border-radius: 50%; border: 1px solid rgba(207, 170, 94, .35); }
 .video-play:hover .pbtn { background: var(--gold); color: var(--night); transform: scale(1.06); }
-.video-play strong { font-family: var(--f-display); font-weight: 400; font-size: clamp(22px, 2.4vw, 32px); line-height: 1.15; max-width: 24ch; }
-.video-play span { color: var(--parch-2); font-size: 14px; }
+.video-play strong { font-family: var(--f-display); font-weight: 400; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.15; max-width: 24ch; }
+.video-play span:not(.pbtn) { color: var(--parch-2); font-size: 14px; }
 .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 3; }
 .video.is-playing .video-play, .video.is-playing img { display: none; }
 .video-alt { display: inline-block; margin-top: 14px; color: var(--parch-3); font-size: 14px; }
@@ -260,31 +261,61 @@ p { margin: 0; }
 .contact-photo { margin-top: 40px; position: relative; max-width: 380px; }
 .contact-photo img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 15%; filter: grayscale(.25); }
 .contact-photo::after { content: ''; position: absolute; inset: 14px -14px -14px 14px; border: 1px solid var(--gold); z-index: -1; }
-.form { display: grid; gap: 28px; }
-.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.form { display: grid; gap: 36px; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 28px; }
 .field { position: relative; display: grid; gap: 6px; }
-.field label { color: var(--gold); }
+.field label, .field-label { color: var(--gold); font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
 .field input, .field select, .field textarea { width: 100%; font: inherit; font-size: 18px; font-weight: 300; color: var(--parch); padding: 12px 0; background: transparent; border: 0; border-bottom: 1px solid rgba(238, 230, 212, .3); border-radius: 0; outline: none; transition: border-color .3s; -webkit-appearance: none; appearance: none; }
 .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CFAA5E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center; padding-right: 28px; }
 .field select option { background: var(--night-2); color: var(--parch); }
 .field textarea { min-height: 100px; resize: vertical; }
 .field input::placeholder, .field textarea::placeholder { color: var(--parch-3); }
 .field input:focus, .field select:focus, .field textarea:focus { border-bottom-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
-.field-err { display: none; font-size: 13px; color: var(--danger); }
+.field-err { position: absolute; left: 0; top: calc(100% + 6px); display: none; font-size: 13px; line-height: 1.2; color: var(--danger); }
 .field.is-error input { border-bottom-color: var(--danger); }
 .field.is-error .field-err { display: block; }
 .form-foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .form-note { font-size: 13px; color: var(--parch-3); max-width: 36ch; }
+.form-note a { color: var(--parch-2); text-decoration: underline; text-underline-offset: 3px; }
+.form-note a:hover { color: var(--gold-2); }
+.dd { position: relative; }
+.dd-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(238, 230, 212, .3); font-size: 18px; font-weight: 300; text-align: left; color: var(--parch); transition: border-color .3s; }
+.dd-btn:hover { border-bottom-color: rgba(238, 230, 212, .55); }
+.dd.is-open .dd-btn, .dd-btn:focus-visible { outline: none; border-bottom-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+.dd-chev { color: var(--gold); flex-shrink: 0; transition: transform .4s var(--ease); }
+.dd.is-open .dd-chev { transform: rotate(180deg); }
+.dd-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 10px); margin: 0; padding: 8px 0; list-style: none; max-height: 300px; overflow-y: auto; background: var(--night-3); border: 1px solid rgba(207, 170, 94, .35); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .25s, transform .3s var(--ease), visibility .25s; outline: none; }
+.dd.is-open .dd-list { opacity: 1; visibility: visible; transform: none; }
+.dd-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; font-size: 16px; color: var(--parch-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.dd-list li.is-active { background: rgba(207, 170, 94, .1); color: var(--parch); }
+.dd-list li[aria-selected="true"] { color: var(--gold-2); }
+.dd-list li[aria-selected="true"]::after { content: ''; width: 15px; height: 15px; flex-shrink: 0; background: var(--gold); -webkit-mask: var(--tick) center / contain no-repeat; mask: var(--tick) center / contain no-repeat; }
 .btn.is-loading { opacity: .6; pointer-events: none; }
-.success { padding: 40px; border: 1px solid var(--gold); outline: none; }
-.success h3 { font-size: 40px; font-style: italic; color: var(--gold-2); }
-.success p { color: var(--parch-2); margin-top: 8px; }
+.success { padding: 44px 36px; border: 1px solid var(--gold); outline: none; }
+.success-check { width: 76px; height: 76px; margin-bottom: 22px; display: block; animation: pop .6s var(--ease) both; }
+.success-check circle { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 208; stroke-dashoffset: 208; animation: draw .8s .1s var(--ease) forwards; }
+.success-check path { fill: none; stroke: var(--gold-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw .5s .6s var(--ease) forwards; }
+.success h3 { font-size: 36px; font-style: italic; color: var(--gold-2); animation: fadeUp .7s .55s var(--ease) both; }
+.success p { color: var(--parch-2); margin-top: 8px; animation: fadeUp .7s .65s var(--ease) both; }
+
+/* ── Policy dialog ── */
+.dlg { width: min(720px, calc(100% - 32px)); max-height: min(86vh, 900px); padding: 0; border: 1px solid rgba(207, 170, 94, .4); background: var(--night-2); color: var(--parch); box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .8); }
+.dlg::backdrop { background: rgba(5, 8, 15, .75); }
+.dlg[open] { animation: fadeUp .4s var(--ease) both; }
+.dlg-in { position: relative; padding: clamp(28px, 4vw, 52px); }
+.dlg h2 { font-size: clamp(26px, 3vw, 36px); line-height: 1.1; padding-right: 52px; margin-bottom: 20px; }
+.dlg h3 { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 26px 0 8px; }
+.dlg p { color: var(--parch-2); font-size: 15px; }
+.dlg-close { position: absolute; top: 20px; right: 20px; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); transition: background-color .2s, color .2s; }
+.dlg-close:hover { background: var(--gold); color: var(--night); }
+.foot-bottom a { color: var(--parch-2); text-decoration: underline; text-underline-offset: 3px; }
+.foot-bottom a:hover { color: var(--gold-2); }
 
 /* ── Footer ── */
 .foot { border-top: 1px solid var(--line); padding-block: 56px calc(36px + env(safe-area-inset-bottom, 0px)); }
 .foot-big { font-family: var(--f-display); font-size: clamp(56px, 12vw, 200px); line-height: .85; letter-spacing: -.02em; color: var(--night-3); -webkit-text-stroke: 1px rgba(207, 170, 94, .35); white-space: nowrap; overflow: hidden; }
 .foot-big i { color: transparent; }
-.foot-in { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 32px; margin-top: 48px; }
+.foot-in { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 32px; }
 .foot p { color: var(--parch-3); font-size: 14px; max-width: 44ch; }
 .foot h4 { margin: 0 0 14px; color: var(--gold); }
 .foot-col a { display: block; padding: 4px 0; color: var(--parch-2); font-size: 15px; transition: color .2s; }
@@ -308,6 +339,8 @@ p { margin: 0; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes draw { from { transform: scaleX(0); } to { transform: none; } }
 @keyframes portrait { from { opacity: 0; transform: scale(1.08) translateX(3%); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(.5); } 60% { transform: scale(1.06); } 100% { transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes cue { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -346,7 +379,9 @@ p { margin: 0; }
   body { font-size: 16px; }
   .hdr-in { height: 68px; }
   .hero-in { margin-top: -20vw; }
-  .pbtn { width: 64px; height: 64px; top: 16px; left: auto; right: 16px; margin: 0; }
+  .pbtn { width: 60px; height: 60px; top: 14px; right: 14px; }
+  .pbtn::after { inset: 5px; }
+  .video-play strong { font-size: 18px; }
   .pbtn svg { width: 22px; height: 22px; }
   .hero-name .ln:nth-child(2) > span { padding-left: .25em; }
   .hero-actions .btn { flex: 1 1 100%; }
@@ -376,9 +411,9 @@ p { margin: 0; }
 
 <div class="progress" aria-hidden="true"></div>
 
-<header class="hdr">
+<header class="hdr" data-reveal>
   <div class="wrap hdr-in">
-    <a href="#top" class="logo" aria-label="Анна Алёшина — наверх"><i>Анна</i> Алёшина</a>
+    <a href="#top" class="logo">Анна Алёшина</a>
     <nav class="nav" aria-label="Разделы">
       <a href="#projects">Проекты</a>
       <a href="#about">Обо мне</a>
@@ -398,14 +433,13 @@ p { margin: 0; }
   <a href="#results">Результаты</a>
   <a href="#reviews">Отзывы</a>
   <a href="#books">Учебники</a>
-  <a href="#contact" class="btn btn-gold">Написать мне</a>
+  <a href="#contact" class="btn btn-gold">Связаться</a>
 </div>
 
 <main>
 <section class="hero" id="top">
   <div class="hero-photo"><img src="images/anna-aleshina/photo_2026-06-22_14-03-19.jpg" alt="Анна Алёшина" fetchpriority="high"></div>
   <div class="wrap hero-in">
-    <div class="hero-kicker mono"><span>К.э.н.</span><span>Доцент МГУ</span><span>ИЭЭФ МГУ</span></div>
     <h1 class="hero-name"><span class="ln"><span>Анна</span></span><span class="ln"><span>Алёшина</span></span></h1>
     <div class="hero-rule"></div>
     <div class="hero-row">
@@ -413,7 +447,7 @@ p { margin: 0; }
         <p class="hero-desc">Экономист, педагог и учёный. Основала онлайн-школу «Будет 100 баллов», руковожу научным департаментом Института экспериментальной экономики и финансов МГУ.</p>
         <div class="hero-actions">
           <a href="#projects" class="btn btn-gold">Проекты <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a href="#contact" class="btn btn-line">Написать мне</a>
+          <a href="#contact" class="btn btn-line">Связаться</a>
         </div>
       </div>
       <div class="creds">
@@ -428,32 +462,27 @@ p { margin: 0; }
 
 <section class="sec" id="projects">
   <div class="wrap">
-    <div class="eyebrow mono">Проекты</div>
-    <h2 class="sec-title">Школа и <em>институт</em>: два дела, одна логика</h2>
+    <h2 class="sec-title">Школа и институт: два дела, одна логика</h2>
     <div class="projects">
       <article class="proj rv">
-        <div class="proj-tag mono">Образование · с 2023</div>
         <h3>Онлайн-школа «Будет 100&nbsp;баллов»</h3>
-        <p>С 2000 года я репетитор по обществознанию и правоведению. В 2023 году вышла в онлайн: основала школу полного цикла с преподавателями-экспертами, которые проверяют ЕГЭ и ОГЭ, командой кураторов и службой заботы об учениках.</p>
-        <ul class="proj-list"><li>Русский язык</li><li>Математика</li><li>История</li><li>Обществознание</li></ul>
+        <p>В 2023 году основала онлайн-школу полного цикла. В команде — преподаватели-эксперты, которые проверяют ЕГЭ и ОГЭ, кураторы и служба заботы об учениках. Школа выросла из моей многолетней практики подготовки к экзаменам и олимпиадам.</p>
+        <a class="link" href="https://vk.com/club238178938" target="_blank" rel="noopener">Сообщество школы <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
         <div class="proj-stats">
           <div><div class="ps-num" data-count="171">171</div><div class="ps-label">ученик за 4 года</div></div>
           <div><div class="ps-num" data-count="14">14</div><div class="ps-label">победителей олимпиад</div></div>
           <div><div class="ps-num" data-count="15">15</div><div class="ps-label">преподавателей</div></div>
         </div>
-        <a class="link" href="https://vk.com/club238178938" target="_blank" rel="noopener">Сообщество школы <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </article>
       <article class="proj rv">
-        <div class="proj-tag mono">Наука · ИЭЭФ МГУ</div>
         <h3>Институт экспериментальной экономики и&nbsp;финансов</h3>
         <p>Руковожу научным и образовательным департаментом. Веду проекты в области блокчейн-технологий, финтеха и автоматизации банковских операций. Главный научный редактор журнала «Экспериментальная экономика и финансы».</p>
-        <ul class="proj-list"><li>Блокчейн</li><li>Финтех</li><li>Банковские операции</li></ul>
+        <a class="link" href="https://иээф.рф/" target="_blank" rel="noopener">Сайт института <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
         <div class="proj-stats">
           <div><div class="ps-num">Q1</div><div class="ps-label">публикации за рубежом</div></div>
           <div><div class="ps-num" data-count="12">12</div><div class="ps-label">свидетельств Роспатента</div></div>
           <div><div class="ps-num">к.э.н.</div><div class="ps-label">доцент МГУ</div></div>
         </div>
-        <a class="link" href="https://иээф.рф/" target="_blank" rel="noopener">Сайт института <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </article>
     </div>
   </div>
@@ -463,7 +492,6 @@ p { margin: 0; }
   <div class="wrap">
     <figure class="about-wide rv" style="margin:0">
       <img src="images/anna-aleshina/photo_2026-06-26_09-44-00.jpg" alt="Анна Алёшина с книгой" loading="lazy">
-      <figcaption class="mono">Обо мне</figcaption>
     </figure>
     <div class="about">
       <div>
@@ -472,11 +500,11 @@ p { margin: 0; }
         <p class="about-body">Параллельно веду научную работу в ИЭЭФ МГУ: исследую блокчейн-технологии, финтех и цифровую трансформацию финансов. Открыта к сотрудничеству, обмену опытом и новым знакомствам.</p>
       </div>
       <ol class="cv rv">
-        <li><span class="cv-y mono">1995</span><div><strong>Экономический факультет МГУ</strong><span>Выпускница</span></div></li>
+        <li><span class="cv-y mono">1995</span><div><strong>Экономический факультет МГУ</strong><span>Окончила факультет и с того же года работаю на нём</span></div></li>
         <li><span class="cv-y mono">1996</span><div><strong>Юридический факультет МФЮА</strong><span>Второе высшее образование</span></div></li>
-        <li><span class="cv-y mono">2000</span><div><strong>Начало преподавания</strong><span>МГУ, олимпиады, затем ЕГЭ и ОГЭ</span></div></li>
-        <li><span class="cv-y mono">2023</span><div><strong>Школа «Будет 100 баллов»</strong><span>Онлайн-школа полного цикла</span></div></li>
-        <li><span class="cv-y mono">Сейчас</span><div><strong>Доцент МГУ, ИЭЭФ МГУ</strong><span>Главный редактор журнала «Экспериментальная экономика и финансы»</span></div></li>
+        <li><span class="cv-y mono">с 2000</span><div><strong>Доцент кафедры финансов и кредита МГУ</strong><span>Кандидат экономических наук</span></div></li>
+        <li><span class="cv-y mono">с 2011</span><div><strong>ИЭЭФ МГУ</strong><span>Руковожу научным и образовательным департаментом, главный редактор журнала «Экспериментальная экономика и финансы»</span></div></li>
+        <li><span class="cv-y mono">с 2023</span><div><strong>Онлайн-школа «Будет 100 баллов»</strong><span>Школа полного цикла, 15 преподавателей</span></div></li>
       </ol>
     </div>
   </div>
@@ -484,7 +512,6 @@ p { margin: 0; }
 
 <section class="sec results" id="results">
   <div class="wrap">
-    <div class="eyebrow mono">Результаты</div>
     <h2 class="sec-title">Двадцать пять лет <em>в цифрах</em></h2>
     <div class="nums">
       <div class="num rv"><div class="num-v" data-count="1530">1&nbsp;530</div><p>школьников подготовлено к экзаменам лично</p></div>
@@ -503,7 +530,6 @@ p { margin: 0; }
   <div data-carousel>
     <div class="wrap sec-head">
       <div>
-        <div class="eyebrow mono">Отзывы</div>
         <h2 class="sec-title">Слова <em>учеников</em></h2>
       </div>
       <div class="car-ctrl">
@@ -549,7 +575,6 @@ p { margin: 0; }
 
 <section class="sec paper" id="books">
   <div class="wrap">
-    <div class="eyebrow mono">Учебники</div>
     <h2 class="sec-title">Учебно-методические комплексы <em>для&nbsp;10–11&nbsp;классов</em></h2>
     <p class="sec-lead">Информатика и обществознание, базовый уровень, ФГОС. Рекомендованы для общеобразовательных организаций.</p>
     <div class="books">
@@ -568,15 +593,12 @@ p { margin: 0; }
         <img src="images/anna-aleshina/photo_2026-06-26_09-43-53.jpg" alt="" loading="lazy">
         <button class="video-play" type="button" aria-label="Смотреть интервью «Как поступить в вуз по результатам олимпиады?»">
           <span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-          <span class="mono gold">Интервью</span>
           <strong>Как поступить в вуз по результатам олимпиады?</strong>
           <span>Эфир с преподавателем МГУ</span>
         </button>
       </div>
-      <a class="video-alt" href="https://vimeo.com/1203420289/75e32f9618" target="_blank" rel="noopener">Открыть на Vimeo ↗</a>
     </div>
     <div class="rv">
-      <div class="eyebrow mono">Соцсети</div>
       <h2 class="sec-title" style="font-size:clamp(34px,4vw,56px)">Следите <em>за&nbsp;новостями</em></h2>
       <p class="sec-lead">Разборы заданий, новости олимпиад и истории учеников — в каналах школы.</p>
       <div class="socials">
@@ -598,10 +620,8 @@ p { margin: 0; }
 <section class="sec" id="contact" style="background:var(--night-2)">
   <div class="wrap contact">
     <div>
-      <div class="eyebrow mono">Контакты</div>
       <h2 class="sec-title">Напишите <em>мне</em></h2>
-      <p class="sec-lead">Партнёрство, наука или подготовка к экзаменам — оставьте контакты, отвечу в течение дня.</p>
-      <div class="contact-photo"><img src="images/anna-aleshina/3701.png" alt="Анна Алёшина" loading="lazy"></div>
+      <p class="sec-lead">Партнёрство, научный проект, интервью или другой вопрос — оставьте контакты, я отвечу в течение дня.</p>
     </div>
     <div>
       <form class="form" id="contactForm" novalidate>
@@ -618,29 +638,35 @@ p { margin: 0; }
           </div>
         </div>
         <div class="field">
-          <label class="mono" for="inp-goal">Тема</label>
-          <select id="inp-goal" name="goal">
-            <option>Подготовка к ЕГЭ / ОГЭ</option>
-            <option>Олимпиады и поступление</option>
-            <option>Партнёрство / инвестиции</option>
-            <option>Сотрудничество в науке</option>
-            <option>Работа в школе</option>
-            <option>Другое</option>
-          </select>
-        </div>
+            <span class="field-label" id="goal-label">Тема обращения</span>
+            <div class="dd" data-dd>
+              <input type="hidden" name="goal" id="inp-goal" value="Партнёрство и совместные проекты">
+              <button type="button" class="dd-btn" id="goal-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="goal-label goal-btn"><span class="dd-val">Партнёрство и совместные проекты</span><svg class="dd-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+              <ul class="dd-list" role="listbox" tabindex="-1" aria-labelledby="goal-label">
+                <li role="option" aria-selected="true">Партнёрство и совместные проекты</li>
+                <li role="option" aria-selected="false">Инвестиции</li>
+                <li role="option" aria-selected="false">Научное сотрудничество</li>
+                <li role="option" aria-selected="false">Онлайн-школа «Будет 100 баллов»</li>
+                <li role="option" aria-selected="false">Интервью и выступления</li>
+                <li role="option" aria-selected="false">Работа в команде</li>
+                <li role="option" aria-selected="false">Другой вопрос</li>
+              </ul>
+            </div>
+          </div>
         <div class="field">
           <label class="mono" for="inp-comment">Комментарий</label>
-          <textarea id="inp-comment" name="comment" placeholder="Расскажите о вашем запросе"></textarea>
+          <textarea id="inp-comment" name="comment" placeholder="Коротко опишите ваш вопрос"></textarea>
         </div>
         <div class="form-foot">
           <button type="submit" class="btn btn-gold">Отправить <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-          <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
+          <p class="form-note">Нажимая кнопку, вы соглашаетесь с <a href="#policy" data-dialog="policy">политикой обработки персональных данных</a></p>
         </div>
       </form>
       <div class="success" id="formSuccess" tabindex="-1" hidden>
-        <h3>Спасибо!</h3>
-        <p>Заявка принята. Свяжусь с вами в течение дня.</p>
-      </div>
+          <svg class="success-check" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="33"/><path d="M22 37.5l9.5 9.5L51 27"/></svg>
+          <h3>Спасибо, заявка принята</h3>
+          <p>Анна свяжется с вами в течение дня.</p>
+        </div>
     </div>
   </div>
 </section>
@@ -648,7 +674,6 @@ p { margin: 0; }
 
 <footer class="foot">
   <div class="wrap">
-    <div class="foot-big" aria-hidden="true"><i>Анна</i> Алёшина</div>
     <div class="foot-in">
       <div><p>Кандидат экономических наук, доцент МГУ им. М. В. Ломоносова. Основатель онлайн-школы «Будет 100 баллов». Руководитель научного департамента ИЭЭФ МГУ.</p></div>
       <div class="foot-col">
@@ -660,9 +685,30 @@ p { margin: 0; }
         <a href="https://t.me/obshestvoEGE100ballov" target="_blank" rel="noopener">Telegram</a><a href="https://vk.com/club238178938" target="_blank" rel="noopener">ВКонтакте</a><a href="https://иээф.рф/" target="_blank" rel="noopener">ИЭЭФ МГУ</a>
       </div>
     </div>
-    <div class="foot-bottom"><span>© <span data-year>2026</span> Анна Алёшина</span><span>ЕГЭ · ОГЭ · олимпиады · наука</span></div>
+    <div class="foot-bottom"><span>© <span data-year>2026</span> Анна Алёшина</span><a href="#policy" data-dialog="policy">Политика обработки персональных данных</a></div>
   </div>
 </footer>
+
+<dialog class="dlg" id="policy" aria-labelledby="policy-title">
+  <div class="dlg-in">
+    <form method="dialog"><button class="dlg-close" aria-label="Закрыть"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
+    <h2 id="policy-title">Политика обработки персональных данных</h2>
+    <h3>1. Общие положения</h3>
+    <p>Настоящая политика определяет порядок обработки и защиты персональных данных посетителей сайта Анны Валентиновны Алёшиной (далее — Оператор). Политика составлена в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных».</p>
+    <h3>2. Какие данные обрабатываются</h3>
+    <p>Имя, номер телефона и текст сообщения, которые посетитель сам указывает в форме обратной связи, а также выбранная тема обращения.</p>
+    <h3>3. Цели обработки</h3>
+    <p>Данные используются только для того, чтобы связаться с посетителем и ответить на его обращение. Оператор не использует их для рассылок без отдельного согласия.</p>
+    <h3>4. Основание обработки</h3>
+    <p>Обработка ведётся на основании согласия посетителя, которое он даёт, отправляя форму на сайте.</p>
+    <h3>5. Хранение и защита</h3>
+    <p>Данные хранятся не дольше, чем это нужно для ответа на обращение, и не передаются третьим лицам, за исключением случаев, прямо предусмотренных законодательством Российской Федерации. Оператор принимает организационные и технические меры для защиты данных от неправомерного доступа.</p>
+    <h3>6. Права посетителя</h3>
+    <p>Посетитель вправе получить сведения об обработке своих данных, потребовать их уточнения или удаления, а также отозвать согласие, направив обращение через форму обратной связи на этом сайте.</p>
+    <h3>7. Изменение политики</h3>
+    <p>Оператор может обновлять политику. Актуальная версия всегда опубликована на этой странице.</p>
+  </div>
+</dialog>
 
 <script>
 (() => {
@@ -678,11 +724,17 @@ p { margin: 0; }
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
   const progress = $('.progress');
+  const heroEl = $('.hero');
+  const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   let lastY = window.scrollY;
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
+      if (revealHdr) {
+        const limit = heroEl ? heroEl.offsetHeight * 0.6 : 320;
+        hdr.classList.toggle('is-away', window.innerWidth > 980 && y < limit);
+      }
       const dy = y - lastY;
       if (Math.abs(dy) > 6) {
         hdr.classList.toggle('is-hidden', dy > 0 && y > 520 && !document.body.classList.contains('menu-open'));
@@ -695,6 +747,7 @@ p { margin: 0; }
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
   onScroll();
 
   /* ── Mobile menu ── */
@@ -897,6 +950,73 @@ p { margin: 0; }
       box.appendChild(f);
       box.classList.add('is-playing');
     });
+  });
+
+  /* ── Dropdowns in the site's own style ── */
+  $$('[data-dd]').forEach((dd, n) => {
+    const btn = $('.dd-btn', dd);
+    const list = $('.dd-list', dd);
+    const val = $('.dd-val', dd);
+    const input = $('input[type="hidden"]', dd);
+    const opts = $$('[role="option"]', list);
+    let active = Math.max(0, opts.findIndex(o => o.getAttribute('aria-selected') === 'true'));
+    opts.forEach((o, i) => { if (!o.id) o.id = 'dd' + n + '-' + i; });
+    const setActive = (i, scroll) => {
+      active = (i + opts.length) % opts.length;
+      opts.forEach((o, k) => o.classList.toggle('is-active', k === active));
+      list.setAttribute('aria-activedescendant', opts[active].id);
+      if (scroll) opts[active].scrollIntoView({ block: 'nearest' });
+    };
+    const open = () => {
+      dd.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      setActive(active, true);
+      list.focus({ preventScroll: true });
+    };
+    const close = focusBtn => {
+      if (!dd.classList.contains('is-open')) return;
+      dd.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (focusBtn) btn.focus({ preventScroll: true });
+    };
+    const choose = i => {
+      opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === i)));
+      val.textContent = opts[i].textContent.trim();
+      if (input) input.value = opts[i].dataset.value || opts[i].textContent.trim();
+      active = i;
+      close(true);
+    };
+    btn.addEventListener('click', () => (dd.classList.contains('is-open') ? close(true) : open()));
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+    });
+    opts.forEach((o, i) => {
+      o.addEventListener('click', () => choose(i));
+      o.addEventListener('mousemove', () => { if (active !== i) setActive(i, false); });
+    });
+    list.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1, true); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1, true); }
+      else if (e.key === 'Home') { e.preventDefault(); setActive(0, true); }
+      else if (e.key === 'End') { e.preventDefault(); setActive(opts.length - 1, true); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+      else if (e.key === 'Tab') close(false);
+    });
+    document.addEventListener('click', e => { if (!dd.contains(e.target)) close(false); });
+  });
+
+  /* ── Privacy policy dialog ── */
+  $$('[data-dialog]').forEach(a => a.addEventListener('click', e => {
+    const d = document.getElementById(a.dataset.dialog);
+    if (!d || typeof d.showModal !== 'function') return;
+    e.preventDefault();
+    d.showModal();
+    document.body.classList.add('lb-open');
+  }));
+  $$('dialog').forEach(d => {
+    d.addEventListener('close', () => document.body.classList.remove('lb-open'));
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
   });
 
   /* ── Contact form ── */

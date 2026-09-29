@@ -4,211 +4,170 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Анна Алёшина · Учебник</title>
+<title>Анна Алёшина · Кабинет</title>
 <meta name="description" content="Анна Алёшина — кандидат экономических наук, доцент МГУ, основатель онлайн-школы «Будет 100 баллов», руководитель научного департамента ИЭЭФ МГУ.">
-<meta name="theme-color" content="#2446E0">
+<meta name="theme-color" content="#F3EEE6">
+<link rel="icon" type="image/png" href="images/anna-aleshina/245.png">
+<link rel="apple-touch-icon" href="images/anna-aleshina/245.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Golos+Text:wght@400;500;600;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout: страница как школьный учебник — кобальт и жёлтый с обложек её УМК, параграфы «§», подписи «Рис.», оценки красной ручкой */
+/* Layout: спокойная официальная визитка — бежевая бумага, тонкие линии, фотографии в паспарту, классическая антиква в заголовках */
 :root {
-  --white:   #FFFFFF;
-  --paper:   #F3F5FB;
-  --ink:     #0E1330;
-  --ink-2:   #4A5173;
-  --ink-3:   #858BA6;
-  --cobalt:  #2446E0;
-  --cobalt-d:#1831A8;
-  --cobalt-l:#E4E9FD;
-  --yellow:  #FFD53D;
-  --yellow-d:#F2C200;
-  --pen:     #E0352B;
-  --line:    #DCE1F0;
+  --bg:       #F3EEE6;
+  --sand:     #EAE2D6;
+  --card:     #FBF8F3;
+  --ink:      #2B221C;
+  --ink-2:    #685B50;
+  --ink-3:    #9A8D81;
+  --accent:   #8A6A4E;
+  --accent-d: #6F5440;
+  --line:     #DCD2C4;
+  --dark:     #2F2620;
+  --danger:   #A8402F;
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
 
-  --f-display: 'Unbounded', 'Golos Text', system-ui, sans-serif;
-  --f-body:    'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --f-hand:    'Caveat', 'Segoe Print', cursive;
+  --f-display: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
+  --f-body:    'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --r: 24px;
-  --r-l: 40px;
-  --wrap: 1240px;
-  --gut: clamp(16px, 4vw, 40px);
-  --spring: cubic-bezier(.34, 1.56, .64, 1);
-  --ease: cubic-bezier(.2, .8, .2, 1);
+  --r: 6px;
+  --wrap: 1200px;
+  --gut: clamp(16px, 4vw, 48px);
+  --ease: cubic-bezier(.22, .7, .2, 1);
   color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-body { margin: 0; font-family: var(--f-body); font-size: 17px; line-height: 1.6; color: var(--ink); background: var(--white); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-variant-numeric: lining-nums; font-family: var(--f-body); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--bg); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 body.menu-open, body.lb-open { overflow: hidden; }
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
 [hidden] { display: none !important; }
-:focus-visible { outline: 3px solid var(--yellow-d); outline-offset: 3px; border-radius: 8px; }
-h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
 p { margin: 0; }
-::selection { background: var(--yellow); color: var(--ink); }
+::selection { background: var(--accent); color: var(--card); }
 
 .wrap { width: 100%; max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
-.sec { padding-block: clamp(64px, 9vw, 120px); }
-.kicker { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 100px; background: var(--cobalt-l); color: var(--cobalt-d); font-weight: 600; font-size: 14px; margin-bottom: 18px; }
-.kicker b { display: grid; place-items: center; min-width: 28px; height: 28px; padding-inline: 6px; border-radius: 100px; background: var(--cobalt); color: var(--white); font-family: var(--f-display); font-size: 12px; font-weight: 700; }
-.sec-title { font-size: clamp(30px, 4.6vw, 58px); font-weight: 700; line-height: 1.05; letter-spacing: -.03em; }
-.sec-title mark { background: none; color: var(--cobalt); }
-.sec-lead { color: var(--ink-2); max-width: 50ch; margin-top: 16px; font-size: 18px; }
+.sec { padding-block: clamp(72px, 9vw, 128px); }
+.sec-title { font-size: clamp(36px, 4.6vw, 58px); line-height: 1.05; letter-spacing: -.01em; }
+.sec-lead { color: var(--ink-2); max-width: 56ch; margin-top: 18px; }
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: clamp(36px, 4.5vw, 56px); }
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .rv { animation: rv linear both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
-    @keyframes rv { from { transform: translateY(40px) rotate(1.5deg); } to { transform: none; } }
-    .pop { animation: pop linear both; animation-timeline: view(); animation-range: entry 10% cover 30%; }
-    @keyframes pop { from { transform: scale(1.8) rotate(-30deg); } to { transform: rotate(var(--rot, -8deg)); } }
+    .rv { animation: rv linear both; animation-timeline: view(); animation-range: entry 5% cover 26%; }
+    @keyframes rv { from { transform: translateY(36px); } to { transform: none; } }
   }
 }
 
 /* ── Buttons ── */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 28px; border-radius: 100px; font-weight: 600; font-size: 17px; white-space: nowrap; transition: transform .35s var(--spring), background-color .25s, color .25s, box-shadow .25s; }
-.btn svg { transition: transform .35s var(--spring); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 28px; border-radius: var(--r); font-size: 15px; font-weight: 600; letter-spacing: .01em; white-space: nowrap; transition: background-color .3s, color .3s, border-color .3s, transform .3s var(--ease); }
+.btn svg { transition: transform .3s var(--ease); }
 .btn:hover svg { transform: translateX(4px); }
-.btn:active { transform: scale(.97); }
-.btn-yellow { background: var(--yellow); color: var(--ink); box-shadow: 0 5px 0 var(--yellow-d); }
-.btn-yellow:hover { transform: translateY(-3px); box-shadow: 0 8px 0 var(--yellow-d); }
-.btn-ghost { color: var(--white); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .45); }
-.btn-ghost:hover { box-shadow: inset 0 0 0 2px var(--white); transform: translateY(-3px); }
-.btn-blue { background: var(--cobalt); color: var(--white); box-shadow: 0 5px 0 var(--cobalt-d); }
-.btn-blue:hover { transform: translateY(-3px); box-shadow: 0 8px 0 var(--cobalt-d); }
+.btn-dark { background: var(--ink); color: var(--card); }
+.btn-dark:hover { background: var(--accent-d); }
+.btn-line { border: 1px solid var(--ink); color: var(--ink); }
+.btn-line:hover { background: var(--ink); color: var(--card); }
+.link { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; font-size: 15px; font-weight: 600; color: var(--accent-d); padding-bottom: 3px; background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat; transition: background-size .45s var(--ease), color .2s; }
+.link:hover { background-size: 35% 1px; color: var(--ink); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 4px; background: var(--yellow); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
-.hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); color: var(--white); transition: transform .45s var(--ease), background-color .3s, color .3s, box-shadow .3s; }
-.hdr.is-solid { background: rgba(255, 255, 255, .92); color: var(--ink); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 1px 0 var(--line); }
-.hdr.is-hidden { transform: translateY(-110%); }
-.hdr-in { display: flex; align-items: center; gap: 20px; height: 76px; }
-.logo { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 700; font-size: 16px; letter-spacing: -.02em; }
-.logo-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--yellow); color: var(--ink); font-size: 13px; font-weight: 900; transition: transform .5s var(--spring); }
-.logo:hover .logo-mark { transform: rotate(-20deg) scale(1.08); }
-.nav { display: flex; gap: 2px; margin-left: auto; padding: 5px; border-radius: 100px; background: rgba(255, 255, 255, .12); }
-.hdr.is-solid .nav { background: var(--paper); }
-.nav a { padding: 8px 14px; border-radius: 100px; font-size: 15px; font-weight: 500; opacity: .85; transition: background-color .25s, color .25s, opacity .25s; }
-.nav a:hover { opacity: 1; }
-.nav a.is-active { opacity: 1; background: var(--yellow); color: var(--ink); }
-.hdr-cta { min-height: 46px; padding: 0 20px; font-size: 15px; box-shadow: 0 4px 0 var(--yellow-d); }
-.burger { display: none; margin-left: auto; width: 48px; height: 48px; border-radius: 50%; background: var(--yellow); position: relative; }
-.burger span { position: absolute; left: 14px; right: 14px; height: 2.5px; border-radius: 2px; background: var(--ink); transition: transform .4s var(--spring), opacity .2s; }
-.burger span:nth-child(1) { top: 17px; }
-.burger span:nth-child(2) { top: 23px; }
-.burger span:nth-child(3) { top: 29px; }
+.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
+.hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .3s, box-shadow .3s; }
+.hdr.is-solid { background: rgba(243, 238, 230, .9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
+.hdr.is-hidden, .hdr.is-away { transform: translateY(-110%); }
+.hdr.is-away { pointer-events: none; }
+.hdr-in { display: flex; align-items: center; gap: 28px; height: 74px; }
+.logo { font-family: var(--f-display); font-size: 24px; font-weight: 600; letter-spacing: .01em; }
+.nav { display: flex; gap: 26px; margin-left: auto; }
+.nav a { position: relative; font-size: 15px; color: var(--ink-2); padding-block: 6px; transition: color .2s; }
+.nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform .35s var(--ease); }
+.nav a:hover, .nav a.is-active { color: var(--ink); }
+.nav a:hover::after, .nav a.is-active::after { transform: scaleX(1); }
+.hdr-cta { min-height: 42px; padding: 0 20px; font-size: 14px; }
+.burger { display: none; margin-left: auto; width: 46px; height: 46px; border: 1px solid var(--line); border-radius: var(--r); position: relative; background: var(--card); }
+.burger span { position: absolute; left: 13px; right: 13px; height: 1.5px; background: var(--ink); transition: transform .35s var(--ease), opacity .2s; }
+.burger span:nth-child(1) { top: 16px; }
+.burger span:nth-child(2) { top: 22px; }
+.burger span:nth-child(3) { top: 28px; }
 .burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
 .burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-.mnav { position: fixed; inset: 0; z-index: 290; background: var(--cobalt); color: var(--white); padding: calc(104px + env(safe-area-inset-top, 0px)) var(--gut) calc(28px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 4px; clip-path: circle(0 at calc(100% - 44px) 40px); visibility: hidden; transition: clip-path .6s var(--ease), visibility .6s; }
-.mnav.is-open { clip-path: circle(150% at calc(100% - 44px) 40px); visibility: visible; }
-.mnav a:not(.btn) { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 8vw, 40px); letter-spacing: -.03em; padding-block: 8px; }
-.mnav a:not(.btn):hover { color: var(--yellow); }
+.mnav { position: fixed; inset: 0; z-index: 290; background: var(--bg); padding: calc(100px + env(safe-area-inset-top, 0px)) var(--gut) calc(28px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; visibility: hidden; opacity: 0; transition: opacity .35s, visibility .35s; }
+.mnav.is-open { visibility: visible; opacity: 1; }
+.mnav a:not(.btn) { font-family: var(--f-display); font-size: clamp(32px, 9vw, 44px); line-height: 1.2; padding-block: 10px; border-bottom: 1px solid var(--line); opacity: 0; transform: translateY(12px); transition: opacity .45s var(--ease), transform .45s var(--ease); }
+.mnav.is-open a:not(.btn) { opacity: 1; transform: none; }
+.mnav.is-open a:nth-child(2) { transition-delay: .04s; }
+.mnav.is-open a:nth-child(3) { transition-delay: .08s; }
+.mnav.is-open a:nth-child(4) { transition-delay: .12s; }
+.mnav.is-open a:nth-child(5) { transition-delay: .16s; }
 .mnav .btn { margin-top: auto; }
-.hdr:has(+ .mnav.is-open) { color: var(--white); background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 /* ── Hero ── */
-.hero { position: relative; overflow: hidden; background: var(--cobalt); color: var(--white); padding-top: calc(112px + env(safe-area-inset-top, 0px)); padding-bottom: clamp(48px, 7vw, 96px); border-radius: 0 0 var(--r-l) var(--r-l); }
-.hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, .14) 1.2px, transparent 1.3px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(120deg, #000 10%, transparent 60%); mask-image: linear-gradient(120deg, #000 10%, transparent 60%); pointer-events: none; }
-.hero-grid { position: relative; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
-.hero-tags { display: flex; flex-wrap: wrap; gap: 8px; animation: up .8s .1s var(--ease) both; }
-.htag { padding: 7px 14px; border-radius: 100px; background: rgba(255, 255, 255, .14); font-size: 14px; font-weight: 500; }
-.htag:first-child { background: var(--yellow); color: var(--ink); font-weight: 700; }
-.hero-name { margin-top: 24px; font-size: clamp(46px, 6.8vw, 100px); font-weight: 900; line-height: .92; letter-spacing: -.045em; }
-.hero-name span { display: block; animation: up 1s var(--ease) both; }
-.hero-name span:nth-child(1) { animation-delay: .15s; }
-.hero-name span:nth-child(2) { animation-delay: .25s; color: var(--yellow); }
-.hero-desc { margin-top: 28px; max-width: 46ch; font-size: clamp(17px, 1.5vw, 20px); color: rgba(255, 255, 255, .86); animation: up .9s .35s var(--ease) both; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 36px; animation: up .9s .45s var(--ease) both; }
-.hero-visual { position: relative; animation: up 1.1s .2s var(--ease) both; }
-.cover { position: relative; border-radius: 28px 28px 20px 20px; overflow: hidden; background: var(--cobalt-d); box-shadow: 0 40px 80px -30px rgba(10, 20, 80, .7); aspect-ratio: 4 / 5; transform: rotate(2.5deg); transition: transform .8s var(--spring); }
-.hero-visual:hover .cover { transform: rotate(0); }
-.cover img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
-.cover-band { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 20px; background: var(--yellow); color: var(--ink); font-weight: 700; font-size: 15px; }
-.cover-band span:last-child { font-family: var(--f-display); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 100px; background: var(--ink); color: var(--yellow); }
-.seal { position: absolute; left: -44px; top: 28px; width: 136px; height: 136px; border-radius: 50%; background: var(--white); color: var(--ink); display: grid; place-items: center; box-shadow: 0 18px 40px -16px rgba(10, 20, 80, .6); }
-.seal svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 18s linear infinite; }
-.seal text { font-family: var(--f-display); font-size: 10.5px; font-weight: 700; letter-spacing: .12em; fill: var(--cobalt); }
-.seal b { font-family: var(--f-display); font-size: 34px; font-weight: 900; letter-spacing: -.04em; color: var(--pen); }
-.sticker { position: absolute; right: -14px; bottom: 76px; padding: 12px 16px; border-radius: 16px; background: var(--white); color: var(--ink); box-shadow: 0 18px 40px -16px rgba(10, 20, 80, .6); transform: rotate(-6deg); font-size: 14px; line-height: 1.3; }
-.sticker strong { display: block; font-family: var(--f-display); font-size: 22px; font-weight: 900; color: var(--cobalt); letter-spacing: -.03em; }
-
-/* ── Ticker ── */
-.ticker-wrap { position: relative; z-index: 2; overflow: hidden; margin-top: -40px; padding-block: 18px 26px; }
-.ticker { overflow: hidden; background: var(--yellow); transform: rotate(-1.5deg); margin-inline: -24px; box-shadow: 0 8px 0 var(--yellow-d); }
-.ticker-track { display: flex; width: max-content; animation: marquee 32s linear infinite; }
-.ticker:hover .ticker-track { animation-play-state: paused; }
-.ticker-group { display: flex; }
-.ticker-item { display: inline-flex; align-items: center; gap: 12px; padding: 18px 28px; font-family: var(--f-display); font-size: clamp(16px, 1.8vw, 22px); font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
-.ticker-item b { color: var(--cobalt); }
-.ticker-item::after { content: '●'; margin-left: 28px; font-size: .5em; color: var(--ink); }
+.hero { padding-top: calc(64px + env(safe-area-inset-top, 0px)); padding-bottom: clamp(32px, 4vw, 48px); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 6vw, 96px); align-items: center; }
+.hero-name { font-size: clamp(56px, 8.4vw, 124px); line-height: .92; letter-spacing: -.015em; }
+.hero-name span { display: block; animation: rise 1.1s var(--ease) both; }
+.hero-name span:nth-child(2) { animation-delay: .1s; padding-left: .55em; font-style: italic; color: var(--accent-d); }
+.hero-role { margin-top: 30px; font-size: 18px; font-weight: 500; color: var(--ink); max-width: 40ch; animation: fade 1s .3s var(--ease) both; }
+.hero-desc { margin-top: 12px; color: var(--ink-2); max-width: 52ch; animation: fade 1s .4s var(--ease) both; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; animation: fade 1s .5s var(--ease) both; }
+.frame { position: relative; margin: 0; }
+.frame::before { content: ''; position: absolute; inset: 16px -16px -16px 16px; border: 1px solid var(--accent); opacity: .5; pointer-events: none; }
+.frame img { position: relative; width: 100%; object-fit: cover; }
+.hero-photo { animation: fade 1.2s .15s var(--ease) both; }
+.hero-photo img { aspect-ratio: 4 / 5; max-height: min(66vh, 600px); object-position: 50% 20%; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: clamp(40px, 5vw, 56px) 0 0; padding: 0; border-top: 1px solid var(--line); animation: fade 1s .6s var(--ease) both; }
+.fact { padding: 22px 24px 0 0; min-width: 0; }
+.fact + .fact { padding-left: 24px; border-left: 1px solid var(--line); }
+.fact dt { font-family: var(--f-display); font-size: clamp(28px, 2.8vw, 38px); line-height: 1; font-weight: 600; color: var(--accent-d); }
+.fact dd { margin: 10px 0 0; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
 
 /* ── Projects ── */
-.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: clamp(32px, 4vw, 48px); }
-.proj { position: relative; display: flex; flex-direction: column; gap: 22px; padding: clamp(28px, 3.6vw, 48px); border-radius: var(--r-l); min-width: 0; transition: transform .5s var(--spring); }
-.proj:hover { transform: translateY(-6px) rotate(-.6deg); }
-.proj:nth-child(2):hover { transform: translateY(-6px) rotate(.6deg); }
-.proj-y { background: var(--yellow); }
-.proj-b { background: var(--ink); color: var(--white); }
-.proj-label { display: inline-flex; align-self: flex-start; padding: 6px 12px; border-radius: 100px; background: var(--ink); color: var(--yellow); font-size: 13px; font-weight: 600; }
-.proj-b .proj-label { background: var(--cobalt); color: var(--white); }
-.proj h3 { font-size: clamp(24px, 2.6vw, 34px); font-weight: 700; line-height: 1.08; letter-spacing: -.03em; }
-.proj p { font-size: 16px; color: rgba(14, 19, 48, .78); }
-.proj-b p { color: rgba(255, 255, 255, .72); }
-.proj-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: auto; }
-.pst { padding: 16px; border-radius: 18px; background: rgba(255, 255, 255, .55); }
-.proj-b .pst { background: rgba(255, 255, 255, .07); }
-.pst-v { font-family: var(--f-display); font-size: clamp(24px, 2.6vw, 34px); font-weight: 900; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-.proj-b .pst-v { color: var(--yellow); }
-.pst-l { margin-top: 6px; font-size: 13px; line-height: 1.3; opacity: .75; }
-.proj-link { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px; }
-.proj-link span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--yellow); transition: transform .4s var(--spring); }
-.proj-b .proj-link span { background: var(--yellow); color: var(--ink); }
-.proj-link:hover span { transform: rotate(45deg) scale(1.1); }
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.proj { display: flex; flex-direction: column; gap: 20px; padding: clamp(28px, 3.6vw, 48px); background: var(--card); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
+.proj h3 { font-size: clamp(28px, 2.8vw, 38px); line-height: 1.08; }
+.proj p { color: var(--ink-2); font-size: 16px; }
+.proj-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: auto; padding-top: 24px; border-top: 1px solid var(--line); }
+.ps-num { font-family: var(--f-display); font-size: clamp(32px, 3vw, 44px); font-weight: 600; line-height: 1; color: var(--ink); font-variant-numeric: lining-nums tabular-nums; }
+.ps-label { margin-top: 8px; font-size: 13px; line-height: 1.4; color: var(--ink-3); }
 
-/* ── About (textbook page) ── */
-.about { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 80px); align-items: start; }
-.fig { margin: 0; position: sticky; top: 100px; }
-.fig-img { position: relative; border-radius: var(--r); overflow: hidden; }
-.fig-img img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 62% 50%; }
-.fig figcaption { margin-top: 12px; font-size: 14px; color: var(--ink-3); }
-.fig figcaption b { color: var(--ink); font-weight: 600; }
-.fig .mark { --rot: -8deg; position: absolute; right: 18px; top: 18px; }
-.mark { display: grid; place-items: center; width: 78px; height: 78px; border: 3px solid var(--pen); border-radius: 50%; color: var(--pen); font-family: var(--f-hand); font-size: 50px; line-height: 1; transform: rotate(var(--rot, -8deg)); background: rgba(255, 255, 255, .85); }
-.paras { display: grid; gap: 0; margin-top: 36px; }
-.para { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 16px; padding-block: 24px; border-top: 2px solid var(--ink); }
-.para-n { font-family: var(--f-display); font-weight: 900; font-size: 22px; color: var(--cobalt); letter-spacing: -.03em; }
-.para h3 { font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
-.para p { margin-top: 8px; color: var(--ink-2); }
-.para em { font-style: normal; background: linear-gradient(transparent 60%, rgba(255, 213, 61, .7) 60%); padding-inline: 2px; }
-.about-lead { font-size: clamp(22px, 2.3vw, 28px); line-height: 1.35; font-weight: 500; letter-spacing: -.01em; }
+/* ── About ── */
+.about { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(40px, 6vw, 96px); align-items: start; }
+.about-photo { position: sticky; top: 104px; }
+.about-photo img { aspect-ratio: 4 / 5; object-position: 50% 30%; }
+.about-body { color: var(--ink-2); margin-top: 22px; max-width: 60ch; }
+.about-body + .about-body { margin-top: 14px; }
+.cv { list-style: none; margin: 40px 0 0; padding: 0; }
+.cv li { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 20px; padding: 20px 0; border-top: 1px solid var(--line); }
+.cv li:last-child { border-bottom: 1px solid var(--line); }
+.cv-y { font-family: var(--f-display); font-size: 22px; font-weight: 600; line-height: 1.2; color: var(--accent-d); }
+.cv strong { display: block; font-family: var(--f-display); font-size: 23px; font-weight: 600; line-height: 1.2; }
+.cv span { display: block; margin-top: 4px; font-size: 15px; color: var(--ink-2); }
 
 /* ── Results ── */
-.results-bg { background: var(--paper); border-radius: var(--r-l); padding: clamp(28px, 5vw, 72px); }
-.results { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; margin-top: clamp(32px, 4vw, 48px); }
-.rbox { border-radius: var(--r); padding: 28px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.rbox-v { font-family: var(--f-display); font-weight: 900; font-size: clamp(44px, 5.4vw, 80px); line-height: .9; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
-.rbox p { font-size: 16px; line-height: 1.45; }
-.r1 { grid-column: span 4; background: var(--yellow); }
-.r2 { grid-column: span 4; background: var(--cobalt); color: var(--white); }
-.r2 p { color: rgba(255, 255, 255, .8); }
-.r3 { grid-column: span 4; background: var(--white); box-shadow: inset 0 0 0 2px var(--line); }
-.r3 .rbox-v { color: var(--pen); }
-.chart { grid-column: 1 / -1; background: var(--white); border-radius: var(--r); padding: clamp(24px, 3vw, 36px); box-shadow: inset 0 0 0 2px var(--line); }
-.chart-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 24px; }
-.chart-head h3 { font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.band { background: var(--sand); }
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.num { padding: 30px 28px 0 0; min-width: 0; }
+.num + .num { padding-left: 28px; border-left: 1px solid var(--line); }
+.num-v { font-family: var(--f-display); font-size: clamp(54px, 6vw, 88px); font-weight: 500; line-height: .95; font-variant-numeric: lining-nums tabular-nums; }
+.num p { margin-top: 14px; color: var(--ink-2); font-size: 15px; line-height: 1.5; max-width: 30ch; }
+.chart { margin-top: clamp(40px, 5vw, 64px); padding: clamp(24px, 3.4vw, 40px); background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 26px; }
+.chart-head h3 { font-size: 28px; font-weight: 600; }
 .chart-head span { color: var(--ink-3); font-size: 14px; }
-.bars { display: grid; gap: 16px; }
-.bar { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 16px; align-items: center; }
-.bar-name { font-family: var(--f-display); font-weight: 700; font-size: 15px; }
-.bar-track { position: relative; height: 48px; }
-.bar-fill { position: relative; height: 100%; width: calc(var(--w) * var(--p)); min-width: 64px; border-radius: 14px; background: var(--c, var(--cobalt)); color: var(--white); display: flex; align-items: center; justify-content: flex-end; padding-right: 16px; font-family: var(--f-display); font-weight: 900; font-size: 18px; transform-origin: 0 50%; }
-.bar:nth-child(2) .bar-fill { --c: #4D6BF0; }
-.bar:nth-child(3) .bar-fill { --c: var(--yellow); color: var(--ink); }
+.bars { display: grid; gap: 18px; }
+.bar { display: grid; grid-template-columns: 80px minmax(0, 1fr) 52px; align-items: center; gap: 16px; }
+.bar-name { font-weight: 600; font-size: 15px; }
+.bar-track { height: 10px; border-radius: 10px; background: var(--sand); overflow: hidden; }
+.bar-fill { height: 100%; width: calc(var(--w) * var(--p)); border-radius: 10px; background: var(--accent); }
+.bar-val { font-family: var(--f-display); font-size: 26px; font-weight: 600; text-align: right; font-variant-numeric: lining-nums tabular-nums; }
+.chart-note { margin-top: 22px; font-size: 14px; color: var(--ink-3); }
+@property --p { syntax: '<number>'; inherits: false; initial-value: 1; }
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .bar-fill { animation: grow linear both; animation-timeline: view(); animation-range: entry 10% cover 40%; }
@@ -216,195 +175,208 @@ p { margin: 0; }
 }
 
 /* ── Reviews ── */
-.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; }
 .car-ctrl { display: flex; gap: 10px; }
-.car-btn { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--ink); color: var(--white); transition: transform .35s var(--spring), background-color .2s, opacity .2s; }
-.car-btn:hover:not(:disabled) { background: var(--cobalt); transform: scale(1.08); }
+.car-btn { display: grid; place-items: center; width: 52px; height: 52px; border: 1px solid var(--ink); border-radius: 50%; transition: background-color .25s, color .25s, opacity .25s; }
+.car-btn:hover:not(:disabled) { background: var(--ink); color: var(--card); }
 .car-btn:disabled { opacity: .25; cursor: default; }
 .is-static .car-ctrl, .is-static .car-bar { display: none; }
-.car-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-block: 40px 28px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; }
+.car-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-block: 4px 28px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; }
 .car-track::-webkit-scrollbar { display: none; }
 .car-track.is-dragging { cursor: grabbing; scroll-snap-type: none; }
 .car-track.is-dragging * { pointer-events: none; }
 .car-bar { max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
-.car-bar > div { height: 6px; border-radius: 6px; background: var(--paper); overflow: hidden; }
-.car-thumb { display: block; height: 100%; border-radius: 6px; background: var(--cobalt); transition: transform .12s linear; }
-.rev { position: relative; scroll-snap-align: start; flex: 0 0 min(390px, 84vw); display: flex; flex-direction: column; gap: 18px; padding: 30px 28px 26px; border-radius: var(--r); background: var(--white); box-shadow: inset 0 0 0 2px var(--line); background-image: linear-gradient(var(--line) 1px, transparent 1px); background-size: 100% 32px; background-position: 0 14px; transition: transform .45s var(--spring), box-shadow .3s; }
-.rev:nth-child(odd) { transform: rotate(-.8deg); }
-.rev:nth-child(even) { transform: rotate(.8deg); }
-.rev:hover { transform: translateY(-6px) rotate(0); box-shadow: inset 0 0 0 2px var(--cobalt), 0 24px 40px -24px rgba(24, 49, 168, .45); }
-.rev::before { content: ''; position: absolute; left: 44px; top: 0; bottom: 0; width: 2px; background: rgba(224, 53, 43, .35); }
-.rev > * { position: relative; padding-left: 36px; }
-.rev-who strong { display: block; font-family: var(--f-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
-.rev-who span { font-size: 14px; color: var(--ink-3); }
-.rev blockquote { margin: 0; font-size: 16px; line-height: 2; }
-.rev-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.rev .mark { --rot: -10deg; width: 64px; height: 64px; font-size: 40px; position: absolute; right: 16px; top: 16px; padding: 0; }
-.rev .mark small { font-family: var(--f-body); font-size: 11px; position: absolute; bottom: -20px; white-space: nowrap; font-weight: 600; }
-.rev-who { padding-right: 76px; }
-.orig { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--cobalt); }
-.orig:hover { text-decoration: underline; text-underline-offset: 3px; }
-.score-note { font-size: 14px; font-weight: 600; color: var(--pen); }
+.car-bar > div { height: 1px; background: var(--line); }
+.car-thumb { display: block; height: 1px; background: var(--ink); transition: transform .12s linear; }
+.rev { scroll-snap-align: start; flex: 0 0 min(420px, 84vw); display: flex; flex-direction: column; gap: 22px; padding: clamp(26px, 3vw, 36px); background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+.rev blockquote { margin: 0; font-family: var(--f-display); font-size: 22px; line-height: 1.4; }
+.rev-foot { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: end; }
+.rev-foot strong { font-weight: 600; font-size: 15px; }
+.rev-foot span { font-size: 13px; color: var(--ink-3); }
+.grade { grid-row: span 2; text-align: right; }
+.grade b { display: block; font-family: var(--f-display); font-size: 32px; font-weight: 600; line-height: 1; color: var(--accent-d); }
+.grade small { display: block; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.orig { justify-self: start; font-size: 13px; color: var(--ink-2); border-bottom: 1px solid var(--line); transition: color .2s, border-color .2s; }
+.orig:hover { color: var(--accent-d); border-color: currentColor; }
 
-/* ── Books (shelf) ── */
-.shelf { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 3vw, 40px); padding: clamp(32px, 4vw, 56px) clamp(16px, 3vw, 48px) 0; margin-top: clamp(32px, 4vw, 48px); perspective: 1200px; }
-.shelf::after { content: ''; position: absolute; left: 0; right: 0; bottom: -22px; height: 22px; border-radius: 6px; background: var(--ink); box-shadow: 0 18px 30px -12px rgba(14, 19, 48, .4); }
-.book { display: block; position: relative; transform-origin: 50% 100%; transition: transform .6s var(--spring); }
-.book:hover { transform: translateY(-18px) rotate(-3deg); }
-.book-cover { display: block; aspect-ratio: 594 / 850; border-radius: 3px 10px 10px 3px; overflow: hidden; box-shadow: -2px 0 0 rgba(0, 0, 0, .2) inset, 0 22px 30px -18px rgba(14, 19, 48, .6); }
-.book-cover::after { content: ''; position: absolute; inset: 0; border-radius: 3px 10px 10px 3px; background: linear-gradient(90deg, rgba(0, 0, 0, .2), rgba(255, 255, 255, .25) 3%, transparent 8%); pointer-events: none; }
+/* ── Books ── */
+.books { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 3vw, 44px); }
+.book { display: flex; flex-direction: column; gap: 24px; }
+.book-3d { position: relative; display: block; aspect-ratio: 594 / 850; perspective: 1600px; isolation: isolate; }
+.book-3d::before { content: ''; position: absolute; inset: 1.2% 0 1.2% 1.5%; border-radius: 2px 6px 6px 2px; background: linear-gradient(90deg, rgba(60, 40, 25, .3), rgba(60, 40, 25, 0) 30%), repeating-linear-gradient(0deg, #fbf8f1 0 2px, #ebe4d6 2px 3px); box-shadow: 0 1px 2px rgba(43, 34, 28, .25), inset -1px 0 0 #d8cebd; }
+.book-3d::after { content: ''; position: absolute; z-index: -1; left: 3%; right: -1%; bottom: -14px; height: 26px; border-radius: 50%; background: radial-gradient(closest-side, rgba(43, 34, 28, .32), transparent); filter: blur(2px); transition: transform .8s var(--ease), opacity .8s; }
+.book-cover { position: absolute; inset: 0; display: block; border-radius: 3px 6px 6px 3px; overflow: hidden; background: var(--line); transform-origin: 0 50%; transition: transform .8s var(--ease), box-shadow .8s var(--ease); box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 14px 22px -14px rgba(43, 34, 28, .55); backface-visibility: hidden; }
+.book-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .22) 0, rgba(255, 255, 255, .2) 2%, transparent 5%, transparent 75%, rgba(255, 255, 255, .08)); pointer-events: none; }
 .book-cover img { width: 100%; height: 100%; object-fit: cover; }
-.book-tag { position: absolute; top: -14px; right: -10px; padding: 6px 10px; border-radius: 10px; background: var(--pen); color: var(--white); font-family: var(--f-display); font-weight: 700; font-size: 12px; transform: rotate(6deg); box-shadow: 0 6px 14px -6px rgba(224, 53, 43, .8); }
-.books-cap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 3vw, 40px); padding-inline: clamp(16px, 3vw, 48px); margin-top: 44px; }
-.books-cap div { font-family: var(--f-display); font-weight: 700; font-size: 15px; letter-spacing: -.02em; }
-.books-cap span { display: block; font-family: var(--f-body); font-weight: 400; font-size: 14px; color: var(--ink-3); letter-spacing: 0; }
+.book:hover .book-cover { transform: rotateY(-24deg); box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 16px 10px 22px -12px rgba(43, 34, 28, .45); }
+.book:hover .book-3d::after { transform: translateX(6%) scaleX(1.06); opacity: .8; }
+.book-t { font-family: var(--f-display); font-size: 24px; font-weight: 600; line-height: 1.1; }
+.book-m { font-size: 14px; color: var(--ink-3); margin-top: 4px; }
 
 /* ── Media ── */
-.media { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 20px; }
-.video { position: relative; aspect-ratio: 16 / 11; border-radius: var(--r-l); overflow: hidden; background: var(--ink); }
-.video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; transition: transform .9s var(--ease); }
-.video:hover img { transform: scale(1.05); }
-.video-play { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 10px; padding: clamp(20px, 3vw, 36px); text-align: left; color: var(--white); background: linear-gradient(180deg, rgba(36, 70, 224, 0) 30%, rgba(24, 49, 168, .92)); }
-.pbtn { position: absolute; top: 24px; right: 24px; width: 92px; height: 92px; border-radius: 50%; background: var(--yellow); color: var(--ink); display: grid; place-items: center; box-shadow: 0 6px 0 var(--yellow-d); transition: transform .5s var(--spring); }
-.video-play:hover .pbtn { transform: scale(1.1) rotate(-8deg); }
-.video-play .vt { padding: 6px 12px; border-radius: 100px; background: var(--white); color: var(--cobalt-d); font-size: 13px; font-weight: 700; }
-.video-play strong { font-family: var(--f-display); font-weight: 700; font-size: clamp(20px, 2.4vw, 30px); line-height: 1.1; letter-spacing: -.03em; max-width: 22ch; }
+.media { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+.video { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--dark); border-radius: var(--r); }
+.video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transition: transform 1s var(--ease); }
+.video:hover img { transform: scale(1.04); }
+.video-play { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 6px; padding: clamp(20px, 3vw, 32px); text-align: left; color: var(--card); background: linear-gradient(180deg, rgba(47, 38, 32, 0) 40%, rgba(47, 38, 32, .88)); }
+.pbtn { position: absolute; top: clamp(16px, 2.6vw, 28px); right: clamp(16px, 2.6vw, 28px); width: 76px; height: 76px; border-radius: 50%; background: var(--card); color: var(--ink); display: grid; place-items: center; transition: transform .4s var(--ease), background-color .3s; }
+.video-play:hover .pbtn { transform: scale(1.06); background: #fff; }
+.video-play strong { font-family: var(--f-display); font-size: clamp(22px, 2.2vw, 30px); font-weight: 600; line-height: 1.15; max-width: 26ch; }
+.video-play span:not(.pbtn) { font-size: 14px; color: rgba(251, 248, 243, .75); }
 .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 3; }
 .video.is-playing .video-play, .video.is-playing img { display: none; }
-.video-alt { display: inline-block; margin-top: 12px; color: var(--ink-3); font-size: 14px; font-weight: 500; }
-.video-alt:hover { color: var(--cobalt); }
-.soc-col { display: grid; gap: 20px; grid-template-rows: 1fr 1fr; }
-.social { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; padding: 28px; border-radius: var(--r-l); overflow: hidden; transition: transform .5s var(--spring); min-height: 200px; }
-.social:hover { transform: translateY(-5px) rotate(-1deg); }
-.social-tg { background: var(--cobalt-l); color: var(--cobalt-d); }
-.social-vk { background: var(--ink); color: var(--white); }
-.social-ic { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; background: var(--cobalt); color: var(--white); }
-.social-vk .social-ic { background: var(--yellow); color: var(--ink); }
-.social strong { display: block; font-family: var(--f-display); font-size: 26px; font-weight: 700; letter-spacing: -.03em; }
-.social span { font-size: 15px; opacity: .75; word-break: break-word; }
-.social-arrow { position: absolute; right: 24px; top: 24px; transition: transform .4s var(--spring); }
-.social:hover .social-arrow { transform: rotate(45deg); }
+.socials { display: grid; margin-top: 32px; border-top: 1px solid var(--line); }
+.social { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 20px 0; border-bottom: 1px solid var(--line); transition: padding .4s var(--ease), color .25s; }
+.social:hover { padding-left: 10px; color: var(--accent-d); }
+.social-ic { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; color: var(--accent-d); }
+.social strong { display: block; font-family: var(--f-display); font-size: 26px; font-weight: 600; line-height: 1.1; }
+.social span { font-size: 14px; color: var(--ink-3); word-break: break-word; }
 
 /* ── Contact ── */
-.contact { background: var(--yellow); border-radius: var(--r-l); padding: clamp(24px, 5vw, 72px); display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 72px); position: relative; overflow: hidden; }
-.contact::before { content: '100'; position: absolute; left: -2%; bottom: -8%; font-family: var(--f-display); font-weight: 900; font-size: clamp(160px, 26vw, 360px); line-height: 1; letter-spacing: -.06em; color: rgba(14, 19, 48, .06); pointer-events: none; }
-.contact > * { position: relative; }
-.contact h2 { font-size: clamp(34px, 4.6vw, 60px); font-weight: 900; line-height: 1; letter-spacing: -.045em; }
-.contact .sec-lead { color: rgba(14, 19, 48, .75); }
-.contact-ava { display: flex; align-items: center; gap: 14px; margin-top: 32px; }
-.contact-ava img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--white); }
-.contact-ava p { font-size: 15px; line-height: 1.35; }
-.contact-ava strong { display: block; font-family: var(--f-display); font-size: 15px; }
-.card { background: var(--white); border-radius: var(--r); padding: clamp(22px, 3.4vw, 40px); box-shadow: 0 30px 60px -30px rgba(14, 19, 48, .35); }
-.form { display: grid; gap: 18px; }
-.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-.field { display: grid; gap: 8px; }
-.field label { font-weight: 600; font-size: 15px; }
-.field input, .field select, .field textarea { width: 100%; font: inherit; font-size: 16px; color: var(--ink); padding: 15px 18px; border-radius: 16px; border: 2px solid var(--line); background: var(--paper); outline: none; transition: border-color .2s, background-color .2s, box-shadow .2s; -webkit-appearance: none; appearance: none; }
-.field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232446E0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 18px center; padding-right: 44px; }
-.field textarea { min-height: 110px; resize: vertical; }
-.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--cobalt); background: var(--white); box-shadow: 0 0 0 4px var(--cobalt-l); }
-.field-err { display: none; font-size: 14px; font-weight: 500; color: var(--pen); }
-.field.is-error input { border-color: var(--pen); }
+.contact { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(36px, 6vw, 96px); align-items: start; }
+.contact-points { list-style: none; margin: 32px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.contact-points li { padding: 14px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 15px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: clamp(24px, 4vw, 48px); }
+.form { display: grid; gap: 30px; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 20px; }
+.field { position: relative; display: grid; gap: 8px; }
+.field label, .field-label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.field input, .field textarea, .dd-btn { width: 100%; font: inherit; font-size: 16px; color: var(--ink); padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg); outline: none; transition: border-color .2s, background-color .2s, box-shadow .2s; -webkit-appearance: none; appearance: none; }
+.field textarea { min-height: 120px; resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--ink-3); }
+.field input:hover, .field textarea:hover, .dd-btn:hover { border-color: #c9bca9; }
+.field input:focus, .field textarea:focus, .dd.is-open .dd-btn, .dd-btn:focus-visible { outline: none; border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px rgba(138, 106, 78, .15); }
+.field-err { position: absolute; left: 0; top: calc(100% + 6px); display: none; font-size: 13px; line-height: 1.2; color: var(--danger); }
+.field.is-error input { border-color: var(--danger); }
 .field.is-error .field-err { display: block; }
-.form .btn { width: 100%; }
-.btn.is-loading { opacity: .7; pointer-events: none; }
-.form-note { font-size: 13px; color: var(--ink-3); text-align: center; }
-.success { text-align: center; padding: 28px 12px; outline: none; }
-.success .mark { margin: 0 auto 16px; width: 96px; height: 96px; font-size: 60px; }
-.success h3 { font-size: 28px; font-weight: 900; letter-spacing: -.04em; }
-.success p { color: var(--ink-2); margin-top: 8px; }
+.dd { position: relative; }
+.dd-btn { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; }
+.dd-chev { flex-shrink: 0; color: var(--accent-d); transition: transform .3s var(--ease); }
+.dd.is-open .dd-chev { transform: rotate(180deg); }
+.dd-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none; max-height: 290px; overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 24px 50px -24px rgba(43, 34, 28, .35); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .2s, transform .25s var(--ease), visibility .2s; outline: none; }
+.dd.is-open .dd-list { opacity: 1; visibility: visible; transform: none; }
+.dd-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 4px; font-size: 15px; cursor: pointer; }
+.dd-list li.is-active { background: var(--bg); }
+.dd-list li[aria-selected="true"] { font-weight: 600; color: var(--accent-d); }
+.dd-list li[aria-selected="true"]::after { content: ''; width: 15px; height: 15px; flex-shrink: 0; background: var(--accent-d); -webkit-mask: var(--tick) center / contain no-repeat; mask: var(--tick) center / contain no-repeat; }
+.form .btn { width: 100%; min-height: 56px; }
+.btn.is-loading { opacity: .6; pointer-events: none; }
+.form-note { margin-top: -14px; font-size: 13px; color: var(--ink-3); text-align: center; }
+.form-note a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+.form-note a:hover { color: var(--accent-d); }
+.success { padding: 40px 12px; text-align: center; outline: none; }
+.success-check { width: 80px; height: 80px; margin: 0 auto 22px; display: block; animation: pop .6s var(--ease) both; }
+.success-check circle { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 208; stroke-dashoffset: 208; animation: draw .8s .1s var(--ease) forwards; }
+.success-check path { fill: none; stroke: var(--accent-d); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw .5s .6s var(--ease) forwards; }
+.success h3 { font-size: 34px; font-weight: 600; animation: fade .7s .55s var(--ease) both; }
+.success p { color: var(--ink-2); margin-top: 6px; animation: fade .7s .65s var(--ease) both; }
+
+/* ── Policy dialog ── */
+.dlg { width: min(720px, calc(100% - 32px)); max-height: min(86vh, 900px); padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); color: var(--ink); box-shadow: 0 40px 100px -30px rgba(43, 34, 28, .45); }
+.dlg::backdrop { background: rgba(43, 34, 28, .5); }
+.dlg[open] { animation: fade .35s var(--ease) both; }
+.dlg-in { position: relative; padding: clamp(28px, 4vw, 52px); }
+.dlg h2 { font-size: clamp(28px, 3.4vw, 38px); line-height: 1.1; padding-right: 52px; margin-bottom: 18px; }
+.dlg h3 { font-family: var(--f-body); font-size: 15px; font-weight: 600; margin: 22px 0 6px; }
+.dlg p { color: var(--ink-2); font-size: 15px; }
+.dlg-close { position: absolute; top: 20px; right: 20px; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; transition: background-color .2s; }
+.dlg-close:hover { background: var(--bg); }
 
 /* ── Footer ── */
-.foot { margin-top: clamp(64px, 9vw, 120px); background: var(--ink); color: rgba(255, 255, 255, .7); border-radius: var(--r-l) var(--r-l) 0 0; padding-block: clamp(48px, 6vw, 72px) calc(32px + env(safe-area-inset-bottom, 0px)); }
+.foot { background: var(--dark); color: rgba(243, 238, 230, .7); padding-block: 56px calc(32px + env(safe-area-inset-bottom, 0px)); }
 .foot-in { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 32px; }
-.foot-name { font-family: var(--f-display); font-weight: 900; font-size: clamp(34px, 4.6vw, 60px); line-height: .95; letter-spacing: -.045em; color: var(--white); }
-.foot-name span { color: var(--yellow); }
-.foot p { font-size: 15px; margin-top: 14px; max-width: 42ch; }
-.foot h4 { margin: 0 0 12px; color: var(--yellow); font-family: var(--f-display); font-size: 13px; font-weight: 700; }
-.foot-col a { display: block; padding: 4px 0; transition: color .2s; }
-.foot-col a:hover { color: var(--yellow); }
-.foot-bottom { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 48px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .12); font-size: 13px; color: rgba(255, 255, 255, .45); }
+.foot p { font-size: 15px; max-width: 46ch; }
+.foot h4 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #C9B49B; }
+.foot-col a { display: block; padding: 4px 0; font-size: 15px; transition: color .2s; }
+.foot-col a:hover { color: var(--card); }
+.foot-bottom { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 44px; padding-top: 22px; border-top: 1px solid rgba(243, 238, 230, .12); font-size: 13px; color: rgba(243, 238, 230, .5); }
+.foot-bottom a { text-decoration: underline; text-underline-offset: 3px; }
+.foot-bottom a:hover { color: var(--card); }
 
 /* ── Lightbox ── */
-.lb { position: fixed; inset: 0; z-index: 500; display: grid; grid-template-columns: 72px minmax(0, 1fr) 72px; align-items: center; gap: 8px; padding: calc(64px + env(safe-area-inset-top, 0px)) 12px calc(56px + env(safe-area-inset-bottom, 0px)); background: rgba(24, 49, 168, .94); opacity: 0; transition: opacity .26s; }
+.lb { position: fixed; inset: 0; z-index: 500; display: grid; grid-template-columns: 72px minmax(0, 1fr) 72px; align-items: center; gap: 8px; padding: calc(64px + env(safe-area-inset-top, 0px)) 12px calc(56px + env(safe-area-inset-bottom, 0px)); background: rgba(37, 29, 24, .94); opacity: 0; transition: opacity .26s; }
 .lb.is-open { opacity: 1; }
 .lb-fig { margin: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-width: 0; }
-.lb-img { max-width: 100%; max-height: calc(100% - 44px); object-fit: contain; border-radius: 18px; box-shadow: 0 40px 80px rgba(0, 0, 0, .4); opacity: 0; transform: scale(.94) rotate(-1deg); transition: opacity .3s, transform .5s var(--spring); }
+.lb-img { max-width: 100%; max-height: calc(100% - 44px); object-fit: contain; border-radius: var(--r); box-shadow: 0 40px 80px rgba(0, 0, 0, .45); opacity: 0; transform: scale(.97); transition: opacity .3s, transform .45s var(--ease); }
 .lb-img.is-in { opacity: 1; transform: none; }
-.lb-cap { color: var(--white); font-size: 15px; font-weight: 500; text-align: center; max-width: 60ch; }
-.lb-btn { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--yellow); color: var(--ink); transition: transform .3s var(--spring); }
-.lb-btn:hover { transform: scale(1.1); }
-.lb-close { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; background: var(--white); }
-.lb-count { position: absolute; top: calc(28px + env(safe-area-inset-top, 0px)); left: 24px; color: var(--white); font-family: var(--f-display); font-weight: 700; font-size: 14px; }
+.lb-cap { color: rgba(251, 248, 243, .85); font-size: 14px; text-align: center; max-width: 60ch; }
+.lb-btn { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(251, 248, 243, .3); color: var(--card); transition: background-color .2s, color .2s; }
+.lb-btn:hover { background: var(--card); color: var(--ink); }
+.lb-close { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; }
+.lb-count { position: absolute; top: calc(28px + env(safe-area-inset-top, 0px)); left: 24px; color: rgba(251, 248, 243, .6); font-size: 13px; }
 
 /* ── Keyframes ── */
-@keyframes up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes marquee { to { transform: translateX(-50%); } }
-@property --p { syntax: '<number>'; inherits: false; initial-value: 1; }
+@keyframes rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(.5); } 60% { transform: scale(1.06); } 100% { transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes grow { from { --p: .2; } to { --p: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
-  .ticker-track, .seal svg { animation: none; }
+}
+
+/* ── Short laptop screens: keep the facts row on the first screen ── */
+@media (min-width: 981px) and (max-height: 820px) {
+  .hero { padding-top: 48px; }
+  .hero-name { font-size: clamp(56px, 7vw, 100px); }
+  .hero-role { margin-top: 20px; }
+  .hero-actions { margin-top: 24px; }
+  .hero-photo img { max-height: 56vh; }
+  .facts { margin-top: 28px; }
+  .fact { padding-top: 16px; }
+  .fact dd { margin-top: 6px; }
 }
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-  .nav a { padding: 8px 10px; font-size: 14px; }
-  .r1, .r2 { grid-column: span 6; }
-  .r3 { grid-column: 1 / -1; }
+  .nav { gap: 18px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fact:nth-child(3) { border-left: 0; padding-left: 0; }
+  .fact:nth-child(n+3) { margin-top: 22px; border-top: 1px solid var(--line); }
 }
 @media (max-width: 980px) {
   .nav, .hdr-cta { display: none; }
   .burger { display: block; }
+  .hero { padding-top: calc(90px + env(safe-area-inset-top, 0px)); }
   .hero-grid { grid-template-columns: 1fr; }
-  .hero-visual { max-width: 460px; width: 100%; margin-inline: auto; padding-inline: 24px; }
-  .seal { left: -4px; }
-  .sticker { right: 4px; }
+  .hero-photo { order: -1; max-width: 460px; margin-right: 16px; }
+  .hero-photo img { max-height: none; }
   .projects { grid-template-columns: 1fr; }
   .about { grid-template-columns: 1fr; }
-  .fig { position: relative; top: 0; max-width: 480px; }
+  .about-photo { position: relative; top: 0; max-width: 440px; margin-right: 16px; }
   .media { grid-template-columns: 1fr; }
-  .soc-col { grid-template-columns: 1fr 1fr; grid-template-rows: none; }
   .contact { grid-template-columns: 1fr; }
-  .shelf, .books-cap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .shelf::after { display: none; }
-  .shelf { row-gap: 48px; }
-  .books-cap { display: none; }
+  .books { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 48px; }
   .foot-in { grid-template-columns: 1fr 1fr; }
   .foot-in > :first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
   body { font-size: 16px; }
   .hdr-in { height: 66px; }
-  .hero { padding-top: calc(88px + env(safe-area-inset-top, 0px)); border-radius: 0 0 28px 28px; }
+  .hero-name { font-size: clamp(52px, 16vw, 72px); }
+  .hero-name span:nth-child(2) { padding-left: .3em; }
+  .hero-role { margin-top: 22px; font-size: 17px; }
   .hero-actions .btn { flex: 1 1 100%; }
-  .seal { width: 104px; height: 104px; top: -12px; }
-  .seal b { font-size: 26px; }
-  .seal text { font-size: 13px; }
-  .sticker { bottom: 64px; font-size: 13px; }
-  .sticker strong { font-size: 18px; }
+  .facts { grid-template-columns: 1fr; }
+  .fact, .fact + .fact { padding: 18px 0 0; border-left: 0; }
+  .fact + .fact { margin-top: 18px; border-top: 1px solid var(--line); }
   .sec-head { grid-template-columns: 1fr; }
   .sec-head .car-ctrl { display: none; }
-  .proj-stats { gap: 8px; }
-  .pst { padding: 12px; }
-  .pst-l { font-size: 12px; }
-  .para { grid-template-columns: 1fr; gap: 6px; }
-  .results-bg { padding: 24px 16px; margin-inline: calc(var(--gut) * -1 + 8px); }
-  .r1, .r2, .r3 { grid-column: 1 / -1; }
-  .bar { grid-template-columns: 64px minmax(0, 1fr); gap: 10px; }
-  .bar-name { font-size: 13px; }
-  .bar-track { height: 40px; }
-  .bar-fill { font-size: 15px; padding-right: 12px; }
-  .soc-col { grid-template-columns: 1fr; }
-  .social { min-height: 0; }
+  .proj-stats { gap: 10px; }
+  .ps-label { font-size: 12px; }
+  .cv li { grid-template-columns: 1fr; gap: 4px; }
+  .nums { grid-template-columns: 1fr; }
+  .num, .num + .num { padding: 24px 0 0; border-left: 0; }
+  .num + .num { margin-top: 24px; border-top: 1px solid var(--line); }
+  .bar { grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 10px; }
+  .pbtn { width: 56px; height: 56px; }
+  .pbtn svg { width: 20px; height: 20px; }
+  .video-play strong { font-size: 19px; padding-right: 60px; }
   .form-row { grid-template-columns: 1fr; }
   .lb { grid-template-columns: minmax(0, 1fr); padding-inline: 8px; }
   .lb-prev, .lb-next { position: absolute; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
-  .lb-prev { left: calc(50% - 66px); }
-  .lb-next { right: calc(50% - 66px); }
+  .lb-prev { left: calc(50% - 62px); }
+  .lb-next { right: calc(50% - 62px); }
   .foot-in { grid-template-columns: 1fr; }
 }
 </style>
@@ -413,17 +385,18 @@ p { margin: 0; }
 
 <div class="progress" aria-hidden="true"></div>
 
-<header class="hdr">
+<header class="hdr" data-reveal>
   <div class="wrap hdr-in">
-    <a href="#top" class="logo" aria-label="Анна Алёшина — наверх"><span class="logo-mark">АА</span>Анна Алёшина</a>
+    <a href="#top" class="logo">Анна Алёшина</a>
     <nav class="nav" aria-label="Разделы">
       <a href="#projects">Проекты</a>
       <a href="#about">Обо мне</a>
       <a href="#results">Результаты</a>
       <a href="#reviews">Отзывы</a>
       <a href="#books">Учебники</a>
+      <a href="#media">Интервью</a>
     </nav>
-    <a href="#contact" class="btn btn-yellow hdr-cta">Написать</a>
+    <a href="#contact" class="btn btn-line hdr-cta">Связаться</a>
     <button class="burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
   </div>
 </header>
@@ -434,82 +407,56 @@ p { margin: 0; }
   <a href="#results">Результаты</a>
   <a href="#reviews">Отзывы</a>
   <a href="#books">Учебники</a>
-  <a href="#media">Интервью</a>
-  <a href="#contact" class="btn btn-yellow">Написать мне</a>
+  <a href="#contact" class="btn btn-dark">Связаться</a>
 </div>
 
 <main>
 <section class="hero" id="top">
-  <div class="wrap hero-grid">
-    <div>
-      <div class="hero-tags"><span class="htag">к.э.н.</span><span class="htag">Доцент МГУ</span><span class="htag">Автор учебников</span></div>
-      <h1 class="hero-name"><span>Анна</span><span>Алёшина</span></h1>
-      <p class="hero-desc">Готовлю школьников к ЕГЭ, ОГЭ и олимпиадам с 2000 года. Основала онлайн-школу «Будет 100 баллов» и руковожу научным департаментом ИЭЭФ МГУ.</p>
-      <div class="hero-actions">
-        <a href="#contact" class="btn btn-yellow">Записаться на консультацию <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <a href="#projects" class="btn btn-ghost">Мои проекты</a>
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <h1 class="hero-name"><span>Анна</span><span>Алёшина</span></h1>
+        <p class="hero-role">Кандидат экономических наук, доцент экономического факультета МГУ им.&nbsp;М.&nbsp;В.&nbsp;Ломоносова</p>
+        <p class="hero-desc">Основатель онлайн-школы «Будет 100 баллов», руководитель научного департамента Института экспериментальной экономики и финансов МГУ, автор учебников по обществознанию и информатике.</p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn btn-dark">Связаться <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a href="#projects" class="btn btn-line">Проекты</a>
+        </div>
       </div>
+      <figure class="frame hero-photo"><img src="images/anna-aleshina/photo_2026-06-26_09-43-53.jpg" alt="Анна Алёшина" fetchpriority="high"></figure>
     </div>
-    <div class="hero-visual">
-      <div class="cover">
-        <img src="images/anna-aleshina/photo_2026-06-26_09-43-53.jpg" alt="Анна Алёшина у книжной полки с пособиями ЕГЭ" fetchpriority="high">
-        <div class="cover-band"><span>Базовый уровень знаний — не предел</span><span>ФГОС</span></div>
-      </div>
-      <div class="seal" aria-hidden="true">
-        <svg viewBox="0 0 136 136"><defs><path id="circ" d="M68,68 m-52,0 a52,52 0 1,1 104,0 a52,52 0 1,1 -104,0"/></defs><text><textPath href="#circ">БУДЕТ 100 БАЛЛОВ · БУДЕТ 100 БАЛЛОВ ·</textPath></text></svg>
-        <b>100</b>
-      </div>
-      <div class="sticker"><strong>25+ лет</strong>в образовании</div>
-    </div>
+    <dl class="facts">
+      <div class="fact"><dt>1995</dt><dd>на экономическом факультете МГУ</dd></div>
+      <div class="fact"><dt>2011</dt><dd>в Институте экспериментальной экономики и финансов</dd></div>
+      <div class="fact"><dt>2023</dt><dd>основала онлайн-школу «Будет 100&nbsp;баллов»</dd></div>
+      <div class="fact"><dt>4</dt><dd>авторских учебно-методических комплекса</dd></div>
+    </dl>
   </div>
 </section>
 
-<div class="ticker-wrap"><div class="ticker" aria-label="Куда поступают ученики">
-  <div class="ticker-track">
-    <div class="ticker-group">
-      <span class="ticker-item">МГУ <b>172</b> ученика</span>
-      <span class="ticker-item">ВШЭ <b>139</b> учеников</span>
-      <span class="ticker-item">МГИМО <b>27</b> учеников</span>
-      <span class="ticker-item"><b>14</b> победителей олимпиад</span>
-      <span class="ticker-item"><b>1 530</b> выпускников</span>
-    </div>
-    <div class="ticker-group" aria-hidden="true">
-      <span class="ticker-item">МГУ <b>172</b> ученика</span>
-      <span class="ticker-item">ВШЭ <b>139</b> учеников</span>
-      <span class="ticker-item">МГИМО <b>27</b> учеников</span>
-      <span class="ticker-item"><b>14</b> победителей олимпиад</span>
-      <span class="ticker-item"><b>1 530</b> выпускников</span>
-    </div>
-  </div>
-</div>
-</div>
-
 <section class="sec" id="projects">
   <div class="wrap">
-    <div class="kicker"><b>2</b>проекта</div>
-    <h2 class="sec-title">Учу школьников и&nbsp;<mark>двигаю науку</mark></h2>
+    <div class="sec-head"><h2 class="sec-title">Проекты</h2></div>
     <div class="projects">
-      <article class="proj proj-y rv">
-        <span class="proj-label">Образование · с 2023</span>
+      <article class="proj rv">
         <h3>Онлайн-школа «Будет 100&nbsp;баллов»</h3>
-        <p>С 2000 года я репетитор по обществознанию и правоведению. В 2023 году основала онлайн-школу полного цикла: преподаватели-эксперты, которые проверяют ЕГЭ и ОГЭ, кураторы и служба заботы. Русский, математика, история, обществознание.</p>
+        <p>В 2023 году основала онлайн-школу полного цикла. В команде — преподаватели-эксперты, которые проверяют ЕГЭ и ОГЭ, кураторы и служба заботы об учениках. Школа выросла из моей многолетней практики подготовки к экзаменам и олимпиадам.</p>
+        <a class="link" href="https://vk.com/club238178938" target="_blank" rel="noopener">Сообщество школы <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
         <div class="proj-stats">
-          <div class="pst"><div class="pst-v" data-count="171">171</div><div class="pst-l">ученик за 4 года</div></div>
-          <div class="pst"><div class="pst-v" data-count="14">14</div><div class="pst-l">победителей олимпиад</div></div>
-          <div class="pst"><div class="pst-v" data-count="15">15</div><div class="pst-l">преподавателей</div></div>
+          <div><div class="ps-num" data-count="171">171</div><div class="ps-label">ученик за 4 года</div></div>
+          <div><div class="ps-num" data-count="14">14</div><div class="ps-label">победителей олимпиад</div></div>
+          <div><div class="ps-num" data-count="15">15</div><div class="ps-label">преподавателей</div></div>
         </div>
-        <a class="proj-link" href="https://vk.com/club238178938" target="_blank" rel="noopener"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span>Сообщество школы</a>
       </article>
-      <article class="proj proj-b rv">
-        <span class="proj-label">Наука · ИЭЭФ МГУ</span>
-        <h3>Институт экспериментальной экономики и финансов</h3>
-        <p>Руковожу научным и образовательным департаментом: блокчейн-технологии, финтех, автоматизация банковских операций. Главный научный редактор журнала «Экспериментальная экономика и финансы».</p>
+      <article class="proj rv">
+        <h3>Институт экспериментальной экономики и&nbsp;финансов МГУ</h3>
+        <p>Руковожу научным и образовательным департаментом. Веду проекты в области блокчейн-технологий, финтеха и автоматизации банковских операций. Главный научный редактор журнала «Экспериментальная экономика и финансы».</p>
+        <a class="link" href="https://иээф.рф/" target="_blank" rel="noopener">Сайт института <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
         <div class="proj-stats">
-          <div class="pst"><div class="pst-v">Q1</div><div class="pst-l">публикации за рубежом</div></div>
-          <div class="pst"><div class="pst-v" data-count="12">12</div><div class="pst-l">свидетельств Роспатента</div></div>
-          <div class="pst"><div class="pst-v">к.э.н.</div><div class="pst-l">доцент МГУ</div></div>
+          <div><div class="ps-num">Q1</div><div class="ps-label">публикации в зарубежных журналах</div></div>
+          <div><div class="ps-num" data-count="12">12</div><div class="ps-label">свидетельств Роспатента</div></div>
+          <div><div class="ps-num">к.э.н.</div><div class="ps-label">доцент МГУ</div></div>
         </div>
-        <a class="proj-link" href="https://иээф.рф/" target="_blank" rel="noopener"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span>Сайт института</a>
       </article>
     </div>
   </div>
@@ -517,201 +464,180 @@ p { margin: 0; }
 
 <section class="sec" id="about" style="padding-top:0">
   <div class="wrap about">
-    <figure class="fig rv">
-      <div class="fig-img">
-        <img src="images/anna-aleshina/photo_2026-06-26_09-43-27.jpg" alt="Анна Алёшина за рабочим столом с учебниками" loading="lazy">
-        <span class="mark pop" aria-hidden="true">5</span>
-      </div>
-      <figcaption><b>Рис. 1.</b> Автор за подготовкой нового урока</figcaption>
-    </figure>
+    <figure class="frame about-photo rv"><img src="images/anna-aleshina/3701.png" alt="Анна Алёшина за рабочим столом" loading="lazy"></figure>
     <div>
-      <div class="kicker"><b>§</b>Обо мне</div>
-      <p class="about-lead">Экономист, юрист, педагог и учёный. Сложное объясняю просто — на примерах из жизни.</p>
-      <div class="paras">
-        <div class="para rv"><span class="para-n">§ 1</span><div><h3>Образование</h3><p>Экономический факультет МГУ (1995) и юридический факультет МФЮА (1996). Кандидат экономических наук, <em>доцент МГУ</em>.</p></div></div>
-        <div class="para rv"><span class="para-n">§ 2</span><div><h3>Преподавание</h3><p>С 2000 года: сначала подготовка к поступлению в МГУ и олимпиадам, затем ЕГЭ и ОГЭ. <em>1 530 школьников</em> и 4 000 студентов экономфака МГУ и Финансового университета.</p></div></div>
-        <div class="para rv"><span class="para-n">§ 3</span><div><h3>Своя школа</h3><p>В 2023 году вышла в онлайн и основала <em>«Будет 100 баллов»</em> — школу полного цикла с командой из 15 преподавателей.</p></div></div>
-        <div class="para rv"><span class="para-n">§ 4</span><div><h3>Наука</h3><p>ИЭЭФ МГУ: блокчейн, финтех, цифровая трансформация финансов. Публикации Q1 и <em>12 свидетельств Роспатента</em>.</p></div></div>
-      </div>
+      <h2 class="sec-title">Экономист, юрист, педагог и&nbsp;учёный</h2>
+      <p class="about-body">Окончила экономический факультет МГУ и юридический факультет МФЮА. Преподаю в МГУ, руковожу научной работой в ИЭЭФ МГУ и развиваю собственную онлайн-школу. Строю проекты на пересечении образования, науки и технологий.</p>
+      <p class="about-body">Исследую блокчейн-технологии, финтех и цифровую трансформацию финансов. Открыта к партнёрству, обмену опытом и новым знакомствам.</p>
+      <ol class="cv">
+        <li class="rv"><span class="cv-y">1995</span><div><strong>Экономический факультет МГУ</strong><span>Окончила факультет и с того же года работаю на нём</span></div></li>
+        <li class="rv"><span class="cv-y">1996</span><div><strong>Юридический факультет МФЮА</strong><span>Второе высшее образование</span></div></li>
+        <li class="rv"><span class="cv-y">с 2000</span><div><strong>Доцент кафедры финансов и кредита МГУ</strong><span>Кандидат экономических наук, автор учебников по обществознанию и информатике</span></div></li>
+        <li class="rv"><span class="cv-y">с 2011</span><div><strong>ИЭЭФ МГУ</strong><span>Руковожу научным и образовательным департаментом, главный редактор журнала «Экспериментальная экономика и финансы»</span></div></li>
+        <li class="rv"><span class="cv-y">с 2023</span><div><strong>Онлайн-школа «Будет 100 баллов»</strong><span>Школа полного цикла: 15 преподавателей, кураторы, служба заботы</span></div></li>
+      </ol>
     </div>
   </div>
 </section>
 
-<section class="sec" id="results" style="padding-top:0">
+<section class="sec band" id="results">
   <div class="wrap">
-    <div class="results-bg">
-      <div class="kicker"><b>✓</b>Результаты</div>
-      <h2 class="sec-title">Ученики поступают <mark>в&nbsp;топовые вузы</mark></h2>
-      <div class="results">
-        <div class="chart rv">
-          <div class="chart-head"><h3>Куда поступили ученики</h3><span>количество человек</span></div>
-          <div class="bars">
-            <div class="bar"><span class="bar-name">МГУ</span><div class="bar-track"><div class="bar-fill" style="--w:100%">172</div></div></div>
-            <div class="bar"><span class="bar-name">ВШЭ</span><div class="bar-track"><div class="bar-fill" style="--w:80.8%">139</div></div></div>
-            <div class="bar"><span class="bar-name">МГИМО</span><div class="bar-track"><div class="bar-fill" style="--w:15.7%">27</div></div></div>
-          </div>
-        </div>
-        <div class="rbox r1 rv"><div class="rbox-v" data-count="1530">1&nbsp;530</div><p>школьников подготовлено к экзаменам лично</p></div>
-        <div class="rbox r2 rv"><div class="rbox-v" data-count="4000">4&nbsp;000</div><p>студентов экономфака МГУ и Финансового университета</p></div>
-        <div class="rbox r3 rv"><div class="rbox-v" data-count="14">14</div><p>победителей и призёров олимпиад в онлайн-школе</p></div>
+    <div class="sec-head"><h2 class="sec-title">Результаты учеников и студентов</h2></div>
+    <div class="nums">
+      <div class="num rv"><div class="num-v" data-count="1530">1&nbsp;530</div><p>школьников подготовлено к экзаменам лично</p></div>
+      <div class="num rv"><div class="num-v" data-count="4000">4&nbsp;000</div><p>студентов на экономическом факультете МГУ и в Финансовом университете</p></div>
+      <div class="num rv"><div class="num-v" data-count="14">14</div><p>победителей и призёров олимпиад в онлайн-школе</p></div>
+    </div>
+    <div class="chart rv">
+      <div class="chart-head"><h3>Куда поступили ученики</h3><span>количество человек</span></div>
+      <div class="bars">
+        <div class="bar"><span class="bar-name">МГУ</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">172</span></div>
+        <div class="bar"><span class="bar-name">ВШЭ</span><div class="bar-track"><div class="bar-fill" style="--w:80.8%"></div></div><span class="bar-val">139</span></div>
+        <div class="bar"><span class="bar-name">МГИМО</span><div class="bar-track"><div class="bar-fill" style="--w:15.7%"></div></div><span class="bar-val">27</span></div>
       </div>
+      <p class="chart-note">МГУ — экономический и юридический факультеты. Остальные ученики поступили в другие сильные вузы.</p>
     </div>
   </div>
 </section>
 
-<section class="sec" id="reviews" style="padding-top:0">
+<section class="sec" id="reviews">
   <div data-carousel>
     <div class="wrap sec-head">
-      <div>
-        <div class="kicker"><b>6</b>отзывов</div>
-        <h2 class="sec-title">Пишут <mark>ученики</mark></h2>
-      </div>
+      <h2 class="sec-title">Отзывы учеников</h2>
       <div class="car-ctrl">
-        <button class="car-btn" type="button" data-prev aria-label="Предыдущие отзывы"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <button class="car-btn" type="button" data-next aria-label="Следующие отзывы"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <button class="car-btn" type="button" data-prev aria-label="Предыдущие отзывы"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+        <button class="car-btn" type="button" data-next aria-label="Следующие отзывы"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </div>
     </div>
     <div class="car-track" tabindex="0" aria-label="Отзывы учеников">
       <article class="rev">
-        <span class="mark" aria-label="Оценка 5">5<small>33 балла</small></span>
-        <div class="rev-who"><strong>Юрий Аспидов</strong><span>9 класс · ОГЭ</span></div>
         <blockquote>«Здравствуйте! Написал на 5 (33 балла), огромное Вам спасибо!»</blockquote>
-        <div class="rev-foot"><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-02-01.jpg" data-lb="reviews" data-caption="Юрий Аспидов, 9 класс: оценка 5, 33 балла">Смотреть оригинал →</a></div>
+        <div class="rev-foot"><strong>Юрий Аспидов</strong><div class="grade"><b>5</b><small>33 балла</small></div><span>9 класс · ОГЭ</span><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-02-01.jpg" data-lb="reviews" data-caption="Юрий Аспидов, 9 класс: оценка 5, 33 балла">Оригинал отзыва</a></div>
       </article>
       <article class="rev">
-        <span class="mark" aria-label="Оценка 4">4<small>26 баллов</small></span>
-        <div class="rev-who"><strong>Алан Дзугаев</strong><span>9 класс · ОГЭ</span></div>
-        <blockquote>«Больше всего помогла простота понимания новых терминов: за недели с нулевыми знаниями я написал экзамен на хорошую оценку».</blockquote>
-        <div class="rev-foot"><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-02-02.jpg" data-lb="reviews" data-caption="Алан Дзугаев, 9 класс: оценка 4, 26 баллов">Смотреть оригинал →</a></div>
+        <blockquote>«Больше всего помогла простота понимания новых терминов: за недели с моими ранее нулевыми знаниями я написал экзамен на хорошую оценку».</blockquote>
+        <div class="rev-foot"><strong>Алан Дзугаев</strong><div class="grade"><b>4</b><small>26 баллов</small></div><span>9 класс · ОГЭ</span><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-02-02.jpg" data-lb="reviews" data-caption="Алан Дзугаев, 9 класс: оценка 4, 26 баллов">Оригинал отзыва</a></div>
       </article>
       <article class="rev">
-        <span class="mark" aria-label="Оценка 4">4<small>28 баллов</small></span>
-        <div class="rev-who"><strong>Владислава Дьякова</strong><span>9 класс · ОГЭ</span></div>
-        <blockquote>«Каждая тема объяснялась подробно, на обычных примерах из жизни. И не было насмешек, если ответы были неверными».</blockquote>
-        <div class="rev-foot"><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-02-04.jpg" data-lb="reviews" data-caption="Владислава Дьякова, 9 класс: оценка 4, 28 баллов">Смотреть оригинал →</a></div>
+        <blockquote>«Каждая тема объяснялась подробно, на обычных примерах из жизни. И не было никаких насмешек, если что-то было неясно или ответы были неверными».</blockquote>
+        <div class="rev-foot"><strong>Владислава Дьякова</strong><div class="grade"><b>4</b><small>28 баллов</small></div><span>9 класс · ОГЭ</span><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-02-04.jpg" data-lb="reviews" data-caption="Владислава Дьякова, 9 класс: оценка 4, 28 баллов">Оригинал отзыва</a></div>
       </article>
       <article class="rev">
-        <span class="mark" aria-label="Призёр второй степени">II<small>степень</small></span>
-        <div class="rev-who"><strong>Ученица</strong><span>Олимпиада СПбГУ по праву</span></div>
-        <blockquote>«Спешу поделиться радостными новостями! Я стала призёром второй степени олимпиады по праву от СПбГУ! Спасибо Вам огромное!!!»</blockquote>
-        <div class="rev-foot"><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-01-13.jpg" data-lb="reviews" data-caption="Сообщение ученицы: призёр второй степени олимпиады СПбГУ по праву">Смотреть оригинал →</a></div>
+        <blockquote>«Анна Валентиновна, спешу поделиться радостными новостями! Я стала призёром второй степени олимпиады по праву от Санкт-Петербургского университета! Спасибо Вам огромное!»</blockquote>
+        <div class="rev-foot"><strong>Ученица</strong><div class="grade"><b>II</b><small>степень</small></div><span>Олимпиада СПбГУ, право</span><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-01-13.jpg" data-lb="reviews" data-caption="Сообщение ученицы: призёр второй степени олимпиады СПбГУ по праву">Оригинал отзыва</a></div>
       </article>
       <article class="rev">
-        <span class="mark" aria-label="Семь олимпиад">7<small>олимпиад</small></span>
-        <div class="rev-who"><strong>Влад</strong><span>Право и обществознание</span></div>
         <blockquote>«Добрый день, пришёл проходной „Изумруда“ — я призёр! Спасибо Вам большое!»</blockquote>
-        <div class="rev-foot"><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-00-52.jpg" data-lb="reviews" data-caption="Переписка с Владом: результаты олимпиад ВГУЮ, СПбГУ, РГГУ, «Изумруд» и других">Смотреть оригинал →</a></div>
+        <div class="rev-foot"><strong>Влад</strong><div class="grade"><b>7</b><small>олимпиад</small></div><span>Право и обществознание</span><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-00-52.jpg" data-lb="reviews" data-caption="Переписка с Владом: результаты олимпиад ВГУЮ, СПбГУ, РГГУ, «Изумруд» и других">Оригинал отзыва</a></div>
       </article>
       <article class="rev">
-        <span class="mark" aria-label="Две олимпиады">2<small>олимпиады</small></span>
-        <div class="rev-who"><strong>Ученик школы</strong><span>Обществознание</span></div>
-        <blockquote>«СПбГУ (обществознание) — призёр 2 степени. „Миссия выполнима. Твоё призвание — финансист“ — призёр».</blockquote>
-        <div class="rev-foot"><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-01-04.jpg" data-lb="reviews" data-caption="Сообщение ученика: призёр олимпиад СПбГУ и Финансового университета">Смотреть оригинал →</a></div>
+        <blockquote>«По олимпиадам: СПбГУ (обществознание) — призёр 2 степени. „Миссия выполнима. Твоё призвание — финансист“ (Финансовый университет) — призёр».</blockquote>
+        <div class="rev-foot"><strong>Ученик школы</strong><div class="grade"><b>2</b><small>олимпиады</small></div><span>Обществознание</span><a class="orig" href="images/anna-aleshina/photo_2026-06-22_14-01-04.jpg" data-lb="reviews" data-caption="Сообщение ученика: призёр олимпиад СПбГУ и Финансового университета">Оригинал отзыва</a></div>
       </article>
     </div>
     <div class="car-bar"><div><span class="car-thumb"></span></div></div>
   </div>
 </section>
 
-<section class="sec" id="books" style="padding-top:0">
+<section class="sec band" id="books">
   <div class="wrap">
-    <div class="kicker"><b>4</b>УМК</div>
-    <h2 class="sec-title">Мои учебники <mark>для 10–11&nbsp;классов</mark></h2>
-    <p class="sec-lead">Информатика и обществознание, базовый уровень, ФГОС. Рекомендованы для школ.</p>
-    <div class="shelf">
-      <a class="book rv" href="images/anna-aleshina/inf10.jpg" data-lb="books" data-caption="УМК «Информатика», 10 класс"><span class="book-cover"><img src="images/anna-aleshina/inf10.jpg" alt="Обложка учебника «Информатика», 10 класс" loading="lazy"></span><span class="book-tag">10 кл.</span></a>
-      <a class="book rv" href="images/anna-aleshina/inf11.jpg" data-lb="books" data-caption="УМК «Информатика», 11 класс"><span class="book-cover"><img src="images/anna-aleshina/inf11.jpg" alt="Обложка учебника «Информатика», 11 класс" loading="lazy"></span><span class="book-tag">11 кл.</span></a>
-      <a class="book rv" href="images/anna-aleshina/obsh10.jpg" data-lb="books" data-caption="УМК «Обществознание», 10 класс"><span class="book-cover"><img src="images/anna-aleshina/obsh10.jpg" alt="Обложка учебника «Обществознание», 10 класс" loading="lazy"></span><span class="book-tag">10 кл.</span></a>
-      <a class="book rv" href="images/anna-aleshina/obsh11.jpg" data-lb="books" data-caption="УМК «Обществознание», 11 класс"><span class="book-cover"><img src="images/anna-aleshina/obsh11.jpg" alt="Обложка учебника «Обществознание», 11 класс" loading="lazy"></span><span class="book-tag">11 кл.</span></a>
-    </div>
-    <div class="books-cap">
-      <div>Информатика<span>10 класс · базовый уровень</span></div>
-      <div>Информатика<span>11 класс · базовый уровень</span></div>
-      <div>Обществознание<span>10 класс · базовый уровень</span></div>
-      <div>Обществознание<span>11 класс · базовый уровень</span></div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="media" style="padding-top:0">
-  <div class="wrap">
-    <div class="media">
-      <div class="rv">
-        <div class="video" data-video="https://player.vimeo.com/video/1203420289?h=75e32f9618&amp;badge=0&amp;autopause=0&amp;autoplay=1" data-title="Как поступить в вуз по результатам олимпиады?">
-          <img src="images/anna-aleshina/photo_2026-06-22_14-03-19.jpg" alt="" loading="lazy">
-          <button class="video-play" type="button" aria-label="Смотреть интервью «Как поступить в вуз по результатам олимпиады?»">
-            <span class="pbtn"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-            <span class="vt">Интервью</span>
-            <strong>Как поступить в вуз по результатам олимпиады?</strong>
-          </button>
-        </div>
-        <a class="video-alt" href="https://vimeo.com/1203420289/75e32f9618" target="_blank" rel="noopener">Открыть на Vimeo ↗</a>
-      </div>
-      <div class="soc-col">
-        <a class="social social-tg rv" href="https://t.me/obshestvoEGE100ballov" target="_blank" rel="noopener">
-          <span class="social-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span>
-          <span><strong>Telegram</strong><span>@obshestvoEGE100ballov — разборы ЕГЭ и новости олимпиад</span></span>
-          <svg class="social-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
-        </a>
-        <a class="social social-vk rv" href="https://vk.com/club238178938" target="_blank" rel="noopener">
-          <span class="social-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span>
-          <span><strong>ВКонтакте</strong><span>Сообщество школы «Будет 100 баллов»</span></span>
-          <svg class="social-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="contact">
-  <div class="wrap">
-    <div class="contact rv">
+    <div class="sec-head">
       <div>
-        <h2>Будет 100&nbsp;баллов. Начнём?</h2>
-        <p class="sec-lead">Подготовка к ЕГЭ и олимпиадам, партнёрство или научный проект — оставьте контакты, отвечу в течение дня.</p>
-        <div class="contact-ava">
-          <img src="images/anna-aleshina/204.jfif" alt="" loading="lazy">
-          <p><strong>Анна Валентиновна</strong>отвечает лично</p>
-        </div>
+        <h2 class="sec-title">Учебники для 10–11 классов</h2>
+        <p class="sec-lead">Авторские учебно-методические комплексы по информатике и обществознанию. Базовый уровень, ФГОС, рекомендованы для общеобразовательных школ.</p>
       </div>
-      <div class="card">
-        <form class="form" id="contactForm" novalidate>
-          <div class="form-row">
-            <div class="field">
-              <label for="inp-name">Имя</label>
-              <input id="inp-name" name="name" type="text" autocomplete="name" placeholder="Как к вам обращаться">
-              <span class="field-err">Напишите, как к вам обращаться</span>
-            </div>
-            <div class="field">
-              <label for="inp-phone">Телефон</label>
-              <input id="inp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (999) 000-00-00">
-              <span class="field-err">Нужен номер из 11 цифр</span>
-            </div>
+    </div>
+    <div class="books">
+      <div class="book rv"><a class="book-3d" href="images/anna-aleshina/inf10.jpg" data-lb="books" data-caption="УМК «Информатика», 10 класс"><span class="book-cover"><img src="images/anna-aleshina/inf10.jpg" alt="Обложка учебника «Информатика», 10 класс" loading="lazy"></span></a><div><div class="book-t">Информатика</div><div class="book-m">10 класс · базовый уровень</div></div></div>
+      <div class="book rv"><a class="book-3d" href="images/anna-aleshina/inf11.jpg" data-lb="books" data-caption="УМК «Информатика», 11 класс"><span class="book-cover"><img src="images/anna-aleshina/inf11.jpg" alt="Обложка учебника «Информатика», 11 класс" loading="lazy"></span></a><div><div class="book-t">Информатика</div><div class="book-m">11 класс · базовый уровень</div></div></div>
+      <div class="book rv"><a class="book-3d" href="images/anna-aleshina/obsh10.jpg" data-lb="books" data-caption="УМК «Обществознание», 10 класс"><span class="book-cover"><img src="images/anna-aleshina/obsh10.jpg" alt="Обложка учебника «Обществознание», 10 класс" loading="lazy"></span></a><div><div class="book-t">Обществознание</div><div class="book-m">10 класс · базовый уровень</div></div></div>
+      <div class="book rv"><a class="book-3d" href="images/anna-aleshina/obsh11.jpg" data-lb="books" data-caption="УМК «Обществознание», 11 класс"><span class="book-cover"><img src="images/anna-aleshina/obsh11.jpg" alt="Обложка учебника «Обществознание», 11 класс" loading="lazy"></span></a><div><div class="book-t">Обществознание</div><div class="book-m">11 класс · базовый уровень</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="media">
+  <div class="wrap media">
+    <div class="video rv" data-video="https://player.vimeo.com/video/1203420289?h=75e32f9618&amp;badge=0&amp;autopause=0&amp;autoplay=1" data-title="Как поступить в вуз по результатам олимпиады?">
+      <img src="images/anna-aleshina/photo_2026-06-26_09-44-00.jpg" alt="" loading="lazy">
+      <button class="video-play" type="button" aria-label="Смотреть интервью «Как поступить в вуз по результатам олимпиады?»">
+        <span class="pbtn"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+        <strong>Как поступить в вуз по результатам олимпиады?</strong>
+        <span>Эфир с преподавателем МГУ</span>
+      </button>
+    </div>
+    <div class="rv">
+      <h2 class="sec-title" style="font-size:clamp(34px,3.8vw,48px)">Интервью и новости проектов</h2>
+      <p class="sec-lead">Новости онлайн-школы, олимпиад и научной работы.</p>
+      <div class="socials">
+        <a class="social" href="https://t.me/obshestvoEGE100ballov" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span>
+          <span><strong>Telegram</strong><span>@obshestvoEGE100ballov</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+        <a class="social" href="https://vk.com/club238178938" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span>
+          <span><strong>ВКонтакте</strong><span>Сообщество школы «Будет 100 баллов»</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec band" id="contact">
+  <div class="wrap contact">
+    <div>
+      <h2 class="sec-title">Связаться с&nbsp;Анной</h2>
+      <p class="sec-lead">Оставьте контакты и коротко опишите вопрос — Анна ответит в течение дня.</p>
+      <ul class="contact-points">
+        <li>Партнёрство и совместные проекты</li>
+        <li>Научное сотрудничество</li>
+        <li>Интервью и выступления</li>
+      </ul>
+    </div>
+    <div class="card rv">
+      <form class="form" id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="field">
+            <label for="inp-name">Имя</label>
+            <input id="inp-name" name="name" type="text" autocomplete="name" placeholder="Как к вам обращаться">
+            <span class="field-err">Напишите, как к вам обращаться</span>
           </div>
           <div class="field">
-            <label for="inp-goal">Что вас интересует</label>
-            <select id="inp-goal" name="goal">
-              <option>Подготовка к ЕГЭ / ОГЭ</option>
-              <option>Олимпиады и поступление</option>
-              <option>Партнёрство / инвестиции</option>
-              <option>Сотрудничество в науке</option>
-              <option>Работа в школе</option>
-              <option>Другое</option>
-            </select>
+            <label for="inp-phone">Телефон</label>
+            <input id="inp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (999) 000-00-00">
+            <span class="field-err">Нужен номер из 11 цифр</span>
           </div>
-          <div class="field">
-            <label for="inp-comment">Комментарий</label>
-            <textarea id="inp-comment" name="comment" placeholder="Например: дочь в 10 классе, хотим на юрфак МГУ"></textarea>
-          </div>
-          <button type="submit" class="btn btn-blue">Отправить заявку <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-          <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
-        </form>
-        <div class="success" id="formSuccess" tabindex="-1" hidden>
-          <span class="mark" aria-hidden="true">5</span>
-          <h3>Заявка принята!</h3>
-          <p>Свяжусь с вами в течение дня.</p>
         </div>
-      </div>
+        <div class="field">
+            <span class="field-label" id="goal-label">Тема обращения</span>
+            <div class="dd" data-dd>
+              <input type="hidden" name="goal" id="inp-goal" value="Партнёрство и совместные проекты">
+              <button type="button" class="dd-btn" id="goal-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="goal-label goal-btn"><span class="dd-val">Партнёрство и совместные проекты</span><svg class="dd-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+              <ul class="dd-list" role="listbox" tabindex="-1" aria-labelledby="goal-label">
+                <li role="option" aria-selected="true">Партнёрство и совместные проекты</li>
+                <li role="option" aria-selected="false">Инвестиции</li>
+                <li role="option" aria-selected="false">Научное сотрудничество</li>
+                <li role="option" aria-selected="false">Онлайн-школа «Будет 100 баллов»</li>
+                <li role="option" aria-selected="false">Интервью и выступления</li>
+                <li role="option" aria-selected="false">Работа в команде</li>
+                <li role="option" aria-selected="false">Другой вопрос</li>
+              </ul>
+            </div>
+          </div>
+        <div class="field">
+          <label for="inp-comment">Комментарий</label>
+          <textarea id="inp-comment" name="comment" placeholder="Коротко опишите ваш вопрос"></textarea>
+        </div>
+        <button type="submit" class="btn btn-dark">Отправить <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <p class="form-note">Нажимая кнопку, вы соглашаетесь с <a href="#policy" data-dialog="policy">политикой обработки персональных данных</a></p>
+      </form>
+      <div class="success" id="formSuccess" tabindex="-1" hidden>
+          <svg class="success-check" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="33"/><path d="M22 37.5l9.5 9.5L51 27"/></svg>
+          <h3>Спасибо, заявка принята</h3>
+          <p>Анна свяжется с вами в течение дня.</p>
+        </div>
     </div>
   </div>
 </section>
@@ -720,10 +646,7 @@ p { margin: 0; }
 <footer class="foot">
   <div class="wrap">
     <div class="foot-in">
-      <div>
-        <div class="foot-name">Анна<br><span>Алёшина</span></div>
-        <p>Кандидат экономических наук, доцент МГУ им. М. В. Ломоносова. Основатель онлайн-школы «Будет 100 баллов».</p>
-      </div>
+      <div><p>Анна Алёшина — кандидат экономических наук, доцент МГУ им. М. В. Ломоносова. Основатель онлайн-школы «Будет 100 баллов», руководитель научного департамента ИЭЭФ МГУ.</p></div>
       <div class="foot-col">
         <h4>Разделы</h4>
         <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#reviews">Отзывы</a><a href="#books">Учебники</a><a href="#contact">Контакты</a>
@@ -733,9 +656,30 @@ p { margin: 0; }
         <a href="https://t.me/obshestvoEGE100ballov" target="_blank" rel="noopener">Telegram</a><a href="https://vk.com/club238178938" target="_blank" rel="noopener">ВКонтакте</a><a href="https://иээф.рф/" target="_blank" rel="noopener">ИЭЭФ МГУ</a>
       </div>
     </div>
-    <div class="foot-bottom"><span>© <span data-year>2026</span> Анна Алёшина</span><span>Онлайн-школа «Будет 100 баллов» · ЕГЭ, ОГЭ, олимпиады</span></div>
+    <div class="foot-bottom"><span>© <span data-year>2026</span> Анна Алёшина</span><a href="#policy" data-dialog="policy">Политика обработки персональных данных</a></div>
   </div>
 </footer>
+
+<dialog class="dlg" id="policy" aria-labelledby="policy-title">
+  <div class="dlg-in">
+    <form method="dialog"><button class="dlg-close" aria-label="Закрыть"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
+    <h2 id="policy-title">Политика обработки персональных данных</h2>
+    <h3>1. Общие положения</h3>
+    <p>Настоящая политика определяет порядок обработки и защиты персональных данных посетителей сайта Анны Валентиновны Алёшиной (далее — Оператор). Политика составлена в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных».</p>
+    <h3>2. Какие данные обрабатываются</h3>
+    <p>Имя, номер телефона и текст сообщения, которые посетитель сам указывает в форме обратной связи, а также выбранная тема обращения.</p>
+    <h3>3. Цели обработки</h3>
+    <p>Данные используются только для того, чтобы связаться с посетителем и ответить на его обращение. Оператор не использует их для рассылок без отдельного согласия.</p>
+    <h3>4. Основание обработки</h3>
+    <p>Обработка ведётся на основании согласия посетителя, которое он даёт, отправляя форму на сайте.</p>
+    <h3>5. Хранение и защита</h3>
+    <p>Данные хранятся не дольше, чем это нужно для ответа на обращение, и не передаются третьим лицам, за исключением случаев, прямо предусмотренных законодательством Российской Федерации. Оператор принимает организационные и технические меры для защиты данных от неправомерного доступа.</p>
+    <h3>6. Права посетителя</h3>
+    <p>Посетитель вправе получить сведения об обработке своих данных, потребовать их уточнения или удаления, а также отозвать согласие, направив обращение через форму обратной связи на этом сайте.</p>
+    <h3>7. Изменение политики</h3>
+    <p>Оператор может обновлять политику. Актуальная версия всегда опубликована на этой странице.</p>
+  </div>
+</dialog>
 
 <script>
 (() => {
@@ -751,11 +695,17 @@ p { margin: 0; }
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
   const progress = $('.progress');
+  const heroEl = $('.hero');
+  const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   let lastY = window.scrollY;
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
+      if (revealHdr) {
+        const limit = heroEl ? heroEl.offsetHeight * 0.6 : 320;
+        hdr.classList.toggle('is-away', window.innerWidth > 980 && y < limit);
+      }
       const dy = y - lastY;
       if (Math.abs(dy) > 6) {
         hdr.classList.toggle('is-hidden', dy > 0 && y > 520 && !document.body.classList.contains('menu-open'));
@@ -768,6 +718,7 @@ p { margin: 0; }
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
   onScroll();
 
   /* ── Mobile menu ── */
@@ -970,6 +921,73 @@ p { margin: 0; }
       box.appendChild(f);
       box.classList.add('is-playing');
     });
+  });
+
+  /* ── Dropdowns in the site's own style ── */
+  $$('[data-dd]').forEach((dd, n) => {
+    const btn = $('.dd-btn', dd);
+    const list = $('.dd-list', dd);
+    const val = $('.dd-val', dd);
+    const input = $('input[type="hidden"]', dd);
+    const opts = $$('[role="option"]', list);
+    let active = Math.max(0, opts.findIndex(o => o.getAttribute('aria-selected') === 'true'));
+    opts.forEach((o, i) => { if (!o.id) o.id = 'dd' + n + '-' + i; });
+    const setActive = (i, scroll) => {
+      active = (i + opts.length) % opts.length;
+      opts.forEach((o, k) => o.classList.toggle('is-active', k === active));
+      list.setAttribute('aria-activedescendant', opts[active].id);
+      if (scroll) opts[active].scrollIntoView({ block: 'nearest' });
+    };
+    const open = () => {
+      dd.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      setActive(active, true);
+      list.focus({ preventScroll: true });
+    };
+    const close = focusBtn => {
+      if (!dd.classList.contains('is-open')) return;
+      dd.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (focusBtn) btn.focus({ preventScroll: true });
+    };
+    const choose = i => {
+      opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === i)));
+      val.textContent = opts[i].textContent.trim();
+      if (input) input.value = opts[i].dataset.value || opts[i].textContent.trim();
+      active = i;
+      close(true);
+    };
+    btn.addEventListener('click', () => (dd.classList.contains('is-open') ? close(true) : open()));
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+    });
+    opts.forEach((o, i) => {
+      o.addEventListener('click', () => choose(i));
+      o.addEventListener('mousemove', () => { if (active !== i) setActive(i, false); });
+    });
+    list.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1, true); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1, true); }
+      else if (e.key === 'Home') { e.preventDefault(); setActive(0, true); }
+      else if (e.key === 'End') { e.preventDefault(); setActive(opts.length - 1, true); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+      else if (e.key === 'Tab') close(false);
+    });
+    document.addEventListener('click', e => { if (!dd.contains(e.target)) close(false); });
+  });
+
+  /* ── Privacy policy dialog ── */
+  $$('[data-dialog]').forEach(a => a.addEventListener('click', e => {
+    const d = document.getElementById(a.dataset.dialog);
+    if (!d || typeof d.showModal !== 'function') return;
+    e.preventDefault();
+    d.showModal();
+    document.body.classList.add('lb-open');
+  }));
+  $$('dialog').forEach(d => {
+    d.addEventListener('close', () => document.body.classList.remove('lb-open'));
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
   });
 
   /* ── Contact form ── */
