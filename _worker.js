@@ -4570,6 +4570,190 @@ async function handleBotApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// ── /academy: 14-day training course for Avito trainees ──
+// The API lives under /api/dashboard/academy/* on purpose: the dashboard's Yandex Cloud proxy
+// function (yc-dashboard-api-proxy, lets through /api/dashboard/* only) then carries it too, so
+// the page works in Russia without a VPN and no extra function has to be deployed. handleApi
+// routes it before the dashboard's password check: trainees sign in with just a name and a
+// Telegram username (no password — the owner's call), and signing up as "admin" / "admin" opens
+// the admin view instead (set the ACADEMY_ADMIN_KEY secret to require that value in the
+// Telegram field rather than "admin").
+// Storage: AGENCY_DASHBOARD_KV, one "academy:u:<username>" record per trainee. A summary goes in
+// the key's metadata so the admin list is a single kv.list call instead of one get per trainee.
+const ACADEMY_MODULES = 14;
+const ACADEMY_USER_PREFIX = 'academy:u:';
+const ACADEMY_ADMIN_PREFIX = 'academy:admin:';
+const ACADEMY_ADMIN_TTL = 60 * 60 * 24 * 30;
+const ACADEMY_SEEN_EVERY_MS = 6 * 60 * 60 * 1000;
+const ACADEMY_ANSWER_MAX = 10000;
+
+function academyUsername(raw) {
+  const tg = String(raw || '').trim().replace(/^https?:\/\/t\.me\//i, '').replace(/^@+/, '').toLowerCase();
+  return /^[a-z0-9_]{3,32}$/.test(tg) ? tg : '';
+}
+
+function academyMeta(user) {
+  const subs = user.submissions || {};
+  const pending = Object.keys(subs).filter((id) => subs[id].status === 'pending').map(Number);
+  const count = (status) => Object.values(subs).filter((s) => s.status === status).length;
+  return {
+    name: String(user.name || '').slice(0, 80),
+    blocked: !!user.blocked,
+    submitted: Object.keys(subs).length,
+    accepted: count('accepted'),
+    revise: count('revise'),
+    pending,
+    pendingSince: pending.map((id) => subs[id].submittedAt).sort()[0] || null,
+    createdAt: user.createdAt,
+    lastSeenAt: user.lastSeenAt,
+  };
+}
+
+async function academyGetUser(kv, tg) {
+  return tg ? kv.get(ACADEMY_USER_PREFIX + tg, 'json') : null;
+}
+
+async function academyPutUser(kv, user) {
+  await kv.put(ACADEMY_USER_PREFIX + user.tg, JSON.stringify(user), { metadata: academyMeta(user) });
+}
+
+// Signed-in trainee from body.tg: 404 when unknown, 403 when the admin switched access off.
+async function academyTrainee(kv, body) {
+  const user = await academyGetUser(kv, academyUsername(body.tg));
+  if (!user) return { error: json({ error: 'not_found' }, 404) };
+  if (user.blocked) return { error: json({ error: 'blocked' }, 403) };
+  return { user };
+}
+
+async function academyTouch(kv, user) {
+  const now = Date.now();
+  if (now - Date.parse(user.lastSeenAt || 0) < ACADEMY_SEEN_EVERY_MS) return;
+  user.lastSeenAt = new Date(now).toISOString();
+  await academyPutUser(kv, user);
+}
+
+function academyIsAdminLogin(env, name, tg) {
+  const key = String(env.ACADEMY_ADMIN_KEY || 'admin').toLowerCase();
+  return name.toLowerCase() === 'admin' && tg.replace(/^@+/, '').toLowerCase() === key;
+}
+
+function academyCleanAnswers(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const keys = Object.keys(raw);
+  if (!keys.length || keys.length > 30) return null;
+  const answers = {};
+  for (const key of keys) {
+    const value = typeof raw[key] === 'string' ? raw[key].trim() : '';
+    if (!/^[A-Za-z0-9._-]{1,24}$/.test(key) || !value || value.length > ACADEMY_ANSWER_MAX) return null;
+    answers[key] = value;
+  }
+  return answers;
+}
+
+async function handleAcademyApi(request, env, url) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv) return json({ error: 'kv_not_configured' }, 500);
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const body = (await readJson(request)) || {};
+  const action = url.pathname.slice('/api/dashboard/academy/'.length);
+  const now = new Date().toISOString();
+
+  if (action === 'register') {
+    const name = String(body.name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const rawTg = String(body.tg || '').trim();
+    if (academyIsAdminLogin(env, name, rawTg)) {
+      const token = crypto.randomUUID();
+      await kv.put(ACADEMY_ADMIN_PREFIX + token, now, { expirationTtl: ACADEMY_ADMIN_TTL });
+      return json({ admin: true, token });
+    }
+    const tg = academyUsername(rawTg);
+    if (name.length < 2 || name.toLowerCase() === 'admin') return json({ error: 'bad_name' }, 400);
+    if (!tg || tg === 'admin') return json({ error: 'bad_username' }, 400);
+    const existing = await academyGetUser(kv, tg);
+    if (existing) {
+      if (existing.blocked) return json({ error: 'blocked' }, 403);
+      await academyTouch(kv, existing);
+      return json({ user: existing, existing: true });
+    }
+    const user = { tg, name, createdAt: now, lastSeenAt: now, blocked: false, submissions: {} };
+    await academyPutUser(kv, user);
+    return json({ user });
+  }
+
+  if (action === 'login' || action === 'me') {
+    const { user, error } = await academyTrainee(kv, body);
+    if (error) return error;
+    await academyTouch(kv, user);
+    return json({ user });
+  }
+
+  if (action === 'submit') {
+    const { user, error } = await academyTrainee(kv, body);
+    if (error) return error;
+    const moduleId = Number(body.moduleId);
+    if (!Number.isInteger(moduleId) || moduleId < 1 || moduleId > ACADEMY_MODULES) return json({ error: 'bad_module' }, 400);
+    const subs = user.submissions || (user.submissions = {});
+    // Modules go strictly in order: a module opens once the previous one's task is handed in.
+    if (moduleId > 1 && !subs[moduleId - 1]) return json({ error: 'locked' }, 409);
+    const prev = subs[moduleId];
+    if (prev && prev.status === 'accepted') return json({ error: 'already_accepted' }, 409);
+    const answers = academyCleanAnswers(body.answers);
+    if (!answers) return json({ error: 'bad_answers' }, 400);
+    const history = (prev && prev.history) || [];
+    if (prev && prev.status === 'revise') history.push({ feedback: prev.feedback || '', reviewedAt: prev.reviewedAt || null });
+    subs[moduleId] = { answers, status: 'pending', submittedAt: now, firstSubmittedAt: (prev && prev.firstSubmittedAt) || now, history };
+    user.lastSeenAt = now;
+    await academyPutUser(kv, user);
+    return json({ user });
+  }
+
+  if (!action.startsWith('admin/')) return json({ error: 'not_found' }, 404);
+  const token = typeof body.token === 'string' ? body.token : '';
+  if (!token || !(await kv.get(ACADEMY_ADMIN_PREFIX + token))) return json({ error: 'unauthorized' }, 401);
+
+  if (action === 'admin/users') {
+    const users = [];
+    let cursor;
+    for (;;) {
+      const list = await kv.list({ prefix: ACADEMY_USER_PREFIX, cursor });
+      list.keys.forEach((k) => users.push({ tg: k.name.slice(ACADEMY_USER_PREFIX.length), ...(k.metadata || {}) }));
+      if (list.list_complete || !list.cursor) break;
+      cursor = list.cursor;
+    }
+    return json({ users });
+  }
+
+  const target = await academyGetUser(kv, academyUsername(body.tg));
+  if (!target) return json({ error: 'not_found' }, 404);
+
+  if (action === 'admin/user') return json({ user: target });
+
+  if (action === 'admin/review') {
+    const sub = (target.submissions || {})[Number(body.moduleId)];
+    if (!sub) return json({ error: 'not_submitted' }, 404);
+    if (body.status !== 'accepted' && body.status !== 'revise') return json({ error: 'bad_status' }, 400);
+    const feedback = String(body.feedback || '').trim();
+    if (feedback.length > ACADEMY_ANSWER_MAX) return json({ error: 'too_long' }, 400);
+    if (body.status === 'revise' && !feedback) return json({ error: 'feedback_required' }, 400);
+    Object.assign(sub, { status: body.status, feedback, reviewedAt: now });
+    await academyPutUser(kv, target);
+    return json({ user: target });
+  }
+
+  if (action === 'admin/block') {
+    target.blocked = !!body.blocked;
+    await academyPutUser(kv, target);
+    return json({ user: target });
+  }
+
+  if (action === 'admin/delete') {
+    await kv.delete(ACADEMY_USER_PREFIX + target.tg);
+    return json({ ok: true });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 // ── /mba-otchet: the editable progress report for the MBA "Личный бренд" project ──
 // The page computes progress live from the CRM (/api/crm/clients); everything a person types
 // into it (dates, notes, problems, finance, percent overrides) is one JSON document in KV
@@ -4626,6 +4810,11 @@ async function handleApi(request, env, url, ctx) {
 
   if (pathname.startsWith('/api/report-jobs/')) {
     return handleReportJobCallback(request, env, url);
+  }
+
+  // Before the dashboard's own routes: the academy has its own sign-in (see handleAcademyApi).
+  if (pathname.startsWith('/api/dashboard/academy/')) {
+    return handleAcademyApi(request, env, url);
   }
 
   if (pathname.startsWith('/api/dashboard/')) {
