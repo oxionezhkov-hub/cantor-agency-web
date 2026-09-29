@@ -163,7 +163,8 @@ function autoCount(key){
   var p=key.split('.');
   return CLIENT.filter(function(c){return p.length===1?isDone(c.tasks,p[0]):isDone(c.tasks,p[0],p[1])}).length;
 }
-function count(key){return shown(autoCount(key),R.counts[key])}
+function ovCount(key){return getP(R.counts,key)}
+function count(key){return shown(autoCount(key),ovCount(key))}
 function taskPct(t){
   var N=activeN();
   if(t.type==='single')return pct(count(t.id),N);
@@ -214,11 +215,11 @@ function render(){
     var auto=taskPct(t);var o=R.tasks[t.id]||{};var v=shown(auto,o.override);
     h+='<div class="card task"><div class="top"><h3>'+esc(t.label)+'</h3>'+pctEd('tasks.'+t.id+'.override',auto,o.override)+'</div>'+bar(v);
     if(t.type==='group'){
-      h+='<div class="cnt">материалы готовы у '+numEd('counts.'+t.id+'.texts',autoCount(t.id+'.texts'),R.counts[t.id+'.texts'])+' из '+numEd('active',totalN(),R.active)+' клиентов</div><div class="stages">';
+      h+='<div class="cnt">материалы готовы у '+numEd('counts.'+t.id+'.texts',autoCount(t.id+'.texts'),ovCount(t.id+'.texts'))+' из '+numEd('active',totalN(),R.active)+' клиентов</div><div class="stages">';
       STAGES.forEach(function(s){var key=t.id+'.'+s[0];var n=count(key);
-        h+='<div class="stage"><span>'+s[1]+'</span>'+bar(pct(n,N))+'<span class="n">'+numEd('counts.'+key,autoCount(key),R.counts[key])+'/'+numEd('active',totalN(),R.active)+'</span></div>'});
+        h+='<div class="stage"><span>'+s[1]+'</span>'+bar(pct(n,N))+'<span class="n">'+numEd('counts.'+key,autoCount(key),ovCount(key))+'/'+numEd('active',totalN(),R.active)+'</span></div>'});
       h+='</div>';
-    }else h+='<div class="cnt">выполнено у '+numEd('counts.'+t.id,autoCount(t.id),R.counts[t.id])+' из '+numEd('active',totalN(),R.active)+' клиентов</div>';
+    }else h+='<div class="cnt">выполнено у '+numEd('counts.'+t.id,autoCount(t.id),ovCount(t.id))+' из '+numEd('active',totalN(),R.active)+' клиентов</div>';
     h+='<div class="meta"><div><span class="l">Будет готово:</span> '+ed('tasks.'+t.id+'.eta',o.eta,'укажите срок')+'</div><div><span class="l">Комментарий:</span> '+ed('tasks.'+t.id+'.note',o.note,'—')+'</div></div></div>';
   });
   h+='</div></section>';
