@@ -4570,6 +4570,36 @@ async function handleBotApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// ── /mba-otchet: the editable progress report for the MBA "Личный бренд" project ──
+// The page computes progress live from the CRM (/api/crm/clients); everything a person types
+// into it (dates, notes, problems, finance, percent overrides) is one JSON document in KV
+// ("report:mba-otchet"). Reading is open (the page is a shared link); writing needs the
+// "x-dashboard-password" header — env.MBA_REPORT_PASSWORD when set (Cloudflare dashboard ->
+// Variables and Secrets), otherwise the shared dashboard password.
+const MBA_REPORT_KEY = 'report:mba-otchet';
+const MBA_REPORT_MAX_BYTES = 200000;
+
+async function handleMbaReportApi(request, env) {
+  const kv = env.MBA_MYBRAND_KV;
+  if (request.method === 'GET') {
+    const report = await kv.get(MBA_REPORT_KEY, 'json');
+    return json({ report: report || null });
+  }
+  if (request.method === 'PUT') {
+    const password = env.MBA_REPORT_PASSWORD || DASHBOARD_PASSWORD;
+    if (request.headers.get('x-dashboard-password') !== password) return json({ error: 'unauthorized' }, 401);
+    const body = await readJson(request);
+    if (!body || !body.report || typeof body.report !== 'object' || Array.isArray(body.report)) {
+      return json({ error: 'bad_request' }, 400);
+    }
+    const text = JSON.stringify({ ...body.report, updatedAt: new Date().toISOString() });
+    if (text.length > MBA_REPORT_MAX_BYTES) return json({ error: 'too_large' }, 413);
+    await kv.put(MBA_REPORT_KEY, text);
+    return json({ ok: true, updatedAt: JSON.parse(text).updatedAt });
+  }
+  return json({ error: 'method_not_allowed' }, 405);
+}
+
 async function handleApi(request, env, url, ctx) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
@@ -4580,6 +4610,10 @@ async function handleApi(request, env, url, ctx) {
 
   if (pathname.startsWith('/api/crm/')) {
     return handleCrmApi(request, env, url);
+  }
+
+  if (pathname === '/api/mba-report') {
+    return handleMbaReportApi(request, env);
   }
 
   if (pathname.startsWith('/api/avito/')) {
