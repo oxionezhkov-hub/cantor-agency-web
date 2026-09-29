@@ -106,7 +106,6 @@ p { margin: 0; }
   transition: transform .45s var(--ease), background-color .3s, box-shadow .3s;
 }
 .hdr.is-solid { background: rgba(242, 245, 238, .86); -webkit-backdrop-filter: saturate(1.4) blur(16px); backdrop-filter: saturate(1.4) blur(16px); box-shadow: 0 1px 0 var(--line); }
-.hdr.is-hidden { transform: translateY(-110%); }
 .hdr-in { display: flex; align-items: center; gap: 24px; height: 72px; }
 .logo { font-family: var(--f-display); font-weight: 700; font-size: 18px; letter-spacing: -.02em; }
 .nav { display: flex; gap: 4px; margin-left: auto; }
@@ -299,7 +298,7 @@ p { margin: 0; }
 .media .sec-title { color: #fff; }
 .media .sec-label { color: var(--green); }
 .media .sec-lead { color: rgba(233, 240, 230, .7); }
-.video { position: relative; aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; background: #0b120e; }
+.video { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; background: #0b120e; }
 .video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transition: transform .8s var(--ease), opacity .4s; }
 .video::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(11, 18, 14, .85)); pointer-events: none; }
 .video:hover img { transform: scale(1.04); }
@@ -704,12 +703,11 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media rv">
       <div>
-        <div class="video" data-video="https://player.vimeo.com/video/1203420289?h=75e32f9618&amp;badge=0&amp;autopause=0&amp;autoplay=1" data-title="Как поступить в вуз по результатам олимпиады?">
+        <div class="video" data-video="https://player.vimeo.com/video/1231403858?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Анна Алёшина">
           <img src="images/anna-aleshina/photo_2026-06-26_09-44-00.jpg" alt="" loading="lazy">
-          <button class="video-play" type="button" aria-label="Смотреть интервью «Как поступить в вуз по результатам олимпиады?»">
+          <button class="video-play" type="button" aria-label="Смотреть интервью с Анной Алёшиной">
             <span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-            <strong>Как поступить в вуз по результатам олимпиады?</strong>
-            <span>Эфир с преподавателем МГУ</span>
+            <strong>Интервью с Анной Алёшиной</strong>
           </button>
         </div>
       </div>
@@ -842,22 +840,12 @@ p { margin: 0; }
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
   const progress = $('.progress');
-  const heroEl = $('.hero');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
-  let lastY = window.scrollY;
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
-      if (revealHdr) {
-        const limit = heroEl ? heroEl.offsetHeight * 0.6 : 320;
-        hdr.classList.toggle('is-away', window.innerWidth > 980 && y < limit);
-      }
-      const dy = y - lastY;
-      if (Math.abs(dy) > 6) {
-        hdr.classList.toggle('is-hidden', dy > 0 && y > 520 && !document.body.classList.contains('menu-open'));
-        lastY = y;
-      }
+      if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
     }
     if (progress) {
       const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -878,7 +866,6 @@ p { margin: 0; }
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
     document.body.classList.toggle('menu-open', open);
-    if (open && hdr) hdr.classList.remove('is-hidden');
   }
   if (burger && menu) {
     burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
