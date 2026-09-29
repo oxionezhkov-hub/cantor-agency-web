@@ -12,7 +12,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --red:#E8391D;--red-dark:#C42D13;--dark:#0F0F0F;--dark2:#1A1A1A;
+  --red:#E8391D;--red-dark:#C42D13;--dark:#0F0F0F;
   --text:#1C1C1C;--muted:#787672;--bg:#F6F5F2;--white:#fff;--border:#E2E0DC;--soft:#FFF3F0;
   --g:#1E9E5A;--y:#E9A216;--r:#DB3A2A;
   --g-bg:#E7F6EE;--y-bg:#FDF3DC;--r-bg:#FCE7E4;
@@ -21,11 +21,10 @@
 html{scroll-behavior:smooth}
 body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 72px}
-h1,h2,h3,.num{font-family:'Unbounded',sans-serif}
+h1,h2,h3{font-family:'Unbounded',sans-serif}
 section{margin-top:36px}
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .sec-h h2{font-size:19px;line-height:1.25}
-.sec-h .hint{font-size:13px;color:var(--muted)}
 
 /* editable */
 .ed{border-radius:6px;padding:0 3px;margin:0 -3px;cursor:text;transition:background .15s;outline:none;display:inline-block}
@@ -33,26 +32,23 @@ section{margin-top:36px}
 .ed:hover{background:rgba(232,57,29,.09);box-shadow:0 0 0 1px rgba(232,57,29,.25)}
 .ed[contenteditable="true"]{background:#fff;box-shadow:0 0 0 2px var(--red);color:var(--text)}
 .ed:empty::before{content:attr(data-ph);color:#B0ADA6;font-weight:400;font-style:italic}
-.hero .ed:hover{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.3)}
-.hero .ed[contenteditable="true"]{background:#fff;color:#111}
-.hero .ed:empty::before{color:#8d8a84}
 
 /* hero */
-.hero{background:var(--dark);color:#fff;border-radius:22px;padding:30px 28px;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.hero{background:var(--white);border:1px solid var(--border);border-radius:22px;padding:30px 28px;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .ring{position:relative;width:170px;height:170px}
 .ring svg{transform:rotate(-90deg)}
 .ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .ring .val b{font-family:'Unbounded',sans-serif;font-size:38px;line-height:1}
-.ring .val small{font-size:12px;color:#B8B5AE;margin-top:6px}
+.ring .val small{font-size:12px;color:var(--muted);margin-top:6px}
 .hero h1{font-size:26px;line-height:1.2;margin-bottom:6px}
-.hero .sub{color:#B8B5AE;font-size:14px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
-.kpi{background:var(--dark2);border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px}
-.kpi .k{font-size:12px;color:#B8B5AE}
+.hero .sub{color:var(--muted);font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
+.kpi{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+.kpi .k{font-size:12px;color:var(--muted)}
 .kpi .v{font-family:'Unbounded',sans-serif;font-size:22px;margin-top:2px}
 .kpi .v.small{font-size:15px;padding-top:6px}
-.hero-note{margin-top:14px;font-size:14px;color:#D8D5CE}
-.hero-note b{color:#fff;font-weight:500}
+.hero-note{margin-top:14px;font-size:14px;color:#4a4741}
+.hero-note b{color:var(--text);font-weight:500}
 
 /* generic card */
 .card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
@@ -64,25 +60,25 @@ section{margin-top:36px}
 .g>i{background:var(--g)}.y>i{background:var(--y)}.r>i{background:var(--r)}
 .pct{font-family:'Unbounded',sans-serif;font-weight:600;font-size:15px;white-space:nowrap}
 .pct.g{color:var(--g)}.pct.y{color:#B97E00}.pct.r{color:var(--r)}
-.pct.auto-off::after{content:"•";color:var(--red);margin-left:2px;font-size:12px}
+.pct.manual::after{content:"•";color:var(--red);margin-left:2px;font-size:12px}
 .row-bar{display:flex;align-items:center;gap:12px}
 .row-bar .bar{flex:1}
 
 /* task cards */
+.task{display:flex;flex-direction:column}
 .task h3{font-size:14px;margin-bottom:10px;line-height:1.3}
 .task .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .task .cnt{font-size:12px;color:var(--muted);margin:6px 0 10px}
 .stages{display:grid;gap:5px;margin:2px 0 10px}
-.stage{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;font-size:12.5px}
+.stage{display:grid;grid-template-columns:110px 1fr 66px;gap:8px;align-items:center;font-size:12.5px}
 .stage .bar{height:6px}
-.stage .n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.stage .n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .meta{display:grid;gap:4px;font-size:13px;border-top:1px dashed var(--border);padding-top:10px;margin-top:auto}
 .meta .l{color:var(--muted)}
-.task{display:flex;flex-direction:column}
 
 /* problems */
 .prob{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
-.prob:last-child{border-bottom:0}
+.prob:last-of-type{border-bottom:0}
 .lvl{flex-shrink:0;border:0;border-radius:999px;padding:2px 10px;font:600 11px 'Geologica',sans-serif;cursor:pointer;margin-top:2px}
 .lvl.c{background:var(--r-bg);color:var(--r)}.lvl.w{background:var(--y-bg);color:#9A6B00}.lvl.o{background:var(--g-bg);color:var(--g)}
 .prob .t{flex:1}
@@ -90,20 +86,12 @@ section{margin-top:36px}
 .x:hover{color:var(--r)}
 .add{margin-top:10px;background:var(--soft);color:var(--red-dark);border:1px dashed rgba(232,57,29,.4);border-radius:10px;padding:8px 14px;font:500 13px 'Geologica',sans-serif;cursor:pointer}
 .add:hover{background:#ffe6e0}
-.risk-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
-.risk{background:var(--r-bg);border-radius:12px;padding:10px 12px;font-size:13px}
-.risk b{display:block;font-weight:600;margin-bottom:2px}
-.risk span{color:#6b3b35}
-.subh{font-size:13px;color:var(--muted);margin:16px 0 8px;font-weight:500}
 
 /* finance */
-.fin{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.fin{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .fin .box{background:var(--bg);border-radius:12px;padding:14px}
 .fin .k{font-size:12px;color:var(--muted)}
-.fin .v{font-family:'Unbounded',sans-serif;font-size:22px;margin-top:2px}
-.exp{display:grid;grid-template-columns:1fr auto 26px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}
-.exp:last-of-type{border-bottom:0}
-.exp .amt{font-variant-numeric:tabular-nums;font-weight:500}
+.fin .v{font-family:'Unbounded',sans-serif;font-size:20px;margin-top:2px}
 
 /* clients */
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
@@ -113,10 +101,10 @@ section{margin-top:36px}
 .cl:last-child{border-bottom:0}
 .rank{font-family:'Unbounded',sans-serif;font-size:12px;color:#B0ADA6}
 .cl .name{font-weight:500;font-size:14.5px;line-height:1.3}
-.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
-.chip{font-size:10.5px;border-radius:6px;padding:1px 6px;background:var(--track);color:#8a877f;font-weight:500}
-.chip.d{background:var(--g-bg);color:var(--g)}.chip.p{background:var(--y-bg);color:#9A6B00}
-.tag-risk{font-size:10.5px;background:var(--r-bg);color:var(--r);border-radius:6px;padding:1px 6px;font-weight:600;margin-left:6px;vertical-align:1px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.chip{border:0;font:500 11px 'Geologica',sans-serif;border-radius:7px;padding:3px 8px;background:var(--track);color:#8a877f;cursor:pointer;transition:transform .1s}
+.chip:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.chip.d{background:var(--g);color:#fff}.chip.p{background:var(--y);color:#fff}
 .cl .side{font-size:13px;display:grid;gap:3px}
 .cl .side .l{color:var(--muted)}
 .cl .side .nt{color:#4a4741}
@@ -131,7 +119,7 @@ section{margin-top:36px}
   .hero h1{font-size:21px}
   .cl{grid-template-columns:24px 1fr}
   .cl .barcol,.cl .side{grid-column:1 / -1}
-  .stage{grid-template-columns:96px 1fr 50px}
+  .stage{grid-template-columns:96px 1fr 62px}
 }
 </style>
 </head>
@@ -156,107 +144,112 @@ try{pw=localStorage.getItem('mba_otchet_pw')||''}catch(e){}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function defaults(){return{title:'Отчёт о прогрессе работ',subtitle:'МБА «Личный бренд» · Cantor Agency',
-  overall:{eta:'',note:'',override:null},tasks:{},clients:{},problems:[],
-  finance:{paid:null,paidNote:'',expenses:[]}}}
+  overall:{eta:'',note:'',override:null},total:null,active:null,kpi:{serp:null,podcasts:null,sites:null},
+  counts:{},tasks:{},clients:{},problems:[],seeded:false,
+  finance:{paid:null,planned:null,spent:null,realistic:null}}}
 function getP(o,path){return path.split('.').reduce(function(a,k){return a==null?undefined:a[k]},o)}
 function setP(o,path,v){var ks=path.split('.');var last=ks.pop();var cur=o;ks.forEach(function(k){if(cur[k]==null||typeof cur[k]!=='object')cur[k]={};cur=cur[k]});cur[last]=v}
 function col(p){return p>=70?'g':p>=30?'y':'r'}
 function money(n){return n==null||n===''?'':Number(n).toLocaleString('ru-RU')+' ₽'}
+function isNum(v){return typeof v==='number'&&!isNaN(v)}
+function shown(auto,ov){return isNum(ov)?ov:auto}
 function isDone(t,id,sub){var x=t&&t[id];if(sub)x=x&&x[sub];return !!(x&&x.done)}
+function pct(n,N){return N>0?Math.max(0,Math.min(100,Math.round(n/N*100))):0}
 
 /* ---- compute ---- */
-function clientStats(c){
-  var t=c.tasks||{};var done=0,total=0,chips={};
-  TASKS.forEach(function(k){
-    if(k.type==='single'){total++;var d=isDone(t,k.id);if(d)done++;chips[k.id]=d?2:0}
-    else{var n=0;STAGES.forEach(function(s){total++;if(isDone(t,k.id,s[0])){done++;n++}});chips[k.id]=n===5?2:(n>0?1:0)}
-  });
-  return{pct:Math.round(done/total*100),chips:chips};
+function totalN(){return shown(CLIENT.length,R.total)}
+function activeN(){return shown(totalN(),R.active)}
+function autoCount(key){
+  var p=key.split('.');
+  return CLIENT.filter(function(c){return p.length===1?isDone(c.tasks,p[0]):isDone(c.tasks,p[0],p[1])}).length;
 }
-function taskStats(id){
-  var list=CLIENT,N=list.length||1;
-  var t=TASKS.filter(function(x){return x.id===id})[0];
-  if(t.type==='single'){var n=list.filter(function(c){return isDone(c.tasks,id)}).length;return{pct:Math.round(n/N*100),count:n,N:N}}
-  var st=STAGES.map(function(s){var n=list.filter(function(c){return isDone(c.tasks,id,s[0])}).length;return{key:s[0],label:s[1],n:n,pct:Math.round(n/N*100)}});
-  var avg=Math.round(st.reduce(function(a,b){return a+b.pct},0)/st.length);
-  return{pct:avg,stages:st,N:N,count:st[4].n}
+function count(key){return shown(autoCount(key),R.counts[key])}
+function taskPct(t){
+  var N=activeN();
+  if(t.type==='single')return pct(count(t.id),N);
+  var sum=0;STAGES.forEach(function(s){sum+=pct(count(t.id+'.'+s[0]),N)});
+  return Math.round(sum/STAGES.length);
 }
-function shown(auto,ov){return typeof ov==='number'&&!isNaN(ov)?ov:auto}
+/* client chips: state 0 grey, 1 yellow, 2 green */
+function chipAuto(c,key){
+  var t=c.tasks||{};
+  if(key.indexOf('podcast')===0){var n=0;STAGES.forEach(function(s){if(isDone(t,key,s[0]))n++});return{state:n===5?2:(n>0?1:0),score:n/5}}
+  var d=isDone(t,key);return{state:d?2:0,score:d?1:0};
+}
+function chipInfo(c,key){
+  var ov=getP(R,'clients.'+c.id+'.chips.'+key);
+  if(ov===0||ov===1||ov===2)return{state:ov,score:[0,0.5,1][ov]};
+  return chipAuto(c,key);
+}
+function clientAuto(c){var s=0;CHIPS.forEach(function(k){s+=chipInfo(c,k[0]).score});return Math.round(s/CHIPS.length*100)}
 
 /* ---- render ---- */
 function ed(path,val,ph,type){return '<span class="ed" data-path="'+esc(path)+'" data-ph="'+esc(ph||'кликните, чтобы указать')+'" data-type="'+(type||'text')+'">'+esc(val)+'</span>'}
-function pctEd(path,auto,ov){var v=shown(auto,ov);var off=typeof ov==='number';
-  return '<span class="pct '+col(v)+(off?' auto-off':'')+'" title="'+(off?'Значение задано вручную (в CRM '+auto+'%). Очистите, чтобы вернуть авто.':'Считается из CRM. Кликните, чтобы задать вручную.')+'"><span class="ed" data-path="'+esc(path)+'" data-type="pct" data-auto="'+auto+'" data-ph="авто">'+v+'</span>%</span>'}
+function numEd(path,auto,ov,type){return '<span class="ed" data-path="'+esc(path)+'" data-type="'+(type||'int')+'" data-ph="авто">'+shown(auto,ov)+'</span>'}
+function pctEd(path,auto,ov){var v=shown(auto,ov);return '<span class="pct '+col(v)+(isNum(ov)?' manual':'')+'"><span class="ed" data-path="'+esc(path)+'" data-type="pct" data-ph="авто">'+v+'</span>%</span>'}
 function bar(v){return '<div class="bar '+col(v)+'"><i style="width:'+Math.max(0,Math.min(100,v))+'%"></i></div>'}
 
 function render(){
-  var N=CLIENT.length;
-  var cs=CLIENT.map(function(c){var s=clientStats(c);var o=getP(R,'clients.'+c.id)||{};return{c:c,auto:s.pct,pct:shown(s.pct,o.override),ov:o.override,chips:s.chips,o:o}});
-  var autoAvg=Math.round(cs.reduce(function(a,b){return a+b.auto},0)/(N||1));
-  var overall=shown(autoAvg,R.overall.override);
-  var risk=CLIENT.filter(function(c){return c.problem});
-  var recs=0,texts=0;CLIENT.forEach(function(c){[1,2,3].forEach(function(i){if(isDone(c.tasks,'podcast'+i,'recording'))recs++;if(isDone(c.tasks,'podcast'+i,'texts'))texts++})});
-  var circ=2*Math.PI*74,dash=circ*overall/100;
+  var N=activeN();
+  var autoOverall=Math.round(TASKS.reduce(function(a,t){return a+taskPct(t)},0)/TASKS.length);
+  var overall=shown(autoOverall,R.overall.override);
+  var circ=2*Math.PI*74,dash=circ*Math.min(100,overall)/100;
+  var podAuto=[1,2,3].map(function(i){return autoCount('podcast'+i+'.texts')}).join(' / ');
   var h='';
-  h+='<div class="hero"><div class="ring"><svg width="170" height="170" viewBox="0 0 170 170"><circle cx="85" cy="85" r="74" fill="none" stroke="#2a2a2a" stroke-width="14"/><circle cx="85" cy="85" r="74" fill="none" stroke="'+({g:'#2DBE73',y:'#F2B33A',r:'#F0523F'})[col(overall)]+'" stroke-width="14" stroke-linecap="round" stroke-dasharray="'+dash+' '+circ+'"/></svg><div class="val"><b>'+overall+'%</b><small>общий прогресс</small></div></div>';
+  h+='<div class="hero"><div class="ring"><svg width="170" height="170" viewBox="0 0 170 170"><circle cx="85" cy="85" r="74" fill="none" stroke="#ECEAE5" stroke-width="14"/><circle cx="85" cy="85" r="74" fill="none" stroke="'+({g:'#1E9E5A',y:'#E9A216',r:'#DB3A2A'})[col(overall)]+'" stroke-width="14" stroke-linecap="round" stroke-dasharray="'+dash+' '+circ+'"/></svg><div class="val"><b><span class="ed" data-path="overall.override" data-type="pct" data-ph="авто">'+overall+'</span>%</b><small>общий прогресс</small></div></div>';
   h+='<div><h1>'+ed('title',R.title,'Название отчёта')+'</h1><div class="sub">'+ed('subtitle',R.subtitle,'Подзаголовок')+' · данные CRM на '+new Date().toLocaleDateString('ru-RU')+'</div>';
-  h+='<div class="kpis"><div class="kpi"><div class="k">Клиентов в проекте</div><div class="v">'+N+'</div></div>'
-    +'<div class="kpi"><div class="k">Подкастов записано</div><div class="v">'+recs+'</div></div>'
-    +'<div class="kpi"><div class="k">Подкастов с готовыми текстами</div><div class="v">'+texts+'</div></div>'
-    +'<div class="kpi"><div class="k">Клиентов в риске</div><div class="v">'+risk.length+'</div></div>'
+  h+='<div class="kpis">'
+    +'<div class="kpi"><div class="k">Клиентов в проекте</div><div class="v">'+numEd('total',CLIENT.length,R.total)+'</div></div>'
+    +'<div class="kpi"><div class="k">Не отказались от работы</div><div class="v">'+numEd('active',totalN(),R.active)+'</div></div>'
+    +'<div class="kpi"><div class="k">Сделано анализов поисковой выдачи</div><div class="v">'+numEd('kpi.serp',autoCount('serp'),R.kpi.serp)+'</div></div>'
+    +'<div class="kpi"><div class="k">Сделано подкастов</div><div class="v"><span class="ed" data-path="kpi.podcasts" data-type="text" data-ph="'+esc(podAuto)+'">'+esc(R.kpi.podcasts!=null&&R.kpi.podcasts!==''?R.kpi.podcasts:podAuto)+'</span></div></div>'
+    +'<div class="kpi"><div class="k">Сделано сайтов</div><div class="v">'+numEd('kpi.sites',autoCount('site'),R.kpi.sites)+'</div></div>'
     +'<div class="kpi"><div class="k">Проект будет завершён</div><div class="v small">'+ed('overall.eta',R.overall.eta,'укажите срок')+'</div></div></div>';
   h+='<div class="hero-note"><b>Комментарий:</b> '+ed('overall.note',R.overall.note,'общий комментарий по проекту')+'</div>';
-  h+='<div class="hero-note" style="font-size:12px;color:#8d8a84">Общий процент'+(typeof R.overall.override==='number'?' (задан вручную, в CRM '+autoAvg+'%)':' считается как средний по клиентам')+': <span class="ed" data-path="overall.override" data-type="pct" data-auto="'+autoAvg+'" data-ph="авто" style="color:#ddd">'+(typeof R.overall.override==='number'?R.overall.override:autoAvg)+'</span>%</div>';
   h+='</div></div>';
 
   /* tasks */
-  h+='<section><div class="sec-h"><h2>Прогресс по задачам</h2><span class="hint">Доля клиентов, у которых задача выполнена. Срок и комментарий редактируются кликом.</span></div><div class="grid">';
+  h+='<section><div class="sec-h"><h2>Прогресс по задачам</h2></div><div class="grid">';
   TASKS.forEach(function(t){
-    var s=taskStats(t.id);var o=getP(R,'tasks.'+t.id)||{};var v=shown(s.pct,o.override);
-    h+='<div class="card task"><div class="top"><h3>'+esc(t.label)+'</h3>'+pctEd('tasks.'+t.id+'.override',s.pct,o.override)+'</div>'+bar(v);
+    var auto=taskPct(t);var o=R.tasks[t.id]||{};var v=shown(auto,o.override);
+    h+='<div class="card task"><div class="top"><h3>'+esc(t.label)+'</h3>'+pctEd('tasks.'+t.id+'.override',auto,o.override)+'</div>'+bar(v);
     if(t.type==='group'){
-      h+='<div class="cnt">материалы готовы у '+s.count+' из '+s.N+' клиентов</div><div class="stages">';
-      s.stages.forEach(function(x){h+='<div class="stage"><span>'+x.label+'</span>'+bar(x.pct)+'<span class="n">'+x.n+'/'+s.N+'</span></div>'});
+      h+='<div class="cnt">материалы готовы у '+numEd('counts.'+t.id+'.texts',autoCount(t.id+'.texts'),R.counts[t.id+'.texts'])+' из '+numEd('active',totalN(),R.active)+' клиентов</div><div class="stages">';
+      STAGES.forEach(function(s){var key=t.id+'.'+s[0];var n=count(key);
+        h+='<div class="stage"><span>'+s[1]+'</span>'+bar(pct(n,N))+'<span class="n">'+numEd('counts.'+key,autoCount(key),R.counts[key])+'/'+numEd('active',totalN(),R.active)+'</span></div>'});
       h+='</div>';
-    }else h+='<div class="cnt">выполнено у '+s.count+' из '+s.N+' клиентов</div>';
+    }else h+='<div class="cnt">выполнено у '+numEd('counts.'+t.id,autoCount(t.id),R.counts[t.id])+' из '+numEd('active',totalN(),R.active)+' клиентов</div>';
     h+='<div class="meta"><div><span class="l">Будет готово:</span> '+ed('tasks.'+t.id+'.eta',o.eta,'укажите срок')+'</div><div><span class="l">Комментарий:</span> '+ed('tasks.'+t.id+'.note',o.note,'—')+'</div></div></div>';
   });
   h+='</div></section>';
 
   /* problems */
-  h+='<section><div class="sec-h"><h2>Проблемы</h2><span class="hint">Отметка кликом меняет уровень, крестик удаляет</span></div><div class="card">';
-  var LV={c:['Критично','c'],w:['Важно','w'],o:['Наблюдаем','o']};
-  if(!R.problems.length)h+='<div style="color:var(--muted);font-size:14px;padding:4px 0">Проблемы проекта пока не добавлены.</div>';
-  R.problems.forEach(function(p,i){h+='<div class="prob"><button class="lvl '+p.level+'" data-lvl="'+i+'">'+LV[p.level][0]+'</button><div class="t">'+ed('problems.'+i+'.text',p.text,'опишите проблему')+'</div><button class="x" data-del="problems:'+i+'" title="Удалить">×</button></div>'});
-  h+='<button class="add" data-add="problems">+ Добавить проблему</button>';
-  h+='<div class="subh">Клиенты в риске по данным CRM ('+risk.length+')</div><div class="risk-list">';
-  risk.forEach(function(c){h+='<div class="risk"><b>'+esc(c.name||c.email)+'</b><span>'+esc(c.problemComment||'без комментария')+'</span></div>'});
-  if(!risk.length)h+='<div style="color:var(--muted);font-size:14px">Нет клиентов, помеченных проблемными.</div>';
-  h+='</div></div></section>';
+  h+='<section><div class="sec-h"><h2>Проблемы</h2></div><div class="card">';
+  var LV={c:'Критично',w:'Важно',o:'Наблюдаем'};
+  if(!R.problems.length)h+='<div style="color:var(--muted);font-size:14px;padding:4px 0">Проблем пока нет.</div>';
+  R.problems.forEach(function(p,i){h+='<div class="prob"><button class="lvl '+p.level+'" data-lvl="'+i+'">'+LV[p.level]+'</button><div class="t">'+ed('problems.'+i+'.text',p.text,'опишите проблему')+'</div><button class="x" data-del="problems:'+i+'">×</button></div>'});
+  h+='<button class="add" data-add="problems">+ Добавить проблему</button></div></section>';
 
   /* finance */
-  var fin=R.finance,spent=fin.expenses.reduce(function(a,b){return a+(Number(b.amount)||0)},0);
-  var paid=Number(fin.paid)||0;var left=paid-spent;var share=paid>0?Math.round(spent/paid*100):0;
-  var fcol=share<70?'g':share<=95?'y':'r';
-  h+='<section><div class="sec-h"><h2>Финансы</h2><span class="hint">Все суммы редактируются кликом</span></div><div class="card"><div class="fin">'
-   +'<div class="box"><div class="k">Оплатил МБА (изначально)</div><div class="v">'+ed('finance.paid',fin.paid==null?'':money(fin.paid),'укажите сумму','money')+'</div></div>'
-   +'<div class="box"><div class="k">Затраты на проект</div><div class="v">'+(spent?money(spent):'0 ₽')+'</div></div>'
-   +'<div class="box"><div class="k">Остаток</div><div class="v" style="color:var(--'+(left<0?'r':'g')+')">'+(paid?money(left):'—')+'</div></div></div>';
-  h+='<div class="row-bar" style="margin-bottom:6px"><div class="bar '+fcol+'"><i style="width:'+Math.min(100,share)+'%"></i></div><span class="pct '+fcol+'">'+share+'%</span></div><div style="font-size:12px;color:var(--muted);margin-bottom:8px">доля оплаты, уже потраченная на проект</div>';
-  h+='<div style="font-size:13px;margin:6px 0 4px"><span style="color:var(--muted)">Примечание к оплате:</span> '+ed('finance.paidNote',fin.paidNote,'например: договор, этапы оплаты')+'</div>';
-  h+='<div class="subh">Статьи затрат</div>';
-  if(!fin.expenses.length)h+='<div style="color:var(--muted);font-size:14px;padding:4px 0">Статьи затрат пока не добавлены.</div>';
-  fin.expenses.forEach(function(e,i){h+='<div class="exp"><div>'+ed('finance.expenses.'+i+'.name',e.name,'статья затрат')+'</div><div class="amt">'+ed('finance.expenses.'+i+'.amount',e.amount==null||e.amount===''?'':money(e.amount),'сумма','money')+'</div><button class="x" data-del="finance.expenses:'+i+'" title="Удалить">×</button></div>'});
-  h+='<button class="add" data-add="expenses">+ Добавить статью затрат</button></div></section>';
+  var f=R.finance,left=(Number(f.paid)||0)-(Number(f.spent)||0);
+  function fin(label,path,val){return '<div class="box"><div class="k">'+label+'</div><div class="v">'+ed(path,val==null||val===''?'':money(val),'укажите сумму','money')+'</div></div>'}
+  h+='<section><div class="sec-h"><h2>Финансы</h2></div><div class="card"><div class="fin">'
+   +fin('Оплатил School Smart','finance.paid',f.paid)
+   +fin('Запланированные затраты','finance.planned',f.planned)
+   +fin('Затраты на проект','finance.spent',f.spent)
+   +fin('Реалистичные затраты','finance.realistic',f.realistic)
+   +'<div class="box"><div class="k">Остаток</div><div class="v" style="color:var(--'+(left<0?'r':'g')+')">'+(f.paid==null&&f.spent==null?'—':money(left))+'</div></div>'
+   +'</div></div></section>';
 
   /* clients */
+  var cs=CLIENT.map(function(c){var o=R.clients[c.id]||{};var a=clientAuto(c);return{c:c,o:o,auto:a,pct:shown(a,o.override)}});
   cs.sort(function(a,b){return b.pct-a.pct||String(a.c.name).localeCompare(String(b.c.name),'ru')});
-  h+='<section><div class="sec-h"><h2>Клиенты ('+N+')</h2><div class="legend"><span class="lg">70–100% хорошо</span><span class="ly">30–69% в работе</span><span class="lr">0–29% отстаёт</span></div></div><div class="card">';
+  h+='<section><div class="sec-h"><h2>Клиенты ('+CLIENT.length+')</h2><div class="legend"><span class="lg">70–100% хорошо</span><span class="ly">30–69% в работе</span><span class="lr">0–29% отстаёт</span></div></div><div class="card">';
   cs.forEach(function(x,i){
     var c=x.c;var note=x.o.note!=null?x.o.note:(c.problem?(c.problemComment||''):'');
-    h+='<div class="cl"><div class="rank">'+(i+1)+'</div><div><div class="name">'+esc(c.name||c.email)+(c.problem?'<span class="tag-risk">риск</span>':'')+'</div><div class="chips">'
-      +CHIPS.map(function(k){var st=x.chips[k[0]];return '<span class="chip '+(st===2?'d':st===1?'p':'')+'">'+k[1]+'</span>'}).join('')+'</div></div>'
-      +'<div class="barcol"><div class="row-bar">'+bar(x.pct)+pctEd('clients.'+c.id+'.override',x.auto,x.ov)+'</div></div>'
+    h+='<div class="cl"><div class="rank">'+(i+1)+'</div><div><div class="name">'+esc(c.name||c.email)+'</div><div class="chips">'
+      +CHIPS.map(function(k){var st=chipInfo(c,k[0]).state;return '<button class="chip '+(st===2?'d':st===1?'p':'')+'" data-chip="'+esc(c.id)+':'+k[0]+'">'+k[1]+'</button>'}).join('')+'</div></div>'
+      +'<div class="barcol"><div class="row-bar">'+bar(x.pct)+pctEd('clients.'+c.id+'.override',x.auto,x.o.override)+'</div></div>'
       +'<div class="side"><div><span class="l">Будет готово:</span> '+ed('clients.'+c.id+'.eta',x.o.eta,'укажите срок')+'</div><div class="nt">'+ed('clients.'+c.id+'.note',note,'примечание')+'</div></div></div>';
   });
   h+='</div></section>';
@@ -281,18 +274,33 @@ function ensureAuth(){
 function normalizeReport(x){
   var d=defaults();x=x&&typeof x==='object'?x:{};
   var r=Object.assign(d,x);
-  r.overall=Object.assign(d.overall,x.overall||{});r.tasks=x.tasks||{};r.clients=x.clients||{};
+  r.overall=Object.assign(defaults().overall,x.overall||{});
+  r.kpi=Object.assign(defaults().kpi,x.kpi||{});
+  r.counts=x.counts&&typeof x.counts==='object'?x.counts:{};
+  r.tasks=x.tasks||{};r.clients=x.clients||{};
   r.problems=Array.isArray(x.problems)?x.problems:[];
-  r.finance=Object.assign(d.finance,x.finance||{});r.finance.expenses=Array.isArray(r.finance.expenses)?r.finance.expenses:[];
+  r.finance=Object.assign(defaults().finance,x.finance||{});
   return r;
+}
+/* first open: the problem list starts from the CRM's at-risk clients; from then on it is fully editable */
+function seedProblems(){
+  if(R.seeded)return;
+  CLIENT.forEach(function(c){
+    if(!c.problem)return;
+    var txt=(c.name||c.email)+(c.problemComment?': '+c.problemComment.trim():'');
+    R.problems.push({text:txt,level:/отказ/i.test(c.problemComment||'')?'c':'w'});
+  });
+  R.seeded=true;
 }
 
 /* ---- editing ---- */
 var editing=null;
 document.addEventListener('mousedown',function(e){
   var el=e.target.closest('.ed');if(!el||!editing||el===editing)return;
-  var path=el.dataset.path;e.preventDefault();finish(editing,true);
-  var n=document.querySelector('.ed[data-path="'+path+'"]');if(n&&ensureAuth())startEdit(n);
+  var path=el.dataset.path;var sel='.ed[data-path="'+path+'"]';
+  var idx=[].slice.call(document.querySelectorAll(sel)).indexOf(el);
+  e.preventDefault();finish(editing,true);
+  var n=document.querySelectorAll(sel)[idx];if(n&&ensureAuth())startEdit(n);
 });
 document.addEventListener('click',function(e){
   var el=e.target.closest('.ed');
@@ -301,21 +309,24 @@ document.addEventListener('click',function(e){
     if(!ensureAuth())return;
     startEdit(el);return;
   }
+  var ch=e.target.closest('[data-chip]');
+  if(ch){if(!ensureAuth())return;var a=ch.dataset.chip.split(':');var c=CLIENT.filter(function(x){return x.id===a[0]})[0];
+    var cur=chipInfo(c,a[1]).state;setP(R,'clients.'+a[0]+'.chips.'+a[1],(cur+1)%3);save();render();return}
   var lv=e.target.closest('[data-lvl]');
   if(lv){if(!ensureAuth())return;var i=+lv.dataset.lvl;var order=['c','w','o'];R.problems[i].level=order[(order.indexOf(R.problems[i].level)+1)%3];save();render();return}
   var dl=e.target.closest('[data-del]');
-  if(dl){if(!ensureAuth())return;var a=dl.dataset.del.split(':');getP(R,a[0]).splice(+a[1],1);save();render();return}
+  if(dl){if(!ensureAuth())return;var a2=dl.dataset.del.split(':');getP(R,a2[0]).splice(+a2[1],1);save();render();return}
   var ad=e.target.closest('[data-add]');
   if(ad){if(!ensureAuth())return;
-    if(ad.dataset.add==='problems')R.problems.push({text:'',level:'w'});else R.finance.expenses.push({name:'',amount:null});
-    save();render();var last=document.querySelectorAll(ad.dataset.add==='problems'?'.prob .ed':'.exp .ed');
-    var idx=ad.dataset.add==='problems'?last.length-1:last.length-2;if(last[idx])startEdit(last[idx]);return}
+    R.problems.push({text:'',level:'w'});save();render();
+    var last=document.querySelectorAll('.prob .ed');if(last.length)startEdit(last[last.length-1]);return}
 });
 function startEdit(el){
   editing=el;var type=el.dataset.type;var cur=getP(R,el.dataset.path);
-  if(type==='pct'){el.textContent=typeof cur==='number'?cur:''}
+  if(type==='pct'||type==='int'){el.textContent=isNum(cur)?cur:''}
   else if(type==='money'){el.textContent=cur==null||cur===''?'':cur}
-  el.setAttribute('contenteditable','true');el.focus();
+  else if(type==='text'&&el.dataset.path==='kpi.podcasts'){el.textContent=cur==null?'':cur}
+  el.setAttribute('contenteditable','true');el.focus({preventScroll:true});
   var rg=document.createRange();rg.selectNodeContents(el);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(rg);
 }
 function finish(el,commit){
@@ -323,6 +334,7 @@ function finish(el,commit){
   if(commit){
     var raw=el.textContent.replace(/ /g,' ').trim();var type=el.dataset.type;var v;
     if(type==='pct'){v=raw===''?null:Math.max(0,Math.min(100,Math.round(parseFloat(raw.replace(',','.').replace(/[^\d.]/g,'')))));if(v!=null&&isNaN(v))v=null}
+    else if(type==='int'){v=raw===''?null:Math.max(0,Math.round(parseFloat(raw.replace(',','.').replace(/[^\d.]/g,''))));if(v!=null&&isNaN(v))v=null}
     else if(type==='money'){var d=raw.replace(/[^\d.,]/g,'').replace(',','.');v=d===''?null:parseFloat(d);if(v!=null&&isNaN(v))v=null}
     else v=raw;
     if(JSON.stringify(getP(R,el.dataset.path))!==JSON.stringify(v)){setP(R,el.dataset.path,v);save()}
@@ -342,7 +354,7 @@ Promise.all([
   fetch(API+'/api/crm/clients').then(function(r){return r.json()}),
   fetch(API+'/api/mba-report').then(function(r){return r.json()}).catch(function(){return{report:null}})
 ]).then(function(res){
-  CLIENT=(res[0].clients||[]);R=normalizeReport(res[1].report);render();
+  CLIENT=(res[0].clients||[]);R=normalizeReport(res[1].report);seedProblems();render();
 }).catch(function(){document.getElementById('app').innerHTML='<div class="loading">Не удалось загрузить данные CRM. Обновите страницу.</div>'});
 </script>
 </body>
