@@ -8,6 +8,7 @@
 // Дашборд зовёт: <адрес функции>?p=<путь воркера с query>, например
 //   ?p=%2Fapi%2Fdashboard%2Fbootstrap
 // Пропускаются только пути /api/dashboard/* — это не открытый прокси.
+// Сюда же входит API стажировки (cantor.agency/academy → /api/dashboard/academy/*).
 
 const TARGET_ORIGIN = process.env.TARGET_ORIGIN || 'https://mainweb.oxion-ezhkov.workers.dev';
 const FORWARD_HEADERS = ['content-type', 'x-dashboard-password'];
