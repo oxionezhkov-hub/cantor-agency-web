@@ -66,7 +66,7 @@ button{cursor:pointer}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:22px;text-decoration:none;color:var(--ink)}
 .auth-logo img{height:30px;width:auto}
 .auth-logo span{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-left:1px solid var(--line);padding-left:10px}
-.auth-title{font-family:var(--font-display);font-weight:800;font-size:24px;line-height:1.2;letter-spacing:-.02em;color:var(--ink);margin-bottom:8px}
+.auth-title{font-family:var(--font-display);font-weight:800;font-size:24px;line-height:1.2;letter-spacing:-.02em;color:var(--ink);margin-bottom:20px}
 .auth-sub{font-size:14.5px;color:var(--muted);margin-bottom:22px}
 .auth-points{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px}
 .auth-points span{font-size:12.5px;font-weight:600;background:var(--paper);border-radius:999px;padding:5px 11px;color:var(--text)}
@@ -81,11 +81,16 @@ button{cursor:pointer}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex:0 0 auto}
 .brand img{height:26px;width:auto}
 .brand span{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-left:1px solid var(--line);padding-left:10px}
-.nav{display:flex;gap:4px;margin:0 auto}
+.nav{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;display:flex;gap:4px;padding:6px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow-md)}
+body.no-nav .nav{display:none}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--ink);text-decoration:none;padding:8px 14px 8px 10px;border-radius:999px;background:var(--white);border:1px solid var(--line)}
+.back-link:hover{border-color:var(--red);color:var(--red-dark)}
+.back-link svg{width:18px;height:18px}
 .nav a{position:relative;display:flex;align-items:center;gap:7px;padding:9px 16px;white-space:nowrap;border-radius:999px;text-decoration:none;font-weight:700;font-size:14.5px;color:var(--muted)}
 .nav a svg{width:18px;height:18px;flex:0 0 auto}
 .nav a:hover{color:var(--ink)}
-.nav a.on{background:var(--white);color:var(--ink);box-shadow:var(--shadow-sm)}
+.nav a.on{background:var(--red-bg);color:var(--red-dark)}
+body.has-nav .wrap{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:11.5px;font-weight:700;line-height:1}
 .me{display:flex;align-items:center;gap:10px;flex:0 0 auto;margin-left:auto}
 .me-name{font-size:13.5px;font-weight:600;color:var(--ink);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;line-height:1.25}
@@ -93,16 +98,14 @@ button{cursor:pointer}
 .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--white);display:flex;align-items:center;justify-content:center;color:var(--muted)}
 .icon-btn:hover{color:var(--red-dark);border-color:var(--red)}
 .icon-btn svg{width:18px;height:18px}
-@media(max-width:1060px){.brand span,.me-name{display:none}.nav a{padding:9px 13px}}
 @media(max-width:760px){
-  .me-name{display:block}
   :root{--header-h:56px}
   /* backdrop-filter делает шапку контейнером для position:fixed — иначе нижнее меню «прилипает» к шапке */
   .topbar{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
   .topbar-in{padding:0 16px}
   .brand span{display:none}
   .me-name{max-width:120px}
-  .nav{position:fixed;left:0;right:0;bottom:0;z-index:60;margin:0;gap:0;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .nav{left:0;right:0;transform:none;border-radius:0;border-width:1px 0 0;box-shadow:none;bottom:0;margin:0;gap:0;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
   .nav a{flex:1;flex-direction:column;gap:2px;padding:6px 4px;font-size:11.5px;border-radius:12px;min-height:52px;justify-content:center}
   .nav a svg{width:22px;height:22px}
   .nav a.on{box-shadow:none;background:var(--red-bg);color:var(--red-dark)}
@@ -118,7 +121,9 @@ button{cursor:pointer}
 .day-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--red-dark);background:var(--red-bg);border-radius:999px;padding:5px 11px;margin-bottom:12px}
 .doc-title{font-family:var(--font-display);font-size:clamp(23px,4vw,32px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-.02em;line-height:1.22;overflow-wrap:break-word}
 .doc-meta{font-size:15px;color:var(--muted);margin-bottom:26px;max-width:680px}
-.section-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--red-dark);margin:0 0 14px}
+.section-label{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--red-dark);margin:0 0 14px}
+.ic{width:1.15em;height:1.15em;flex:0 0 auto;display:inline-block;vertical-align:-.2em}
+.section-label .ic{width:16px;height:16px}
 .toc{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:22px}
 .toc-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px}
 .toc-links{display:flex;flex-wrap:wrap;gap:8px}
@@ -152,23 +157,23 @@ button{cursor:pointer}
 
 /* callouts */
 .callout{border-radius:var(--r-md);padding:14px 16px 14px 50px;position:relative;margin:14px 0;font-size:15px;line-height:1.6}
-.callout::before{position:absolute;left:15px;top:13px;font-size:20px;line-height:1}
+.callout::before{content:"";position:absolute;left:16px;top:15px;width:20px;height:20px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
 .callout b.ct{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
 .callout p{margin-bottom:6px}
 .callout.secret{background:#1A1A1A;color:#F3F1EE}
-.callout.secret::before{content:"🔑"}
+.callout.secret::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4'/%3E%3Cpath d='m21 2-9.6 9.6'/%3E%3Ccircle cx='7.5' cy='15.5' r='5.5'/%3E%3C/svg%3E");background:var(--red-light)}
 .callout.secret b.ct{color:var(--red-light)}
 .callout.norm{background:var(--red-bg);color:var(--dark2)}
-.callout.norm::before{content:"📌"}
+.callout.norm::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z'/%3E%3C/svg%3E");background:var(--red-dark)}
 .callout.norm b.ct{color:var(--red-dark)}
 .callout.warn{background:var(--amber-bg);color:#4A3200}
-.callout.warn::before{content:"⚠️"}
+.callout.warn::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");background:var(--amber)}
 .callout.warn b.ct{color:var(--amber)}
 .callout.tip{background:var(--green-bg);color:#123D24}
-.callout.tip::before{content:"💡"}
+.callout.tip::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5'/%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 22h4'/%3E%3C/svg%3E");background:var(--green)}
 .callout.tip b.ct{color:var(--green)}
 .callout.info{background:var(--blue-bg);color:#14306B}
-.callout.info::before{content:"ℹ️"}
+.callout.info::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");background:var(--blue)}
 .callout.info b.ct{color:var(--blue)}
 
 /* stat tiles */
@@ -218,10 +223,14 @@ button{cursor:pointer}
 .dd-col li{position:relative;padding-left:22px;margin-bottom:6px;line-height:1.5}
 .dd-col.do{background:var(--green-bg)}
 .dd-col.do h4{color:var(--green)}
-.dd-col.do li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+.dd-col li::before{content:"";position:absolute;left:0;top:4px;width:15px;height:15px;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.dd-col.do li::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");background:var(--green)}
 .dd-col.dont{background:var(--red-bg)}
 .dd-col.dont h4{color:var(--red-dark)}
-.dd-col.dont li::before{content:"✕";position:absolute;left:0;color:var(--red-dark);font-weight:800}
+.dd-col.alt{background:var(--blue-bg)}
+.dd-col.alt h4{color:var(--blue)}
+.dd-col.alt li::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");background:var(--blue)}
+.dd-col.dont li::before{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");background:var(--red-dark)}
 @media(max-width:600px){.dd{grid-template-columns:1fr}}
 
 /* scale / range bar */
@@ -263,9 +272,9 @@ button{cursor:pointer}
 /* Avito ad mock */
 .ad{display:grid;grid-template-columns:190px 1fr;gap:16px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;margin:14px 0;box-shadow:var(--shadow-sm)}
 .ad-cover{aspect-ratio:1/1;border-radius:12px;background:linear-gradient(150deg,#2B3A67 0%,#5563A8 55%,#E8391D 140%);color:#fff;padding:12px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
-.ad-cover .ph{position:absolute;right:-12px;bottom:-8px;font-size:92px;line-height:1;opacity:.95}
+.ad-cover .ph{position:absolute;right:-10px;bottom:-14px;width:110px;height:110px;color:rgba(255,255,255,.85)}
 .ad-cover .c1{font-family:var(--font-display);font-weight:800;font-size:15px;line-height:1.15;max-width:75%;position:relative}
-.ad-cover .c2{font-size:11.5px;font-weight:600;background:rgba(255,255,255,.18);border-radius:8px;padding:5px 8px;max-width:72%;position:relative;line-height:1.3}
+.ad-cover .c2{font-size:11.5px;font-weight:600;background:rgba(255,255,255,.18);border-radius:8px;padding:5px 8px;max-width:60%;position:relative;line-height:1.3}
 .ad-title{font-weight:700;color:#0A58CA;font-size:16px;line-height:1.3;margin-bottom:4px}
 .ad-price{font-weight:800;font-size:18px;color:var(--ink);margin-bottom:6px}
 .ad-text{font-size:13.5px;color:var(--text);line-height:1.5}
@@ -341,6 +350,9 @@ button{cursor:pointer}
 .q-foot .ok{color:var(--green);font-weight:600}
 .answer-view{background:var(--paper);border-radius:var(--r-md);padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.55}
 .task-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px}
+.btn .ic{width:18px;height:18px}
+.task-note{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:600px){.task-actions .btn{flex:1 1 100%}.review-box .task-actions .btn{flex:1 1 0}.doc-nav .btn{flex:1 1 0}}
 .task-note{font-size:13px;color:var(--muted)}
 .task-key{background:var(--blue-bg);color:#14306B;border-radius:var(--r-md);padding:12px 14px;font-size:14px;margin:10px 0 16px}
 .task-key b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);margin-bottom:3px}
@@ -351,6 +363,9 @@ button{cursor:pointer}
 .chip-accepted{background:var(--green-bg);color:var(--green)}
 .chip-revise{background:var(--amber-bg);color:var(--amber)}
 .chip-locked{background:var(--paper);color:#9A958F}
+.chip-locked::before{display:none}
+.chip .ic{width:13px;height:13px}
+.section-label .chip{text-transform:none;letter-spacing:0}
 .chip-blocked{background:var(--red-bg);color:var(--red-dark)}
 
 /* feedback box */
@@ -375,8 +390,10 @@ button{cursor:pointer}
 .hero-kicker{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red-light);margin-bottom:8px;position:relative}
 .hero-title{font-family:var(--font-display);font-size:clamp(21px,3.6vw,28px);font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px;position:relative;overflow-wrap:break-word}
 .hero-sub{color:#C9C5BF;font-size:15px;max-width:560px;margin-bottom:20px;position:relative}
-.hero-row{display:flex;gap:22px;align-items:center;flex-wrap:wrap;position:relative}
-.hero-stats{display:flex;gap:22px;flex-wrap:wrap}
+.hero-row{display:flex;gap:18px 22px;align-items:center;flex-wrap:wrap;position:relative}
+.hero-stats{display:flex;gap:28px;flex-wrap:wrap}
+.hero-btn{margin-left:auto}
+@media(max-width:600px){.hero{padding:24px 20px}.hero-row{flex-direction:column;align-items:stretch}.hero-stats{justify-content:space-between;gap:12px}.hero-btn{margin-left:0;width:100%}}
 .hero-stat b{display:block;font-family:var(--font-display);font-size:22px;font-weight:800;color:#fff}
 .hero-stat span{font-size:12.5px;color:#A3A09B}
 .progress{height:8px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;margin:0 0 20px;position:relative}
@@ -386,7 +403,7 @@ button{cursor:pointer}
 .road-i{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;background:var(--white);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s;position:relative}
 a.road-i:hover{border-color:var(--red);transform:translateY(-1px)}
 .road-n{width:52px;height:52px;border-radius:14px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
-.road-n small{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.road-n small{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--muted)}
 .road-n b{font-family:var(--font-display);font-size:19px;font-weight:800;color:var(--ink);margin-top:2px}
 .road-t{font-weight:700;color:var(--ink);font-size:15.5px;line-height:1.35}
 .road-d{font-size:13.5px;color:var(--muted);line-height:1.45;margin-top:2px}
@@ -397,7 +414,7 @@ a.road-i:hover{border-color:var(--red);transform:translateY(-1px)}
 .road-i.done .road-n b{color:var(--green)}
 .road-i.locked{opacity:.62;cursor:not-allowed;background:transparent;border-style:dashed}
 .road-i.locked .road-t{color:var(--muted)}
-@media(max-width:560px){.road-i{grid-template-columns:44px 1fr;gap:12px;padding:12px 14px}.road-n{width:44px;height:44px}.road-i .chip{grid-column:2;justify-self:start;margin-top:-4px}}
+@media(max-width:560px){.road-i{grid-template-columns:52px 1fr;gap:12px;padding:12px 14px}.road-n{width:52px;height:48px}.road-n small{font-size:8px}.road-i .chip{grid-column:2;justify-self:start;margin-top:-4px}}
 
 .doc-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;flex-wrap:wrap}
 .empty{text-align:center;padding:40px 20px;color:var(--muted);background:var(--white);border:1px dashed var(--line);border-radius:var(--r-lg)}
@@ -418,7 +435,7 @@ a.road-i:hover{border-color:var(--red);transform:translateY(-1px)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--dark);color:#fff;border-radius:14px;padding:12px 18px;font-size:14.5px;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:100;max-width:calc(100vw - 32px);display:flex;gap:12px;align-items:center}
 .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast a{color:var(--red-light);font-weight:700;white-space:nowrap}
-@media(max-width:760px){body.has-nav .toast{bottom:calc(84px + env(safe-area-inset-bottom))}}
+body.has-nav .toast{bottom:calc(90px + env(safe-area-inset-bottom))}
 .banner{background:var(--amber-bg);color:#4A3200;border-radius:var(--r-md);padding:10px 14px;font-size:14px;margin-bottom:16px}
 .loading{display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--muted);gap:10px}
 .spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--red);animation:spin .8s linear infinite}
@@ -519,7 +536,7 @@ a.mod-cell:hover{border-color:var(--red)}
   <p>Это одна из самых важных границ в нашей работе. Агентство отвечает за всё, что происходит <b>до момента, когда ученик написал преподавателю</b>: найти ученику нужное объявление, убедить, что оно ему подходит, и добиться, чтобы он написал. Сам диалог, запись на диагностику и продажу по умолчанию ведёт репетитор.</p>
   <div class="dd">
     <div class="dd-col do"><h4>Зона агентства</h4><ul><li>Профиль и объявления</li><li>Города, ставки, бюджет</li><li>Просмотры и контакты</li><li>Тесты и аналитика</li><li>Отчёты и коммуникация с клиентом</li></ul></div>
-    <div class="dd-col dont"><h4>Зона репетитора</h4><ul><li>Отвечать на входящие заявки</li><li>Доводить до диагностики</li><li>Проводить диагностику и продавать</li><li>Не менять ничего в кабинете самостоятельно</li></ul></div>
+    <div class="dd-col alt"><h4>Зона репетитора</h4><ul><li>Отвечать на входящие заявки</li><li>Доводить до диагностики</li><li>Проводить диагностику и продавать</li><li>Не менять ничего в кабинете самостоятельно</li></ul></div>
   </div>
   <p>Но формально «не наша зона» не значит «нам всё равно». Если просмотров и контактов много, а диагностик мало — мы разбираем диалоги с клиентом на встречах, подсказываем, как не называть цену слишком рано, а иногда <b>временно берём диалоги на себя</b> (об этом — в модуле 12).</p>
   <div class="callout norm"><b class="ct">Правило</b>Кабинет и объявления полностью ведёт агентство. Клиент в них ничего не меняет сам — только отвечает на заявки и доводит их до диагностики. Это фиксируется на старте работы.</div>
@@ -968,7 +985,7 @@ a.mod-cell:hover{border-color:var(--red)}
   <h2>Анатомия объявления</h2>
   <p class="lead">Пользователь принимает решение за пару секунд: видит <b>обложку, заголовок, цену и первые строки текста</b>. Всё остальное читают редко. Поэтому самое важное должно быть наверху.</p>
   <div class="ad">
-    <div class="ad-cover"><div class="c1">Математика ЕГЭ · профиль</div><div class="c2">Бесплатная диагностика ✍️</div><div class="ph">👩‍🏫</div></div>
+    <div class="ad-cover"><div class="c1">Математика ЕГЭ · профиль</div><div class="c2">Бесплатная диагностика</div><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></div>
     <div>
       <div class="ad-title">Репетитор по математике ЕГЭ профиль, подготовка к ОГЭ</div>
       <div class="ad-price">1 500 ₽ за услугу</div>
@@ -1066,7 +1083,7 @@ a.mod-cell:hover{border-color:var(--red)}
   <div class="task-case">
     <p>Сейчас объявление выглядит так:</p>
     <div class="ad" style="margin:10px 0">
-      <div class="ad-cover" style="background:linear-gradient(150deg,#8a8a8a,#c9c9c9)"><div class="c1">Курс по биологии</div><div class="ph">📚</div></div>
+      <div class="ad-cover" style="background:linear-gradient(150deg,#8a8a8a,#c9c9c9)"><div class="c1">Курс по биологии</div><svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
       <div>
         <div class="ad-title">Биология</div>
         <div class="ad-price">3 200 ₽</div>
@@ -1585,7 +1602,7 @@ a.mod-cell:hover{border-color:var(--red)}
   <h2>Регламент нарушен, если…</h2>
   <div class="dd">
     <div class="dd-col dont"><h4>Невыполнение регламента</h4><ul><li>Отчёт клиенту не отправлен до 13:00 без предупреждения</li><li>Заблокированное объявление первым нашёл клиент, а не специалист</li><li>Согласование клиента не передано специалисту в день получения</li><li>Баланс ушёл в ноль без предупреждения клиента минимум за 3 дня</li></ul></div>
-    <div class="dd-col do"><h4>Как проверяют</h4><ul><li>Ежедневно тимлид выборочно проверяет 2–3 кабинета по чек-листу</li><li>Проверяет, что отчёты ушли вовремя</li><li>Еженедельно разбирает с командой повторяющиеся проблемы</li></ul></div>
+    <div class="dd-col alt"><h4>Как проверяют</h4><ul><li>Ежедневно тимлид выборочно проверяет 2–3 кабинета по чек-листу</li><li>Проверяет, что отчёты ушли вовремя</li><li>Еженедельно разбирает с командой повторяющиеся проблемы</li></ul></div>
   </div>
   <p>Инструменты: таблица учёта статистики (Google Sheets, единая для всех клиентов), дашборд агентства, CRM агентства для задач, чаты с клиентами.</p>
   <div class="cheat">
@@ -1785,13 +1802,13 @@ a.mod-cell:hover{border-color:var(--red)}
   <p>Сообщение без вопроса почти всегда остаётся без ответа. Если лид прочитал и замолчал — чаще всего дело не в том, что его не устроил ответ, а в том, что <b>в последнем сообщении не было прямого вопроса</b>, на который легко ответить «да» или «нет».</p>
   <div class="chat-pair">
     <div class="chat">
-      <div class="chat-h bad">✕ Так лид пропадёт</div>
+      <div class="chat-h bad"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Так лид пропадёт</div>
       <div class="msg in">Здравствуйте! Сколько стоит занятие? Сын в 10 классе, математика.<small>18:02</small></div>
       <div class="msg out bad">Добрый вечер! Занятие 60 минут стоит 2 500 ₽, пакет из 8 — 18 000 ₽. Работаю онлайн. Будем ждать от вас информацию.<small>19:47</small></div>
       <div class="chat-note">Прочитано. Ответа нет.</div>
     </div>
     <div class="chat">
-      <div class="chat-h good">✓ Так ведём к диагностике</div>
+      <div class="chat-h good"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Так ведём к диагностике</div>
       <div class="msg in">Здравствуйте! Сколько стоит занятие? Сын в 10 классе, математика.<small>18:02</small></div>
       <div class="msg out">Добрый вечер! Меня зовут Анна. Стоимость зависит от уровня и цели — поэтому начинаю с бесплатной диагностики на 30 минут: посмотрим пробелы и составим план. Удобно созвониться завтра в 17:00 или в 19:00?<small>18:14</small></div>
       <div class="msg in">В 19 удобно<small>18:20</small></div>
@@ -2227,6 +2244,10 @@ var ICONS = {
   inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
   users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>',
   refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
 };
 
@@ -2294,6 +2315,7 @@ function currentModule(user){
 }
 var STATUS_LABEL = {none: 'Не сдано', locked: 'Закрыт', pending: 'На проверке', accepted: 'Принято', revise: 'На доработку'};
 function chip(status, label){ return '<span class="chip chip-' + status + '">' + esc(label || STATUS_LABEL[status]) + '</span>'; }
+function icon(name){ return ICONS[name].replace('<svg', '<svg class="ic" aria-hidden="true"'); }
 
 function seenKey(){ return 'cantor-academy:seen:' + (state.user ? state.user.tg : ''); }
 function unseenFeedback(user){
@@ -2315,7 +2337,8 @@ function todoCount(user){
 
 // ── Layout ──
 var app = document.getElementById('app');
-function shell(active, content){
+function shell(active, content, opts){
+  opts = opts || {};
   var admin = state.session && state.session.role === 'admin';
   var links = admin ? [
     ['#/admin', 'На проверке', ICONS.inbox, 'queue', pendingTotal()],
@@ -2331,13 +2354,15 @@ function shell(active, content){
   }).join('');
   var who = admin ? '<div class="me-name">Админ<small>Cantor Agency</small></div>'
     : '<div class="me-name">' + esc(state.user.name) + '<small>@' + esc(state.user.tg) + '</small></div>';
-  document.body.classList.add('has-nav');
+  document.body.classList.toggle('has-nav', !opts.inModule);
+  document.body.classList.toggle('no-nav', !!opts.inModule);
   app.innerHTML =
     '<header class="topbar"><div class="topbar-in">' +
-      '<a class="brand" href="#/"><img src="/images/brand/logo.svg" alt="Cantor Agency" width="48" height="26"><span>' + (admin ? 'Админка стажировки' : 'Стажировка Авито') + '</span></a>' +
-      '<nav class="nav" aria-label="Разделы">' + nav + '</nav>' +
+      (opts.inModule ? '<a class="back-link" href="#/">' + ICONS.back + 'Модули</a>'
+        : '<a class="brand" href="#/"><img src="/images/brand/logo.svg" alt="Cantor Agency" width="48" height="26"><span>' + (admin ? 'Админка стажировки' : 'Стажировка Авито') + '</span></a>') +
       '<div class="me">' + who + '<button type="button" class="icon-btn" id="logout" title="Выйти" aria-label="Выйти">' + ICONS.out + '</button></div>' +
     '</div></header>' +
+    '<nav class="nav" aria-label="Разделы">' + nav + '</nav>' +
     '<main class="wrap">' + (state.offline ? '<div class="banner">Нет связи с сервером — показываем сохранённые данные. Ответы отправятся, когда связь появится.</div>' : '') + content + '</main>';
   $('#logout').addEventListener('click', function(){
     if (!confirm('Выйти из аккаунта на этом устройстве?')) return;
@@ -2350,14 +2375,12 @@ function shell(active, content){
 
 // ── Auth ──
 function renderAuth(mode, error){
-  document.body.classList.remove('has-nav');
+  document.body.classList.remove('has-nav', 'no-nav');
   var reg = mode !== 'login';
   app.innerHTML =
     '<div class="auth"><div class="auth-card">' +
       '<a class="auth-logo" href="/"><img src="/images/brand/logo.svg" alt="Cantor Agency" width="56" height="30"><span>Стажировка</span></a>' +
-      '<h1 class="auth-title">Школа стажёров Авито</h1>' +
-      '<p class="auth-sub">14 дней, 14 модулей по нашим регламентам и практические задания на реальных кейсах. Проходите по порядку — следующий модуль откроется, как только сдадите задание.</p>' +
-      '<div class="auth-points"><span>📚 14 модулей</span><span>✍️ Задания с разбором</span><span>💬 Фидбэк от команды</span></div>' +
+      '<h1 class="auth-title">Стажировка Авито</h1>' +
       '<div class="seg" role="tablist"><button type="button" data-mode="register" class="' + (reg ? 'on' : '') + '">Я новенький</button><button type="button" data-mode="login" class="' + (reg ? '' : 'on') + '">Уже учусь</button></div>' +
       (error ? '<div class="form-error">' + error + '</div>' : '') +
       '<form id="auth-form" novalidate>' +
@@ -2365,7 +2388,7 @@ function renderAuth(mode, error){
         '<label class="field"><span class="field-label">Telegram username' + (reg ? '' : ' — обязательно с @') + '</span><input class="input" name="tg" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@username" required></label>' +
         '<button class="btn btn-primary btn-block" type="submit">' + (reg ? 'Начать обучение' : 'Войти') + '</button>' +
       '</form>' +
-      '<p class="auth-help">' + (reg ? 'Пароль не нужен — доступ сохранится на этом устройстве. Чтобы зайти с другого, выберите «Уже учусь».' : 'Введите тот же username, что указали при регистрации.') + '<br>Вопросы — ' + supportLink + '</p>' +
+      '<p class="auth-help">Вопросы — ' + supportLink + '</p>' +
     '</div></div>';
   $all('.seg button').forEach(function(b){ b.addEventListener('click', function(){ renderAuth(b.getAttribute('data-mode')); }); });
   var form = $('#auth-form');
@@ -2418,7 +2441,7 @@ function renderAuthError(mode, msg, name, tg){
   if (go) go.addEventListener('click', function(e){ e.preventDefault(); renderAuth('register'); var f = $('#auth-form'); f.tg.value = tg; });
 }
 function renderBlocked(){
-  document.body.classList.remove('has-nav');
+  document.body.classList.remove('has-nav', 'no-nav');
   app.innerHTML = '<div class="auth"><div class="auth-card"><a class="auth-logo" href="/"><img src="/images/brand/logo.svg" alt="Cantor Agency" width="56" height="30"><span>Стажировка</span></a>' +
     '<h1 class="auth-title">Доступ приостановлен</h1><p class="auth-sub">Администратор отключил доступ к обучению для этого аккаунта. Если это ошибка — напишите ' + supportLink + '.</p>' +
     '<button class="btn btn-ghost btn-block" type="button" id="relogin">Войти под другим username</button></div></div>';
@@ -2441,30 +2464,30 @@ function renderHome(){
     hero = '<section class="hero"><div class="hero-kicker">Программа стажировки</div><div class="hero-title">14 модулей по регламентам</div><div class="hero-sub">Так программу видят стажёры. В режиме админа открыты все модули, а в заданиях видны критерии проверки.</div></section>';
   } else {
     var day = programDay(user);
-    var pace = cur === 0 ? 'Программа пройдена 🎉' : (cur > day ? 'Идёте с опережением плана' : cur === day ? 'Идёте точно по плану' : 'По плану сегодня — модуль ' + day + ', поднажмите');
+    var pace = cur === 0 ? 'Программа пройдена' : (cur > day ? 'с опережением плана' : cur === day ? 'точно по плану' : 'по плану сегодня модуль ' + day);
     hero = '<section class="hero">' +
-      '<div class="hero-kicker">День ' + day + ' из ' + TOTAL + ' · ' + esc(pace) + '</div>' +
-      '<div class="hero-title">' + (cur ? 'Привет, ' + esc(user.name.split(' ')[0]) + '!' : 'Вы прошли все 14 модулей!') + '</div>' +
+      '<div class="hero-kicker">' + (cur ? 'Модуль ' + cur + ' из ' + TOTAL + ' · ' : '') + esc(pace) + '</div>' +
+      '<div class="hero-title">' + (cur ? 'Здравствуйте, ' + esc(user.name.split(' ')[0]) + '!' : 'Вы прошли все 14 модулей!') + '</div>' +
       '<div class="hero-sub">' + (cur ? 'Сейчас у вас <b style="color:#fff">модуль ' + cur + ' — «' + esc(modById(cur).title) + '»</b>. Прочитайте материал и сдайте задание внизу модуля — следующий откроется сразу.' : 'Дождитесь фидбэка по последним заданиям — он появится в разделе «Фидбэк».') + '</div>' +
       '<div class="progress"><i style="width:' + Math.round(done / TOTAL * 100) + '%"></i></div>' +
       '<div class="hero-row"><div class="hero-stats">' +
         '<div class="hero-stat"><b>' + done + '/' + TOTAL + '</b><span>заданий сдано</span></div>' +
         '<div class="hero-stat"><b>' + accepted + '</b><span>принято</span></div>' +
-        '<div class="hero-stat"><b>' + day + '</b><span>день программы</span></div>' +
-      '</div>' + (cur ? '<a class="btn btn-primary" href="#/module/' + cur + '" style="margin-left:auto">Продолжить →</a>' : '') + '</div>' +
+        '<div class="hero-stat"><b>' + (TOTAL - done) + '</b><span>осталось</span></div>' +
+      '</div>' + (cur ? '<a class="btn btn-primary hero-btn" href="#/module/' + cur + '">' + (done ? 'Продолжить: модуль ' + cur : 'Начать модуль 1') + ' →</a>' : '') + '</div>' +
     '</section>';
   }
   var road = MODULES.map(function(m){
     var st = admin ? 'none' : moduleStatus(user, m.id);
     var cls = admin ? '' : st === 'locked' ? 'locked' : m.id === cur ? 'current' : (st === 'accepted' || st === 'pending' || st === 'revise') ? 'done' : '';
     var tag = st === 'locked' ? 'div' : 'a';
-    var chipHtml = admin ? '<span class="chip chip-none">' + esc(m.time) + '</span>' : st === 'locked' ? chip('locked', '🔒 Закрыт') : m.id === cur ? chip('revise', 'Текущий') : chip(st);
+    var chipHtml = admin ? '<span class="chip chip-none">' + esc(m.time) + '</span>' : st === 'locked' ? '<span class="chip chip-locked">' + icon('lock') + 'Закрыт</span>' : m.id === cur ? chip('revise', 'Текущий') : chip(st);
     return '<' + tag + ' class="road-i ' + cls + '"' + (tag === 'a' ? ' href="#/module/' + m.id + '"' : ' aria-disabled="true" title="Откроется после сдачи задания модуля ' + (m.id - 1) + '"') + '>' +
-      '<div class="road-n"><small>день</small><b>' + m.id + '</b></div>' +
+      '<div class="road-n"><small>модуль</small><b>' + m.id + '</b></div>' +
       '<div><div class="road-t">' + esc(m.title) + '</div><div class="road-d">' + esc(m.desc) + (admin ? '' : ' · ' + esc(m.time)) + '</div></div>' +
       chipHtml + '</' + tag + '>';
   }).join('');
-  shell('modules', hero + '<div class="section-label">Программа на 14 дней</div><div class="road">' + road + '</div>');
+  shell('modules', hero + '<div class="section-label">Программа: 14 модулей</div><div class="road">' + road + '</div>');
 }
 
 // ── Task form (используется в модуле и в разделе «Задания») ──
@@ -2515,7 +2538,7 @@ function bindForms(root){
     function update(ta){
       var n = ta.value.trim().length;
       var el = form.querySelector('.cnt[data-for="' + ta.name + '"]');
-      if (el){ el.className = 'cnt' + (n >= MIN_ANSWER ? ' ok' : ''); el.textContent = n >= MIN_ANSWER ? '✓ ' + n + ' ' + plural(n, 'символ', 'символа', 'символов') : 'Ещё минимум ' + (MIN_ANSWER - n) + ' ' + plural(MIN_ANSWER - n, 'символ', 'символа', 'символов'); }
+      if (el){ el.className = 'cnt' + (n >= MIN_ANSWER ? ' ok' : ''); el.textContent = n >= MIN_ANSWER ? 'Готово · ' + n + ' ' + plural(n, 'символ', 'символа', 'символов') : 'Ещё минимум ' + (MIN_ANSWER - n) + ' ' + plural(MIN_ANSWER - n, 'символ', 'символа', 'символов'); }
     }
     areas.forEach(function(ta){
       update(ta);
@@ -2541,7 +2564,7 @@ function bindForms(root){
           state.user = r.data.user; state.offline = false; lsSet(USER_KEY, state.user); lsDel(draftKey(id));
           route(true);
           if (wasNew && id < TOTAL) toast('Ответы отправлены на проверку. Открыт модуль ' + (id + 1) + '! <a href="#/module/' + (id + 1) + '">Перейти →</a>', 7000);
-          else toast(wasNew ? 'Готово! Вы сдали все задания программы 🎉' : 'Ответы обновлены и отправлены на проверку.');
+          else toast(wasNew ? 'Готово! Вы сдали все задания программы.' : 'Ответы обновлены и отправлены на проверку.');
           return;
         }
         btn.disabled = false; btn.textContent = old;
@@ -2571,21 +2594,20 @@ function renderModule(id){
   var holder = document.createElement('div'); holder.innerHTML = parts.lessonHtml;
   var sections = $all('.ls', holder);
   sections.forEach(function(s, i){ s.id = 'ls-' + (i + 1); });
-  var toc = sections.map(function(s){ var h = $('h2', s); return h ? '<a href="#" data-scroll="' + s.id + '">' + esc(h.textContent) + '</a>' : ''; }).join('') + '<a href="#" class="toc-task" data-scroll="task-zone">✍️ Задание</a>';
+  var toc = sections.map(function(s){ var h = $('h2', s); return h ? '<a href="#" data-scroll="' + s.id + '">' + esc(h.textContent) + '</a>' : ''; }).join('') + '<a href="#" class="toc-task" data-scroll="task-zone">' + icon('pen') + ' Задание</a>';
   var st = admin ? null : moduleStatus(state.user, id);
   var nextOpen = id < TOTAL && (admin || isUnlocked(state.user, id + 1));
   var html =
-    '<div class="crumbs"><a href="#/">← Все модули</a></div>' +
-    '<div class="day-chip">День ' + id + ' из ' + TOTAL + ' · ' + esc(m.time) + '</div>' +
+    '<div class="day-chip">Модуль ' + id + ' из ' + TOTAL + ' · ' + esc(m.time) + '</div>' +
     '<h1 class="doc-title">' + esc(m.title) + '</h1>' +
     '<p class="doc-meta">' + esc(m.desc) + '</p>' +
     '<nav class="toc" aria-label="Содержание"><div class="toc-label">Быстрые ссылки</div><div class="toc-links">' + toc + '</div></nav>' +
     '<article class="reg-card lesson">' + holder.innerHTML + '</article>' +
-    '<section id="task-zone" class="task-zone"><div class="section-label" style="margin-top:34px">✍️ Задание к модулю ' + (st ? '· ' + chip(st) : '') + '</div>' + renderTaskForm(id) + '</section>' +
-    (admin ? '' : '<section><div class="section-label" style="margin-top:30px">💬 Фидбэк</div>' + feedbackBlock(id) + '</section>') +
+    '<section id="task-zone" class="task-zone"><div class="section-label" style="margin-top:34px">' + icon('pen') + 'Задание к модулю' + (st ? ' ' + chip(st) : '') + '</div>' + renderTaskForm(id) + '</section>' +
+    (admin ? '' : '<section><div class="section-label" style="margin-top:30px">' + icon('chat') + 'Фидбэк</div>' + feedbackBlock(id) + '</section>') +
     '<div class="doc-nav">' + (id > 1 ? '<a class="btn btn-ghost btn-sm" href="#/module/' + (id - 1) + '">← Модуль ' + (id - 1) + '</a>' : '<span></span>') +
-      (id < TOTAL ? (nextOpen ? '<a class="btn btn-primary btn-sm" href="#/module/' + (id + 1) + '">Модуль ' + (id + 1) + ' →</a>' : '<span class="task-note">🔒 Модуль ' + (id + 1) + ' откроется после сдачи задания</span>') : '') + '</div>';
-  shell('modules', html);
+      (id < TOTAL ? (nextOpen ? '<a class="btn btn-primary btn-sm" href="#/module/' + (id + 1) + '">Модуль ' + (id + 1) + ' →</a>' : '<span class="task-note">' + icon('lock') + 'Модуль ' + (id + 1) + ' откроется после сдачи задания</span>') : '') + '</div>';
+  shell('modules', html, {inModule: true});
   $all('[data-scroll]').forEach(function(a){
     a.addEventListener('click', function(e){ e.preventDefault(); var t = document.getElementById(a.getAttribute('data-scroll')); if (t) t.scrollIntoView({behavior: 'smooth', block: 'start'}); });
   });
@@ -2601,13 +2623,13 @@ function renderTasks(){
   var items = open.slice().reverse().map(function(id){
     var st = moduleStatus(user, id);
     var expand = id === cur || st === 'revise';
-    return '<details class="acc" id="acc-' + id + '"' + (expand ? ' open' : '') + '><summary><div class="acc-t"><small>День ' + id + '</small>' + esc(modById(id).title) + '</div><div class="acc-r">' + chip(st) + '</div></summary>' +
-      '<div class="acc-body">' + renderTaskForm(id) + '<div class="section-label" style="margin-top:18px">💬 Фидбэк</div>' + feedbackBlock(id) + '</div></details>';
+    return '<details class="acc" id="acc-' + id + '"' + (expand ? ' open' : '') + '><summary><div class="acc-t"><small>Модуль ' + id + '</small>' + esc(modById(id).title) + '</div><div class="acc-r">' + chip(st) + '</div></summary>' +
+      '<div class="acc-body">' + renderTaskForm(id) + '<div class="section-label" style="margin-top:18px">' + icon('chat') + 'Фидбэк</div>' + feedbackBlock(id) + '</div></details>';
   }).join('');
   var locked = TOTAL - open.length;
   shell('tasks',
     '<h1 class="doc-title">Задания</h1><p class="doc-meta">Все открытые задания и фидбэк по ним в одном месте. Теория — в разделе «Модули», задание можно сдать и там, и здесь.</p>' +
-    items + (locked ? '<div class="empty"><b>🔒 Ещё ' + locked + ' ' + plural(locked, 'задание', 'задания', 'заданий') + ' впереди</b>Они откроются по порядку — по мере сдачи текущих.</div>' : ''));
+    items + (locked ? '<div class="empty"><b>Ещё ' + locked + ' ' + plural(locked, 'задание', 'задания', 'заданий') + ' впереди</b>Они откроются по порядку — по мере сдачи текущих.</div>' : ''));
   bindForms(app);
 }
 
@@ -2621,7 +2643,7 @@ function renderFeedback(){
   var list = reviewed.map(function(id){
     var s = subs[id];
     var isNew = seen[id] !== s.reviewedAt;
-    return '<div class="fb ' + s.status + '"><div class="fb-head"><div class="fb-title"><a href="#/module/' + id + '">День ' + id + ' · ' + esc(modById(id).title) + '</a>' + (isNew ? ' <span class="badge">new</span>' : '') + '</div>' + chip(s.status) + '</div>' +
+    return '<div class="fb ' + s.status + '"><div class="fb-head"><div class="fb-title"><a href="#/module/' + id + '">Модуль ' + id + ' · ' + esc(modById(id).title) + '</a>' + (isNew ? ' <span class="badge">new</span>' : '') + '</div>' + chip(s.status) + '</div>' +
       '<div class="fb-text">' + (s.feedback ? esc(s.feedback) : '<span class="muted">Принято без комментария.</span>') + '</div>' +
       '<div class="fb-meta">' + fmtDate(s.reviewedAt, true) + (s.status === 'revise' ? ' · <a href="#/module/' + id + '">Доработать задание →</a>' : '') + '</div></div>';
   }).join('');
@@ -2692,11 +2714,11 @@ function renderQueue(force){
       '<div class="kpi"><b>' + active.filter(function(u){ return Date.now() - Date.parse(u.lastSeenAt || 0) < 3 * 86400000; }).length + '</b><span>активны за 3 дня</span></div>' +
       '<div class="kpi"><b>' + finished + '</b><span>прошли программу</span></div></div>';
     var list = items.map(function(it){
-      return '<a class="qrow" href="#/admin/u/' + encodeURIComponent(it.tg) + '/' + it.id + '"><div><b>' + esc(it.name) + '</b> <span class="muted">@' + esc(it.tg) + '</span><small>День ' + it.id + ' · ' + esc(modById(it.id).title) + '</small></div><span class="btn btn-primary btn-sm">Проверить</span></a>';
+      return '<a class="qrow" href="#/admin/u/' + encodeURIComponent(it.tg) + '/' + it.id + '"><div><b>' + esc(it.name) + '</b> <span class="muted">@' + esc(it.tg) + '</span><small>Модуль ' + it.id + ' · ' + esc(modById(it.id).title) + '</small></div><span class="btn btn-primary btn-sm">Проверить</span></a>';
     }).join('');
     shell('queue',
       '<div class="adm-tools" style="justify-content:space-between"><h1 class="doc-title" style="margin:0">На проверке</h1><button type="button" class="btn btn-ghost btn-sm" id="refresh">' + ICONS.refresh.replace('<svg', '<svg width="16" height="16"') + ' Обновить</button></div>' +
-      kpis + (list ? '<div class="ulist">' + list + '</div>' : '<div class="empty"><b>Всё проверено ✨</b>Новые работы появятся здесь, как только стажёры их сдадут.</div>'));
+      kpis + (list ? '<div class="ulist">' + list + '</div>' : '<div class="empty"><b>Всё проверено</b>Новые работы появятся здесь, как только стажёры их сдадут.</div>'));
     $('#refresh').addEventListener('click', function(){ renderQueue(true); });
   }).catch(function(e){ if (e.message !== 'unauthorized') adminError('queue', e); });
 }
@@ -2741,7 +2763,7 @@ function renderAdminUser(tg){
     var user = res[1], subs = subsOf(user);
     var cells = MODULES.map(function(m){
       var st = moduleStatus(user, m.id);
-      var inner = '<span><small>День ' + m.id + '</small>' + esc(m.title) + '</span>' + chip(st === 'none' ? 'none' : st, st === 'none' ? 'Не сдано' : null);
+      var inner = '<span><small>Модуль ' + m.id + '</small>' + esc(m.title) + '</span>' + chip(st === 'none' ? 'none' : st, st === 'none' ? 'Не сдано' : null);
       return subs[m.id] ? '<a class="mod-cell" href="#/admin/u/' + encodeURIComponent(tg) + '/' + m.id + '">' + inner + '</a>' : '<div class="mod-cell" style="opacity:.6">' + inner + '</div>';
     }).join('');
     var sm = summarize(user);
@@ -2788,14 +2810,14 @@ function renderReview(tg, id){
     var hist = (sub.history || []).filter(function(h){ return h.feedback; });
     shell('queue',
       '<div class="crumbs"><a href="#/admin">← На проверке</a><span class="muted">·</span><a href="#/admin/u/' + encodeURIComponent(tg) + '">' + esc(user.name) + '</a></div>' +
-      '<div class="day-chip">День ' + id + ' · ' + esc(m.title) + '</div>' +
+      '<div class="day-chip">Модуль ' + id + ' · ' + esc(m.title) + '</div>' +
       '<h1 class="doc-title">' + esc(user.name) + ' <span class="muted" style="font-size:.6em">@' + esc(user.tg) + '</span></h1>' +
       '<p class="doc-meta">Сдано ' + fmtDate(sub.submittedAt, true) + (sub.firstSubmittedAt && sub.firstSubmittedAt !== sub.submittedAt ? ' (впервые — ' + fmtDate(sub.firstSubmittedAt, true) + ')' : '') + ' · ' + chip(sub.status) + '</p>' +
       tasks +
       '<form class="review-box" id="review"><div class="section-label">Ваш фидбэк</div>' +
         (hist.length ? '<details class="fb-history" style="margin:0 0 12px"><summary>Прошлые комментарии (' + hist.length + ')</summary>' + hist.map(function(h){ return '<div class="fb-old">' + esc(h.feedback) + '<br><small>' + fmtDate(h.reviewedAt, true) + '</small></div>'; }).join('') + '</details>' : '') +
         '<textarea class="textarea" name="feedback" rows="6" placeholder="Что получилось хорошо, что упущено, как можно было ответить сильнее…">' + esc(sub.status !== 'pending' ? sub.feedback || '' : '') + '</textarea>' +
-        '<div class="task-actions" style="margin-top:12px"><button class="btn btn-green" type="button" data-s="accepted">✓ Принять</button><button class="btn btn-amber" type="button" data-s="revise">↺ На доработку</button><span class="task-note">Стажёр увидит комментарий в разделе «Фидбэк».</span></div></form>');
+        '<div class="task-actions" style="margin-top:12px"><button class="btn btn-green" type="button" data-s="accepted">' + icon('check') + 'Принять</button><button class="btn btn-amber" type="button" data-s="revise">' + icon('undo') + 'На доработку</button><span class="task-note">Стажёр увидит комментарий в разделе «Фидбэк».</span></div></form>');
     var form = $('#review');
     autoGrow(form.feedback);
     form.feedback.addEventListener('input', function(){ autoGrow(form.feedback); });
