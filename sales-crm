@@ -86,8 +86,12 @@ th.col-name,td.col-name{width:170px}
 th.col-tg,td.col-tg{width:190px}
 th.col-priority,td.col-priority{width:150px}
 th.col-status,td.col-status{width:170px}
+th.col-date,td.col-date{width:128px}
 th.col-comment,td.col-comment{width:auto}
 .cell-input{width:100%;min-width:80px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:6px 8px;font-size:13px;background:transparent;outline:none;transition:all 0.15s}
+.date-input.na-overdue{border-color:var(--p-red);background:var(--p-red-bg);color:var(--p-red)}
+.date-input.na-today{border-color:var(--p-orange);background:var(--p-orange-bg);color:var(--p-orange)}
+.date-input.na-soon{border-color:var(--p-yellow);background:var(--p-yellow-bg);color:var(--p-yellow)}
 .cell-input:hover{border-color:var(--border)}
 .cell-input:focus{border-color:var(--red);background:var(--white)}
 textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inherit;line-height:1.4;width:100%}
@@ -190,6 +194,7 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
   th.col-priority,td.col-priority{width:44px}
   th.col-status,td.col-status{width:44px}
   th.col-name,td.col-name{width:130px}
+  th.col-date,td.col-date{width:96px}
   .wrap table .dd-trigger{width:26px;height:26px;padding:0;border-radius:var(--r-md);justify-content:center;gap:0}
   .wrap table .dd-trigger .dd-label,.wrap table .dd-trigger .chev{display:none}
   /* The column headers above these now-icon-only cells would otherwise sit awkwardly wide
@@ -278,6 +283,7 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
           <th class="col-tg"><span class="th-label">Telegram</span></th>
           <th class="col-priority"><span class="th-label">Приоритет</span></th>
           <th class="col-status"><span class="th-label">Статус</span></th>
+          <th class="col-date"><span class="th-label">Дата</span></th>
           <th class="col-comment">Комментарий</th>
         </tr>
       </thead>
@@ -368,6 +374,18 @@ function openTelegram(username) {
 }
 function daysSince(iso) {
   return (Date.now() - new Date(iso).getTime()) / 86400000;
+}
+function dateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+// Colors the next-action date input: overdue (red), today (orange), within 2 days (yellow).
+function nextActionClassFor(c) {
+  if (!c.nextActionDate) return '';
+  const today = dateStr(new Date());
+  if (c.nextActionDate < today) return 'na-overdue';
+  if (c.nextActionDate === today) return 'na-today';
+  const soonBy = dateStr(new Date(Date.now() + 2 * 86400000));
+  return c.nextActionDate <= soonBy ? 'na-soon' : '';
 }
 let toastTimer = null;
 function showToast(text) {
@@ -587,6 +605,10 @@ function rowHtml(c) {
       <td class="col-tg">${tgFieldHtml(c)}</td>
       <td class="col-priority">${rowDropdownHtml('priority', c.id, c.priority)}</td>
       <td class="col-status">${rowDropdownHtml('status', c.id, c.status)}</td>
+      <td class="col-date">
+        <input type="date" class="cell-input date-input ${nextActionClassFor(c)}" value="${escapeHtml(c.nextActionDate || '')}"
+          onchange="onFieldBlur('${c.id}','nextActionDate',this.value)">
+      </td>
       <td class="col-comment">
         <textarea class="cell-input" rows="1" placeholder="Комментарий…"
           oninput="autoGrow(this)"
@@ -609,6 +631,8 @@ function cardHtml(c) {
         ${rowDropdownHtml('priority', c.id, c.priority)}
         ${rowDropdownHtml('status', c.id, c.status)}
       </div>
+      <input type="date" class="cell-input date-input ${nextActionClassFor(c)}" value="${escapeHtml(c.nextActionDate || '')}"
+        onchange="onFieldBlur('${c.id}','nextActionDate',this.value)">
       <textarea class="cell-input" rows="1" placeholder="Комментарий…"
         oninput="autoGrow(this)"
         onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
@@ -756,10 +780,10 @@ function downloadCsv(filename, rows) {
 }
 
 function downloadClientsCsv() {
-  const rows = [['Группа', 'Имя', 'Telegram', 'Приоритет', 'Статус', 'Комментарий', 'Создан', 'Обновлён']];
+  const rows = [['Группа', 'Имя', 'Telegram', 'Приоритет', 'Статус', 'Дата следующего действия', 'Комментарий', 'Создан', 'Обновлён']];
   clients.forEach((c) => {
     rows.push([
-      c.group, c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.comment,
+      c.group, c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.nextActionDate || '', c.comment,
       fmtDateTime(c.createdAt), fmtDateTime(c.updatedAt),
     ]);
   });
