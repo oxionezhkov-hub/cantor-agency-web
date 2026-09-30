@@ -4578,7 +4578,8 @@ async function handleBotApi(request, env, url) {
 // straight on Avito — every notification of that chat turns 🟢.
 // Delivery: Avito's messenger webhook (subscribed by the setup below) plus a cron poll of the
 // latest chats as a safety net; messages are de-duplicated by id.
-// Access: only people who opened the bot's invite link (GET /api/avitobot/<bot>/setup returns it).
+// Access: open — anyone who writes to the bot is subscribed; every subscriber sees the same
+// notifications and the same 🔴/🟢 state. The owner (ANB_OWNER_ID) is told about each new user.
 //
 // KV keys (binding "AGENCY_DASHBOARD_KV", "avitobot:<bot>:" prefix):
 //   setup                    -> ANB_SETUP_VERSION once both webhooks are set
@@ -4597,7 +4598,8 @@ const AVITO_NOTIFY_BOTS = {
     owner: 'Ларисы',
   },
 };
-const ANB_SETUP_VERSION = '1';
+const ANB_SETUP_VERSION = '2';
+const ANB_OWNER_ID = '1326867567';
 const ANB_TTL_DAY = 60 * 60 * 24;
 
 function anbKey(bot, rest) {
@@ -4611,8 +4613,7 @@ function anbSecrets(token) {
   return Promise.all([
     anbHash(`cantor-avito-bot:tg:${token}`, 48),
     anbHash(`cantor-avito-bot:avito:${token}`, 32),
-    anbHash(`cantor-avito-bot:invite:${token}`, 20),
-  ]).then(([tg, avito, invite]) => ({ tg, avito, invite }));
+  ]).then(([tg, avito]) => ({ tg, avito }));
 }
 
 async function anbApi(token, method, body) {
@@ -4753,19 +4754,27 @@ async function anbMarkAnswered(env, bot, token, chatId, { via, by, text }) {
 }
 
 // ── Telegram side ──
+async function anbAddSub(env, bot, cfg, token, subs, from) {
+  const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
+  subs.push({ id: from.id, name, username: from.username || null, addedAt: new Date().toISOString() });
+  await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'subs'), JSON.stringify(subs));
+  if (String(from.id) === ANB_OWNER_ID) return;
+  const note = `👤 Новый пользователь бота «${escapeHtml(cfg.name)}»: <b>${escapeHtml(name)}</b>`
+    + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code>. Всего пользователей: ${subs.length}.`;
+  // Through this bot if the owner has started it, otherwise through the control bot.
+  const sent = await anbApi(token, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
+  if (!sent.ok && env.CONTROL_BOT_TOKEN) await anbApi(env.CONTROL_BOT_TOKEN, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
+}
+
 async function anbOnTelegram(env, bot, cfg, token, update) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const secrets = await anbSecrets(token);
   const subs = await anbSubs(env, bot);
   const isSub = (id) => subs.some((s) => String(s.id) === String(id));
 
   if (update.callback_query) {
     const q = update.callback_query;
     const data = String(q.data || '');
-    if (!isSub(q.from && q.from.id)) {
-      await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id, text: 'Нет доступа', show_alert: true });
-      return;
-    }
+    if (q.from && !isSub(q.from.id)) await anbAddSub(env, bot, cfg, token, subs, q.from);
     if (data.startsWith('r:')) {
       const chatId = data.slice(2);
       const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
@@ -4791,21 +4800,16 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   const text = String(msg.text || '').trim();
   const reply = (t) => anbApi(token, 'sendMessage', { chat_id: msg.chat.id, text: t, parse_mode: 'HTML' });
 
-  if (text.startsWith('/start')) {
-    const param = text.split(/\s+/)[1] || '';
-    if (isSub(from.id)) return reply('Вы уже подключены. Новые сообщения клиентов из Авито будут приходить сюда.');
-    if (param !== secrets.invite) return reply('Нет доступа. Попросите у менеджера Cantor Agency ссылку-приглашение.');
-    const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
-    subs.push({ id: from.id, name, addedAt: new Date().toISOString() });
-    await kv.put(anbKey(bot, 'subs'), JSON.stringify(subs));
+  if (!isSub(from.id)) {
+    await anbAddSub(env, bot, cfg, token, subs, from);
     return reply(`Готово! Сюда будут приходить новые сообщения клиентов из Авито (${escapeHtml(cfg.name)}).\n\n`
       + '🔴 — ещё не ответили, 🟢 — ответили (здесь или на Авито).\n'
       + 'Нажмите «Ответить» под сообщением, напишите текст — он уйдёт клиенту в Авито.');
   }
-  if (!isSub(from.id)) return reply('Нет доступа. Попросите у менеджера Cantor Agency ссылку-приглашение.');
+  if (text.startsWith('/start')) return reply('Вы уже подключены. Новые сообщения клиентов из Авито будут приходить сюда.');
   if (text === '/stop') {
     await kv.put(anbKey(bot, 'subs'), JSON.stringify(subs.filter((s) => String(s.id) !== String(from.id))));
-    return reply('Уведомления отключены. Чтобы вернуть — откройте ссылку-приглашение ещё раз.');
+    return reply('Уведомления отключены. Чтобы вернуть — напишите боту /start.');
   }
   if (!text) return reply('Пока можно отправлять клиенту только текст. Фото и файлы — в приложении Авито.');
 
@@ -4844,7 +4848,7 @@ async function anbSetup(env, bot, cfg, token) {
   });
   results.name = await anbApi(token, 'setMyName', { name: cfg.name });
   results.description = await anbApi(token, 'setMyDescription', {
-    description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Доступ — по ссылке-приглашению от Cantor Agency.',
+    description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
   });
   results.commands = await anbApi(token, 'setMyCommands', { commands: [{ command: 'stop', description: 'Отключить уведомления' }] });
   const me = await anbApi(token, 'getMe', {});
@@ -4862,7 +4866,7 @@ async function anbSetup(env, bot, cfg, token) {
   const ok = !!(results.telegram && results.telegram.ok) && !!(results.avito && results.avito.status === 200);
   if (ok) await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'setup'), ANB_SETUP_VERSION);
   const username = me.ok && me.result && me.result.username;
-  return { ok, invite: username ? `https://t.me/${username}?start=${secrets.invite}` : null, results };
+  return { ok, link: username ? `https://t.me/${username}` : null, results };
 }
 
 // ── poll: safety net for missed webhooks ──
