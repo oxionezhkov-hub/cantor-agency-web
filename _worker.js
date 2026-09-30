@@ -4570,6 +4570,382 @@ async function handleBotApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// ── Avito → Telegram: per-client notifier bots ──
+// One Telegram bot per client cabinet (token in a Worker secret, never in wrangler.jsonc). Every
+// new client message in the cabinet's Avito Messenger lands in the bot as 🔴 <name linked to the
+// Avito chat> + text, with a «Ответить» button: the reply typed in Telegram goes to the client
+// through the Avito API, from the cabinet itself. Once the chat is answered — from the bot or
+// straight on Avito — every notification of that chat turns 🟢.
+// Delivery: Avito's messenger webhook (subscribed by the setup below) plus a cron poll of the
+// latest chats as a safety net; messages are de-duplicated by id.
+// Access: open — anyone who writes to the bot is subscribed; every subscriber sees the same
+// notifications and the same 🔴/🟢 state. The owner (ANB_OWNER_ID) is told about each new user.
+//
+// KV keys (binding "AGENCY_DASHBOARD_KV", "avitobot:<bot>:" prefix):
+//   setup                    -> ANB_SETUP_VERSION once both webhooks are set
+//   subs                     -> [{ id, name, addedAt }]  (Telegram users who get notifications)
+//   chat:<avitoChatId>       -> { name, item, open: [{ c, m, body }] }  (open = 🔴 notifications)
+//   msg:<tgChatId>:<msgId>   -> avitoChatId  (notification / reply prompt → chat, for replies)
+//   await:<tgChatId>         -> avitoChatId  (the chat whose «Ответить» was pressed last)
+//   seen:<avitoMessageId>    -> "1"  (de-dup between webhook and poll)
+//   poll                     -> unix seconds of the newest message the poll has handled
+
+const AVITO_NOTIFY_BOTS = {
+  romashova: {
+    accountId: 'e54ce32a0dd0', // AVITO_KV account:<id> — Лариса Ромашова
+    tokenEnv: 'AVITO_BOT_TOKEN_ROMASHOVA',
+    name: 'Авито · Лариса Ромашова',
+    owner: 'Ларисы',
+  },
+};
+const ANB_SETUP_VERSION = '2';
+const ANB_OWNER_ID = '1326867567';
+const ANB_TTL_DAY = 60 * 60 * 24;
+
+function anbKey(bot, rest) {
+  return `avitobot:${bot}:${rest}`;
+}
+async function anbHash(text, len) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, len);
+}
+function anbSecrets(token) {
+  return Promise.all([
+    anbHash(`cantor-avito-bot:tg:${token}`, 48),
+    anbHash(`cantor-avito-bot:avito:${token}`, 32),
+  ]).then(([tg, avito]) => ({ tg, avito }));
+}
+
+async function anbApi(token, method, body) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+      signal: AbortSignal.timeout(10000),
+    });
+    return (await res.json().catch(() => null)) || { ok: false, description: `HTTP ${res.status}` };
+  } catch (err) {
+    return { ok: false, description: String(err && err.message) };
+  }
+}
+
+async function anbAccount(env, cfg) {
+  const account = await env.AVITO_KV.get(`account:${cfg.accountId}`, 'json');
+  if (!account || !account.userId) throw new Error('avito_account_not_found');
+  return account;
+}
+
+function anbChatLink(chatId) {
+  return `https://www.avito.ru/profile/messenger/channel/${encodeURIComponent(chatId)}`;
+}
+
+function anbMessageText(m) {
+  const content = m.content || {};
+  if (m.type === 'appCall' || m.type === 'call') return '📞 Звонок через Авито';
+  if (m.type === 'image') return '🖼 Фото (откройте чат в Авито)';
+  if (m.type === 'voice') return '🎤 Голосовое сообщение (откройте чат в Авито)';
+  if (m.type === 'system') {
+    const t = String(content.text || '');
+    if (/создал чат/i.test(t)) return '✏️ Создал чат, но пока ничего не написал — напишите первыми';
+    if (/ознакомился с вашим предложением/i.test(t)) return '📨 Открыл(а) предложение из рассылки';
+    return '';
+  }
+  return avitoMessageText(m);
+}
+// System messages worth a notification: an empty chat and an opened promo offer are leads too.
+function anbIsLeadSystem(m) {
+  const t = String((m.content && m.content.text) || '');
+  return /создал чат|ознакомился с вашим предложением/i.test(t);
+}
+
+function anbTrim(text, max) {
+  const s = String(text || '');
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
+function anbButtons(chatId, again) {
+  return { inline_keyboard: [[{ text: again ? '✍️ Написать ещё' : '✍️ Ответить', callback_data: `r:${chatId}` }]] };
+}
+
+async function anbSubs(env, bot) {
+  return (await env.AGENCY_DASHBOARD_KV.get(anbKey(bot, 'subs'), 'json')) || [];
+}
+
+async function anbChatState(env, bot, cfg, token, account, chatId) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || { open: [] };
+  if (!state.name) {
+    try {
+      const info = await avitoJson(token, `/messenger/v2/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}`);
+      const user = (info.users || []).find((u) => String(u.id) !== String(account.userId));
+      const value = (info.context && info.context.value) || {};
+      state.name = (user && user.name) || 'Клиент';
+      const place = value.location && value.location.title;
+      state.item = [value.title, place].filter(Boolean).join(' · ');
+    } catch (err) {
+      state.name = state.name || 'Клиент';
+      state.item = state.item || '';
+    }
+  }
+  return state;
+}
+
+// ── incoming Avito message (from the webhook or the poll) ──
+async function anbHandleAvitoMessage(env, bot, cfg, token, account, v) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!v || !v.chat_id || !v.id) return;
+  const seenKey = anbKey(bot, `seen:${v.id}`);
+  if (await kv.get(seenKey)) return;
+  await kv.put(seenKey, '1', { expirationTtl: ANB_TTL_DAY * 7 });
+
+  const avitoToken = await avitoGetToken(env, account);
+  if (String(v.author_id) === String(account.userId)) {
+    // The cabinet itself wrote (on Avito, or our own reply coming back) — the chat is answered.
+    await anbMarkAnswered(env, bot, token, v.chat_id, { via: 'avito', text: avitoMessageText(v) });
+    return;
+  }
+  if (v.type === 'system' && !anbIsLeadSystem(v)) return;
+  const text = anbMessageText(v);
+  if (!text) return;
+
+  const subs = await anbSubs(env, bot);
+  if (!subs.length) return;
+  const state = await anbChatState(env, bot, cfg, avitoToken, account, v.chat_id);
+  const body = `<a href="${anbChatLink(v.chat_id)}">${escapeHtml(state.name)}</a>`
+    + (state.item ? `\n<i>${escapeHtml(anbTrim(state.item, 150))}</i>` : '')
+    + `\n\n${escapeHtml(anbTrim(text, 3000))}`;
+  for (const sub of subs) {
+    const res = await anbApi(token, 'sendMessage', {
+      chat_id: sub.id,
+      text: `🔴 ${body}`,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+      reply_markup: anbButtons(v.chat_id, false),
+    });
+    if (res.ok && res.result) {
+      state.open.push({ c: sub.id, m: res.result.message_id, body });
+      await kv.put(anbKey(bot, `msg:${sub.id}:${res.result.message_id}`), v.chat_id, { expirationTtl: ANB_TTL_DAY * 30 });
+    }
+  }
+  state.open = state.open.slice(-30);
+  await kv.put(anbKey(bot, `chat:${v.chat_id}`), JSON.stringify(state), { expirationTtl: ANB_TTL_DAY * 90 });
+}
+
+async function anbMarkAnswered(env, bot, token, chatId, { via, by, text }) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const key = anbKey(bot, `chat:${chatId}`);
+  const state = await kv.get(key, 'json');
+  if (!state || !state.open || !state.open.length) return;
+  const where = via === 'tg' ? `в Telegram${by ? ` (${escapeHtml(by)})` : ''}` : 'на Авито';
+  const footer = `\n\n🟢 <b>Ответили ${where}</b>${text ? `:\n${escapeHtml(anbTrim(text, 600))}` : ''}`;
+  for (const n of state.open) {
+    await anbApi(token, 'editMessageText', {
+      chat_id: n.c,
+      message_id: n.m,
+      text: `🟢 ${n.body}${footer}`,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+      reply_markup: anbButtons(chatId, true),
+    });
+  }
+  state.open = [];
+  await kv.put(key, JSON.stringify(state), { expirationTtl: ANB_TTL_DAY * 90 });
+}
+
+// ── Telegram side ──
+async function anbAddSub(env, bot, cfg, token, subs, from) {
+  const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
+  subs.push({ id: from.id, name, username: from.username || null, addedAt: new Date().toISOString() });
+  await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'subs'), JSON.stringify(subs));
+  if (String(from.id) === ANB_OWNER_ID) return;
+  const note = `👤 Новый пользователь бота «${escapeHtml(cfg.name)}»: <b>${escapeHtml(name)}</b>`
+    + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code>. Всего пользователей: ${subs.length}.`;
+  // Through this bot if the owner has started it, otherwise through the control bot.
+  const sent = await anbApi(token, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
+  if (!sent.ok && env.CONTROL_BOT_TOKEN) await anbApi(env.CONTROL_BOT_TOKEN, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
+}
+
+async function anbOnTelegram(env, bot, cfg, token, update) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const subs = await anbSubs(env, bot);
+  const isSub = (id) => subs.some((s) => String(s.id) === String(id));
+
+  if (update.callback_query) {
+    const q = update.callback_query;
+    const data = String(q.data || '');
+    if (q.from && !isSub(q.from.id)) await anbAddSub(env, bot, cfg, token, subs, q.from);
+    if (data.startsWith('r:')) {
+      const chatId = data.slice(2);
+      const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
+      await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
+      const tgChat = q.message ? q.message.chat.id : q.from.id;
+      const prompt = await anbApi(token, 'sendMessage', {
+        chat_id: tgChat,
+        text: `✍️ Ответ для <b>${escapeHtml(state.name || 'клиента')}</b>\nНапишите текст — он уйдёт клиенту в Авито от имени ${escapeHtml(cfg.owner)}.`,
+        parse_mode: 'HTML',
+        reply_markup: { force_reply: true, input_field_placeholder: 'Ответ клиенту' },
+      });
+      if (prompt.ok && prompt.result) {
+        await kv.put(anbKey(bot, `msg:${tgChat}:${prompt.result.message_id}`), chatId, { expirationTtl: ANB_TTL_DAY * 30 });
+      }
+      await kv.put(anbKey(bot, `await:${tgChat}`), chatId, { expirationTtl: 60 * 60 });
+    }
+    return;
+  }
+
+  const msg = update.message;
+  if (!msg || !msg.chat || msg.chat.type !== 'private') return;
+  const from = msg.from || {};
+  const text = String(msg.text || '').trim();
+  const reply = (t) => anbApi(token, 'sendMessage', { chat_id: msg.chat.id, text: t, parse_mode: 'HTML' });
+
+  if (!isSub(from.id)) {
+    await anbAddSub(env, bot, cfg, token, subs, from);
+    return reply(`Готово! Сюда будут приходить новые сообщения клиентов из Авито (${escapeHtml(cfg.name)}).\n\n`
+      + '🔴 — ещё не ответили, 🟢 — ответили (здесь или на Авито).\n'
+      + 'Нажмите «Ответить» под сообщением, напишите текст — он уйдёт клиенту в Авито.');
+  }
+  if (text.startsWith('/start')) return reply('Вы уже подключены. Новые сообщения клиентов из Авито будут приходить сюда.');
+  if (text === '/stop') {
+    await kv.put(anbKey(bot, 'subs'), JSON.stringify(subs.filter((s) => String(s.id) !== String(from.id))));
+    return reply('Уведомления отключены. Чтобы вернуть — напишите боту /start.');
+  }
+  if (!text) return reply('Пока можно отправлять клиенту только текст. Фото и файлы — в приложении Авито.');
+
+  let chatId = null;
+  if (msg.reply_to_message) chatId = await kv.get(anbKey(bot, `msg:${msg.chat.id}:${msg.reply_to_message.message_id}`));
+  if (!chatId) chatId = await kv.get(anbKey(bot, `await:${msg.chat.id}`));
+  if (!chatId) return reply('Чтобы ответить клиенту, нажмите «✍️ Ответить» под его сообщением.');
+
+  const account = await anbAccount(env, cfg);
+  const avitoToken = await avitoGetToken(env, account);
+  const res = await avitoRequest(avitoToken, `/messenger/v1/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ message: { text }, type: 'text' }),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    return reply(`❌ Не отправилось (Авито ответил ${res.status}). Ответьте в приложении Авито.\n<code>${escapeHtml(err.slice(0, 200))}</code>`);
+  }
+  const sent = await res.json().catch(() => null);
+  if (sent && sent.id) await kv.put(anbKey(bot, `seen:${sent.id}`), '1', { expirationTtl: ANB_TTL_DAY * 7 });
+  await avitoRequest(avitoToken, `/messenger/v1/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}/read`, { method: 'POST' }).catch(() => null);
+  await kv.delete(anbKey(bot, `await:${msg.chat.id}`));
+  const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
+  await anbMarkAnswered(env, bot, token, chatId, { via: 'tg', by: from.first_name || from.username, text });
+  return reply(`✅ Отправлено: <a href="${anbChatLink(chatId)}">${escapeHtml(state.name || 'клиент')}</a>`);
+}
+
+// ── setup: Telegram webhook, bot profile, Avito messenger webhook ──
+async function anbSetup(env, bot, cfg, token) {
+  const secrets = await anbSecrets(token);
+  const results = {};
+  results.telegram = await anbApi(token, 'setWebhook', {
+    url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/tg`,
+    secret_token: secrets.tg,
+    allowed_updates: ['message', 'callback_query'],
+  });
+  results.name = await anbApi(token, 'setMyName', { name: cfg.name });
+  results.description = await anbApi(token, 'setMyDescription', {
+    description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
+  });
+  results.commands = await anbApi(token, 'setMyCommands', { commands: [{ command: 'stop', description: 'Отключить уведомления' }] });
+  const me = await anbApi(token, 'getMe', {});
+  try {
+    const account = await anbAccount(env, cfg);
+    const avitoToken = await avitoGetToken(env, account);
+    const res = await avitoRequest(avitoToken, '/messenger/v3/webhook', {
+      method: 'POST',
+      body: JSON.stringify({ url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secrets.avito}` }),
+    });
+    results.avito = { status: res.status, body: (await res.text().catch(() => '')).slice(0, 300) };
+  } catch (err) {
+    results.avito = { error: String(err && err.message) };
+  }
+  const ok = !!(results.telegram && results.telegram.ok) && !!(results.avito && results.avito.status === 200);
+  if (ok) await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'setup'), ANB_SETUP_VERSION);
+  const username = me.ok && me.result && me.result.username;
+  return { ok, link: username ? `https://t.me/${username}` : null, results };
+}
+
+// ── poll: safety net for missed webhooks ──
+async function anbPoll(env, bot, cfg, token) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const account = await anbAccount(env, cfg);
+  const avitoToken = await avitoGetToken(env, account);
+  const pollKey = anbKey(bot, 'poll');
+  const since = Number(await kv.get(pollKey)) || 0;
+  const data = await avitoJson(avitoToken, `/messenger/${AVITO_CHATS_VERSION}/accounts/${account.userId}/chats?chat_types=u2i&limit=20`);
+  const chats = data.chats || [];
+  let newest = since;
+  for (const c of chats) {
+    const last = c.last_message || {};
+    const created = Number(last.created || c.updated || 0);
+    if (created > newest) newest = created;
+    if (!since || created <= since) continue; // first run only sets the baseline — no backlog flood
+    const res = await avitoJson(avitoToken, `/messenger/${AVITO_MESSAGES_VERSION}/accounts/${account.userId}/chats/${encodeURIComponent(c.id)}/messages?limit=20&offset=0`);
+    const msgs = (Array.isArray(res) ? res : res.messages || []).filter((m) => Number(m.created) > since);
+    msgs.sort((a, b) => Number(a.created) - Number(b.created));
+    for (const m of msgs) await anbHandleAvitoMessage(env, bot, cfg, token, account, { ...m, chat_id: c.id });
+  }
+  if (newest > since) await kv.put(pollKey, String(newest));
+}
+
+async function avitoNotifyCron(env) {
+  for (const [bot, cfg] of Object.entries(AVITO_NOTIFY_BOTS)) {
+    const token = env[cfg.tokenEnv];
+    if (!token) continue;
+    try {
+      if ((await env.AGENCY_DASHBOARD_KV.get(anbKey(bot, 'setup'))) !== ANB_SETUP_VERSION) await anbSetup(env, bot, cfg, token);
+      await anbPoll(env, bot, cfg, token);
+    } catch (err) {
+      console.error(`avito notify bot ${bot} cron failed`, err && err.stack);
+    }
+  }
+}
+
+async function handleAvitoBotApi(request, env, url, ctx) {
+  const m = url.pathname.match(/^\/api\/avitobot\/([a-z0-9-]+)\/(tg|avito|setup)(?:\/([a-f0-9]+))?$/);
+  const bot = m && m[1];
+  const cfg = bot && AVITO_NOTIFY_BOTS[bot];
+  if (!cfg) return json({ error: 'not_found' }, 404);
+  const token = env[cfg.tokenEnv];
+  if (!token) return json({ error: `${cfg.tokenEnv} is not set` }, 503);
+  const secrets = await anbSecrets(token);
+
+  if (m[2] === 'setup') {
+    if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
+    const result = await anbSetup(env, bot, cfg, token);
+    result.subscribers = (await anbSubs(env, bot)).map((s) => s.name);
+    return json(result);
+  }
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+
+  if (m[2] === 'tg') {
+    if (request.headers.get('X-Telegram-Bot-Api-Secret-Token') !== secrets.tg) return json({ ok: false }, 403);
+    const update = await readJson(request);
+    try {
+      if (update) await anbOnTelegram(env, bot, cfg, token, update);
+    } catch (err) {
+      console.error(`avito notify bot ${bot} telegram update failed`, err && err.stack);
+    }
+    return json({ ok: true }); // always 200, so Telegram doesn't redeliver the same update forever
+  }
+
+  // Avito messenger webhook: {payload: {type: 'message', value: {id, chat_id, author_id, type, content, …}}}
+  if (m[3] !== secrets.avito) return json({ ok: false }, 403);
+  const event = await readJson(request);
+  const value = event && event.payload && event.payload.type === 'message' ? event.payload.value : null;
+  if (value) {
+    const work = anbAccount(env, cfg)
+      .then((account) => anbHandleAvitoMessage(env, bot, cfg, token, account, value))
+      .catch((err) => console.error(`avito notify bot ${bot} avito event failed`, err && err.stack));
+    if (ctx && ctx.waitUntil) ctx.waitUntil(work); else await work;
+  }
+  return json({ ok: true });
+}
+
 // ── /academy: 14-day training course for Avito trainees ──
 // The API lives under /api/dashboard/academy/* on purpose: the dashboard's Yandex Cloud proxy
 // function (yc-dashboard-api-proxy, lets through /api/dashboard/* only) then carries it too, so
@@ -4825,6 +5201,10 @@ async function handleApi(request, env, url, ctx) {
     return handleBotApi(request, env, url);
   }
 
+  if (pathname.startsWith('/api/avitobot/')) {
+    return handleAvitoBotApi(request, env, url, ctx);
+  }
+
   // ── Leads: notify by email ──
   if (pathname === '/api/leads/notify' && request.method === 'POST') {
     return handleLeadNotify(request, env);
@@ -5042,5 +5422,6 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
+    ctx.waitUntil(avitoNotifyCron(env).catch((err) => console.error('avito notify cron failed', err && err.stack)));
   },
 };
