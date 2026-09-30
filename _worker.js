@@ -2521,6 +2521,7 @@ async function handleDashboardApi(request, env, url, ctx) {
       updatedAt: now,
     };
     await kv.put(`project:${id}`, JSON.stringify(project));
+    await atTouch(kv, ['#projects']);
     return json({ project });
   }
 
@@ -2534,6 +2535,7 @@ async function handleDashboardApi(request, env, url, ctx) {
       kv.list({ prefix: `dailyMetrics:${id}:` }),
     ]);
     await Promise.all([...analyticsList.keys, ...ratingsList.keys, ...dailyMetricsList.keys].map((k) => kv.delete(k.name)));
+    await atTouch(kv, ['#projects']);
     return json({ ok: true });
   }
 
@@ -2725,6 +2727,7 @@ async function handleDashboardApi(request, env, url, ctx) {
       updatedAt: now,
     };
     await kv.put(`task:${id}`, JSON.stringify(task));
+    await atTouch(kv, [id]);
     return json({ task });
   }
 
@@ -2732,6 +2735,7 @@ async function handleDashboardApi(request, env, url, ctx) {
     const id = url.searchParams.get('id');
     if (!id) return json({ error: 'missing_id' }, 400);
     await kv.delete(`task:${id}`);
+    await atTouch(kv, [id]);
     return json({ ok: true });
   }
 
@@ -3522,7 +3526,7 @@ async function handleReportJobCallback(request, env, url) {
 //                                              origin, chatId, threadId, msgId, link, author,
 //                                              doneAt, informedAt, notified, createdAt, updatedAt }
 
-const BOT_SETUP_VERSION = '1';
+const BOT_SETUP_VERSION = '2'; // 2: callback buttons + employees' private chats (Avito Tasks)
 const BOT_WORKER_ORIGIN = 'https://mainweb.oxion-ezhkov.workers.dev';
 const BOT_AI_MODEL_DEFAULT = '@cf/qwen/qwen3-30b-a3b-fp8';
 const BOT_LOG_TTL = 60 * 60 * 24 * 180;
@@ -3549,6 +3553,8 @@ const BOT_STRANGER_REPLY = 'Здравствуйте! Это служебный 
 
 const BOT_OWNER_COMMANDS = [
   { command: 'summary', description: 'Сводка: просрочено, без срока, не сообщили клиенту' },
+  { command: 'my', description: 'Мои задачи (Avito Tasks)' },
+  { command: 'access', description: 'Ссылки доступа в Avito Tasks' },
   { command: 'tasks', description: 'Открытые задачи по клиентам' },
   { command: 'overdue', description: 'Просроченные задачи' },
   { command: 'metrics', description: 'Проверка метрик из дашборда' },
@@ -3685,7 +3691,7 @@ async function botSetup(env) {
   results.webhook = await botApi(env, 'setWebhook', {
     url: `${BOT_WORKER_ORIGIN}/api/tgbot/webhook`,
     secret_token: await botWebhookSecret(token),
-    allowed_updates: ['message', 'edited_message', 'my_chat_member'],
+    allowed_updates: ['message', 'edited_message', 'my_chat_member', 'callback_query'],
     max_connections: 1, // one update at a time, so the per-day log read-modify-write never races
   });
   results.name = await botApi(env, 'setMyName', { name: 'Cantor Agency · помощник' });
@@ -3815,6 +3821,7 @@ async function handleBotWebhook(request, env) {
   const update = await readJson(request);
   try {
     if (update && update.my_chat_member) await botOnMembership(env, update.my_chat_member);
+    else if (update && update.callback_query) await atOnCallback(env, update.callback_query);
     else if (update && update.message) await botOnMessage(env, update.message, false);
     else if (update && update.edited_message) await botOnMessage(env, update.edited_message, true);
   } catch (err) {
@@ -3851,7 +3858,12 @@ async function botOnMessage(env, msg, edited) {
 
   if (chat.type === 'private') {
     if (edited) return;
+    // «Подключить Telegram» in Avito Tasks: /start at_<userId>_<code>
+    const start = String(msg.text || '').match(/^\/start\s+(\S+)/);
+    if (start && (await atLinkTelegram(env, msg, start[1]))) return;
     if (botIsOwner(env, msg.from && msg.from.id)) return botOnOwnerMessage(env, msg);
+    const member = (await atGetTeam(env)).users.find((u) => u.active && u.tgId && String(u.tgId) === String(msg.from && msg.from.id));
+    if (member) return atOnMemberMessage(env, msg, member);
     await botApi(env, 'sendMessage', { chat_id: chat.id, text: BOT_STRANGER_REPLY });
     if (await botOnce(kv, `stranger:${msg.from && msg.from.id}`, 60 * 60 * 24)) {
       const who = msg.from && msg.from.username ? ` (@${escapeHtml(msg.from.username)})` : '';
@@ -3900,8 +3912,19 @@ async function botOnMessage(env, msg, edited) {
 
   if (chatRec.kind === 'client' && !edited) {
     const pendingKey = `bot:pending:${chat.id}`;
+    let signalChanged = false; // Avito Tasks' Clients tab re-reads these on a change-log bump
     if (isTeam) {
-      if (await kv.get(pendingKey)) await kv.delete(pendingKey);
+      if (await kv.get(pendingKey)) { await kv.delete(pendingKey); signalChanged = true; }
+      if (chatRec.projectId) {
+        // "When did we last write to this client" — at most one write an hour per client.
+        const clients = (await kv.get('at:clients', 'json')) || {};
+        const rec = clients[chatRec.projectId] || {};
+        if (t - (Date.parse(rec.lastTeamAt || 0) || 0) > 3600000) {
+          clients[chatRec.projectId] = { ...rec, lastTeamAt: new Date(t).toISOString() };
+          await kv.put('at:clients', JSON.stringify(clients));
+          signalChanged = true;
+        }
+      }
       const { date, hh } = botMsk(t);
       const reportKey = `bot:report:${chat.id}:${date}`;
       if (hh < 13 && /отч[её]т|бюджет[\s\S]*контакт/i.test(text) && !(await kv.get(reportKey))) {
@@ -3909,7 +3932,9 @@ async function botOnMessage(env, msg, edited) {
       }
     } else if (!(await kv.get(pendingKey))) {
       await kv.put(pendingKey, JSON.stringify({ since: t, msgId: msg.message_id, text: text.slice(0, 300) }));
+      signalChanged = true;
     }
+    if (signalChanged) await atTouch(kv, ['#clients']);
   }
 }
 
@@ -3927,6 +3952,7 @@ async function botOnOwnerMessage(env, msg) {
       'Я молча читаю рабочий чат (и чаты клиентов, куда меня добавят), сам нахожу задачи, сроки и выполнение и пишу только вам.',
       '',
       '/summary — просрочено, без срока, сделано но не сообщили клиенту',
+      '/my — мои задачи в Avito Tasks · /access — ссылки доступа для команды',
       '/tasks — открытые задачи по клиентам (/tasks Агешина — только один клиент)',
       '/overdue — просроченные',
       '/metrics — проверка метрик из дашборда',
@@ -3939,6 +3965,11 @@ async function botOnOwnerMessage(env, msg) {
     ].join('\n'));
   }
   if (cmd === 'summary') return reply(await botBuildSummary(env, Date.now()));
+  if (cmd === 'my') {
+    const me = (await atGetTeam(env)).users.find((u) => u.role === 'owner');
+    return me ? reply(await atBuildMyTasks(env, me)) : reply('В Avito Tasks нет руководителя.');
+  }
+  if (cmd === 'access') return reply(atAccessMessage(await atGetTeam(env), false));
   if (cmd === 'tasks') return reply(await botBuildTaskList(env, 'open', args.join(' ')));
   if (cmd === 'overdue') return reply(await botBuildTaskList(env, 'overdue'));
   if (cmd === 'metrics') return reply((await botBuildMetricsReport(env, Date.now())) || 'По метрикам всё спокойно: данные за вчера внесены, аномалий нет.');
@@ -3957,6 +3988,7 @@ async function botOnOwnerMessage(env, msg) {
     if (cmd === 'cancel') task.status = 'cancelled';
     task.updatedAt = now;
     await kv.put(`task:${task.id}`, JSON.stringify(task));
+    await atTouch(kv, [task.id]);
     return reply(`Готово: «${escapeHtml(task.text)}» → ${botStatusLabel(task)}.`);
   }
   if (cmd === 'map') {
@@ -3984,8 +4016,9 @@ async function botOnOwnerMessage(env, msg) {
 function botStatusLabel(task) {
   return { open: 'открыта', done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[task.status] || task.status;
 }
+// Tasks the bot found in chats plus the ones people add in Avito Tasks.
 async function botAllTasks(kv) {
-  return (await listByPrefix(kv, 'task:')).filter((t) => t.source === 'bot');
+  return (await listByPrefix(kv, 'task:')).filter(atIsTrackerTask);
 }
 function botTaskClient(task, projectsById) {
   return task.projectId && projectsById[task.projectId] ? projectsById[task.projectId].name : task.topicName || 'без клиента';
@@ -4122,6 +4155,7 @@ async function botProcessQueue(env) {
   if (!listing.keys.length) return { processed: 0 };
   const state = (await kv.get('bot:ai', 'json')) || {};
   const projectsById = await botProjectsById(kv);
+  const team = await atGetTeam(env);
   let allTasks = null;
   let processed = 0;
   for (const k of listing.keys.slice(0, BOT_AI_BATCH_GROUPS)) {
@@ -4155,6 +4189,7 @@ async function botProcessQueue(env) {
     const user = [
       `Сейчас: ${botFmtDate(now)}.${botMsk(now).date.slice(0, 4)} (МСК). Сегодня ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][botMsk(now).dow]}.`,
       `Чат: ${chatRec.kind === 'work' ? 'рабочий чат агентства, топик клиента' : 'чат с клиентом'} «${projectName}».`,
+      `Команда агентства: ${atTeamPromptLine(team)}. Исполнителя (assignee) пиши полным именем из этого списка.`,
       `Открытые задачи клиента:\n${openTasks.length ? openTasks.map((t) => `- id=${t.id} [${botStatusLabel(t)}] ${t.text} (исполнитель: ${t.owner || '—'}, срок: ${t.due ? botFmtDate(botDueMs(t)) : '—'})`).join('\n') : '—'}`,
       `Контекст (уже разобрано):\n${context.length ? botFormatLogLines(context) : '—'}`,
       `НОВЫЕ сообщения:\n${botFormatLogLines(fresh)}`,
@@ -4188,7 +4223,7 @@ async function botProcessQueue(env) {
       await botSetAiLimited(env, false, { backlog: listing.keys.length });
       state.limited = false;
     }
-    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks });
+    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks, team, projectsById });
     await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
     processed += fresh.length;
   }
@@ -4200,6 +4235,9 @@ async function botApplyEvents(env, events, ctx) {
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
   const openById = new Map(ctx.openTasks.map((t) => [t.id, t]));
   const nowIso = new Date().toISOString();
+  const users = ctx.team ? ctx.team.users : [];
+  const touched = [];
+  const assigned = []; // [task, source message] — the person gets a (quiet) heads-up in Avito Tasks / Telegram
   for (const ev of Array.isArray(events) ? events : []) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
@@ -4212,6 +4250,8 @@ async function botApplyEvents(env, events, ctx) {
         text: String(ev.text).slice(0, 300),
         status: 'open',
         owner: ev.assignee && ev.assignee !== 'null' ? String(ev.assignee).slice(0, 80) : null,
+        assigneeId: null,
+        priority: 'normal',
         due: dueMs ? botIsoMsk(dueMs) : null,
         projectId: ctx.topic.projectId || null,
         topicName: ctx.topic.name,
@@ -4224,23 +4264,47 @@ async function botApplyEvents(env, events, ctx) {
         author: src ? src.from : null,
         startedAt: src ? new Date(src.t).toISOString() : nowIso,
         notified: {},
+        activity: [{ t: Date.now(), by: 'Бот', what: 'нашёл задачу в чате' }],
         createdAt: nowIso,
         updatedAt: nowIso,
       };
+      const who = task.owner && atMatchUser(task.owner, users);
+      if (who) Object.assign(task, { assigneeId: who.id, owner: who.name });
       await kv.put(`task:${id}`, JSON.stringify(task));
       openById.set(id, task);
       ctx.openTasks.push(task);
+      touched.push(id);
+      if (who) assigned.push([task, src]);
     } else if (ev.type === 'update' && openById.has(String(ev.task))) {
       const task = openById.get(String(ev.task));
-      if (ev.assignee && ev.assignee !== 'null') task.owner = String(ev.assignee).slice(0, 80);
+      if (ev.assignee && ev.assignee !== 'null') {
+        const who = atMatchUser(ev.assignee, users);
+        const prevId = atAssigneeId(task, users);
+        task.owner = who ? who.name : String(ev.assignee).slice(0, 80);
+        task.assigneeId = who ? who.id : null;
+        if (who && who.id !== prevId) assigned.push([task, src]);
+      }
       if (dueMs) task.due = botIsoMsk(dueMs);
       if (ev.status === 'taken' && !task.takenAt) task.takenAt = src ? new Date(src.t).toISOString() : nowIso;
       if (ev.status === 'done' && task.status === 'open') Object.assign(task, { status: 'done', doneAt: src ? new Date(src.t).toISOString() : nowIso });
       if (ev.status === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || nowIso, informedAt: src ? new Date(src.t).toISOString() : nowIso });
       if (ev.status === 'cancelled') task.status = 'cancelled';
       task.updatedAt = nowIso;
+      task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: 'Бот', what: `обновил по переписке${ev.status ? ` (${ { taken: 'взяли в работу', done: 'сделано', informed: 'клиенту сообщили', cancelled: 'отменена' }[ev.status] || ev.status })` : ''}` }].slice(-20);
       await kv.put(`task:${task.id}`, JSON.stringify(task));
+      touched.push(task.id);
     }
+  }
+  if (touched.length) await atTouch(kv, touched);
+  // No ping when the person set the task themselves ("сделаю к вечеру") — they know already.
+  for (const [task, src] of assigned) {
+    const who = users.find((u) => u.id === task.assigneeId);
+    if (!who || (src && atMatchUser(src.from, users) === who)) continue;
+    const projectName = task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName;
+    await atNotify(env, ctx.team, [who.id], { kind: 'assigned', taskId: task.id, text: `Бот записал на вас задачу из чата: ${task.text}`, by: 'Бот' }, {
+      text: `🤖 <b>Задача на вас из чата</b>${src ? ` (от ${escapeHtml(src.from)})` : ''}\n${atTgTaskBlock(task, projectName)}`,
+      extra: { ...atTgButtons(task, true), disable_notification: true },
+    });
   }
 }
 
@@ -4350,12 +4414,13 @@ async function botRunChecks(env, nowMs) {
   const { date, hh, mm } = botMsk(nowMs);
   const workday = botIsWorkday(nowMs);
   const inHours = workday && hh >= BOT_WORK_START_H && hh < BOT_WORK_END_H;
+  const allTasks = await botAllTasks(kv);
 
   if (inHours) {
     // Newly overdue / still-without-deadline tasks, one message per kind per run.
     const overdue = [];
     const noDue = [];
-    for (const task of (await botAllTasks(kv)).filter((t) => t.status === 'open')) {
+    for (const task of allTasks.filter((t) => t.status === 'open')) {
       task.notified = task.notified || {};
       const due = botDueMs(task);
       let changed = false;
@@ -4381,8 +4446,19 @@ async function botRunChecks(env, nowMs) {
       if (!(await botOnce(kv, `pending:${chatId}:${p.msgId}`, 60 * 60 * 24 * 7))) continue;
       const chat = await kv.get(`bot:chat:${chatId}`, 'json');
       const link = botMessageLink(chatId, null, p.msgId);
-      await botNotifyOwner(env, `💬 <b>${escapeHtml(chat ? chat.title : chatId)}</b>: клиент ждёт ответа больше 30 рабочих минут\n«${escapeHtml(p.text)}»${link ? ` <a href="${link}">сообщение</a>` : ''}`);
+      const note = `💬 <b>${escapeHtml(chat ? chat.title : chatId)}</b>: клиент ждёт ответа больше 30 рабочих минут\n«${escapeHtml(p.text)}»${link ? ` <a href="${link}">сообщение</a>` : ''}`;
+      await botNotifyOwner(env, note);
+      // …and the client manager, whose job this is.
+      const team = await atGetTeam(env);
+      for (const m of team.users.filter((u) => u.role === 'manager' && u.active && u.tgId)) await botSend(env, m.tgId, note);
     }
+  }
+  // Avito Tasks: per-person deadline pings and the 10:00 digest (same task objects, so the
+  // "notified" flags written above and there end up in one record).
+  try {
+    await atRunChecks(env, nowMs, allTasks, byId);
+  } catch (err) {
+    console.error('avito-tasks checks failed', err && err.stack);
   }
   if (!workday) return;
   // 10:00 — morning summary.
@@ -4412,11 +4488,14 @@ async function botRunChecks(env, nowMs) {
 async function botScheduled(env) {
   if (!env.CONTROL_BOT_TOKEN || !env.AGENCY_DASHBOARD_KV) return;
   const kv = env.AGENCY_DASHBOARD_KV;
-  if ((await kv.get('bot:setup')) !== BOT_SETUP_VERSION) {
+  const setupWas = await kv.get('bot:setup');
+  if (setupWas !== BOT_SETUP_VERSION) {
     const res = await botSetup(env);
-    if (res.ok) await botNotifyOwner(env, '👋 Бот запущен и настроен. Добавьте его администратором в рабочий чат — дальше я всё делаю сам. /help — что я умею.');
-    else console.error('control bot setup failed', JSON.stringify(res));
+    if (res.ok && !setupWas) await botNotifyOwner(env, '👋 Бот запущен и настроен. Добавьте его администратором в рабочий чат — дальше я всё делаю сам. /help — что я умею.');
+    else if (!res.ok) console.error('control bot setup failed', JSON.stringify(res));
   }
+  // Avito Tasks: the first run sets up the team and sends the owner everyone's invite links.
+  await atGetTeam(env);
   try {
     await botProcessQueue(env);
   } catch (err) {
@@ -4526,6 +4605,7 @@ async function handleBotImport(request, env) {
   }
 
   const nowIso = new Date().toISOString();
+  const importedIds = [];
   for (const t of Array.isArray(body.tasks) ? body.tasks : []) {
     if (!t || !t.text || !t.importKey) continue;
     const id = `imp${t.importKey}`;
@@ -4555,7 +4635,9 @@ async function handleBotImport(request, env) {
       updatedAt: nowIso,
     }));
     result.tasks += 1;
+    importedIds.push(id);
   }
+  if (importedIds.length) await atTouch(kv, importedIds);
   return json({ ok: true, ...result });
 }
 
@@ -4568,6 +4650,908 @@ async function handleBotApi(request, env, url) {
     return json(await botSetup(env));
   }
   return json({ error: 'not_found' }, 404);
+}
+
+// ── /avito-tasks: the team's task tracker ──
+// Page: /avito-tasks, kept apart from /dashboard. Its API lives under /api/dashboard/avito-tasks/*
+// for the same reason as the academy's: the Yandex Cloud proxy (yc-dashboard-api-proxy) only lets
+// /api/dashboard/* through, so the page works in Russia without a VPN.
+// Access is per person, by invite link (/avito-tasks?invite=<code>): opening it once gives the
+// device a signed token (kept in localStorage), after which the bare /avito-tasks opens on that
+// device. The owner (role "owner") adds people, switches access off and re-issues links in the
+// page's «Команда» tab; a re-issued link signs every device of that person out. The owner's own
+// link comes from the control bot (sent once when the team is first set up, and on /access).
+// Tasks are the same `task:<id>` records the control bot writes (source 'bot') plus ones created
+// on the page (source 'tracker'); the bot's summaries and deadline checks cover both.
+// Notifications: an in-page list and, once the person has pressed «Подключить Telegram» (a /start
+// deep link into the control bot), private messages from the bot: new task for them, deadline in
+// an hour / missed, their task done, a 10:00 digest.
+// The page polls /sync every minute while it is open; to keep KV reads low the task list is cached
+// in the isolate and only the tasks named in at:ver's change log are re-read (full re-read every
+// 10 minutes as a safety net). The first sync of a page load also nudges the bot's AI queue, so
+// someone opening the page gets tasks from the latest chat messages without waiting for the cron.
+//
+// KV keys (AGENCY_DASHBOARD_KV, "at:" prefix):
+//   at:team            -> { secret, users: [{ id, name, role, roleLabel, aliases, invite, v, active,
+//                           tgId, tgUsername, createdAt, activatedAt }] }
+//   at:ver             -> { v, log: [[v, taskId | '#projects' | '#clients'], ...] }  bumped on every change
+//   at:notif:<userId>  -> [{ id, t, kind, taskId, text, by, read }]  (latest 60)
+//   at:seen:<userId>   -> ISO time the person last opened the page (written at most every 3 h)
+//   at:clients         -> { <projectId>: { lastUpdateAt, by, note, lastTeamAt } }
+//   bot:me             -> the control bot's @username (for the «Подключить Telegram» link)
+//   bot:qrun           -> last time a page visit kicked the AI queue
+
+const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
+const AT_OWNER_TG = 'oleg_ezhkov';
+const AT_ROLES = {
+  owner: 'Руководитель',
+  manager: 'Клиентский менеджер',
+  specialist: 'Специалист по Авито',
+  trainee: 'Стажёр по Авито',
+};
+const AT_PRIORITIES = ['urgent', 'high', 'normal', 'low'];
+const AT_PRIORITY_LABEL = { urgent: 'срочно', high: 'высокий', normal: 'обычный', low: 'низкий' };
+const AT_FULL_REBUILD_MS = 10 * 60 * 1000;
+const AT_SEEN_EVERY_MS = 3 * 60 * 60 * 1000;
+const AT_NOTIF_KEEP = 60;
+const AT_HIDE_CLOSED_AFTER_MS = 21 * 24 * 3600000;
+
+const AT_SEED_USERS = [
+  { id: 'oleg', name: 'Олег Ежков', role: 'owner', aliases: ['Олег', 'Oleg'] },
+  { id: 'olga', name: 'Ольга Шпаковская', role: 'manager', aliases: ['Ольга', 'Оля', 'Менеджер Cantor Agency', 'КМ'] },
+  { id: 'evgeny', name: 'Евгений Исаев', role: 'specialist', aliases: ['Евгений', 'Женя'] },
+  { id: 'albina', name: 'Альбина', role: 'trainee', aliases: ['Альбина'] },
+  { id: 'ekaterina', name: 'Екатерина', role: 'trainee', aliases: ['Екатерина', 'Катя'] },
+];
+
+let AT_MEM = null; // { v, builtAt, stamp, tasks: Map, projects, chats, pending, clients }
+let AT_BOT_USERNAME = null;
+let AT_QUEUE_KICKED_AT = 0;
+
+function atRandom(len) {
+  let s = '';
+  while (s.length < len) s += crypto.randomUUID().replace(/-/g, '');
+  return s.slice(0, len);
+}
+async function atHmac(secret, data) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+function atFirstName(name) {
+  return String(name || '').trim().split(/\s+/)[0] || '';
+}
+function atInviteUrl(user) {
+  return `${AT_PAGE_URL}?invite=${user.invite}`;
+}
+function atClean(value, max) {
+  return String(value == null ? '' : value).replace(/\r/g, '').trim().slice(0, max);
+}
+
+// Next working day (or today, when asked and it is one) at hh:00 MSK, as epoch ms.
+function atWorkdayAt(nowMs, hh, includeToday) {
+  let day = botMskStartOfDay(nowMs) + (includeToday ? 0 : 24 * 3600000);
+  while (!botIsWorkday(day + 12 * 3600000)) day += 24 * 3600000;
+  return day + hh * 3600000;
+}
+
+// ── team ──
+async function atGetTeam(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const team = await kv.get('at:team', 'json');
+  return team || atSeedTeam(env);
+}
+async function atPutTeam(kv, team) {
+  await kv.put('at:team', JSON.stringify(team));
+}
+// First run: the five people the owner named, a starter task list (the owner's own reminders) and
+// a message to the owner with everyone's invite links.
+async function atSeedTeam(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const nowMs = Date.now();
+  const now = new Date(nowMs).toISOString();
+  const ownerTg = botOwnerIds(env)[0] || null;
+  const team = {
+    secret: atRandom(48),
+    users: AT_SEED_USERS.map((u) => ({
+      ...u,
+      roleLabel: AT_ROLES[u.role],
+      invite: atRandom(16),
+      v: 1,
+      active: true,
+      tgId: u.role === 'owner' ? ownerTg : null,
+      tgUsername: u.role === 'owner' ? AT_OWNER_TG : null,
+      createdAt: now,
+      activatedAt: null,
+    })),
+    seededAt: now,
+  };
+  await atPutTeam(kv, team);
+
+  const seedTasks = [
+    {
+      text: 'Добавить бота во все чаты с клиентами',
+      note: 'Сейчас бот есть только в рабочем чате «Авито». Добавить его администратором в чат каждого клиента — '
+        + 'тогда трекер увидит вопросы клиентов, ответы команды и подсветит клиентов, которым давно не писали. '
+        + 'В чатах клиентов бот молчит и пишет только в личку.',
+      priority: 'high',
+      due: atWorkdayAt(nowMs, 18, false),
+    },
+    {
+      text: 'Выгрузить историю чатов с клиентами для базы знаний бота',
+      note: 'Telegram Desktop → чат клиента → ⋮ → «Экспорт истории чата» → формат JSON, без медиа. '
+        + 'По каждому клиенту (и рабочий чат целиком). Архивы передать Claude — он загрузит их в бота как исходную базу знаний.',
+      priority: 'high',
+      due: atWorkdayAt(nowMs, 18, false) + 24 * 3600000,
+    },
+    {
+      text: 'Разослать команде ссылки в Avito Tasks и попросить подключить Telegram',
+      note: 'Вкладка «Команда» → у каждого «Отправить в Telegram». После входа человек жмёт «Подключить Telegram» — '
+        + 'и бот начнёт присылать ему задачи и напоминания о сроках.',
+      priority: 'normal',
+      due: atWorkdayAt(nowMs, 18, true),
+    },
+  ];
+  const ids = [];
+  for (const s of seedTasks) {
+    const id = `tr${atRandom(10)}`;
+    ids.push(id);
+    await kv.put(`task:${id}`, JSON.stringify({
+      id,
+      text: s.text,
+      note: s.note,
+      status: 'open',
+      priority: s.priority,
+      owner: 'Олег Ежков',
+      assigneeId: 'oleg',
+      due: botIsoMsk(s.due),
+      projectId: null,
+      source: 'tracker',
+      origin: 'tracker',
+      author: 'Олег Ежков',
+      createdById: 'oleg',
+      startedAt: now,
+      notified: {},
+      activity: [{ t: nowMs, by: 'Claude', what: 'поставил(а) задачу' }],
+      createdAt: now,
+      updatedAt: now,
+    }));
+  }
+  await atTouch(kv, ids);
+  if (env.CONTROL_BOT_TOKEN) await botNotifyOwner(env, atAccessMessage(team, true));
+  return team;
+}
+function atAccessMessage(team, first) {
+  const owner = team.users.find((u) => u.role === 'owner');
+  const lines = [first ? '🗂 <b>Avito Tasks готов</b> — трекер задач команды.' : '🔑 <b>Avito Tasks — доступы</b>'];
+  if (owner) lines.push('', `Ваша ссылка (откройте один раз на каждом своём устройстве):\n${atInviteUrl(owner)}`);
+  const others = team.users.filter((u) => u.role !== 'owner');
+  if (others.length) {
+    lines.push('', '<b>Ссылки сотрудников</b> — у каждого своя:');
+    for (const u of others) lines.push(`${u.active ? '•' : '⛔'} ${escapeHtml(u.name)} — ${escapeHtml(u.roleLabel)}\n${atInviteUrl(u)}`);
+  }
+  lines.push('', 'Отключить доступ, выдать новую ссылку или добавить человека — вкладка «Команда» в трекере.');
+  return lines.join('\n');
+}
+function atPublicUser(u) {
+  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId };
+}
+async function atAuth(team, token) {
+  const [id, v, sig] = String(token || '').split('.');
+  const user = team.users.find((u) => u.id === id);
+  if (!user || String(user.v) !== v || !sig) return { error: 'no_access' };
+  if (sig !== (await atHmac(team.secret, `s:${id}.${v}`)).slice(0, 32)) return { error: 'no_access' };
+  if (!user.active) return { error: 'blocked' };
+  return { user };
+}
+async function atToken(team, user) {
+  return `${user.id}.${user.v}.${(await atHmac(team.secret, `s:${user.id}.${user.v}`)).slice(0, 32)}`;
+}
+async function atTgStartParam(team, user) {
+  return `at_${user.id}_${(await atHmac(team.secret, `tg:${user.id}.${user.v}`)).slice(0, 16)}`;
+}
+// Team member named in free text ("Евгений", "Менеджер — Cantor Agency", "Женя"), or null.
+function atMatchUser(name, users) {
+  const n = ` ${botNorm(name)} `;
+  if (!n.trim()) return null;
+  let best = null;
+  let bestScore = 0;
+  let tie = false;
+  for (const u of users) {
+    let score = 0;
+    const full = botNorm(u.name);
+    if (full && n.includes(` ${full} `)) score = 3;
+    for (const a of u.aliases || []) {
+      const an = botNorm(a);
+      if (an && n.includes(` ${an} `)) score = Math.max(score, an.includes(' ') ? 3 : 2);
+    }
+    const first = botNorm(atFirstName(u.name));
+    if (!score && first.length >= 4 && n.includes(` ${first.slice(0, first.length - 1)}`)) score = 1;
+    if (score > bestScore) { best = u; bestScore = score; tie = false; } else if (score && score === bestScore && best !== u) tie = true;
+  }
+  return tie ? null : best;
+}
+function atAssigneeId(task, users) {
+  if (task.assigneeId) return task.assigneeId;
+  const u = task.owner ? atMatchUser(task.owner, users) : null;
+  return u ? u.id : null;
+}
+function atIsTrackerTask(t) {
+  return !!t && (t.source === 'bot' || t.source === 'tracker');
+}
+function atTeamPromptLine(team) {
+  return team.users.filter((u) => u.active).map((u) => {
+    const aka = (u.aliases || []).filter((a) => botNorm(a) !== botNorm(atFirstName(u.name)));
+    return `${u.name} — ${u.roleLabel}${aka.length ? ` (может подписываться: ${aka.join(', ')})` : ''}`;
+  }).join('; ');
+}
+
+// ── change log / snapshot ──
+async function atTouch(kv, ids) {
+  const rec = (await kv.get('at:ver', 'json')) || { v: 0, log: [] };
+  rec.v += 1;
+  for (const id of ids) rec.log.push([rec.v, id]);
+  rec.log = rec.log.slice(-300);
+  await kv.put('at:ver', JSON.stringify(rec));
+  return rec.v;
+}
+async function atLoadProjects(kv) {
+  return (await listByPrefix(kv, 'project:')).map((p) => ({ id: p.id, name: p.name, inactive: !!p.inactive }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+async function atLoadClientSignals(kv) {
+  const [chats, pendingList, clients] = await Promise.all([
+    listByPrefix(kv, 'bot:chat:'),
+    kv.list({ prefix: 'bot:pending:' }),
+    kv.get('at:clients', 'json'),
+  ]);
+  const pending = {};
+  await Promise.all(pendingList.keys.map(async (k) => {
+    const p = await kv.get(k.name, 'json');
+    if (p) pending[k.name.slice('bot:pending:'.length)] = p;
+  }));
+  return { chats: chats.filter((c) => c.kind === 'client'), pending, clients: clients || {} };
+}
+async function atSnapshot(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const ver = (await kv.get('at:ver', 'json')) || { v: 0, log: [] };
+  const now = Date.now();
+  const fresh = AT_MEM && now - AT_MEM.builtAt < AT_FULL_REBUILD_MS;
+  if (fresh && AT_MEM.v === ver.v) return AT_MEM;
+  if (fresh && AT_MEM.v < ver.v && ver.log.length && ver.log[0][0] <= AT_MEM.v + 1) {
+    const next = { ...AT_MEM, tasks: new Map(AT_MEM.tasks), v: ver.v };
+    const changed = new Set(ver.log.filter(([v]) => v > AT_MEM.v).map(([, id]) => id));
+    for (const id of changed) {
+      if (id === '#projects') next.projects = await atLoadProjects(kv);
+      else if (id === '#clients') Object.assign(next, await atLoadClientSignals(kv));
+      else if (id.startsWith('#')) continue; // '#team': people are read per request, the bump just makes pages re-fetch
+      else {
+        const t = await kv.get(`task:${id}`, 'json');
+        if (atIsTrackerTask(t)) next.tasks.set(id, t); else next.tasks.delete(id);
+      }
+    }
+    AT_MEM = next;
+    return next;
+  }
+  const [tasks, projects, signals] = await Promise.all([listByPrefix(kv, 'task:'), atLoadProjects(kv), atLoadClientSignals(kv)]);
+  AT_MEM = {
+    v: ver.v,
+    builtAt: now,
+    stamp: now.toString(36),
+    tasks: new Map(tasks.filter(atIsTrackerTask).map((t) => [t.id, t])),
+    projects,
+    ...signals,
+  };
+  return AT_MEM;
+}
+function atPublicTask(t, users) {
+  return {
+    id: t.id,
+    text: t.text,
+    note: t.note || '',
+    status: t.status,
+    takenAt: t.takenAt || null,
+    doneAt: t.doneAt || null,
+    informedAt: t.informedAt || null,
+    due: t.due || null,
+    priority: AT_PRIORITIES.includes(t.priority) ? t.priority : 'normal',
+    projectId: t.projectId || null,
+    topicName: t.topicName || null,
+    assigneeId: atAssigneeId(t, users),
+    owner: t.owner || null,
+    author: t.author || null,
+    createdById: t.createdById || null,
+    source: t.source,
+    link: t.link || null,
+    startedAt: t.startedAt || t.createdAt || null,
+    createdAt: t.createdAt || null,
+    updatedAt: t.updatedAt || null,
+    updatedBy: t.updatedBy || null,
+    activity: Array.isArray(t.activity) ? t.activity.slice(-20) : [],
+  };
+}
+// Clients tab (owner and client manager only — specialists don't need clients' messages).
+function atClientBoard(mem) {
+  return mem.projects.map((p) => {
+    const chat = mem.chats.find((c) => c.projectId === p.id);
+    const pend = chat && mem.pending[String(chat.id)];
+    const c = mem.clients[p.id] || {};
+    return {
+      id: p.id,
+      chat: chat ? { title: chat.title } : null,
+      pending: pend ? { since: pend.since, text: pend.text, link: botMessageLink(chat.id, null, pend.msgId) } : null,
+      lastUpdateAt: c.lastUpdateAt || null,
+      lastUpdateBy: c.by || null,
+      lastUpdateNote: c.note || null,
+      lastTeamAt: c.lastTeamAt || null,
+    };
+  });
+}
+
+// ── notifications ──
+async function atNotify(env, team, userIds, n, tg) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  for (const uid of [...new Set(userIds)].filter(Boolean)) {
+    const user = team.users.find((u) => u.id === uid && u.active);
+    if (!user) continue;
+    const key = `at:notif:${uid}`;
+    const list = (await kv.get(key, 'json')) || [];
+    list.unshift({ id: atRandom(8), t: Date.now(), kind: n.kind, taskId: n.taskId || null, text: String(n.text || '').slice(0, 400), by: n.by || null, read: false });
+    await kv.put(key, JSON.stringify(list.slice(0, AT_NOTIF_KEEP)));
+    if (tg && user.tgId) await botSend(env, user.tgId, tg.text, tg.extra || {});
+  }
+}
+function atTaskUrl(taskId) {
+  return `${AT_PAGE_URL}#t=${encodeURIComponent(taskId)}`;
+}
+function atTgButtons(task, withActions) {
+  const row = [];
+  if (withActions && task.status === 'open' && !task.takenAt) row.push({ text: '▶️ Беру в работу', callback_data: `at:take:${task.id}` });
+  if (withActions && task.status === 'open') row.push({ text: '✅ Готово', callback_data: `at:done:${task.id}` });
+  const rows = row.length ? [row] : [];
+  rows.push([{ text: 'Открыть в трекере', url: atTaskUrl(task.id) }]);
+  return { reply_markup: { inline_keyboard: rows } };
+}
+function atTgTaskBlock(task, projectName) {
+  const due = botDueMs(task);
+  const meta = [];
+  if (projectName) meta.push(`Клиент: ${escapeHtml(projectName)}`);
+  meta.push(due ? `Срок: ${botFmtDate(due)}` : 'Без срока');
+  if (task.priority && task.priority !== 'normal') meta.push(`Приоритет: ${AT_PRIORITY_LABEL[task.priority] || task.priority}`);
+  const lines = [`<b>${escapeHtml(task.text)}</b>`, meta.join(' · ')];
+  if (task.note) lines.push(`<i>${escapeHtml(String(task.note).slice(0, 500))}</i>`);
+  return lines.join('\n');
+}
+async function atProjectName(kv, projectId) {
+  if (!projectId) return null;
+  if (AT_MEM) {
+    const p = AT_MEM.projects.find((x) => x.id === projectId);
+    if (p) return p.name;
+  }
+  const p = await kv.get(`project:${projectId}`, 'json');
+  return p ? p.name : null;
+}
+
+// ── create / edit a task (page, and the bot's «Беру» / «Готово» buttons) ──
+// input: { id?, text?, note?, projectId?, assigneeId?, due?: 'YYYY-MM-DDTHH:MM' (MSK) | null,
+//          priority?, status?: 'new' | 'progress' | 'done' | 'closed' | 'cancelled' }
+async function atSaveTask(env, team, user, input) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const nowMs = Date.now();
+  const now = new Date(nowMs).toISOString();
+  const existing = input.id ? await kv.get(`task:${String(input.id)}`, 'json') : null;
+  if (input.id && !existing) return { error: 'not_found', status: 404 };
+  const task = existing ? { ...existing } : {
+    id: `tr${atRandom(10)}`,
+    text: '',
+    status: 'open',
+    priority: 'normal',
+    source: 'tracker',
+    origin: 'tracker',
+    author: user.name,
+    createdById: user.id,
+    startedAt: now,
+    notified: {},
+    createdAt: now,
+  };
+  const before = { ...task, assigneeId: atAssigneeId(task, team.users) };
+  const changes = [];
+
+  if ('text' in input) {
+    const text = atClean(input.text, 300).replace(/\s*\n\s*/g, ' ');
+    if (!text) return { error: 'missing_text', status: 400 };
+    if (text !== task.text) { task.text = text; if (existing) changes.push('суть'); }
+  } else if (!existing) return { error: 'missing_text', status: 400 };
+  if ('note' in input) {
+    const note = atClean(input.note, 4000);
+    if (note !== (task.note || '')) { task.note = note; if (existing) changes.push('описание'); }
+  }
+  if ('projectId' in input) {
+    const pid = input.projectId ? atClean(input.projectId, 80) : null;
+    if (pid !== (task.projectId || null)) { task.projectId = pid; if (existing) changes.push('клиент'); }
+  }
+  if ('assigneeId' in input) {
+    const a = input.assigneeId ? team.users.find((u) => u.id === input.assigneeId) : null;
+    if ((a ? a.id : null) !== before.assigneeId || (!existing && a)) {
+      task.assigneeId = a ? a.id : null;
+      task.owner = a ? a.name : null;
+      if (existing) changes.push(a ? `исполнитель → ${atFirstName(a.name)}` : 'без исполнителя');
+    }
+  } else if (!existing) {
+    task.assigneeId = user.id;
+    task.owner = user.name;
+  }
+  if ('due' in input) {
+    const ms = input.due ? botParseMskDateTime(input.due) : null;
+    const due = ms ? botIsoMsk(ms) : null;
+    if (due !== (task.due || null)) {
+      task.due = due;
+      // A new deadline gets fresh "an hour left" / "missed" notifications.
+      task.notified = { ...(task.notified || {}), overdue: undefined, overdueUser: undefined, soonUser: undefined };
+      if (existing) changes.push(due ? `срок → ${botFmtDate(ms)}` : 'срок снят');
+    }
+  }
+  if ('priority' in input && AT_PRIORITIES.includes(input.priority) && input.priority !== (task.priority || 'normal')) {
+    task.priority = input.priority;
+    if (existing) changes.push(`приоритет → ${AT_PRIORITY_LABEL[input.priority]}`);
+  }
+  let statusChange = null;
+  if ('status' in input) {
+    const s = input.status;
+    const cur = task.status === 'open' ? (task.takenAt ? 'progress' : 'new') : task.status;
+    if (s !== cur && ['new', 'progress', 'done', 'closed', 'cancelled'].includes(s)) {
+      statusChange = s;
+      if (s === 'new') Object.assign(task, { status: 'open', takenAt: null });
+      if (s === 'progress') Object.assign(task, { status: 'open', takenAt: task.takenAt || now });
+      if (s === 'done') Object.assign(task, { status: 'done', doneAt: now });
+      if (s === 'closed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || now, informedAt: task.projectId ? now : task.informedAt || null });
+      if (s === 'cancelled') task.status = 'cancelled';
+      changes.push({ new: 'вернул(а) в новые', progress: 'взял(а) в работу', done: 'отметил(а) «готово»', closed: task.projectId ? 'закрыл(а): клиенту сообщили' : 'закрыл(а)', cancelled: 'отменил(а)' }[s]);
+    }
+  }
+  if (existing && !changes.length) return { task };
+
+  task.updatedAt = now;
+  task.updatedBy = user.name;
+  task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: nowMs, by: user.name, what: existing ? changes.join(', ') : 'поставил(а) задачу' }].slice(-20);
+  await kv.put(`task:${task.id}`, JSON.stringify(task));
+  await atTouch(kv, [task.id]);
+  if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(task.id, task);
+
+  // Who hears about it.
+  const assigneeId = atAssigneeId(task, team.users);
+  const projectName = await atProjectName(kv, task.projectId);
+  const by = atFirstName(user.name);
+  if (assigneeId && assigneeId !== user.id && assigneeId !== before.assigneeId) {
+    await atNotify(env, team, [assigneeId], { kind: 'assigned', taskId: task.id, text: `${by} поставил(а) вам задачу: ${task.text}`, by: user.name }, {
+      text: `📌 <b>Новая задача для вас</b> · поставил(а) ${escapeHtml(user.name)}\n${atTgTaskBlock(task, projectName)}`,
+      extra: atTgButtons(task, true),
+    });
+  } else if (existing && assigneeId && assigneeId !== user.id && !statusChange && changes.length) {
+    await atNotify(env, team, [assigneeId], { kind: 'edited', taskId: task.id, text: `${by} изменил(а) вашу задачу (${changes.join(', ')}): ${task.text}`, by: user.name });
+  }
+  if (statusChange === 'done' || statusChange === 'closed') {
+    const watchers = [task.createdById, assigneeId].filter((id) => id && id !== user.id);
+    if (watchers.length) {
+      await atNotify(env, team, watchers, { kind: 'done', taskId: task.id, text: `${by}: готово — ${task.text}`, by: user.name }, {
+        text: `✅ <b>${escapeHtml(by)}: готово</b>\n${atTgTaskBlock(task, projectName)}`,
+        extra: { ...atTgButtons(task, false), disable_notification: true },
+      });
+    }
+    // The client manager passes results on to the client.
+    if (statusChange === 'done' && task.projectId) {
+      const managers = team.users.filter((u) => u.role === 'manager' && u.active && u.id !== user.id && !watchers.includes(u.id)).map((u) => u.id);
+      await atNotify(env, team, managers, { kind: 'inform', taskId: task.id, text: `Готово по ${projectName || 'клиенту'} — сообщите клиенту: ${task.text}`, by: user.name }, {
+        text: `📨 <b>Сообщите клиенту: ${escapeHtml(projectName || '')}</b>\n${escapeHtml(by)} сделал(а): ${escapeHtml(task.text)}`,
+        extra: atTgButtons(task, false),
+      });
+    }
+  }
+  return { task };
+}
+
+// ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
+async function handleAvitoTasksApi(request, env, url, ctx) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv) return json({ error: 'kv_not_configured' }, 500);
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const body = (await readJson(request)) || {};
+  const action = url.pathname.slice('/api/dashboard/avito-tasks/'.length);
+  const team = await atGetTeam(env);
+  const nowMs = Date.now();
+
+  if (action === 'activate') {
+    const code = atClean(body.invite, 64);
+    const user = code && team.users.find((u) => u.invite === code);
+    if (!user) return json({ error: 'bad_invite' }, 404);
+    if (!user.active) return json({ error: 'blocked' }, 403);
+    if (!user.activatedAt) {
+      user.activatedAt = new Date(nowMs).toISOString();
+      await atPutTeam(kv, team);
+    }
+    return json({ token: await atToken(team, user), me: atPublicUser(user) });
+  }
+
+  const auth = await atAuth(team, body.token);
+  if (auth.error) return json({ error: auth.error, owner: AT_OWNER_TG }, auth.error === 'blocked' ? 403 : 401);
+  const me = auth.user;
+  const isOwner = me.role === 'owner';
+  const seesClients = isOwner || me.role === 'manager';
+
+  if (action === 'sync') {
+    if (body.initial) {
+      const seenKey = `at:seen:${me.id}`;
+      const seen = Date.parse((await kv.get(seenKey)) || 0) || 0;
+      if (nowMs - seen > AT_SEEN_EVERY_MS) await kv.put(seenKey, new Date(nowMs).toISOString());
+      atKickQueue(env, ctx);
+    }
+    const [mem, notifications] = await Promise.all([atSnapshot(env), kv.get(`at:notif:${me.id}`, 'json')]);
+    const ver = `${mem.v}.${mem.stamp}`;
+    const out = {
+      ver,
+      me: { ...atPublicUser(me), roleLabel: me.roleLabel },
+      notifications: notifications || [],
+      serverTime: nowMs,
+    };
+    if (body.ver === ver) return json({ ...out, unchanged: true });
+    const cutoff = nowMs - AT_HIDE_CLOSED_AFTER_MS;
+    out.users = team.users.map(atPublicUser);
+    out.projects = mem.projects;
+    out.tasks = [...mem.tasks.values()]
+      .filter((t) => (t.status === 'open' || t.status === 'done') || Date.parse(t.updatedAt || t.createdAt || 0) > cutoff)
+      .map((t) => atPublicTask(t, team.users));
+    if (seesClients) out.clients = atClientBoard(mem);
+    if (!me.tgId) out.tgStart = await atTgStartParam(team, me);
+    out.bot = await atBotUsername(env);
+    return json(out);
+  }
+
+  if (action === 'task-save') {
+    const res = await atSaveTask(env, team, me, body.task || {});
+    if (res.error) return json({ error: res.error }, res.status || 400);
+    return json({ task: atPublicTask(res.task, team.users) });
+  }
+
+  if (action === 'task-delete') {
+    const id = atClean(body.id, 40);
+    const task = id && (await kv.get(`task:${id}`, 'json'));
+    if (!task) return json({ error: 'not_found' }, 404);
+    if (!isOwner && task.createdById !== me.id) return json({ error: 'forbidden' }, 403);
+    await kv.delete(`task:${id}`);
+    await atTouch(kv, [id]);
+    if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.delete(id);
+    return json({ ok: true });
+  }
+
+  if (action === 'notif-read') {
+    const key = `at:notif:${me.id}`;
+    const list = (await kv.get(key, 'json')) || [];
+    if (list.some((n) => !n.read)) await kv.put(key, JSON.stringify(list.map((n) => ({ ...n, read: true }))));
+    return json({ ok: true });
+  }
+
+  if (action === 'tg-unlink') {
+    if (me.tgId && !isOwner) {
+      me.tgId = null;
+      me.tgUsername = null;
+      await atPutTeam(kv, team);
+    }
+    return json({ ok: true });
+  }
+
+  // «Клиенту написали» — the client manager's mark on the Clients tab.
+  if (action === 'client-touch') {
+    if (!seesClients) return json({ error: 'forbidden' }, 403);
+    const projectId = atClean(body.projectId, 80);
+    if (!projectId) return json({ error: 'missing_project' }, 400);
+    const clients = (await kv.get('at:clients', 'json')) || {};
+    clients[projectId] = { ...(clients[projectId] || {}), lastUpdateAt: new Date(nowMs).toISOString(), by: me.name, note: atClean(body.note, 300) || null };
+    await kv.put('at:clients', JSON.stringify(clients));
+    // Answered: the client's waiting question (if the bot is in their chat) is settled too.
+    for (const c of (await listByPrefix(kv, 'bot:chat:')).filter((x) => x.kind === 'client' && x.projectId === projectId)) {
+      if (await kv.get(`bot:pending:${c.id}`)) await kv.delete(`bot:pending:${c.id}`);
+      if (AT_MEM && AT_MEM.pending) delete AT_MEM.pending[String(c.id)];
+    }
+    await atTouch(kv, ['#clients']);
+    if (AT_MEM) AT_MEM.clients = clients;
+    return json({ ok: true, client: clients[projectId] });
+  }
+
+  // ── Команда (owner only) ──
+  if (!isOwner) return json({ error: 'forbidden' }, 403);
+
+  const teamView = async () => {
+    const seen = await Promise.all(team.users.map((u) => kv.get(`at:seen:${u.id}`)));
+    return json({
+      users: team.users.map((u, i) => ({
+        ...atPublicUser(u),
+        aliases: u.aliases || [],
+        invite: atInviteUrl(u),
+        inviteCode: u.invite,
+        tgUsername: u.tgUsername || null,
+        activatedAt: u.activatedAt || null,
+        seenAt: seen[i] || null,
+        createdAt: u.createdAt || null,
+      })),
+      roles: AT_ROLES,
+    });
+  };
+  const target = body.id ? team.users.find((u) => u.id === body.id) : null;
+
+  if (action === 'team') return teamView();
+
+  if (action === 'user-save') {
+    const input = body.user || {};
+    const name = atClean(input.name, 80).replace(/\s+/g, ' ');
+    if (name.length < 2) return json({ error: 'bad_name' }, 400);
+    const role = AT_ROLES[input.role] ? input.role : 'specialist';
+    const aliases = Array.isArray(input.aliases) ? input.aliases.map((a) => atClean(a, 60)).filter(Boolean).slice(0, 8) : null;
+    const now = new Date(nowMs).toISOString();
+    let user = input.id ? team.users.find((u) => u.id === input.id) : null;
+    if (input.id && !user) return json({ error: 'not_found' }, 404);
+    if (user) {
+      user.name = name;
+      if (user.id !== me.id) user.role = role; // the owner can't demote themselves out of the Team tab
+      user.roleLabel = atClean(input.roleLabel, 60) || AT_ROLES[user.role];
+      if (aliases) user.aliases = aliases;
+    } else {
+      user = {
+        id: `u${atRandom(7)}`,
+        name,
+        role: role === 'owner' ? 'manager' : role,
+        roleLabel: atClean(input.roleLabel, 60) || AT_ROLES[role === 'owner' ? 'manager' : role],
+        aliases: aliases || [atFirstName(name)],
+        invite: atRandom(16),
+        v: 1,
+        active: true,
+        tgId: null,
+        tgUsername: null,
+        createdAt: now,
+        activatedAt: null,
+      };
+      team.users.push(user);
+    }
+    await atPutTeam(kv, team);
+    await atTouch(kv, ['#team']);
+    return teamView();
+  }
+
+  if (action === 'user-access') {
+    if (!target) return json({ error: 'not_found' }, 404);
+    if (target.id === me.id) return json({ error: 'self' }, 400);
+    target.active = !!body.active;
+    await atPutTeam(kv, team);
+    await atTouch(kv, ['#team']);
+    return teamView();
+  }
+
+  if (action === 'user-reset') {
+    if (!target) return json({ error: 'not_found' }, 404);
+    target.invite = atRandom(16);
+    target.v = (Number(target.v) || 1) + 1;
+    target.activatedAt = null;
+    await atPutTeam(kv, team);
+    const res = await teamView();
+    // The owner's own devices are signed out too — hand this one a fresh token.
+    if (target.id === me.id) {
+      const data = await res.json();
+      return json({ ...data, token: await atToken(team, target) });
+    }
+    return res;
+  }
+
+  if (action === 'user-delete') {
+    if (!target) return json({ error: 'not_found' }, 404);
+    if (target.id === me.id) return json({ error: 'self' }, 400);
+    team.users = team.users.filter((u) => u.id !== target.id);
+    await atPutTeam(kv, team);
+    await kv.delete(`at:notif:${target.id}`);
+    await atTouch(kv, ['#team']);
+    return teamView();
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+async function atBotUsername(env) {
+  if (AT_BOT_USERNAME) return AT_BOT_USERNAME;
+  const kv = env.AGENCY_DASHBOARD_KV;
+  let name = await kv.get('bot:me');
+  if (!name && env.CONTROL_BOT_TOKEN) {
+    const res = await botApi(env, 'getMe', {});
+    name = res && res.ok && res.result && res.result.username;
+    if (name) await kv.put('bot:me', name);
+  }
+  AT_BOT_USERNAME = name || null;
+  return AT_BOT_USERNAME;
+}
+
+// A page visit nudges the AI queue (in the background) so fresh chat messages turn into tasks
+// without waiting for the cron. Only in the middle of the cron's 10-minute cycle, so a visit-run
+// and a cron-run never work on the same topic at once, and at most every 4 minutes.
+function atKickQueue(env, ctx) {
+  if (!env.CONTROL_BOT_TOKEN || !ctx || !ctx.waitUntil) return;
+  const nowMs = Date.now();
+  const minute = new Date(nowMs).getUTCMinutes() % 10;
+  if (minute < 3 || minute > 6 || nowMs - AT_QUEUE_KICKED_AT < 4 * 60000) return;
+  AT_QUEUE_KICKED_AT = nowMs;
+  ctx.waitUntil((async () => {
+    const kv = env.AGENCY_DASHBOARD_KV;
+    const last = Number(await kv.get('bot:qrun')) || 0;
+    if (nowMs - last < 4 * 60000) return;
+    if (!(await kv.list({ prefix: 'bot:dirty:', limit: 1 })).keys.length) return;
+    await kv.put('bot:qrun', String(nowMs), { expirationTtl: 3600 });
+    await botProcessQueue(env);
+  })().catch((err) => console.error('avito-tasks queue kick failed', err && err.stack)));
+}
+
+// ── Telegram side (called from the control bot) ──
+// /start at_<userId>_<code> from the «Подключить Telegram» button: ties the chat to the person.
+async function atLinkTelegram(env, msg, param) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const m = String(param || '').match(/^at_([a-z0-9]+)_([a-f0-9]{16})$/);
+  if (!m) return false;
+  const team = await atGetTeam(env);
+  const user = team.users.find((u) => u.id === m[1]);
+  if (!user || !user.active || m[2] !== (await atTgStartParam(team, user)).split('_').pop()) {
+    await botSend(env, msg.chat.id, 'Ссылка устарела. Откройте Avito Tasks и нажмите «Подключить Telegram» ещё раз.');
+    return true;
+  }
+  // One Telegram account per person: drop it from anyone else it was tied to.
+  for (const u of team.users) if (u !== user && String(u.tgId) === String(msg.from.id) && u.role !== 'owner') u.tgId = null;
+  user.tgId = String(msg.from.id);
+  user.tgUsername = msg.from.username || null;
+  await atPutTeam(kv, team);
+  await atTouch(kv, ['#team']);
+  if (user.role !== 'owner') {
+    await botApi(env, 'setMyCommands', { commands: AT_EMPLOYEE_COMMANDS, scope: { type: 'chat', chat_id: Number(user.tgId) } });
+  }
+  await botSend(env, msg.chat.id, [
+    `✅ <b>${escapeHtml(atFirstName(user.name))}, Telegram подключён.</b>`,
+    'Сюда будут приходить новые задачи для вас, напоминания о сроках (за час и когда срок вышел), отметки «готово» по вашим задачам и сводка в 10:00.',
+    '',
+    '/tasks — ваши задачи',
+  ].join('\n'), { reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: AT_PAGE_URL }]] } });
+  if (user.role !== 'owner') await botNotifyOwner(env, `🔔 ${escapeHtml(user.name)} подключил(а) Telegram к Avito Tasks.`, { disable_notification: true });
+  return true;
+}
+const AT_EMPLOYEE_COMMANDS = [
+  { command: 'tasks', description: 'Мои задачи' },
+  { command: 'help', description: 'Что умеет бот' },
+];
+
+// Private chat with a team member the bot knows (not the owner — see botOnOwnerMessage).
+async function atOnMemberMessage(env, msg, user) {
+  const text = String(msg.text || '').trim();
+  const cmd = text.startsWith('/') ? text.slice(1).split(/[\s@]/)[0].toLowerCase() : null;
+  if (cmd === 'tasks' || cmd === 'my') return botSend(env, msg.chat.id, await atBuildMyTasks(env, user), { reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: AT_PAGE_URL }]] } });
+  return botSend(env, msg.chat.id, [
+    `<b>${escapeHtml(atFirstName(user.name))}, я присылаю ваши задачи из Avito Tasks.</b>`,
+    'Новые задачи для вас, напоминание за час до срока и когда срок вышел, сводка в 10:00. Под задачей — кнопки «Беру в работу» и «Готово».',
+    '',
+    '/tasks — ваши задачи',
+  ].join('\n'), { reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: AT_PAGE_URL }]] } });
+}
+
+function atUrgency(t, nowMs) {
+  const due = botDueMs(t);
+  let s = { urgent: 300, high: 150, normal: 0, low: -80 }[t.priority || 'normal'] || 0;
+  if (due) {
+    if (due < nowMs) s += 1000;
+    else if (due - nowMs < 24 * 3600000) s += 500;
+    else if (due - nowMs < 72 * 3600000) s += 200;
+  }
+  return s;
+}
+async function atBuildMyTasks(env, user, digest) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const nowMs = Date.now();
+  const team = await atGetTeam(env);
+  const byId = await botProjectsById(kv);
+  const all = await botAllTasks(kv);
+  const mine = all.filter((t) => t.status === 'open' && atAssigneeId(t, team.users) === user.id)
+    .sort((a, b) => atUrgency(b, nowMs) - atUrgency(a, nowMs) || (botDueMs(a) || Infinity) - (botDueMs(b) || Infinity));
+  const lines = [];
+  const overdue = mine.filter((t) => botDueMs(t) && botDueMs(t) < nowMs).length;
+  const today = mine.filter((t) => botDueMs(t) && botDueMs(t) >= nowMs && botMsk(botDueMs(t)).date === botMsk(nowMs).date).length;
+  if (digest) lines.push(`☀️ <b>Доброе утро, ${escapeHtml(atFirstName(user.name))}!</b>`);
+  if (!mine.length) lines.push('Открытых задач на вас нет 👌');
+  else {
+    lines.push(`📋 <b>Ваши задачи: ${mine.length}</b>${overdue ? ` · 🔴 просрочено ${overdue}` : ''}${today ? ` · на сегодня ${today}` : ''}`);
+    for (const t of mine.slice(0, 15)) {
+      const due = botDueMs(t);
+      const client = t.projectId && byId[t.projectId] ? byId[t.projectId].name : t.topicName;
+      const mark = due && due < nowMs ? '🔴' : t.priority === 'urgent' ? '🔥' : t.priority === 'high' ? '🟠' : t.takenAt ? '▶️' : '•';
+      lines.push(`${mark} ${escapeHtml(t.text)}${client ? ` — <i>${escapeHtml(client)}</i>` : ''}${due ? ` · ${due < nowMs ? 'был срок ' : 'до '}${botFmtDate(due)}` : ''}`);
+    }
+    if (mine.length > 15) lines.push(`…и ещё ${mine.length - 15} — в трекере.`);
+  }
+  if (user.role === 'manager' || user.role === 'owner') {
+    const toInform = all.filter((t) => t.status === 'done' && t.projectId);
+    if (toInform.length) {
+      lines.push('', `📨 <b>Готово — сообщить клиентам: ${toInform.length}</b>`);
+      for (const t of toInform.slice(0, 10)) lines.push(`• <b>${escapeHtml((byId[t.projectId] || {}).name || '')}</b>: ${escapeHtml(t.text)}`);
+    }
+    if (digest) {
+      const stale = await atStaleClients(env, all, byId, nowMs);
+      if (stale.length) lines.push('', `⏳ <b>Давно без обновлений (3+ рабочих дня):</b> ${stale.map(escapeHtml).join(', ')}`);
+    }
+  }
+  return lines.join('\n');
+}
+// Active clients the team hasn't sent an update to for 3+ working days.
+async function atStaleClients(env, tasks, byId, nowMs) {
+  const clients = (await env.AGENCY_DASHBOARD_KV.get('at:clients', 'json')) || {};
+  const out = [];
+  for (const p of Object.values(byId)) {
+    if (p.inactive) continue;
+    let last = Date.parse((clients[p.id] || {}).lastUpdateAt || 0) || 0;
+    last = Math.max(last, Date.parse((clients[p.id] || {}).lastTeamAt || 0) || 0);
+    for (const t of tasks) if (t.projectId === p.id && t.informedAt) last = Math.max(last, Date.parse(t.informedAt) || 0);
+    if (!last || botWorkingMinutes(last, nowMs) >= 3 * 8 * 60) out.push(p.name);
+  }
+  return out;
+}
+
+// «Беру в работу» / «Готово» under a task message.
+async function atOnCallback(env, cq) {
+  const answer = (text) => botApi(env, 'answerCallbackQuery', { callback_query_id: cq.id, text });
+  const m = String(cq.data || '').match(/^at:(take|done):([A-Za-z0-9_-]{1,40})$/);
+  if (!m) return answer('');
+  const team = await atGetTeam(env);
+  const user = team.users.find((u) => u.active && u.tgId && String(u.tgId) === String(cq.from && cq.from.id));
+  if (!user) return answer('Нет доступа к Avito Tasks');
+  const res = await atSaveTask(env, team, user, { id: m[2], status: m[1] === 'take' ? 'progress' : 'done' });
+  if (res.error) return answer(res.error === 'not_found' ? 'Задача удалена' : 'Не получилось');
+  await answer(m[1] === 'take' ? 'Взято в работу ▶️' : 'Отмечено: готово ✅');
+  if (cq.message) {
+    await botApi(env, 'editMessageReplyMarkup', {
+      chat_id: cq.message.chat.id,
+      message_id: cq.message.message_id,
+      reply_markup: atTgButtons(res.task, true).reply_markup,
+    });
+  }
+}
+
+// Deadline pings for the person a task is on + the 10:00 digest. Runs from botRunChecks.
+async function atRunChecks(env, nowMs, tasks, byId) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const team = await atGetTeam(env);
+  const { date, hh } = botMsk(nowMs);
+  const workday = botIsWorkday(nowMs);
+  const inHours = workday && hh >= BOT_WORK_START_H && hh < BOT_WORK_END_H;
+  if (inHours) {
+    for (const task of tasks.filter((t) => t.status === 'open')) {
+      const due = botDueMs(task);
+      if (!due) continue;
+      const uid = atAssigneeId(task, team.users);
+      const user = uid && team.users.find((u) => u.id === uid && u.active);
+      if (!user) continue;
+      task.notified = task.notified || {};
+      let kind = null;
+      if (due < nowMs && !task.notified.overdueUser) kind = 'overdue';
+      else if (due >= nowMs && due - nowMs <= 60 * 60000 && !task.notified.soonUser) kind = 'soon';
+      if (!kind) continue;
+      task.notified[kind === 'overdue' ? 'overdueUser' : 'soonUser'] = new Date(nowMs).toISOString();
+      await kv.put(`task:${task.id}`, JSON.stringify(task));
+      const projectName = task.projectId && byId[task.projectId] ? byId[task.projectId].name : null;
+      await atNotify(env, team, [user.id], {
+        kind,
+        taskId: task.id,
+        text: kind === 'overdue' ? `Срок вышел: ${task.text}` : `Через час срок: ${task.text}`,
+      }, {
+        text: `${kind === 'overdue' ? '🔴 <b>Срок вышел</b>' : '⏳ <b>Через час срок</b>'}\n${atTgTaskBlock(task, projectName)}`,
+        extra: atTgButtons(task, true),
+      });
+    }
+  }
+  // 10:00 — each connected person's own list (the owner gets the full /summary instead).
+  if (workday && hh >= 10 && hh < 12 && (await botOnce(kv, `atdigest:${date}`, 60 * 60 * 36))) {
+    for (const user of team.users.filter((u) => u.active && u.tgId && u.role !== 'owner')) {
+      const text = await atBuildMyTasks(env, user, true);
+      await botSend(env, user.tgId, text, { reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: AT_PAGE_URL }]] } });
+    }
+  }
 }
 
 // ── Avito → Telegram: per-client notifier bots ──
@@ -5191,6 +6175,11 @@ async function handleApi(request, env, url, ctx) {
   // Before the dashboard's own routes: the academy has its own sign-in (see handleAcademyApi).
   if (pathname.startsWith('/api/dashboard/academy/')) {
     return handleAcademyApi(request, env, url);
+  }
+
+  // Same for Avito Tasks: per-person invite links instead of the dashboard password.
+  if (pathname.startsWith('/api/dashboard/avito-tasks/')) {
+    return handleAvitoTasksApi(request, env, url, ctx);
   }
 
   if (pathname.startsWith('/api/dashboard/')) {
