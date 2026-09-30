@@ -99,7 +99,8 @@ a{color:inherit}
 .icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--muted);position:relative}
 .icon-btn:hover{background:var(--sunken);color:var(--ink)}
 .badge{position:absolute;top:4px;right:3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
-.avatar{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex:none;letter-spacing:.02em}
+.avatar{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex:none;letter-spacing:.02em;overflow:hidden;position:relative}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;background:var(--surface)}
 .avatar.xs{width:20px;height:20px;font-size:9px}
 .avatar.lg{width:42px;height:42px;font-size:15px}
 .me-btn{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 4px;border-radius:999px}
@@ -592,7 +593,13 @@ function workdaysSince(ms, now) {
 const PALETTE = ['#E8391D', '#2556C4', '#1C8048', '#B06500', '#7B3FC4', '#0E8A8A', '#C4287A', '#5A6B7B'];
 function colorFor(id) { const i = S.users.findIndex((u) => u.id === id); if (i >= 0) return PALETTE[i % PALETTE.length]; let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PALETTE[h % PALETTE.length]; }
 function initials(name) { const w = String(name || '?').trim().split(/\s+/); return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase(); }
-function avatar(user, size) { const u = user || { id: '?', name: '?' }; return `<span class="avatar ${size || ''}" style="background:${colorFor(u.id)}">${esc(initials(u.name))}</span>`; }
+// Фото команды лежат в /images/avito-tasks/<id>.jpg; у кого фото нет (или оно не загрузилось) — инициалы на цветном круге.
+const TEAM_PHOTOS = { oleg: 1, olga: 1, evgeny: 1, albina: 1, ekaterina: 1 };
+function avatar(user, size, id) {
+  const u = user || { id: '?', name: '?' };
+  const photo = TEAM_PHOTOS[u.id] ? `<img src="/images/avito-tasks/${esc(u.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : '';
+  return `<span class="avatar ${size || ''}"${id ? ` id="${id}"` : ''} style="background:${colorFor(u.id)}">${esc(initials(u.name))}${photo}</span>`;
+}
 const userById = (id) => S.users.find((u) => u.id === id);
 const projectById = (id) => S.projects.find((p) => p.id === id);
 function clientName(t) { const p = t.projectId && projectById(t.projectId); return p ? p.name : t.topicName || ''; }
@@ -782,7 +789,7 @@ function renderHeader() {
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
   ['tasks', 'clients', 'team'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
-  $('meAvatar').outerHTML = `<span class="avatar" id="meAvatar" style="background:${colorFor(S.me.id)}">${esc(initials(S.me.name))}</span>`;
+  if ($('meAvatar').dataset.uid !== S.me.id + S.me.name) { $('meAvatar').outerHTML = avatar(S.me, '', 'meAvatar'); $('meAvatar').dataset.uid = S.me.id + S.me.name; }
   const unread = S.notifications.filter((n) => !n.read).length;
   $('bellBadge').hidden = !unread;
   $('bellBadge').textContent = unread > 9 ? '9+' : unread;
