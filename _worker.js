@@ -2678,6 +2678,11 @@ async function handleDashboardApi(request, env, url, ctx) {
     };
     await kv.put(`project:${id}`, JSON.stringify(project));
     await atTouch(kv, ['#projects']);
+    // A client added by hand: its work-chat topic / client chat and their tasks get linked to it.
+    if (!existing.id) {
+      const relink = botRelinkClients(env).catch((err) => console.error('relink failed', err && err.stack));
+      if (ctx && ctx.waitUntil) ctx.waitUntil(relink); else await relink;
+    }
     return json({ project });
   }
 
@@ -3930,13 +3935,140 @@ async function botGetTopic(kv, chatRec, threadId) {
   }
   return rec;
 }
-async function botSetTopicName(kv, chatId, threadId, name) {
+// With env (a real topic event, not a placeholder name): a topic named like a person that matches
+// no dashboard client is a new client — it is added to the dashboard (and so to Avito Tasks) and
+// the owner is told. /notclient undoes it for topics that aren't clients.
+async function botSetTopicName(kv, chatId, threadId, name, env) {
   const key = `bot:topic:${chatId}:${threadId}`;
   const prev = (await kv.get(key, 'json')) || {};
-  const project = botMatchProject(name, await botProjects(kv));
+  let project = prev.projectLocked ? null : botMatchProject(name, await botProjects(kv));
+  if (!project && !prev.projectLocked && env && botLooksLikeClientName(name)) {
+    project = await botCreateClient(env, name, `${chatId}:${threadId}`);
+  }
   const rec = { name, projectId: prev.projectLocked ? prev.projectId : project ? project.id : null, projectLocked: !!prev.projectLocked };
   await kv.put(key, JSON.stringify(rec));
   return rec;
+}
+
+// ── clients: new work-chat topics become dashboard clients by themselves ──
+const BOT_NOT_CLIENT_TOPICS = new Set(['общий', 'эдвайзеры', 'флуд', 'новости', 'важное', 'вопросы', 'оффтоп', 'задачи', 'отчеты', 'отчёты', 'команда', 'стажеры', 'стажёры']);
+// "Елена Окунева", "Окунева Елена", "Наталина Сасс": two or three capitalised Cyrillic words.
+function botLooksLikeClientName(name) {
+  const words = String(name || '').trim().split(/\s+/);
+  if (words.length < 2 || words.length > 3) return false;
+  if (words.some((w) => BOT_NOT_CLIENT_TOPICS.has(w.toLowerCase()))) return false;
+  return words.every((w) => /^[А-ЯЁ][а-яё]+(?:-[А-ЯЁ]?[а-яё]+)?$/.test(w));
+}
+// Topics are sometimes "Фамилия Имя"; the dashboard uses "Имя Фамилия". Swapped only when the
+// second word is a known first name ("Окунева Елена"), so "Наталина Сасс" stays as it is.
+const BOT_FIRST_NAMES = new Set(('александр алексей анатолий андрей антон аркадий артём артем богдан борис вадим валентин валерий василий виктор виталий владимир владислав вячеслав геннадий георгий глеб григорий давид даниил денис дмитрий евгений егор иван игорь илья кирилл константин лев леонид максим марк матвей михаил никита николай олег павел пётр петр роман руслан сергей станислав степан тимур фёдор федор юрий ярослав айдар ринат рустам '
+  + 'александра алина алиса алла альбина анастасия ангелина анна антонина арина валентина валерия вера вероника виктория галина гульнара дарья диана дина евгения екатерина елена елизавета жанна зарина злата зоя инна ирина карина кира кристина ксения лариса лилия любовь людмила маргарита марина мария милана надежда наталия наталья наталина нелли нина оксана олеся ольга полина раиса регина светлана софия софья таисия тамара татьяна ульяна эльвира эльмира юлия яна').split(' '));
+function botClientDisplayName(name) {
+  const words = String(name).trim().split(/\s+/);
+  if (words.length === 2 && BOT_FIRST_NAMES.has(words[1].toLowerCase()) && !BOT_FIRST_NAMES.has(words[0].toLowerCase())) return `${words[1]} ${words[0]}`;
+  return words.join(' ');
+}
+const BOT_TRANSLIT = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
+function botSlug(name) {
+  return String(name).toLowerCase().split('').map((c) => (c in BOT_TRANSLIT ? BOT_TRANSLIT[c] : c)).join('')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || `client-${Date.now().toString(36)}`;
+}
+// Same record shape as the dashboard's POST /api/dashboard/project.
+async function botCreateClient(env, rawName, fromTopic, quiet) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const name = botClientDisplayName(rawName);
+  const existing = botMatchProject(name, await botProjects(kv));
+  if (existing) return existing;
+  let id = botSlug(name);
+  while (await kv.get(`project:${id}`)) id = `${botSlug(name)}-${Math.random().toString(36).slice(2, 5)}`;
+  const now = new Date().toISOString();
+  const project = {
+    id, name, service: 'Продвижение на Авито', responsibleId: null, status: 'active', stage: '', currentWork: '', review: '',
+    rowColor: '', avitoAccountId: null, inactive: false, ratings: { result: 0, communication: 0, quality: 0 },
+    autoFromTopic: fromTopic || null, createdAt: now, updatedAt: now,
+  };
+  await kv.put(`project:${id}`, JSON.stringify(project));
+  await atTouch(kv, ['#projects']);
+  if (!quiet) {
+    await botNotifyOwner(env, `🆕 <b>Новый клиент: ${escapeHtml(name)}</b>\nВ рабочем чате появился топик «${escapeHtml(rawName)}» — добавил клиента в дашборд и Avito Tasks, задачи из топика привязываются к нему.`
+      + `\nЕсли это не клиент: /notclient ${escapeHtml(fromTopic || '')}`);
+  }
+  return project;
+}
+// Topics without a client get matched again (e.g. after a client was added in the dashboard), and
+// bot tasks from those topics get the client. With create, person-named topics become clients.
+async function botRelinkClients(env, { create } = {}) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const created = [];
+  const linked = {}; // "chatId:threadId" -> projectId
+  for (const chat of (await listByPrefix(kv, 'bot:chat:')).filter((c) => c.isForum)) {
+    for (const k of (await kv.list({ prefix: `bot:topic:${chat.id}:` })).keys) {
+      const rec = await kv.get(k.name, 'json');
+      const thread = k.name.split(':').pop();
+      if (!rec) continue;
+      if (!rec.projectId && !rec.projectLocked) {
+        let project = botMatchProject(rec.name, await botProjects(kv));
+        if (!project && create && botLooksLikeClientName(rec.name)) {
+          project = await botCreateClient(env, rec.name, `${chat.id}:${thread}`, true);
+          created.push(project.name);
+        }
+        if (project) {
+          rec.projectId = project.id;
+          await kv.put(k.name, JSON.stringify(rec));
+        }
+      }
+      if (rec.projectId) linked[`${chat.id}:${thread}`] = rec.projectId;
+    }
+  }
+  for (const chat of (await listByPrefix(kv, 'bot:chat:')).filter((c) => !c.isForum)) {
+    if (!chat.projectId && !chat.projectLocked) {
+      const project = botMatchProject(chat.title, await botProjects(kv));
+      if (project) {
+        chat.projectId = project.id;
+        await kv.put(`bot:chat:${chat.id}`, JSON.stringify(chat));
+      }
+    }
+    if (chat.projectId) linked[`${chat.id}:0`] = chat.projectId;
+  }
+  const touched = [];
+  for (const t of await botAllTasks(kv)) {
+    const pid = !t.projectId && t.chatId != null && linked[`${t.chatId}:${t.threadId || 0}`];
+    if (!pid) continue;
+    t.projectId = pid;
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    touched.push(t.id);
+  }
+  if (touched.length) await atTouch(kv, touched);
+  return { created, tasks: touched.length };
+}
+// One-time (2026-09-30): the clients whose topics were already in the work chat but not in the dashboard.
+const CLIENTS_SEED_V2 = [
+  ['natalina-sass', 'Наталина Сасс'], ['elena-okuneva', 'Елена Окунева'], ['natalya-valiullova', 'Наталья Валиуллова'],
+  ['gulnara-lyutova', 'Гульнара Лютова'], ['nataliya-popova', 'Наталия Попова'], ['olga-klimovich', 'Ольга Климович'],
+  ['tatyana-verkhoturova', 'Татьяна Верхотурова'],
+];
+async function ensureClientsSeedV2(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (await kv.get('clientsSeedV2')) return;
+  await kv.put('clientsSeedV2', '1');
+  const now = new Date().toISOString();
+  const projects = await botProjects(kv);
+  const added = [];
+  for (const [id, name] of CLIENTS_SEED_V2) {
+    if (botMatchProject(name, projects) || (await kv.get(`project:${id}`))) continue;
+    await kv.put(`project:${id}`, JSON.stringify({
+      id, name, service: 'Продвижение на Авито', responsibleId: null, status: 'active', stage: '', currentWork: '', review: '',
+      rowColor: '', avitoAccountId: null, inactive: false, ratings: { result: 0, communication: 0, quality: 0 }, createdAt: now, updatedAt: now,
+    }));
+    added.push(name);
+  }
+  if (added.length) await atTouch(kv, ['#projects']);
+  const res = await botRelinkClients(env);
+  if (added.length && env.CONTROL_BOT_TOKEN) {
+    await botNotifyOwner(env, `🆕 <b>Добавил клиентов: ${added.length}</b>\n${added.map((n) => `• ${escapeHtml(n)}`).join('\n')}\n`
+      + `Они в дашборде и Avito Tasks, топики рабочего чата привязаны${res.tasks ? `, задач из их топиков: ${res.tasks}` : ''}.`
+      + '\n\nДальше новые клиенты добавляются сами: создали в рабочем чате топик с именем клиента — он сразу появится в дашборде и Avito Tasks.');
+  }
 }
 
 // ── message log ──
@@ -4033,18 +4165,18 @@ async function botOnMessage(env, msg, edited) {
   const threadId = chatRec.isForum ? (msg.is_topic_message && msg.message_thread_id) || 0 : 0;
 
   if (msg.forum_topic_created) {
-    await botSetTopicName(kv, chat.id, msg.message_thread_id || msg.message_id, msg.forum_topic_created.name);
+    await botSetTopicName(kv, chat.id, msg.message_thread_id || msg.message_id, msg.forum_topic_created.name, env);
     return;
   }
   if (msg.forum_topic_edited && msg.forum_topic_edited.name) {
-    await botSetTopicName(kv, chat.id, msg.message_thread_id || threadId, msg.forum_topic_edited.name);
+    await botSetTopicName(kv, chat.id, msg.message_thread_id || threadId, msg.forum_topic_edited.name, env);
     return;
   }
   // Learn a topic's name from the topic root a message replies to.
   const root = msg.reply_to_message && msg.reply_to_message.forum_topic_created;
   if (root && threadId) {
     const known = await kv.get(`bot:topic:${chat.id}:${threadId}`, 'json');
-    if (!known || known.name !== root.name) await botSetTopicName(kv, chat.id, threadId, root.name);
+    if (!known || known.name !== root.name) await botSetTopicName(kv, chat.id, threadId, root.name, env);
   }
 
   if (!msg.from || msg.from.is_bot) return;
@@ -4116,6 +4248,7 @@ async function botOnOwnerMessage(env, msg) {
       '/ai — статус ИИ и очереди',
       '/done &lt;id&gt; · /informed &lt;id&gt; · /cancel &lt;id&gt; — поправить задачу вручную',
       '/map &lt;чат:топик&gt; &lt;id клиента&gt; — привязать топик или чат к клиенту',
+      '/notclient &lt;чат:топик&gt; — топик не клиент (бот сам заводит клиента на каждый новый топик с именем человека)',
       '',
       'Любой другой текст — вопрос по переписке, например: «что мы обещали Агешиной на этой неделе?»',
     ].join('\n'));
@@ -4162,7 +4295,25 @@ async function botOnOwnerMessage(env, msg) {
       if (!rec) return reply('Такого чата бот не знает.');
       await kv.put(key, JSON.stringify({ ...rec, projectId, projectLocked: true }));
     }
-    return reply(`Привязал ${escapeHtml(target)} → ${escapeHtml(projectId)}.`);
+    const res = await botRelinkClients(env);
+    return reply(`Привязал ${escapeHtml(target)} → ${escapeHtml(projectId)}.${res.tasks ? ` Задач из него: ${res.tasks}.` : ''}`);
+  }
+  // A topic the bot took for a new client but which isn't one ("Эдвайзеры"-like): unlink it for good
+  // and remove the client it created.
+  if (cmd === 'notclient') {
+    const m = String(args[0] || '').match(/^(-?\d+):(\d+)$/);
+    if (!m) return reply('Формат: /notclient &lt;чат:топик&gt; — значение есть в /topics.');
+    const key = `bot:topic:${m[1]}:${m[2]}`;
+    const rec = (await kv.get(key, 'json')) || { name: `Топик ${m[2]}` };
+    const project = rec.projectId && (await kv.get(`project:${rec.projectId}`, 'json'));
+    await kv.put(key, JSON.stringify({ ...rec, projectId: null, projectLocked: true }));
+    let removed = '';
+    if (project && project.autoFromTopic === `${m[1]}:${m[2]}`) {
+      await kv.delete(`project:${project.id}`);
+      await atTouch(kv, ['#projects']);
+      removed = ` Клиента «${escapeHtml(project.name)}», которого бот создал из этого топика, удалил.`;
+    }
+    return reply(`Топик «${escapeHtml(rec.name)}» больше не считается клиентом.${removed}`);
   }
   if (cmd) return reply('Не знаю такой команды. /help — список.');
   if (!text) return;
@@ -4238,6 +4389,7 @@ async function botBuildTopicsList(env) {
       lines.push(`<b>${escapeHtml(c.title)}</b> → ${c.projectId ? escapeHtml((byId[c.projectId] || {}).name || c.projectId) : '❔ не привязан'} <code>${c.id}</code>`);
     }
   }
+  lines.push('', 'Новый топик с именем клиента бот сам добавляет в дашборд и Avito Tasks. Не клиент — /notclient &lt;чат:топик&gt;.');
   lines.push('', 'Клиенты в дашборде: ' + Object.values(byId).map((p) => `${escapeHtml(p.name)} <code>${escapeHtml(p.id)}</code>`).join(', '));
   return lines.join('\n');
 }
@@ -4652,6 +4804,11 @@ async function botScheduled(env) {
   }
   // Avito Tasks: the first run sets up the team and sends the owner everyone's invite links.
   await atGetTeam(env);
+  try {
+    await ensureClientsSeedV2(env);
+  } catch (err) {
+    console.error('clients seed failed', err && err.stack);
+  }
   try {
     await botProcessQueue(env);
   } catch (err) {
