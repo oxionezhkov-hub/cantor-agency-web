@@ -73,7 +73,7 @@ input,textarea,select{font-family:inherit}
 
 /* ── TABLE ── */
 .wrap{padding:20px 24px 60px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);min-width:960px}
+table{width:100%;border-collapse:collapse;background:var(--white);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);min-width:1200px}
 thead th{background:var(--dark);color:white;font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;padding:11px 12px;text-align:left;white-space:nowrap}
 thead th.sortable{cursor:pointer;user-select:none}
 thead th.sortable:hover{color:var(--red-light)}
@@ -86,8 +86,10 @@ th.col-name,td.col-name{width:170px}
 th.col-tg,td.col-tg{width:190px}
 th.col-priority,td.col-priority{width:150px}
 th.col-status,td.col-status{width:170px}
-th.col-date,td.col-date{width:128px}
+th.col-date,td.col-date{width:200px}
+th.col-last,td.col-last{width:250px}
 th.col-comment,td.col-comment{width:auto}
+th.col-actions,td.col-actions{width:36px;padding-left:0;padding-right:8px}
 .cell-input{width:100%;min-width:80px;border:1.5px solid transparent;border-radius:var(--r-sm);padding:6px 8px;font-size:13px;background:transparent;outline:none;transition:all 0.15s}
 .date-input.na-overdue{border-color:var(--p-red);background:var(--p-red-bg);color:var(--p-red)}
 .date-input.na-today{border-color:var(--p-orange);background:var(--p-orange-bg);color:var(--p-orange)}
@@ -100,6 +102,75 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
 .btn-tg-icon{background:none;border:none;padding:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;transition:transform 0.15s}
 .btn-tg-icon:hover{transform:scale(1.12)}
 .btn-tg-icon:disabled{opacity:0.3;cursor:not-allowed}
+
+/* ── name cell: AI-added badge ── */
+.name-cell{display:flex;align-items:center;gap:4px}
+.name-cell .cell-input{flex:1;min-width:60px}
+.ai-badge{font-size:9px;font-weight:800;letter-spacing:0.03em;padding:2px 5px;border-radius:4px;background:#EEF2FF;color:#4338CA;white-space:nowrap;flex-shrink:0;cursor:help}
+/* ── task cell: next-action date + what to do ── */
+.task-cell{display:flex;flex-direction:column;gap:2px}
+.task-input{font-size:12px;padding:4px 8px;color:var(--text)}
+.task-input::placeholder{color:#bbb}
+.task-ai{font-size:10px;color:#4338CA;padding:0 8px;font-weight:600}
+/* ── last Telegram message ── */
+.last-msg{display:flex;gap:7px;align-items:flex-start;width:100%;background:none;border:1.5px solid transparent;border-radius:var(--r-sm);padding:5px 7px;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:all 0.15s}
+.last-msg:hover{border-color:var(--border);background:var(--white)}
+.last-msg-dir{flex-shrink:0;font-size:13px;line-height:1.3;font-weight:800;color:var(--muted)}
+.last-msg.awaiting .last-msg-dir{color:var(--red)}
+.last-msg-main{flex:1;min-width:0}
+.last-msg-text{font-size:12px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.last-msg-time{font-size:10.5px;color:var(--muted);margin-top:1px}
+.last-msg.awaiting .last-msg-time{color:var(--red);font-weight:700}
+.last-msg-empty{font-size:11.5px;color:var(--muted)}
+.row-del{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:var(--r-sm);display:flex;transition:all 0.15s}
+tbody tr:hover .row-del,.lead-card:hover .row-del{opacity:1}
+.row-del:hover{color:#c0392b;background:#fdecea}
+@media (hover:none){.row-del{opacity:0.6}}
+/* ── Telegram chat drawer ── */
+.chat-overlay{position:fixed;inset:0;background:rgba(10,10,10,0.35);z-index:250}
+.chat-drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:#EEF1F4;z-index:260;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,0.15);transform:translateX(105%);transition:transform 0.22s ease}
+.chat-drawer.open{transform:none}
+.chat-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--white);border-bottom:1.5px solid var(--border)}
+.chat-who{flex:1;min-width:0}
+.chat-who-name{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-who-sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:5px}
+.chat-center{margin:auto;text-align:center;color:var(--muted);font-size:13px;max-width:320px;line-height:1.55}
+.chat-center input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-md);padding:11px 12px;font-size:14px;margin:12px 0 10px;outline:none}
+.chat-center input:focus{border-color:var(--red)}
+.bubble{max-width:84%;padding:7px 11px 5px;border-radius:14px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;box-shadow:0 1px 2px rgba(0,0,0,0.08)}
+.bubble.in{align-self:flex-start;background:var(--white);border-bottom-left-radius:4px}
+.bubble.out{align-self:flex-end;background:#E3F4D7;border-bottom-right-radius:4px}
+.bubble.deleted{opacity:0.55}
+.bubble-meta{font-size:10px;color:var(--muted);text-align:right;margin-top:2px;white-space:nowrap}
+.bubble img,.bubble video{max-width:100%;max-height:320px;border-radius:10px;display:block;margin:2px 0 4px}
+.bubble audio{max-width:100%;display:block;margin:2px 0 4px}
+.bubble a{color:#1C7ED6}
+.bubble code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:4px}
+.bubble pre{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:rgba(0,0,0,0.06);padding:8px;border-radius:8px;margin:3px 0;white-space:pre-wrap}
+.bubble blockquote{border-left:3px solid var(--red);padding:1px 0 1px 8px;margin:3px 0;background:rgba(0,0,0,0.03);border-radius:0 6px 6px 0}
+.tg-spoiler{background:#9aa0a6;color:transparent;border-radius:3px;cursor:pointer;transition:all 0.2s}
+.tg-spoiler.shown{background:rgba(0,0,0,0.08);color:inherit}
+.composer .tg-spoiler{background:rgba(0,0,0,0.12);color:inherit;border-bottom:2px dotted #666}
+.day-sep{align-self:center;font-size:11px;font-weight:600;color:var(--muted);background:rgba(255,255,255,0.8);padding:3px 10px;border-radius:100px;margin:8px 0 4px}
+.chat-more{align-self:center;margin-bottom:6px}
+.pick-list{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:10px;text-align:left}
+.pick-item{display:block;width:100%;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-md);padding:9px 12px;cursor:pointer;font:inherit;text-align:left;color:var(--text)}
+.pick-item:hover{border-color:var(--red)}
+.pick-item b{font-size:13px}
+.pick-item span{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-compose{background:var(--white);border-top:1.5px solid var(--border);padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.fmt-bar{display:flex;gap:4px;flex-wrap:wrap}
+.fmt-btn{min-width:30px;height:28px;padding:0 6px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);cursor:pointer;font-size:12.5px;color:var(--text);font-family:inherit}
+.fmt-btn:hover{border-color:var(--red);color:var(--red)}
+.composer{min-height:46px;max-height:240px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--r-md);padding:9px 12px;font-size:13.5px;line-height:1.45;outline:none;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;background:var(--white)}
+.composer:focus{border-color:var(--red)}
+.composer:empty::before{content:attr(data-placeholder);color:var(--muted);pointer-events:none}
+.composer code{font-family:ui-monospace,Menlo,monospace;background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:4px}
+.composer blockquote{border-left:3px solid var(--red);padding-left:8px;margin:2px 0}
+.composer a{color:#1C7ED6}
+.compose-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.compose-hint{font-size:11px;color:var(--muted)}
 
 /* ── custom dropdown (priority / status pills, opens on hover) ── */
 .dd{position:relative;display:inline-flex;width:100%}
@@ -194,7 +265,8 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
   th.col-priority,td.col-priority{width:44px}
   th.col-status,td.col-status{width:44px}
   th.col-name,td.col-name{width:130px}
-  th.col-date,td.col-date{width:96px}
+  th.col-date,td.col-date{width:150px}
+  th.col-last,td.col-last{width:170px}
   .wrap table .dd-trigger{width:26px;height:26px;padding:0;border-radius:var(--r-md);justify-content:center;gap:0}
   .wrap table .dd-trigger .dd-label,.wrap table .dd-trigger .chev{display:none}
   /* The column headers above these now-icon-only cells would otherwise sit awkwardly wide
@@ -283,8 +355,10 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
           <th class="col-tg"><span class="th-label">Telegram</span></th>
           <th class="col-priority"><span class="th-label">Приоритет</span></th>
           <th class="col-status"><span class="th-label">Статус</span></th>
-          <th class="col-date"><span class="th-label">Дата</span></th>
+          <th class="col-date">Задача</th>
+          <th class="col-last">Переписка</th>
           <th class="col-comment">Комментарий</th>
+          <th class="col-actions"></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -304,6 +378,37 @@ textarea.cell-input{resize:none;min-height:34px;overflow:hidden;font-family:inhe
   </div>
 </div>
 
+<div id="chatOverlay" class="chat-overlay hidden" onclick="closeChat()"></div>
+<aside id="chatDrawer" class="chat-drawer" aria-hidden="true">
+  <div class="chat-head">
+    <div class="chat-who">
+      <div class="chat-who-name" id="chatName"></div>
+      <div class="chat-who-sub" id="chatSub"></div>
+    </div>
+    <button class="btn-ghost-sm" id="chatOpenTg" onclick="openChatInTelegram()" title="Открыть в Telegram">Telegram</button>
+    <button class="btn-ghost-sm danger hidden" id="chatUnlink" onclick="unlinkChat()" title="Этот диалог привязан не к тому клиенту">Отвязать</button>
+    <button class="btn-icon" onclick="closeChat()" title="Закрыть">✕</button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-compose hidden" id="chatCompose">
+    <div class="fmt-bar">
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtCmd('bold')" title="Жирный (Ctrl+B)"><b>B</b></button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtCmd('italic')" title="Курсив (Ctrl+I)"><i>I</i></button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtCmd('underline')" title="Подчёркнутый (Ctrl+U)"><u>U</u></button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtCmd('strikeThrough')" title="Зачёркнутый"><s>S</s></button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtWrap('code')" title="Моноширинный">&lt;/&gt;</button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtWrap('span','tg-spoiler')" title="Скрытый текст (спойлер)">▒</button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtWrap('blockquote')" title="Цитата">❝</button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtLink()" title="Ссылка">🔗</button>
+      <button type="button" class="fmt-btn" onmousedown="event.preventDefault()" onclick="fmtCmd('removeFormat')" title="Убрать форматирование">⌫</button>
+    </div>
+    <div class="composer" id="composer" contenteditable="true" data-placeholder="Сообщение… (уйдёт от вашего имени)"></div>
+    <div class="compose-row">
+      <span class="compose-hint">Ctrl+Enter — отправить</span>
+      <button class="btn-red" id="chatSendBtn" onclick="sendChatMessage()">Отправить</button>
+    </div>
+  </div>
+</aside>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -423,6 +528,7 @@ async function boot() {
   document.getElementById('app').classList.remove('hidden');
   renderFilterDropdowns();
   await loadClients();
+  if (!window._refreshTimer) window._refreshTimer = setInterval(refreshClients, CLIENTS_REFRESH_MS);
 }
 
 /* ════════════ DATA ════════════ */
@@ -578,8 +684,13 @@ async function selectRowValue(id, field, value) {
 }
 
 /* ════════════ TABLE RENDER ════════════ */
+// Latest sign of life on a lead: a person/AI editing its row, or a Telegram message either way.
+function lastActivityIso(c) {
+  const msgAt = c.lastMessage && c.lastMessage.at ? new Date(c.lastMessage.at).toISOString() : '';
+  return msgAt > (c.updatedAt || '') ? msgAt : c.updatedAt;
+}
 function staleClassFor(c) {
-  const age = daysSince(c.updatedAt);
+  const age = daysSince(lastActivityIso(c));
   return age >= STALE_DANGER_DAYS ? 'stale-danger' : age >= STALE_WARN_DAYS ? 'stale-warn' : '';
 }
 function tgFieldHtml(c) {
@@ -594,26 +705,80 @@ function tgFieldHtml(c) {
     </div>
   `;
 }
+function nameFieldHtml(c) {
+  const badge = c.source === 'telegram-ai'
+    ? '<span class="ai-badge" title="Добавлен автоматически из вашего Telegram: ИИ решил, что это диалог про Авито / агентство. Если ошибка — просто удалите строку, повторно он не появится.">TG·ИИ</span>'
+    : '';
+  return `
+    <div class="name-cell">
+      <input class="cell-input name-input" value="${escapeHtml(c.name)}"
+        onblur="onFieldBlur('${c.id}','name',this.value)"
+        onkeydown="if(event.key==='Enter') this.blur()">
+      ${badge}
+    </div>`;
+}
+// "Задача": when (nextActionDate) + what (nextAction). Both are also moved by the Telegram AI sync.
+function taskFieldHtml(c) {
+  const aiNote = c.aiUpdatedAt && c.aiUpdatedAt === c.updatedAt
+    ? `<div class="task-ai" title="Статус/задачу обновил ИИ по переписке ${escapeHtml(fmtDateTime(c.aiUpdatedAt))}">🤖 обновлено по переписке</div>`
+    : '';
+  return `
+    <div class="task-cell">
+      <input type="date" class="cell-input date-input ${nextActionClassFor(c)}" value="${escapeHtml(c.nextActionDate || '')}"
+        onchange="onFieldBlur('${c.id}','nextActionDate',this.value)">
+      <input class="cell-input task-input" placeholder="Что сделать…" value="${escapeHtml(c.nextAction || '')}"
+        onblur="onFieldBlur('${c.id}','nextAction',this.value)"
+        onkeydown="if(event.key==='Enter') this.blur()">
+      ${aiNote}
+    </div>`;
+}
+function fmtRelative(ms) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const mins = Math.round((Date.now() - ms) / 60000);
+  if (mins < 1) return 'сейчас';
+  if (mins < 60) return mins + ' мин назад';
+  const today = dateStr(new Date());
+  if (dateStr(d) === today) return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  if (dateStr(d) === dateStr(new Date(Date.now() - 86400000))) return 'вчера';
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+}
+function lastMsgHtml(c) {
+  const lm = c.lastMessage;
+  if (!c.tgChatId) {
+    return `<button class="last-msg" onclick="openChat('${c.id}')" title="Выбрать диалог из вашего Telegram"><span class="last-msg-empty">＋ Привязать диалог</span></button>`;
+  }
+  if (!lm) {
+    return `<button class="last-msg" onclick="openChat('${c.id}')"><span class="last-msg-empty">Диалог привязан — открыть</span></button>`;
+  }
+  const awaiting = lm.direction === 'in';
+  return `
+    <button class="last-msg${awaiting ? ' awaiting' : ''}" onclick="openChat('${c.id}')" title="${awaiting ? 'Последним написал клиент — ждёт ответа' : 'Последним написали вы'}">
+      <span class="last-msg-dir">${awaiting ? '↙' : '↗'}</span>
+      <span class="last-msg-main">
+        <span class="last-msg-text">${escapeHtml(lm.text || '')}</span>
+        <span class="last-msg-time">${escapeHtml(fmtRelative(lm.at))}</span>
+      </span>
+    </button>`;
+}
+function deleteBtnHtml(c) {
+  return `<button class="row-del" onclick="deleteClient('${c.id}')" title="Удалить клиента"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>`;
+}
 function rowHtml(c) {
   return `
     <tr data-id="${c.id}" class="${staleClassFor(c)}">
-      <td class="col-name">
-        <input class="cell-input name-input" value="${escapeHtml(c.name)}"
-          onblur="onFieldBlur('${c.id}','name',this.value)"
-          onkeydown="if(event.key==='Enter') this.blur()">
-      </td>
+      <td class="col-name">${nameFieldHtml(c)}</td>
       <td class="col-tg">${tgFieldHtml(c)}</td>
       <td class="col-priority">${rowDropdownHtml('priority', c.id, c.priority)}</td>
       <td class="col-status">${rowDropdownHtml('status', c.id, c.status)}</td>
-      <td class="col-date">
-        <input type="date" class="cell-input date-input ${nextActionClassFor(c)}" value="${escapeHtml(c.nextActionDate || '')}"
-          onchange="onFieldBlur('${c.id}','nextActionDate',this.value)">
-      </td>
+      <td class="col-date">${taskFieldHtml(c)}</td>
+      <td class="col-last">${lastMsgHtml(c)}</td>
       <td class="col-comment">
         <textarea class="cell-input" rows="1" placeholder="Комментарий…"
           oninput="autoGrow(this)"
           onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
       </td>
+      <td class="col-actions">${deleteBtnHtml(c)}</td>
     </tr>
   `;
 }
@@ -621,18 +786,17 @@ function cardHtml(c) {
   return `
     <div class="lead-card ${staleClassFor(c)}" data-id="${c.id}">
       <div class="lead-card-head">
-        <input class="cell-input name-input" value="${escapeHtml(c.name)}"
-          onblur="onFieldBlur('${c.id}','name',this.value)"
-          onkeydown="if(event.key==='Enter') this.blur()">
+        <div style="flex:1;min-width:0">${nameFieldHtml(c)}</div>
         <span class="group-badge" style="background:${GROUP_BG[c.group]};color:${GROUP_FG[c.group]}">${escapeHtml(c.group)}</span>
+        ${deleteBtnHtml(c)}
       </div>
       ${tgFieldHtml(c)}
       <div class="lead-card-dd">
         ${rowDropdownHtml('priority', c.id, c.priority)}
         ${rowDropdownHtml('status', c.id, c.status)}
       </div>
-      <input type="date" class="cell-input date-input ${nextActionClassFor(c)}" value="${escapeHtml(c.nextActionDate || '')}"
-        onchange="onFieldBlur('${c.id}','nextActionDate',this.value)">
+      ${taskFieldHtml(c)}
+      ${lastMsgHtml(c)}
       <textarea class="cell-input" rows="1" placeholder="Комментарий…"
         oninput="autoGrow(this)"
         onblur="onFieldBlur('${c.id}','comment',this.value)">${escapeHtml(c.comment)}</textarea>
@@ -661,7 +825,8 @@ function renderTable() {
     if (filterValues.priority.size && !filterValues.priority.has(c.priority)) return false;
     if (filterValues.status.size && !filterValues.status.has(c.status)) return false;
     if (!q) return true;
-    return [c.name, c.telegram, c.comment].some((v) => String(v || '').toLowerCase().includes(q));
+    return [c.name, c.telegram, c.comment, c.nextAction, c.lastMessage && c.lastMessage.text]
+      .some((v) => String(v || '').toLowerCase().includes(q));
   });
 
   document.getElementById('emptyState').classList.toggle('hidden', clients.length > 0);
@@ -780,10 +945,12 @@ function downloadCsv(filename, rows) {
 }
 
 function downloadClientsCsv() {
-  const rows = [['Группа', 'Имя', 'Telegram', 'Приоритет', 'Статус', 'Дата следующего действия', 'Комментарий', 'Создан', 'Обновлён']];
+  const rows = [['Группа', 'Имя', 'Telegram', 'Приоритет', 'Статус', 'Дата следующего действия', 'Задача', 'Комментарий', 'Последнее сообщение', 'Когда', 'Создан', 'Обновлён']];
   clients.forEach((c) => {
+    const lm = c.lastMessage;
     rows.push([
-      c.group, c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.nextActionDate || '', c.comment,
+      c.group, c.name, c.telegram, PRIORITY_LABEL[c.priority] || c.priority, c.status, c.nextActionDate || '', c.nextAction || '', c.comment,
+      lm ? (lm.direction === 'out' ? 'Я: ' : 'Клиент: ') + (lm.text || '') : '', lm ? fmtDateTime(new Date(lm.at).toISOString()) : '',
       fmtDateTime(c.createdAt), fmtDateTime(c.updatedAt),
     ]);
   });
@@ -792,7 +959,8 @@ function downloadClientsCsv() {
 }
 
 const HISTORY_ACTION_LABEL = { create: 'Создан', update: 'Изменение', delete: 'Удалён' };
-const HISTORY_FIELD_LABEL = { name: 'Имя', telegram: 'Telegram', priority: 'Приоритет', status: 'Статус', group: 'Группа', comment: 'Комментарий' };
+const HISTORY_FIELD_LABEL = { name: 'Имя', telegram: 'Telegram', priority: 'Приоритет', status: 'Статус', group: 'Группа', comment: 'Комментарий', nextActionDate: 'Дата', nextAction: 'Задача', tgChatId: 'Диалог Telegram' };
+const HISTORY_SOURCE_LABEL = { 'telegram-ai': 'ИИ по переписке', telegram: 'Telegram' };
 function historyValueLabel(field, v) {
   if (v == null) return '';
   if (field === 'priority') return PRIORITY_LABEL[v] || v;
@@ -803,11 +971,12 @@ async function downloadHistoryCsv() {
   try {
     const data = await api('/api/salescrm/history');
     const history = data.history || [];
-    const rows = [['Дата', 'Клиент', 'Действие', 'Поле', 'Было', 'Стало']];
+    const rows = [['Дата', 'Клиент', 'Действие', 'Поле', 'Было', 'Стало', 'Кто']];
     history.forEach((h) => {
       rows.push([
         fmtDateTime(h.ts), h.clientName, HISTORY_ACTION_LABEL[h.action] || h.action,
         HISTORY_FIELD_LABEL[h.field] || h.field || '', historyValueLabel(h.field, h.oldValue), historyValueLabel(h.field, h.newValue),
+        HISTORY_SOURCE_LABEL[h.source] || 'Вручную',
       ]);
     });
     downloadCsv(`crm-istoriya-${new Date().toISOString().slice(0,10)}.csv`, rows);
@@ -817,7 +986,489 @@ async function downloadHistoryCsv() {
   }
 }
 
+/* ════════════ DELETE ════════════ */
+async function deleteClient(id) {
+  const client = clients.find((c) => c.id === id);
+  if (!client) return;
+  if (!confirm(`Удалить «${client.name}» из CRM?` + (client.tgChatId ? '\nДиалог из Telegram больше не будет добавляться автоматически.' : ''))) return;
+  try {
+    await api(`/api/salescrm/clients/${id}`, { method: 'DELETE' });
+    clients = clients.filter((c) => c.id !== id);
+    if (chatState.clientId === id) closeChat();
+    renderTable();
+    showToast('Клиент удалён');
+  } catch (err) {
+    showToast('Ошибка: ' + err.message);
+  }
+}
+
+/* ════════════ LIVE REFRESH ════════════ */
+// Last messages / AI status changes arrive server-side (MyBrand → /api/salescrm/tg/sync), so
+// re-pull the list every minute — but never while the user is mid-edit or hovering a dropdown
+// (a re-render would drop their focus / close the menu). Keeps the existing row order.
+const CLIENTS_REFRESH_MS = 60000;
+async function refreshClients() {
+  if (document.hidden) return;
+  const active = document.activeElement;
+  if (active && active.closest && active.closest('.wrap') && /^(INPUT|TEXTAREA)$/.test(active.tagName)) return;
+  if (document.querySelector('.dd:hover')) return;
+  try {
+    const fresh = (await api('/api/salescrm/clients')).clients || [];
+    const byId = new Map(fresh.map((c) => [c.id, c]));
+    const next = clients.filter((c) => byId.has(c.id)).map((c) => byId.get(c.id));
+    const known = new Set(next.map((c) => c.id));
+    fresh.forEach((c) => { if (!known.has(c.id)) next.push(c); });
+    clients = next;
+    renderTable();
+  } catch (err) { /* transient — next tick retries */ }
+}
+
+/* ════════════ TELEGRAM CHAT (via the MyBrand inbox bot) ════════════ */
+// Chats live in the MyBrand worker (repo mybrand-smm), which receives the owner's personal
+// Telegram through a Telegram Business bot. This page talks to its /message API directly with
+// the same access code as the /message page, stored only in this browser — the CRM's own API
+// stays unable to read chats or send messages as the owner.
+const INBOX_API_BASE = 'https://tasktracker.oxion-ezhkov.workers.dev/message/api';
+const INBOX_TOKEN_KEY = 'salescrm_inbox_token';
+const CHAT_POLL_MS = 8000;
+const CHAT_PAGE = 80;
+const INBOX_TYPE_LABEL = {
+  photo: '📷 Фото', document: '📎 Файл', voice: '🎤 Голосовое', audio: '🎵 Аудио', video: '🎬 Видео',
+  video_note: '⭕ Видеосообщение', animation: '🎞️ GIF', sticker: '🖼️ Стикер', contact: '👤 Контакт',
+  location: '📍 Локация', other: '📦 Сообщение',
+};
+const chatState = { clientId: null, chatId: null, messages: [], hasMore: false, timer: null, sending: false };
+
+function inboxToken() { try { return localStorage.getItem(INBOX_TOKEN_KEY) || ''; } catch (e) { return ''; } }
+async function inboxApi(path, opts = {}) {
+  const res = await fetch(INBOX_API_BASE + path, {
+    ...opts,
+    headers: { Authorization: 'Bearer ' + inboxToken(), ...(opts.body ? { 'Content-Type': 'application/json' } : {}) },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { const e = new Error('Неверный код доступа MyBrand'); e.unauthorized = true; throw e; }
+  if (!res.ok) throw new Error(data.error || ('http_' + res.status));
+  return data;
+}
+function inboxMediaUrl(chatId, msgId) {
+  return `${INBOX_API_BASE}/media/${encodeURIComponent(chatId)}/${encodeURIComponent(msgId)}?token=${encodeURIComponent(inboxToken())}`;
+}
+
+// Telegram message entities (UTF-16 offsets — same units as JS strings) → safe HTML. Entities
+// may overlap without nesting, so a closing tag closes everything above it on the stack and
+// re-opens whatever is still running.
+function safeHref(url) {
+  const u = String(url || '').trim();
+  if (/^(https?:|tg:|mailto:|tel:)/i.test(u)) return u;
+  if (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(u)) return 'https://' + u;
+  return '';
+}
+function entityTags(e, text) {
+  const slice = text.slice(e.offset, e.offset + e.length);
+  const link = (href) => href ? [`<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">`, '</a>'] : ['', ''];
+  switch (e.type) {
+    case 'bold': return ['<b>', '</b>'];
+    case 'italic': return ['<i>', '</i>'];
+    case 'underline': return ['<u>', '</u>'];
+    case 'strikethrough': return ['<s>', '</s>'];
+    case 'spoiler': return ['<span class="tg-spoiler" onclick="this.classList.toggle(\'shown\')">', '</span>'];
+    case 'code': return ['<code>', '</code>'];
+    case 'pre': return ['<pre>', '</pre>'];
+    case 'blockquote': case 'expandable_blockquote': return ['<blockquote>', '</blockquote>'];
+    case 'text_link': return link(safeHref(e.url));
+    case 'url': return link(safeHref(slice));
+    case 'email': return link('mailto:' + slice);
+    case 'phone_number': return link('tel:' + slice.replace(/[^\d+]/g, ''));
+    case 'mention': return link('https://t.me/' + slice.replace(/^@/, ''));
+    default: return ['', ''];
+  }
+}
+function entitiesToHtml(text, entities) {
+  text = String(text || '');
+  const ents = (entities || []).filter((e) => e && e.length > 0 && e.offset >= 0 && e.offset < text.length);
+  if (!ents.length) return escapeHtml(text);
+  const cuts = new Set([0, text.length]);
+  ents.forEach((e) => { cuts.add(e.offset); cuts.add(Math.min(text.length, e.offset + e.length)); });
+  const points = [...cuts].sort((a, b) => a - b);
+  let stack = [];
+  let html = '';
+  for (let i = 0; i < points.length - 1; i++) {
+    const pos = points[i];
+    const endingIdx = stack.findIndex((s) => s.e.offset + s.e.length <= pos);
+    if (endingIdx !== -1) {
+      for (let j = stack.length - 1; j >= endingIdx; j--) html += stack[j].tags[1];
+      const reopen = stack.slice(endingIdx).filter((s) => s.e.offset + s.e.length > pos);
+      stack = stack.slice(0, endingIdx);
+      reopen.forEach((s) => { html += s.tags[0]; stack.push(s); });
+    }
+    ents.filter((e) => e.offset === pos).sort((a, b) => b.length - a.length).forEach((e) => {
+      const tags = entityTags(e, text);
+      html += tags[0];
+      stack.push({ e, tags });
+    });
+    html += escapeHtml(text.slice(pos, points[i + 1]));
+  }
+  for (let j = stack.length - 1; j >= 0; j--) html += stack[j].tags[1];
+  return html;
+}
+
+function mediaHtml(m) {
+  if (!m.fileId) return m.type !== 'text' && m.type !== 'contact' && m.type !== 'location' ? `<div>${escapeHtml(INBOX_TYPE_LABEL[m.type] || '')}</div>` : '';
+  const src = inboxMediaUrl(chatState.chatId, m.id);
+  if (m.type === 'photo' || m.type === 'sticker') return `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" loading="lazy" alt=""></a>`;
+  if (m.type === 'voice' || m.type === 'audio') return `<audio controls preload="none" src="${src}"></audio>`;
+  if (m.type === 'video' || m.type === 'video_note' || m.type === 'animation') return `<video controls preload="none" src="${src}"></video>`;
+  return `<div><a href="${src}" target="_blank" rel="noopener">📎 ${escapeHtml(m.fileName || 'Файл')}</a></div>`;
+}
+function bubbleHtml(m) {
+  const d = new Date(m.at);
+  const time = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const flags = [m.editedAt ? 'изменено' : '', m.deletedAt ? 'удалено' : ''].filter(Boolean).join(', ');
+  const prefix = m.type === 'contact' || m.type === 'location' ? escapeHtml(INBOX_TYPE_LABEL[m.type]) + ' ' : '';
+  return `<div class="bubble ${m.direction === 'out' ? 'out' : 'in'}${m.deletedAt ? ' deleted' : ''}">`
+    + mediaHtml(m)
+    + (m.text ? prefix + entitiesToHtml(m.text, m.entities) : '')
+    + `<div class="bubble-meta">${flags ? escapeHtml(flags) + ' · ' : ''}${time}</div></div>`;
+}
+function renderChatMessages(stickToBottom) {
+  const body = document.getElementById('chatBody');
+  const wasAtBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 80;
+  const prevHeight = body.scrollHeight;
+  let html = chatState.hasMore ? '<button class="btn-ghost-sm chat-more" onclick="loadOlderChat()">Показать более ранние</button>' : '';
+  if (!chatState.messages.length) html += '<div class="chat-center">Сообщений пока нет. Бот видит только переписку с момента подключения.</div>';
+  let lastDay = '';
+  chatState.messages.forEach((m) => {
+    const day = new Date(m.at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    if (day !== lastDay) { html += `<div class="day-sep">${escapeHtml(day)}</div>`; lastDay = day; }
+    html += bubbleHtml(m);
+  });
+  body.innerHTML = html;
+  if (stickToBottom === 'keep') body.scrollTop = body.scrollHeight - prevHeight;
+  else if (stickToBottom || wasAtBottom) body.scrollTop = body.scrollHeight;
+}
+
+function chatClient() { return clients.find((c) => c.id === chatState.clientId); }
+function setChatHeader(c, conv) {
+  const username = (conv && conv.username) || (c.telegram || '').replace(/^@/, '');
+  document.getElementById('chatName').textContent = c.name;
+  document.getElementById('chatSub').textContent = [username ? '@' + username : '', c.status].filter(Boolean).join(' · ');
+  document.getElementById('chatUnlink').classList.toggle('hidden', !c.tgChatId);
+  document.getElementById('chatOpenTg').classList.toggle('hidden', !username);
+  document.getElementById('chatOpenTg').dataset.username = username || '';
+}
+function stopChatPolling() {
+  clearInterval(chatState.timer);
+  chatState.timer = null;
+}
+
+function openChat(clientId) {
+  const c = clients.find((x) => x.id === clientId);
+  if (!c) return;
+  stopChatPolling();
+  Object.assign(chatState, { clientId, chatId: c.tgChatId || null, messages: [], hasMore: false });
+  document.getElementById('chatOverlay').classList.remove('hidden');
+  const drawer = document.getElementById('chatDrawer');
+  drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+  setChatHeader(c, null);
+  document.getElementById('chatCompose').classList.add('hidden');
+  if (!inboxToken()) return renderChatSetup();
+  if (!c.tgChatId) return renderChatPicker();
+  loadChat();
+}
+function closeChat() {
+  stopChatPolling();
+  chatState.clientId = null;
+  chatState.chatId = null;
+  document.getElementById('chatOverlay').classList.add('hidden');
+  const drawer = document.getElementById('chatDrawer');
+  drawer.classList.remove('open');
+  drawer.setAttribute('aria-hidden', 'true');
+}
+function openChatInTelegram() {
+  openTelegram(document.getElementById('chatOpenTg').dataset.username);
+}
+
+function renderChatSetup(error) {
+  document.getElementById('chatCompose').classList.add('hidden');
+  document.getElementById('chatBody').innerHTML = `
+    <form class="chat-center" onsubmit="event.preventDefault(); saveInboxToken(this.token.value)">
+      <b style="color:var(--text)">Подключите переписку из Telegram</b><br>
+      Введите код доступа MyBrand — тот же, что на странице /message. Он сохранится только в этом браузере.
+      <input name="token" type="password" placeholder="Код доступа" autocomplete="off">
+      ${error ? `<div style="color:var(--red);margin-bottom:10px">${escapeHtml(error)}</div>` : ''}
+      <button class="btn-red" type="submit" style="width:100%">Подключить</button>
+    </form>`;
+  const input = document.querySelector('#chatBody input');
+  if (input) input.focus();
+}
+async function saveInboxToken(value) {
+  const token = String(value || '').trim();
+  if (!token) return;
+  try { localStorage.setItem(INBOX_TOKEN_KEY, token); } catch (e) { /* private mode — works for this session only */ }
+  try {
+    await inboxApi('/conversations?q=__ping__');
+  } catch (err) {
+    try { localStorage.removeItem(INBOX_TOKEN_KEY); } catch (e) {}
+    return renderChatSetup(err.unauthorized ? 'Код не подошёл' : 'Не удалось проверить: ' + err.message);
+  }
+  if (chatState.clientId) openChat(chatState.clientId);
+}
+
+// A row with no linked chat yet (its @username never wrote since the bot was connected, or it
+// has no username at all): pick the right dialog from the owner's personal chats by hand.
+async function renderChatPicker(query) {
+  const body = document.getElementById('chatBody');
+  const c = chatClient();
+  if (!c) return;
+  const q = query !== undefined ? query : (c.telegram || c.name || '').replace(/^@/, '');
+  if (query === undefined) {
+    body.innerHTML = `
+      <div class="chat-center" style="margin-top:0;max-width:none;width:100%">
+        <b style="color:var(--text)">Диалог не привязан</b><br>
+        Выберите переписку с этим клиентом из вашего Telegram:
+        <input id="pickSearch" placeholder="Имя или @username" value="${escapeHtml(q)}" oninput="clearTimeout(window._pickT); window._pickT=setTimeout(()=>renderChatPicker(this.value),300)">
+        <div class="pick-list" id="pickList">Загрузка…</div>
+      </div>`;
+  }
+  const listEl = document.getElementById('pickList');
+  try {
+    let convs = (await inboxApi('/conversations?q=' + encodeURIComponent(q.trim()))).conversations || [];
+    if (!convs.length && q.trim()) convs = (await inboxApi('/conversations')).conversations || [];
+    const linked = new Set(clients.filter((x) => x.tgChatId).map((x) => x.tgChatId));
+    convs = convs.filter((v) => v.chatType === 'private' && !linked.has(v.chatId)).slice(0, 30);
+    if (chatState.clientId !== c.id) return;
+    listEl.innerHTML = convs.length
+      ? convs.map((v) => `
+          <button class="pick-item" onclick="linkChat('${escapeHtml(v.chatId)}','${escapeHtml(v.username || '')}')">
+            <b>${escapeHtml(v.displayName || 'Без имени')}</b>${v.username ? ' <span style="display:inline">@' + escapeHtml(v.username) + '</span>' : ''}
+            <span>${v.lastDirection === 'out' ? 'Вы: ' : ''}${escapeHtml(v.lastMessagePreview || '')}</span>
+          </button>`).join('')
+      : '<div style="text-align:center">Ничего не найдено. Диалог появится, как только в нём будет новое сообщение.</div>';
+  } catch (err) {
+    if (err.unauthorized) return renderChatSetup('Код доступа больше не подходит');
+    listEl.textContent = 'Ошибка: ' + err.message;
+  }
+}
+async function linkChat(chatId, username) {
+  const c = chatClient();
+  if (!c) return;
+  const updated = await patchClient(c.id, 'tgChatId', chatId);
+  if (!updated) return;
+  if (!updated.telegram && username) await patchClient(c.id, 'telegram', username);
+  renderTable();
+  openChat(c.id);
+}
+async function unlinkChat() {
+  const c = chatClient();
+  if (!c || !c.tgChatId) return;
+  if (!confirm('Отвязать этот диалог от клиента?')) return;
+  const updated = await patchClient(c.id, 'tgChatId', '');
+  if (!updated) return;
+  renderTable();
+  openChat(c.id);
+}
+
+async function fetchChatPage(offset) {
+  return inboxApi(`/conversations/${encodeURIComponent(chatState.chatId)}/messages?limit=${CHAT_PAGE}&offset=${offset}`);
+}
+async function loadChat() {
+  const chatId = chatState.chatId;
+  const body = document.getElementById('chatBody');
+  body.innerHTML = '<div class="chat-center">Загрузка…</div>';
+  try {
+    const [page, meta] = await Promise.all([
+      fetchChatPage(0),
+      inboxApi(`/conversations/${encodeURIComponent(chatId)}`).catch(() => null),
+    ]);
+    if (chatState.chatId !== chatId) return;
+    chatState.messages = page.messages || [];
+    chatState.hasMore = !!page.hasMore;
+    const c = chatClient();
+    if (c && meta && meta.conversation) setChatHeader(c, meta.conversation);
+    renderChatMessages(true);
+    document.getElementById('chatCompose').classList.remove('hidden');
+    inboxApi(`/conversations/${encodeURIComponent(chatId)}/read`, { method: 'POST' }).catch(() => {});
+    chatState.timer = setInterval(pollChat, CHAT_POLL_MS);
+  } catch (err) {
+    if (err.unauthorized) return renderChatSetup('Код доступа больше не подходит');
+    body.innerHTML = `<div class="chat-center">${err.message === 'conversation not found'
+      ? 'Этот диалог удалён из MyBrand. Нажмите «Отвязать» и выберите другой.'
+      : 'Ошибка загрузки: ' + escapeHtml(err.message)}</div>`;
+  }
+}
+async function pollChat() {
+  if (document.hidden || !chatState.chatId) return;
+  const chatId = chatState.chatId;
+  try {
+    const page = await fetchChatPage(0);
+    if (chatState.chatId !== chatId) return;
+    const fresh = page.messages || [];
+    const sig = (list) => list.map((m) => m.id + (m.editedAt || '') + (m.deletedAt || '')).join('|');
+    const current = chatState.messages.slice(-fresh.length);
+    if (sig(fresh) === sig(current)) return;
+    const older = chatState.messages.slice(0, Math.max(0, chatState.messages.length - fresh.length));
+    const freshIds = new Set(fresh.map((m) => m.id));
+    chatState.messages = older.filter((m) => !freshIds.has(m.id)).concat(fresh);
+    renderChatMessages(false);
+  } catch (err) { /* transient */ }
+}
+async function loadOlderChat() {
+  try {
+    const page = await fetchChatPage(chatState.messages.length);
+    chatState.messages = (page.messages || []).concat(chatState.messages);
+    chatState.hasMore = !!page.hasMore;
+    renderChatMessages('keep');
+  } catch (err) {
+    showToast('Ошибка: ' + err.message);
+  }
+}
+
+/* ── composer: rich text → Telegram HTML ── */
+// Telegram accepts only <b> <i> <u> <s> <code> <pre> <a href> <tg-spoiler> <blockquote>, with
+// real newlines instead of <br>/<p>. Walk the editor's DOM (whatever the browser or a paste put
+// there — incl. Google Docs' <span style="font-weight:700">) and emit just that subset.
+function escapeTg(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function domToTelegramHtml(root) {
+  let out = '';
+  const walk = (node, inPre) => {
+    node.childNodes.forEach((child) => {
+      if (child.nodeType === 3) { out += escapeTg(child.nodeValue.replace(/ /g, ' ')); return; }
+      if (child.nodeType !== 1) return;
+      const tag = child.tagName.toLowerCase();
+      if (tag === 'br') { out += '\n'; return; }
+      if (/^(script|style|head|meta|title|img)$/.test(tag)) return;
+      const st = child.style || {};
+      const fw = st.fontWeight || '';
+      const td = (st.textDecorationLine || st.textDecoration || '');
+      const wraps = [];
+      const boldTag = tag === 'b' || tag === 'strong' || /^h[1-6]$/.test(tag);
+      if ((boldTag && !(fw === 'normal' || (+fw && +fw < 600))) || (!boldTag && (fw === 'bold' || +fw >= 600))) wraps.push(['<b>', '</b>']);
+      if (tag === 'i' || tag === 'em' || st.fontStyle === 'italic') wraps.push(['<i>', '</i>']);
+      if (tag === 'u' || tag === 'ins' || td.includes('underline')) wraps.push(['<u>', '</u>']);
+      if (tag === 's' || tag === 'strike' || tag === 'del' || td.includes('line-through')) wraps.push(['<s>', '</s>']);
+      if (tag === 'a') {
+        const href = safeHref(child.getAttribute('href'));
+        if (href) wraps.push([`<a href="${escapeTg(href).replace(/"/g, '&quot;')}">`, '</a>']);
+      }
+      if (tag === 'tg-spoiler' || (child.classList && child.classList.contains('tg-spoiler'))) wraps.push(['<tg-spoiler>', '</tg-spoiler>']);
+      if (tag === 'code' && !inPre) wraps.push(['<code>', '</code>']);
+      if (tag === 'pre') wraps.push(['<pre>', '</pre>']);
+      if (tag === 'blockquote') wraps.push(['<blockquote>', '</blockquote>']);
+      const isBlock = /^(div|p|li|h[1-6]|pre|blockquote|ul|ol|tr)$/.test(tag);
+      if (isBlock && out && !out.endsWith('\n')) out += '\n';
+      if (tag === 'li') out += '• ';
+      wraps.forEach((w) => { out += w[0]; });
+      walk(child, inPre || tag === 'pre');
+      for (let i = wraps.length - 1; i >= 0; i--) out += wraps[i][1];
+      if (isBlock && !out.endsWith('\n')) out += '\n';
+    });
+  };
+  walk(root, false);
+  return out.replace(/\n{3,}/g, '\n\n').replace(/^\s+|\s+$/g, '');
+}
+function composerEl() { return document.getElementById('composer'); }
+function fmtCmd(cmd) {
+  composerEl().focus();
+  document.execCommand(cmd, false, null);
+}
+function fmtWrap(tag, cls) {
+  const editor = composerEl();
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed || !editor.contains(range.commonAncestorContainer)) { showToast('Сначала выделите текст'); return; }
+  const el = document.createElement(tag);
+  if (cls) el.className = cls;
+  el.appendChild(range.extractContents());
+  range.insertNode(el);
+  sel.removeAllRanges();
+  const r = document.createRange();
+  r.selectNodeContents(el);
+  sel.addRange(r);
+}
+function fmtLink() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.getRangeAt(0).collapsed) { showToast('Сначала выделите текст для ссылки'); return; }
+  const range = sel.getRangeAt(0).cloneRange();
+  const url = safeHref(prompt('Ссылка (https://…)', 'https://') || '');
+  if (!url || url === 'https://') return;
+  composerEl().focus();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.execCommand('createLink', false, url);
+}
+// Paste keeps formatting (bold/italic/links… from Google Docs, Notion, another chat) but only
+// the parts Telegram can show — reduced through the same converter, then put back as markup.
+document.addEventListener('paste', (e) => {
+  const editor = composerEl();
+  if (!editor || !editor.contains(e.target)) return;
+  e.preventDefault();
+  const html = e.clipboardData.getData('text/html');
+  if (html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tg = domToTelegramHtml(doc.body)
+      .replace(/<tg-spoiler>/g, '<span class="tg-spoiler">').replace(/<\/tg-spoiler>/g, '</span>')
+      .replace(/\n/g, '<br>');
+    document.execCommand('insertHTML', false, tg);
+  } else {
+    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && chatState.clientId && !document.getElementById('chatOverlay').classList.contains('hidden')) closeChat();
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && composerEl() && composerEl().contains(e.target)) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+});
+
+async function sendChatMessage() {
+  if (chatState.sending || !chatState.chatId) return;
+  const editor = composerEl();
+  const html = domToTelegramHtml(editor);
+  if (!html.replace(/<[^>]+>/g, '').trim()) return;
+  const chatId = chatState.chatId;
+  const btn = document.getElementById('chatSendBtn');
+  chatState.sending = true;
+  btn.disabled = true;
+  try {
+    const { message } = await inboxApi(`/conversations/${encodeURIComponent(chatId)}/send`, {
+      method: 'POST',
+      body: JSON.stringify({ html }),
+    });
+    editor.innerHTML = '';
+    if (chatState.chatId === chatId && message) {
+      chatState.messages.push(message);
+      renderChatMessages(true);
+    }
+    const c = clients.find((x) => x.tgChatId === chatId);
+    if (c && message) {
+      c.lastMessage = { text: message.text, at: message.at, direction: 'out', type: 'text' };
+      renderTable();
+    }
+  } catch (err) {
+    showToast(err.unauthorized ? err.message : 'Не отправлено: ' + err.message);
+  } finally {
+    chatState.sending = false;
+    btn.disabled = false;
+  }
+}
+
 window.logout = logout;
+window.deleteClient = deleteClient;
+window.openChat = openChat;
+window.closeChat = closeChat;
+window.openChatInTelegram = openChatInTelegram;
+window.saveInboxToken = saveInboxToken;
+window.renderChatPicker = renderChatPicker;
+window.linkChat = linkChat;
+window.unlinkChat = unlinkChat;
+window.loadOlderChat = loadOlderChat;
+window.fmtCmd = fmtCmd;
+window.fmtWrap = fmtWrap;
+window.fmtLink = fmtLink;
+window.sendChatMessage = sendChatMessage;
 window.addClient = addClient;
 window.onFieldBlur = onFieldBlur;
 window.openStats = openStats;

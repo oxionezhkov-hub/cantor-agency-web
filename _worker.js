@@ -69,10 +69,17 @@
  * same Avito sales-leads domain, under its own key prefix:
  *
  * KV keys (binding "AVITO_KV", sales-crm prefix):
- *   salescrm:client:<id>              -> { id, name, telegram, priority, status, group, comment, nextActionDate, createdAt, updatedAt }
+ *   salescrm:client:<id>              -> { id, name, telegram, priority, status, group, comment, nextActionDate, nextAction,
+ *                                          tgChatId, lastMessage, source, createdAt, updatedAt, aiUpdatedAt }
  *                                          (group: one of РЕПБИЗ / ВЕБИНАР / НОВЫЕ — lead source;
- *                                           nextActionDate: "YYYY-MM-DD" or "" — next follow-up date, checked by the control bot cron)
- *   salescrm:history:<id>:<ts>:<rand> -> { clientId, clientName, ts, action, field, oldValue, newValue }
+ *                                           nextActionDate: "YYYY-MM-DD" or "" — next follow-up date, checked by the control bot cron;
+ *                                           nextAction: free-text next step ("задача");
+ *                                           tgChatId / lastMessage { text, at, direction, type }: the owner's personal Telegram
+ *                                           chat with this lead, synced from the MyBrand worker — see handleSalesCrmTgSync;
+ *                                           source: "telegram-ai" when the row was created by that sync)
+ *   salescrm:history:<id>:<ts>:<rand> -> { clientId, clientName, ts, action, field, oldValue, newValue, source? }
+ *   salescrm:tgchat:<chatId>          -> clientId (Telegram chat → CRM row index)
+ *   salescrm:tgdismissed:<chatId>     -> "1" (row linked to this chat was deleted — never auto-create it again)
  *
  * It also powers /dashboard: the agency-owner dashboard (active Avito-promotion projects,
  * staff cards with weekly 1–5 ratings, sales plan/fact, agency task list). Gated client-side
@@ -1621,8 +1628,28 @@ const SALES_CRM_PRIORITIES = ['green', 'yellow', 'orange', 'red'];
 // РЕПБИЗ / ВЕБИНАР are the two lead sources bulk-imported from existing sheets; НОВЫЕ is the
 // default for anything added by hand going forward (there were no НОВЫЕ leads at import time).
 const SALES_CRM_GROUPS = ['РЕПБИЗ', 'ВЕБИНАР', 'НОВЫЕ'];
-const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'group', 'comment', 'nextActionDate'];
+const SALES_CRM_FIELDS = ['name', 'telegram', 'priority', 'status', 'group', 'comment', 'nextActionDate', 'nextAction', 'tgChatId'];
 const SALES_CRM_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const SALES_CRM_CHAT_ID_RE = /^-?\d{1,20}$/;
+// Fields the MyBrand Telegram sync (see /api/salescrm/tg/sync) may change on its own after
+// its AI reads the dialog. A lead already marked "Продажа" is never moved by it.
+const SALES_CRM_AI_FIELDS = ['status', 'nextActionDate', 'nextAction'];
+
+function salesCrmNormalizeTg(value) {
+  return String(value || '').trim().replace(/^https?:\/\/t\.me\//i, '').replace(/^@/, '').toLowerCase();
+}
+
+// "salescrm:tgchat:<chatId>" -> clientId: which CRM row a Telegram chat belongs to, so a sync
+// doesn't have to scan every client. "salescrm:tgdismissed:<chatId>": a row linked to that chat
+// was deleted by hand — the sync must never auto-create it again (it still re-links if the
+// owner later adds the person back with their username).
+async function salesCrmSetChatLink(kv, client, prevChatId) {
+  if (prevChatId && prevChatId !== client.tgChatId) await kv.delete(`salescrm:tgchat:${prevChatId}`);
+  if (client.tgChatId) {
+    await kv.put(`salescrm:tgchat:${client.tgChatId}`, client.id);
+    await kv.delete(`salescrm:tgdismissed:${client.tgChatId}`);
+  }
+}
 
 async function salesCrmHistoryAppend(kv, clientId, clientName, entries) {
   const now = new Date().toISOString();
@@ -1689,17 +1716,26 @@ async function handleSalesCrmApi(request, env, url) {
       if (field === 'group' && !SALES_CRM_GROUPS.includes(value)) continue;
       if (field === 'name' || field === 'telegram') value = String(value || '').trim();
       if (field === 'comment') value = String(value || '');
+      if (field === 'nextAction') value = String(value || '').trim().slice(0, 300);
       if (field === 'nextActionDate') {
         value = String(value || '').trim();
         if (value && !SALES_CRM_DATE_RE.test(value)) continue;
       }
-      if (value === existing[field]) continue;
+      if (field === 'tgChatId') {
+        value = String(value || '').trim();
+        if (value && !SALES_CRM_CHAT_ID_RE.test(value)) continue;
+      }
+      if (value === (existing[field] ?? '')) continue;
       historyEntries.push({ action: 'update', field, oldValue: existing[field] ?? null, newValue: value });
       updated[field] = value;
     }
 
     if (!historyEntries.length) return json({ client: existing });
 
+    if ('tgChatId' in body && updated.tgChatId !== (existing.tgChatId || '')) {
+      if (!updated.tgChatId) updated.lastMessage = null;
+      await salesCrmSetChatLink(kv, updated, existing.tgChatId);
+    }
     updated.updatedAt = now;
     await kv.put(`salescrm:client:${id}`, JSON.stringify(updated));
     await salesCrmHistoryAppend(kv, id, updated.name, historyEntries);
@@ -1711,8 +1747,16 @@ async function handleSalesCrmApi(request, env, url) {
     const existing = await kv.get(`salescrm:client:${id}`, 'json');
     if (!existing) return json({ error: 'not_found' }, 404);
     await kv.delete(`salescrm:client:${id}`);
+    if (existing.tgChatId) {
+      await kv.delete(`salescrm:tgchat:${existing.tgChatId}`);
+      await kv.put(`salescrm:tgdismissed:${existing.tgChatId}`, '1');
+    }
     await salesCrmHistoryAppend(kv, id, existing.name, [{ action: 'delete', field: null, oldValue: null, newValue: null }]);
     return json({ ok: true });
+  }
+
+  if (pathname === '/api/salescrm/tg/sync' && request.method === 'POST') {
+    return handleSalesCrmTgSync(request, env, kv);
   }
 
   if (pathname === '/api/salescrm/history' && request.method === 'GET') {
@@ -1723,6 +1767,118 @@ async function handleSalesCrmApi(request, env, url) {
   }
 
   return json({ error: 'not_found' }, 404);
+}
+
+// ── /sales-crm ⇄ MyBrand Telegram inbox ──
+// The owner talks to clients from their personal Telegram; the MyBrand worker (repo
+// mybrand-smm, "tasktracker") receives those chats through its Telegram Business bot and calls
+// this endpoint server-to-server: on every message (to refresh the row's "last message"), and a
+// few minutes after a dialog goes quiet with what its AI read from it (new status / next step /
+// next-action date), or — for a chat not yet in the CRM whose topic is Avito / the agency /
+// launching promotion — to create the row. Guarded by the SALESCRM_SYNC_SECRET secret (set it in
+// the Cloudflare dashboard, and the same value as CRM_SYNC_SECRET on the MyBrand worker); unset
+// means the endpoint is off.
+//
+// Body: { chat: { id, username, name }, lastMessage?: { text, at, direction, type },
+//         update?: { status?, nextActionDate?, nextAction? }, create?: bool, reason?: string }
+// Reply: { client | null, dismissed?: true }
+async function handleSalesCrmTgSync(request, env, kv) {
+  if (!env.SALESCRM_SYNC_SECRET || request.headers.get('x-sync-secret') !== env.SALESCRM_SYNC_SECRET) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+  const body = await readJson(request);
+  const chat = body && body.chat;
+  const chatId = chat && String(chat.id || '');
+  if (!SALES_CRM_CHAT_ID_RE.test(chatId)) return json({ error: 'invalid_chat' }, 400);
+  const username = salesCrmNormalizeTg(chat.username);
+
+  // 1. Already linked to this chat.
+  let client = null;
+  const linkedId = await kv.get(`salescrm:tgchat:${chatId}`);
+  if (linkedId) {
+    client = await kv.get(`salescrm:client:${linkedId}`, 'json');
+    if (!client) await kv.delete(`salescrm:tgchat:${chatId}`);
+  }
+
+  // 2. A row whose Telegram field is this person's username (added by hand, never linked yet).
+  let dirty = false;
+  const historyEntries = [];
+  if (!client && username) {
+    const list = await kv.list({ prefix: 'salescrm:client:' });
+    const records = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    client = records.find((c) => c && !c.tgChatId && salesCrmNormalizeTg(c.telegram) === username) || null;
+    if (client) {
+      historyEntries.push({ action: 'update', field: 'tgChatId', oldValue: null, newValue: chatId, source: 'telegram' });
+      client.tgChatId = chatId;
+      await salesCrmSetChatLink(kv, client, null);
+      dirty = true;
+    }
+  }
+
+  // 3. New lead found by the AI.
+  const now = new Date().toISOString();
+  if (!client) {
+    if (await kv.get(`salescrm:tgdismissed:${chatId}`)) return json({ client: null, dismissed: true });
+    if (!body.create) return json({ client: null });
+    const id = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    client = {
+      id,
+      name: String(chat.name || '').trim().slice(0, 120) || (username ? '@' + username : 'Telegram ' + chatId),
+      telegram: username,
+      priority: 'yellow',
+      status: 'Первое сообщение',
+      group: 'НОВЫЕ',
+      comment: body.reason ? `🤖 Добавлен из Telegram: ${String(body.reason).slice(0, 300)}` : '🤖 Добавлен из Telegram',
+      nextActionDate: '',
+      nextAction: '',
+      tgChatId: chatId,
+      source: 'telegram-ai',
+      createdAt: now,
+      updatedAt: now,
+    };
+    await salesCrmSetChatLink(kv, client, null);
+    await salesCrmHistoryAppend(kv, id, client.name, [{ action: 'create', field: null, oldValue: null, newValue: null, source: 'telegram-ai' }]);
+    dirty = true;
+  }
+
+  // Last message: shown in the row; never bumps updatedAt (that's "last edited by a person/AI").
+  const lm = body.lastMessage;
+  if (lm && typeof lm === 'object' && Number(lm.at) >= Number((client.lastMessage && client.lastMessage.at) || 0)) {
+    client.lastMessage = {
+      text: String(lm.text || '').slice(0, 400),
+      at: Number(lm.at) || Date.now(),
+      direction: lm.direction === 'out' ? 'out' : 'in',
+      type: String(lm.type || 'text').slice(0, 20),
+    };
+    dirty = true;
+  }
+
+  const update = body.update;
+  if (update && typeof update === 'object' && client.status !== 'Продажа') {
+    for (const field of SALES_CRM_AI_FIELDS) {
+      if (!(field in update)) continue;
+      let value = update[field];
+      if (field === 'status' && !SALES_CRM_STATUSES.includes(value)) continue;
+      if (field === 'nextActionDate') {
+        value = String(value || '').trim();
+        if (value && !SALES_CRM_DATE_RE.test(value)) continue;
+      }
+      if (field === 'nextAction') value = String(value || '').trim().slice(0, 300);
+      if (value === (client[field] ?? '')) continue;
+      historyEntries.push({ action: 'update', field, oldValue: client[field] ?? null, newValue: value, source: 'telegram-ai' });
+      client[field] = value;
+    }
+    if (historyEntries.some((h) => h.source === 'telegram-ai')) {
+      client.updatedAt = now;
+      client.aiUpdatedAt = now;
+    }
+  }
+
+  if (dirty || historyEntries.length) {
+    await kv.put(`salescrm:client:${client.id}`, JSON.stringify(client));
+    if (historyEntries.length) await salesCrmHistoryAppend(kv, client.id, client.name, historyEntries);
+  }
+  return json({ client });
 }
 
 // ── /dashboard: agency-owner dashboard ──
