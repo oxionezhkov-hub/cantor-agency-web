@@ -85,7 +85,7 @@ textarea.field-textarea{width:100%;border:1.5px solid var(--border);border-radiu
 .tasks-toolbar select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;background:var(--white)}
 .tasks-table td.task-text{white-space:normal;min-width:260px;max-width:460px}
 .tasks-table tbody tr{cursor:default}
-.tasks-table a{color:var(--red);text-decoration:none;font-weight:600}
+.tasks-table a,.tasks-toolbar a{color:var(--red);text-decoration:none;font-weight:600}
 
 /* Ratings + Analytics range nav */
 .range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
@@ -326,6 +326,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
           <option value="overdue">Только просроченные</option>
           <option value="all">Все</option>
         </select>
+        <a href="/avito-tasks" style="margin-left:auto">Открыть Avito Tasks →</a>
       </div>
       <div class="analytics-table-wrap">
         <table class="analytics-table tasks-table" id="tasksTable"></table>
@@ -1421,8 +1422,8 @@ document.getElementById('weekNext').addEventListener('click', () => { currentRat
 document.getElementById('weekToday').addEventListener('click', () => { currentRatingWeek = isoMonday(new Date()); renderRatings(); });
 
 // ══════════════════════ TASKS ══════════════════════
-// Read-only view of the tasks the control bot extracts from the work chat and client chats;
-// the owner corrects them from the bot itself (/done, /informed, /cancel).
+// Read-only view of the tasks the control bot extracts from the work chat and client chats plus
+// the ones the team adds in Avito Tasks (/avito-tasks) — that's where they're edited.
 const TASK_STATUS = {
   open: ['Открыта', 'status-active'],
   done: ['Сделана, клиенту не сообщили', 'status-paused'],
@@ -1439,7 +1440,7 @@ function fmtTaskDate(ms) {
 }
 
 function renderTasks() {
-  const tasks = (state.tasks || []).filter((t) => t.source === 'bot');
+  const tasks = (state.tasks || []).filter((t) => t.source === 'bot' || t.source === 'tracker');
   const projectName = (id) => (state.projects.find((p) => p.id === id) || {}).name;
   const filterEl = document.getElementById('tasksProjectFilter');
   const current = filterEl.value;
