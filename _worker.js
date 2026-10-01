@@ -2606,6 +2606,18 @@ async function ensureInactiveClientsSeed(kv) {
   await kv.put('inactiveSeedV1', '1');
 }
 
+// One-time: grey became the only "inactive" switch (the checkbox is gone) — clients already
+// flagged inactive turn grey, and clients already coloured grey become inactive.
+async function ensureGrayInactiveMigration(kv) {
+  if (await kv.get('grayInactiveV1')) return;
+  const now = new Date().toISOString();
+  for (const p of await listByPrefix(kv, 'project:')) {
+    if (p.inactive && p.rowColor !== 'gray') await kv.put(`project:${p.id}`, JSON.stringify({ ...p, rowColor: 'gray', updatedAt: now }));
+    else if (!p.inactive && p.rowColor === 'gray') await kv.put(`project:${p.id}`, JSON.stringify({ ...p, inactive: true, updatedAt: now }));
+  }
+  await kv.put('grayInactiveV1', '1');
+}
+
 async function handleDashboardApi(request, env, url, ctx) {
   const { pathname } = url;
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -2622,6 +2634,7 @@ async function handleDashboardApi(request, env, url, ctx) {
   await ensureDailyMetricsSeed(kv);
   await ensureProjectRatingsMigration(kv);
   await ensureInactiveClientsSeed(kv);
+  await ensureGrayInactiveMigration(kv);
 
   // ── Bootstrap: everything the dashboard needs in one call ──
   if (pathname === '/api/dashboard/bootstrap' && request.method === 'GET') {
@@ -2654,6 +2667,7 @@ async function handleDashboardApi(request, env, url, ctx) {
     const existing = (await kv.get(`project:${id}`, 'json')) || {};
     const now = new Date().toISOString();
     const ROW_COLORS = new Set(['', 'green', 'yellow', 'red', 'gray']);
+    const rowColor = body && 'rowColor' in body && ROW_COLORS.has(body.rowColor) ? body.rowColor : existing.rowColor || '';
     const project = {
       id,
       name,
@@ -2663,11 +2677,13 @@ async function handleDashboardApi(request, env, url, ctx) {
       stage: body && 'stage' in body ? String(body.stage || '') : existing.stage || '',
       currentWork: body && 'currentWork' in body ? String(body.currentWork || '') : existing.currentWork || '',
       review: body && 'review' in body ? String(body.review || '') : existing.review || '',
-      rowColor: body && 'rowColor' in body && ROW_COLORS.has(body.rowColor) ? body.rowColor : existing.rowColor || '',
+      rowColor,
       avitoAccountId: existing.avitoAccountId || null,
-      // Inactive clients sink to the bottom of the Analytics table and are left out of the
-      // daily report, Ratings and the Avito pull — history stays, nothing is deleted.
-      inactive: body && 'inactive' in body ? Boolean(body.inactive) : Boolean(existing.inactive),
+      // Inactive clients sink to the bottom of the Projects/Analytics lists and are left out of
+      // the daily report and the Avito pull — history stays, nothing is deleted. The dashboard
+      // marks a client inactive by colouring it grey, so a colour change sets the flag.
+      inactive: body && 'rowColor' in body ? rowColor === 'gray'
+        : body && 'inactive' in body ? Boolean(body.inactive) : Boolean(existing.inactive),
       ratings: {
         result: Number((body && body.ratings && body.ratings.result) ?? existing.ratings?.result ?? 0),
         communication: Number((body && body.ratings && body.ratings.communication) ?? existing.ratings?.communication ?? 0),
