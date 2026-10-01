@@ -4855,6 +4855,11 @@ async function botScheduled(env) {
     console.error('clients seed failed', err && err.stack);
   }
   try {
+    await atEnsureNewMembers(env);
+  } catch (err) {
+    console.error('team members seed failed', err && err.stack);
+  }
+  try {
     await botProcessQueue(env);
   } catch (err) {
     console.error('control bot queue failed', err && err.stack);
@@ -5090,6 +5095,7 @@ const AT_ROLES = {
   manager: 'Клиентский менеджер',
   specialist: 'Специалист по Авито',
   trainee: 'Стажёр по Авито',
+  assistant: 'Ассистент',
 };
 const AT_PRIORITIES = ['urgent', 'high', 'normal', 'low'];
 const AT_PRIORITY_LABEL = { urgent: 'срочно', high: 'высокий', normal: 'обычный', low: 'низкий' };
@@ -5223,6 +5229,53 @@ async function atSeedTeam(env) {
   if (env.CONTROL_BOT_TOKEN) await botNotifyOwner(env, atAccessMessage(team, true));
   return team;
 }
+// People added to the team after it was first set up (2026-10-01: София, ассистент). Each is added
+// once, with Telegram already tied (so the bot can write to her as soon as she has opened it), and
+// gets her invite link from the bot; the owner is told either way.
+const AT_NEW_MEMBERS = [
+  { id: 'sofia', name: 'София Романовна', role: 'assistant', aliases: ['София', 'Софья', 'Соня'], tgId: '993366229', tgUsername: 'sofiuspasskaya' },
+];
+async function atEnsureNewMembers(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  for (const m of AT_NEW_MEMBERS) {
+    const flag = `at:member-added:${m.id}`;
+    if (await kv.get(flag)) continue;
+    await kv.put(flag, '1');
+    const team = await atGetTeam(env);
+    if (team.users.some((u) => u.id === m.id || String(u.tgId) === m.tgId)) continue;
+    const user = {
+      ...m, roleLabel: AT_ROLES[m.role], invite: atRandom(16), v: 1, active: true,
+      createdAt: new Date().toISOString(), activatedAt: null,
+    };
+    team.users.push(user);
+    await atPutTeam(kv, team);
+    await atTouch(kv, ['#team']);
+    const first = atFirstName(user.name);
+    const res = await botApi(env, 'sendMessage', {
+      chat_id: Number(user.tgId),
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      text: [
+        `<b>${escapeHtml(first)}, вас добавили в Avito Tasks</b> — трекер задач команды Cantor Agency.`,
+        '',
+        'Откройте свою ссылку один раз — дальше трекер будет открываться на этом устройстве сам:',
+        atInviteUrl(user),
+        `Если без VPN не открывается: ${BOT_WORKER_ORIGIN}/avito-tasks?invite=${user.invite}`,
+        '',
+        'Telegram уже подключён: сюда будут приходить ваши задачи, напоминания о сроках и сводка в 10:00. /tasks — ваши задачи.',
+      ].join('\n'),
+      reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: atInviteUrl(user) }]] },
+    });
+    if (res && res.ok) await botApi(env, 'setMyCommands', { commands: AT_EMPLOYEE_COMMANDS, scope: { type: 'chat', chat_id: Number(user.tgId) } });
+    await botNotifyOwner(env, [
+      `👤 <b>В команду добавлена ${escapeHtml(user.name)}</b> — ${escapeHtml(user.roleLabel)}${user.tgUsername ? ` (@${escapeHtml(user.tgUsername)})` : ''}.`,
+      res && res.ok
+        ? 'Бот уже отправил ей ссылку и будет присылать задачи.'
+        : `Бот не смог написать ей: она ещё не открывала бота. Отправьте ей ссылку:\n${atInviteUrl(user)}\nи попросите нажать Start у бота — тогда начнут приходить задачи.`,
+    ].join('\n'));
+  }
+}
+
 function atAccessMessage(team, first) {
   const owner = team.users.find((u) => u.role === 'owner');
   const lines = [first ? '🗂 <b>Avito Tasks готов</b> — трекер задач команды.' : '🔑 <b>Avito Tasks — доступы</b>'];

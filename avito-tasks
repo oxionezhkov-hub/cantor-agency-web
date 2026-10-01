@@ -663,7 +663,7 @@ const PALETTE = ['#E8391D', '#2556C4', '#1C8048', '#B06500', '#7B3FC4', '#0E8A8A
 function colorFor(id) { const i = S.users.findIndex((u) => u.id === id); if (i >= 0) return PALETTE[i % PALETTE.length]; let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return PALETTE[h % PALETTE.length]; }
 function initials(name) { const w = String(name || '?').trim().split(/\s+/); return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase(); }
 // Фото команды лежат в /images/avito-tasks/<id>.jpg; у кого фото нет (или оно не загрузилось) — инициалы на цветном круге.
-const TEAM_PHOTOS = { oleg: 1, olga: 1, evgeny: 1, albina: 1, ekaterina: 1 };
+const TEAM_PHOTOS = { oleg: 1, olga: 1, evgeny: 1, albina: 1, ekaterina: 1, sofia: 1 };
 function avatar(user, size, id) {
   const u = user || { id: '?', name: '?' };
   const photo = TEAM_PHOTOS[u.id] ? `<img src="/images/avito-tasks/${esc(u.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : '';
@@ -1581,7 +1581,7 @@ $('clientCards').addEventListener('click', async (e) => {
 
 // ── вкладка «Команда» (только руководитель) ──
 function renderTeamStatic() {
-  $('newRole').innerHTML = [['manager', 'Клиентский менеджер'], ['specialist', 'Специалист по Авито'], ['trainee', 'Стажёр по Авито']].map(([k, v]) => `<option value="${k}" ${k === 'trainee' ? 'selected' : ''}>${v}</option>`).join('');
+  $('newRole').innerHTML = [['manager', 'Клиентский менеджер'], ['specialist', 'Специалист по Авито'], ['trainee', 'Стажёр по Авито'], ['assistant', 'Ассистент']].map(([k, v]) => `<option value="${k}" ${k === 'trainee' ? 'selected' : ''}>${v}</option>`).join('');
   if (S.team) renderMembers();
 }
 async function loadTeam() {
