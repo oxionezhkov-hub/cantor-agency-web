@@ -3692,6 +3692,8 @@ async function handleReportJobCallback(request, env, url) {
 //   bot:topic:<chatId>:<threadId>          -> { name, projectId }
 //   bot:member:<userId>                    -> { id, name, seenAt }  (people who write in the work chat = team)
 //   bot:log:<chatId>:<threadId>:<YYYY-MM-DD> -> [{ id, t, from, fromId, text, reply }]  (MSK day, 180-day TTL)
+//   bot:hist:<chatId>:<threadId>           -> [{ id, t, from, team, text, reply, imported }]  history from before
+//                                              the bot joined (Telegram export, /api/tgbot/import), 180-day TTL
 //   bot:dirty:<chatId>:<threadId>          -> "1" while a topic/chat has messages the AI hasn't seen
 //   bot:cursor:<chatId>:<threadId>         -> last message id the AI has processed there
 //   bot:attempts:<chatId>:<threadId>       -> failed AI attempts on the current batch
@@ -4113,6 +4115,14 @@ async function botReadLogs(kv, chatId, threadId, fromMs, toMs) {
     const list = await kv.get(`bot:log:${chatId}:${threadId}:${botMsk(day).date}`, 'json');
     if (list) out.push(...list);
   }
+  // Imported history. Its ids are the exporting account's, not the bot's (in a basic group every
+  // account numbers messages its own way), so a message the bot also saw live is matched on its
+  // timestamp, and the live copy wins.
+  const hist = await kv.get(`bot:hist:${chatId}:${threadId}`, 'json');
+  if (hist) {
+    const seen = new Set(out.map((e) => e.t));
+    out.push(...hist.filter((e) => !seen.has(e.t)));
+  }
   return out.filter((e) => e.t >= fromMs && e.t <= toMs).sort((a, b) => a.t - b.t);
 }
 
@@ -4518,11 +4528,12 @@ async function botProcessQueue(env) {
     const cursor = Number(await kv.get(cursorKey)) || 0;
     const now = Date.now();
     const logs = await botReadLogs(kv, chatId, threadId, now - 10 * 24 * 3600000, now);
-    const unseen = logs.filter((e) => e.id > cursor);
+    // Imported history is context only: its tasks came in with the import, and its ids aren't the bot's.
+    const unseen = logs.filter((e) => !e.imported && e.id > cursor);
     if (!unseen.length) continue;
     const fresh = unseen.slice(0, BOT_AI_BATCH_MESSAGES);
     if (unseen.length > fresh.length) await kv.put(k.name, '1'); // the rest goes next run
-    const context = logs.filter((e) => e.id <= cursor).slice(-15);
+    const context = logs.filter((e) => e.imported || e.id <= cursor).slice(-15);
 
     if (!allTasks) allTasks = await botAllTasks(kv);
     const openTasks = allTasks.filter((t) => (t.status === 'open' || t.status === 'done')
@@ -4894,90 +4905,132 @@ async function botAnswerQuestion(env, question) {
   }
 }
 
-// One-time history import from a Telegram Desktop export (the bot can't read messages sent before
-// it joined). Loads the logs, topic names and already-known open tasks, and moves each topic's AI
-// cursor past the imported messages so the history isn't re-billed to the AI. Sent in chunks
-// (one or a few topics per request) to stay within a Worker invocation's KV-operation limit.
+// History import from a Telegram Desktop export (the bot can't read messages sent before it joined):
+// the work chat's topics or a client chat. The messages go into one bot:hist key per topic/chat
+// (one KV write per chat, not one per day — writes are the scarce resource on the free plan); the
+// AI treats them as context only, and the open tasks found in them come in as `tasks`. Sent one
+// chat (or a few topics) per request.
 //   POST /api/tgbot/import  (x-dashboard-password)
-//   { chatId?, topics: { <threadId>: name }, entries: [{ thread, id, t, from, text, reply }], tasks: [...] }
+//   { chatId? | chatTitle?, topics: { <threadId>: name }, entries: [{ thread, id, t, from, team, text, reply }], tasks: [...] }
+// chatTitle ("Авито — Ольга Агешина", as in the export) finds the client chat the bot is in; with
+// neither, the work chat is used.
 function botRedactSecrets(text) {
-  // API keys / client secrets pasted into chats: long unbroken letter+digit runs.
-  return String(text || '').replace(/\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{16,}\b/g, '[скрыто]');
+  return String(text || '')
+    // API keys / client secrets pasted into chats: long unbroken letter+digit runs.
+    .replace(/\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{16,}\b/g, '[скрыто]')
+    // Clients' Avito passwords: "пароль: Abc123", "Password Abc123", "abc123-пароль",
+    // and "login@mail.ru Abc123" (an email followed by something with a digit in it).
+    .replace(/(парол[ьяе]|password)(\s*(?:от\s+[а-яё]+\s*)?[:=\-–—]?\s*)[A-Za-z0-9_!@#$%^&*.+?-]{5,}/gi, '$1$2[скрыто]')
+    .replace(/[A-Za-z0-9_!@#$%^&*.+?]{5,}(\s*[-–—]\s*парол[ьяе])/gi, '[скрыто]$1')
+    .replace(/([\w.+-]+@[\w-]+\.[\w.]+[\s,;:]+)(?=\S*\d)[A-Za-z0-9_!@#$%^&*.+?-]{5,}/g, '$1[скрыто]');
+}
+async function botFindImportChat(kv, body) {
+  const chats = await listByPrefix(kv, 'bot:chat:');
+  if (body.chatId) return chats.find((c) => String(c.id) === String(body.chatId)) || null;
+  if (body.chatTitle) {
+    const clientChats = chats.filter((c) => !c.isForum);
+    const title = botNorm(body.chatTitle);
+    // A basic group that became a supergroup leaves a second record with the same title: the newer one is live.
+    const exact = clientChats.filter((c) => botNorm(c.title) === title)
+      .sort((a, b) => (Date.parse(b.addedAt || 0) || 0) - (Date.parse(a.addedAt || 0) || 0));
+    if (exact.length) return exact[0];
+    const project = botMatchProject(body.chatTitle, await botProjects(kv));
+    const byProject = project ? clientChats.filter((c) => c.projectId === project.id) : [];
+    return byProject.length === 1 ? byProject[0] : null;
+  }
+  const forums = chats.filter((c) => c.isForum);
+  return forums.length === 1 ? forums[0] : null;
 }
 async function handleBotImport(request, env) {
   if (!checkDashboardAuth(request)) return json({ error: 'unauthorized' }, 401);
   const kv = env.AGENCY_DASHBOARD_KV;
   const body = await readJson(request);
   if (!body) return json({ error: 'bad_json' }, 400);
-  let chatRec = body.chatId ? await kv.get(`bot:chat:${body.chatId}`, 'json') : null;
+  const chatRec = await botFindImportChat(kv, body);
   if (!chatRec) {
-    const forums = (await listByPrefix(kv, 'bot:chat:')).filter((c) => c.isForum);
-    if (forums.length !== 1) return json({ error: 'chat_unknown', message: 'Добавьте бота в рабочий чат (или передайте chatId)', forums: forums.map((c) => ({ id: c.id, title: c.title })) }, 409);
-    chatRec = forums[0];
+    const chats = await listByPrefix(kv, 'bot:chat:');
+    return json({
+      error: 'chat_unknown',
+      message: body.chatTitle ? `Бот не знает чат «${body.chatTitle}» — добавьте бота в него (или передайте chatId)` : 'Добавьте бота в рабочий чат (или передайте chatId)',
+      chats: chats.map((c) => ({ id: c.id, title: c.title, kind: c.kind, projectId: c.projectId || null })),
+    }, 409);
   }
   const chatId = chatRec.id;
-  const result = { chatId, topics: 0, days: 0, entries: 0, tasks: 0 };
+  const result = { chatId, title: chatRec.title, projectId: chatRec.projectId || null, topics: 0, entries: 0, tasks: 0 };
 
-  for (const [thread, name] of Object.entries(body.topics || {})) {
-    const key = `bot:topic:${chatId}:${thread}`;
-    const known = await kv.get(key, 'json');
-    if (!known || /^Топик \d+$/.test(known.name)) { await botSetTopicName(kv, chatId, thread, name); result.topics += 1; }
+  if (chatRec.isForum) {
+    for (const [thread, name] of Object.entries(body.topics || {})) {
+      const key = `bot:topic:${chatId}:${thread}`;
+      const known = await kv.get(key, 'json');
+      if (!known || /^Топик \d+$/.test(known.name)) { await botSetTopicName(kv, chatId, thread, name); result.topics += 1; }
+    }
   }
 
   const groups = new Map();
+  let lastTeamMs = 0;
   for (const e of Array.isArray(body.entries) ? body.entries : []) {
-    if (!e || !Number.isFinite(e.id) || !Number.isFinite(e.t)) continue;
-    const thread = String(e.thread || 0);
-    const k = `${thread}|${botMsk(e.t).date}`;
-    if (!groups.has(k)) groups.set(k, []);
-    groups.get(k).push({ id: e.id, t: e.t, from: String(e.from || '?'), fromId: null, team: true, text: botRedactSecrets(e.text).slice(0, 4000), reply: e.reply || null, imported: true });
+    if (!e || !Number.isFinite(e.id) || !Number.isFinite(e.t) || !e.text) continue;
+    const thread = chatRec.isForum ? String(e.thread || 0) : '0';
+    if (!groups.has(thread)) groups.set(thread, []);
+    const team = e.team !== false;
+    groups.get(thread).push({ id: e.id, t: e.t, from: String(e.from || '?').slice(0, 80), fromId: null, team, text: botRedactSecrets(e.text).slice(0, 4000), reply: e.reply || null, imported: true });
+    if (team) lastTeamMs = Math.max(lastTeamMs, e.t);
   }
-  const maxIdByThread = {};
-  for (const [k, list] of groups) {
-    const [thread, date] = k.split('|');
-    const key = `bot:log:${chatId}:${thread}:${date}`;
+  for (const [thread, list] of groups) {
+    const key = `bot:hist:${chatId}:${thread}`;
     const existing = (await kv.get(key, 'json')) || [];
-    const byId = new Map(existing.map((x) => [x.id, x]));
-    for (const x of list) if (!byId.has(x.id)) byId.set(x.id, x);
-    const merged = [...byId.values()].sort((a, b) => a.t - b.t);
+    const byKey = new Map(existing.map((x) => [`${x.t}|${x.id}`, x]));
+    for (const x of list) byKey.set(`${x.t}|${x.id}`, x); // a re-import replaces the same messages
+    const merged = [...byKey.values()].sort((a, b) => a.t - b.t);
     await kv.put(key, JSON.stringify(merged), { expirationTtl: BOT_LOG_TTL });
-    result.days += 1;
     result.entries += list.length;
-    maxIdByThread[thread] = Math.max(maxIdByThread[thread] || 0, ...list.map((x) => x.id));
   }
-  for (const [thread, maxId] of Object.entries(maxIdByThread)) {
-    const key = `bot:cursor:${chatId}:${thread}`;
-    const cur = Number(await kv.get(key)) || 0;
-    if (maxId > cur) await kv.put(key, String(maxId));
+
+  // "When did we last write to this client" (Avito Tasks' Clients tab, the stale-clients digest).
+  if (!chatRec.isForum && chatRec.projectId && lastTeamMs) {
+    const clients = (await kv.get('at:clients', 'json')) || {};
+    const rec = clients[chatRec.projectId] || {};
+    if (lastTeamMs > (Date.parse(rec.lastTeamAt || 0) || 0)) {
+      clients[chatRec.projectId] = { ...rec, lastTeamAt: new Date(lastTeamMs).toISOString() };
+      await kv.put('at:clients', JSON.stringify(clients));
+      await atTouch(kv, ['#clients']);
+    }
   }
 
   const nowIso = new Date().toISOString();
   const importedIds = [];
+  const users = Array.isArray(body.tasks) && body.tasks.length ? (await atGetTeam(env)).users : [];
   for (const t of Array.isArray(body.tasks) ? body.tasks : []) {
     if (!t || !t.text || !t.importKey) continue;
-    const id = `imp${t.importKey}`;
+    const id = `imp${String(t.importKey).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)}`;
     if (await kv.get(`task:${id}`)) continue;
-    const topic = await kv.get(`bot:topic:${chatId}:${t.thread || 0}`, 'json');
+    const who = t.owner ? atMatchUser(String(t.owner), users) : null;
+    const thread = chatRec.isForum ? Number(t.thread || 0) : 0;
+    const topic = chatRec.isForum ? await kv.get(`bot:topic:${chatId}:${thread}`, 'json') : { name: chatRec.title, projectId: chatRec.projectId };
     const dueMs = botParseMskDateTime(t.due);
     await kv.put(`task:${id}`, JSON.stringify({
       id,
       text: String(t.text).slice(0, 300),
       status: 'open',
-      owner: t.owner || null,
+      owner: who ? who.name : t.owner || null,
+      assigneeId: who ? who.id : null,
+      priority: AT_PRIORITIES.includes(t.priority) ? t.priority : 'normal',
       due: dueMs ? botIsoMsk(dueMs) : null,
       projectId: (topic && topic.projectId) || null,
       topicName: topic ? topic.name : null,
       source: 'bot',
       origin: 'import',
       chatId,
-      threadId: Number(t.thread || 0),
+      threadId: thread,
       msgId: t.msgId || null,
-      link: t.msgId ? botMessageLink(chatId, t.thread, t.msgId) : null,
+      // Export ids are the bot's own only in supergroups (basic groups have no message links anyway).
+      link: t.msgId ? botMessageLink(chatId, chatRec.isForum ? thread : null, t.msgId) : null,
       author: t.author || null,
       note: t.note || null,
       startedAt: Number.isFinite(t.t) ? new Date(t.t).toISOString() : nowIso,
       // Old backlog: counted in /summary and /tasks, but no individual "no deadline" pings.
       notified: { noDue: nowIso, overdue: dueMs && dueMs < Date.now() ? nowIso : undefined },
+      activity: [{ t: Date.now(), by: 'Бот', what: 'нашёл задачу в истории чата (импорт)' }],
       createdAt: nowIso,
       updatedAt: nowIso,
     }));
