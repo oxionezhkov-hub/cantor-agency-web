@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Дашборд руководителя — Cantor Agency</title>
+<title>Аналитика проектов Cantor Agency</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,50 +67,13 @@ main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
 .btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.18);box-shadow:none}
 .btn.ghost:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.32)}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
-.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-sm)}
-.card h3{font-size:16px;font-weight:700;margin-bottom:2px}
-.card .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
-.field-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.field-row label{font-size:12px;color:var(--muted);flex-shrink:0}
-.field-row select,.field-row input[type=text],.field-row input[type=number]{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;font-size:13px;width:100%;max-width:190px}
-
-textarea.field-textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;min-height:70px;resize:vertical;margin-top:6px}
-.status-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
-.status-active{background:var(--green-bg);color:var(--green)}
-.status-paused{background:var(--amber-bg);color:var(--amber)}
-.status-done{background:var(--gray-bg);color:var(--gray)}
-.status-overdue{background:var(--accent-bg);color:var(--red)}
-.tasks-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.tasks-toolbar select{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;background:var(--white)}
-.tasks-table td.task-text{white-space:normal;min-width:260px;max-width:460px}
-.tasks-table tbody tr{cursor:default}
-.tasks-table a,.tasks-toolbar a{color:var(--red);text-decoration:none;font-weight:600}
-
-/* Ratings + Analytics range nav */
+/* Analytics range nav */
 .range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
 .range-nav .arrow{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);flex-shrink:0;transition:all .15s}
 .range-nav .arrow:hover{border-color:var(--red);color:var(--red)}
 .range-nav .label{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800;background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;letter-spacing:.01em;min-width:150px;text-align:center}
 .range-nav .today-btn{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .range-nav .today-btn:hover{color:var(--red-dark)}
-
-.rating-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:22px 22px 6px;box-shadow:var(--shadow-sm)}
-.rating-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
-.rating-card-head h3{font-size:17px;font-weight:700}
-.rating-card-head .avg-pill{display:inline-flex;align-items:center;background:var(--accent-bg);color:var(--red-dark);font-family:'Unbounded',sans-serif;font-size:13px;font-weight:800;padding:5px 13px;border-radius:20px;letter-spacing:.01em;flex-shrink:0;cursor:default}
-.rater{padding:16px 0}
-.rater + .rater{border-top:1px solid var(--border)}
-.rater-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.rater-head .who{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--text)}
-.rater-head .who .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.rater-head .score-badge{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--red);min-width:24px;text-align:right}
-.score-scale{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:10px}
-.score-scale button{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--border);background:var(--warm-bg);font-size:12px;font-weight:700;color:var(--muted);transition:all .12s}
-.score-scale button:hover{border-color:var(--red-light);color:var(--red)}
-.score-scale button.on{background:var(--red);border-color:var(--red);color:#fff;box-shadow:var(--shadow-red)}
-textarea.rater-comment{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13px;min-height:52px;resize:vertical}
-textarea.rater-comment:focus{outline:none;border-color:var(--red-light)}
 
 /* Analytics */
 .analytics-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
@@ -215,14 +178,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .icon-btn{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
 .icon-btn:hover{border-color:var(--red);color:var(--red)}
 @media (max-width:760px){
-  header.top{padding:12px 14px}
-  .top-actions .btn .lbl,.tab-btn .lbl{display:none}
-  .top-actions .btn{padding:9px 10px}
-  .tab-btn{padding:10px 12px}
+  /* Two short lines: sections + service icons, then the current section's buttons (scroll sideways if they don't fit) */
+  header.top{padding:8px 10px;gap:8px}
+  .top-right{order:-1;width:100%;flex-wrap:nowrap;gap:6px}
+  .top-right .tabs{flex:1;flex-wrap:nowrap;gap:4px}
+  .top-divider{display:none}
+  .tab-btn{padding:8px 11px}
+  .icon-link{width:34px;height:34px}
+  .top-actions{width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;scrollbar-width:none}
+  .top-actions::-webkit-scrollbar{display:none}
+  .top-actions > *{flex-shrink:0}
+  .top-actions .btn .lbl{display:none}
+  .top-actions .btn{padding:8px 10px}
+  .week-nav .lbl-week small{display:none}
   main{padding:18px 14px 80px}
-  .summary-popup{left:14px;right:14px;width:auto;top:70px}
-  .side-panel{top:70px;right:8px;left:8px;width:auto}
+  .summary-popup{left:14px;right:14px;width:auto;top:100px}
+  .side-panel{top:100px;right:8px;left:8px;width:auto}
 }
+@media (max-width:400px){ .tab-btn .lbl{display:none} }
 
 /* Date picker in the Avito panel head */
 .avito-date-row{display:flex;align-items:center;gap:8px;margin-top:8px}
@@ -242,18 +215,96 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;margin-right:6px;vertical-align:-1px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Project card: row colour for Analytics + inactive flag */
+/* ── Projects: cards + table ── */
+/* Each card spans 9 rows of the shared grid (head, 3 text fields, week line, 3 ratings, colour)
+   and takes them as a subgrid, so every block's heading sits at the same height in all cards
+   of a row; a field with less text just leaves space under it. */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));column-gap:16px;row-gap:0}
+.pcard{background:var(--white);border:1.5px solid var(--border);border-top:4px solid var(--border);border-radius:var(--r-lg);padding:16px 18px 14px;box-shadow:var(--shadow-sm);display:grid;grid-row:span 9;grid-template-rows:subgrid;row-gap:0;margin-bottom:16px;min-width:0}
+.pcard > *{align-self:start;min-width:0}
+.pcard.c-green{border-top-color:var(--green)}
+.pcard.c-yellow{border-top-color:#e0b400}
+.pcard.c-red{border-top-color:var(--red)}
+.pcard.c-gray{border-top-color:var(--gray);opacity:.6}
+.pcard-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.pcard-head h3{font-size:16px;font-weight:700}
+.avg-pill{display:inline-flex;align-items:center;background:var(--accent-bg);color:var(--red-dark);font-family:'Unbounded',sans-serif;font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;flex-shrink:0;cursor:default}
+.inactive-tag{font-size:11px;font-weight:600;color:var(--gray);background:var(--gray-bg);padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.f{padding:7px 0}
+.pcard .f + .f,.pcard .r + .r{border-top:1px solid #f0eeea}
+.f .q,.color-row .q{font-size:11.5px;font-weight:600;color:var(--muted)}
+.f .q{margin-bottom:3px}
+textarea.auto{width:100%;border:1.5px solid transparent;background:var(--warm-bg);border-radius:var(--r-sm);padding:6px 9px;font-size:13.5px;line-height:1.45;resize:none;overflow:hidden;display:block;color:var(--text)}
+textarea.auto:hover{border-color:var(--border)}
+textarea.auto:focus{outline:none;border-color:var(--red-light);background:var(--white)}
+/* An empty field collapses into one short line */
+.f.is-empty{display:flex;align-items:center;gap:10px;padding:5px 0}
+.f.is-empty .q{margin:0;flex-shrink:0;min-width:122px}
+.f.is-empty textarea.auto{background:none;border:1.5px dashed var(--border);padding:3px 9px;font-size:12.5px}
+textarea.auto::placeholder{color:#bbb}
+.week-sep{display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.week-sep::after{content:"";flex:1;height:1px;background:var(--border)}
+.r{padding:7px 0}
+.r-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;min-height:22px}
+.r-head .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-head .score{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:800;color:#fff;background:var(--red);border-radius:6px;padding:1px 7px}
+.r-head .link-btn{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11.5px;padding:0}
+.r-head .link-btn:hover{color:var(--red)}
+.r-comment{font-size:13.5px;line-height:1.45;white-space:pre-line;margin-top:4px;overflow-wrap:anywhere}
+.pcard .r-comment{padding-left:16px}
+.r .chips{margin-top:6px}
+.r textarea.auto{margin-top:6px}
+/* An empty rating is one line: who + the 1–10 buttons */
+.r.is-empty{display:flex;align-items:center;gap:10px;padding:5px 0}
+.r.is-empty .r-head{min-width:122px;color:var(--muted)}
+.r.is-empty .chips{margin-top:0}
+.chips{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:3px;min-width:0}
+.chips button{height:22px;border-radius:5px;border:1.5px solid var(--border);background:var(--warm-bg);font-size:10.5px;font-weight:700;color:var(--muted);padding:0}
+.chips button:hover{border-color:var(--red-light);color:var(--red)}
+.chips button.on{background:var(--red);border-color:var(--red);color:#fff}
+.color-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.color-row .q{min-width:122px}
 .swatches{display:flex;gap:6px}
-.swatch{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);padding:0}
+.swatch{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);padding:0;flex-shrink:0}
 .swatch.on{outline:2px solid var(--text);outline-offset:2px}
 .swatch[data-color=""]{background:var(--white);background-image:linear-gradient(135deg,transparent 45%,var(--border) 45%,var(--border) 55%,transparent 55%)}
 .swatch[data-color=green]{background:var(--green-bg);border-color:var(--green)}
 .swatch[data-color=yellow]{background:var(--amber-bg);border-color:var(--amber)}
 .swatch[data-color=red]{background:var(--accent-bg);border-color:var(--red)}
 .swatch[data-color=gray]{background:var(--gray-bg);border-color:var(--gray)}
-.card.inactive{opacity:.6}
-.inactive-toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:12px;cursor:pointer}
-.analytics-table td.name-cell .inactive-tag{font-weight:400;font-size:11px;color:var(--muted);margin-left:6px}
+.analytics-table td.name-cell .inactive-tag{font-weight:600}
+/* Table view: wide columns so text wraps as little as possible */
+/* the table is wide on purpose — let it use the whole screen instead of the 1300px column */
+main:has(#panel-projects.active #projectsTableWrap:not(.hidden)){max-width:none}
+.projects-table td{white-space:normal;vertical-align:top}
+.projects-table td.name-cell{white-space:nowrap}
+.projects-table th.wk small{display:block;font-size:9.5px;color:#aaa;text-transform:none;letter-spacing:0;font-weight:500}
+.projects-table td.t-text{min-width:210px;max-width:300px}
+.projects-table td.t-wide{min-width:380px;max-width:460px}
+.projects-table td.t-rate{min-width:300px;max-width:380px}
+.projects-table textarea.auto{background:transparent;padding:4px 7px;font-size:13px}
+.projects-table textarea.auto:focus{background:var(--white)}
+.projects-table tbody tr.row-gray{color:var(--gray)}
+.projects-table .swatches{gap:5px}
+.projects-table .swatch{width:16px;height:16px}
+.projects-table th.wk{background:#2a2a2a}
+.projects-table td.t-avg{white-space:nowrap}
+.projects-table .r{padding:0}
+
+/* Projects toolbar in the top bar: week ‹ › + cards/table switch */
+.week-nav{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--r-sm);padding:2px}
+.week-nav button{background:none;border:none;color:#fff;height:30px;border-radius:5px}
+.week-nav .arr{width:30px;font-size:17px}
+.week-nav .lbl-week{font-size:13px;font-weight:700;padding:0 8px;white-space:nowrap}
+.week-nav .lbl-week small{font-weight:500;color:#aaa;margin-left:4px}
+.week-nav button:hover{background:rgba(255,255,255,.14)}
+.seg{display:flex;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--r-sm);padding:2px}
+.seg button{background:none;border:none;color:#bbb;width:32px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.seg button.on{background:var(--white);color:var(--dark)}
+.top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top-divider{width:1px;height:26px;background:rgba(255,255,255,.18)}
+.icon-link{width:36px;height:36px;border-radius:var(--r-sm);border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.icon-link:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.32)}
 
 .toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;border-radius:var(--r-sm);font-size:13px;z-index:1100;opacity:0;transform:translateY(8px);transition:all .2s}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -263,7 +314,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 
 <div id="gate">
   <div class="box">
-    <h1>Дашборд руководителя</h1>
+    <h1>Аналитика проектов Cantor Agency</h1>
     <div class="err" id="gateErr"></div>
     <input type="password" id="gatePassword" placeholder="Пароль" autocomplete="off" autofocus>
     <button id="gateSubmit">Войти</button>
@@ -273,18 +324,24 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 <div id="app">
   <header class="top">
     <div class="top-actions" id="topActions"></div>
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="projects" title="Проекты"><svg class="ic" data-icon="folder"></svg><span class="lbl">Проекты</span></button>
-      <button class="tab-btn" data-tab="analytics" title="Аналитика"><svg class="ic" data-icon="chart"></svg><span class="lbl">Аналитика</span></button>
-      <button class="tab-btn" data-tab="ratings" title="Оценки"><svg class="ic" data-icon="star"></svg><span class="lbl">Оценки</span></button>
-      <button class="tab-btn" data-tab="tasks" title="Задачи"><svg class="ic" data-icon="tasks"></svg><span class="lbl">Задачи</span></button>
-    </nav>
+    <div class="top-right">
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="projects" title="Проекты"><svg class="ic" data-icon="folder"></svg><span class="lbl">Проекты</span></button>
+        <button class="tab-btn" data-tab="analytics" title="Аналитика"><svg class="ic" data-icon="chart"></svg><span class="lbl">Аналитика</span></button>
+      </nav>
+      <span class="top-divider"></span>
+      <a class="icon-link" href="/avito-tasks" title="Avito Tasks" aria-label="Avito Tasks"><svg class="ic" data-icon="tasks"></svg></a>
+      <a class="icon-link" href="/sales-crm" title="CRM" aria-label="CRM"><svg class="ic" data-icon="crm"></svg></a>
+    </div>
   </header>
 
   <main>
     <!-- PROJECTS -->
     <section class="panel active" id="panel-projects">
       <div class="grid" id="projectsGrid"></div>
+      <div class="analytics-table-wrap hidden" id="projectsTableWrap">
+        <table class="analytics-table projects-table" id="projectsTable"></table>
+      </div>
     </section>
 
     <!-- ANALYTICS -->
@@ -306,32 +363,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
       </div>
     </section>
 
-    <!-- RATINGS -->
-    <section class="panel" id="panel-ratings">
-      <div class="range-nav">
-        <button class="arrow" id="weekPrev" aria-label="Предыдущая неделя">‹</button>
-        <div class="label" id="weekLabel"></div>
-        <button class="arrow" id="weekNext" aria-label="Следующая неделя">›</button>
-        <button class="today-btn" id="weekToday">Текущая неделя</button>
-      </div>
-      <div class="grid" id="ratingsGrid"></div>
-    </section>
-
-    <!-- TASKS (found in the Telegram chats by the control bot — see "Control bot" in _worker.js) -->
-    <section class="panel" id="panel-tasks">
-      <div class="tasks-toolbar">
-        <select id="tasksProjectFilter"></select>
-        <select id="tasksStatusFilter">
-          <option value="active">Открытые и не сообщённые клиенту</option>
-          <option value="overdue">Только просроченные</option>
-          <option value="all">Все</option>
-        </select>
-        <a href="/avito-tasks" style="margin-left:auto">Открыть Avito Tasks →</a>
-      </div>
-      <div class="analytics-table-wrap">
-        <table class="analytics-table tasks-table" id="tasksTable"></table>
-      </div>
-    </section>
   </main>
 </div>
 
@@ -487,8 +518,6 @@ async function boot() {
   bootstrapped = true;
   renderProjects();
   renderAnalytics();
-  renderRatings();
-  renderTasks();
   renderTopActions(currentTab); // whatever tab the user moved to while data was loading
   resumeBackgroundJobs();
 }
@@ -510,8 +539,10 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
 const ICON_PATHS = {
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
   tasks: '<path d="M9 11l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
+  crm: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.5A6.5 6.5 0 0 1 21.5 20"/>',
+  cards: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   sum: '<path d="M18 5H6l6 7-6 7h12"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
@@ -541,6 +572,7 @@ function renderTopActions(tab) {
     document.getElementById('summaryPopup').classList.add('hidden');
     document.getElementById('avitoPanel').classList.add('hidden');
   }
+  if (tab === 'projects') el.append(weekNav(), viewSwitch());
   (TOP_ACTIONS[tab] || []).forEach((a) => {
     const btn = document.createElement('button');
     btn.className = a.primary ? 'btn' : 'btn ghost';
@@ -609,87 +641,273 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
 
 // ══════════════════════ PROJECTS ══════════════════════
-// Per-project card is intentionally just three free-text fields — everything else
-// (metrics, ratings, day-to-day numbers) now lives in the Аналитика/Оценки tabs.
+// One place per client: the permanent fields (status, stage, current work, colour) plus the
+// three ratings of the week picked in the top bar — the week arrows change only the ratings.
 const PROJECT_FIELDS = [
-  { key: 'status', label: 'Статус', placeholder: 'Активен, на паузе, завершён...' },
-  { key: 'stage', label: 'Этап работы', placeholder: 'Настройка, тестирование, масштабирование...' },
+  { key: 'status', label: 'Статус' },
+  { key: 'stage', label: 'Этап работы' },
+  { key: 'currentWork', label: 'Сейчас работаем над' },
 ];
+const COLOR_TITLES = { '': 'Без цвета', green: 'Зелёный', yellow: 'Жёлтый', red: 'Красный', gray: 'Серый — неактивный клиент' };
 
-function renderProjects() {
-  const grid = document.getElementById('projectsGrid');
-  grid.innerHTML = '';
-  if (!state.projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
+let projectsView = (() => { try { return localStorage.getItem('dash_projects_view') === 'table' ? 'table' : 'cards'; } catch { return 'cards'; } })();
 
-  orderedAnalyticsProjects().forEach((p) => {
-    const card = document.createElement('div');
-    card.className = `card${p.inactive ? ' inactive' : ''}`;
-    card.innerHTML = `<h3>${escapeHtml(p.name)}</h3>`;
+function weekNav() {
+  const wrap = document.createElement('div');
+  wrap.className = 'week-nav';
+  const isCurrent = currentRatingWeek === isoMonday(new Date());
+  wrap.innerHTML = `<button class="arr" aria-label="Предыдущая неделя" title="Предыдущая неделя">‹</button>`
+    + `<button class="lbl-week" title="К текущей неделе">${formatWeekRange(currentRatingWeek)}${isCurrent ? '<small>текущая</small>' : ''}</button>`
+    + `<button class="arr" aria-label="Следующая неделя" title="Следующая неделя">›</button>`;
+  const [prev, label, next] = wrap.querySelectorAll('button');
+  prev.addEventListener('click', () => setRatingWeek(addDays(currentRatingWeek, -7)));
+  label.addEventListener('click', () => setRatingWeek(isoMonday(new Date())));
+  next.addEventListener('click', () => setRatingWeek(addDays(currentRatingWeek, 7)));
+  return wrap;
+}
 
-    const saveField = async (field, value) => {
-      await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, [field]: value }) });
-      p[field] = value;
-      toast('Сохранено');
+function setRatingWeek(week) {
+  currentRatingWeek = week;
+  renderTopActions(currentTab);
+  if (bootstrapped) renderProjects();
+}
+
+function viewSwitch() {
+  const wrap = document.createElement('div');
+  wrap.className = 'seg';
+  [['cards', 'Карточки'], ['table', 'Таблица']].forEach(([view, title]) => {
+    const b = document.createElement('button');
+    b.className = projectsView === view ? 'on' : '';
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.innerHTML = icon(view);
+    b.addEventListener('click', () => {
+      projectsView = view;
+      try { localStorage.setItem('dash_projects_view', view); } catch {}
+      renderTopActions(currentTab);
+      if (bootstrapped) renderProjects();
+    });
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+
+// Textareas grow with their text — no empty space under a short answer.
+function fitTextarea(t) {
+  if (!t.isConnected || !t.offsetParent) return;
+  t.style.height = 'auto';
+  t.style.height = `${t.scrollHeight + t.offsetHeight - t.clientHeight}px`;
+}
+function fitAllTextareas() { document.querySelectorAll('#panel-projects textarea.auto').forEach(fitTextarea); }
+let refitTimer = null;
+window.addEventListener('resize', () => { clearTimeout(refitTimer); refitTimer = setTimeout(fitAllTextareas, 120); });
+if (document.fonts) document.fonts.ready.then(fitAllTextareas);
+
+function autoTextarea(value, placeholder, onSave) {
+  const t = document.createElement('textarea');
+  t.className = 'auto';
+  t.rows = 1;
+  t.placeholder = placeholder;
+  t.value = value || '';
+  let saved = t.value;
+  t.addEventListener('input', () => fitTextarea(t));
+  t.addEventListener('blur', () => { if (t.value !== saved) { saved = t.value; onSave(t.value); } });
+  return t;
+}
+
+async function saveProjectField(p, field, value) {
+  const res = await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, [field]: value }) });
+  if (!res || !res.project) return false;
+  Object.assign(p, res.project); // picks up what the server derives too (grey ⇒ inactive)
+  toast('Сохранено');
+  return true;
+}
+
+function weekAvgText(p) {
+  const d = projectRatingFor(p.id, currentRatingWeek);
+  return `${fmtAvg(avgScore([d.client.score, d.manager.score, d.specialist.score]))}/${fmtAvg(allTimeAvgFor(p.id))}`;
+}
+
+function inactiveTag(p) { return isInactive(p) ? '<span class="inactive-tag">неактивный</span>' : ''; }
+
+// Status / stage / current work: heading on top, answer below; an empty one is a single short line.
+function textField(p, key, label) {
+  const f = document.createElement('div');
+  f.className = 'f';
+  f.innerHTML = `<div class="q">${label}</div>`;
+  const t = autoTextarea(p[key], 'добавить…', (v) => saveProjectField(p, key, v));
+  // re-checked on blur, not while typing, so the field doesn't jump under the cursor
+  const syncEmpty = () => { f.classList.toggle('is-empty', !t.value.trim()); fitTextarea(t); };
+  t.addEventListener('blur', syncEmpty);
+  f.appendChild(t);
+  syncEmpty();
+  return f;
+}
+
+// One role's rating for the selected week. Filled: who · score, comment below.
+// Empty: who + 1–10 in one line. «изменить» (or picking a score) opens the 1–10 + comment editor.
+function raterBlock(p, role, { label = true, onSaved } = {}) {
+  const el = document.createElement('div');
+  const week = currentRatingWeek;
+  let editing = false;
+  let renderGen = 0; // a blur from the editor that the re-render itself removed must not count
+  const current = () => projectRatingFor(p.id, week)[role];
+
+  async function save(score, comment) {
+    const res = await api('/api/dashboard/project-rating', {
+      method: 'POST',
+      body: JSON.stringify({ projectId: p.id, weekStart: week, role, score, comment }),
+    });
+    if (!res || !res.projectRating) return;
+    // Client/manager/specialist are three different people, often on three different
+    // devices — each role is its own independent record server-side (see _worker.js),
+    // so this save can never race with or clobber another role's concurrent save.
+    state.projectRatings = state.projectRatings.filter((r) => !(r.projectId === p.id && r.weekStart === week && r.role === role));
+    state.projectRatings.push(res.projectRating);
+    toast('Оценка сохранена');
+    if (onSaved) onSaved();
+  }
+
+  function render() {
+    const gen = ++renderGen;
+    const d = current();
+    const filled = d.score > 0 || Boolean(d.comment.trim());
+    el.className = `r${filled || editing ? '' : ' is-empty'}`;
+    const who = label ? `<span class="dot" style="background:${ROLE_DOT[role]}"></span>${ROLE_LABELS[role]}` : '';
+    const score = d.score ? `<span class="score">${d.score}</span>` : '';
+    const action = filled || editing ? `<button type="button" class="link-btn">${editing ? 'готово' : 'изменить'}</button>` : '';
+    el.innerHTML = who || score || action ? `<div class="r-head">${who}${score}${action}</div>` : '';
+
+    let comment = null;
+    const finish = async () => {
+      if (!editing || gen !== renderGen) return;
+      editing = false;
+      if (comment && comment.value !== d.comment) await save(d.score, comment.value);
+      render();
     };
 
-    PROJECT_FIELDS.forEach(({ key, label, placeholder }) => {
-      const row = document.createElement('div');
-      row.className = 'field-row';
-      row.innerHTML = `<label>${label}</label>`;
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = placeholder;
-      input.value = p[key] || '';
-      input.addEventListener('blur', () => saveField(key, input.value));
-      row.appendChild(input);
-      card.appendChild(row);
-    });
+    if (!filled || editing) {
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      for (let i = 1; i <= 10; i++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = String(i);
+        if (i === d.score) b.classList.add('on');
+        b.addEventListener('mousedown', (e) => e.preventDefault()); // keep the comment focused
+        b.addEventListener('click', async () => {
+          // clicking the already-set score again clears it back to unrated
+          await save(d.score === i ? 0 : i, comment ? comment.value : d.comment);
+          editing = true;
+          render();
+        });
+        chips.appendChild(b);
+      }
+      el.appendChild(chips);
+    }
+    if (editing) {
+      comment = autoTextarea(d.comment, 'Комментарий к оценке…', () => {});
+      comment.addEventListener('blur', finish);
+      el.appendChild(comment);
+      fitTextarea(comment);
+      comment.focus();
+    } else if (d.comment.trim()) {
+      el.insertAdjacentHTML('beforeend', `<div class="r-comment">${escapeHtml(d.comment)}</div>`);
+    }
 
-    const workLabel = document.createElement('div');
-    workLabel.className = 'field-row';
-    workLabel.innerHTML = '<label>Сейчас работаем над</label>';
-    card.appendChild(workLabel);
-    const workArea = document.createElement('textarea');
-    workArea.className = 'field-textarea';
-    workArea.placeholder = 'Кратко: что сейчас делается по проекту...';
-    workArea.value = p.currentWork || '';
-    workArea.addEventListener('blur', () => saveField('currentWork', workArea.value));
-    card.appendChild(workArea);
+    const btn = el.querySelector('.link-btn');
+    if (btn) {
+      btn.addEventListener('mousedown', (e) => e.preventDefault());
+      btn.addEventListener('click', () => { if (editing) finish(); else { editing = true; render(); } });
+    }
+  }
 
-    // Row colour shown in the Analytics table (set here, no longer by clicking the row there).
-    const colorRow = document.createElement('div');
-    colorRow.className = 'field-row';
-    colorRow.style.marginTop = '12px';
-    colorRow.innerHTML = '<label>Цвет в аналитике</label><div class="swatches"></div>';
-    const COLOR_TITLES = { '': 'Без цвета', green: 'Зелёный', yellow: 'Жёлтый', red: 'Красный', gray: 'Серый' };
-    ROW_COLORS.forEach((c) => {
-      const sw = document.createElement('button');
-      sw.className = `swatch${(p.rowColor || '') === c ? ' on' : ''}`;
-      sw.dataset.color = c;
-      sw.title = COLOR_TITLES[c];
-      sw.setAttribute('aria-label', COLOR_TITLES[c]);
-      sw.addEventListener('click', async () => {
-        await saveField('rowColor', c);
-        colorRow.querySelectorAll('.swatch').forEach((x) => x.classList.toggle('on', x.dataset.color === c));
+  render();
+  return el;
+}
+
+function colorPicker(p, withLabel) {
+  const row = document.createElement('div');
+  row.className = withLabel ? 'color-row' : '';
+  row.innerHTML = `${withLabel ? '<span class="q">Цвет в аналитике</span>' : ''}<div class="swatches"></div>`;
+  const current = displayColor(p);
+  ROW_COLORS.forEach((c) => {
+    const sw = document.createElement('button');
+    sw.className = `swatch${current === c ? ' on' : ''}`;
+    sw.dataset.color = c;
+    sw.title = COLOR_TITLES[c];
+    sw.setAttribute('aria-label', COLOR_TITLES[c]);
+    sw.addEventListener('click', async () => {
+      if (await saveProjectField(p, 'rowColor', c)) {
+        renderProjects(); // grey moves the client to the bottom
         renderAnalytics();
-      });
-      colorRow.querySelector('.swatches').appendChild(sw);
+      }
     });
-    card.appendChild(colorRow);
-
-    const inactiveLabel = document.createElement('label');
-    inactiveLabel.className = 'inactive-toggle';
-    inactiveLabel.innerHTML = `<input type="checkbox"${p.inactive ? ' checked' : ''}> Неактивный клиент`;
-    inactiveLabel.querySelector('input').addEventListener('change', async (e) => {
-      await saveField('inactive', e.target.checked);
-      renderProjects();
-      renderAnalytics();
-      renderRatings();
-    });
-    card.appendChild(inactiveLabel);
-
-    grid.appendChild(card);
+    row.querySelector('.swatches').appendChild(sw);
   });
+  return row;
+}
+
+function projectCard(p) {
+  const card = document.createElement('div');
+  const color = displayColor(p);
+  card.className = `pcard${color ? ' c-' + color : ''}`;
+  card.innerHTML = `<div class="pcard-head"><h3>${escapeHtml(p.name)}${inactiveTag(p)}</h3>`
+    + `<span class="avg-pill" title="Средняя оценка за неделю / за всё время">${weekAvgText(p)}</span></div>`;
+  const pill = card.querySelector('.avg-pill');
+  PROJECT_FIELDS.forEach(({ key, label }) => card.appendChild(textField(p, key, label)));
+  card.insertAdjacentHTML('beforeend', `<div class="week-sep">Оценки · ${formatWeekRange(currentRatingWeek)}</div>`);
+  Object.keys(ROLE_LABELS).forEach((role) => card.appendChild(raterBlock(p, role, { onSaved: () => { pill.textContent = weekAvgText(p); } })));
+  card.appendChild(colorPicker(p, true));
+  return card;
+}
+
+function renderProjectsTable(projects) {
+  const table = document.getElementById('projectsTable');
+  const week = formatWeekRange(currentRatingWeek);
+  table.innerHTML = `<thead><tr><th class="name-th">Клиент</th><th class="wk">Средняя<small>неделя / всё время</small></th>`
+    + PROJECT_FIELDS.map((f) => `<th>${f.label}</th>`).join('')
+    + Object.values(ROLE_LABELS).map((l) => `<th class="wk">${l}<small>${week}</small></th>`).join('')
+    + '<th>Цвет</th></tr></thead><tbody></tbody>';
+  const tbody = table.querySelector('tbody');
+  if (!projects.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Пока нет ни одного проекта</td></tr>';
+    return;
+  }
+  projects.forEach((p) => {
+    const tr = document.createElement('tr');
+    applyRowColor(tr, displayColor(p));
+    const cell = (cls) => { const td = document.createElement('td'); if (cls) td.className = cls; tr.appendChild(td); return td; };
+    cell('name-cell').innerHTML = escapeHtml(p.name) + inactiveTag(p);
+    const avg = cell('t-avg');
+    avg.innerHTML = `<span class="avg-pill" title="Средняя оценка за неделю / за всё время">${weekAvgText(p)}</span>`;
+    PROJECT_FIELDS.forEach(({ key }) => {
+      cell(key === 'currentWork' ? 't-wide' : 't-text').appendChild(autoTextarea(p[key], '—', (v) => saveProjectField(p, key, v)));
+    });
+    Object.keys(ROLE_LABELS).forEach((role) => {
+      cell('t-rate').appendChild(raterBlock(p, role, { label: false, onSaved: () => { avg.firstChild.textContent = weekAvgText(p); } }));
+    });
+    cell().appendChild(colorPicker(p, false));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderProjects() {
+  const cards = projectsView === 'cards';
+  const grid = document.getElementById('projectsGrid');
+  grid.classList.toggle('hidden', !cards);
+  document.getElementById('projectsTableWrap').classList.toggle('hidden', cards);
+  grid.innerHTML = '';
+  document.getElementById('projectsTable').innerHTML = '';
+
+  const projects = orderedProjects();
+  if (cards) {
+    if (!projects.length) grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>';
+    projects.forEach((p) => grid.appendChild(projectCard(p)));
+  } else {
+    renderProjectsTable(projects);
+  }
+  fitAllTextareas();
 }
 
 function openAddProjectModal() {
@@ -772,13 +990,23 @@ const DERIVED_LABELS = { convAd: '% Объявления', convDialog: '% Диа
 const RAW_KEYS = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
 const RAW_LABELS = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
 
-// Wound-down clients with sparse history — pinned to the bottom of the Analytics
-// table instead of sorting alphabetically with active clients, and left out of
-// Ratings entirely (nobody is actively rating them week to week any more).
-const WOUND_DOWN_CLIENTS = new Set(['aydar-ziyazov', 'anna-kramorenko']);
-function isInactive(p) { return Boolean(p.inactive) || WOUND_DOWN_CLIENTS.has(p.id); }
-function orderedAnalyticsProjects() {
-  return [...state.projects].sort((a, b) => (isInactive(a) ? 1 : 0) - (isInactive(b) ? 1 : 0));
+// Grey in the colour picker is what marks a client inactive (the server keeps `inactive`
+// in sync with it); `inactive` alone still counts until that migration has run.
+function isInactive(p) { return p.rowColor === 'gray' || Boolean(p.inactive); }
+function displayColor(p) { return isInactive(p) ? 'gray' : p.rowColor || ''; }
+
+// Clients in the order they came: oldest first, newest after them, inactive (grey) last.
+// A client's start is the first day with any numbers in Analytics — the seeded clients all
+// share one createdAt — falling back to when the project was added.
+function orderedProjects() {
+  const firstDay = {};
+  state.dailyMetrics.forEach((r) => {
+    if (RAW_KEYS.some((k) => r[k] > 0) && (!firstDay[r.projectId] || r.date < firstDay[r.projectId])) firstDay[r.projectId] = r.date;
+  });
+  const start = (p) => firstDay[p.id] || String(p.createdAt || '').slice(0, 10) || '9999-12-31';
+  return [...state.projects].sort((a, b) => (isInactive(a) ? 1 : 0) - (isInactive(b) ? 1 : 0)
+    || start(a).localeCompare(start(b))
+    || a.name.localeCompare(b.name, 'ru'));
 }
 
 // Soft per-client status colour for the Analytics row, picked on the client's Projects card.
@@ -840,7 +1068,7 @@ function renderAnalytics() {
   `;
   const tbody = document.getElementById('analyticsTbody');
 
-  const projects = orderedAnalyticsProjects();
+  const projects = orderedProjects();
   if (!projects.length) {
     tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty">Пока нет ни одного проекта</td></tr>`;
     return;
@@ -849,12 +1077,11 @@ function renderAnalytics() {
   projects.forEach((p) => {
     const tr = document.createElement('tr');
     tr.dataset.projectId = p.id;
-    applyRowColor(tr, p.rowColor);
+    applyRowColor(tr, displayColor(p));
 
     const nameTd = document.createElement('td');
     nameTd.className = 'name-cell';
-    nameTd.textContent = p.name;
-    if (isInactive(p)) nameTd.insertAdjacentHTML('beforeend', '<span class="inactive-tag">неактивный</span>');
+    nameTd.innerHTML = escapeHtml(p.name) + inactiveTag(p);
     tr.appendChild(nameTd);
 
     if (analyticsView === 'day') {
@@ -1114,7 +1341,7 @@ function renderAvitoPanel() {
   if (!avitoPull) sub.textContent = `${formatDayLabel(avitoDate || addDays(todayIso(), -1))} · загрузка…`;
   else if (avitoPull.status !== 'done') sub.textContent = `${formatDayLabel(avitoPull.date)} · собираю данные, можно закрыть окно — придёт уведомление`;
   else sub.textContent = `${formatDayLabel(avitoPull.date)} · собрано ${new Date(avitoPull.finishedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
-  const rows = orderedAnalyticsProjects().map((p) => {
+  const rows = orderedProjects().map((p) => {
     const name = `${escapeHtml(p.name)}${isInactive(p) ? ' <span class="src">неактивный</span>' : ''}`;
     if (!avitoLinks) return `<tr><td>${name}</td><td colspan="4" class="muted">…</td></tr>`;
     if (!linkedAccountId(p.id)) return `<tr><td>${name}</td><td colspan="4" class="muted">кабинет не подключен</td></tr>`;
@@ -1213,7 +1440,7 @@ function renderAvitoLinksList() {
   if (!el || !avitoLinks) return;
   const options = (selected) => ['<option value="">— не подключен —</option>',
     ...avitoLinks.accounts.map((a) => `<option value="${a.id}"${a.id === selected ? ' selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.userId || '')})</option>`)].join('');
-  el.innerHTML = orderedAnalyticsProjects().map((p) =>
+  el.innerHTML = orderedProjects().map((p) =>
     `<div class="link-row"><span>${linkedAccountId(p.id) ? '🟢' : '⚪'} ${escapeHtml(p.name)}</span><select data-project="${p.id}">${options(linkedAccountId(p.id))}</select></div>`
   ).join('');
   el.querySelectorAll('select').forEach((sel) => sel.addEventListener('change', async () => {
@@ -1355,7 +1582,7 @@ async function downloadReport(job) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-// ══════════════════════ RATINGS (по проектам, по неделям) ══════════════════════
+// ══════════════════════ WEEKS + RATINGS (shown on the Projects cards / table) ══════════════════════
 function isoMonday(d) {
   const date = new Date(d);
   const day = date.getDay();
@@ -1389,20 +1616,6 @@ function projectRatingFor(projectId, weekStart) {
   return draft;
 }
 
-function numberScale(value, onSet) {
-  const wrap = document.createElement('div');
-  wrap.className = 'score-scale';
-  for (let i = 1; i <= 10; i++) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = String(i);
-    if (i === value) b.classList.add('on');
-    b.addEventListener('click', () => onSet(i));
-    wrap.appendChild(b);
-  }
-  return wrap;
-}
-
 function avgScore(scores) {
   const valid = scores.filter((s) => s > 0);
   return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
@@ -1416,139 +1629,6 @@ function allTimeAvgFor(projectId) {
 }
 
 function fmtAvg(n) { return n == null ? '—' : String(Math.round(n * 10) / 10); }
-
-document.getElementById('weekPrev').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, -7); renderRatings(); });
-document.getElementById('weekNext').addEventListener('click', () => { currentRatingWeek = addDays(currentRatingWeek, 7); renderRatings(); });
-document.getElementById('weekToday').addEventListener('click', () => { currentRatingWeek = isoMonday(new Date()); renderRatings(); });
-
-// ══════════════════════ TASKS ══════════════════════
-// Read-only view of the tasks the control bot extracts from the work chat and client chats plus
-// the ones the team adds in Avito Tasks (/avito-tasks) — that's where they're edited.
-const TASK_STATUS = {
-  open: ['Открыта', 'status-active'],
-  done: ['Сделана, клиенту не сообщили', 'status-paused'],
-  closed: ['Закрыта', 'status-done'],
-  cancelled: ['Отменена', 'status-done'],
-};
-document.getElementById('tasksProjectFilter').addEventListener('change', renderTasks);
-document.getElementById('tasksStatusFilter').addEventListener('change', renderTasks);
-
-function taskDueMs(t) { const ms = Date.parse(t.due || ''); return Number.isFinite(ms) ? ms : null; }
-function fmtTaskDate(ms) {
-  if (!ms) return '—';
-  return new Date(ms).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-}
-
-function renderTasks() {
-  const tasks = (state.tasks || []).filter((t) => t.source === 'bot' || t.source === 'tracker');
-  const projectName = (id) => (state.projects.find((p) => p.id === id) || {}).name;
-  const filterEl = document.getElementById('tasksProjectFilter');
-  const current = filterEl.value;
-  const ids = [...new Set(tasks.map((t) => t.projectId || ''))];
-  filterEl.innerHTML = '<option value="">Все клиенты</option>' + ids
-    .map((id) => [id, id ? projectName(id) || id : 'Без клиента'])
-    .sort((a, b) => a[1].localeCompare(b[1], 'ru'))
-    .map(([id, name]) => `<option value="${escapeHtml(id || '__none')}">${escapeHtml(name)}</option>`).join('');
-  filterEl.value = current;
-
-  const status = document.getElementById('tasksStatusFilter').value;
-  const now = Date.now();
-  const rows = tasks.filter((t) => {
-    if (filterEl.value && (t.projectId || '__none') !== filterEl.value) return false;
-    if (status === 'active') return t.status === 'open' || t.status === 'done';
-    if (status === 'overdue') return t.status === 'open' && taskDueMs(t) && taskDueMs(t) < now;
-    return true;
-  }).sort((a, b) => (taskDueMs(a) || Infinity) - (taskDueMs(b) || Infinity) || String(b.createdAt).localeCompare(String(a.createdAt)));
-
-  const table = document.getElementById('tasksTable');
-  const head = '<thead><tr><th class="name-th">Клиент</th><th>Задача</th><th>Исполнитель</th><th>Срок</th><th>Статус</th><th>Поставлена</th><th></th></tr></thead>';
-  if (!rows.length) {
-    table.innerHTML = head + '<tbody><tr><td class="empty" colspan="7">Задач нет — бот добавляет их сюда сам из рабочего чата</td></tr></tbody>';
-    return;
-  }
-  table.innerHTML = head + '<tbody>' + rows.map((t) => {
-    const due = taskDueMs(t);
-    const overdue = t.status === 'open' && due && due < now;
-    const [label, cls] = overdue ? ['Просрочена', 'status-overdue'] : TASK_STATUS[t.status] || [t.status, ''];
-    return `<tr>
-      <td class="name-cell">${escapeHtml(projectName(t.projectId) || t.topicName || '—')}</td>
-      <td class="task-text">${escapeHtml(t.text)}</td>
-      <td>${escapeHtml(t.owner || '—')}</td>
-      <td>${due ? fmtTaskDate(due) : 'без срока'}</td>
-      <td><span class="status-badge ${cls}">${escapeHtml(label)}</span></td>
-      <td>${fmtTaskDate(Date.parse(t.startedAt || t.createdAt))}${t.author ? ' · ' + escapeHtml(t.author) : ''}</td>
-      <td>${t.link ? `<a href="${escapeHtml(t.link)}" target="_blank" rel="noopener">в чате ↗</a>` : ''}</td>
-    </tr>`;
-  }).join('') + '</tbody>';
-}
-
-function renderRatings() {
-  document.getElementById('weekLabel').textContent = formatWeekRange(currentRatingWeek);
-
-  const grid = document.getElementById('ratingsGrid');
-  grid.innerHTML = '';
-  const projects = state.projects.filter((p) => !isInactive(p));
-  if (!projects.length) { grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>'; return; }
-
-  projects.forEach((p) => {
-    const draft = projectRatingFor(p.id, currentRatingWeek);
-    const card = document.createElement('div');
-    card.className = 'rating-card';
-
-    const scores = [draft.client.score, draft.manager.score, draft.specialist.score];
-    const weekAvg = avgScore(scores);
-    const allTimeAvg = allTimeAvgFor(p.id);
-    card.innerHTML = `
-      <div class="rating-card-head">
-        <h3>${escapeHtml(p.name)}</h3>
-        <span class="avg-pill" title="Средняя за неделю / за всё время">${fmtAvg(weekAvg)}/${fmtAvg(allTimeAvg)}</span>
-      </div>
-    `;
-
-    Object.entries(ROLE_LABELS).forEach(([role, label]) => {
-      const block = document.createElement('div');
-      block.className = 'rater';
-
-      const head = document.createElement('div');
-      head.className = 'rater-head';
-      head.innerHTML = `<span class="who"><span class="dot" style="background:${ROLE_DOT[role]}"></span>${label}</span><span class="score-badge">${draft[role].score || '—'}</span>`;
-      block.appendChild(head);
-
-      block.appendChild(numberScale(draft[role].score, async (val) => {
-        // clicking the already-set score again clears it back to unrated
-        draft[role].score = draft[role].score === val ? 0 : val;
-        await save(role);
-        renderRatings();
-      }));
-
-      const comment = document.createElement('textarea');
-      comment.className = 'rater-comment';
-      comment.placeholder = 'Комментарий к оценке...';
-      comment.value = draft[role].comment;
-      comment.addEventListener('blur', () => { draft[role].comment = comment.value; save(role); });
-      block.appendChild(comment);
-
-      card.appendChild(block);
-    });
-
-    grid.appendChild(card);
-
-    // Client/manager/specialist are three different people, often on three different
-    // devices — each role is its own independent record server-side (see _worker.js),
-    // so this save can never race with or clobber another role's concurrent save.
-    async function save(role) {
-      const res = await api('/api/dashboard/project-rating', {
-        method: 'POST',
-        body: JSON.stringify({ projectId: p.id, weekStart: currentRatingWeek, role, score: draft[role].score, comment: draft[role].comment }),
-      });
-      if (res && res.projectRating) {
-        state.projectRatings = state.projectRatings.filter((r) => !(r.projectId === p.id && r.weekStart === currentRatingWeek && r.role === role));
-        state.projectRatings.push(res.projectRating);
-        toast('Оценка сохранена');
-      }
-    }
-  });
-}
 
 // ── util ──
 function escapeHtml(s) {
