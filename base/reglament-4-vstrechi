@@ -101,6 +101,12 @@ li:last-child{margin-bottom:0}
   .feedback-btn{top:12px;right:12px}
   .feedback-panel{top:60px;right:12px}
 }
+.copy-target{position:relative;padding-right:52px!important}
+.copy-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:color .15s,border-color .15s,background .15s;white-space:normal}
+.copy-btn:hover{color:var(--red-dark);border-color:var(--red)}
+.copy-btn svg{width:16px;height:16px}
+.copy-btn.copied{color:#fff;background:var(--red);border-color:var(--red)}
+.copy-target.copying .copy-btn,.copy-target.copying .sample-label{display:none}
 </style>
 </head>
 <body>
@@ -287,6 +293,80 @@ li:last-child{margin-bottom:0}
       statusEl.textContent = 'Не получилось отправить. Попробуйте ещё раз.';
     }).finally(function(){
       sendBtn.disabled = false;
+    });
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+  var ICON_DONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject();
+  }
+  // Plain text plus HTML, so bold survives when pasted into Telegram.
+  function copyText(text, html){
+    if (navigator.clipboard && window.isSecureContext) {
+      if (html && window.ClipboardItem && navigator.clipboard.write) {
+        var item = new ClipboardItem({
+          'text/plain': new Blob([text], {type: 'text/plain'}),
+          'text/html': new Blob([html], {type: 'text/html'})
+        });
+        return navigator.clipboard.write([item]).catch(function(){
+          return navigator.clipboard.writeText(text);
+        }).catch(function(){ return fallbackCopy(text); });
+      }
+      return navigator.clipboard.writeText(text).catch(function(){ return fallbackCopy(text); });
+    }
+    return fallbackCopy(text);
+  }
+  function boxHtml(box){
+    var clone = box.cloneNode(true);
+    Array.prototype.forEach.call(clone.querySelectorAll('.copy-btn, .sample-label'), function(el){ el.remove(); });
+    return clone.innerHTML.trim().replace(/\n/g, '<br>');
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.template-box, .sample-box'), function(box){
+    if (box.hasAttribute('data-nocopy')) return;
+    box.classList.add('copy-target');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.title = 'Скопировать';
+    btn.setAttribute('aria-label', 'Скопировать текст');
+    btn.innerHTML = ICON_COPY;
+    box.appendChild(btn);
+    var timer = null;
+    btn.addEventListener('click', function(){
+      box.classList.add('copying');
+      var text = box.innerText.replace(/\n{3,}/g, '\n\n').trim();
+      box.classList.remove('copying');
+      copyText(text, boxHtml(box)).then(function(){
+        btn.classList.add('copied');
+        btn.innerHTML = ICON_DONE;
+        btn.title = 'Скопировано';
+      }, function(){
+        btn.title = 'Не получилось скопировать — выделите текст вручную';
+      }).then(function(){
+        clearTimeout(timer);
+        timer = setTimeout(function(){
+          btn.classList.remove('copied');
+          btn.innerHTML = ICON_COPY;
+          btn.title = 'Скопировать';
+        }, 1600);
+      });
     });
   });
 })();

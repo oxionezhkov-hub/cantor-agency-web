@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Работа с автозагрузкой Авито — База знаний Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--red)}
+a:hover{text-decoration:none}
+
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
+.logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
+.logo span{color:var(--red)}
+.header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
+.header-tag:hover{color:var(--red)}
+
+.wrap{max-width:820px;margin:0 auto;padding:44px 24px 60px}
+
+.doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
+.doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
+
+.reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
+.reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
+.reg-goal{font-size:15px;color:var(--muted);margin-bottom:22px;font-style:italic}
+
+.step{border-top:1px solid var(--border);padding:22px 0}
+.reg-card > .step:first-of-type{border-top:none;padding-top:2px}
+.step-title{font-size:16.5px;font-weight:700;color:var(--dark);margin-bottom:4px;letter-spacing:-0.005em}
+.step-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+.step h4{font-size:13px;font-weight:700;color:var(--red-dark);text-transform:uppercase;letter-spacing:.03em;margin:16px 0 8px}
+.step h4:first-of-type{margin-top:0}
+.step p{font-size:15px;color:var(--text);margin-bottom:10px}
+.step p:last-child{margin-bottom:0}
+ul,ol{padding-left:20px;margin-bottom:10px}
+li{font-size:15px;color:var(--text);margin-bottom:6px;line-height:1.65}
+li:last-child{margin-bottom:0}
+.result-box{background:var(--accent-bg);border-radius:var(--r-md);padding:12px 16px;font-size:14px;color:var(--dark2);margin-top:14px}
+.result-box strong{color:var(--red-dark)}
+
+table.data-table{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:14px}
+table.data-table th,table.data-table td{border-bottom:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+table.data-table th{font-weight:700;color:var(--dark);background:var(--bg)}
+table.data-table td{color:var(--text)}
+table.data-table tr:last-child td{border-bottom:none}
+.table-scroll{overflow-x:auto;margin:12px 0 16px}
+.table-scroll table.data-table{margin:0;min-width:480px}
+
+.checklist{list-style:none;padding-left:0;margin:10px 0 4px}
+.checklist li{display:flex;gap:10px;align-items:flex-start;padding-left:0}
+.checklist li::before{content:"✓";flex:0 0 20px;height:20px;width:20px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:11px;line-height:20px;text-align:center;margin-top:1px}
+
+.doc-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;flex-wrap:wrap}
+.doc-nav a{font-size:13.5px;font-weight:700;color:var(--red-dark);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.doc-nav a:hover{color:var(--red)}
+.doc-nav .to-catalog{color:var(--muted)}
+.doc-nav .to-catalog:hover{color:var(--red)}
+
+.video-embed{position:relative;padding-top:56.25%;border-radius:var(--r-md);overflow:hidden;background:var(--dark);margin:12px 0 6px}
+.template-box{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--r-md);padding:12px 16px;font-size:14px;color:var(--dark2);white-space:pre-line;margin:8px 0 14px;line-height:1.6}
+.template-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:14px}
+.video-embed iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:1px 6px;word-break:break-word}
+
+@media(max-width:640px){
+  .header{padding:14px 20px}
+  .wrap{padding:30px 16px 50px}
+  .reg-card{padding:24px 20px 6px}
+  table.data-table th,table.data-table td{font-size:12.5px;padding:8px 8px}
+  .doc-nav{flex-direction:column;align-items:flex-start}
+}
+.feedback-btn{position:fixed;top:16px;right:16px;z-index:110;width:42px;height:42px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red-dark);transition:transform .15s,border-color .15s;padding:0}
+.feedback-btn:hover{border-color:var(--red);transform:scale(1.06)}
+.feedback-btn svg{width:20px;height:20px}
+.feedback-panel{position:fixed;top:66px;right:16px;z-index:110;width:300px;max-width:calc(100vw - 32px);background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:16px;display:none}
+.feedback-panel.open{display:block}
+.feedback-panel-label{font-size:13.5px;color:var(--text);margin-bottom:10px;line-height:1.5}
+.feedback-textarea{width:100%;min-height:90px;resize:vertical;font-family:inherit;font-size:14px;color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;box-sizing:border-box}
+.feedback-textarea:focus{outline:none;border-color:var(--red)}
+.feedback-actions{display:flex;justify-content:flex-end;gap:8px}
+.feedback-btn-cancel{font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;padding:8px 10px}
+.feedback-btn-cancel:hover{color:var(--text)}
+.feedback-btn-send{font-size:13px;font-weight:700;color:#fff;background:var(--red);border:none;border-radius:999px;padding:8px 16px;cursor:pointer}
+.feedback-btn-send:hover{background:var(--red-dark)}
+.feedback-btn-send:disabled{opacity:.6;cursor:default}
+.feedback-status{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+@media(max-width:640px){
+  .feedback-btn{top:12px;right:12px}
+  .feedback-panel{top:60px;right:12px}
+}
+.copy-target{position:relative;padding-right:52px!important}
+.copy-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:color .15s,border-color .15s,background .15s;white-space:normal}
+.copy-btn:hover{color:var(--red-dark);border-color:var(--red)}
+.copy-btn svg{width:16px;height:16px}
+.copy-btn.copied{color:#fff;background:var(--red);border-color:var(--red)}
+.copy-target.copying .copy-btn,.copy-target.copying .sample-label{display:none}
+</style>
+</head>
+<body>
+
+<div class="header-trigger"></div>
+<div class="header">
+  <a href="/" class="logo">Cantor <span>Agency</span></a>
+  <a href="/base" class="header-tag">← База знаний</a>
+</div>
+
+<button type="button" class="feedback-btn" id="feedback-btn" aria-label="Оставить комментарий">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.27 16.5 14.14 18.18 21 12 17.27 5.82 21 7.5 14.14 2 9.27 8.91 8.63 12 2"></polygon></svg>
+</button>
+<div class="feedback-panel" id="feedback-panel">
+  <div class="feedback-panel-label">Напишите что хотите уточнить — добавим это в базу знаний</div>
+  <textarea class="feedback-textarea" id="feedback-text" placeholder="Ваш комментарий…"></textarea>
+  <div class="feedback-actions">
+    <button type="button" class="feedback-btn-cancel" id="feedback-cancel">Закрыть</button>
+    <button type="button" class="feedback-btn-send" id="feedback-send">Отправить</button>
+  </div>
+  <div class="feedback-status" id="feedback-status" hidden></div>
+</div>
+
+<div class="wrap">
+
+  <div class="doc-title">Работа с автозагрузкой Авито</div>
+  <div class="doc-meta">Как подключить клиента к автозагрузке через сервис Банан Лаб, перенести существующие объявления в таблицу, создавать и править объявления массово, уникализировать тексты и подключать фото.</div>
+
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#v0">Видео-обучение</a>
+        <a href="#v1">1. Зачем нужна автозагрузка</a>
+        <a href="#v2">2. Доступ к сервису</a>
+        <a href="#v3">3. Подключение нового клиента</a>
+        <a href="#v4">4. Перенос существующих объявлений</a>
+        <a href="#v5">5. Как устроена таблица</a>
+        <a href="#v6">6. Контакты и данные менеджера</a>
+        <a href="#v7">7. Поиск и правка объявления</a>
+        <a href="#v8">8. Создание нового объявления</a>
+        <a href="#v9">9. Тексты и уникализация</a>
+        <a href="#v10">10. Фото через Яндекс Диск</a>
+        <a href="#v11">11. Публикация на Авито</a>
+        <a href="#v12">12. Обучение и вопросы</a>
+        <a href="#v13">Чек-лист подключения</a>
+    </div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-title">Работа с автозагрузкой Авито</div>
+    <div class="reg-goal">Все массовые изменения в объявлениях — через таблицу автозагрузки, а не вручную по каждому объявлению.</div>
+
+    <div class="step" id="v0">
+      <div class="step-title">Видео-обучение</div>
+      <div class="step-meta">Запись Zoom-обучения по автозагрузке · 29 сентября 2026 · ведёт Евгений Исаев</div>
+      <p>Перед работой посмотрите запись целиком — в ней показан весь процесс на реальных кабинетах. Ниже он расписан по шагам.</p>
+      <div class="video-embed"><iframe src="https://player.vimeo.com/video/1231971304?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen frameborder="0" title="Обучение: работа с автозагрузкой Авито" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="step" id="v1">
+      <div class="step-title">1. Зачем нужна автозагрузка</div>
+      <p>Выкладывать и особенно редактировать объявления вручную долго: чтобы, например, добавить видео, приходится заходить в каждое из 20–50 объявлений по отдельности. Автозагрузка позволяет вносить все правки в одной Google-таблице: сервис по API передаёт их в кабинет клиента на Авито.</p>
+      <ul>
+        <li>Правка, которую нужно внести в десятки объявлений (видео, контакты, цена, характеристики), делается один раз в таблице — например, вставили ссылку на видео с Яндекс Диска, и задача закрыта.</li>
+        <li>Массовые размещения (масспостинг на 100–300 объявлений по разным городам) без автозагрузки практически невозможны.</li>
+        <li>Сервис для нас бесплатный — его оплачивает агентство, поэтому используем его по максимуму.</li>
+      </ul>
+      <div class="result-box"><strong>Правило:</strong> видите задачу, где нужно пройтись по многим объявлениям, — сначала думаем, как сделать её через автозагрузку. Не нужно стремиться сделать за час вручную; лучше один раз разобраться в инструменте.</div>
+    </div>
+
+    <div class="step" id="v2">
+      <div class="step-title">2. Доступ к сервису</div>
+      <div class="step-meta">Кто выдаёт: Олег Ежков (руководитель)</div>
+      <ul>
+        <li>Работаем в сервисе автозагрузки <strong>Банан Лаб</strong> через <strong>один общий кабинет</strong> агентства — в нём подключены все наши клиенты.</li>
+        <li>Логин, пароль и ссылку на сервис запрашиваете у Олега.</li>
+        <li>Кабинет общий, поэтому таблицы всех клиентов видны всем сотрудникам: можно открыть любую таблицу и посмотреть, как сделано у коллег, — и брать удачные решения себе.</li>
+        <li>В сервисе есть подробные инструкции почти по каждому инструменту (заголовки, ID, описание, фото, видео) — изучите их, когда появится время.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="v3">
+      <div class="step-title">3. Подключение нового клиента</div>
+      <div class="step-meta">Что понадобится: данные API кабинета клиента — client_id, client_secret и номер профиля</div>
+      <p>Данные API Олег выкладывает в чат по каждому клиенту — там же, где бриф и выгрузка объявлений (.xlsx).</p>
+      <h4>Порядок действий</h4>
+      <ol>
+        <li>Откройте в Банан Лабе список клиентов и нажмите кнопку добавления клиента. Назовите клиента понятно (имя преподавателя / направление).</li>
+        <li>Откройте <strong>шаблон таблицы</strong> объявлений и создайте его копию (Файл → Создать копию). Шаблон общий для всех пользователей сервиса — <strong>в самом шаблоне ничего не меняем</strong>, работаем только в копии.</li>
+        <li>Откройте доступ к копии по ссылке и вставьте ссылку на неё в карточку клиента в сервисе.</li>
+        <li>Вставьте в карточку клиента <strong>client_id</strong>, <strong>client_secret</strong> и <strong>номер профиля</strong> — через них сервис подключается к кабинету напрямую по API, и все изменения уходят туда.</li>
+        <li>Нажмите «Добавить клиента». Теперь клиент в сервисе привязан к своему кабинету на Авито и к своей таблице.</li>
+      </ol>
+      <div class="result-box"><strong>Результат этапа:</strong> клиент добавлен в Банан Лаб, к нему привязаны кабинет Авито и отдельная копия таблицы.</div>
+    </div>
+
+    <div class="step" id="v4">
+      <div class="step-title">4. Перенос существующих объявлений в таблицу</div>
+      <p>В большинстве кабинетов уже есть объявления. Чтобы работать с ними через автозагрузку, их нужно перенести в таблицу.</p>
+      <ol>
+        <li>Скачайте из чата клиента файл-выгрузку объявлений (.xlsx — это обычная Excel-таблица). Загрузить его в таблицу напрямую не получится.</li>
+        <li>Откройте файл через Google Таблицы (прямо из таблицы клиента: Файл → Открыть → загрузить файл) — он откроется отдельной таблицей.</li>
+        <li>Скопируйте все значения из файла и вставьте их на вкладку <strong>«Файл из Авито»</strong> в таблице клиента.</li>
+        <li>В меню <strong>«Банан Лаб»</strong> в таблице (через него идёт любое взаимодействие с сервисом) выберите «Выгрузить старые объявления из Авито». Запустится скрипт, и все объявления появятся на основной рабочей вкладке.</li>
+      </ol>
+      <p>Вкладка «Файл из Авито» — это исходные данные, которые сервис берёт за основу. <strong>Ничего на ней не меняем</strong> — работаем только на рабочей вкладке.</p>
+      <div class="result-box"><strong>Результат этапа:</strong> все текущие объявления клиента лежат на рабочей вкладке таблицы: ID, заголовки, описания, категория, адрес и все параметры — каждый в своём столбце.</div>
+    </div>
+
+    <div class="step" id="v5">
+      <div class="step-title">5. Как устроена таблица</div>
+      <h4>Вкладки</h4>
+      <ul>
+        <li><strong>«Справка»</strong> — описание сервиса и параметров. Для ежедневной работы не нужна, но изучить стоит.</li>
+        <li><strong>Основная рабочая вкладка</strong> — объявления по категории (для наших клиентов обычно «Предложения услуг» → обучение: курсы, школьные предметы, вуз). <strong>Одна строка = одно объявление.</strong></li>
+        <li><strong>«Информация о менеджере»</strong> и другие вкладки — часть из них понадобится (см. шаг 6).</li>
+        <li><strong>«Файл из Авито»</strong> — исходная выгрузка из кабинета, не редактируем.</li>
+      </ul>
+      <h4>Цвета заголовков столбцов</h4>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Обозначение</th><th>Что значит</th><th>Что делаем</th></tr>
+          <tr><td>Красный заголовок</td><td>Обязательный параметр</td><td>Заполняем всегда: без него объявление не выгрузится, сервис покажет ошибку</td></tr>
+          <tr><td>Синий заголовок</td><td>Дополнительный параметр</td><td>Тоже заполняем — многие из них влияют на конверсию</td></tr>
+          <tr><td>Зелёная плашка</td><td>Параметр выгружается в XML и попадает в объявление на Авито</td><td>Всё, что должно попасть на Авито, должно быть с зелёной плашкой</td></tr>
+          <tr><td>Без зелёной плашки</td><td>Вспомогательный столбец, на Авито не уходит</td><td>Используем для внутренней работы (например, инструмент уникализации текстов)</td></tr>
+        </table>
+      </div>
+      <ul>
+        <li>По каждому столбцу можно открыть подсказку: что это за параметр, зачем его заполнять и пример заполнения. Если не знаете, в каком формате записать значение, — смотрите пример.</li>
+        <li>Не пропускаем характеристики, которые повышают доверие. Например, если у преподавателя есть <strong>лицензия на образовательную деятельность</strong> — обязательно указываем это в характеристиках: для ученика это может быть важно.</li>
+        <li>Большая часть столбцов в нашей работе не понадобится — заполняем обязательные и те, что важны для ниши.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="v6">
+      <div class="step-title">6. Контакты и данные менеджера</div>
+      <p>На вкладке «Информация о менеджере» задаются: телефон, способ связи, имя менеджера и можно ли принимать интернет-звонки. Это одни из самых важных данных клиента.</p>
+      <ul>
+        <li><strong>Эти столбцы по умолчанию не выгружаются</strong> — им нужно вручную проставить зелёную плашку, иначе данные не попадут в объявления.</li>
+        <li><strong>Телефон</strong> — это контактный номер. Он не обязательно должен быть привязан к кабинету Авито: указываем тот номер, по которому клиент принимает звонки.</li>
+        <li><strong>Имя менеджера</strong> — может быть любым.</li>
+        <li><strong>Способ связи</strong> — сверяемся с брифом или смотрим текущие объявления. Некоторые клиенты не работают со звонками. Если во всех объявлениях стоит «В сообщениях», а в одном «По телефону» — это, скорее всего, ошибка: выравниваем, проставляем везде «В сообщениях».</li>
+      </ul>
+      <div class="result-box"><strong>Результат этапа:</strong> во всех объявлениях единые и корректные телефон, способ связи и имя.</div>
+    </div>
+
+    <div class="step" id="v7">
+      <div class="step-title">7. Поиск и правка объявления</div>
+      <p>В таблице два вида ID — не путайте их:</p>
+      <ul>
+        <li><strong>Id</strong> — наш рабочий ID. Его задаём сами, в любом удобном формате.</li>
+        <li><strong>AvitoId</strong> — ID объявления на Авито, проставляется автоматически. Это «адрес» объявления: его <strong>не трогаем</strong>, используем только для поиска.</li>
+      </ul>
+      <h4>Как найти нужное объявление</h4>
+      <ol>
+        <li>Увидели в кабинете клиента объявление, которое нужно поправить (или вам подсветили проблему, например с фото), — скопируйте его ID на Авито.</li>
+        <li>Найдите этот ID в таблице поиском (Ctrl+F / ⌘+F) — это и есть строка, которую нужно отредактировать.</li>
+        <li>Внесите правки в строке и опубликуйте изменения (шаг 11).</li>
+      </ol>
+      <p>Чтобы внести одинаковую правку во много объявлений (например, добавить видео), достаточно заполнить нужный столбец во всех строках — по видео в сервисе есть отдельная подробная инструкция.</p>
+    </div>
+
+    <div class="step" id="v8">
+      <div class="step-title">8. Создание нового объявления</div>
+      <ol>
+        <li>Добавьте новую строку — проще всего скопировать строку уже готового объявления и поменять в ней нужное (например, город).</li>
+        <li>Задайте свой Id — любой удобный.</li>
+        <li>Заполните все обязательные (красные) поля и всё важное из дополнительных: заголовок, описание, цена, категория, адрес/город, контакты, фото.</li>
+        <li>Описание пишется в специальном формате разметки — посмотрите, как оно оформлено в таблицах других клиентов, и делайте так же.</li>
+        <li>Проверьте, что вся информация заполнена: та же категория, тот же номер, корректный город.</li>
+      </ol>
+      <p>Требования к самим объявлениям (заголовки, первый абзац, цена, фото, отзывы) — в регламенте <a href="/base/reglament-oformlenie-obyavleniy">«Оформление и наполнение объявлений»</a> и в шаге 6 <a href="/base/zapusk-novogo-klienta#a6">регламента работы с новыми клиентами</a>.</p>
+    </div>
+
+    <div class="step" id="v9">
+      <div class="step-title">9. Тексты и уникализация</div>
+      <h4>Подготовка текста с ChatGPT</h4>
+      <ol>
+        <li>Дайте ChatGPT формат описания (пример из таблицы) и бриф клиента.</li>
+        <li>Попросите несколько вариантов текста — например, таким запросом:
+          <div class="template-box">Создай 3 варианта этого текста. Обязательно: призывы к действию и УТП расположи на первых строках, используй выделение жирным. Покажи предпросмотр каждого варианта в удобном для чтения виде.</div>
+          Предпросмотр просим потому, что формат разметки читать тяжело.
+        </li>
+        <li>Прочитайте итоговый вариант, внесите правки, при необходимости дорабатывайте текст в том же диалоге.</li>
+      </ol>
+      <h4>Уникализация</h4>
+      <p>При масспостинге (сотни объявлений по разным городам) одинаковые тексты не подходят — объявления с одинаковыми текстами и фото рискуют попасть под блокировку. Поэтому уникализируем и текст, и фото.</p>
+      <ul>
+        <li>В готовом тексте выбираете фразу, у которой может быть несколько вариантов, и записываете варианты в скобках через разделитель, например призыв к действию:
+          <div class="template-box">{Напишите в чат Авито|Позвоните|Переходите в профиль}</div>
+          Точный синтаксис — в «Справке» таблицы.</li>
+        <li>Запускаете инструмент <strong>«Уникализировать текст»</strong> — из одного грамотно составленного текста он делает хоть 150 вариантов в одно нажатие, для каждого объявления случайно выбирая один из вариантов фразы.</li>
+        <li>Чем больше фраз с вариантами — тем разнообразнее получаются тексты.</li>
+        <li>Столбец уникализации — вспомогательный, на Авито не уходит: готовый результат копируем в столбец описания.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="v10">
+      <div class="step-title">10. Фото через Яндекс Диск</div>
+      <ol>
+        <li>Фото храним в папках на Яндекс Диске (по клиентам). Папкой можно поделиться с Олегом.</li>
+        <li>В ячейку фото вставляем ссылки на фото — каждая с новой строки. Максимум <strong>10 фото</strong> на объявление.</li>
+        <li><strong>Обязательно подключите токен Яндекс Диска</strong>, иначе сервис не сможет забрать фото: в таблице есть инструкция со ссылкой — перейдите по ней, откроется токен вашего аккаунта Яндекса (набор букв и цифр). Скопируйте его и вставьте в жёлтое поле. Больше ничего делать не нужно.</li>
+      </ol>
+      <p>Требования к самим фото (обложка, порядок, качество) — в регламенте <a href="/base/reglament-oformlenie-obyavleniy">«Оформление и наполнение объявлений»</a>.</p>
+    </div>
+
+    <div class="step" id="v11">
+      <div class="step-title">11. Публикация на Авито</div>
+      <h4>Первое подключение профиля</h4>
+      <ul>
+        <li>В меню «Банан Лаб» выберите «Подключить на Авито», заполните данные и сохраните изменения. После этого все активные объявления из таблицы будут выгружаться в кабинет, к которому она привязана.</li>
+      </ul>
+      <h4>Публикация изменений</h4>
+      <ul>
+        <li>После любых правок нажмите в меню <strong>«Обновить в XML»</strong> — изменения сохранятся в файл автозагрузки.</li>
+        <li>Авито забирает файл автоматически, в среднем <strong>раз в час</strong>, — через какое-то время новые объявления и правки появятся в кабинете.</li>
+        <li>Если изменения нужны раньше — нажмите <strong>«Обновить сразу в Авито»</strong>.</li>
+        <li>После выгрузки проверьте в кабинете, что объявления появились и прошли модерацию, и что сервис не показал ошибок.</li>
+      </ul>
+      <div class="result-box"><strong>Важно:</strong> после подключения клиента к автозагрузке правки вносим через таблицу. Изменения, сделанные вручную в кабинете, при следующей выгрузке могут перезаписаться данными из таблицы.</div>
+    </div>
+
+    <div class="step" id="v12">
+      <div class="step-title">12. Обучение и вопросы</div>
+      <ul>
+        <li>По автозагрузке обращайтесь к Евгению Исаеву: можно созвониться, включить демонстрацию экрана и сделать задачу вместе. Не стесняйтесь задавать вопросы — инструмент новый, вопросов поначалу много, это нормально.</li>
+        <li>Когда закроете текущие срочные задачи — напишите Евгению, что готовы плотно заняться автозагрузкой: следующий шаг — научиться вести через неё профили целиком и быстро вносить крупные изменения.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="v13">
+      <div class="step-title">Чек-лист подключения клиента к автозагрузке</div>
+      <ul class="checklist">
+        <li>Клиент добавлен в Банан Лаб, название понятное</li>
+        <li>Создана копия шаблона таблицы, доступ по ссылке открыт, ссылка вставлена в сервис</li>
+        <li>Указаны client_id, client_secret и номер профиля</li>
+        <li>Выгрузка объявлений (.xlsx) вставлена на вкладку «Файл из Авито»</li>
+        <li>Выполнено «Выгрузить старые объявления из Авито» — объявления на рабочей вкладке</li>
+        <li>Данные менеджера (телефон, способ связи, имя) заполнены и отмечены зелёной плашкой</li>
+        <li>Обязательные (красные) поля заполнены во всех строках</li>
+        <li>Подключён токен Яндекс Диска, ссылки на фото работают</li>
+        <li>Профиль подключён на Авито, изменения выгружены через «Обновить в XML»</li>
+        <li>Проверено в кабинете: объявления на месте, ошибок и блокировок нет</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-nav">
+    <a href="/base" class="to-catalog">← К каталогу регламентов</a>
+    <a href="/base/reglament-oformlenie-obyavleniy">Оформление и наполнение объявлений →</a>
+  </div>
+
+</div>
+
+
+
+
+
+
+<script>
+(function(){
+  var FEEDBACK_URL = 'https://functions.yandexcloud.net/d4ee1rhgpv5toe7lcjta';
+
+  var btn = document.getElementById('feedback-btn');
+  var panel = document.getElementById('feedback-panel');
+  var textarea = document.getElementById('feedback-text');
+  var sendBtn = document.getElementById('feedback-send');
+  var cancelBtn = document.getElementById('feedback-cancel');
+  var statusEl = document.getElementById('feedback-status');
+
+  function nearestBlock(){
+    var titleEl = document.querySelector('.doc-title');
+    var regulation = titleEl ? titleEl.textContent.trim() : document.title;
+    var blocks = document.querySelectorAll('.step-title, .cat-card-title, .featured-card-title, .section-label, .reg-title');
+    var block = '';
+    var threshold = window.innerHeight * 0.4;
+    for (var i = 0; i < blocks.length; i++){
+      var rect = blocks[i].getBoundingClientRect();
+      if (rect.top <= threshold) block = blocks[i].textContent.trim();
+      else break;
+    }
+    if (!block && blocks.length) block = blocks[0].textContent.trim();
+    return { regulation: regulation, block: block };
+  }
+
+  function closePanel(){
+    panel.classList.remove('open');
+    statusEl.hidden = true;
+    statusEl.textContent = '';
+  }
+
+  btn.addEventListener('click', function(){
+    var opening = !panel.classList.contains('open');
+    panel.classList.toggle('open');
+    if (opening) {
+      textarea.focus();
+    }
+  });
+  cancelBtn.addEventListener('click', closePanel);
+  document.addEventListener('click', function(e){
+    if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      closePanel();
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closePanel();
+  });
+
+  sendBtn.addEventListener('click', function(){
+    var comment = textarea.value.trim();
+    if (!comment) { textarea.focus(); return; }
+    var ctx = nearestBlock();
+    sendBtn.disabled = true;
+    statusEl.hidden = false;
+    statusEl.textContent = 'Отправляем…';
+    fetch(FEEDBACK_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        comment: comment,
+        regulation: ctx.regulation,
+        block: ctx.block,
+        url: window.location.href
+      })
+    }).then(function(r){
+      if (!r.ok) throw new Error('bad status');
+      statusEl.textContent = 'Спасибо, отправлено!';
+      textarea.value = '';
+      setTimeout(closePanel, 1200);
+    }).catch(function(){
+      statusEl.textContent = 'Не получилось отправить. Попробуйте ещё раз.';
+    }).finally(function(){
+      sendBtn.disabled = false;
+    });
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+  var ICON_DONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject();
+  }
+  // Plain text plus HTML, so bold survives when pasted into Telegram.
+  function copyText(text, html){
+    if (navigator.clipboard && window.isSecureContext) {
+      if (html && window.ClipboardItem && navigator.clipboard.write) {
+        var item = new ClipboardItem({
+          'text/plain': new Blob([text], {type: 'text/plain'}),
+          'text/html': new Blob([html], {type: 'text/html'})
+        });
+        return navigator.clipboard.write([item]).catch(function(){
+          return navigator.clipboard.writeText(text);
+        }).catch(function(){ return fallbackCopy(text); });
+      }
+      return navigator.clipboard.writeText(text).catch(function(){ return fallbackCopy(text); });
+    }
+    return fallbackCopy(text);
+  }
+  function boxHtml(box){
+    var clone = box.cloneNode(true);
+    Array.prototype.forEach.call(clone.querySelectorAll('.copy-btn, .sample-label'), function(el){ el.remove(); });
+    return clone.innerHTML.trim().replace(/\n/g, '<br>');
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.template-box, .sample-box'), function(box){
+    if (box.hasAttribute('data-nocopy')) return;
+    box.classList.add('copy-target');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.title = 'Скопировать';
+    btn.setAttribute('aria-label', 'Скопировать текст');
+    btn.innerHTML = ICON_COPY;
+    box.appendChild(btn);
+    var timer = null;
+    btn.addEventListener('click', function(){
+      box.classList.add('copying');
+      var text = box.innerText.replace(/\n{3,}/g, '\n\n').trim();
+      box.classList.remove('copying');
+      copyText(text, boxHtml(box)).then(function(){
+        btn.classList.add('copied');
+        btn.innerHTML = ICON_DONE;
+        btn.title = 'Скопировано';
+      }, function(){
+        btn.title = 'Не получилось скопировать — выделите текст вручную';
+      }).then(function(){
+        clearTimeout(timer);
+        timer = setTimeout(function(){
+          btn.classList.remove('copied');
+          btn.innerHTML = ICON_COPY;
+          btn.title = 'Скопировать';
+        }, 1600);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

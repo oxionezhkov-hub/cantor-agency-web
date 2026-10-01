@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Работа в таск-трекере Avito Tasks — База знаний Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--red)}
+a:hover{text-decoration:none}
+
+.header-trigger{position:fixed;top:0;left:0;right:0;height:16px;z-index:99}
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:-72px;left:0;right:0;z-index:100;transition:top .22s ease;box-shadow:var(--shadow-sm)}
+.header-trigger:hover ~ .header,.header:hover{top:0}
+.logo{font-size:16px;font-weight:700;color:var(--dark);text-decoration:none;letter-spacing:-0.01em}
+.logo span{color:var(--red)}
+.header-tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-decoration:none}
+.header-tag:hover{color:var(--red)}
+
+.wrap{max-width:820px;margin:0 auto;padding:44px 24px 60px}
+
+.doc-title{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,30px);font-weight:800;color:var(--dark);margin-bottom:10px;letter-spacing:-0.02em;line-height:1.25}
+.doc-meta{font-size:13.5px;color:var(--muted);margin-bottom:32px}
+.toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.toc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.toc-links{display:flex;flex-wrap:wrap;gap:8px 10px}
+.toc-links a{font-size:13px;font-weight:600;color:var(--red-dark);text-decoration:none;background:var(--accent-bg);padding:6px 12px;border-radius:999px;line-height:1.3}
+.toc-links a:hover{background:var(--red);color:#fff}
+
+.reg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 32px 8px;margin-bottom:0;box-shadow:var(--shadow-sm)}
+.reg-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:6px;letter-spacing:-0.01em}
+.reg-goal{font-size:15px;color:var(--muted);margin-bottom:22px;font-style:italic}
+
+.step{border-top:1px solid var(--border);padding:22px 0}
+.reg-card > .step:first-of-type{border-top:none;padding-top:2px}
+.step-title{font-size:16.5px;font-weight:700;color:var(--dark);margin-bottom:4px;letter-spacing:-0.005em}
+.step-meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+.step h4{font-size:13px;font-weight:700;color:var(--red-dark);text-transform:uppercase;letter-spacing:.03em;margin:16px 0 8px}
+.step h4:first-of-type{margin-top:0}
+.step p{font-size:15px;color:var(--text);margin-bottom:10px}
+.step p:last-child{margin-bottom:0}
+ul,ol{padding-left:20px;margin-bottom:10px}
+li{font-size:15px;color:var(--text);margin-bottom:6px;line-height:1.65}
+li:last-child{margin-bottom:0}
+.result-box{background:var(--accent-bg);border-radius:var(--r-md);padding:12px 16px;font-size:14px;color:var(--dark2);margin-top:14px}
+.result-box strong{color:var(--red-dark)}
+
+table.data-table{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:14px}
+table.data-table th,table.data-table td{border-bottom:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top}
+table.data-table th{font-weight:700;color:var(--dark);background:var(--bg)}
+table.data-table td{color:var(--text)}
+table.data-table tr:last-child td{border-bottom:none}
+.table-scroll{overflow-x:auto;margin:12px 0 16px}
+.table-scroll table.data-table{margin:0;min-width:480px}
+
+.checklist{list-style:none;padding-left:0;margin:10px 0 4px}
+.checklist li{display:flex;gap:10px;align-items:flex-start;padding-left:0}
+.checklist li::before{content:"✓";flex:0 0 20px;height:20px;width:20px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:11px;line-height:20px;text-align:center;margin-top:1px}
+
+.doc-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;flex-wrap:wrap}
+.doc-nav a{font-size:13.5px;font-weight:700;color:var(--red-dark);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.doc-nav a:hover{color:var(--red)}
+.doc-nav .to-catalog{color:var(--muted)}
+.doc-nav .to-catalog:hover{color:var(--red)}
+
+.video-embed{position:relative;padding-top:75%;border-radius:var(--r-md);overflow:hidden;background:var(--dark);margin:12px 0 6px}
+.video-embed iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:1px 6px;word-break:break-word}
+
+@media(max-width:640px){
+  .header{padding:14px 20px}
+  .wrap{padding:30px 16px 50px}
+  .reg-card{padding:24px 20px 6px}
+  table.data-table th,table.data-table td{font-size:12.5px;padding:8px 8px}
+  .doc-nav{flex-direction:column;align-items:flex-start}
+}
+.feedback-btn{position:fixed;top:16px;right:16px;z-index:110;width:42px;height:42px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red-dark);transition:transform .15s,border-color .15s;padding:0}
+.feedback-btn:hover{border-color:var(--red);transform:scale(1.06)}
+.feedback-btn svg{width:20px;height:20px}
+.feedback-panel{position:fixed;top:66px;right:16px;z-index:110;width:300px;max-width:calc(100vw - 32px);background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:16px;display:none}
+.feedback-panel.open{display:block}
+.feedback-panel-label{font-size:13.5px;color:var(--text);margin-bottom:10px;line-height:1.5}
+.feedback-textarea{width:100%;min-height:90px;resize:vertical;font-family:inherit;font-size:14px;color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;box-sizing:border-box}
+.feedback-textarea:focus{outline:none;border-color:var(--red)}
+.feedback-actions{display:flex;justify-content:flex-end;gap:8px}
+.feedback-btn-cancel{font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;padding:8px 10px}
+.feedback-btn-cancel:hover{color:var(--text)}
+.feedback-btn-send{font-size:13px;font-weight:700;color:#fff;background:var(--red);border:none;border-radius:999px;padding:8px 16px;cursor:pointer}
+.feedback-btn-send:hover{background:var(--red-dark)}
+.feedback-btn-send:disabled{opacity:.6;cursor:default}
+.feedback-status{font-size:12.5px;color:var(--muted);margin-top:8px}
+
+@media(max-width:640px){
+  .feedback-btn{top:12px;right:12px}
+  .feedback-panel{top:60px;right:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header-trigger"></div>
+<div class="header">
+  <a href="/" class="logo">Cantor <span>Agency</span></a>
+  <a href="/base" class="header-tag">← База знаний</a>
+</div>
+
+<button type="button" class="feedback-btn" id="feedback-btn" aria-label="Оставить комментарий">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.63 22 9.27 16.5 14.14 18.18 21 12 17.27 5.82 21 7.5 14.14 2 9.27 8.91 8.63 12 2"></polygon></svg>
+</button>
+<div class="feedback-panel" id="feedback-panel">
+  <div class="feedback-panel-label">Напишите что хотите уточнить — добавим это в базу знаний</div>
+  <textarea class="feedback-textarea" id="feedback-text" placeholder="Ваш комментарий…"></textarea>
+  <div class="feedback-actions">
+    <button type="button" class="feedback-btn-cancel" id="feedback-cancel">Закрыть</button>
+    <button type="button" class="feedback-btn-send" id="feedback-send">Отправить</button>
+  </div>
+  <div class="feedback-status" id="feedback-status" hidden></div>
+</div>
+
+<div class="wrap">
+
+  <div class="doc-title">Работа в таск-трекере Avito Tasks</div>
+  <div class="doc-meta">Полный регламент: вход, роли, постановка задач, статусы, задачи из чатов, Telegram-бот, напоминания, статусы клиентов, контроль руководителя и ежедневный ритм работы.</div>
+
+  <div class="toc">
+    <div class="toc-label">Быстрые ссылки</div>
+    <div class="toc-links">
+        <a href="#t1">1. Главные правила</a>
+        <a href="#t2">2. Вход и доступ</a>
+        <a href="#t3">3. Роли</a>
+        <a href="#t4">4. Подключение Telegram</a>
+        <a href="#t5">5. Экран «Задачи»</a>
+        <a href="#t6">6. Как поставить задачу</a>
+        <a href="#t7">7. Статусы задачи</a>
+        <a href="#t8">8. Работа с задачей</a>
+        <a href="#t9">9. Задачи из чатов</a>
+        <a href="#t10">10. Бот в чатах клиентов</a>
+        <a href="#t11">11. Уведомления и напоминания</a>
+        <a href="#t12">12. Вкладка «Клиенты»</a>
+        <a href="#t13">13. Контроль руководителя</a>
+        <a href="#t14">14. Ежедневный ритм</a>
+        <a href="#t15">15. Нормативы</a>
+        <a href="#t16">16. Частые ошибки</a>
+    </div>
+  </div>
+
+  <div class="reg-card">
+    <div class="reg-title">Работа в таск-трекере Avito Tasks</div>
+    <div class="reg-goal">Ни одна просьба клиента и ни одна задача внутри команды не теряется: у каждой есть исполнитель, срок и понятный статус, а клиент вовремя узнаёт о результате.</div>
+
+    <div class="step" id="t1">
+      <div class="step-title">1. Главные правила</div>
+      <ul>
+        <li><strong>Всё, что нужно сделать для клиента, — задача в трекере.</strong> Договорённость «на словах» или в переписке без задачи считается потерянной.</li>
+        <li><strong>У каждой задачи есть клиент, исполнитель и срок.</strong> Задача без срока дольше 2 рабочих часов попадает в сводку руководителю.</li>
+        <li><strong>Статус всегда актуален.</strong> Взяли задачу — «В работе», сделали — «Готово». По статусам команда и руководитель видят, что происходит, без лишних вопросов.</li>
+        <li><strong>Клиент узнаёт о каждом результате.</strong> Задача по клиенту считается завершённой, только когда клиентский менеджер сообщил клиенту результат и закрыл её.</li>
+        <li><strong>Telegram подключён у всех.</strong> Так новые задачи и напоминания о сроках приходят сразу в личку.</li>
+        <li><strong>Рабочее время — будни 10:00–18:00 МСК.</strong> Все сроки, «рабочие минуты» и «рабочие дни» в трекере считаются в этом интервале.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="t2">
+      <div class="step-title">2. Вход и доступ</div>
+      <div class="step-meta">Адрес: <a href="/avito-tasks">cantor.agency/avito-tasks</a> · также открывается со вкладки «Задачи» в дашборде («Открыть Avito Tasks →»)</div>
+      <ul>
+        <li>Вход — только по <strong>личной пригласительной ссылке</strong>. Пароля нет. Ссылку выдаёт Олег.</li>
+        <li>Откройте ссылку один раз на каждом устройстве (компьютер, телефон) — после этого трекер открывается по обычному адресу.</li>
+        <li>Ссылка личная — не пересылайте её коллегам: по ней в трекер входят от вашего имени.</li>
+        <li>Трекер работает в России без VPN. Страница сама обновляется каждую минуту; точка рядом с логотипом показывает время последнего обновления. Если пропала связь, показываются последние загруженные задачи.</li>
+      </ul>
+      <h4>Если не пускает</h4>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Экран</th><th>Что случилось</th><th>Что делать</th></tr>
+          <tr><td>«Нет доступа»</td><td>Устройство ещё не входило по ссылке</td><td>Откройте свою пригласительную ссылку или запросите её у Олега</td></tr>
+          <tr><td>«Ссылка не работает» / «Нужна новая ссылка»</td><td>Ссылку перевыпустили, старая больше не действует</td><td>Попросите у Олега актуальную ссылку</td></tr>
+          <tr><td>«Доступ отключён»</td><td>Руководитель отключил доступ</td><td>Если это ошибка — напишите Олегу</td></tr>
+          <tr><td>«Нет связи»</td><td>Нет интернета</td><td>Проверьте интернет — страница повторит попытку через минуту</td></tr>
+        </table>
+      </div>
+      <p>В меню профиля (аватар справа вверху): статус Telegram, «Обновить сейчас» и «Выйти на этом устройстве».</p>
+    </div>
+
+    <div class="step" id="t3">
+      <div class="step-title">3. Роли</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Роль в трекере</th><th>Кто</th><th>Что видит</th><th>Зона ответственности</th></tr>
+          <tr><td>Руководитель</td><td>Олег Ежков</td><td>Задачи, Клиенты, Команда, Активность</td><td>Доступы, контроль сроков и качества, сводки</td></tr>
+          <tr><td>Клиентский менеджер</td><td>Ольга Шпаковская</td><td>Задачи, Клиенты</td><td>Ставит задачи по запросам клиентов, сообщает клиентам результаты и закрывает задачи, следит, чтобы клиенты не ждали ответа</td></tr>
+          <tr><td>Специалист по Авито</td><td>Евгений Исаев</td><td>Задачи</td><td>Выполняет задачи по кабинетам, ставит задачи стажёрам</td></tr>
+          <tr><td>Стажёр по Авито</td><td>Альбина, Екатерина</td><td>Задачи</td><td>Выполняет поставленные задачи</td></tr>
+        </table>
+      </div>
+      <p>Задачи команды видят все — не только свои. Это нормально: если у вас пусто, можно помочь коллегам.</p>
+    </div>
+
+    <div class="step" id="t4">
+      <div class="step-title">4. Подключение Telegram</div>
+      <div class="step-meta">Обязательно для всех · один раз</div>
+      <ol>
+        <li>В трекере нажмите «Подключить» на баннере или «Подключить Telegram» в меню профиля.</li>
+        <li>Откроется бот <strong>«Cantor Agency · помощник»</strong> — нажмите «Start».</li>
+        <li>Бот ответит «✅ Telegram подключён». Если пишет «Ссылка устарела» — нажмите «Подключить Telegram» в трекере ещё раз.</li>
+      </ol>
+      <p>После подключения бот присылает в личку: новые задачи на вас, задачи, которые он нашёл на вас в чатах, напоминания «⏳ Через час срок» и «🔴 Срок вышел», отметки «готово» по поставленным вами задачам и утреннюю сводку в 10:00.</p>
+      <p>Под каждой задачей в Telegram есть кнопки <strong>«▶️ Беру в работу»</strong>, <strong>«✅ Готово»</strong> и «Открыть в трекере» — статус можно менять прямо из бота. Команда <code>/tasks</code> присылает список ваших задач, <code>/help</code> — что умеет бот.</p>
+      <p>Бот <strong>никогда не пишет в группы</strong> — всё приходит только в личные сообщения.</p>
+    </div>
+
+    <div class="step" id="t5">
+      <div class="step-title">5. Экран «Задачи»</div>
+      <h4>Сверху</h4>
+      <ul>
+        <li>Приветствие и сколько открытых задач на вас, из них просрочено.</li>
+        <li>Быстрые фильтры-чипы: <strong>«Просрочено»</strong>, <strong>«На сегодня»</strong>, <strong>«В работе»</strong>, у руководителя и менеджера — <strong>«Сообщить клиенту»</strong>. Повторное нажатие сбрасывает фильтр.</li>
+        <li>Поле быстрого создания «Новая задача — себе или коллеге…».</li>
+        <li>Поиск по задачам (название, описание, клиент, исполнитель).</li>
+        <li>Переключатель <strong>«Все» / «Мои» / «Поставил(а) я»</strong> и кнопка «Фильтры»: клиент, исполнитель, статус, приоритет и группировка (по клиентам, исполнителям или срокам). Выбор запоминается на устройстве.</li>
+      </ul>
+      <h4>Разделы</h4>
+      <ol>
+        <li><strong>«Мои задачи»</strong> — ваши открытые задачи, отсортированы по срочности: просроченные, затем со сроком в ближайшие 24 часа, затем по приоритету. До трёх самых горящих помечены «🔥 Сначала» с причиной — <strong>начинайте день с них</strong>.</li>
+        <li><strong>«Готово — сообщите клиентам»</strong> (руководитель и менеджер) — выполненные задачи по клиентам, о которых ещё не сообщили клиенту.</li>
+        <li><strong>«Задачи команды»</strong> — все остальные задачи в группах. В заголовке группы видно, сколько просрочено, сколько ждёт сообщения клиенту и сколько открыто.</li>
+      </ol>
+      <h4>Что на карточке задачи</h4>
+      <p>Название, метки («срочно», «высокий», «в работе», «готово · сообщить клиенту», «отменена»), клиент, исполнитель, срок (просроченный — красным), метка «🤖 из чата», если задачу нашёл бот, и значок Telegram — он открывает исходное сообщение в чате.</p>
+      <p>Закрытые и отменённые задачи исчезают из трекера через 21 день после последнего изменения.</p>
+    </div>
+
+    <div class="step" id="t6">
+      <div class="step-title">6. Как поставить задачу</div>
+      <h4>Порядок</h4>
+      <ol>
+        <li>Нажмите в поле «Новая задача — себе или коллеге…» (на телефоне — круглая кнопка «+»).</li>
+        <li>Напишите суть задачи.</li>
+        <li>Выберите <strong>клиента</strong>, <strong>исполнителя</strong> (по умолчанию — вы), <strong>срок</strong> и <strong>приоритет</strong>.</li>
+        <li>В «Детали» добавьте всё, что нужно для выполнения: что именно сделать, ссылки, договорённости с клиентом.</li>
+        <li>Нажмите «Создать задачу» или Enter. Исполнитель сразу получит уведомление в Telegram или в трекере. Форма остаётся открытой с тем же клиентом — удобно ставить несколько задач подряд.</li>
+      </ol>
+      <h4>Как формулировать</h4>
+      <ul>
+        <li><strong>Название — конкретное действие с результатом</strong>, начинается с глагола: «Добавить видео-визитку во все объявления», «Поднять ставки в Казани до топ-20», «Заменить обложку в объявлениях по ОГЭ». Не «Фото», не «Разобраться с кабинетом».</li>
+        <li><strong>Одна задача — одно действие.</strong> Если работ несколько — несколько задач (форма для этого остаётся открытой).</li>
+        <li><strong>Детали — так, чтобы исполнитель не переспрашивал</strong>: в каких объявлениях/городах, ссылки на фото и тексты, что именно попросил клиент, как проверить результат.</li>
+        <li>Задача про кабинет клиента — <strong>всегда с клиентом</strong>. «Без клиента» — только внутренние задачи команды (обучение, шаблоны, регламенты).</li>
+      </ul>
+      <h4>Срок</h4>
+      <ul>
+        <li>Быстрые варианты: «Сегодня» (до 18:00), «Завтра», «Пятница», «Через неделю» — все означают 18:00 МСК выбранного дня. Точное время — через значок 🕒.</li>
+        <li>Срок ставим реальный: тот, к которому задача действительно будет сделана. Если клиенту что-то обещали к дате — срок задачи раньше обещанного.</li>
+        <li>«Без срока» — исключение. Такие задачи через 2 рабочих часа попадают в сводку руководителю.</li>
+      </ul>
+      <h4>Приоритет</h4>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Приоритет</th><th>Когда ставить</th></tr>
+          <tr><td>Срочно</td><td>Кабинет заблокирован, деньги не расходуются или расходуются без контактов, клиент ждёт срочного ответа — бросаем остальное</td></tr>
+          <tr><td>Высокий</td><td>Влияет на заявки и бюджет: ставки, запуск объявлений, правки по просьбе клиента со сроком</td></tr>
+          <tr><td>Обычный</td><td>Плановая работа — по умолчанию</td></tr>
+          <tr><td>Низкий</td><td>Можно сделать, когда освободится время</td></tr>
+        </table>
+      </div>
+      <p>«Срочно» и «Высокий» выделяются цветной полосой на карточке. Не ставьте «Срочно» всему подряд — тогда он перестаёт работать.</p>
+    </div>
+
+    <div class="step" id="t7">
+      <div class="step-title">7. Статусы задачи</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Статус</th><th>Что значит</th><th>Кто ставит</th></tr>
+          <tr><td>Новая</td><td>Задача поставлена, к ней ещё не приступили</td><td>Автоматически при создании</td></tr>
+          <tr><td>В работе</td><td>Исполнитель взял задачу и делает её</td><td>Исполнитель — сразу, как приступил</td></tr>
+          <tr><td>Готово, сообщить клиенту</td><td>Работа сделана, клиенту ещё не сообщили. Менеджер получает уведомление</td><td>Исполнитель — сразу после выполнения</td></tr>
+          <tr><td>Закрыта, клиенту сообщили</td><td>Клиенту сообщили результат, задача завершена</td><td>Клиентский менеджер (или руководитель)</td></tr>
+          <tr><td>Отменена</td><td>Задача больше не нужна</td><td>Постановщик или руководитель</td></tr>
+        </table>
+      </div>
+      <p>У задач без клиента статусы проще: «Готово» и «Закрыта» — такая задача закрывается сразу, без шага «сообщить клиенту».</p>
+      <h4>Жизненный цикл задачи по клиенту</h4>
+      <ol>
+        <li><strong>Новая</strong> — задачу поставили, исполнитель получил уведомление.</li>
+        <li><strong>В работе</strong> — исполнитель нажал «Беру в работу» (в боте) или сменил статус в трекере.</li>
+        <li><strong>Готово, сообщить клиенту</strong> — исполнитель нажал «Готово». Клиентскому менеджеру приходит «📨 Сообщите клиенту».</li>
+        <li><strong>Закрыта, клиенту сообщили</strong> — менеджер написал клиенту, что сделано, и закрыл задачу.</li>
+      </ol>
+    </div>
+
+    <div class="step" id="t8">
+      <div class="step-title">8. Работа с задачей</div>
+      <ul>
+        <li><strong>Открыть и изменить</strong> — нажмите на карточку, задача раскроется. Все изменения сохраняются сразу (появится «Сохранено ✓»). Если пишет «Не сохранилось — нет связи» — повторите после восстановления интернета.</li>
+        <li><strong>Круглая кнопка на карточке:</strong> открытая задача по клиенту → «Готово»; открытая задача без клиента → «Закрыта»; задача в «Готово» → «Закрыта, клиенту сообщили»; закрытая → снова «Новая». Под каждым действием есть «Отменить» — если нажали по ошибке.</li>
+        <li><strong>Сменить исполнителя</strong> — если задачу нужно передать коллеге, смените «Исполнителя» и допишите в «Детали», что уже сделано. Новый исполнитель получит уведомление.</li>
+        <li><strong>Сдвинуть срок</strong> — только если понятно, к какому сроку реально успеете; если от срока зависит обещание клиенту — сначала предупредите клиентского менеджера.</li>
+        <li><strong>Задача не нужна</strong> — ставьте статус «Отменена», а не удаляйте. Удалить задачу может только её автор или руководитель, и это нельзя отменить.</li>
+        <li><strong>История изменений</strong> внизу задачи показывает, кто и когда менял статус, срок, исполнителя и приоритет, — в том числе изменения от бота.</li>
+        <li><strong>«Сообщение в Telegram»</strong> — для задач из чата открывает исходное сообщение, чтобы посмотреть контекст.</li>
+      </ul>
+      <p>Горячие клавиши: Enter в поле новой задачи — создать; Enter в названии — сохранить; Esc — свернуть форму, закрыть меню или уведомления.</p>
+    </div>
+
+    <div class="step" id="t9">
+      <div class="step-title">9. Задачи из чатов: как писать, чтобы бот понял</div>
+      <p>Бот читает рабочий чат «Авито» (каждая тема — отдельный клиент) и чаты клиентов, куда он добавлен. Каждые 10 минут ИИ разбирает новые сообщения: создаёт задачи (с клиентом, исполнителем и сроком) и обновляет уже существующие — взяли в работу, сделано, клиенту сообщили, отменено. Такие задачи помечены «🤖 из чата».</p>
+      <h4>Что бот считает задачей</h4>
+      <p>Просьбу что-то сделать для клиента или в его кабинете: правки объявлений, фото, ставки, города, отчёт, ответ на вопрос клиента, проверка. Болтовня, благодарности и статистика без просьбы задачами не считаются.</p>
+      <h4>Правила для сообщений в рабочем чате</h4>
+      <ul>
+        <li><strong>Пишите в теме нужного клиента</strong> — по теме бот определяет клиента.</li>
+        <li><strong>Называйте исполнителя по имени</strong>: «Женя, …», «Альбина, …». Бот сопоставляет имена и привычные обращения с командой.</li>
+        <li><strong>Называйте срок явно</strong>: «сегодня» = сегодня до 18:00, «до завтра» = завтра до 18:00, «через час» = через час от сообщения. Нет срока в сообщении — у задачи не будет срока.</li>
+        <li><strong>Отписывайтесь о результате в той же теме</strong>: «Сделано», «Взяла в работу». Бот обновит статус задачи.</li>
+        <li><strong>Менеджер отписывается, что клиенту сообщили</strong> — бот закроет задачу.</li>
+      </ul>
+      <h4>Проверяйте за ботом</h4>
+      <ul>
+        <li>Бот может ошибиться в исполнителе, сроке или формулировке. Получили задачу «🤖 из чата» — откройте её и поправьте, если нужно.</li>
+        <li>Если просьба важная, а задача не появилась в течение 10–15 минут — поставьте её вручную.</li>
+        <li>Бот видит только сообщения, отправленные после его добавления в чат.</li>
+        <li>Длинные ключи (например, API-ключи кабинета) бот сохраняет как «[скрыто]» — в задачу они не попадают, смотрите их в исходном сообщении.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="t10">
+      <div class="step-title">10. Бот в чатах клиентов</div>
+      <ul>
+        <li>Бота <strong>«Cantor Agency · помощник»</strong> добавляем в каждый чат с клиентом сразу после создания чата (см. <a href="/base/zapusk-novogo-klienta#a0">регламент работы с новыми клиентами</a>) и <strong>делаем администратором группы</strong>.</li>
+        <li>Добавить бота могут руководитель, сотрудники с подключённым к трекеру Telegram и те, кто пишет в рабочем чате. Если бота добавит посторонний человек — бот выйдет из чата.</li>
+        <li>Бот находит клиента по названию чата (имя и фамилия), поэтому чат называем по шаблону «Авито — Имя Фамилия».</li>
+        <li>В чате клиента бот молчит. Он отмечает, когда клиент написал и ждёт ответа, и когда команда последний раз писала клиенту, — это видно во вкладке «Клиенты».</li>
+      </ul>
+    </div>
+
+    <div class="step" id="t11">
+      <div class="step-title">11. Уведомления и напоминания</div>
+      <ul>
+        <li><strong>Колокольчик</strong> в трекере — новые задачи на вас, изменения ваших задач, отметки «готово», напоминания о сроках. Нажатие на уведомление открывает задачу.</li>
+        <li><strong>Напоминания о сроке</strong> — за час до срока и когда срок вышел. Приходят только в рабочее время (будни 10:00–18:00 МСК). Если срок перенесли — напоминания сработают заново.</li>
+        <li><strong>Сводка в 10:00</strong> (по будням) — ваши открытые задачи: сколько просрочено и сколько на сегодня, с отметками 🔴 просрочено, 🔥 срочно, 🟠 высокий, ▶️ в работе. Клиентский менеджер дополнительно видит, о чём нужно сообщить клиентам, и клиентов без обновлений 3+ рабочих дня.</li>
+        <li><strong>Клиентскому менеджеру</strong> также приходит «📨 Сообщите клиенту», когда задача по клиенту отмечена «Готово», и «💬 клиент ждёт ответа», если клиент ждёт больше 30 рабочих минут.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="t12">
+      <div class="step-title">12. Вкладка «Клиенты»</div>
+      <div class="step-meta">Для клиентского менеджера и руководителя</div>
+      <p>«Статусы клиентов»: кому давно не писали, чьи вопросы ждут ответа и какие результаты пора передать клиенту.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Цвет</th><th>Когда</th><th>Что делать</th></tr>
+          <tr><td>Красный</td><td>Клиент ждёт ответа, по клиенту нет ни одного обновления или 3+ рабочих дня без обновлений</td><td>Ответить / написать клиенту сегодня, в первую очередь</td></tr>
+          <tr><td>Жёлтый</td><td>2 рабочих дня без обновлений или есть готовые результаты, о которых клиент не знает</td><td>Сообщить результаты, отправить обновление</td></tr>
+          <tr><td>Зелёный</td><td>Всё в порядке</td><td>—</td></tr>
+        </table>
+      </div>
+      <ul>
+        <li>На карточке клиента: ждёт ли клиент ответа (с текстом его сообщения), дата последнего обновления и кто его отправил, готовые задачи для передачи клиенту, сколько задач открыто и просрочено.</li>
+        <li>Написали клиенту — нажмите <strong>«✓ Клиенту написали»</strong> (по желанию укажите, что отправили). Если бот добавлен в чат клиента, сообщения команды отмечаются автоматически.</li>
+        <li>«+ Задача» — поставить задачу по этому клиенту, «Задачи клиента →» — все его задачи.</li>
+      </ul>
+    </div>
+
+    <div class="step" id="t13">
+      <div class="step-title">13. Контроль руководителя</div>
+      <p>Руководитель получает в Telegram сводки, по которым видно, где процесс нарушается. Чтобы не попадать в них — соблюдайте правила выше.</p>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Когда</th><th>Что проверяется</th></tr>
+          <tr><td>10:00</td><td>Просроченные задачи; задачи без срока дольше 2 рабочих часов; сделанные задачи, о которых клиенту не сообщили за рабочий день; клиенты, ждущие ответа; открытые задачи по клиентам; даты следующих действий в CRM продаж</td></tr>
+          <tr><td>11:00</td><td>Не внесённые в дашборд метрики за прошлый рабочий день; аномалии: 0 контактов два дня подряд при расходе или стоимость контакта на 30%+ выше средней за 7 дней</td></tr>
+          <tr><td>13:05</td><td>Чаты клиентов, куда до 13:00 не отправили ежедневный отчёт</td></tr>
+          <tr><td>В течение дня</td><td>Вышедшие сроки, задачи без срока 2+ рабочих часа, клиенты, ждущие ответа больше 30 рабочих минут, новые клиенты, подключение бота к чатам</td></tr>
+        </table>
+      </div>
+      <p>Вкладка <strong>«Команда»</strong> (только руководитель) — добавление сотрудников, выдача и перевыпуск ссылок, включение/отключение доступа, имена, по которым бот узнаёт сотрудников в чатах. Вкладка <strong>«Активность»</strong> — когда кто работал по часам: время в трекере (считается только при реальных действиях на странице), сообщения в чатах и действия с задачами.</p>
+      <p>Руководитель может задать боту вопрос о переписке, например «что мы обещали клиенту на этой неделе?», — бот ответит по истории чатов.</p>
+    </div>
+
+    <div class="step" id="t14">
+      <div class="step-title">14. Ежедневный ритм</div>
+      <h4>Исполнитель (специалист, стажёр)</h4>
+      <ul class="checklist">
+        <li>10:00 — прочитать сводку бота, открыть трекер, начать с задач «🔥 Сначала» и «Просрочено»</li>
+        <li>Проверить новые задачи «🤖 из чата»: исполнитель, срок, формулировка верные</li>
+        <li>Взятую задачу сразу переводить в «В работе»</li>
+        <li>Сделали — сразу «Готово» (кнопкой в боте или в трекере), в деталях — что именно сделано</li>
+        <li>Не успеваете к сроку — заранее перенести срок и предупредить постановщика</li>
+        <li>18:00 — в «Мои задачи» нет просроченных и задач без срока</li>
+      </ul>
+      <h4>Клиентский менеджер</h4>
+      <ul class="checklist">
+        <li>10:00 — сводка: что сообщить клиентам, кто давно без обновлений</li>
+        <li>Каждую просьбу клиента из чата — в задачу с исполнителем и сроком (или проверить, что бот её создал)</li>
+        <li>Клиент не ждёт ответа больше 30 рабочих минут</li>
+        <li>Ежедневный отчёт в чат каждого клиента — до 12:00 (бот проверяет в 13:05)</li>
+        <li>Раздел «Готово — сообщите клиентам» — разобрать в тот же день: сообщить клиенту и закрыть задачи</li>
+        <li>Во вкладке «Клиенты» нет красных карточек к концу дня</li>
+      </ul>
+    </div>
+
+    <div class="step" id="t15">
+      <div class="step-title">15. Нормативы</div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <tr><th>Что</th><th>Норматив</th></tr>
+          <tr><td>Ответ клиенту в чате</td><td>До 30 рабочих минут</td></tr>
+          <tr><td>Задача без срока</td><td>Не дольше 2 рабочих часов</td></tr>
+          <tr><td>Сообщить клиенту о готовом результате</td><td>В тот же день, максимум — 1 рабочий день</td></tr>
+          <tr><td>Обновление клиенту</td><td>Каждый рабочий день (отчёт); без обновлений не больше 2 рабочих дней</td></tr>
+          <tr><td>Ежедневный отчёт клиенту</td><td>До 12:00, крайний срок проверки — 13:00</td></tr>
+          <tr><td>Ответ специалиста менеджеру по техническому вопросу</td><td>До 4 рабочих часов, срочное (блокировка, деньги не расходуются) — до 1 часа</td></tr>
+          <tr><td>Метрики за прошлый день в дашборде</td><td>До 11:00</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="step" id="t16">
+      <div class="step-title">16. Частые ошибки</div>
+      <ul>
+        <li>Задачу сделали, но не нажали «Готово» — менеджер не знает, что можно сообщать клиенту, а задача висит просроченной.</li>
+        <li>Задачу поставили без клиента или без срока — она теряется в общем списке и попадает в сводку руководителю.</li>
+        <li>В чате написали «надо поправить фото» без имени исполнителя и срока — бот создаст задачу без исполнителя или не создаст вовсе.</li>
+        <li>Ненужную задачу удалили вместо «Отменена» — пропадает история.</li>
+        <li>Одна задача на несколько разных действий — непонятно, что уже сделано.</li>
+        <li>Telegram не подключён — новые задачи и напоминания проходят мимо.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-nav">
+    <a href="/base" class="to-catalog">← К каталогу регламентов</a>
+    <a href="/base/reglament-3-soprovozhdenie">Ежедневное сопровождение клиентов →</a>
+  </div>
+
+</div>
+
+
+
+
+
+
+<script>
+(function(){
+  var FEEDBACK_URL = 'https://functions.yandexcloud.net/d4ee1rhgpv5toe7lcjta';
+
+  var btn = document.getElementById('feedback-btn');
+  var panel = document.getElementById('feedback-panel');
+  var textarea = document.getElementById('feedback-text');
+  var sendBtn = document.getElementById('feedback-send');
+  var cancelBtn = document.getElementById('feedback-cancel');
+  var statusEl = document.getElementById('feedback-status');
+
+  function nearestBlock(){
+    var titleEl = document.querySelector('.doc-title');
+    var regulation = titleEl ? titleEl.textContent.trim() : document.title;
+    var blocks = document.querySelectorAll('.step-title, .cat-card-title, .featured-card-title, .section-label, .reg-title');
+    var block = '';
+    var threshold = window.innerHeight * 0.4;
+    for (var i = 0; i < blocks.length; i++){
+      var rect = blocks[i].getBoundingClientRect();
+      if (rect.top <= threshold) block = blocks[i].textContent.trim();
+      else break;
+    }
+    if (!block && blocks.length) block = blocks[0].textContent.trim();
+    return { regulation: regulation, block: block };
+  }
+
+  function closePanel(){
+    panel.classList.remove('open');
+    statusEl.hidden = true;
+    statusEl.textContent = '';
+  }
+
+  btn.addEventListener('click', function(){
+    var opening = !panel.classList.contains('open');
+    panel.classList.toggle('open');
+    if (opening) {
+      textarea.focus();
+    }
+  });
+  cancelBtn.addEventListener('click', closePanel);
+  document.addEventListener('click', function(e){
+    if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      closePanel();
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closePanel();
+  });
+
+  sendBtn.addEventListener('click', function(){
+    var comment = textarea.value.trim();
+    if (!comment) { textarea.focus(); return; }
+    var ctx = nearestBlock();
+    sendBtn.disabled = true;
+    statusEl.hidden = false;
+    statusEl.textContent = 'Отправляем…';
+    fetch(FEEDBACK_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        comment: comment,
+        regulation: ctx.regulation,
+        block: ctx.block,
+        url: window.location.href
+      })
+    }).then(function(r){
+      if (!r.ok) throw new Error('bad status');
+      statusEl.textContent = 'Спасибо, отправлено!';
+      textarea.value = '';
+      setTimeout(closePanel, 1200);
+    }).catch(function(){
+      statusEl.textContent = 'Не получилось отправить. Попробуйте ещё раз.';
+    }).finally(function(){
+      sendBtn.disabled = false;
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
