@@ -293,6 +293,59 @@ a{color:inherit}
 .switch.on::after{transform:translateX(18px)}
 .sw-wrap{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted)}
 
+/* activity */
+/* одна синяя шкала (ordinal, проверена валидатором dataviz): светлая тема от 250 к 700, тёмная — от 600 к 150 */
+:root{--h0:var(--sunken);--h1:#86b6ef;--h2:#5598e7;--h3:#2a78d6;--h4:#1c5cab;--h5:#104281}
+@media (prefers-color-scheme: dark){:root{--h1:#184f95;--h2:#256abf;--h3:#3987e5;--h4:#6da7ec;--h5:#b7d3f6}}
+.act-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.days{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;flex:1;min-width:0}
+.days::-webkit-scrollbar{display:none}
+.days .pill{flex:none}
+.legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:4px 2px 14px;flex-wrap:wrap}
+.legend .sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.legend .gap{width:12px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px 12px;margin-bottom:10px}
+.person.idle{padding:12px 16px}
+.p-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.person.idle .p-head{margin-bottom:0}
+.p-name{font-weight:700;color:var(--ink);font-size:15px;line-height:1.25}
+.p-role{font-size:12.5px;color:var(--muted)}
+.p-span{margin-left:auto;text-align:right;font-size:13px;color:var(--muted);line-height:1.35}
+.p-span b{color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums}
+.lanes{display:grid;grid-template-columns:96px minmax(0,1fr);row-gap:5px;column-gap:10px;align-items:center}
+.lane-label{font-size:12px;color:var(--muted);line-height:1.2}
+.lane-label b{display:block;color:var(--text);font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.cells{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px}
+.cell{height:22px;border-radius:4px;background:var(--h0);position:relative;cursor:default}
+.cell.l1{background:var(--h1)}.cell.l2{background:var(--h2)}.cell.l3{background:var(--h3)}.cell.l4{background:var(--h4)}.cell.l5{background:var(--h5)}
+.cell.now{box-shadow:inset 0 0 0 2px var(--accent)}
+.axis{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+.axis span{text-align:left;white-space:nowrap}
+.axis span.work{color:var(--muted)}
+.axis-row{display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:10px;margin:0 17px 6px}
+.p-where{font-size:12.5px;color:var(--muted);margin-top:9px}
+.p-where b{color:var(--text);font-weight:600}
+.tip{position:fixed;z-index:70;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:10px;pointer-events:none;box-shadow:var(--shadow-lg);max-width:240px}
+.week{width:100%;border-collapse:separate;border-spacing:4px;font-size:12.5px}
+.week th{font-weight:600;color:var(--muted);text-align:left;padding:4px 6px;white-space:nowrap}
+.week td{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 8px;vertical-align:top;cursor:pointer;min-width:84px}
+.week td.who{background:transparent;border:0;cursor:default;min-width:150px}
+.week td.who .p-head{flex-wrap:nowrap}
+.week td:hover:not(.who){border-color:var(--faint)}
+.week .t{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.week .h{color:var(--muted);font-size:11.5px}
+.week .bar{height:4px;border-radius:2px;background:var(--h0);margin-top:6px;overflow:hidden}
+.week .bar i{display:block;height:100%;background:var(--h4);border-radius:2px}
+.week-wrap{overflow-x:auto;margin:0 -4px}
+@media (max-width:760px){
+  .lanes,.axis-row{grid-template-columns:64px minmax(0,1fr);column-gap:6px}
+  .cells,.axis{gap:1px}
+  .cell{height:20px;border-radius:3px}
+  .person{padding:12px 12px 10px}
+  .axis-row{margin:0 13px 6px}
+  .axis span:not(.k){visibility:hidden}
+}
+
 /* toasts */
 .toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;display:grid;gap:8px;width:min(440px,calc(100% - 32px))}
 .toast{background:var(--ink);color:var(--bg);border-radius:14px;padding:12px 14px 12px 16px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:var(--shadow-lg);animation:rise .18s ease-out}
@@ -371,6 +424,7 @@ a{color:inherit}
   <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 14h.01M15 14h.01"/></symbol>
   <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 22c4 0 7-2.8 7-7 0-5-5-7-5-12-3 2-4 5-4 7-1-1-2-2-2-4-2 2-3 5-3 9 0 4.2 3 7 7 7z"/></symbol>
   <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 2v-8.5z"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
   <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></symbol>
 </svg>
 
@@ -476,6 +530,21 @@ a{color:inherit}
         <button class="btn btn-primary" id="addMember"><svg class="ic"><use href="#i-plus"/></svg>Добавить и создать ссылку</button>
       </div>
       <div id="members"><div class="empty">Загружаю…</div></div>
+    </section>
+
+    <!-- Активность (только руководитель) -->
+    <section id="view-activity" hidden>
+      <div class="hello">
+        <div>
+          <h1>Активность команды</h1>
+          <div class="sub">Когда кто работал: время в трекере, сообщения в чатах и действия с задачами. По часам, московское время.</div>
+        </div>
+      </div>
+      <div class="act-top">
+        <div class="seg" id="actMode"><button data-mode="day" class="on">День</button><button data-mode="week">Неделя</button></div>
+        <div class="days" id="actDays"></div>
+      </div>
+      <div id="actBody"><div class="empty">Загружаю…</div></div>
     </section>
   </main>
 
@@ -706,12 +775,49 @@ function stopPolling() { clearInterval(pollTimer); pollTimer = null; }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.token && Date.now() - S.lastSync > 20000) sync(false); });
 window.addEventListener('online', () => S.token && sync(false));
 
+// ── учёт активности: 10-минутные отрезки, в которые человек что-то делал на странице ──
+// Отрезки копятся на устройстве и уходят на сервер вместе с обновлением раз в ~10 минут.
+const K_ACT = 'avitoTasks.act';
+const actPending = store.json(K_ACT) || {};
+let actLastMark = 0;
+let actLastSent = 0;
+const mskDateStr = (ms) => new Date(ms + MSK).toISOString().slice(0, 10);
+function markActive(force) {
+  if (document.hidden || !S.token) return;
+  const now = Date.now();
+  if (!force && now - actLastMark < 15000) return;
+  actLastMark = now;
+  const p = msk(now);
+  const d = mskDateStr(now);
+  const slot = Math.floor((p.hh * 60 + p.mi) / 10);
+  const arr = actPending[d] || (actPending[d] = []);
+  if (!arr.includes(slot)) { arr.push(slot); store.set(K_ACT, JSON.stringify(actPending)); }
+}
+['pointerdown', 'keydown', 'scroll', 'touchstart', 'wheel', 'mousemove'].forEach((ev) => window.addEventListener(ev, () => markActive(false), { passive: true, capture: true }));
+function activityPayload(initial) {
+  const keep = new Set([0, 1, 2].map((d) => mskDateStr(Date.now() - d * 86400000)));
+  Object.keys(actPending).forEach((d) => { if (!keep.has(d) || !actPending[d].length) delete actPending[d]; });
+  if (!Object.keys(actPending).length || (!initial && Date.now() - actLastSent < 9 * 60000)) return null;
+  return JSON.parse(JSON.stringify(actPending));
+}
+function activitySent(sent) {
+  actLastSent = Date.now();
+  Object.keys(sent).forEach((d) => {
+    actPending[d] = (actPending[d] || []).filter((x) => !sent[d].includes(x));
+    if (!actPending[d].length) delete actPending[d];
+  });
+  store.set(K_ACT, JSON.stringify(actPending));
+}
+
 async function sync(initial) {
   if (S.syncing) return;
   S.syncing = true;
   $('syncDot').classList.add('busy');
   try {
-    const res = await api('sync', { ver: initial ? null : S.ver, initial: !!initial });
+    if (initial) markActive(true);
+    const activity = activityPayload(initial);
+    const res = await api('sync', { ver: initial ? null : S.ver, initial: !!initial, activity: activity || undefined });
+    if (res.ok && activity) activitySent(activity);
     if (res.status === 401) return signOut(S.me ? 'reset' : 'none');
     if (res.status === 403) return signOut('blocked');
     if (!res.ok) throw new Error(res.data.error || 'error');
@@ -730,6 +836,7 @@ async function sync(initial) {
     dot.classList.toggle('off', S.offline);
     dot.title = S.offline ? 'Нет связи — повторю через минуту' : `Обновлено в ${fmtTime(Date.now())} · обновляется само каждую минуту`;
     renderBanners();
+    if (S.view === 'activity' && !S.offline) loadActivity();
   }
 }
 
@@ -754,7 +861,7 @@ function applySync(d, fromCache) {
 
 function isEditing() {
   const a = document.activeElement;
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-team') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-team, #view-activity') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -763,6 +870,7 @@ function render() {
   if (S.view === 'tasks') renderTasks();
   if (S.view === 'clients') renderClients();
   if (S.view === 'team') renderTeamStatic();
+  if (S.view === 'activity') loadActivity();
 }
 document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRender && !isEditing()) render(); }, 150));
 
@@ -771,6 +879,7 @@ function views() {
   const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }];
   if (canSeeClients()) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
   if (isOwner()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
+  if (isOwner()) v.push({ id: 'activity', label: 'Активность', icon: 'pulse' });
   return v;
 }
 function clientAlerts() {
@@ -788,7 +897,7 @@ function renderHeader() {
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'clients', 'team'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'clients', 'team', 'activity'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
   if ($('meAvatar').dataset.uid !== S.me.id + S.me.name) { $('meAvatar').outerHTML = avatar(S.me, '', 'meAvatar'); $('meAvatar').dataset.uid = S.me.id + S.me.name; }
   const unread = S.notifications.filter((n) => !n.read).length;
   $('bellBadge').hidden = !unread;
@@ -1573,6 +1682,117 @@ $('members').addEventListener('click', async (e) => {
     teamAction('user-save', { user: { id, name: val('name'), role: val('role') || u.role, aliases: val('aliases').split(',').map((s) => s.trim()).filter(Boolean) } }, 'Сохранено');
   }
 });
+
+// ── вкладка «Активность» (только руководитель) ──
+const ACT = { data: null, loadedAt: 0, date: null, mode: 'day', loading: false };
+async function loadActivity(force) {
+  if (!isOwner()) return;
+  if (ACT.data && !force && Date.now() - ACT.loadedAt < 55000) return renderActivity();
+  if (ACT.loading) return;
+  ACT.loading = true;
+  try {
+    const res = await api('activity', { days: 14 });
+    if (!res.ok) throw new Error(res.data.error);
+    ACT.data = res.data;
+    ACT.loadedAt = Date.now();
+    if (!ACT.date || !res.data.dates.includes(ACT.date)) ACT.date = res.data.dates[0];
+    renderActivity();
+  } catch (e) {
+    if (!ACT.data) $('actBody').innerHTML = '<div class="empty">Не получилось загрузить активность — проверьте интернет.</div>';
+  } finally { ACT.loading = false; }
+}
+const sum = (arr) => (arr || []).reduce((s, n) => s + n, 0);
+const hm = (min) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+function dur(min) { const h = Math.floor(min / 60); const m = min % 60; return h ? `${h} ч${m ? ' ' + m + ' мин' : ''}` : `${m} мин`; }
+function dateLabel(d, i) {
+  if (i === 0) return 'Сегодня';
+  if (i === 1) return 'Вчера';
+  const ms = Date.parse(d + 'T12:00:00+03:00');
+  return `${DOW[msk(ms).dow]}, ${d.slice(8, 10)}.${d.slice(5, 7)}`;
+}
+function actPeople() {
+  const D = ACT.data;
+  const list = D.users.map((u) => ({ key: u.id, user: u, name: u.name, sub: u.roleLabel, inTeam: true }));
+  Object.entries(D.others).forEach(([k, name]) => list.push({ key: k, user: { id: k, name }, name, sub: 'пишет в чатах, нет в трекере', inTeam: false }));
+  return list;
+}
+function activeHours(r) { let n = 0; for (let h = 0; h < 24; h += 1) if ((r.p[h] || 0) + (r.c[h] || 0) + (r.a[h] || 0)) n += 1; return n; }
+function renderActivity() {
+  const D = ACT.data;
+  if (!D) return;
+  document.querySelectorAll('#actMode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === ACT.mode));
+  $('actDays').hidden = ACT.mode !== 'day';
+  $('actDays').innerHTML = D.dates.map((d, i) => `<button class="pill ${d === ACT.date ? 'on' : ''}" data-date="${d}">${dateLabel(d, i)}</button>`).join('');
+  if (ACT.mode === 'week') return renderWeek();
+  const day = D.data[ACT.date] || {};
+  const people = actPeople().filter((p) => p.inTeam ? (p.user.active || day[p.key]) : day[p.key] && sum(day[p.key].c));
+  const isToday = ACT.date === D.dates[0];
+  const nowH = msk(Date.now()).hh;
+  // Единая шкала на день: чаты и задачи — относительно максимума за час у всей команды, трекер — минуты из 60.
+  let maxC = 1; let maxA = 1;
+  Object.values(day).forEach((r) => { r.c.forEach((v) => { if (v > maxC) maxC = v; }); r.a.forEach((v) => { if (v > maxA) maxA = v; }); });
+  const lvl = (v, max) => (v ? Math.max(1, Math.min(5, Math.ceil((v / max) * 5))) : 0);
+  const lane = (key, name, label, total, arr, kind) => `<div class="lane-label">${label}<b>${total}</b></div><div class="cells">${arr.map((v, h) => {
+    const l = kind === 'p' ? lvl(v, 60) : lvl(v, kind === 'c' ? maxC : maxA);
+    return `<div class="cell ${l ? 'l' + l : ''} ${isToday && h === nowH ? 'now' : ''}" data-tip="${esc(`${name} · ${pad(h)}:00–${pad((h + 1) % 24)}:00 · ${kind === 'p' ? (v ? `в трекере ~${v} мин` : 'в трекере не был(а)') : kind === 'c' ? `${v} ${plural(v, 'сообщение', 'сообщения', 'сообщений')} в чатах` : `${v} ${plural(v, 'действие', 'действия', 'действий')} с задачами`}`)}"></div>`;
+  }).join('')}</div>`;
+  const axis = `<div class="axis-row"><span></span><div class="axis">${Array.from({ length: 24 }, (_, h) => `<span class="${h % 3 === 0 ? 'k' : ''} ${h >= 10 && h < 18 ? 'work' : ''}">${h % 3 === 0 ? h : ''}</span>`).join('')}</div></div>`;
+  const cards = people.map((p) => {
+    const r = day[p.key];
+    const head = `<div class="p-head">${avatar(p.user, '')}<div><div class="p-name">${esc(p.name)}</div><div class="p-role">${esc(p.sub || '')}</div></div>`;
+    if (!r || r.f == null) return `<div class="person idle">${head}<div class="p-span">нет активности</div></div></div>`;
+    const where = Object.entries(r.w || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    return `<div class="person">${head}<div class="p-span"><b>${hm(r.f)}–${hm(r.l)}</b><br>активен(на) ${activeHours(r)} ${plural(activeHours(r), 'час', 'часа', 'часов')}</div></div>
+      <div class="lanes">
+        ${p.inTeam ? lane(p.key, first(p.name), 'Трекер', sum(r.p) ? dur(sum(r.p)) : '—', r.p, 'p') : ''}
+        ${lane(p.key, first(p.name), 'Чаты', sum(r.c) ? `${sum(r.c)} сообщ.` : '—', r.c, 'c')}
+        ${p.inTeam ? lane(p.key, first(p.name), 'Задачи', sum(r.a) ? `${sum(r.a)} действ.` : '—', r.a, 'a') : ''}
+      </div>
+      ${where.length ? `<div class="p-where">Где писал(а): ${where.map(([w, n]) => `<b>${esc(w)}</b> ${n}`).join(' · ')}</div>` : ''}
+    </div>`;
+  }).join('');
+  $('actBody').innerHTML = `<div class="legend"><span>Меньше</span>${[1, 2, 3, 4, 5].map((l) => `<span class="sw" style="background:var(--h${l})"></span>`).join('')}<span>Больше</span><span class="gap"></span><span class="sw" style="background:var(--h0)"></span><span>нет активности</span>${isToday ? '<span class="gap"></span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--accent)"></span><span>сейчас</span>' : ''}</div>`
+    + axis + (cards || '<div class="empty">За этот день активности нет</div>');
+}
+function renderWeek() {
+  const D = ACT.data;
+  const dates = D.dates.slice(0, 7).reverse();
+  const people = actPeople().filter((p) => p.inTeam ? p.user.active || dates.some((d) => D.data[d] && D.data[d][p.key]) : dates.some((d) => D.data[d] && D.data[d][p.key] && sum(D.data[d][p.key].c)));
+  const head = `<tr><th></th>${dates.map((d) => `<th>${dateLabel(d, D.dates.indexOf(d))}</th>`).join('')}<th>Итого</th></tr>`;
+  const rows = people.map((p) => {
+    let total = 0;
+    const cells = dates.map((d) => {
+      const r = D.data[d] && D.data[d][p.key];
+      if (!r || r.f == null) return `<td data-date="${d}"><span class="h">—</span></td>`;
+      const hrs = activeHours(r);
+      total += hrs;
+      return `<td data-date="${d}" title="${esc(`${p.name}: ${hm(r.f)}–${hm(r.l)}, активен(на) ${hrs} ч; трекер ${dur(sum(r.p))}, чаты ${sum(r.c)}, задачи ${sum(r.a)}`)}"><div class="t">${hm(r.f)}–${hm(r.l)}</div><div class="h">${hrs} ч · ${sum(r.c)} сообщ.</div><div class="bar"><i style="width:${Math.min(100, Math.round((hrs / 10) * 100))}%"></i></div></td>`;
+    }).join('');
+    return `<tr><td class="who"><div class="p-head" style="margin:0">${avatar(p.user, '')}<div><div class="p-name">${esc(p.name)}</div><div class="p-role">${esc(p.sub || '')}</div></div></div></td>${cells}<td class="who"><b>${total} ч</b><div class="h muted" style="font-size:11.5px">активных часов</div></td></tr>`;
+  }).join('');
+  $('actBody').innerHTML = `<div class="legend">Время — с первого до последнего действия за день. «ч» — часы, в которые человек был активен в трекере, чатах или задачах. Нажмите на день, чтобы открыть его по часам.</div><div class="week-wrap"><table class="week">${head}${rows}</table></div>`;
+}
+$('actMode').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (!b) return; ACT.mode = b.dataset.mode; renderActivity(); });
+$('actDays').addEventListener('click', (e) => { const b = e.target.closest('[data-date]'); if (!b) return; ACT.date = b.dataset.date; renderActivity(); });
+$('actBody').addEventListener('click', (e) => {
+  const td = e.target.closest('td[data-date]');
+  if (td) { ACT.date = td.dataset.date; ACT.mode = 'day'; renderActivity(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  const cell = e.target.closest('.cell');
+  if (cell) showTip(cell);
+});
+let tipEl = null;
+function showTip(cell) {
+  if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'tip'; document.body.appendChild(tipEl); }
+  tipEl.textContent = cell.dataset.tip;
+  tipEl.hidden = false;
+  const r = cell.getBoundingClientRect();
+  const w = tipEl.offsetWidth;
+  tipEl.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  tipEl.style.top = Math.max(8, r.top - tipEl.offsetHeight - 8) + 'px';
+}
+$('actBody').addEventListener('pointerover', (e) => { const c = e.target.closest('.cell'); if (c && e.pointerType === 'mouse') showTip(c); });
+$('actBody').addEventListener('pointerout', (e) => { if (e.target.closest('.cell') && tipEl && e.pointerType === 'mouse') tipEl.hidden = true; });
+window.addEventListener('scroll', () => { if (tipEl) tipEl.hidden = true; }, { passive: true });
 
 boot();
 </script>
