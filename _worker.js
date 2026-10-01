@@ -4855,6 +4855,11 @@ async function botScheduled(env) {
     console.error('clients seed failed', err && err.stack);
   }
   try {
+    await atEnsureNewMembers(env);
+  } catch (err) {
+    console.error('team members seed failed', err && err.stack);
+  }
+  try {
     await botProcessQueue(env);
   } catch (err) {
     console.error('control bot queue failed', err && err.stack);
@@ -5090,6 +5095,7 @@ const AT_ROLES = {
   manager: 'Клиентский менеджер',
   specialist: 'Специалист по Авито',
   trainee: 'Стажёр по Авито',
+  assistant: 'Ассистент', // same access as the owner, except the owner's own record
 };
 const AT_PRIORITIES = ['urgent', 'high', 'normal', 'low'];
 const AT_PRIORITY_LABEL = { urgent: 'срочно', high: 'высокий', normal: 'обычный', low: 'низкий' };
@@ -5223,6 +5229,53 @@ async function atSeedTeam(env) {
   if (env.CONTROL_BOT_TOKEN) await botNotifyOwner(env, atAccessMessage(team, true));
   return team;
 }
+// People added to the team after it was first set up (2026-10-01: София, ассистент). Each is added
+// once, with Telegram already tied (so the bot can write to her as soon as she has opened it), and
+// gets her invite link from the bot; the owner is told either way.
+const AT_NEW_MEMBERS = [
+  { id: 'sofia', name: 'София Романовна', role: 'assistant', aliases: ['София', 'Софья', 'Соня'], tgId: '993366229', tgUsername: 'sofiuspasskaya' },
+];
+async function atEnsureNewMembers(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  for (const m of AT_NEW_MEMBERS) {
+    const flag = `at:member-added:${m.id}`;
+    if (await kv.get(flag)) continue;
+    await kv.put(flag, '1');
+    const team = await atGetTeam(env);
+    if (team.users.some((u) => u.id === m.id || String(u.tgId) === m.tgId)) continue;
+    const user = {
+      ...m, roleLabel: AT_ROLES[m.role], invite: atRandom(16), v: 1, active: true,
+      createdAt: new Date().toISOString(), activatedAt: null,
+    };
+    team.users.push(user);
+    await atPutTeam(kv, team);
+    await atTouch(kv, ['#team']);
+    const first = atFirstName(user.name);
+    const res = await botApi(env, 'sendMessage', {
+      chat_id: Number(user.tgId),
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+      text: [
+        `<b>${escapeHtml(first)}, вас добавили в Avito Tasks</b> — трекер задач команды Cantor Agency.`,
+        '',
+        'Откройте свою ссылку один раз — дальше трекер будет открываться на этом устройстве сам:',
+        atInviteUrl(user),
+        `Если без VPN не открывается: ${BOT_WORKER_ORIGIN}/avito-tasks?invite=${user.invite}`,
+        '',
+        'Telegram уже подключён: сюда будут приходить ваши задачи, напоминания о сроках и сводка в 10:00. /tasks — ваши задачи.',
+      ].join('\n'),
+      reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: atInviteUrl(user) }]] },
+    });
+    if (res && res.ok) await botApi(env, 'setMyCommands', { commands: AT_EMPLOYEE_COMMANDS, scope: { type: 'chat', chat_id: Number(user.tgId) } });
+    await botNotifyOwner(env, [
+      `👤 <b>В команду добавлена ${escapeHtml(user.name)}</b> — ${escapeHtml(user.roleLabel)}${user.tgUsername ? ` (@${escapeHtml(user.tgUsername)})` : ''}.`,
+      res && res.ok
+        ? 'Бот уже отправил ей ссылку и будет присылать задачи.'
+        : `Бот не смог написать ей: она ещё не открывала бота. Отправьте ей ссылку:\n${atInviteUrl(user)}\nи попросите нажать Start у бота — тогда начнут приходить задачи.`,
+    ].join('\n'));
+  }
+}
+
 function atAccessMessage(team, first) {
   const owner = team.users.find((u) => u.role === 'owner');
   const lines = [first ? '🗂 <b>Avito Tasks готов</b> — трекер задач команды.' : '🔑 <b>Avito Tasks — доступы</b>'];
@@ -5578,7 +5631,10 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   if (auth.error) return json({ error: auth.error, owner: AT_OWNER_TG }, auth.error === 'blocked' ? 403 : 401);
   const me = auth.user;
   const isOwner = me.role === 'owner';
-  const seesClients = isOwner || me.role === 'manager';
+  // The assistant sees and manages everything the owner does (Clients, Team, Activity); only the
+  // owner's own record (and invite link) stays out of her reach.
+  const isAdmin = isOwner || me.role === 'assistant';
+  const seesClients = isAdmin || me.role === 'manager';
 
   if (action === 'sync') {
     if (body.initial) {
@@ -5619,7 +5675,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const id = atClean(body.id, 40);
     const task = id && (await kv.get(`task:${id}`, 'json'));
     if (!task) return json({ error: 'not_found' }, 404);
-    if (!isOwner && task.createdById !== me.id) return json({ error: 'forbidden' }, 403);
+    if (!isAdmin && task.createdById !== me.id) return json({ error: 'forbidden' }, 403);
     await kv.delete(`task:${id}`);
     await atTouch(kv, [id]);
     if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.delete(id);
@@ -5660,8 +5716,8 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ ok: true, client: clients[projectId] });
   }
 
-  // ── Команда (owner only) ──
-  if (!isOwner) return json({ error: 'forbidden' }, 403);
+  // ── Команда и Активность (owner and assistant) ──
+  if (!isAdmin) return json({ error: 'forbidden' }, 403);
 
   const teamView = async () => {
     const seen = await Promise.all(team.users.map((u) => kv.get(`at:seen:${u.id}`)));
@@ -5669,8 +5725,9 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       users: team.users.map((u, i) => ({
         ...atPublicUser(u),
         aliases: u.aliases || [],
-        invite: atInviteUrl(u),
-        inviteCode: u.invite,
+        // The owner's link signs in as the owner — only they see it.
+        invite: u.role === 'owner' && !isOwner ? null : atInviteUrl(u),
+        inviteCode: u.role === 'owner' && !isOwner ? null : u.invite,
         tgUsername: u.tgUsername || null,
         activatedAt: u.activatedAt || null,
         seenAt: seen[i] || null,
@@ -5680,6 +5737,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     });
   };
   const target = body.id ? team.users.find((u) => u.id === body.id) : null;
+  if (target && target.role === 'owner' && !isOwner && action !== 'team' && action !== 'activity') return json({ error: 'forbidden' }, 403);
 
   if (action === 'team') return teamView();
 
@@ -5692,22 +5750,24 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const input = body.user || {};
     const name = atClean(input.name, 80).replace(/\s+/g, ' ');
     if (name.length < 2) return json({ error: 'bad_name' }, 400);
-    const role = AT_ROLES[input.role] ? input.role : 'specialist';
+    // Nobody becomes owner from the Team tab; the one owner stays as they are.
+    const role = AT_ROLES[input.role] && input.role !== 'owner' ? input.role : 'specialist';
     const aliases = Array.isArray(input.aliases) ? input.aliases.map((a) => atClean(a, 60)).filter(Boolean).slice(0, 8) : null;
     const now = new Date(nowMs).toISOString();
     let user = input.id ? team.users.find((u) => u.id === input.id) : null;
     if (input.id && !user) return json({ error: 'not_found' }, 404);
+    if (user && user.role === 'owner' && !isOwner) return json({ error: 'forbidden' }, 403);
     if (user) {
       user.name = name;
-      if (user.id !== me.id) user.role = role; // the owner can't demote themselves out of the Team tab
+      if (user.id !== me.id && user.role !== 'owner') user.role = role; // nobody demotes themselves or the owner out of the Team tab
       user.roleLabel = atClean(input.roleLabel, 60) || AT_ROLES[user.role];
       if (aliases) user.aliases = aliases;
     } else {
       user = {
         id: `u${atRandom(7)}`,
         name,
-        role: role === 'owner' ? 'manager' : role,
-        roleLabel: atClean(input.roleLabel, 60) || AT_ROLES[role === 'owner' ? 'manager' : role],
+        role,
+        roleLabel: atClean(input.roleLabel, 60) || AT_ROLES[role],
         aliases: aliases || [atFirstName(name)],
         invite: atRandom(16),
         v: 1,
@@ -6037,7 +6097,7 @@ async function atBuildMyTasks(env, user, digest) {
     }
     if (mine.length > 15) lines.push(`…и ещё ${mine.length - 15} — в трекере.`);
   }
-  if (user.role === 'manager' || user.role === 'owner') {
+  if (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant') {
     const toInform = all.filter((t) => t.status === 'done' && t.projectId);
     if (toInform.length) {
       lines.push('', `📨 <b>Готово — сообщить клиентам: ${toInform.length}</b>`);
