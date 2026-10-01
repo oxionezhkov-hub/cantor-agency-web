@@ -672,8 +672,10 @@ function avatar(user, size, id) {
 const userById = (id) => S.users.find((u) => u.id === id);
 const projectById = (id) => S.projects.find((p) => p.id === id);
 function clientName(t) { const p = t.projectId && projectById(t.projectId); return p ? p.name : t.topicName || ''; }
-const canSeeClients = () => S.me && (S.me.role === 'owner' || S.me.role === 'manager');
 const isOwner = () => S.me && S.me.role === 'owner';
+// Ассистент видит и делает всё, что руководитель (кроме правки самого руководителя).
+const isAdmin = () => S.me && (S.me.role === 'owner' || S.me.role === 'assistant');
+const canSeeClients = () => S.me && (isAdmin() || S.me.role === 'manager');
 
 // ── Telegram: открываем приложение, а не вкладку ──
 function tgAppUrl(url) {
@@ -878,8 +880,8 @@ document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRend
 function views() {
   const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }];
   if (canSeeClients()) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
-  if (isOwner()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
-  if (isOwner()) v.push({ id: 'activity', label: 'Активность', icon: 'pulse' });
+  if (isAdmin()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
+  if (isAdmin()) v.push({ id: 'activity', label: 'Активность', icon: 'pulse' });
   return v;
 }
 function clientAlerts() {
@@ -1231,7 +1233,7 @@ function userOptions(cur) {
 function editor(t, now) {
   const sk = statusKey(t);
   const created = Date.parse(t.startedAt || t.createdAt || 0);
-  const canDelete = isOwner() || t.createdById === S.me.id;
+  const canDelete = isAdmin() || t.createdById === S.me.id;
   const statusBtns = ['new', 'progress', 'done', 'closed', 'cancelled'].map((k) => `<button type="button" class="pill ${sk === k ? 'on' : ''}" data-status="${k}">${k === 'done' ? (t.projectId ? 'Готово, сообщить клиенту' : 'Готово') : k === 'closed' && t.projectId ? 'Закрыта, клиенту сообщили' : STATUS[k]}</button>`).join('');
   const acts = (t.activity || []).slice().reverse();
   return `<div class="editor" data-editor>
@@ -1598,6 +1600,8 @@ function renderMembers() {
   const roles = S.team.roles || {};
   $('members').innerHTML = S.team.users.map((u) => {
     const me = u.id === S.me.id;
+    // Ассистент видит руководителя в списке, но не его ссылку и не может его менять.
+    const locked = u.role === 'owner' && !isOwner();
     const shareText = `${first(u.name)}, это ваша личная ссылка в Avito Tasks — трекер задач команды. Откройте её один раз, дальше трекер будет открываться сам. Потом нажмите «Подключить Telegram», чтобы получать задачи и напоминания.`;
     const share = `https://t.me/share/url?url=${encodeURIComponent(u.invite)}&text=${encodeURIComponent(shareText)}`;
     const flags = [
@@ -1608,7 +1612,7 @@ function renderMembers() {
     return `<div class="member ${u.active ? '' : 'off'} ${S.freshMember === u.id ? 'fresh' : ''}" data-member="${esc(u.id)}">
       <div class="m-head">${avatar(u, 'lg')}<div><div class="m-name">${esc(u.name)}${me ? ' <span class="muted" style="font-weight:500">(вы)</span>' : ''}</div><div class="m-role">${esc(u.roleLabel)}</div></div><div class="m-flags">${flags}</div></div>
       ${S.freshMember === u.id ? '<div class="banner" style="margin:0"><div class="b-ic">' + ico('send') + '</div><div class="b-text"><b>Ссылка готова.</b> Отправьте её человеку — по ней он войдёт в трекер.</div></div>' : ''}
-      <div class="m-link">
+      ${locked ? '' : `<div class="m-link">
         <input class="input" value="${esc(u.invite)}" readonly aria-label="Пригласительная ссылка" onclick="this.select()">
         <button class="btn btn-ghost btn-sm" data-m="copy">${ico('copy', 'ic-sm')}Скопировать</button>
         <a class="btn btn-ghost btn-sm tg" href="${esc(share)}">${ico('tg', 'ic-sm')}Отправить в Telegram</a>
@@ -1626,8 +1630,8 @@ function renderMembers() {
             ${me ? '' : `<button class="btn btn-quiet btn-sm btn-danger" data-m="delete">${ico('trash', 'ic-sm')}Удалить</button>`}
           </div>
         </div>
-      </details>
-      ${me ? '' : `<div style="display:flex;align-items:center;gap:10px"><button class="switch ${u.active ? 'on' : ''}" data-m="toggle" role="switch" aria-checked="${u.active}" aria-label="Доступ"></button><span class="sw-wrap">${u.active ? 'Доступ включён' : 'Доступ выключен'}</span></div>`}
+      </details>`}
+      ${me || locked ? '' : `<div style="display:flex;align-items:center;gap:10px"><button class="switch ${u.active ? 'on' : ''}" data-m="toggle" role="switch" aria-checked="${u.active}" aria-label="Доступ"></button><span class="sw-wrap">${u.active ? 'Доступ включён' : 'Доступ выключен'}</span></div>`}
     </div>`;
   }).join('');
 }
@@ -1686,7 +1690,7 @@ $('members').addEventListener('click', async (e) => {
 // ── вкладка «Активность» (только руководитель) ──
 const ACT = { data: null, loadedAt: 0, date: null, mode: 'day', loading: false };
 async function loadActivity(force) {
-  if (!isOwner()) return;
+  if (!isAdmin()) return;
   if (ACT.data && !force && Date.now() - ACT.loadedAt < 55000) return renderActivity();
   if (ACT.loading) return;
   ACT.loading = true;
