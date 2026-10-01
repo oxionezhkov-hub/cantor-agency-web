@@ -88,7 +88,9 @@ table.data-table tr:last-child td{border-bottom:none}
 .doc-nav .to-catalog{color:var(--muted)}
 .doc-nav .to-catalog:hover{color:var(--red)}
 
-.video-embed{position:relative;padding-top:75%;border-radius:var(--r-md);overflow:hidden;background:var(--dark);margin:12px 0 6px}
+.video-embed{position:relative;padding-top:56.25%;border-radius:var(--r-md);overflow:hidden;background:var(--dark);margin:12px 0 6px}
+.template-box{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--r-md);padding:12px 16px;font-size:14px;color:var(--dark2);white-space:pre-line;margin:8px 0 14px;line-height:1.6}
+.template-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:14px}
 .video-embed iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:1px 6px;word-break:break-word}
 
@@ -119,6 +121,12 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;back
   .feedback-btn{top:12px;right:12px}
   .feedback-panel{top:60px;right:12px}
 }
+.copy-target{position:relative;padding-right:52px!important}
+.copy-btn{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:color .15s,border-color .15s,background .15s;white-space:normal}
+.copy-btn:hover{color:var(--red-dark);border-color:var(--red)}
+.copy-btn svg{width:16px;height:16px}
+.copy-btn.copied{color:#fff;background:var(--red);border-color:var(--red)}
+.copy-target.copying .copy-btn,.copy-target.copying .sample-label{display:none}
 </style>
 </head>
 <body>
@@ -299,14 +307,18 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;back
       <h4>Подготовка текста с ChatGPT</h4>
       <ol>
         <li>Дайте ChatGPT формат описания (пример из таблицы) и бриф клиента.</li>
-        <li>Попросите несколько вариантов текста, например: «Создай 3 варианта этого текста. Обязательно: призывы к действию и УТП расположи на первых строках, используй выделение жирным».</li>
-        <li>Попросите показать предпросмотр в удобном для чтения виде — формат разметки читать тяжело.</li>
+        <li>Попросите несколько вариантов текста — например, таким запросом:
+          <div class="template-box">Создай 3 варианта этого текста. Обязательно: призывы к действию и УТП расположи на первых строках, используй выделение жирным. Покажи предпросмотр каждого варианта в удобном для чтения виде.</div>
+          Предпросмотр просим потому, что формат разметки читать тяжело.
+        </li>
         <li>Прочитайте итоговый вариант, внесите правки, при необходимости дорабатывайте текст в том же диалоге.</li>
       </ol>
       <h4>Уникализация</h4>
       <p>При масспостинге (сотни объявлений по разным городам) одинаковые тексты не подходят — объявления с одинаковыми текстами и фото рискуют попасть под блокировку. Поэтому уникализируем и текст, и фото.</p>
       <ul>
-        <li>В готовом тексте выбираете фразу, у которой может быть несколько вариантов, и записываете варианты в скобках через разделитель, например призыв к действию: <code>{Напишите в чат Авито|Позвоните|Переходите в профиль}</code>. Точный синтаксис — в «Справке» таблицы.</li>
+        <li>В готовом тексте выбираете фразу, у которой может быть несколько вариантов, и записываете варианты в скобках через разделитель, например призыв к действию:
+          <div class="template-box">{Напишите в чат Авито|Позвоните|Переходите в профиль}</div>
+          Точный синтаксис — в «Справке» таблицы.</li>
         <li>Запускаете инструмент <strong>«Уникализировать текст»</strong> — из одного грамотно составленного текста он делает хоть 150 вариантов в одно нажатие, для каждого объявления случайно выбирая один из вариантов фразы.</li>
         <li>Чем больше фраз с вариантами — тем разнообразнее получаются тексты.</li>
         <li>Столбец уникализации — вспомогательный, на Авито не уходит: готовый результат копируем в столбец описания.</li>
@@ -450,6 +462,80 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;back
       statusEl.textContent = 'Не получилось отправить. Попробуйте ещё раз.';
     }).finally(function(){
       sendBtn.disabled = false;
+    });
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+  var ICON_DONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok ? Promise.resolve() : Promise.reject();
+  }
+  // Plain text plus HTML, so bold survives when pasted into Telegram.
+  function copyText(text, html){
+    if (navigator.clipboard && window.isSecureContext) {
+      if (html && window.ClipboardItem && navigator.clipboard.write) {
+        var item = new ClipboardItem({
+          'text/plain': new Blob([text], {type: 'text/plain'}),
+          'text/html': new Blob([html], {type: 'text/html'})
+        });
+        return navigator.clipboard.write([item]).catch(function(){
+          return navigator.clipboard.writeText(text);
+        }).catch(function(){ return fallbackCopy(text); });
+      }
+      return navigator.clipboard.writeText(text).catch(function(){ return fallbackCopy(text); });
+    }
+    return fallbackCopy(text);
+  }
+  function boxHtml(box){
+    var clone = box.cloneNode(true);
+    Array.prototype.forEach.call(clone.querySelectorAll('.copy-btn, .sample-label'), function(el){ el.remove(); });
+    return clone.innerHTML.trim().replace(/\n/g, '<br>');
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.template-box, .sample-box'), function(box){
+    if (box.hasAttribute('data-nocopy')) return;
+    box.classList.add('copy-target');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.title = 'Скопировать';
+    btn.setAttribute('aria-label', 'Скопировать текст');
+    btn.innerHTML = ICON_COPY;
+    box.appendChild(btn);
+    var timer = null;
+    btn.addEventListener('click', function(){
+      box.classList.add('copying');
+      var text = box.innerText.replace(/\n{3,}/g, '\n\n').trim();
+      box.classList.remove('copying');
+      copyText(text, boxHtml(box)).then(function(){
+        btn.classList.add('copied');
+        btn.innerHTML = ICON_DONE;
+        btn.title = 'Скопировано';
+      }, function(){
+        btn.title = 'Не получилось скопировать — выделите текст вручную';
+      }).then(function(){
+        clearTimeout(timer);
+        timer = setTimeout(function(){
+          btn.classList.remove('copied');
+          btn.innerHTML = ICON_COPY;
+          btn.title = 'Скопировать';
+        }, 1600);
+      });
     });
   });
 })();
