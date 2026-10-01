@@ -3687,7 +3687,7 @@ async function handleReportJobCallback(request, env, url) {
 //                                              origin, chatId, threadId, msgId, link, author,
 //                                              doneAt, informedAt, notified, createdAt, updatedAt }
 
-const BOT_SETUP_VERSION = '2'; // 2: callback buttons + employees' private chats (Avito Tasks)
+const BOT_SETUP_VERSION = '3'; // 2: callback buttons + employees' private chats (Avito Tasks); 3: /activity in the owner's menu
 const BOT_WORKER_ORIGIN = 'https://mainweb.oxion-ezhkov.workers.dev';
 const BOT_AI_MODEL_DEFAULT = '@cf/qwen/qwen3-30b-a3b-fp8';
 const BOT_LOG_TTL = 60 * 60 * 24 * 180;
@@ -3716,6 +3716,7 @@ const BOT_OWNER_COMMANDS = [
   { command: 'summary', description: 'Сводка: просрочено, без срока, не сообщили клиенту' },
   { command: 'my', description: 'Мои задачи (Avito Tasks)' },
   { command: 'access', description: 'Ссылки доступа в Avito Tasks' },
+  { command: 'activity', description: 'Кто когда работал сегодня' },
   { command: 'tasks', description: 'Открытые задачи по клиентам' },
   { command: 'overdue', description: 'Просроченные задачи' },
   { command: 'metrics', description: 'Проверка метрик из дашборда' },
@@ -4241,6 +4242,7 @@ async function botOnOwnerMessage(env, msg) {
       '',
       '/summary — просрочено, без срока, сделано но не сообщили клиенту',
       '/my — мои задачи в Avito Tasks · /access — ссылки доступа для команды',
+      '/activity — кто когда работал сегодня (трекер, чаты, задачи)',
       '/tasks — открытые задачи по клиентам (/tasks Агешина — только один клиент)',
       '/overdue — просроченные',
       '/metrics — проверка метрик из дашборда',
@@ -4259,6 +4261,7 @@ async function botOnOwnerMessage(env, msg) {
     return me ? reply(await atBuildMyTasks(env, me)) : reply('В Avito Tasks нет руководителя.');
   }
   if (cmd === 'access') return reply(atAccessMessage(await atGetTeam(env), false));
+  if (cmd === 'activity') return reply(await atActivityText(env));
   if (cmd === 'tasks') return reply(await botBuildTaskList(env, 'open', args.join(' ')));
   if (cmd === 'overdue') return reply(await botBuildTaskList(env, 'overdue'));
   if (cmd === 'metrics') return reply((await botBuildMetricsReport(env, Date.now())) || 'По метрикам всё спокойно: данные за вчера внесены, аномалий нет.');
@@ -4991,6 +4994,8 @@ async function handleBotApi(request, env, url) {
 //   at:notif:<userId>  -> [{ id, t, kind, taskId, text, by, read }]  (latest 60)
 //   at:seen:<userId>   -> ISO time the person last opened the page (written at most every 3 h)
 //   at:clients         -> { <projectId>: { lastUpdateAt, by, note, lastTeamAt } }
+//   at:act:<userId>:<date>  -> { slots: [0..143] }  10-minute slots the person was active on the page
+//   at:chatact:<date>  -> per-person chat message counts by hour for a finished day (cache)
 //   bot:me             -> the control bot's @username (for the «Подключить Telegram» link)
 //   bot:qrun           -> last time a page visit kicked the AI queue
 
@@ -5498,6 +5503,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       if (nowMs - seen > AT_SEEN_EVERY_MS) await kv.put(seenKey, new Date(nowMs).toISOString());
       atKickQueue(env, ctx);
     }
+    if (body.activity) await atSaveActivity(kv, me, body.activity, nowMs);
     const [mem, notifications] = await Promise.all([atSnapshot(env), kv.get(`at:notif:${me.id}`, 'json')]);
     const ver = `${mem.v}.${mem.stamp}`;
     const out = {
@@ -5593,6 +5599,11 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
 
   if (action === 'team') return teamView();
 
+  if (action === 'activity') {
+    const days = Math.min(31, Math.max(1, Number(body.days) || 14));
+    return json(await atBuildActivity(env, team, days, nowMs));
+  }
+
   if (action === 'user-save') {
     const input = body.user || {};
     const name = atClean(input.name, 80).replace(/\s+/g, ' ');
@@ -5664,6 +5675,169 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   }
 
   return json({ error: 'not_found' }, 404);
+}
+
+// ── Activity: when who worked (owner only) ──
+// Three sources, all bucketed by MSK hour:
+//   • tracker — the page marks 10-minute slots in which the person actually did something (click,
+//     key, scroll, touch while the tab is visible) and sends them with a sync every ~10 minutes;
+//     stored per person and day in at:act:<userId>:<date> = { slots: [0..143] } (a slot = 10 min).
+//   • chats — messages the control bot logged (work chat topics and client chats), matched to a
+//     person by Telegram id or name; past days are cached in at:chatact:<date> once computed.
+//   • actions — task changes made in the tracker (each task's activity list).
+const AT_ACT_TTL = 60 * 60 * 24 * 120;
+const AT_ACT_CACHE = new Map(); // `${date}` -> { at, data } for today's chat counts (recomputed every 3 min)
+
+function atMskDate(ms) { return botMsk(ms).date; }
+
+async function atSaveActivity(kv, user, activity, nowMs) {
+  if (!activity || typeof activity !== 'object') return;
+  const recent = new Set([0, 1, 2].map((d) => atMskDate(nowMs - d * 86400000)));
+  for (const [date, slotsRaw] of Object.entries(activity).slice(0, 3)) {
+    if (!recent.has(date) || !Array.isArray(slotsRaw)) continue;
+    const slots = slotsRaw.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < 144);
+    if (!slots.length) continue;
+    const key = `at:act:${user.id}:${date}`;
+    const rec = (await kv.get(key, 'json')) || { slots: [] };
+    const merged = [...new Set([...rec.slots, ...slots])].sort((a, b) => a - b);
+    if (merged.length !== rec.slots.length) await kv.put(key, JSON.stringify({ slots: merged }), { expirationTtl: AT_ACT_TTL });
+  }
+}
+
+// Every place the bot logs messages: work-chat topics and client chats, with a readable label.
+async function atChatSources(kv) {
+  const byId = await botProjectsById(kv);
+  const out = [];
+  for (const c of await listByPrefix(kv, 'bot:chat:')) {
+    if (c.isForum) {
+      const keys = (await kv.list({ prefix: `bot:topic:${c.id}:` })).keys;
+      const threads = new Set(['0']);
+      for (const k of keys) threads.add(k.name.split(':').pop());
+      const recs = await Promise.all(keys.map((k) => kv.get(k.name, 'json')));
+      const names = {};
+      keys.forEach((k, i) => { const r = recs[i]; names[k.name.split(':').pop()] = r ? ((r.projectId && byId[r.projectId] && byId[r.projectId].name) || r.name) : null; });
+      for (const t of threads) out.push({ chatId: c.id, threadId: t, label: names[t] || (t === '0' ? 'Общий' : `Топик ${t}`) });
+    } else {
+      out.push({ chatId: c.id, threadId: '0', label: `чат: ${(c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title}` });
+    }
+  }
+  return out;
+}
+// { users: { <userId | 'tg:…'>: { c: [24], f, l, w: { label: n } } }, names: { 'tg:…': name } }
+async function atChatActivityForDate(env, users, date, sources, isToday) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!isToday) {
+    const cached = await kv.get(`at:chatact:${date}`, 'json');
+    if (cached) return cached;
+  } else {
+    const hit = AT_ACT_CACHE.get(date);
+    if (hit && Date.now() - hit.at < 3 * 60000) return hit.data;
+  }
+  const data = { users: {}, names: {} };
+  const lists = await Promise.all(sources.map((s) => kv.get(`bot:log:${s.chatId}:${s.threadId}:${date}`, 'json')));
+  lists.forEach((list, i) => {
+    for (const e of list || []) {
+      if (e.team === false || !e.t) continue;
+      const who = users.find((u) => u.tgId && e.fromId && String(u.tgId) === String(e.fromId)) || atMatchUser(e.from, users);
+      const key = who ? who.id : `tg:${e.fromId || e.from}`;
+      if (!who) data.names[key] = e.from || '?';
+      const rec = data.users[key] || (data.users[key] = { c: new Array(24).fill(0), f: null, l: null, w: {} });
+      const p = botMsk(e.t);
+      const min = p.hh * 60 + p.mm;
+      rec.c[p.hh] += 1;
+      rec.f = rec.f == null ? min : Math.min(rec.f, min);
+      rec.l = rec.l == null ? min : Math.max(rec.l, min);
+      rec.w[sources[i].label] = (rec.w[sources[i].label] || 0) + 1;
+    }
+  });
+  if (isToday) AT_ACT_CACHE.set(date, { at: Date.now(), data });
+  else await kv.put(`at:chatact:${date}`, JSON.stringify(data), { expirationTtl: AT_ACT_TTL });
+  return data;
+}
+// Per date and person: p = tracker minutes per hour, c = chat messages per hour, a = task changes
+// per hour, f / l = first / last activity (minutes after MSK midnight), w = where they wrote.
+async function atBuildActivity(env, team, days, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const users = team.users;
+  const dates = [];
+  for (let i = 0; i < days; i += 1) dates.push(atMskDate(nowMs - i * 86400000));
+  const today = dates[0];
+  const sources = await atChatSources(kv);
+  const mem = await atSnapshot(env);
+  const blank = () => ({ p: new Array(24).fill(0), c: new Array(24).fill(0), a: new Array(24).fill(0), f: null, l: null, w: {} });
+  const span = (rec, min) => { rec.f = rec.f == null ? min : Math.min(rec.f, min); rec.l = rec.l == null ? min : Math.max(rec.l, min); };
+  const data = {};
+  const others = {};
+  for (const date of dates) {
+    const day = (data[date] = {});
+    const get = (k) => day[k] || (day[k] = blank());
+    // tracker
+    const acts = await Promise.all(users.map((u) => kv.get(`at:act:${u.id}:${date}`, 'json')));
+    users.forEach((u, i) => {
+      for (const slot of (acts[i] && acts[i].slots) || []) {
+        const rec = get(u.id);
+        rec.p[Math.floor(slot / 6)] += 10;
+        span(rec, slot * 10);
+        span(rec, slot * 10 + 9);
+      }
+    });
+    // chats
+    const chat = await atChatActivityForDate(env, users, date, sources, date === today);
+    for (const [k, r] of Object.entries(chat.users)) {
+      const rec = get(k);
+      rec.c = r.c;
+      rec.w = r.w;
+      if (r.f != null) { span(rec, r.f); span(rec, r.l); }
+      if (chat.names[k]) others[k] = chat.names[k];
+    }
+  }
+  // actions in the tracker
+  const byName = new Map(users.map((u) => [u.name, u]));
+  for (const t of mem.tasks.values()) {
+    for (const a of Array.isArray(t.activity) ? t.activity : []) {
+      if (!a || !a.t || a.by === 'Бот' || a.by === 'Claude') continue;
+      const date = atMskDate(a.t);
+      if (!data[date]) continue;
+      const u = byName.get(a.by) || atMatchUser(a.by, users);
+      if (!u) continue;
+      const rec = data[date][u.id] || (data[date][u.id] = blank());
+      const p = botMsk(a.t);
+      rec.a[p.hh] += 1;
+      span(rec, p.hh * 60 + p.mm);
+    }
+  }
+  return { dates, users: users.map(atPublicUser), others, data };
+}
+function atFmtMinutes(min) {
+  return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+}
+function atFmtDuration(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h ? `${h} ч${m ? ` ${m} мин` : ''}` : `${m} мин`;
+}
+// /activity in the owner's chat: today, one line per person.
+async function atActivityText(env) {
+  const team = await atGetTeam(env);
+  const res = await atBuildActivity(env, team, 1, Date.now());
+  const day = res.data[res.dates[0]];
+  const lines = [`🕘 <b>Активность сегодня</b> (${res.dates[0].slice(8, 10)}.${res.dates[0].slice(5, 7)})`];
+  const sum = (arr) => arr.reduce((s, n) => s + n, 0);
+  for (const u of team.users.filter((x) => x.active)) {
+    const r = day[u.id];
+    if (!r || r.f == null) { lines.push(`⚪ ${escapeHtml(u.name)} — активности нет`); continue; }
+    const parts = [`${atFmtMinutes(r.f)}–${atFmtMinutes(r.l)}`];
+    if (sum(r.p)) parts.push(`трекер ${atFmtDuration(sum(r.p))}`);
+    if (sum(r.c)) parts.push(`чаты ${sum(r.c)} сообщ.`);
+    if (sum(r.a)) parts.push(`задачи ${sum(r.a)} действ.`);
+    lines.push(`🟢 ${escapeHtml(u.name)}: ${parts.join(' · ')}`);
+  }
+  for (const [k, name] of Object.entries(res.others)) {
+    const r = day[k];
+    if (r && sum(r.c)) lines.push(`• ${escapeHtml(name)} (не в трекере): ${atFmtMinutes(r.f)}–${atFmtMinutes(r.l)} · чаты ${sum(r.c)} сообщ.`);
+  }
+  lines.push('', `По часам и за прошлые дни — вкладка «Активность»: ${AT_PAGE_URL}`);
+  return lines.join('\n');
 }
 
 async function atBotUsername(env) {
