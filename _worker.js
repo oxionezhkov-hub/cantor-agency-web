@@ -4126,18 +4126,33 @@ async function botOnMembership(env, upd) {
   const status = upd.new_chat_member && upd.new_chat_member.status;
   const title = escapeHtml(chat.title || chat.id);
   if (status === 'left' || status === 'kicked') {
+    // The bot leaving on its own (stranger's chat, below) needs no second message.
+    if (upd.from && upd.from.is_bot) return;
     await botNotifyOwner(env, `ℹ️ Бота убрали из чата «${title}» (${escapeHtml(botUserName(upd.from))}).`);
     return;
   }
-  if (!botIsOwner(env, upd.from && upd.from.id) && !(await kv.get(`bot:chat:${chat.id}`))) {
+  if (!(await botMayAddBot(env, upd.from)) && !(await kv.get(`bot:chat:${chat.id}`))) {
     await botApi(env, 'leaveChat', { chat_id: chat.id });
-    await botNotifyOwner(env, `⚠️ ${escapeHtml(botUserName(upd.from))} добавил(а) бота в «${title}». Бот вышел: добавлять его может только владелец.`);
+    await botNotifyOwner(env, `⚠️ ${escapeHtml(botUserName(upd.from))} добавил(а) бота в «${title}». Бот вышел: этого человека нет в команде `
+      + '(добавлять бота могут владелец, сотрудники из Avito Tasks с подключённым Telegram и те, кто пишет в рабочем чате).');
     return;
   }
   const rec = await botGetChat(kv, chat);
-  const adminHint = status === 'administrator' ? '' : '\nСделайте бота администратором группы — иначе он видит не все сообщения.';
-  const kindText = rec.kind === 'work' ? 'рабочий чат (топики = клиенты)' : `чат клиента${rec.projectId ? ` → ${escapeHtml(rec.projectId)}` : ' (клиент не определён — см. /topics)'}`;
-  await botNotifyOwner(env, `✅ Бот подключён к «${title}»: ${kindText}.${adminHint}`);
+  const adminHint = status === 'administrator' ? '' : '\nЛучше сделать бота администратором группы: без этого Telegram может не показывать ему часть сообщений.';
+  const projectName = rec.projectId ? ((await kv.get(`project:${rec.projectId}`, 'json')) || {}).name || rec.projectId : null;
+  const by = botIsOwner(env, upd.from && upd.from.id) ? '' : ` Добавил(а): ${escapeHtml(botUserName(upd.from))}.`;
+  const kindText = rec.kind === 'work' ? 'рабочий чат (топики = клиенты)' : `чат клиента${projectName ? ` → ${escapeHtml(projectName)}` : ' (клиент не определён — см. /topics)'}`;
+  await botNotifyOwner(env, `✅ Бот подключён к «${title}»: ${kindText}.${by}${adminHint}`);
+}
+// Who may add the bot to a new group: the owner, people in Avito Tasks who connected their Telegram,
+// and anyone who writes in the work chat (the bot keeps them as bot:member:<id>). Anyone else's
+// chat the bot leaves at once, so it can't be pulled into strangers' groups.
+async function botMayAddBot(env, from) {
+  if (!from) return false;
+  if (botIsOwner(env, from.id)) return true;
+  if (await env.AGENCY_DASHBOARD_KV.get(`bot:member:${from.id}`)) return true;
+  const team = await atGetTeam(env);
+  return team.users.some((u) => u.active && u.tgId && String(u.tgId) === String(from.id));
 }
 
 async function botOnMessage(env, msg, edited) {
