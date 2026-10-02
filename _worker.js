@@ -5080,13 +5080,14 @@ async function handleBotApi(request, env, url) {
 //   at:team            -> { secret, users: [{ id, name, role, roleLabel, aliases, invite, v, active,
 //                           tgId, tgUsername, createdAt, activatedAt }] }
 //   at:ver             -> { v, log: [[v, taskId | '#projects' | '#clients'], ...] }  bumped on every change
-//   at:notif:<userId>  -> [{ id, t, kind, taskId, text, by, read }]  (latest 60)
+//   at:notif:<userId>  -> [{ id, t, kind, taskId, ref, text, by, read }]  (latest 60; ref: 'kb:<jobId>' for «База знаний»)
 //   at:seen:<userId>   -> ISO time the person last opened the page (written at most every 3 h)
 //   at:clients         -> { <projectId>: { lastUpdateAt, by, note, lastTeamAt } }
 //   at:act:<userId>:<date>  -> { slots: [0..143] }  10-minute slots the person was active on the page
 //   at:chatact:<date>  -> per-person chat message counts by hour for a finished day (cache)
 //   bot:me             -> the control bot's @username (for the «Подключить Telegram» link)
 //   bot:qrun           -> last time a page visit kicked the AI queue
+//   kb:*               -> «База знаний» update requests — see "Avito Tasks → «База знаний»" below
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -5451,7 +5452,7 @@ async function atNotify(env, team, userIds, n, tg) {
     if (!user) continue;
     const key = `at:notif:${uid}`;
     const list = (await kv.get(key, 'json')) || [];
-    list.unshift({ id: atRandom(8), t: Date.now(), kind: n.kind, taskId: n.taskId || null, text: String(n.text || '').slice(0, 400), by: n.by || null, read: false });
+    list.unshift({ id: atRandom(8), t: Date.now(), kind: n.kind, taskId: n.taskId || null, ref: n.ref || null, text: String(n.text || '').slice(0, 400), by: n.by || null, read: false });
     await kv.put(key, JSON.stringify(list.slice(0, AT_NOTIF_KEEP)));
     if (tg && user.tgId) await botSend(env, user.tgId, tg.text, tg.extra || {});
   }
@@ -5719,6 +5720,9 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   // ── Команда и Активность (owner and assistant) ──
   if (!isAdmin) return json({ error: 'forbidden' }, 403);
 
+  // «База знаний»: updates to cantor.agency/base through the Claude Code routine.
+  if (action.startsWith('kb-')) return atKbApi(env, me, action, body);
+
   const teamView = async () => {
     const seen = await Promise.all(team.users.map((u) => kv.get(`at:seen:${u.id}`)));
     return json({
@@ -5819,6 +5823,407 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   }
 
   return json({ error: 'not_found' }, 404);
+}
+
+// ── Avito Tasks → «База знаний»: updates to cantor.agency/base via a Claude Code routine ──
+// The owner and the assistant describe new knowledge on the tracker's «База знаний» tab: into a
+// chosen regulation, into «общее» (Claude decides where it belongs) or as a new regulation —
+// text plus files and pictures. The page uploads files in ≤1.5 MB parts (the Yandex Cloud proxy
+// takes ≤3.5 MB per request), then «kb-send» fires the routine (KB_ROUTINE_ID var + KB_ROUTINE_TOKEN
+// secret, same mechanism as the daily report's) and answers at once — nobody waits on the page.
+// The routine's session reads the request from /api/kb-jobs/<id>?token=…, edits base/ in the repo,
+// merges it to main (the GitHub Action deploys cantor.agency) and posts the result back; the worker
+// then notifies the requester in the tracker and in Telegram, naming what changed where. The cron
+// marks requests the routine never answered as stuck and tells the requester and the owner.
+//
+// KV keys (AGENCY_DASHBOARD_KV, "kb:" prefix):
+//   kb:job:<id>              -> { id, token, status, mode, target, newTitle, newSection, text, files,
+//                                 byId, byName, sessionUrl, progress, result, error, createdAt,
+//                                 updatedAt, sentAt, finishedAt }  (60-day TTL)
+//                               status: draft → sent → running → done | failed | stuck | not_configured
+//                               mode: 'reglament' (target = { slug, title }) | 'general' | 'new'
+//   kb:file:<id>:<fileId>:<part> -> raw bytes of one ≤1.5 MB part of an attached file (30-day TTL)
+//   kb:index                 -> [{ id, status, byId, createdAt, updatedAt }]  newest first, latest 60
+
+const KB_JOB_TTL = 60 * 24 * 3600;
+const KB_FILE_TTL = 30 * 24 * 3600;
+const KB_PART_BYTES = 1536 * 1024; // a multiple of 3, so every part is standalone base64
+const KB_MAX_FILES = 12;
+const KB_MAX_FILE_BYTES = 25 * 1024 * 1024;
+const KB_MAX_TOTAL_BYTES = 80 * 1024 * 1024;
+const KB_MAX_TEXT = 30000;
+const KB_STUCK_MS = 150 * 60 * 1000;
+const KB_ACTIVE = new Set(['sent', 'running']);
+const KB_CALLBACK_PREFIX = `${BOT_WORKER_ORIGIN}/api/kb-jobs/`;
+const KB_BASE_URL = 'https://cantor.agency/base';
+
+function kbSlug(value) {
+  const s = String(value || '').trim().replace(/^\/?base\//, '').replace(/\/+$/, '');
+  return /^[a-z0-9][a-z0-9-]{1,79}$/.test(s) ? s : '';
+}
+async function kbPutJob(kv, job) {
+  job.updatedAt = new Date().toISOString();
+  await kv.put(`kb:job:${job.id}`, JSON.stringify(job), { expirationTtl: KB_JOB_TTL });
+  if (job.status === 'draft') return;
+  const index = ((await kv.get('kb:index', 'json')) || []).filter((x) => x.id !== job.id);
+  index.unshift({ id: job.id, status: job.status, byId: job.byId, createdAt: job.createdAt, updatedAt: job.updatedAt });
+  await kv.put('kb:index', JSON.stringify(index.slice(0, 60)));
+}
+function kbTargetLabel(job) {
+  if (job.mode === 'reglament' && job.target) return job.target.title;
+  if (job.mode === 'new') return `Новый регламент: ${job.newTitle}`;
+  return 'Общее — Claude разберёт сам';
+}
+function kbPublicJob(job) {
+  return {
+    id: job.id,
+    status: job.status,
+    mode: job.mode,
+    target: job.target || null,
+    targetLabel: kbTargetLabel(job),
+    newTitle: job.newTitle || null,
+    newSection: job.newSection || null,
+    text: job.text,
+    files: (job.files || []).map((f) => ({ id: f.id, name: f.name, type: f.type, size: f.size })),
+    byId: job.byId,
+    byName: job.byName,
+    sessionUrl: job.sessionUrl || null,
+    progress: job.progress || null,
+    result: job.result || null,
+    error: job.error || null,
+    createdAt: job.createdAt,
+    sentAt: job.sentAt || null,
+    finishedAt: job.finishedAt || null,
+  };
+}
+
+// Tracker API actions kb-* (owner and assistant only — called from handleAvitoTasksApi).
+async function atKbApi(env, me, action, body) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const nowIso = new Date().toISOString();
+
+  if (action === 'kb-list') {
+    const index = (await kv.get('kb:index', 'json')) || [];
+    const jobs = (await Promise.all(index.slice(0, 30).map((x) => kv.get(`kb:job:${x.id}`, 'json')))).filter(Boolean);
+    return json({ jobs: jobs.map(kbPublicJob), configured: Boolean(env.KB_ROUTINE_ID && env.KB_ROUTINE_TOKEN) });
+  }
+
+  if (action === 'kb-create') {
+    const mode = ['reglament', 'general', 'new'].includes(body.mode) ? body.mode : null;
+    if (!mode) return json({ error: 'bad_mode' }, 400);
+    const text = String(body.text == null ? '' : body.text).replace(/\r/g, '').trim().slice(0, KB_MAX_TEXT);
+    const filesIn = Array.isArray(body.files) ? body.files.slice(0, KB_MAX_FILES + 1) : [];
+    if (filesIn.length > KB_MAX_FILES) return json({ error: 'too_many_files' }, 400);
+    if (!text && !filesIn.length) return json({ error: 'empty' }, 400);
+    let target = null;
+    if (mode === 'reglament') {
+      const slug = kbSlug(body.slug);
+      if (!slug) return json({ error: 'bad_target' }, 400);
+      target = { slug, title: atClean(body.title, 200) || slug };
+    }
+    const newTitle = mode === 'new' ? atClean(body.newTitle, 200).replace(/\s+/g, ' ') : '';
+    if (mode === 'new' && newTitle.length < 3) return json({ error: 'bad_title' }, 400);
+    let total = 0;
+    const files = [];
+    for (const f of filesIn) {
+      const size = Math.floor(Number(f && f.size) || 0);
+      if (size <= 0 || size > KB_MAX_FILE_BYTES) return json({ error: 'file_too_big', name: atClean(f && f.name, 120) }, 400);
+      total += size;
+      files.push({
+        id: `f${files.length + 1}${atRandom(5)}`,
+        name: atClean(f.name, 160).replace(/[\\/]/g, '_') || `file-${files.length + 1}`,
+        type: atClean(f.type, 100) || 'application/octet-stream',
+        size,
+        parts: Math.ceil(size / KB_PART_BYTES),
+      });
+    }
+    if (total > KB_MAX_TOTAL_BYTES) return json({ error: 'files_too_big' }, 400);
+    const job = {
+      id: atRandom(12),
+      token: atRandom(32),
+      status: 'draft',
+      mode,
+      target,
+      newTitle: newTitle || null,
+      newSection: mode === 'new' ? atClean(body.newSection, 120) || null : null,
+      text,
+      files,
+      byId: me.id,
+      byName: me.name,
+      sessionUrl: null,
+      progress: null,
+      result: null,
+      error: null,
+      createdAt: nowIso,
+    };
+    await kbPutJob(kv, job);
+    return json({ job: { id: job.id, files: files.map((f) => ({ id: f.id, parts: f.parts })) }, partBytes: KB_PART_BYTES });
+  }
+
+  const id = atClean(body.id, 24);
+  const job = /^[a-z0-9]{12}$/.test(id) ? await kv.get(`kb:job:${id}`, 'json') : null;
+  if (!job) return json({ error: 'not_found' }, 404);
+
+  if (action === 'kb-file') {
+    if (job.status !== 'draft') return json({ error: 'already_sent' }, 409);
+    const file = job.files.find((f) => f.id === body.fileId);
+    const part = Number(body.part);
+    if (!file || !Number.isInteger(part) || part < 0 || part >= file.parts) return json({ error: 'bad_part' }, 400);
+    let bytes;
+    try {
+      bytes = Uint8Array.from(atob(String(body.data || '')), (c) => c.charCodeAt(0));
+    } catch {
+      return json({ error: 'bad_data' }, 400);
+    }
+    const expected = part < file.parts - 1 ? KB_PART_BYTES : file.size - KB_PART_BYTES * (file.parts - 1);
+    if (bytes.length !== expected) return json({ error: 'bad_size', expected, got: bytes.length }, 400);
+    await kv.put(`kb:file:${job.id}:${file.id}:${part}`, bytes, { expirationTtl: KB_FILE_TTL });
+    return json({ ok: true });
+  }
+
+  if (action === 'kb-send') {
+    if (job.status === 'draft') {
+      const have = new Set();
+      let cursor;
+      do {
+        const page = await kv.list({ prefix: `kb:file:${job.id}:`, cursor });
+        page.keys.forEach((k) => have.add(k.name.slice(`kb:file:${job.id}:`.length)));
+        cursor = page.list_complete ? null : page.cursor;
+      } while (cursor);
+      const missing = [];
+      for (const f of job.files) for (let p = 0; p < f.parts; p += 1) if (!have.has(`${f.id}:${p}`)) missing.push({ fileId: f.id, part: p });
+      if (missing.length) return json({ error: 'files_incomplete', missing }, 409);
+    } else if (KB_ACTIVE.has(job.status) || job.status === 'done') {
+      return json({ job: kbPublicJob(job) });
+    }
+    await kbFireRoutine(env, job);
+    return json({ job: kbPublicJob(job) });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+// Fires the «База знаний» routine. Its saved prompt only accepts URLs under KB_CALLBACK_PREFIX;
+// everything else (what to do, how to report back) comes from the job's DATA_URL.
+async function kbFireRoutine(env, job) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  job.error = null;
+  job.result = null;
+  job.progress = null;
+  if (!env.KB_ROUTINE_ID || !env.KB_ROUTINE_TOKEN) {
+    job.status = 'not_configured';
+    job.error = 'Рутина Claude Code для базы знаний ещё не подключена (нет KB_ROUTINE_ID / KB_ROUTINE_TOKEN). Запрос сохранён — его можно отправить снова, когда рутину подключат.';
+    await kbPutJob(kv, job);
+    if (await botOnce(kv, `kb-not-configured:${botMsk(Date.now()).date}`, 86400)) {
+      await botNotifyOwner(env, `📚 ${escapeHtml(job.byName)} отправил(а) обновление базы знаний, но рутина Claude Code для базы ещё не подключена (KB_ROUTINE_ID / KB_ROUTINE_TOKEN в Cloudflare). Запрос сохранён в трекере, вкладка «База знаний».`);
+    }
+    return;
+  }
+  const text = [
+    'Запрос из Avito Tasks: обновить базу знаний Cantor Agency (папка base/ репозитория, сайт cantor.agency/base).',
+    `JOB_ID: ${job.id}`,
+    `FROM: ${job.byName}`,
+    `WHERE: ${kbTargetLabel(job)}`,
+    `DATA_URL: ${KB_CALLBACK_PREFIX}${job.id}?token=${job.token}`,
+  ].join('\n');
+  try {
+    const res = await fetch(`https://api.anthropic.com/v1/claude_code/routines/${env.KB_ROUTINE_ID}/fire`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.KB_ROUTINE_TOKEN}`,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(`routine_fire_${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
+    job.status = 'sent';
+    job.sentAt = new Date().toISOString();
+    job.sessionUrl = (data && data.claude_code_session_url) || null;
+  } catch (e) {
+    job.status = 'failed';
+    job.error = `Не удалось запустить Claude: ${String(e && e.message)}`;
+  }
+  await kbPutJob(kv, job);
+}
+
+function kbInstructions(job) {
+  const where = {
+    reglament: `Добавь знания в регламент «${job.target && job.target.title}» — файл base/${job.target && job.target.slug}. Если часть материала явно относится к другому регламенту — внеси её туда и упомяни это в отчёте.`,
+    general: 'Место не выбрано: сам реши, к каким регламентам из base/ это относится (смотри base/index.html и содержимое регламентов). Можно распределить по нескольким. Новый регламент создавай, только если знания не подходят ни к одному существующему.',
+    new: `Создай новый регламент «${job.newTitle}»${job.newSection ? ` в разделе «${job.newSection}» каталога` : ''} и наполни его этими знаниями.`,
+  }[job.mode];
+  return [
+    `Задача: внести новые знания в базу знаний агентства. ${where}`,
+    'Материал — поле text и файлы из files[] (скачай каждый по url: curl -sS -o <файл> "<url>"; если ответ 503 not_ready — подожди минуту и повтори). Картинки посмотри, PDF/DOCX/таблицы прочитай. Скриншоты, которые помогают понять шаг, положи в images/base/<slug регламента>/ (латиница, без пробелов) и вставь в регламент тегом <img> с alt; остальные файлы используй только как источник текста.',
+    'Как вносить:',
+    '• Каждый регламент — HTML-файл без расширения в base/ (например base/reglament-4-vstrechi). Сохраняй его вёрстку и стиль: те же классы (.reg-card, .step, .step-title, .step-meta, списки, плашки), оглавление .toc со ссылками на #sN — новый шаг добавляй и в оглавление.',
+    '• Пиши как в остальных регламентах: по-русски, коротко, конкретно, в повелительном наклонении. Не дублируй то, что уже есть, — дополни или поправь существующий пункт. Если новое противоречит старому — новое главнее, старое убери.',
+    '• Не выдумывай факты сверх материала. Имена клиентов, телефоны, пароли и прочие личные данные в базу не переноси.',
+    '• Новый регламент: файл base/<slug> (латиница через дефис, без расширения) по образцу соседних регламентов (шапка, .doc-title, .doc-meta, .toc, .reg-card), плюс карточка a.cat-card в нужном .cat-section в base/index.html (новый раздел — только если ни один не подходит). В base/index.html правь только каталог.',
+    '• Меняй только base/ и images/base/. Больше ничего в репозитории не трогай.',
+    'Публикация: сделай один коммит, запушь ветку, открой PR в main (не черновик) и сразу смержи его (squash) через GitHub — автомерж этих правок заранее разрешён владельцем; после мержа GitHub Action сам выложит сайт. Если мерж не удался из-за конфликта — подтяни свежий main, разреши и повтори. Если GitHub-инструментов для PR нет — попробуй git push origin HEAD:main; если и это запрещено — запушь ветку и отправь done с published=false и ссылкой на ветку (https://github.com/oxionezhkov-hub/cantor-agency-web/tree/<ветка>) в prUrl. На события PR не подписывайся.',
+    `Перед началом отправь POST на callbacks.progress с {"note":"<что делаешь, коротко>"}. В конце — POST на callbacks.done с JSON: {"summary":"2–4 предложения для Софии простым языком: что именно добавлено","changes":[{"slug":"<slug>","title":"<название регламента>","what":"<что изменилось, конкретно: какой шаг/раздел добавлен или исправлен>","isNew":false}],"prUrl":"<ссылка на PR>","published":true}. published=false — если смержить не получилось и PR ждёт проверки. Если внести знания не получилось совсем — POST на callbacks.fail с {"error":"<понятная причина>"}.`,
+    `Ссылка на страницу регламента: ${KB_BASE_URL}/<slug>.`,
+  ].join('\n');
+}
+
+// Called by the routine's cloud session — authorised by the per-job random token that was only
+// ever sent inside the routine fire payload (not by the tracker's tokens).
+async function handleKbJobCallback(request, env, url) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const match = url.pathname.match(/^\/api\/kb-jobs\/([a-z0-9]{12})(?:\/(progress|done|fail|file\/([a-z0-9]{1,12})))?$/);
+  if (!match) return json({ error: 'not_found' }, 404);
+  const job = await kv.get(`kb:job:${match[1]}`, 'json');
+  if (!job || job.status === 'draft' || !url.searchParams.get('token') || url.searchParams.get('token') !== job.token) {
+    return json({ error: 'not_found' }, 404);
+  }
+  const base = `${KB_CALLBACK_PREFIX}${job.id}`;
+  const q = `?token=${job.token}`;
+  const action = match[2] ? match[2].split('/')[0] : null;
+
+  if (!action && request.method === 'GET') {
+    if (job.status === 'sent') {
+      job.status = 'running';
+      await kbPutJob(kv, job);
+    }
+    return json({
+      jobId: job.id,
+      instructions: kbInstructions(job),
+      request: {
+        mode: job.mode,
+        target: job.target,
+        newTitle: job.newTitle,
+        newSection: job.newSection,
+        text: job.text,
+        from: job.byName,
+        createdAt: job.createdAt,
+        files: job.files.map((f) => ({ name: f.name, type: f.type, size: f.size, url: `${base}/file/${f.id}${q}` })),
+      },
+      callbacks: { progress: `${base}/progress${q}`, done: `${base}/done${q}`, fail: `${base}/fail${q}` },
+    });
+  }
+
+  if (action === 'file' && request.method === 'GET') {
+    const file = job.files.find((f) => f.id === match[3]);
+    if (!file) return json({ error: 'not_found' }, 404);
+    const parts = await Promise.all(Array.from({ length: file.parts }, (_, p) => kv.get(`kb:file:${job.id}:${file.id}:${p}`, 'arrayBuffer')));
+    if (parts.some((p) => !p)) return json({ error: 'not_ready', message: 'Файл ещё не доступен (истёк срок хранения или KV не успел синхронизироваться) — повторите через минуту.' }, 503);
+    const bytes = new Uint8Array(file.size);
+    let off = 0;
+    for (const p of parts) { bytes.set(new Uint8Array(p), off); off += p.byteLength; }
+    return new Response(bytes, {
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="file"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+        ...corsHeaders(),
+      },
+    });
+  }
+
+  if (request.method !== 'POST' || !action) return json({ error: 'not_found' }, 404);
+  const body = (await readJson(request)) || {};
+  if (job.status === 'done' && action !== 'done') return json({ error: 'already_done' }, 409);
+
+  if (action === 'progress') {
+    job.status = 'running';
+    job.progress = atClean(body.note, 300) || null;
+    await kbPutJob(kv, job);
+    return json({ ok: true });
+  }
+
+  if (action === 'fail') {
+    job.status = 'failed';
+    job.error = atClean(body.error, 600) || 'Claude не смог внести изменения.';
+    job.finishedAt = new Date().toISOString();
+    await kbPutJob(kv, job);
+    await kbNotify(env, job);
+    return json({ ok: true });
+  }
+
+  // done
+  const changes = (Array.isArray(body.changes) ? body.changes : []).slice(0, 20).map((c) => {
+    const slug = kbSlug(c && c.slug);
+    return {
+      slug: slug || null,
+      title: atClean(c && c.title, 200) || slug || 'Регламент',
+      what: atClean(c && c.what, 600),
+      isNew: Boolean(c && c.isNew),
+      url: slug ? `${KB_BASE_URL}/${slug}` : null,
+    };
+  }).filter((c) => c.slug || c.what);
+  const summary = atClean(body.summary, 1500);
+  if (!summary && !changes.length) return json({ error: 'missing_result', message: 'Нужны summary и changes[]' }, 400);
+  const prUrl = atClean(body.prUrl, 300);
+  job.result = {
+    summary,
+    changes,
+    prUrl: /^https:\/\/github\.com\//.test(prUrl) ? prUrl : null,
+    published: body.published !== false,
+  };
+  job.status = 'done';
+  job.error = null;
+  job.progress = null;
+  job.finishedAt = new Date().toISOString();
+  await kbPutJob(kv, job);
+  await kbNotify(env, job);
+  return json({ ok: true, changes: changes.length });
+}
+
+// The requester hears about the outcome in the tracker and in Telegram; the owner gets a quiet copy
+// when someone else asked (and a loud one for anything that went wrong).
+async function kbNotify(env, job) {
+  const team = await atGetTeam(env);
+  const requester = team.users.find((u) => u.id === job.byId);
+  const owner = team.users.find((u) => u.role === 'owner');
+  const when = botFmtDate(Date.parse(job.createdAt));
+  const excerpt = String(job.text || (job.files[0] && job.files[0].name) || '').replace(/\s+/g, ' ').slice(0, 90);
+  const about = `Запрос от ${when}${excerpt ? `: «${escapeHtml(excerpt)}${job.text && job.text.length > 90 ? '…' : ''}»` : ''}`;
+  const kbPage = `${AT_PAGE_URL}#kb=${job.id}`;
+  let inApp;
+  let tg;
+  if (job.status === 'done') {
+    const r = job.result;
+    const names = r.changes.map((c) => `«${c.title}»`).join(', ');
+    inApp = `${r.published ? 'База знаний обновлена' : 'Правки базы знаний готовы, ждут публикации'}${names ? `: ${names}` : ''}. ${r.summary}`.trim();
+    const lines = [r.published ? '📚 <b>База знаний обновлена</b>' : '📝 <b>Правки базы знаний готовы, но ещё не опубликованы</b>', `<i>${about}</i>`];
+    if (r.changes.length) lines.push('', '<b>Что изменилось:</b>');
+    for (const c of r.changes) lines.push(`• <b>${escapeHtml(c.title)}</b>${c.isNew ? ' (новый регламент)' : ''}${c.what ? ` — ${escapeHtml(c.what)}` : ''}`);
+    if (r.summary) lines.push('', escapeHtml(r.summary));
+    if (!r.published) lines.push('', 'PR ждёт проверки Олега — после мержа изменения появятся на сайте.');
+    const rows = r.changes.filter((c) => c.url).slice(0, 4).map((c) => [{ text: `📖 ${c.title}`.slice(0, 60), url: c.url }]);
+    rows.push([{ text: 'Открыть в трекере', url: kbPage }]);
+    tg = { text: lines.join('\n'), extra: { reply_markup: { inline_keyboard: rows } } };
+  } else {
+    const reason = job.status === 'stuck' ? 'Claude не ответил больше двух часов' : job.error || 'неизвестная ошибка';
+    inApp = `Не получилось обновить базу знаний (${kbTargetLabel(job)}): ${reason}. Можно отправить снова.`;
+    tg = {
+      text: ['⚠️ <b>Не получилось обновить базу знаний</b>', `<i>${about}</i>`, `Куда: ${escapeHtml(kbTargetLabel(job))}`, `Причина: ${escapeHtml(reason)}`, '', 'В трекере на вкладке «База знаний» можно отправить запрос снова.'].join('\n'),
+      extra: { reply_markup: { inline_keyboard: [[{ text: 'Открыть в трекере', url: kbPage }]] } },
+    };
+  }
+  if (requester) await atNotify(env, team, [requester.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: inApp, by: 'Claude' }, tg);
+  if (owner && owner.id !== job.byId && owner.tgId) {
+    const head = job.status === 'done' ? `📚 <i>${escapeHtml(job.byName)} обновил(а) базу знаний.</i>` : `⚠️ <i>Не выполнен запрос в базу знаний (автор — ${escapeHtml(job.byName)}).</i>`;
+    await botSend(env, owner.tgId, `${head}\n${tg.text}`, { ...tg.extra, disable_notification: job.status === 'done' });
+  }
+}
+
+// Cron: requests the routine took but never answered (session died, limits) don't hang forever.
+async function atKbCron(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const index = (await kv.get('kb:index', 'json')) || [];
+  const now = Date.now();
+  for (const x of index.filter((i) => KB_ACTIVE.has(i.status) && now - Date.parse(i.updatedAt) > KB_STUCK_MS)) {
+    const job = await kv.get(`kb:job:${x.id}`, 'json');
+    if (!job || !KB_ACTIVE.has(job.status) || now - Date.parse(job.updatedAt) <= KB_STUCK_MS) continue;
+    job.status = 'stuck';
+    job.error = 'Claude не ответил больше двух часов.';
+    job.finishedAt = new Date().toISOString();
+    await kbPutJob(kv, job);
+    await kbNotify(env, job);
+  }
 }
 
 // ── Activity: when who worked (owner only) ──
@@ -6803,6 +7208,10 @@ async function handleApi(request, env, url, ctx) {
     return handleReportJobCallback(request, env, url);
   }
 
+  if (pathname.startsWith('/api/kb-jobs/')) {
+    return handleKbJobCallback(request, env, url);
+  }
+
   // Before the dashboard's own routes: the academy has its own sign-in (see handleAcademyApi).
   if (pathname.startsWith('/api/dashboard/academy/')) {
     return handleAcademyApi(request, env, url);
@@ -7043,5 +7452,6 @@ export default {
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
     ctx.waitUntil(avitoNotifyCron(env).catch((err) => console.error('avito notify cron failed', err && err.stack)));
+    ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
   },
 };

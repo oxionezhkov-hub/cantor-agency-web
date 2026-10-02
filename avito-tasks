@@ -346,6 +346,87 @@ a{color:inherit}
   .axis span:not(.k){visibility:hidden}
 }
 
+/* knowledge base */
+.kb-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start}
+.kb-form{display:grid;gap:12px}
+.kb-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:12px}
+.kb-step{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink);font-size:15px}
+.kb-num{width:24px;height:24px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none}
+.kb-modes{display:flex;width:100%}
+.kb-modes button{flex:1;padding:0 8px}
+.kb-hint{font-size:13px;color:var(--muted)}
+.kb-search{max-width:none;order:0!important}
+.kb-regs{display:grid;gap:3px;max-height:420px;overflow:auto;margin:0 -8px;padding:0 8px 2px;overscroll-behavior:contain}
+.kb-sec{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin:10px 6px 2px}
+.kb-sec:first-child{margin-top:2px}
+.kb-reg{display:flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:12px;padding:2px 6px 2px 2px;transition:background .15s,border-color .15s}
+.kb-reg:hover{background:var(--surface-2);border-color:var(--line-2)}
+.kb-reg.on{background:var(--accent-bg);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.kb-pick{flex:1;min-width:0;display:flex;align-items:flex-start;gap:10px;text-align:left;padding:8px}
+.kb-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--faint);flex:none;margin-top:1px;transition:all .15s}
+.kb-reg.on .kb-radio{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--surface)}
+.kb-reg-title{display:block;font-weight:600;color:var(--ink);font-size:14px;line-height:1.35}
+.kb-reg-desc{font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.kb-reg.on .kb-reg-desc{-webkit-line-clamp:3}
+.kb-open{flex:none;gap:6px}
+.kb-drop{border:1.5px dashed var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;color:var(--text);font-size:14px;cursor:pointer;transition:border-color .15s,background .15s;line-height:1.35}
+.kb-drop b{color:var(--ink);font-weight:600}
+.kb-drop:hover,.kb-drop.over{border-color:var(--accent);background:var(--accent-bg)}
+.kb-drop-ic{width:38px;height:38px;border-radius:12px;background:var(--sunken);display:grid;place-items:center;color:var(--muted);flex:none}
+.kb-files{display:flex;flex-wrap:wrap;gap:8px}
+.kb-file{display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:5px 4px 5px 5px;max-width:100%;font-size:13px}
+.kb-file img,.kb-fic{width:38px;height:38px;border-radius:8px;object-fit:cover;flex:none;background:var(--sunken);display:grid;place-items:center;color:var(--muted)}
+.kb-file .nm{display:block;min-width:0;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:500}
+.kb-file .sz{display:block;font-size:11.5px;color:var(--faint)}
+.kb-file .x{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.kb-file .x:hover{background:var(--red-bg);color:var(--red)}
+.kb-submit{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.kb-submit .hint{margin-right:auto;font-size:12.5px;color:var(--muted)}
+.kb-done{justify-items:center;text-align:center;padding:30px 22px}
+.kb-done h2{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
+.kb-done p{max-width:460px;font-size:14px;color:var(--text)}
+.kb-done .kb-target{font-weight:600;color:var(--muted);font-size:13.5px;margin-top:-6px}
+.kb-done-ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--green-bg);color:var(--green)}
+.kb-done-ic .ic{width:28px;height:28px;stroke-width:2.4}
+.kb-done-ic.bad{background:var(--red-bg);color:var(--red)}
+.kb-done-ic.warn{background:var(--amber-bg);color:var(--amber)}
+.kb-done-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.kb-progress{width:100%;max-width:360px;height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.kb-progress i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.kb-note{font-size:13px;line-height:1.45;border-radius:12px;padding:9px 11px;color:var(--text);display:flex;gap:8px;align-items:flex-start;text-align:left}
+.kb-note .ic{margin-top:1px;flex:none}
+.kb-note.run{background:var(--blue-bg)}
+.kb-note.run .ic{color:var(--blue)}
+.kb-note.warn{background:var(--amber-bg)}
+.kb-note.bad{background:var(--red-bg)}
+.kb-side .sec-head{margin-top:4px}
+.kb-job{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:8px;margin-bottom:10px}
+.kb-job.flash{animation:flash 1.6s ease-out}
+.kb-job-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kb-job-meta{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;min-width:0}
+.kb-job-head .kb-job-meta{margin-left:auto}
+.kb-job-target{font-weight:700;color:var(--ink);font-size:14.5px;line-height:1.35}
+.kb-job-text{font-size:13.5px;color:var(--text);white-space:pre-line;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.kb-changes{display:grid;gap:6px}
+.kb-change{display:flex;gap:9px;align-items:flex-start;background:var(--green-bg);border-radius:12px;padding:9px 8px 9px 10px;font-size:13px;line-height:1.45}
+.kb-change>.ic{color:var(--green);margin-top:2px}
+.kb-change .w{flex:1;min-width:0}
+.kb-change b{color:var(--ink)}
+.kb-change .btn{flex:none;gap:6px}
+.kb-sum{font-size:13.5px;color:var(--text)}
+.kb-job-links{font-size:12.5px;color:var(--muted)}
+.kb-job-links a{color:var(--muted)}
+.kb-job-links a:hover{color:var(--accent)}
+.tag-run::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1s ease-in-out infinite}
+@media (max-width:900px){.kb-grid{grid-template-columns:1fr}}
+@media (max-width:760px){
+  .kb-modes button{font-size:12.5px;padding:0 4px;white-space:normal;line-height:1.15}
+  .kb-regs{max-height:none;overflow:visible}
+  .kb-open{padding:0 10px}
+  .kb-file .nm{max-width:150px}
+  .kb-submit .btn{width:100%}
+}
+
 /* toasts */
 .toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;display:grid;gap:8px;width:min(440px,calc(100% - 32px))}
 .toast{background:var(--ink);color:var(--bg);border-radius:14px;padding:12px 14px 12px 16px;display:flex;align-items:center;gap:12px;font-size:14px;box-shadow:var(--shadow-lg);animation:rise .18s ease-out}
@@ -426,6 +507,9 @@ a{color:inherit}
   <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 2v-8.5z"/></symbol>
   <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
   <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 20.5A2.5 2.5 0 006.5 23H20v-5M8 7.5h8M8 11h5"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20.5 11.5l-8.2 8.2a5 5 0 01-7.1-7.1l8.5-8.5a3.3 3.3 0 014.7 4.7l-8.5 8.5a1.7 1.7 0 01-2.4-2.4l7.8-7.8"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
 </svg>
 
 <div id="boot" class="center"><div class="spinner" aria-label="Загрузка"></div></div>
@@ -545,6 +629,24 @@ a{color:inherit}
         <div class="days" id="actDays"></div>
       </div>
       <div id="actBody"><div class="empty">Загружаю…</div></div>
+    </section>
+
+    <!-- База знаний (руководитель и ассистент) -->
+    <section id="view-kb" hidden>
+      <div class="hello">
+        <div>
+          <h1>Обновить базу знаний</h1>
+          <div class="sub">Опишите новые знания — Claude сам внесёт их в регламенты и опубликует. Ждать не нужно: когда всё будет готово, придёт уведомление.</div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="https://cantor.agency/base/" target="_blank" rel="noopener"><svg class="ic ic-sm"><use href="#i-book"/></svg>Открыть базу знаний<svg class="ic ic-sm"><use href="#i-ext"/></svg></a>
+      </div>
+      <div class="kb-grid">
+        <div class="kb-form" id="kbForm"></div>
+        <div class="kb-side">
+          <div class="sec-head"><h2>История обновлений</h2></div>
+          <div id="kbJobs"><div class="empty">Загружаю…</div></div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -863,7 +965,7 @@ function applySync(d, fromCache) {
 
 function isEditing() {
   const a = document.activeElement;
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-team, #view-activity') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-team, #view-activity, #view-kb') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -873,6 +975,7 @@ function render() {
   if (S.view === 'clients') renderClients();
   if (S.view === 'team') renderTeamStatic();
   if (S.view === 'activity') loadActivity();
+  if (S.view === 'kb' && !KB.rendered) renderKb();
 }
 document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRender && !isEditing()) render(); }, 150));
 
@@ -882,6 +985,7 @@ function views() {
   if (canSeeClients()) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
   if (isAdmin()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
   if (isAdmin()) v.push({ id: 'activity', label: 'Активность', icon: 'pulse' });
+  if (isAdmin()) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
   return v;
 }
 function clientAlerts() {
@@ -895,11 +999,11 @@ function renderHeader() {
   const alerts = clientAlerts();
   const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${v.id === 'clients' && alerts ? `<span class="count">${alerts}</span>` : ''}</button>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
-  $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.label)}${v.id === 'clients' && alerts ? `<span class="count">${alerts}</span>` : ''}</button>`).join('');
+  $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.short || v.label)}${v.id === 'clients' && alerts ? `<span class="count">${alerts}</span>` : ''}</button>`).join('');
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'clients', 'team', 'activity'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'clients', 'team', 'activity', 'kb'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
   if ($('meAvatar').dataset.uid !== S.me.id + S.me.name) { $('meAvatar').outerHTML = avatar(S.me, '', 'meAvatar'); $('meAvatar').dataset.uid = S.me.id + S.me.name; }
   const unread = S.notifications.filter((n) => !n.read).length;
   $('bellBadge').hidden = !unread;
@@ -912,6 +1016,7 @@ function setView(v) {
   closeMenus();
   render();
   if (v === 'team') loadTeam();
+  if (v === 'kb') renderKb();
   window.scrollTo({ top: 0 });
 }
 document.addEventListener('click', (e) => {
@@ -946,7 +1051,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-tgconnec
 function tgConnectUrl() { return S.bot && S.tgStart ? `https://t.me/${S.bot}?start=${S.tgStart}` : null; }
 
 // ── уведомления ──
-const N_ICON = { assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'] };
+const N_ICON = { assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'] };
 $('bellBtn').addEventListener('click', openNotifications);
 function openNotifications() {
   closeMenus();
@@ -958,7 +1063,7 @@ function openNotifications() {
       <div class="drawer-head"><h2>Уведомления</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
       <div class="drawer-body">${list.length ? list.map((n) => {
         const [ic, bg, fg] = N_ICON[n.kind] || N_ICON.edited;
-        return `<button class="notif ${n.read ? '' : 'unread'}" data-task="${esc(n.taskId || '')}">
+        return `<button class="notif ${n.read ? '' : 'unread'}" data-task="${esc(n.taskId || '')}" data-ref="${esc(n.ref || '')}">
           <span class="n-ic" style="background:${bg};color:${fg}">${ico(ic)}</span>
           <span style="flex:1;min-width:0"><div class="n-text">${esc(n.text)}</div><div class="n-time">${esc(ago(n.t, now))}</div></span>
         </button>`;
@@ -974,7 +1079,7 @@ function openNotifications() {
 $('drawerRoot').addEventListener('click', (e) => {
   if (e.target.closest('[data-close]')) { $('drawerRoot').innerHTML = ''; return; }
   const n = e.target.closest('.notif');
-  if (n) { $('drawerRoot').innerHTML = ''; if (n.dataset.task) openTask(n.dataset.task); }
+  if (n) { $('drawerRoot').innerHTML = ''; if (n.dataset.task) openTask(n.dataset.task); else if (n.dataset.ref.startsWith('kb:')) openKbJob(n.dataset.ref.slice(3)); }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $('drawerRoot').innerHTML = ''; closeMenus(); } });
 
@@ -1328,10 +1433,19 @@ function openTask(id) {
   });
 }
 function openFromHash() {
-  const m = location.hash.match(/^#t=(.+)$/);
+  const m = location.hash.match(/^#(t|kb)=(.+)$/);
   if (!m) return;
   history.replaceState(null, '', location.pathname + location.search);
-  openTask(decodeURIComponent(m[1]));
+  if (m[1] === 'kb') openKbJob(decodeURIComponent(m[2]));
+  else openTask(decodeURIComponent(m[2]));
+}
+// Из уведомления «база знаний обновлена»: вкладка «База знаний» с подсвеченным запросом.
+function openKbJob(id) {
+  if (!isAdmin()) return;
+  KB.focus = id;
+  if (KB.sent && KB.sent.id === id) KB.sent = null;
+  KB.loadedAt = 0;
+  if (S.view === 'kb') { renderKbForm(); loadKbJobs(); } else setView('kb');
 }
 window.addEventListener('hashchange', openFromHash);
 function autosize() { document.querySelectorAll('.ed-title').forEach((el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 2 + 'px'; }); }
@@ -1797,6 +1911,375 @@ function showTip(cell) {
 $('actBody').addEventListener('pointerover', (e) => { const c = e.target.closest('.cell'); if (c && e.pointerType === 'mouse') showTip(c); });
 $('actBody').addEventListener('pointerout', (e) => { if (e.target.closest('.cell') && tipEl && e.pointerType === 'mouse') tipEl.hidden = true; });
 window.addEventListener('scroll', () => { if (tipEl) tipEl.hidden = true; }, { passive: true });
+
+// ── вкладка «База знаний» (руководитель и ассистент) ──
+// Новые знания уходят рутине Claude Code: она сама вносит их в регламенты cantor.agency/base и
+// публикует сайт. Отправил — и свободен: о готовности придёт уведомление здесь и в Telegram.
+// Список регламентов берётся из каталога /base/, поэтому новый регламент появится в нём сам.
+const KB_SITE = 'https://cantor.agency/base';
+const K_KB_DRAFT = 'avitoTasks.kbDraft';
+const KB_FALLBACK = [
+  ['Начало работы', 'zapusk-novogo-klienta', 'Регламент работы с новыми клиентами Авито'],
+  ['Начало работы', 'reglament-1-zapusk', 'Запуск нового клиента по Авито (сжатая версия)'],
+  ['Продвижение кабинета', 'reglament-oformlenie-obyavleniy', 'Оформление и наполнение объявлений'],
+  ['Продвижение кабинета', 'reglament-avtozagruzka', 'Работа с автозагрузкой'],
+  ['Продвижение кабинета', 'reglament-dialogi-zayavki', 'Работа с диалогами и заявками'],
+  ['Продвижение кабинета', 'reglament-3-soprovozhdenie', 'Ежедневное сопровождение клиентов'],
+  ['Задачи и инструменты', 'reglament-task-treker', 'Работа в таск-трекере Avito Tasks'],
+  ['Коммуникация', 'reglament-2-kommunikaciya', 'Коммуникация с клиентом по Авито'],
+  ['Коммуникация', 'reglament-4-vstrechi', 'Проведение регулярных встреч с клиентами'],
+  ['Коммуникация', 'reglament-6-prodazhi', 'Продажи и продление сотрудничества'],
+  ['Эдвайзеры', 'reglament-5-advaizery', 'Сбор опыта авито-экспертов (эдвайзеров)'],
+].map(([section, slug, title]) => ({ section, slug, title, desc: '' }));
+const KB_STATUS = {
+  sent: ['Отправлено Claude', 'tag-progress tag-run'],
+  running: ['Claude вносит правки', 'tag-progress tag-run'],
+  done: ['Готово', 'tag-closed'],
+  failed: ['Не получилось', 'tag-urgent'],
+  stuck: ['Нет ответа от Claude', 'tag-urgent'],
+  not_configured: ['Ждёт подключения рутины', 'tag-done'],
+  draft: ['Не отправлено', 'tag-cancelled'],
+};
+const KB = Object.assign({
+  mode: 'reglament', slug: '', title: '', newTitle: '', newSection: '', text: '',
+}, store.json(K_KB_DRAFT) || {}, {
+  regs: null, q: '', files: [], sending: null, sent: null,
+  jobs: null, configured: true, loadedAt: 0, focus: null, pollTimer: null, rendered: false,
+});
+function kbSaveDraft() {
+  store.set(K_KB_DRAFT, JSON.stringify({ mode: KB.mode, slug: KB.slug, title: KB.title, newTitle: KB.newTitle, newSection: KB.newSection, text: KB.text }));
+}
+const kbIsActive = (j) => j.status === 'sent' || j.status === 'running';
+function fmtSize(n) { return n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} КБ` : `${(n / 1048576).toFixed(n < 10 * 1048576 ? 1 : 0).replace('.', ',')} МБ`; }
+
+async function loadRegs() {
+  try {
+    const res = await fetch('/base/', { cache: 'no-cache' });
+    if (!res.ok) throw new Error(String(res.status));
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    const list = [];
+    doc.querySelectorAll('.cat-section').forEach((sec) => {
+      const label = sec.querySelector('.section-label');
+      sec.querySelectorAll('a.featured-card, a.cat-card').forEach((a) => {
+        const slug = (a.getAttribute('href') || '').replace(/^\/base\//, '').replace(/\/$/, '');
+        if (!/^[a-z0-9][a-z0-9-]+$/.test(slug) || list.some((x) => x.slug === slug)) return;
+        const t = a.querySelector('.featured-card-title, .cat-card-title');
+        const d = a.querySelector('.featured-card-desc, .cat-card-desc');
+        list.push({ slug, title: t ? t.textContent.trim() : slug, desc: d ? d.textContent.trim() : '', section: label ? label.textContent.trim() : '' });
+      });
+    });
+    if (!list.length) throw new Error('empty');
+    KB.regs = list;
+  } catch (e) { KB.regs = KB_FALLBACK; }
+  if (KB.slug && !KB.regs.some((r) => r.slug === KB.slug)) { KB.slug = ''; KB.title = ''; }
+  if (S.view === 'kb') { renderKbRegs(); if (KB.mode === 'new') renderKbForm(); }
+}
+
+async function loadKbJobs() {
+  try {
+    const res = await api('kb-list');
+    if (!res.ok) throw new Error(res.data.error);
+    KB.jobs = res.data.jobs || [];
+    KB.configured = res.data.configured !== false;
+    KB.loadedAt = Date.now();
+    if (KB.sent) KB.sent = KB.jobs.find((j) => j.id === KB.sent.id) || KB.sent;
+  } catch (e) { if (!KB.jobs) KB.jobs = []; }
+  if (S.view !== 'kb') return;
+  renderKbJobs();
+  if (KB.sent && !KB.sending) renderKbForm();
+  clearTimeout(KB.pollTimer);
+  if (KB.jobs.some(kbIsActive)) KB.pollTimer = setTimeout(() => { if (S.view === 'kb' && !document.hidden) loadKbJobs(); }, 20000);
+}
+
+function renderKb() {
+  KB.rendered = true;
+  if (!KB.regs) loadRegs();
+  renderKbForm();
+  renderKbJobs();
+  if (!KB.jobs || Date.now() - KB.loadedAt > 15000) loadKbJobs();
+}
+
+function renderKbForm() {
+  const el = $('kbForm');
+  if (KB.sending) {
+    const s = KB.sending;
+    el.innerHTML = `<div class="kb-card kb-done">
+      <div class="spinner"></div>
+      <h2>${esc(s.stage)}</h2>
+      ${s.total ? `<div class="kb-progress"><i style="width:${Math.round((s.done / s.total) * 100)}%"></i></div><p class="kb-hint">${fmtSize(s.bytesDone)} из ${fmtSize(s.bytes)}</p>` : ''}
+      <p class="kb-hint">Не закрывайте страницу, пока идёт загрузка файлов — это несколько секунд.</p>
+    </div>`;
+    return;
+  }
+  if (KB.sent) {
+    const j = KB.sent;
+    const bad = j.status === 'failed' || j.status === 'stuck';
+    const wait = j.status === 'not_configured';
+    el.innerHTML = `<div class="kb-card kb-done">
+      <div class="kb-done-ic ${bad ? 'bad' : wait ? 'warn' : ''}">${ico(bad ? 'x' : wait ? 'clock' : 'check')}</div>
+      <h2>${bad ? 'Claude не запустился' : wait ? 'Запрос сохранён' : j.status === 'done' ? 'Готово — база знаний обновлена' : 'Принято! Claude уже взялся за работу'}</h2>
+      <p class="kb-target">${esc(j.targetLabel)}</p>
+      ${bad ? `<p class="kb-note bad">${esc(j.error || 'Неизвестная ошибка')}</p>`
+        : wait ? `<p class="kb-note warn">Рутина Claude для базы знаний ещё не подключена — Олег получил уведомление. Запрос не потеряется: отправьте его снова, когда рутину подключат.</p>`
+        : j.status === 'done' ? '<p class="kb-hint">Что именно изменилось — в истории справа.</p>'
+        : `<p>Можно заниматься другими делами. Когда база знаний обновится, придёт уведомление здесь${S.me.tg ? ' и в Telegram' : ''} — с тем, что именно и в каких регламентах изменилось. Обычно это занимает 5–15 минут.</p>`}
+      <div class="kb-done-actions">
+        ${bad || wait ? `<button class="btn btn-primary" data-kbretry="${esc(j.id)}">${ico('refresh')}Отправить снова</button>` : ''}
+        <button class="btn btn-ghost" data-kb="again">${ico('plus')}Добавить ещё знания</button>
+      </div>
+    </div>`;
+    return;
+  }
+  const modes = [['reglament', 'В регламент'], ['general', 'Пусть ИИ разберёт'], ['new', 'Новый регламент']];
+  const sections = [...new Set((KB.regs || KB_FALLBACK).map((r) => r.section).filter(Boolean))];
+  let where = '';
+  if (KB.mode === 'reglament') {
+    where = `<div class="search kb-search">${ico('search', 'ic-sm')}<input class="input" id="kbQ" type="search" placeholder="Найти регламент по названию" value="${esc(KB.q)}" autocomplete="off"></div>
+      <div class="kb-regs" id="kbRegs"></div>`;
+  } else if (KB.mode === 'general') {
+    where = `<div class="kb-note run">${ico('bot', 'ic-sm')} Claude сам прочитает базу знаний и решит, куда это относится: допишет нужные регламенты (можно сразу несколько) или предложит новый, если ничего не подходит.</div>`;
+  } else {
+    where = `<div class="grid2">
+        <div><label class="label" for="kbNewTitle">Название регламента</label><input class="input" id="kbNewTitle" value="${esc(KB.newTitle)}" maxlength="200" placeholder="Например: Работа с отзывами на Авито" autocomplete="off"></div>
+        <div><label class="label" for="kbNewSection">Раздел каталога</label><select class="select" id="kbNewSection"><option value="">Пусть решит Claude</option>${sections.map((s) => `<option ${s === KB.newSection ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+      </div>
+      <div class="kb-hint">Claude создаст страницу регламента в общем стиле базы и добавит её в каталог.</div>`;
+  }
+  const files = KB.files.map((f) => `<div class="kb-file" data-kbfile="${f.key}">
+      ${f.thumb ? `<img src="${f.thumb}" alt="">` : `<span class="kb-fic">${ico('clip', 'ic-sm')}</span>`}
+      <span style="min-width:0"><span class="nm" title="${esc(f.name)}">${esc(f.name)}</span><span class="sz">${fmtSize(f.size)}</span></span>
+      <button class="x" data-kbrm="${f.key}" aria-label="Убрать файл">${ico('x', 'ic-sm')}</button>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="kb-card">
+      <div class="kb-step"><span class="kb-num">1</span>Куда добавить</div>
+      <div class="seg kb-modes">${modes.map(([k, v]) => `<button data-kbmode="${k}" class="${KB.mode === k ? 'on' : ''}">${v}</button>`).join('')}</div>
+      ${where}
+    </div>
+    <div class="kb-card">
+      <div class="kb-step"><span class="kb-num">2</span>Что добавить</div>
+      <textarea class="textarea" id="kbText" rows="7" maxlength="30000" placeholder="Новые правила, порядок действий, ответы на частые вопросы, договорённости с командой… Пишите как удобно — Claude оформит в стиле регламента.">${esc(KB.text)}</textarea>
+      <label class="kb-drop" id="kbDrop">
+        <span class="kb-drop-ic">${ico('clip')}</span>
+        <span><b>Прикрепить файлы или фото</b><br><span class="kb-hint">или перетащите сюда · скриншот можно вставить через Ctrl+V</span></span>
+        <input type="file" id="kbFile" multiple hidden>
+      </label>
+      ${files ? `<div class="kb-files">${files}</div>` : ''}
+    </div>
+    <div class="kb-submit">
+      <span class="hint">${KB.configured ? 'После отправки можно не ждать — придёт уведомление' : 'Рутина Claude ещё не подключена — запрос сохранится и уйдёт позже'}</span>
+      <button class="btn btn-primary" id="kbSend">${ico('send')}Отправить в базу знаний</button>
+    </div>`;
+  if (KB.mode === 'reglament') renderKbRegs();
+}
+
+function renderKbRegs() {
+  const box = $('kbRegs');
+  if (!box) return;
+  if (!KB.regs) { box.innerHTML = '<div class="kb-hint" style="padding:10px 4px">Загружаю регламенты…</div>'; return; }
+  const words = KB.q.toLowerCase().replace(/ё/g, 'е').split(/\s+/).filter(Boolean);
+  const list = KB.regs.filter((r) => { const hay = `${r.title} ${r.desc}`.toLowerCase().replace(/ё/g, 'е'); return words.every((w) => hay.includes(w)); });
+  if (!list.length) { box.innerHTML = '<div class="kb-hint" style="padding:10px 4px">Ничего не нашлось. Попробуйте другое слово — или выберите «Пусть ИИ разберёт» / «Новый регламент».</div>'; return; }
+  let sec = null;
+  box.innerHTML = list.map((r) => {
+    const head = r.section && r.section !== sec ? `<div class="kb-sec">${esc(r.section)}</div>` : '';
+    sec = r.section;
+    return `${head}<div class="kb-reg ${KB.slug === r.slug ? 'on' : ''}">
+      <button class="kb-pick" data-kbpick="${esc(r.slug)}" aria-pressed="${KB.slug === r.slug}"><span class="kb-radio"></span><span style="min-width:0"><span class="kb-reg-title">${esc(r.title)}</span>${r.desc ? `<span class="kb-reg-desc">${esc(r.desc)}</span>` : ''}</span></button>
+      <a class="btn btn-ghost btn-sm kb-open" href="${KB_SITE}/${esc(r.slug)}" target="_blank" rel="noopener" title="Открыть регламент в новой вкладке">Открыть${ico('ext', 'ic-sm')}</a>
+    </div>`;
+  }).join('');
+}
+
+function renderKbJobs() {
+  const el = $('kbJobs');
+  if (!KB.jobs) { el.innerHTML = '<div class="empty">Загружаю…</div>'; return; }
+  const jobs = KB.jobs.filter((j) => j.status !== 'draft');
+  if (!jobs.length) { el.innerHTML = `<div class="empty">${ico('book')}<div style="margin-top:6px">Здесь будут ваши обновления базы знаний и что Claude по ним сделал.</div></div>`; return; }
+  const now = Date.now();
+  el.innerHTML = jobs.map((j) => {
+    const [label, cls] = KB_STATUS[j.status] || [j.status, 'tag-cancelled'];
+    const author = userById(j.byId) || { id: j.byId, name: j.byName };
+    const r = j.result;
+    let body = '';
+    if (j.status === 'done' && r) {
+      body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(c.url)}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
+        ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
+        ${r.published ? '' : '<div class="kb-note warn">Правки готовы, но ещё не опубликованы — PR ждёт проверки Олега.</div>'}`;
+    } else if (kbIsActive(j)) {
+      body = `<div class="kb-note run">${j.progress ? `Claude: ${esc(j.progress)}` : j.status === 'sent' ? 'Claude запускается…' : 'Claude читает материалы и вносит правки…'}</div>`;
+    } else if (j.status === 'failed' || j.status === 'stuck' || j.status === 'not_configured') {
+      body = `<div class="kb-note ${j.status === 'not_configured' ? 'warn' : 'bad'}">${esc(j.error || 'Неизвестная ошибка')}</div>
+        <div><button class="btn btn-ghost btn-sm" data-kbretry="${esc(j.id)}">${ico('refresh', 'ic-sm')}Отправить снова</button></div>`;
+    }
+    const links = [
+      r && r.prUrl ? `<a href="${esc(r.prUrl)}" target="_blank" rel="noopener">PR на GitHub</a>` : '',
+      j.sessionUrl ? `<a href="${esc(j.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a>` : '',
+    ].filter(Boolean).join(' · ');
+    return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
+      <div class="kb-job-head"><span class="tag ${cls}">${esc(r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
+      <div class="kb-job-target">${esc(j.targetLabel)}</div>
+      ${j.text ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
+      ${j.files.length ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
+      ${body}
+      ${links ? `<div class="kb-job-links">${links}</div>` : ''}
+    </div>`;
+  }).join('');
+  if (KB.focus) {
+    const card = el.querySelector(`[data-kbjob="${CSS.escape(KB.focus)}"]`);
+    if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+    KB.focus = null;
+  }
+}
+
+// ── файлы ──
+let kbFileSeq = 0;
+function kbAddFiles(list) {
+  const incoming = [...(list || [])].filter((f) => f && f.size);
+  for (const f of incoming) {
+    if (KB.files.length >= 12) { toast('Не больше 12 файлов за раз'); break; }
+    if (f.size > 25 * 1048576 && !/^image\//.test(f.type)) { toast(`«${f.name}» больше 25 МБ — так много не загрузить`); continue; }
+    const name = f.name && f.name !== 'image.png' ? f.name : `скриншот-${fmtTime(Date.now()).replace(':', '')}-${kbFileSeq + 1}.${(f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
+    KB.files.push({ key: `k${(kbFileSeq += 1)}`, file: f, name, type: f.type || 'application/octet-stream', size: f.size, thumb: /^image\//.test(f.type) ? URL.createObjectURL(f) : null });
+  }
+  renderKbForm();
+}
+// Большие фото ужимаются до 2400 px по длинной стороне (JPEG) — текст на скриншотах остаётся читаемым.
+async function kbPrepFile(f) {
+  const limit = 25 * 1048576;
+  if (!/^image\/(jpeg|png|webp|bmp)$/.test(f.type) || f.size <= 1.5 * 1048576) return { name: f.name, type: f.type, blob: f.file };
+  try {
+    const bmp = await createImageBitmap(f.file);
+    const k = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bmp.width * k); canvas.height = Math.round(bmp.height * k);
+    canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.86));
+    if (blob && blob.size < f.size) return { name: f.name.replace(/\.(png|webp|bmp|jpe?g)$/i, '') + '.jpg', type: 'image/jpeg', blob };
+  } catch (e) { /* формат, который браузер не открывает (HEIC и т.п.), — уходит как есть */ }
+  if (f.size > limit) throw new Error(`«${f.name}» больше 25 МБ`);
+  return { name: f.name, type: f.type, blob: f.file };
+}
+function kbBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).slice(String(r.result).indexOf(',') + 1));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+async function kbApiRetry(action, body) {
+  let res;
+  for (let n = 0; n < 3; n += 1) {
+    try { res = await api(action, body); if (res.ok || (res.status >= 400 && res.status < 500)) return res; } catch (e) { if (n === 2) throw e; }
+    await new Promise((r) => setTimeout(r, 1500 * (n + 1)));
+  }
+  return res;
+}
+
+async function kbSubmit() {
+  KB.text = ($('kbText') || {}).value != null ? $('kbText').value : KB.text;
+  if (KB.mode === 'reglament' && !KB.slug) { toast('Выберите регламент — или режим «Пусть ИИ разберёт»'); return; }
+  if (KB.mode === 'new' && KB.newTitle.trim().length < 3) { $('kbNewTitle') && $('kbNewTitle').focus(); toast('Напишите название нового регламента'); return; }
+  if (!KB.text.trim() && !KB.files.length) { $('kbText').focus(); toast('Напишите, что добавить, или прикрепите файл'); return; }
+  KB.sending = { stage: 'Готовлю…', done: 0, total: 0, bytes: 0, bytesDone: 0 };
+  renderKbForm();
+  try {
+    const prepared = await Promise.all(KB.files.map(kbPrepFile));
+    const created = await kbApiRetry('kb-create', {
+      mode: KB.mode, slug: KB.slug, title: KB.title, newTitle: KB.newTitle.trim(), newSection: KB.newSection, text: KB.text,
+      files: prepared.map((p) => ({ name: p.name, type: p.type, size: p.blob.size })),
+    });
+    if (!created || !created.ok) throw new Error({ file_too_big: 'Файл больше 25 МБ', files_too_big: 'Файлы вместе больше 80 МБ', too_many_files: 'Не больше 12 файлов' }[created && created.data.error] || 'Не получилось создать запрос');
+    const { job, partBytes } = created.data;
+    const parts = [];
+    job.files.forEach((f, i) => { for (let p = 0; p < f.parts; p += 1) parts.push({ fileId: f.id, part: p, blob: prepared[i].blob.slice(p * partBytes, (p + 1) * partBytes) }); });
+    const upload = async (list) => {
+      for (const x of list) {
+        const res = await kbApiRetry('kb-file', { id: job.id, fileId: x.fileId, part: x.part, data: await kbBase64(x.blob) });
+        if (!res || !res.ok) throw new Error('Файл не загрузился — проверьте интернет и попробуйте ещё раз');
+        KB.sending.done += 1; KB.sending.bytesDone += x.blob.size;
+        renderKbForm();
+      }
+    };
+    if (parts.length) {
+      Object.assign(KB.sending, { stage: 'Загружаю файлы…', total: parts.length, bytes: parts.reduce((s, x) => s + x.blob.size, 0) });
+      renderKbForm();
+      await upload(parts);
+    }
+    KB.sending.stage = 'Отправляю Claude…'; KB.sending.total = 0;
+    renderKbForm();
+    let sent = await kbApiRetry('kb-send', { id: job.id });
+    if (sent && sent.status === 409 && sent.data.error === 'files_incomplete') {
+      await upload(sent.data.missing.map((m) => parts.find((x) => x.fileId === m.fileId && x.part === m.part)).filter(Boolean));
+      sent = await kbApiRetry('kb-send', { id: job.id });
+    }
+    if (!sent || !sent.ok) throw new Error('Не получилось отправить — попробуйте ещё раз');
+    KB.files.forEach((f) => f.thumb && URL.revokeObjectURL(f.thumb));
+    Object.assign(KB, { sending: null, sent: sent.data.job, files: [], text: '', newTitle: '' });
+    kbSaveDraft();
+    KB.jobs = [sent.data.job, ...(KB.jobs || []).filter((j) => j.id !== sent.data.job.id)];
+    renderKbForm(); renderKbJobs();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    loadKbJobs();
+  } catch (e) {
+    KB.sending = null;
+    renderKbForm();
+    toast(e && e.message && !/fetch|network|abort/i.test(e.message) ? e.message : 'Нет связи — ничего не потерялось, попробуйте ещё раз', null, null, 7000);
+  }
+}
+
+async function kbRetry(id, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await kbApiRetry('kb-send', { id });
+    if (!res || !res.ok) throw new Error();
+    const job = res.data.job;
+    KB.jobs = (KB.jobs || []).map((j) => (j.id === job.id ? job : j));
+    if (KB.sent && KB.sent.id === job.id) KB.sent = job;
+    renderKbForm(); renderKbJobs();
+    toast(job.status === 'sent' ? 'Отправлено — Claude взялся за работу' : job.status === 'not_configured' ? 'Рутина всё ещё не подключена' : 'Снова не получилось — подробности в карточке');
+    loadKbJobs();
+  } catch (e) { if (btn) btn.disabled = false; toast('Не получилось — проверьте интернет'); }
+}
+
+$('kbForm').addEventListener('click', (e) => {
+  const mode = e.target.closest('[data-kbmode]');
+  if (mode) { KB.mode = mode.dataset.kbmode; kbSaveDraft(); renderKbForm(); return; }
+  const pick = e.target.closest('[data-kbpick]');
+  if (pick) {
+    const r = (KB.regs || []).find((x) => x.slug === pick.dataset.kbpick);
+    KB.slug = r ? r.slug : ''; KB.title = r ? r.title : '';
+    kbSaveDraft(); renderKbRegs();
+    return;
+  }
+  const rm = e.target.closest('[data-kbrm]');
+  if (rm) { e.preventDefault(); const f = KB.files.find((x) => x.key === rm.dataset.kbrm); if (f && f.thumb) URL.revokeObjectURL(f.thumb); KB.files = KB.files.filter((x) => x !== f); renderKbForm(); return; }
+  if (e.target.closest('#kbSend')) { kbSubmit(); return; }
+  if (e.target.closest('[data-kb="again"]')) { KB.sent = null; renderKbForm(); setTimeout(() => $('kbText') && $('kbText').focus(), 30); }
+});
+$('view-kb').addEventListener('click', (e) => { const b = e.target.closest('[data-kbretry]'); if (b) kbRetry(b.dataset.kbretry, b); });
+$('kbForm').addEventListener('input', (e) => {
+  if (e.target.id === 'kbText') { KB.text = e.target.value; kbSaveDraft(); }
+  if (e.target.id === 'kbNewTitle') { KB.newTitle = e.target.value; kbSaveDraft(); }
+  if (e.target.id === 'kbQ') { KB.q = e.target.value.trim(); renderKbRegs(); }
+});
+$('kbForm').addEventListener('change', (e) => {
+  if (e.target.id === 'kbNewSection') { KB.newSection = e.target.value; kbSaveDraft(); }
+  if (e.target.id === 'kbFile') { kbAddFiles(e.target.files); }
+});
+$('kbForm').addEventListener('dragover', (e) => { const d = e.target.closest('#kbDrop'); if (!d) return; e.preventDefault(); d.classList.add('over'); });
+$('kbForm').addEventListener('dragleave', (e) => { const d = e.target.closest('#kbDrop'); if (d) d.classList.remove('over'); });
+$('kbForm').addEventListener('drop', (e) => { const d = e.target.closest('#kbDrop'); if (!d) return; e.preventDefault(); d.classList.remove('over'); kbAddFiles(e.dataTransfer.files); });
+document.addEventListener('paste', (e) => {
+  if (S.view !== 'kb' || KB.sending || KB.sent) return;
+  const files = [...((e.clipboardData && e.clipboardData.files) || [])];
+  // Из Word/Excel вместе с текстом приходит и картинка-копия — тогда вставляем только текст.
+  if (!files.length || (e.clipboardData.getData('text/plain') && e.target.closest && e.target.closest('textarea, input'))) return;
+  e.preventDefault();
+  kbAddFiles(files);
+  toast(files.length > 1 ? `Добавлено файлов: ${files.length}` : 'Скриншот добавлен');
+});
 
 boot();
 </script>
