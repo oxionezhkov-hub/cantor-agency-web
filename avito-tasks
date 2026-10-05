@@ -178,6 +178,17 @@ a{color:inherit}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .filters .select{width:auto;min-width:0;max-width:220px;min-height:34px;padding:5px 30px 5px 12px;font-size:13px;border-radius:999px}
 .filters .select.set{border-color:var(--ink);font-weight:600}
+.st-wrap{position:relative}
+.st-btn{text-align:left;white-space:nowrap;overflow:hidden}
+.st-pop{position:absolute;left:0;top:calc(100% + 6px);z-index:35;width:270px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:8px;animation:drop .14s ease-out}
+.st-pop .st-presets{display:flex;gap:6px;padding:2px 2px 8px;border-bottom:1px solid var(--line-2);margin-bottom:6px}
+.st-pop .st-presets button{flex:1;height:30px;border-radius:999px;background:var(--sunken);font-size:12.5px;font-weight:600;color:var(--text)}
+.st-pop .st-presets button.on{background:var(--ink);color:var(--bg)}
+.st-pop label{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;font-size:14px;cursor:pointer;color:var(--text)}
+.st-pop label:hover{background:var(--sunken)}
+.st-pop input{width:17px;height:17px;accent-color:var(--accent);flex:none}
+.st-pop .st-hint{font-size:12px;color:var(--muted);padding:8px 8px 4px;border-top:1px solid var(--line-2);margin-top:6px;line-height:1.4}
+.st-pop .st-group{font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px 2px}
 .filter-toggle{display:none}
 
 /* sections & groups */
@@ -481,6 +492,8 @@ a{color:inherit}
   .filters{display:none}
   .filters.open{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .filters.open .select{max-width:none;width:100%}
+  .filters.open .st-wrap{grid-column:1/-1}
+  .st-pop{width:100%}
   .grid2,.grid4,.m-edit{grid-template-columns:1fr}
   .t-row{padding:12px 10px 12px 13px;gap:10px}
   .t-title{font-size:15px}
@@ -588,17 +601,10 @@ a{color:inherit}
       <div class="filters" id="filters">
         <select class="select" id="fClient"></select>
         <select class="select" id="fAssignee"></select>
-        <select class="select" id="fStatus">
-          <option value="active">Активные</option>
-          <option value="overdue">Просроченные</option>
-          <option value="today">Срок сегодня</option>
-          <option value="new">Новые</option>
-          <option value="progress">В работе</option>
-          <option value="done">Готово — сообщить клиенту</option>
-          <option value="closed">Закрытые</option>
-          <option value="cancelled">Отменённые</option>
-          <option value="all">Все статусы</option>
-        </select>
+        <div class="st-wrap" id="fStatusWrap">
+          <button type="button" class="select st-btn" id="fStatus" aria-haspopup="true" aria-expanded="false">Активные</button>
+          <div class="st-pop" id="fStatusPop" hidden></div>
+        </div>
         <select class="select" id="fPriority">
           <option value="">Любой приоритет</option>
           <option value="urgent">Срочно</option>
@@ -741,12 +747,25 @@ async function api(action, body) {
 
 // ── state ──
 const prefs = Object.assign({ scope: 'all', status: 'active', group: 'client', collapsed: {}, tgHideUntil: 0, showInactive: false }, store.json(K_PREFS) || {});
+// Фильтр статусов — набор отметок (можно несколько); пустой набор = все статусы.
+const ST_ACTIVE = ['new', 'progress', 'done'];
+const ST_DUE = ['overdue', 'today'];
+const ST_OPTS = [['overdue', 'Просроченные'], ['today', 'Срок сегодня'], ['new', 'Новые'], ['progress', 'В работе'], ['done', 'Готово — сообщить клиенту'], ['closed', 'Закрытые'], ['cancelled', 'Отменённые']];
+function normStatuses(v) {
+  if (Array.isArray(v)) return v.filter((k) => ST_OPTS.some(([o]) => o === k));
+  if (v === 'all') return [];
+  if (!v || v === 'active') return ST_ACTIVE.slice();
+  return normStatuses([v]);
+}
+const sameSet = (a, b) => a.length === b.length && a.every((k) => b.includes(k));
+const stIs = (...keys) => sameSet(S.f.status, keys);
+const stActive = () => sameSet(S.f.status, ST_ACTIVE);
 const S = {
   token: store.get(K_TOKEN),
   me: null, users: [], projects: [], tasks: [], clients: null, notifications: [],
   ver: null, bot: null, tgStart: null,
   view: 'tasks', expanded: null,
-  f: { scope: prefs.scope, q: '', client: '', assignee: '', status: prefs.status, priority: '', group: prefs.group },
+  f: { scope: prefs.scope, q: '', client: '', assignee: '', status: normStatuses(prefs.status), priority: '', group: prefs.group },
   draft: null, team: null, freshMember: null,
   lastSync: 0, syncing: false, offline: false, pendingRender: false,
 };
@@ -1151,10 +1170,11 @@ function matches(t, now) {
   if (f.priority && (t.priority || 'normal') !== f.priority) return false;
   const sk = statusKey(t);
   const due = dueMs(t);
-  if (f.status === 'active' && !(sk === 'new' || sk === 'progress' || sk === 'done')) return false;
-  if (f.status === 'overdue' && !(isOpen(t) && due && due < now)) return false;
-  if (f.status === 'today' && !(isOpen(t) && due && dayStart(due) <= dayStart(now))) return false;
-  if (STATUS[f.status] && sk !== f.status) return false;
+  // Внутри группы — «или», между группами «по сроку» и «по статусу» — «и».
+  const byDue = f.status.filter((k) => ST_DUE.includes(k));
+  const bySt = f.status.filter((k) => !ST_DUE.includes(k));
+  if (byDue.length && !(isOpen(t) && due && byDue.some((k) => (k === 'overdue' ? due < now : dayStart(due) <= dayStart(now))))) return false;
+  if (bySt.length && !bySt.includes(sk)) return false;
   if (f.q) {
     const hay = `${t.text} ${t.note} ${clientName(t)} ${(userById(t.assigneeId) || {}).name || t.owner || ''}`.toLowerCase().replace(/ё/g, 'е');
     if (!f.q.toLowerCase().replace(/ё/g, 'е').split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false;
@@ -1169,17 +1189,58 @@ function fillFilters() {
   $('fClient').value = f.client; if ($('fClient').value !== f.client) { f.client = ''; $('fClient').value = ''; }
   $('fAssignee').innerHTML = '<option value="">Все исполнители</option>' + S.users.filter((u) => u.active || S.tasks.some((t) => t.assigneeId === u.id)).map((u) => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('') + '<option value="__none">Без исполнителя</option>';
   $('fAssignee').value = f.assignee;
-  $('fStatus').value = f.status; $('fPriority').value = f.priority; $('fGroup').value = f.group;
+  $('fPriority').value = f.priority; $('fGroup').value = f.group;
+  renderStatusFilter();
   ['fClient', 'fAssignee', 'fPriority'].forEach((id) => $(id).classList.toggle('set', !!$(id).value));
-  $('fStatus').classList.toggle('set', f.status !== 'active');
+  $('fStatus').classList.toggle('set', !stActive());
   document.querySelectorAll('#scopeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.scope === f.scope));
-  const n = ['client', 'assignee', 'priority'].filter((k) => f[k]).length + (f.status !== 'active' ? 1 : 0);
+  const n = ['client', 'assignee', 'priority'].filter((k) => f[k]).length + (stActive() ? 0 : 1);
   $('filterToggle').querySelector('span').textContent = n ? `Фильтры · ${n}` : 'Фильтры';
 }
 $('q').addEventListener('input', () => { S.f.q = $('q').value.trim(); renderLists(); });
 $('filterToggle').addEventListener('click', () => $('filters').classList.toggle('open'));
 $('scopeSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-scope]'); if (!b) return; S.f.scope = b.dataset.scope; savePrefs(); renderTasks(); });
-[['fClient', 'client'], ['fAssignee', 'assignee'], ['fStatus', 'status'], ['fPriority', 'priority'], ['fGroup', 'group']].forEach(([id, k]) => {
+function statusLabel() {
+  const f = S.f.status;
+  if (!f.length) return 'Все статусы';
+  if (stActive()) return 'Активные';
+  const names = ST_OPTS.filter(([k]) => f.includes(k)).map(([, n]) => n);
+  return names.length <= 2 ? names.join(', ') : `${names[0]} +${names.length - 1}`;
+}
+function renderStatusFilter() {
+  $('fStatus').textContent = statusLabel();
+  const pop = $('fStatusPop');
+  if (pop.hidden) return;
+  const row = ([k, n]) => `<label><input type="checkbox" data-st="${k}" ${S.f.status.includes(k) ? 'checked' : ''}>${esc(n)}</label>`;
+  pop.innerHTML = `<div class="st-presets"><button type="button" data-preset="active" class="${stActive() ? 'on' : ''}">Активные</button><button type="button" data-preset="all" class="${S.f.status.length ? '' : 'on'}">Все</button></div>`
+    + '<div class="st-group">По сроку</div>' + ST_OPTS.slice(0, 2).map(row).join('')
+    + '<div class="st-group">По статусу</div>' + ST_OPTS.slice(2).map(row).join('')
+    + '<div class="st-hint">Срок и статус сочетаются: «Срок сегодня» + «В работе» — задачи в работе со сроком сегодня.</div>';
+}
+function setStatuses(list) { S.f.status = list; savePrefs(); renderTasks(); }
+$('fStatus').addEventListener('click', () => {
+  const pop = $('fStatusPop');
+  pop.hidden = !pop.hidden;
+  $('fStatus').setAttribute('aria-expanded', String(!pop.hidden));
+  renderStatusFilter();
+});
+$('fStatusPop').addEventListener('change', (e) => {
+  const k = e.target.dataset.st;
+  if (!k) return;
+  setStatuses(e.target.checked ? [...S.f.status, k] : S.f.status.filter((x) => x !== k));
+});
+$('fStatusPop').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-preset]');
+  if (b) setStatuses(b.dataset.preset === 'active' ? ST_ACTIVE.slice() : []);
+});
+document.addEventListener('click', (e) => {
+  // Цель могла уже пропасть из DOM (меню перерисовалось по клику внутри него) — это тоже клик внутри.
+  if ($('fStatusPop').hidden || $('fStatusWrap').contains(e.target) || !document.contains(e.target)) return;
+  $('fStatusPop').hidden = true;
+  $('fStatus').setAttribute('aria-expanded', 'false');
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('fStatusPop').hidden) { $('fStatusPop').hidden = true; $('fStatus').focus(); } });
+[['fClient', 'client'], ['fAssignee', 'assignee'], ['fPriority', 'priority'], ['fGroup', 'group']].forEach(([id, k]) => {
   $(id).addEventListener('change', () => { S.f[k] = $(id).value; savePrefs(); $(id).blur(); renderTasks(); });
 });
 
@@ -1199,10 +1260,10 @@ function renderTasks() {
   const stat = (key, n, label, color, extra) => `<button class="stat ${extra || ''}" data-stat="${key}"><span class="dot" style="background:${color}"></span>${label} <b>${n}</b></button>`;
   const f = S.f;
   $('stats').innerHTML = [
-    overdue ? stat('overdue', overdue, 'Просрочено', 'var(--red)', f.scope === 'mine' && f.status === 'overdue' ? 'on' : '') : '',
-    stat('today', today, 'На сегодня', 'var(--amber)', f.scope === 'mine' && f.status === 'today' ? 'on' : ''),
-    stat('progress', inWork, 'В работе', 'var(--blue)', f.scope === 'mine' && f.status === 'progress' ? 'on' : ''),
-    canSeeClients() && toInform ? stat('inform', toInform, 'Сообщить клиенту', 'var(--amber)', f.scope === 'all' && f.status === 'done' ? 'on' : '') : '',
+    overdue ? stat('overdue', overdue, 'Просрочено', 'var(--red)', f.scope === 'mine' && stIs('overdue') ? 'on' : '') : '',
+    stat('today', today, 'На сегодня', 'var(--amber)', f.scope === 'mine' && stIs('today') ? 'on' : ''),
+    stat('progress', inWork, 'В работе', 'var(--blue)', f.scope === 'mine' && stIs('progress') ? 'on' : ''),
+    canSeeClients() && toInform ? stat('inform', toInform, 'Сообщить клиенту', 'var(--amber)', f.scope === 'all' && stIs('done') ? 'on' : '') : '',
   ].join('');
   renderBanners();
   renderComposer();
@@ -1214,7 +1275,7 @@ $('stats').addEventListener('click', (e) => {
   if (!b) return;
   const k = b.dataset.stat;
   const on = b.classList.contains('on');
-  Object.assign(S.f, on ? { scope: 'all', status: 'active' } : k === 'inform' ? { scope: 'all', status: 'done' } : { scope: 'mine', status: k });
+  Object.assign(S.f, on ? { scope: 'all', status: ST_ACTIVE.slice() } : k === 'inform' ? { scope: 'all', status: ['done'] } : { scope: 'mine', status: [k] });
   savePrefs(); renderTasks();
 });
 
@@ -1238,7 +1299,7 @@ function renderLists() {
   const now = Date.now();
   const list = S.tasks.filter((t) => matches(t, now));
   const sort = byUrgency(now);
-  const informFirst = canSeeClients() && S.f.status !== 'done';
+  const informFirst = canSeeClients() && !stIs('done');
   const inform = informFirst ? list.filter((t) => needsInform(t) && t.assigneeId !== S.me.id).sort(sort) : [];
   const mine = list.filter((t) => t.assigneeId === S.me.id).sort(sort);
   const informIds = new Set(inform.map((t) => t.id));
@@ -1248,7 +1309,7 @@ function renderLists() {
   let html = '';
   if (S.f.scope !== 'byme' || mine.length) {
     html += `<div class="section"><div class="sec-head"><h2>Мои задачи</h2><span class="n">${mine.length}</span></div>`;
-    html += mine.length ? mine.map((t) => card(t, now, focus.has(t.id))).join('') : `<div class="empty">${S.f.q || S.f.client || S.f.priority || S.f.status !== 'active' ? 'Ничего не нашлось по фильтрам' : 'На вас сейчас ничего нет 🎉'}</div>`;
+    html += mine.length ? mine.map((t) => card(t, now, focus.has(t.id))).join('') : `<div class="empty">${S.f.q || S.f.client || S.f.priority || !stActive() ? 'Ничего не нашлось по фильтрам' : 'На вас сейчас ничего нет 🎉'}</div>`;
     html += '</div>';
   }
   if (inform.length) {
@@ -1451,7 +1512,7 @@ function openTask(id) {
   const t = taskById(id);
   if (!t) return toast('Задача не найдена — возможно, её удалили.');
   if (S.view !== 'tasks') { S.view = 'tasks'; }
-  if (!matches(t, Date.now())) { Object.assign(S.f, { scope: 'all', status: 'all', client: '', assignee: '', priority: '', q: '' }); $('q').value = ''; }
+  if (!matches(t, Date.now())) { Object.assign(S.f, { scope: 'all', status: [], client: '', assignee: '', priority: '', q: '' }); $('q').value = ''; }
   const g = document.querySelector(`.task[data-id="${CSS.escape(id)}"]`);
   const group = g && g.closest('.group');
   if (group) delete prefs.collapsed[group.dataset.group];
@@ -1780,7 +1841,7 @@ $('clientCards').addEventListener('click', async (e) => {
   }
   if (e.target.closest('[data-links-cancel]')) { linksOpen = null; renderClients(); return; }
   if (e.target.closest('[data-newtask]')) return openComposer({ projectId: pid });
-  if (e.target.closest('[data-filter]')) { Object.assign(S.f, { scope: 'all', status: 'active', client: pid, assignee: '', priority: '' }); setView('tasks'); renderTasks(); return; }
+  if (e.target.closest('[data-filter]')) { Object.assign(S.f, { scope: 'all', status: ST_ACTIVE.slice(), client: pid, assignee: '', priority: '' }); setView('tasks'); renderTasks(); return; }
   const touch = e.target.closest('[data-touch]');
   if (touch) {
     const note = cardEl.querySelector('[data-touch-note]').value.trim();

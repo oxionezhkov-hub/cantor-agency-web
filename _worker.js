@@ -6762,28 +6762,45 @@ async function atBuildMyTasks(env, user, digest) {
   const team = await atGetTeam(env);
   const byId = await botProjectsById(kv);
   const all = await botAllTasks(kv);
-  const mine = all.filter((t) => t.status === 'open' && atAssigneeId(t, team.users) === user.id)
-    .sort((a, b) => atUrgency(b, nowMs) - atUrgency(a, nowMs) || (botDueMs(a) || Infinity) - (botDueMs(b) || Infinity));
+  // Every task on the person that isn't closed: open ones in full, grouped by client (most urgent
+  // client first), and their «готово» ones still waiting for the client to be told.
+  const urgentFirst = (a, b) => atUrgency(b, nowMs) - atUrgency(a, nowMs) || (botDueMs(a) || Infinity) - (botDueMs(b) || Infinity);
+  const mine = all.filter((t) => t.status === 'open' && atAssigneeId(t, team.users) === user.id).sort(urgentFirst);
+  const doneMine = all.filter((t) => t.status === 'done' && atAssigneeId(t, team.users) === user.id);
+  const clientOf = (t) => (t.projectId && byId[t.projectId] ? byId[t.projectId].name : t.topicName) || 'Без клиента';
   const lines = [];
   const overdue = mine.filter((t) => botDueMs(t) && botDueMs(t) < nowMs).length;
   const today = mine.filter((t) => botDueMs(t) && botDueMs(t) >= nowMs && botMsk(botDueMs(t)).date === botMsk(nowMs).date).length;
+  const inWork = mine.filter((t) => t.takenAt).length;
   if (digest) lines.push(`☀️ <b>Доброе утро, ${escapeHtml(atFirstName(user.name))}!</b>`);
   if (!mine.length) lines.push('Открытых задач на вас нет 👌');
   else {
-    lines.push(`📋 <b>Ваши задачи: ${mine.length}</b>${overdue ? ` · 🔴 просрочено ${overdue}` : ''}${today ? ` · на сегодня ${today}` : ''}`);
-    for (const t of mine.slice(0, 15)) {
-      const due = botDueMs(t);
-      const client = t.projectId && byId[t.projectId] ? byId[t.projectId].name : t.topicName;
-      const mark = due && due < nowMs ? '🔴' : t.priority === 'urgent' ? '🔥' : t.priority === 'high' ? '🟠' : t.takenAt ? '▶️' : '•';
-      lines.push(`${mark} ${escapeHtml(t.text)}${client ? ` — <i>${escapeHtml(client)}</i>` : ''}${due ? ` · ${due < nowMs ? 'был срок ' : 'до '}${botFmtDate(due)}` : ''}`);
+    lines.push(`📋 <b>Незакрытые задачи: ${mine.length}</b>${overdue ? ` · 🔴 просрочено ${overdue}` : ''}${today ? ` · на сегодня ${today}` : ''}${inWork ? ` · ▶️ в работе ${inWork}` : ''}`);
+    const groups = new Map();
+    for (const t of mine) {
+      const name = clientOf(t);
+      if (!groups.has(name)) groups.set(name, []);
+      groups.get(name).push(t);
     }
-    if (mine.length > 15) lines.push(`…и ещё ${mine.length - 15} — в трекере.`);
+    for (const [name, list] of groups) {
+      lines.push('', `<b>${escapeHtml(name)}</b>`);
+      for (const t of list) {
+        const due = botDueMs(t);
+        const mark = due && due < nowMs ? '🔴' : t.priority === 'urgent' ? '🔥' : t.priority === 'high' ? '🟠' : t.takenAt ? '▶️' : '•';
+        lines.push(`${mark} <a href="${escapeHtml(atTaskUrl(t.id))}">${escapeHtml(t.text)}</a> · ${due ? `${due < nowMs ? 'был срок ' : 'до '}${botFmtDate(due)}` : 'без срока'}`);
+      }
+    }
+  }
+  const seesInform = user.role === 'manager' || user.role === 'owner' || user.role === 'assistant';
+  if (doneMine.length && !seesInform) { // the manager sees these in «сообщить клиентам» below
+    lines.push('', `✅ <b>Сделано, ждёт сообщения клиенту: ${doneMine.length}</b>`);
+    for (const t of doneMine) lines.push(`• ${escapeHtml(t.text)} — <i>${escapeHtml(clientOf(t))}</i>`);
   }
   if (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant') {
     const toInform = all.filter((t) => t.status === 'done' && atNeedsInform(t, team.users));
     if (toInform.length) {
       lines.push('', `📨 <b>Готово — сообщить клиентам: ${toInform.length}</b>`);
-      for (const t of toInform.slice(0, 10)) lines.push(`• <b>${escapeHtml((byId[t.projectId] || {}).name || '')}</b>: ${escapeHtml(t.text)}`);
+      for (const t of toInform) lines.push(`• <b>${escapeHtml((byId[t.projectId] || {}).name || '')}</b>: ${escapeHtml(t.text)}`);
     }
     if (digest) {
       const stale = await atStaleClients(env, all, byId, nowMs);
