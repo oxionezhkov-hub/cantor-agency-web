@@ -2679,6 +2679,10 @@ async function handleDashboardApi(request, env, url, ctx) {
       review: body && 'review' in body ? String(body.review || '') : existing.review || '',
       rowColor,
       avitoAccountId: existing.avitoAccountId || null,
+      // Links on the client's card in Avito Tasks (edited there; the Avito pull fills avitoProfileUrl).
+      profileUrl: existing.profileUrl || null,
+      briefUrl: existing.briefUrl || null,
+      avitoProfileUrl: existing.avitoProfileUrl || null,
       // Inactive clients sink to the bottom of the Projects/Analytics lists and are left out of
       // the daily report and the Avito pull — history stays, nothing is deleted. The dashboard
       // marks a client inactive by colouring it grey, so a colour change sets the flag.
@@ -2929,7 +2933,9 @@ async function handleDashboardApi(request, env, url, ctx) {
     if (!project) return json({ error: 'not_found' }, 404);
     const accountId = body.accountId ? String(body.accountId) : null;
     if (accountId && !(await env.AVITO_KV.get(`account:${accountId}`))) return json({ error: 'account_not_found' }, 404);
-    await kv.put(`project:${projectId}`, JSON.stringify({ ...project, avitoAccountId: accountId, updatedAt: new Date().toISOString() }));
+    // Another cabinet → its profile link is looked up again on the next Avito pull.
+    const avitoProfileUrl = accountId === project.avitoAccountId ? project.avitoProfileUrl || null : null;
+    await kv.put(`project:${projectId}`, JSON.stringify({ ...project, avitoAccountId: accountId, avitoProfileUrl, updatedAt: new Date().toISOString() }));
     return json(await dashboardAvitoLinks(env, kv));
   }
 
@@ -3159,6 +3165,7 @@ async function importAvitoCredentials(env, kv, text) {
       await avitoKv.put(`account:${account.id}`, JSON.stringify(account));
       accounts.push(account);
     }
+    if (project.avitoAccountId !== account.id) project.avitoProfileUrl = null;
     project.avitoAccountId = account.id;
     await kv.put(`project:${project.id}`, JSON.stringify({ ...project, updatedAt: now }));
     results.push({ ...base, project: project.name, ok: true, message: `Подключено (user id ${userId})` });
@@ -3303,6 +3310,7 @@ async function processAvitoPull(env, date) {
   if (!pull || pull.status !== 'running' || !pull.pending.length) return;
   const deadline = Date.now() + AVITO_PULL_BUDGET_MS;
   const queue = [...pull.pending];
+  let profilesFound = false;
   const worker = async () => {
     while (queue.length && Date.now() < deadline) {
       const projectId = queue.shift();
@@ -3313,12 +3321,24 @@ async function processAvitoPull(env, date) {
       else {
         try { result = { linked: true, ...(await fetchAvitoDaySummary(env, account, date)) }; }
         catch (e) { result = { linked: true, errors: [String(e && e.message)] }; }
+        // The cabinet's public Avito profile, for the client card in Avito Tasks — read once.
+        if (!project.avitoProfileUrl) {
+          try {
+            const self = await fetchAvitoSelf(await avitoGetToken(env, account));
+            if (self && isValidHttpUrl(self.profile_url)) {
+              const fresh = (await kv.get(`project:${projectId}`, 'json')) || project;
+              await kv.put(`project:${projectId}`, JSON.stringify({ ...fresh, avitoProfileUrl: String(self.profile_url).slice(0, 500) }));
+              profilesFound = true;
+            }
+          } catch (e) { /* no profile link this time; tried again on the next pull */ }
+        }
       }
       pull.results[projectId] = result;
       pull.pending = pull.pending.filter((id) => id !== projectId);
     }
   };
   await Promise.all(Array.from({ length: AVITO_PULL_CONCURRENCY }, worker));
+  if (profilesFound) await atTouch(kv, ['#projects']);
   if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = new Date().toISOString(); }
   await kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
 }
@@ -3691,7 +3711,8 @@ async function handleReportJobCallback(request, env, url) {
 //   bot:chat:<chatId>                      -> { id, title, isForum, kind: 'work'|'client', projectId, addedAt }
 //   bot:topic:<chatId>:<threadId>          -> { name, projectId }
 //   bot:member:<userId>                    -> { id, name, seenAt }  (people who write in the work chat = team)
-//   bot:log:<chatId>:<threadId>:<YYYY-MM-DD> -> [{ id, t, from, fromId, text, reply }]  (MSK day, 180-day TTL)
+//   bot:log:<chatId>:<threadId>:<YYYY-MM-DD> -> [{ id, t, from, fromId, text, reply, reactions? }]  (MSK day,
+//                                              180-day TTL; reactions: [{ by, team, e, t }] put on the message)
 //   bot:hist:<chatId>:<threadId>           -> [{ id, t, from, team, text, reply, imported }]  history from before
 //                                              the bot joined (Telegram export, /api/tgbot/import), 180-day TTL
 //   bot:dirty:<chatId>:<threadId>          -> "1" while a topic/chat has messages the AI hasn't seen
@@ -3705,7 +3726,7 @@ async function handleReportJobCallback(request, env, url) {
 //                                              origin, chatId, threadId, msgId, link, author,
 //                                              doneAt, informedAt, notified, createdAt, updatedAt }
 
-const BOT_SETUP_VERSION = '3'; // 2: callback buttons + employees' private chats (Avito Tasks); 3: /activity in the owner's menu
+const BOT_SETUP_VERSION = '4'; // 2: callback buttons + employees' private chats (Avito Tasks); 3: /activity in the owner's menu; 4: reactions
 const BOT_WORKER_ORIGIN = 'https://mainweb.oxion-ezhkov.workers.dev';
 const BOT_AI_MODEL_DEFAULT = '@cf/qwen/qwen3-30b-a3b-fp8';
 const BOT_LOG_TTL = 60 * 60 * 24 * 180;
@@ -3714,7 +3735,10 @@ const BOT_WORK_START_H = 10;
 const BOT_WORK_END_H = 18;
 const BOT_NO_DUE_AFTER_WMIN = 120;      // task without a deadline after 2 working hours
 const BOT_CLIENT_REPLY_WMIN = 30;       // client message unanswered for 30 working minutes
-const BOT_NOT_INFORMED_WMIN = 8 * 60;   // done but not reported to the client after 1 working day
+const BOT_CLIENT_REPLY_STALE_MS = 24 * 3600000; // …but a message unanswered for over a day pings nobody
+const BOT_HANDOFF_WMIN = 120;           // client's request not passed on to the work chat in 2 working hours
+const BOT_NOT_INFORMED_WMIN = 120;      // done but not reported to the client in 2 working hours
+const BOT_SLA_LOOKBACK_MS = 3 * 24 * 3600000; // the 2-hour checks only look at the last 3 days' tasks
 const BOT_AI_BATCH_GROUPS = 6;          // topics per cron run
 const BOT_AI_BATCH_MESSAGES = 60;       // messages per topic per AI call
 const BOT_AI_MAX_ATTEMPTS = 5;
@@ -3871,7 +3895,8 @@ async function botSetup(env) {
   results.webhook = await botApi(env, 'setWebhook', {
     url: `${BOT_WORKER_ORIGIN}/api/tgbot/webhook`,
     secret_token: await botWebhookSecret(token),
-    allowed_updates: ['message', 'edited_message', 'my_chat_member', 'callback_query'],
+    // message_reaction only reaches the bot in groups where it is an administrator.
+    allowed_updates: ['message', 'edited_message', 'my_chat_member', 'callback_query', 'message_reaction'],
     max_connections: 1, // one update at a time, so the per-day log read-modify-write never races
   });
   results.name = await botApi(env, 'setMyName', { name: 'Cantor Agency · помощник' });
@@ -4139,6 +4164,7 @@ async function handleBotWebhook(request, env) {
     else if (update && update.callback_query) await atOnCallback(env, update.callback_query);
     else if (update && update.message) await botOnMessage(env, update.message, false);
     else if (update && update.edited_message) await botOnMessage(env, update.edited_message, true);
+    else if (update && update.message_reaction) await botOnReaction(env, update.message_reaction);
   } catch (err) {
     console.error('control bot update failed', err && err.stack);
   }
@@ -4164,7 +4190,7 @@ async function botOnMembership(env, upd) {
     return;
   }
   const rec = await botGetChat(kv, chat);
-  const adminHint = status === 'administrator' ? '' : '\nЛучше сделать бота администратором группы: без этого Telegram может не показывать ему часть сообщений.';
+  const adminHint = status === 'administrator' ? '' : '\nЛучше сделать бота администратором группы: без этого Telegram может не показывать ему часть сообщений и не показывает реакции.';
   const projectName = rec.projectId ? ((await kv.get(`project:${rec.projectId}`, 'json')) || {}).name || rec.projectId : null;
   const by = botIsOwner(env, upd.from && upd.from.id) ? '' : ` Добавил(а): ${escapeHtml(botUserName(upd.from))}.`;
   const kindText = rec.kind === 'work' ? 'рабочий чат (топики = клиенты)' : `чат клиента${projectName ? ` → ${escapeHtml(projectName)}` : ' (клиент не определён — см. /topics)'}`;
@@ -4266,6 +4292,102 @@ async function botOnMessage(env, msg, edited) {
     }
     if (signalChanged) await atTouch(kv, ['#clients']);
   }
+}
+
+// ── reactions ──
+// A reaction from the team counts as an answer: on a client's message in the client chat it settles
+// "the client is waiting", and on the message a task was found in it moves the task on — 👍 👌 🫡 ✍
+// 👨‍💻 🤝 👀 ⚡ = taken (by the person who reacted, if nobody had it), 💯 🏆 = done. The reaction is also
+// put on the logged message, so the AI sees it alongside the text. Telegram only sends reactions to
+// a bot that is an administrator of the group.
+const BOT_REACT_TAKEN = new Set(['👍', '👌', '🫡', '✍', '✍️', '👨‍💻', '🤝', '👀', '⚡']);
+const BOT_REACT_DONE = new Set(['💯', '🏆']);
+
+function botReactionEmojis(list) {
+  return (Array.isArray(list) ? list : []).map((r) => (r && r.type === 'emoji' ? r.emoji : r && r.type === 'custom_emoji' ? '★' : r && r.type === 'paid' ? '⭐' : null)).filter(Boolean);
+}
+
+async function botOnReaction(env, upd) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const chat = upd.chat;
+  const user = upd.user;
+  if (!chat || !user || user.is_bot) return;
+  const was = new Set(botReactionEmojis(upd.old_reaction));
+  const added = botReactionEmojis(upd.new_reaction).filter((e) => !was.has(e));
+  if (!added.length) return; // a reaction taken back changes nothing
+  const chatRec = await kv.get(`bot:chat:${chat.id}`, 'json');
+  if (!chatRec) return;
+  const msgId = Number(upd.message_id);
+  const t = (Number(upd.date) || Math.floor(Date.now() / 1000)) * 1000;
+  const isTeam = chatRec.kind === 'work' || botIsOwner(env, user.id) || !!(await kv.get(`bot:member:${user.id}`));
+  const team = await atGetTeam(env);
+  const reactor = team.users.find((u) => u.active && u.tgId && String(u.tgId) === String(user.id))
+    || atMatchUser(botUserName(user), team.users.filter((u) => u.active)) || null;
+
+  // The work-chat message a task was found in. (In the client chat a reaction from the manager only
+  // acknowledges the client — the request still has to reach the specialists.)
+  let task = null;
+  if (isTeam && chatRec.kind === 'work') {
+    const mem = await atSnapshot(env);
+    const hit = [...mem.tasks.values()].find((x) => String(x.chatId) === String(chat.id) && Number(x.msgId) === msgId && (x.status === 'open' || x.status === 'done'));
+    if (hit) task = await kv.get(`task:${hit.id}`, 'json');
+  }
+  const threadId = chatRec.isForum ? (task ? Number(task.threadId) || 0 : null) : 0;
+
+  // Put the reaction on the logged message (client chats always; work-chat topics when a task says which).
+  if (threadId != null) {
+    for (let i = 0; i < 3; i += 1) {
+      const key = `bot:log:${chat.id}:${threadId}:${botMsk(t - i * 24 * 3600000).date}`;
+      const list = await kv.get(key, 'json');
+      const entry = list && list.find((e) => e.id === msgId);
+      if (!entry) continue;
+      entry.reactions = [...(Array.isArray(entry.reactions) ? entry.reactions : []), ...added.map((e) => ({ by: botUserName(user), team: isTeam, e, t }))].slice(-12);
+      await kv.put(key, JSON.stringify(list), { expirationTtl: BOT_LOG_TTL });
+      break;
+    }
+  }
+  if (!isTeam) return;
+
+  const touched = [];
+  // Client chat: the team reacting to the client's waiting message (or anything after it) is an answer.
+  if (chatRec.kind === 'client') {
+    const pendingKey = `bot:pending:${chat.id}`;
+    const p = await kv.get(pendingKey, 'json');
+    if (p && msgId >= Number(p.msgId)) {
+      await kv.delete(pendingKey);
+      if (AT_MEM && AT_MEM.pending) delete AT_MEM.pending[String(chat.id)];
+      touched.push('#clients');
+    }
+  }
+  if (task) {
+    const taken = added.some((e) => BOT_REACT_TAKEN.has(e));
+    const done = added.some((e) => BOT_REACT_DONE.has(e));
+    const what = [];
+    const nowIso = new Date(t).toISOString();
+    const prevAssignee = atAssigneeId(task, team.users);
+    if ((taken || done) && !prevAssignee && reactor && reactor.role !== 'owner' && reactor.role !== 'assistant') {
+      Object.assign(task, { assigneeId: reactor.id, owner: reactor.name });
+      what.push(`исполнитель → ${atFirstName(reactor.name)}`);
+    }
+    if (task.status === 'open' && done) {
+      if (atNeedsInform(task, team.users)) Object.assign(task, { status: 'done', doneAt: nowIso });
+      else Object.assign(task, { status: 'closed', doneAt: nowIso });
+      what.push('сделано');
+    } else if (task.status === 'open' && taken && !task.takenAt) {
+      task.takenAt = nowIso;
+      what.push('взяли в работу');
+    }
+    if (what.length) {
+      task.updatedAt = nowIso;
+      task.updatedBy = botUserName(user);
+      task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: botUserName(user), what: `реакция ${added.join('')} в чате: ${what.join(', ')}` }].slice(-20);
+      await kv.put(`task:${task.id}`, JSON.stringify(task));
+      if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(task.id, task);
+      touched.push(task.id);
+      if (task.status === 'done') await atNotifyInform(env, team, task, reactor ? reactor.name : botUserName(user), reactor ? [reactor.id] : []);
+    }
+  }
+  if (touched.length) await atTouch(kv, touched);
 }
 
 // ── owner's private chat ──
@@ -4591,6 +4713,7 @@ async function botApplyEvents(env, events, ctx) {
   const users = ctx.team ? ctx.team.users : [];
   const touched = [];
   const assigned = []; // [task, source message] — the person gets a (quiet) heads-up in Avito Tasks / Telegram
+  const finished = []; // [task, source message] — done in the chat: the client manager passes it on
   for (const ev of Array.isArray(events) ? events : []) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
@@ -4639,7 +4762,11 @@ async function botApplyEvents(env, events, ctx) {
       }
       if (dueMs) task.due = botIsoMsk(dueMs);
       if (ev.status === 'taken' && !task.takenAt) task.takenAt = src ? new Date(src.t).toISOString() : nowIso;
-      if (ev.status === 'done' && task.status === 'open') Object.assign(task, { status: 'done', doneAt: src ? new Date(src.t).toISOString() : nowIso });
+      if (ev.status === 'done' && task.status === 'open') {
+        // Internal tasks have nothing to pass on to the client — done closes them.
+        Object.assign(task, { status: atNeedsInform(task, users) ? 'done' : 'closed', doneAt: src ? new Date(src.t).toISOString() : nowIso });
+        if (task.status === 'done') finished.push([task, src]);
+      }
       if (ev.status === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || nowIso, informedAt: src ? new Date(src.t).toISOString() : nowIso });
       if (ev.status === 'cancelled') task.status = 'cancelled';
       task.updatedAt = nowIso;
@@ -4659,6 +4786,13 @@ async function botApplyEvents(env, events, ctx) {
       extra: { ...atTgButtons(task, true), disable_notification: true },
     });
   }
+  // Done in the chat → «Сообщите клиенту», unless the manager said it themselves or the task was
+  // already reported in the same batch.
+  for (const [task, src] of finished) {
+    if (task.status !== 'done') continue;
+    const by = src ? atMatchUser(src.from, users) : null;
+    await atNotifyInform(env, ctx.team, task, src ? src.from : null, by ? [by.id] : []);
+  }
 }
 
 // ── checks & summaries ──
@@ -4669,7 +4803,8 @@ async function botBuildSummary(env, nowMs) {
   const open = tasks.filter((t) => t.status === 'open');
   const overdue = open.filter((t) => botDueMs(t) && botDueMs(t) < nowMs);
   const noDue = open.filter((t) => !botDueMs(t) && botWorkingMinutes(Date.parse(t.startedAt || t.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN);
-  const notInformed = tasks.filter((t) => t.status === 'done' && t.doneAt && botWorkingMinutes(Date.parse(t.doneAt), nowMs) >= BOT_NOT_INFORMED_WMIN);
+  const team = await atGetTeam(env);
+  const notInformed = tasks.filter((t) => t.status === 'done' && t.doneAt && atNeedsInform(t, team.users) && botWorkingMinutes(Date.parse(t.doneAt), nowMs) >= BOT_NOT_INFORMED_WMIN);
   const pending = [];
   for (const k of (await kv.list({ prefix: 'bot:pending:' })).keys) {
     const p = await kv.get(k.name, 'json');
@@ -4693,7 +4828,7 @@ async function botBuildSummary(env, nowMs) {
   };
   lines.push('', `🔴 <b>Просрочено: ${overdue.length}</b>`, ...section(overdue));
   lines.push('', `⚪ <b>Без срока дольше 2 рабочих часов: ${noDue.length}</b>`, ...section(noDue));
-  lines.push('', `📨 <b>Сделано, но клиенту не сообщили: ${notInformed.length}</b>`, ...section(notInformed));
+  lines.push('', `📨 <b>Сделано, но клиенту не сообщили за 2 рабочих часа: ${notInformed.length}</b>`, ...section(notInformed));
   if (pending.length) lines.push('', `💬 <b>Клиент ждёт ответа: ${pending.length}</b>`, ...pending);
   lines.push('', `📋 Всего открыто: ${open.length}${Object.keys(perClient).length ? ' — ' + Object.entries(perClient).map(([n, c]) => `${escapeHtml(n)} ${c}`).join(', ') : ''}`);
   return lines.join('\n');
@@ -4791,10 +4926,12 @@ async function botRunChecks(env, nowMs) {
     }
     if (overdue.length) await botNotifyOwner(env, [`🔴 <b>Срок вышел: ${overdue.length}</b>`, ...overdue].join('\n'));
     if (noDue.length) await botNotifyOwner(env, [`⚪ <b>Без срока уже 2+ рабочих часа: ${noDue.length}</b>`, ...noDue].join('\n'), { disable_notification: true });
-    // Client waiting for an answer.
+    // Client waiting for an answer. A message nobody answered for over a day is stale (the talk
+    // moved on elsewhere, or it needed no answer) — nobody gets pinged about it.
     for (const k of (await kv.list({ prefix: 'bot:pending:' })).keys) {
       const p = await kv.get(k.name, 'json');
       if (!p || botWorkingMinutes(p.since, nowMs) < BOT_CLIENT_REPLY_WMIN) continue;
+      if (nowMs - p.since > BOT_CLIENT_REPLY_STALE_MS) continue;
       const chatId = k.name.split(':').pop();
       if (!(await botOnce(kv, `pending:${chatId}:${p.msgId}`, 60 * 60 * 24 * 7))) continue;
       const chat = await kv.get(`bot:chat:${chatId}`, 'json');
@@ -4804,6 +4941,11 @@ async function botRunChecks(env, nowMs) {
       // …and the client manager, whose job this is.
       const team = await atGetTeam(env);
       for (const m of team.users.filter((u) => u.role === 'manager' && u.active && u.tgId)) await botSend(env, m.tgId, note);
+    }
+    try {
+      await botCheckHandoffs(env, nowMs, allTasks, byId);
+    } catch (err) {
+      console.error('handoff checks failed', err && err.stack);
     }
   }
   // Avito Tasks: per-person deadline pings and the 10:00 digest (same task objects, so the
@@ -4836,6 +4978,81 @@ async function botRunChecks(env, nowMs) {
     }
     if (missing.length) await botNotifyOwner(env, `📊 <b>Отчёт до 13:00 не отправлен:</b> ${missing.map(escapeHtml).join(', ')}`);
   }
+}
+
+// The client manager's two 2-hour handoffs (working hours):
+//   • client → work chat: a request the bot found in the client's chat has to reach the client's
+//     topic in the work chat (someone from the team writes there after it, or a specialist takes it);
+//   • work chat → client: a done task has to be reported to the client (closed as «клиенту сообщили»).
+// Each task is pinged once per handoff: the manager in Avito Tasks + Telegram, the owner quietly.
+// Internal (specialist → specialist) tasks are skipped, and only the last 3 days are looked at.
+async function botCheckHandoffs(env, nowMs, allTasks, byId) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const team = await atGetTeam(env);
+  const recent = (iso) => { const ms = Date.parse(iso || 0); return ms && nowMs - ms <= BOT_SLA_LOOKBACK_MS ? ms : 0; };
+  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && (u.role === 'specialist' || u.role === 'trainee'); };
+
+  const toHandoff = allTasks.filter((t) => t.status === 'open' && t.origin === 'client' && t.projectId
+    && !t.takenAt && !isSpec(atAssigneeId(t, team.users)) && !(t.notified && t.notified.handoff)
+    && recent(t.startedAt || t.createdAt) && botWorkingMinutes(recent(t.startedAt || t.createdAt), nowMs) >= BOT_HANDOFF_WMIN);
+  const toInform = allTasks.filter((t) => t.status === 'done' && atNeedsInform(t, team.users)
+    && !(t.notified && t.notified.informLate) && recent(t.doneAt) && botWorkingMinutes(recent(t.doneAt), nowMs) >= BOT_NOT_INFORMED_WMIN);
+  if (!toHandoff.length && !toInform.length) return;
+
+  // Work-chat topics by client, read only when there is something to check.
+  const topicsByProject = {};
+  if (toHandoff.length) {
+    const chats = {};
+    let cursor;
+    for (;;) {
+      const list = await kv.list({ prefix: 'bot:topic:', cursor });
+      for (const k of list.keys) {
+        const [, , chatId, threadId] = k.name.split(':');
+        if (!(chatId in chats)) chats[chatId] = await kv.get(`bot:chat:${chatId}`, 'json');
+        if (!chats[chatId] || chats[chatId].kind !== 'work') continue;
+        const topic = await kv.get(k.name, 'json');
+        if (topic && topic.projectId) (topicsByProject[topic.projectId] = topicsByProject[topic.projectId] || []).push([chatId, threadId]);
+      }
+      if (list.list_complete || !list.cursor) break;
+      cursor = list.cursor;
+    }
+  }
+
+  const managers = team.users.filter((u) => u.role === 'manager' && u.active).map((u) => u.id);
+  const touched = [];
+  const ownerLines = [];
+  const save = async (task, key, value) => {
+    task.notified = { ...(task.notified || {}), [key]: value };
+    await kv.put(`task:${task.id}`, JSON.stringify(task));
+    touched.push(task.id);
+  };
+  for (const task of toHandoff) {
+    const since = Date.parse(task.startedAt || task.createdAt);
+    let passed = false;
+    for (const [chatId, threadId] of topicsByProject[task.projectId] || []) {
+      const logs = await botReadLogs(kv, chatId, threadId, since, nowMs);
+      if (logs.some((e) => e.team !== false && !e.imported)) { passed = true; break; }
+    }
+    if (passed) { await save(task, 'handoff', 'ok'); continue; }
+    await save(task, 'handoff', new Date(nowMs).toISOString());
+    const client = botTaskClient(task, byId);
+    await atNotify(env, team, managers, { kind: 'handoff', taskId: task.id, text: `${client}: просьба клиента не передана в рабочий чат за 2 часа — ${task.text}` }, {
+      text: `⏱ <b>${escapeHtml(client)}: передайте в рабочий чат</b>\nКлиент попросил ${botFmtDate(since)}, в топике клиента с тех пор тишина (2+ рабочих часа).\n«${escapeHtml(task.text)}»${task.link ? ` <a href="${escapeHtml(task.link)}">сообщение</a>` : ''}`,
+      extra: atTgButtons(task, false),
+    });
+    ownerLines.push(`⏱ не передано в рабочий чат: ${botTaskLine(task, byId, nowMs).slice(2)}`);
+  }
+  for (const task of toInform) {
+    await save(task, 'informLate', new Date(nowMs).toISOString());
+    const client = botTaskClient(task, byId);
+    await atNotify(env, team, managers, { kind: 'inform', taskId: task.id, text: `${client}: готово больше 2 часов назад, клиенту ещё не сообщили — ${task.text}` }, {
+      text: `📨 <b>${escapeHtml(client)}: сообщите клиенту</b>\nСделано ${botFmtDate(Date.parse(task.doneAt))}, клиенту не сообщили уже 2+ рабочих часа.\n«${escapeHtml(task.text)}»`,
+      extra: atTgButtons(task, false),
+    });
+    ownerLines.push(`📨 клиенту не сообщили: ${botTaskLine(task, byId, nowMs).slice(2)}`);
+  }
+  if (touched.length) await atTouch(kv, touched);
+  if (ownerLines.length) await botNotifyOwner(env, ['<b>Клиентский менеджер: 2 часа прошли</b>', ...ownerLines].join('\n'), { disable_notification: true });
 }
 
 async function botScheduled(env) {
@@ -5335,6 +5552,21 @@ function atAssigneeId(task, users) {
 function atIsTrackerTask(t) {
   return !!t && (t.source === 'bot' || t.source === 'tracker');
 }
+// Tasks specialists pass between themselves (set by a specialist or trainee for one of them, not
+// taken from the client's chat) are the team's own business: there is nothing to tell the client,
+// so they never go to the client manager — «Готово» closes them straight away.
+function atIsInternalTask(task, users) {
+  if (!task || task.origin === 'client') return false;
+  const isSpec = (u) => !!u && (u.role === 'specialist' || u.role === 'trainee');
+  const author = task.createdById ? users.find((u) => u.id === task.createdById) : task.author ? atMatchUser(task.author, users) : null;
+  if (!isSpec(author)) return false;
+  const aid = atAssigneeId(task, users);
+  return !aid || isSpec(users.find((u) => u.id === aid));
+}
+// A finished task whose result the client manager passes on to the client.
+function atNeedsInform(task, users) {
+  return !!task && !!task.projectId && !atIsInternalTask(task, users);
+}
 function atTeamPromptLine(team) {
   return team.users.filter((u) => u.active).map((u) => {
     const aka = (u.aliases || []).filter((a) => botNorm(a) !== botNorm(atFirstName(u.name)));
@@ -5352,8 +5584,13 @@ async function atTouch(kv, ids) {
   return rec.v;
 }
 async function atLoadProjects(kv) {
-  return (await listByPrefix(kv, 'project:')).map((p) => ({ id: p.id, name: p.name, inactive: !!p.inactive }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  return (await listByPrefix(kv, 'project:')).map((p) => ({
+    id: p.id,
+    name: p.name,
+    inactive: !!p.inactive,
+    profileUrl: p.profileUrl || p.avitoProfileUrl || null,
+    briefUrl: p.briefUrl || null,
+  })).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
 async function atLoadClientSignals(kv) {
   const [chats, pendingList, clients] = await Promise.all([
@@ -5418,6 +5655,8 @@ function atPublicTask(t, users) {
     author: t.author || null,
     createdById: t.createdById || null,
     source: t.source,
+    origin: t.origin || null,
+    internal: atIsInternalTask(t, users),
     link: t.link || null,
     startedAt: t.startedAt || t.createdAt || null,
     createdAt: t.createdAt || null,
@@ -5553,16 +5792,18 @@ async function atSaveTask(env, team, user, input) {
   }
   let statusChange = null;
   if ('status' in input) {
-    const s = input.status;
+    const inform = atNeedsInform(task, team.users);
+    // Nothing to tell the client about an internal task, so «готово» closes it.
+    const s = input.status === 'done' && !inform ? 'closed' : input.status;
     const cur = task.status === 'open' ? (task.takenAt ? 'progress' : 'new') : task.status;
     if (s !== cur && ['new', 'progress', 'done', 'closed', 'cancelled'].includes(s)) {
       statusChange = s;
       if (s === 'new') Object.assign(task, { status: 'open', takenAt: null });
       if (s === 'progress') Object.assign(task, { status: 'open', takenAt: task.takenAt || now });
       if (s === 'done') Object.assign(task, { status: 'done', doneAt: now });
-      if (s === 'closed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || now, informedAt: task.projectId ? now : task.informedAt || null });
+      if (s === 'closed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || now, informedAt: inform ? now : task.informedAt || null });
       if (s === 'cancelled') task.status = 'cancelled';
-      changes.push({ new: 'вернул(а) в новые', progress: 'взял(а) в работу', done: 'отметил(а) «готово»', closed: task.projectId ? 'закрыл(а): клиенту сообщили' : 'закрыл(а)', cancelled: 'отменил(а)' }[s]);
+      changes.push({ new: 'вернул(а) в новые', progress: 'взял(а) в работу', done: 'отметил(а) «готово»', closed: inform ? 'закрыл(а): клиенту сообщили' : 'закрыл(а)', cancelled: 'отменил(а)' }[s]);
     }
   }
   if (existing && !changes.length) return { task };
@@ -5587,7 +5828,10 @@ async function atSaveTask(env, team, user, input) {
     await atNotify(env, team, [assigneeId], { kind: 'edited', taskId: task.id, text: `${by} изменил(а) вашу задачу (${changes.join(', ')}): ${task.text}`, by: user.name });
   }
   if (statusChange === 'done' || statusChange === 'closed') {
-    const watchers = [task.createdById, assigneeId].filter((id) => id && id !== user.id);
+    // A client manager waiting on a client's task gets «Сообщите клиенту» (below) instead of a plain «готово».
+    const informs = task.status === 'done' && atNeedsInform(task, team.users);
+    const isManager = (id) => informs && team.users.some((u) => u.id === id && u.role === 'manager');
+    const watchers = [task.createdById, assigneeId].filter((id) => id && id !== user.id && !isManager(id));
     if (watchers.length) {
       await atNotify(env, team, watchers, { kind: 'done', taskId: task.id, text: `${by}: готово — ${task.text}`, by: user.name }, {
         text: `✅ <b>${escapeHtml(by)}: готово</b>\n${atTgTaskBlock(task, projectName)}`,
@@ -5595,15 +5839,23 @@ async function atSaveTask(env, team, user, input) {
       });
     }
     // The client manager passes results on to the client.
-    if (statusChange === 'done' && task.projectId) {
-      const managers = team.users.filter((u) => u.role === 'manager' && u.active && u.id !== user.id && !watchers.includes(u.id)).map((u) => u.id);
-      await atNotify(env, team, managers, { kind: 'inform', taskId: task.id, text: `Готово по ${projectName || 'клиенту'} — сообщите клиенту: ${task.text}`, by: user.name }, {
-        text: `📨 <b>Сообщите клиенту: ${escapeHtml(projectName || '')}</b>\n${escapeHtml(by)} сделал(а): ${escapeHtml(task.text)}`,
-        extra: atTgButtons(task, false),
-      });
-    }
+    if (task.status === 'done') await atNotifyInform(env, team, task, user.name, [user.id, ...watchers]);
   }
   return { task };
+}
+
+// «📨 Сообщите клиенту» to the client manager(s) — except whoever is in `skipIds` (they know already).
+async function atNotifyInform(env, team, task, byName, skipIds) {
+  if (!atNeedsInform(task, team.users)) return;
+  const skip = new Set((skipIds || []).filter(Boolean));
+  const managers = team.users.filter((u) => u.role === 'manager' && u.active && !skip.has(u.id)).map((u) => u.id);
+  if (!managers.length) return;
+  const projectName = await atProjectName(env.AGENCY_DASHBOARD_KV, task.projectId);
+  const by = atFirstName(byName || '');
+  await atNotify(env, team, managers, { kind: 'inform', taskId: task.id, text: `Готово по ${projectName || 'клиенту'} — сообщите клиенту: ${task.text}`, by: byName || null }, {
+    text: `📨 <b>Сообщите клиенту: ${escapeHtml(projectName || '')}</b>\n${by ? `${escapeHtml(by)} сделал(а)` : 'Сделано'}: ${escapeHtml(task.text)}`,
+    extra: atTgButtons(task, false),
+  });
 }
 
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
@@ -5715,6 +5967,31 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     await atTouch(kv, ['#clients']);
     if (AT_MEM) AT_MEM.clients = clients;
     return json({ ok: true, client: clients[projectId] });
+  }
+
+  // Client card links: the Avito profile and the brief (an empty value clears the hand-entered one;
+  // the profile then falls back to the one the Avito pull found).
+  if (action === 'client-links') {
+    if (!seesClients) return json({ error: 'forbidden' }, 403);
+    const projectId = atClean(body.projectId, 80);
+    const project = projectId && (await kv.get(`project:${projectId}`, 'json'));
+    if (!project) return json({ error: 'not_found' }, 404);
+    const link = (value) => {
+      let v = atClean(value, 500);
+      if (v && !/^https?:\/\//i.test(v)) v = `https://${v}`;
+      return v && isValidHttpUrl(v) ? v : null;
+    };
+    for (const key of ['profileUrl', 'briefUrl']) {
+      if (!(key in body)) continue;
+      if (body[key] && !link(body[key])) return json({ error: 'bad_url', field: key }, 400);
+      project[key] = link(body[key]);
+    }
+    project.updatedAt = new Date(nowMs).toISOString();
+    await kv.put(`project:${projectId}`, JSON.stringify(project));
+    await atTouch(kv, ['#projects']);
+    const pub = { id: project.id, name: project.name, inactive: !!project.inactive, profileUrl: project.profileUrl || project.avitoProfileUrl || null, briefUrl: project.briefUrl || null };
+    if (AT_MEM && AT_MEM.projects) AT_MEM.projects = AT_MEM.projects.map((p) => (p.id === projectId ? pub : p));
+    return json({ ok: true, project: pub });
   }
 
   // ── Команда и Активность (owner and assistant) ──
@@ -6503,7 +6780,7 @@ async function atBuildMyTasks(env, user, digest) {
     if (mine.length > 15) lines.push(`…и ещё ${mine.length - 15} — в трекере.`);
   }
   if (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant') {
-    const toInform = all.filter((t) => t.status === 'done' && t.projectId);
+    const toInform = all.filter((t) => t.status === 'done' && atNeedsInform(t, team.users));
     if (toInform.length) {
       lines.push('', `📨 <b>Готово — сообщить клиентам: ${toInform.length}</b>`);
       for (const t of toInform.slice(0, 10)) lines.push(`• <b>${escapeHtml((byId[t.projectId] || {}).name || '')}</b>: ${escapeHtml(t.text)}`);

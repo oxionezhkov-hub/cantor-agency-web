@@ -53,7 +53,7 @@ main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
 .panel{display:none}
 .panel.active{display:block}
 
-.month-toggle{display:flex;gap:8px;margin-bottom:20px}
+.month-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 .month-toggle button{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;color:var(--muted)}
 .month-toggle button.active{background:var(--dark);color:#fff;border-color:var(--dark)}
 
@@ -372,7 +372,7 @@ main:has(#panel-projects.active #projectsTableWrap:not(.hidden)){max-width:none}
 
 <div class="summary-popup hidden" id="summaryPopup">
   <div class="summary-popup-head">
-    <h4>Сводка по всем клиентам</h4>
+    <h4 id="summaryTitle">Сводка по всем клиентам</h4>
     <button class="popup-close" id="summaryPopupClose" aria-label="Закрыть">×</button>
   </div>
   <div class="summary-rows" id="summaryRows"></div>
@@ -1018,13 +1018,18 @@ function applyRowColor(tr, color) {
 
 let analyticsView = 'day'; // 'day' | 'total'
 
-// Month filter for the "total" view — matches the range covered by the seeded CSV history.
-const ANALYTICS_MONTHS = [
-  { key: '2026-06', label: 'Июнь' },
-  { key: '2026-07', label: 'Июль' },
-  { key: '2026-08', label: 'Август' },
-  { key: '2026-09', label: 'Сентябрь' },
-];
+// Month filter for the "total" view: from June 2026 (the start of the seeded CSV history) up to
+// the current month or the latest month with numbers, so a new month shows up by itself.
+const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+function analyticsMonths() {
+  let last = todayIso().slice(0, 7);
+  state.dailyMetrics.forEach((r) => { if (r.date && r.date.slice(0, 7) > last) last = r.date.slice(0, 7); });
+  const out = [];
+  for (let [y, m] = [2026, 6]; `${y}-${String(m).padStart(2, '0')}` <= last; m === 12 ? (y += 1, m = 1) : (m += 1)) {
+    out.push({ key: `${y}-${String(m).padStart(2, '0')}`, label: MONTH_NAMES[m - 1] + (y !== 2026 ? ` ${y}` : '') });
+  }
+  return out;
+}
 let analyticsMonth = null; // null = every period combined; a month key narrows to just that month
 
 document.getElementById('dayPrev').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, -1); renderAnalytics(); });
@@ -1039,7 +1044,7 @@ function renderAnalyticsMonthToggle() {
   const el = document.getElementById('analyticsMonthToggle');
   el.innerHTML = '';
   if (analyticsView !== 'total') return;
-  ANALYTICS_MONTHS.forEach((m) => {
+  analyticsMonths().forEach((m) => {
     const b = document.createElement('button');
     b.textContent = m.label;
     if (m.key === analyticsMonth) b.classList.add('active');
@@ -1175,8 +1180,14 @@ const SUMMARY_METRICS = [
   { key: 'sales', label: 'Продажи', rate: 'CAC' },
 ];
 
+// The month picked in the "total" view narrows the summary too; otherwise it covers all time.
+function summaryMonth() {
+  return analyticsView === 'total' && analyticsMonth ? analyticsMonths().find((m) => m.key === analyticsMonth) || null : null;
+}
+
 function allClientsTotals() {
-  return state.dailyMetrics.reduce((acc, r) => {
+  const month = summaryMonth();
+  return state.dailyMetrics.filter((r) => !month || r.date.slice(0, 7) === month.key).reduce((acc, r) => {
     acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
     acc.diagnostics += r.diagnostics; acc.sales += r.sales;
     return acc;
@@ -1194,10 +1205,13 @@ function summaryLines() {
 }
 
 function summaryText() {
-  return summaryLines().map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
+  const month = summaryMonth();
+  return (month ? `${month.label}\n` : '') + summaryLines().map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
 }
 
 function renderSummaryPopup() {
+  const month = summaryMonth();
+  document.getElementById('summaryTitle').textContent = month ? `Сводка по всем клиентам · ${month.label}` : 'Сводка по всем клиентам';
   document.getElementById('summaryRows').innerHTML = summaryLines().map((r) => `
     <div class="summary-row">
       <span class="label">${r.label}</span>
