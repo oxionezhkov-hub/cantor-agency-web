@@ -178,6 +178,17 @@ a{color:inherit}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .filters .select{width:auto;min-width:0;max-width:220px;min-height:34px;padding:5px 30px 5px 12px;font-size:13px;border-radius:999px}
 .filters .select.set{border-color:var(--ink);font-weight:600}
+.st-wrap{position:relative}
+.st-btn{text-align:left;white-space:nowrap;overflow:hidden}
+.st-pop{position:absolute;left:0;top:calc(100% + 6px);z-index:35;width:270px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:8px;animation:drop .14s ease-out}
+.st-pop .st-presets{display:flex;gap:6px;padding:2px 2px 8px;border-bottom:1px solid var(--line-2);margin-bottom:6px}
+.st-pop .st-presets button{flex:1;height:30px;border-radius:999px;background:var(--sunken);font-size:12.5px;font-weight:600;color:var(--text)}
+.st-pop .st-presets button.on{background:var(--ink);color:var(--bg)}
+.st-pop label{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;font-size:14px;cursor:pointer;color:var(--text)}
+.st-pop label:hover{background:var(--sunken)}
+.st-pop input{width:17px;height:17px;accent-color:var(--accent);flex:none}
+.st-pop .st-hint{font-size:12px;color:var(--muted);padding:8px 8px 4px;border-top:1px solid var(--line-2);margin-top:6px;line-height:1.4}
+.st-pop .st-group{font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px 2px}
 .filter-toggle{display:none}
 
 /* sections & groups */
@@ -251,29 +262,56 @@ a{color:inherit}
 .activity li::before{content:'';position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--faint)}
 
 /* clients */
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-.ccard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;position:relative}
+.c-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;align-items:start}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;position:relative;min-width:0}
 .ccard.red{border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+.ccard.off{opacity:.6}
 .cc-head{display:flex;align-items:flex-start;gap:10px}
-.cc-name{font-weight:700;font-size:16px;color:var(--ink);line-height:1.3}
-.cc-state{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.cc-head>div{min-width:0}
+.cc-name{font-weight:700;font-size:16px;color:var(--ink);line-height:1.3;overflow-wrap:anywhere}
+.cc-sub{font-size:12px;color:var(--muted)}
+.cc-state{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;flex:none}
 .st-green{background:var(--green-bg);color:var(--green)}
 .st-amber{background:var(--amber-bg);color:var(--amber)}
 .st-red{background:var(--red-bg);color:var(--red)}
-.cc-line{font-size:13.5px;color:var(--text);display:flex;gap:9px;align-items:flex-start}
+.cc-links{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cc-link{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;border-radius:999px;background:var(--sunken);font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:none;max-width:100%}
+.cc-link:hover{background:var(--line-2)}
+.cc-link .ic{width:13px;height:13px;color:var(--muted)}
+.cc-link.add{background:transparent;border:1px dashed var(--line);color:var(--muted);font-weight:500}
+.cc-link.add:hover{border-color:var(--faint);color:var(--ink)}
+.cc-link.edit{width:28px;padding:0;justify-content:center;background:transparent;color:var(--faint)}
+.cc-link.edit:hover{color:var(--ink);background:var(--sunken)}
+.cc-linkform{display:grid;gap:8px;background:var(--sunken);border-radius:12px;padding:10px}
+.cc-linkform label{font-size:12px;font-weight:600;color:var(--muted)}
+.cc-linkform .input{min-height:34px;font-size:13px}
+.cc-linkform .row{display:flex;gap:6px;justify-content:flex-end}
+.cc-line{font-size:13.5px;color:var(--text);display:flex;gap:9px;align-items:flex-start;min-width:0}
+.cc-line>div{min-width:0}
 .cc-line .ic{margin-top:2px;color:var(--muted)}
-.cc-line.alert{background:var(--red-bg);border-radius:12px;padding:10px 12px;color:var(--ink)}
+.cc-line.alert{background:var(--red-bg);border-radius:12px;padding:9px 12px;color:var(--ink)}
 .cc-line.alert .ic{color:var(--red)}
-.cc-line.inform{background:var(--amber-bg);border-radius:12px;padding:10px 12px}
+.cc-line.alert.stale{background:var(--sunken)}
+.cc-line.alert.stale .ic{color:var(--muted)}
+.cc-line.inform{background:var(--amber-bg);border-radius:12px;padding:9px 12px}
 .cc-line.inform .ic{color:var(--amber)}
-.cc-tasks{display:grid;gap:4px;margin-top:4px}
-.cc-tasks button{text-align:left;font-size:13px;color:var(--text);padding:2px 0}
+.cc-quote{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:var(--text);overflow-wrap:anywhere}
+.cc-last{font-size:12.5px;color:var(--muted);display:flex;gap:7px;align-items:flex-start}
+.cc-last .ic{width:14px;height:14px;margin-top:2px}
+.cc-last b{color:var(--text);font-weight:600}
+.cc-last span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cc-tasks{display:grid;gap:2px;margin-top:4px}
+.cc-tasks button{text-align:left;font-size:13px;color:var(--text);padding:2px 0;overflow-wrap:anywhere}
 .cc-tasks button:hover{color:var(--accent)}
-.cc-nums{display:flex;gap:14px;font-size:12.5px;color:var(--muted)}
+.cc-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line-2);padding-top:10px}
+.cc-nums{display:flex;gap:12px;font-size:12.5px;color:var(--muted);margin-right:auto;flex-wrap:wrap}
 .cc-nums b{color:var(--ink)}
-.cc-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
-.cc-touch{display:flex;gap:6px}
-.cc-touch .input{min-height:32px;font-size:13px;border-radius:999px}
+.cc-nums button{color:inherit;font-size:inherit}
+.cc-nums button:hover{color:var(--ink)}
+.cc-touch{display:flex;gap:6px;width:100%}
+.cc-touch .input{min-height:32px;font-size:13px;border-radius:999px;flex:1;min-width:0}
+.cc-empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:28px 0;font-size:14px}
 
 /* team */
 .team-add{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:10px;align-items:end}
@@ -454,6 +492,8 @@ a{color:inherit}
   .filters{display:none}
   .filters.open{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .filters.open .select{max-width:none;width:100%}
+  .filters.open .st-wrap{grid-column:1/-1}
+  .st-pop{width:100%}
   .grid2,.grid4,.m-edit{grid-template-columns:1fr}
   .t-row{padding:12px 10px 12px 13px;gap:10px}
   .t-title{font-size:15px}
@@ -509,6 +549,7 @@ a{color:inherit}
   <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 20.5A2.5 2.5 0 006.5 23H20v-5M8 7.5h8M8 11h5"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20.5 11.5l-8.2 8.2a5 5 0 01-7.1-7.1l8.5-8.5a3.3 3.3 0 014.7 4.7l-8.5 8.5a1.7 1.7 0 01-2.4-2.4l7.8-7.8"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
 </svg>
 
@@ -560,17 +601,10 @@ a{color:inherit}
       <div class="filters" id="filters">
         <select class="select" id="fClient"></select>
         <select class="select" id="fAssignee"></select>
-        <select class="select" id="fStatus">
-          <option value="active">Активные</option>
-          <option value="overdue">Просроченные</option>
-          <option value="today">Срок сегодня</option>
-          <option value="new">Новые</option>
-          <option value="progress">В работе</option>
-          <option value="done">Готово — сообщить клиенту</option>
-          <option value="closed">Закрытые</option>
-          <option value="cancelled">Отменённые</option>
-          <option value="all">Все статусы</option>
-        </select>
+        <div class="st-wrap" id="fStatusWrap">
+          <button type="button" class="select st-btn" id="fStatus" aria-haspopup="true" aria-expanded="false">Активные</button>
+          <div class="st-pop" id="fStatusPop" hidden></div>
+        </div>
         <select class="select" id="fPriority">
           <option value="">Любой приоритет</option>
           <option value="urgent">Срочно</option>
@@ -595,6 +629,9 @@ a{color:inherit}
           <div class="sub">Кому давно не писали, чьи вопросы ждут ответа и какие результаты пора передать клиенту.</div>
         </div>
         <div class="stats" id="clientStats"></div>
+      </div>
+      <div class="c-tools">
+        <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="cq" type="search" placeholder="Поиск клиента" autocomplete="off"></div>
       </div>
       <div class="cards" id="clientCards"></div>
       <div style="margin-top:14px"><button class="btn btn-quiet btn-sm" id="toggleInactive"></button></div>
@@ -710,12 +747,25 @@ async function api(action, body) {
 
 // ── state ──
 const prefs = Object.assign({ scope: 'all', status: 'active', group: 'client', collapsed: {}, tgHideUntil: 0, showInactive: false }, store.json(K_PREFS) || {});
+// Фильтр статусов — набор отметок (можно несколько); пустой набор = все статусы.
+const ST_ACTIVE = ['new', 'progress', 'done'];
+const ST_DUE = ['overdue', 'today'];
+const ST_OPTS = [['overdue', 'Просроченные'], ['today', 'Срок сегодня'], ['new', 'Новые'], ['progress', 'В работе'], ['done', 'Готово — сообщить клиенту'], ['closed', 'Закрытые'], ['cancelled', 'Отменённые']];
+function normStatuses(v) {
+  if (Array.isArray(v)) return v.filter((k) => ST_OPTS.some(([o]) => o === k));
+  if (v === 'all') return [];
+  if (!v || v === 'active') return ST_ACTIVE.slice();
+  return normStatuses([v]);
+}
+const sameSet = (a, b) => a.length === b.length && a.every((k) => b.includes(k));
+const stIs = (...keys) => sameSet(S.f.status, keys);
+const stActive = () => sameSet(S.f.status, ST_ACTIVE);
 const S = {
   token: store.get(K_TOKEN),
   me: null, users: [], projects: [], tasks: [], clients: null, notifications: [],
   ver: null, bot: null, tgStart: null,
   view: 'tasks', expanded: null,
-  f: { scope: prefs.scope, q: '', client: '', assignee: '', status: prefs.status, priority: '', group: prefs.group },
+  f: { scope: prefs.scope, q: '', client: '', assignee: '', status: normStatuses(prefs.status), priority: '', group: prefs.group },
   draft: null, team: null, freshMember: null,
   lastSync: 0, syncing: false, offline: false, pendingRender: false,
 };
@@ -1051,7 +1101,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-tgconnec
 function tgConnectUrl() { return S.bot && S.tgStart ? `https://t.me/${S.bot}?start=${S.tgStart}` : null; }
 
 // ── уведомления ──
-const N_ICON = { assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'] };
+const N_ICON = { assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], handoff: ['msg', 'var(--red-bg)', 'var(--red)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'] };
 $('bellBtn').addEventListener('click', openNotifications);
 function openNotifications() {
   closeMenus();
@@ -1120,10 +1170,11 @@ function matches(t, now) {
   if (f.priority && (t.priority || 'normal') !== f.priority) return false;
   const sk = statusKey(t);
   const due = dueMs(t);
-  if (f.status === 'active' && !(sk === 'new' || sk === 'progress' || sk === 'done')) return false;
-  if (f.status === 'overdue' && !(isOpen(t) && due && due < now)) return false;
-  if (f.status === 'today' && !(isOpen(t) && due && dayStart(due) <= dayStart(now))) return false;
-  if (STATUS[f.status] && sk !== f.status) return false;
+  // Внутри группы — «или», между группами «по сроку» и «по статусу» — «и».
+  const byDue = f.status.filter((k) => ST_DUE.includes(k));
+  const bySt = f.status.filter((k) => !ST_DUE.includes(k));
+  if (byDue.length && !(isOpen(t) && due && byDue.some((k) => (k === 'overdue' ? due < now : dayStart(due) <= dayStart(now))))) return false;
+  if (bySt.length && !bySt.includes(sk)) return false;
   if (f.q) {
     const hay = `${t.text} ${t.note} ${clientName(t)} ${(userById(t.assigneeId) || {}).name || t.owner || ''}`.toLowerCase().replace(/ё/g, 'е');
     if (!f.q.toLowerCase().replace(/ё/g, 'е').split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false;
@@ -1138,17 +1189,58 @@ function fillFilters() {
   $('fClient').value = f.client; if ($('fClient').value !== f.client) { f.client = ''; $('fClient').value = ''; }
   $('fAssignee').innerHTML = '<option value="">Все исполнители</option>' + S.users.filter((u) => u.active || S.tasks.some((t) => t.assigneeId === u.id)).map((u) => `<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('') + '<option value="__none">Без исполнителя</option>';
   $('fAssignee').value = f.assignee;
-  $('fStatus').value = f.status; $('fPriority').value = f.priority; $('fGroup').value = f.group;
+  $('fPriority').value = f.priority; $('fGroup').value = f.group;
+  renderStatusFilter();
   ['fClient', 'fAssignee', 'fPriority'].forEach((id) => $(id).classList.toggle('set', !!$(id).value));
-  $('fStatus').classList.toggle('set', f.status !== 'active');
+  $('fStatus').classList.toggle('set', !stActive());
   document.querySelectorAll('#scopeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.scope === f.scope));
-  const n = ['client', 'assignee', 'priority'].filter((k) => f[k]).length + (f.status !== 'active' ? 1 : 0);
+  const n = ['client', 'assignee', 'priority'].filter((k) => f[k]).length + (stActive() ? 0 : 1);
   $('filterToggle').querySelector('span').textContent = n ? `Фильтры · ${n}` : 'Фильтры';
 }
 $('q').addEventListener('input', () => { S.f.q = $('q').value.trim(); renderLists(); });
 $('filterToggle').addEventListener('click', () => $('filters').classList.toggle('open'));
 $('scopeSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-scope]'); if (!b) return; S.f.scope = b.dataset.scope; savePrefs(); renderTasks(); });
-[['fClient', 'client'], ['fAssignee', 'assignee'], ['fStatus', 'status'], ['fPriority', 'priority'], ['fGroup', 'group']].forEach(([id, k]) => {
+function statusLabel() {
+  const f = S.f.status;
+  if (!f.length) return 'Все статусы';
+  if (stActive()) return 'Активные';
+  const names = ST_OPTS.filter(([k]) => f.includes(k)).map(([, n]) => n);
+  return names.length <= 2 ? names.join(', ') : `${names[0]} +${names.length - 1}`;
+}
+function renderStatusFilter() {
+  $('fStatus').textContent = statusLabel();
+  const pop = $('fStatusPop');
+  if (pop.hidden) return;
+  const row = ([k, n]) => `<label><input type="checkbox" data-st="${k}" ${S.f.status.includes(k) ? 'checked' : ''}>${esc(n)}</label>`;
+  pop.innerHTML = `<div class="st-presets"><button type="button" data-preset="active" class="${stActive() ? 'on' : ''}">Активные</button><button type="button" data-preset="all" class="${S.f.status.length ? '' : 'on'}">Все</button></div>`
+    + '<div class="st-group">По сроку</div>' + ST_OPTS.slice(0, 2).map(row).join('')
+    + '<div class="st-group">По статусу</div>' + ST_OPTS.slice(2).map(row).join('')
+    + '<div class="st-hint">Срок и статус сочетаются: «Срок сегодня» + «В работе» — задачи в работе со сроком сегодня.</div>';
+}
+function setStatuses(list) { S.f.status = list; savePrefs(); renderTasks(); }
+$('fStatus').addEventListener('click', () => {
+  const pop = $('fStatusPop');
+  pop.hidden = !pop.hidden;
+  $('fStatus').setAttribute('aria-expanded', String(!pop.hidden));
+  renderStatusFilter();
+});
+$('fStatusPop').addEventListener('change', (e) => {
+  const k = e.target.dataset.st;
+  if (!k) return;
+  setStatuses(e.target.checked ? [...S.f.status, k] : S.f.status.filter((x) => x !== k));
+});
+$('fStatusPop').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-preset]');
+  if (b) setStatuses(b.dataset.preset === 'active' ? ST_ACTIVE.slice() : []);
+});
+document.addEventListener('click', (e) => {
+  // Цель могла уже пропасть из DOM (меню перерисовалось по клику внутри него) — это тоже клик внутри.
+  if ($('fStatusPop').hidden || $('fStatusWrap').contains(e.target) || !document.contains(e.target)) return;
+  $('fStatusPop').hidden = true;
+  $('fStatus').setAttribute('aria-expanded', 'false');
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('fStatusPop').hidden) { $('fStatusPop').hidden = true; $('fStatus').focus(); } });
+[['fClient', 'client'], ['fAssignee', 'assignee'], ['fPriority', 'priority'], ['fGroup', 'group']].forEach(([id, k]) => {
   $(id).addEventListener('change', () => { S.f[k] = $(id).value; savePrefs(); $(id).blur(); renderTasks(); });
 });
 
@@ -1164,14 +1256,14 @@ function renderTasks() {
   $('helloSub').textContent = mine.length
     ? `На вас ${mine.length} ${plural(mine.length, 'открытая задача', 'открытые задачи', 'открытых задач')}${overdue ? `, из них ${overdue} ${plural(overdue, 'просрочена', 'просрочены', 'просрочено')}` : ''}.`
     : 'Открытых задач на вас нет — можно помочь коллегам или поставить новую.';
-  const toInform = S.tasks.filter((t) => t.status === 'done' && t.projectId).length;
+  const toInform = S.tasks.filter(needsInform).length;
   const stat = (key, n, label, color, extra) => `<button class="stat ${extra || ''}" data-stat="${key}"><span class="dot" style="background:${color}"></span>${label} <b>${n}</b></button>`;
   const f = S.f;
   $('stats').innerHTML = [
-    overdue ? stat('overdue', overdue, 'Просрочено', 'var(--red)', f.scope === 'mine' && f.status === 'overdue' ? 'on' : '') : '',
-    stat('today', today, 'На сегодня', 'var(--amber)', f.scope === 'mine' && f.status === 'today' ? 'on' : ''),
-    stat('progress', inWork, 'В работе', 'var(--blue)', f.scope === 'mine' && f.status === 'progress' ? 'on' : ''),
-    canSeeClients() && toInform ? stat('inform', toInform, 'Сообщить клиенту', 'var(--amber)', f.scope === 'all' && f.status === 'done' ? 'on' : '') : '',
+    overdue ? stat('overdue', overdue, 'Просрочено', 'var(--red)', f.scope === 'mine' && stIs('overdue') ? 'on' : '') : '',
+    stat('today', today, 'На сегодня', 'var(--amber)', f.scope === 'mine' && stIs('today') ? 'on' : ''),
+    stat('progress', inWork, 'В работе', 'var(--blue)', f.scope === 'mine' && stIs('progress') ? 'on' : ''),
+    canSeeClients() && toInform ? stat('inform', toInform, 'Сообщить клиенту', 'var(--amber)', f.scope === 'all' && stIs('done') ? 'on' : '') : '',
   ].join('');
   renderBanners();
   renderComposer();
@@ -1183,7 +1275,7 @@ $('stats').addEventListener('click', (e) => {
   if (!b) return;
   const k = b.dataset.stat;
   const on = b.classList.contains('on');
-  Object.assign(S.f, on ? { scope: 'all', status: 'active' } : k === 'inform' ? { scope: 'all', status: 'done' } : { scope: 'mine', status: k });
+  Object.assign(S.f, on ? { scope: 'all', status: ST_ACTIVE.slice() } : k === 'inform' ? { scope: 'all', status: ['done'] } : { scope: 'mine', status: [k] });
   savePrefs(); renderTasks();
 });
 
@@ -1207,8 +1299,8 @@ function renderLists() {
   const now = Date.now();
   const list = S.tasks.filter((t) => matches(t, now));
   const sort = byUrgency(now);
-  const informFirst = canSeeClients() && S.f.status !== 'done';
-  const inform = informFirst ? list.filter((t) => t.status === 'done' && t.projectId && t.assigneeId !== S.me.id).sort(sort) : [];
+  const informFirst = canSeeClients() && !stIs('done');
+  const inform = informFirst ? list.filter((t) => needsInform(t) && t.assigneeId !== S.me.id).sort(sort) : [];
   const mine = list.filter((t) => t.assigneeId === S.me.id).sort(sort);
   const informIds = new Set(inform.map((t) => t.id));
   const rest = list.filter((t) => t.assigneeId !== S.me.id && !informIds.has(t.id));
@@ -1217,7 +1309,7 @@ function renderLists() {
   let html = '';
   if (S.f.scope !== 'byme' || mine.length) {
     html += `<div class="section"><div class="sec-head"><h2>Мои задачи</h2><span class="n">${mine.length}</span></div>`;
-    html += mine.length ? mine.map((t) => card(t, now, focus.has(t.id))).join('') : `<div class="empty">${S.f.q || S.f.client || S.f.priority || S.f.status !== 'active' ? 'Ничего не нашлось по фильтрам' : 'На вас сейчас ничего нет 🎉'}</div>`;
+    html += mine.length ? mine.map((t) => card(t, now, focus.has(t.id))).join('') : `<div class="empty">${S.f.q || S.f.client || S.f.priority || !stActive() ? 'Ничего не нашлось по фильтрам' : 'На вас сейчас ничего нет 🎉'}</div>`;
     html += '</div>';
   }
   if (inform.length) {
@@ -1258,7 +1350,7 @@ function groups(tasks, now) {
 function groupHtml(g, now) {
   const open = g.tasks.filter(isOpen);
   const over = open.filter((t) => dueMs(t) && dueMs(t) < now).length;
-  const inform = g.tasks.filter((t) => t.status === 'done').length;
+  const inform = g.tasks.filter(needsInform).length;
   const collapsed = prefs.collapsed[g.key];
   return `<div class="group ${collapsed ? 'collapsed' : ''}" data-group="${esc(g.key)}">
     <button class="g-head" data-act="toggle-group">${ico('chev', 'chev')}<span class="g-name">${esc(g.name)}</span>
@@ -1285,7 +1377,8 @@ function card(t, now, focus) {
   if (t.priority === 'urgent' && !focus) tags.push(`<span class="tag tag-urgent">срочно</span>`);
   if (t.priority === 'high' && !focus) tags.push(`<span class="tag tag-high">высокий</span>`);
   if (sk === 'progress') tags.push('<span class="tag tag-progress">в работе</span>');
-  if (sk === 'done') tags.push(`<span class="tag tag-done">${t.projectId ? 'готово · сообщить клиенту' : 'готово'}</span>`);
+  if (sk === 'done') tags.push(`<span class="tag tag-done">${needsInform(t) ? 'готово · сообщить клиенту' : 'готово'}</span>`);
+  if (t.internal && isOpen(t)) tags.push('<span class="tag" title="Задача внутри команды: клиенту сообщать не нужно, клиентскому менеджеру не приходит">внутренняя</span>');
   if (sk === 'cancelled') tags.push('<span class="tag tag-cancelled">отменена</span>');
   const assignee = u ? `<span>${avatar(u, 'xs')}${esc(u.id === S.me.id ? 'я' : first(u.name))}</span>` : t.owner ? `<span>${esc(t.owner)}</span>` : '<span>без исполнителя</span>';
   const pc = isOpen(t) ? PRIO[t.priority] && t.priority !== 'normal' ? PRIO[t.priority][1] : 'transparent' : 'transparent';
@@ -1339,7 +1432,8 @@ function editor(t, now) {
   const sk = statusKey(t);
   const created = Date.parse(t.startedAt || t.createdAt || 0);
   const canDelete = isAdmin() || t.createdById === S.me.id;
-  const statusBtns = ['new', 'progress', 'done', 'closed', 'cancelled'].map((k) => `<button type="button" class="pill ${sk === k ? 'on' : ''}" data-status="${k}">${k === 'done' ? (t.projectId ? 'Готово, сообщить клиенту' : 'Готово') : k === 'closed' && t.projectId ? 'Закрыта, клиенту сообщили' : STATUS[k]}</button>`).join('');
+  const inform = t.projectId && !t.internal;
+  const statusBtns = ['new', 'progress', 'done', 'closed', 'cancelled'].filter((k) => k !== 'done' || inform || sk === 'done').map((k) => `<button type="button" class="pill ${sk === k ? 'on' : ''}" data-status="${k}">${k === 'done' ? (inform ? 'Готово, сообщить клиенту' : 'Готово') : k === 'closed' && inform ? 'Закрыта, клиенту сообщили' : k === 'closed' && t.internal ? 'Готово, закрыта' : STATUS[k]}</button>`).join('');
   const acts = (t.activity || []).slice().reverse();
   return `<div class="editor" data-editor>
     <textarea class="textarea ed-title" data-f="text" rows="1" maxlength="300" aria-label="Суть задачи">${esc(t.text)}</textarea>
@@ -1389,8 +1483,9 @@ function applyLocal(t, patch) {
     const s = patch.status;
     if (s === 'new') Object.assign(t, { status: 'open', takenAt: null });
     if (s === 'progress') Object.assign(t, { status: 'open', takenAt: t.takenAt || now });
-    if (s === 'done') Object.assign(t, { status: 'done', doneAt: now });
-    if (s === 'closed') Object.assign(t, { status: 'closed', informedAt: t.projectId ? now : t.informedAt });
+    const inform = t.projectId && !t.internal;
+    if (s === 'done' && inform) Object.assign(t, { status: 'done', doneAt: now });
+    if (s === 'closed' || (s === 'done' && !inform)) Object.assign(t, { status: 'closed', doneAt: t.doneAt || now, informedAt: inform ? now : t.informedAt });
     if (s === 'cancelled') t.status = 'cancelled';
   }
 }
@@ -1417,7 +1512,7 @@ function openTask(id) {
   const t = taskById(id);
   if (!t) return toast('Задача не найдена — возможно, её удалили.');
   if (S.view !== 'tasks') { S.view = 'tasks'; }
-  if (!matches(t, Date.now())) { Object.assign(S.f, { scope: 'all', status: 'all', client: '', assignee: '', priority: '', q: '' }); $('q').value = ''; }
+  if (!matches(t, Date.now())) { Object.assign(S.f, { scope: 'all', status: [], client: '', assignee: '', priority: '', q: '' }); $('q').value = ''; }
   const g = document.querySelector(`.task[data-id="${CSS.escape(id)}"]`);
   const group = g && g.closest('.group');
   if (group) delete prefs.collapsed[group.dataset.group];
@@ -1469,7 +1564,8 @@ $('lists').addEventListener('click', (e) => {
   if (act && act.dataset.act === 'check') {
     e.stopPropagation();
     const before = statusKey(t);
-    const next = isOpen(t) ? (t.projectId ? 'done' : 'closed') : t.status === 'done' ? 'closed' : 'new';
+    // Внутренние задачи (от специалиста специалисту) клиенту не передаются — «готово» сразу закрывает их.
+    const next = isOpen(t) ? (t.projectId && !t.internal ? 'done' : 'closed') : t.status === 'done' ? 'closed' : 'new';
     saveTask(id, { status: next });
     const msg = next === 'done' ? 'Готово — клиентский менеджер передаст клиенту' : next === 'closed' ? (before === 'done' ? 'Закрыто: клиенту сообщили' : 'Готово ✓') : 'Задача снова открыта';
     toast(msg, 'Отменить', () => saveTask(id, { status: before }));
@@ -1615,13 +1711,17 @@ async function createTask() {
 $('fab').addEventListener('click', () => openComposer());
 
 // ── вкладка «Клиенты» ──
+const CLIENT_STALE_MS = 24 * 3600000; // ждёт ответа больше суток — бот уже не напоминает
+const CF = { q: '', show: '' }; // поиск и фильтр-плашка: '' | 'waiting' | 'red' | 'inform' | 'green'
+let linksOpen = null; // id клиента, у которого открыта правка ссылок
+function needsInform(t) { return t.status === 'done' && t.projectId && !t.internal; }
 function clientInfo(p) {
   const now = Date.now();
   const b = (S.clients || []).find((c) => c.id === p.id) || {};
   const ts = S.tasks.filter((t) => t.projectId === p.id);
   const open = ts.filter(isOpen);
   const overdue = open.filter((t) => dueMs(t) && dueMs(t) < now);
-  const inform = ts.filter((t) => t.status === 'done');
+  const inform = ts.filter(needsInform);
   let last = 0; let lastBy = null; let lastWhat = null;
   const bump = (iso, by, what) => { const ms = Date.parse(iso || ''); if (ms > last) { last = ms; lastBy = by; lastWhat = what; } };
   bump(b.lastUpdateAt, b.lastUpdateBy, b.lastUpdateNote || 'отметили «клиенту написали»');
@@ -1634,49 +1734,114 @@ function clientInfo(p) {
   const score = (b.pending ? 1000 : 0) + (wd == null ? 500 : wd * 100) + inform.length * 60 + overdue.length * 40;
   return { b, open, overdue, inform, last, lastBy, lastWhat, wd, level, score };
 }
+function clientShown(p, i) {
+  if (CF.q && !p.name.toLowerCase().replace(/ё/g, 'е').includes(CF.q)) return false;
+  if (CF.show === 'waiting') return !!i.b.pending;
+  if (CF.show === 'red') return !p.inactive && i.level === 'red';
+  if (CF.show === 'inform') return i.inform.length > 0;
+  if (CF.show === 'green') return !p.inactive && i.level === 'green';
+  return true;
+}
+function linksHtml(p) {
+  if (linksOpen === p.id) {
+    return `<form class="cc-linkform" data-linkform>
+      <label>Профиль на Авито<input class="input" name="profileUrl" type="url" inputmode="url" placeholder="https://www.avito.ru/…" value="${esc(p.profileUrl || '')}"></label>
+      <label>Бриф<input class="input" name="briefUrl" type="url" inputmode="url" placeholder="Ссылка на анкету или документ" value="${esc(p.briefUrl || '')}"></label>
+      <div class="row"><button type="button" class="btn btn-quiet btn-sm" data-links-cancel>Отмена</button><button class="btn btn-primary btn-sm">Сохранить</button></div>
+    </form>`;
+  }
+  const link = (url, label) => (url
+    ? `<a class="cc-link" href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}${ico('ext')}</a>`
+    : `<button class="cc-link add" data-links-edit>${ico('plus')}${esc(label)}</button>`);
+  return `<div class="cc-links">${link(p.profileUrl, 'Профиль Авито')}${link(p.briefUrl, 'Бриф')}${p.profileUrl || p.briefUrl ? `<button class="cc-link edit" data-links-edit aria-label="Изменить ссылки" title="Изменить ссылки">${ico('edit')}</button>` : ''}</div>`;
+}
 function renderClients() {
   if (!canSeeClients()) return;
   const now = Date.now();
-  const rows = S.projects.filter((p) => prefs.showInactive || !p.inactive).map((p) => ({ p, i: clientInfo(p) })).sort((a, b) => (a.p.inactive - b.p.inactive) || b.i.score - a.i.score || a.p.name.localeCompare(b.p.name, 'ru'));
-  const cnt = (lvl) => rows.filter((r) => !r.p.inactive && r.i.level === lvl).length;
-  const waiting = rows.filter((r) => r.i.b.pending).length;
-  const informN = rows.reduce((s, r) => s + r.i.inform.length, 0);
+  const all = S.projects.map((p) => ({ p, i: clientInfo(p) }));
+  const active = all.filter((r) => !r.p.inactive);
+  const waiting = all.filter((r) => r.i.b.pending).length;
+  const red = active.filter((r) => r.i.level === 'red').length;
+  const green = active.filter((r) => r.i.level === 'green').length;
+  const informN = all.reduce((s, r) => s + r.i.inform.length, 0);
+  const stat = (key, n, label, color) => `<button class="stat ${CF.show === key ? 'on' : ''}" data-cstat="${key}"><span class="dot" style="background:${color}"></span>${label} <b>${n}</b></button>`;
   $('clientStats').innerHTML = [
-    waiting ? `<span class="stat"><span class="dot" style="background:var(--red)"></span>Ждут ответа <b>${waiting}</b></span>` : '',
-    `<span class="stat"><span class="dot" style="background:var(--red)"></span>Нужно внимание <b>${cnt('red')}</b></span>`,
-    informN ? `<span class="stat"><span class="dot" style="background:var(--amber)"></span>Сообщить результаты <b>${informN}</b></span>` : '',
-    `<span class="stat"><span class="dot" style="background:var(--green)"></span>В порядке <b>${cnt('green')}</b></span>`,
+    waiting ? stat('waiting', waiting, 'Ждут ответа', 'var(--red)') : '',
+    stat('red', red, 'Нужно внимание', 'var(--red)'),
+    informN ? stat('inform', informN, 'Сообщить результаты', 'var(--amber)') : '',
+    stat('green', green, 'В порядке', 'var(--green)'),
   ].join('');
+  const filtering = !!(CF.q || CF.show);
+  const rows = all.filter((r) => (prefs.showInactive || filtering || !r.p.inactive) && clientShown(r.p, r.i))
+    .sort((a, b) => (a.p.inactive - b.p.inactive) || b.i.score - a.i.score || a.p.name.localeCompare(b.p.name, 'ru'));
   const anyChat = (S.clients || []).some((c) => c.chat);
   $('clientCards').innerHTML = (anyChat ? '' : `<div class="banner" style="grid-column:1/-1;margin:0"><div class="b-ic">${ico('bot')}</div><div class="b-text"><b>Бот пока только в рабочем чате.</b> Когда его добавят в чаты клиентов, здесь сами появятся вопросы клиентов, которые ждут ответа, и дата последнего сообщения от команды. Пока — отмечайте «Клиенту написали» вручную.</div></div>`)
+    + (rows.length ? '' : `<div class="cc-empty">${filtering ? 'Никого не нашлось' : 'Клиентов пока нет'}</div>`)
     + rows.map(({ p, i }) => {
-      const stLabel = i.b.pending ? 'Ждёт ответа' : i.wd == null ? 'Нет обновлений' : i.wd === 0 ? 'Писали сегодня' : i.wd === 1 ? 'Писали вчера' : `${i.wd} ${plural(i.wd, 'рабочий день', 'рабочих дня', 'рабочих дней')} без обновлений`;
-      return `<div class="ccard ${i.level === 'red' && !p.inactive ? 'red' : ''}" data-client="${esc(p.id)}" ${p.inactive ? 'style="opacity:.6"' : ''}>
-        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${p.inactive ? '<div class="muted" style="font-size:12px">неактивный клиент</div>' : ''}</div><span class="cc-state st-${i.level}">${esc(stLabel)}</span></div>
-        ${i.b.pending ? `<div class="cc-line alert">${ico('msg')}<div><b>Клиент ждёт ответа</b> · написал(а) ${esc(ago(i.b.pending.since, now))}<br>«${esc(i.b.pending.text)}»${i.b.pending.link ? ` <a class="tg" href="${esc(i.b.pending.link)}"><b>Открыть</b></a>` : ''}</div></div>` : ''}
-        <div class="cc-line">${ico('send')}<div>${i.last ? `Последнее обновление: <b>${esc(fmtDay(i.last, now))} в ${fmtTime(i.last)}</b>${i.lastBy ? ` · ${esc(first(i.lastBy))}` : ''}<br><span class="muted">${esc(i.lastWhat || '')}</span>` : '<span class="muted">Обновлений клиенту пока не отмечено</span>'}</div></div>
-        ${i.inform.length ? `<div class="cc-line inform">${ico('check')}<div><b>Готово — передать клиенту: ${i.inform.length}</b><div class="cc-tasks">${i.inform.slice(0, 4).map((t) => `<button data-open="${esc(t.id)}">• ${esc(t.text)}</button>`).join('')}</div></div></div>` : ''}
-        <div class="cc-nums"><span>Открыто <b>${i.open.length}</b></span>${i.overdue.length ? `<span style="color:var(--red)">Просрочено <b style="color:inherit">${i.overdue.length}</b></span>` : ''}${i.b.chat ? `<span>${ico('bot', 'ic-sm')} бот в чате</span>` : ''}</div>
-        <div class="cc-touch"><input class="input" data-touch-note placeholder="Что отправили (необязательно)" maxlength="300"><button class="btn btn-primary btn-sm" data-touch>${ico('check', 'ic-sm')}Клиенту написали</button></div>
-        <div class="cc-actions">
+      const pend = i.b.pending;
+      const stale = pend && now - pend.since > CLIENT_STALE_MS;
+      const stLabel = pend ? 'Ждёт ответа' : i.wd == null ? 'Нет обновлений' : i.wd === 0 ? 'Писали сегодня' : i.wd === 1 ? 'Писали вчера' : `${i.wd} ${plural(i.wd, 'рабочий день', 'рабочих дня', 'рабочих дней')} без обновлений`;
+      return `<div class="ccard ${i.level === 'red' && !p.inactive ? 'red' : ''} ${p.inactive ? 'off' : ''}" data-client="${esc(p.id)}">
+        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${p.inactive ? '<div class="cc-sub">неактивный клиент</div>' : ''}</div><span class="cc-state st-${i.level}">${esc(stLabel)}</span></div>
+        ${linksHtml(p)}
+        ${pend ? `<div class="cc-line alert ${stale ? 'stale' : ''}">${ico('msg')}<div><b>${stale ? 'Без ответа больше суток' : 'Клиент ждёт ответа'}</b> · ${esc(ago(pend.since, now))}${pend.link ? ` · <a class="tg" href="${esc(pend.link)}"><b>Открыть</b></a>` : ''}<div class="cc-quote">«${esc(pend.text)}»</div></div></div>` : ''}
+        ${i.inform.length ? `<div class="cc-line inform">${ico('check')}<div><b>Готово — передать клиенту: ${i.inform.length}</b><div class="cc-tasks">${i.inform.slice(0, 4).map((t) => `<button data-open="${esc(t.id)}">• ${esc(t.text)}</button>`).join('')}${i.inform.length > 4 ? `<button data-filter>…и ещё ${i.inform.length - 4}</button>` : ''}</div></div></div>` : ''}
+        <div class="cc-last">${ico('send')}<span>${i.last ? `Обновление клиенту: <b>${esc(fmtDay(i.last, now))} в ${fmtTime(i.last)}</b>${i.lastBy ? ` · ${esc(first(i.lastBy))}` : ''} — ${esc(i.lastWhat || '')}` : 'Обновлений клиенту пока не отмечено'}</span></div>
+        <div class="cc-touch"><input class="input" data-touch-note placeholder="Что отправили?" title="Необязательно: что именно отправили клиенту" maxlength="300"><button class="btn btn-primary btn-sm" data-touch>${ico('check', 'ic-sm')}Клиенту написали</button></div>
+        <div class="cc-foot">
+          <div class="cc-nums"><button data-filter title="Задачи клиента">Открыто <b>${i.open.length}</b> →</button>${i.overdue.length ? `<button data-filter style="color:var(--red)">Просрочено <b style="color:inherit">${i.overdue.length}</b></button>` : ''}${i.b.chat ? `<span title="${esc(i.b.chat.title || '')}">${ico('bot', 'ic-sm')} бот в чате</span>` : ''}</div>
           <button class="btn btn-ghost btn-sm" data-newtask>${ico('plus', 'ic-sm')}Задача</button>
-          <button class="btn btn-quiet btn-sm" data-filter>Задачи клиента →</button>
         </div>
       </div>`;
     }).join('');
   const inactive = S.projects.filter((p) => p.inactive).length;
-  $('toggleInactive').hidden = !inactive;
+  $('toggleInactive').hidden = !inactive || filtering;
   $('toggleInactive').textContent = prefs.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
 }
 $('toggleInactive').addEventListener('click', () => { prefs.showInactive = !prefs.showInactive; store.set(K_PREFS, JSON.stringify(prefs)); renderClients(); });
+$('cq').addEventListener('input', (e) => { CF.q = e.target.value.trim().toLowerCase().replace(/ё/g, 'е'); renderClients(); });
+$('clientStats').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-cstat]');
+  if (!b) return;
+  CF.show = CF.show === b.dataset.cstat ? '' : b.dataset.cstat;
+  renderClients();
+});
+$('clientCards').addEventListener('submit', async (e) => {
+  const form = e.target.closest('[data-linkform]');
+  if (!form) return;
+  e.preventDefault();
+  const pid = form.closest('[data-client]').dataset.client;
+  const btn = form.querySelector('button:not([type])');
+  btn.disabled = true;
+  try {
+    const res = await api('client-links', { projectId: pid, profileUrl: form.profileUrl.value.trim(), briefUrl: form.briefUrl.value.trim() });
+    if (res.status === 400) { btn.disabled = false; toast('Это не похоже на ссылку — проверьте адрес'); return; }
+    if (!res.ok) throw new Error();
+    S.projects = S.projects.map((p) => (p.id === pid ? Object.assign({}, p, res.data.project) : p));
+    linksOpen = null;
+    renderClients();
+    toast('Ссылки сохранены');
+  } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
+});
+$('clientCards').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.matches('[data-touch-note]')) { e.preventDefault(); const b = e.target.closest('.cc-touch').querySelector('[data-touch]'); b && b.click(); }
+  if (e.key === 'Escape' && e.target.closest('[data-linkform]')) { linksOpen = null; renderClients(); }
+});
 $('clientCards').addEventListener('click', async (e) => {
   const cardEl = e.target.closest('[data-client]');
   if (!cardEl) return;
   const pid = cardEl.dataset.client;
   const open = e.target.closest('[data-open]');
   if (open) return openTask(open.dataset.open);
+  if (e.target.closest('[data-links-edit]')) {
+    linksOpen = pid; renderClients();
+    const f = $('clientCards').querySelector(`[data-client="${CSS.escape(pid)}"] [data-linkform] input`);
+    if (f) f.focus();
+    return;
+  }
+  if (e.target.closest('[data-links-cancel]')) { linksOpen = null; renderClients(); return; }
   if (e.target.closest('[data-newtask]')) return openComposer({ projectId: pid });
-  if (e.target.closest('[data-filter]')) { Object.assign(S.f, { scope: 'all', status: 'active', client: pid, assignee: '', priority: '' }); setView('tasks'); renderTasks(); return; }
+  if (e.target.closest('[data-filter]')) { Object.assign(S.f, { scope: 'all', status: ST_ACTIVE.slice(), client: pid, assignee: '', priority: '' }); setView('tasks'); renderTasks(); return; }
   const touch = e.target.closest('[data-touch]');
   if (touch) {
     const note = cardEl.querySelector('[data-touch-note]').value.trim();
