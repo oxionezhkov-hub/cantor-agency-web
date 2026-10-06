@@ -5389,7 +5389,7 @@ async function handleBotApi(request, env, url) {
 //   at:seen:<userId>   -> ISO time the person last opened the page (written at most every 3 h)
 //   at:clients         -> { <projectId>: { lastUpdateAt, by, note, lastTeamAt } }
 //   at:act:<userId>:<date>  -> { slots: [0..143] }  10-minute slots the person was active on the page
-//   at:chatact:<date>  -> per-person chat message counts by hour for a finished day (cache)
+//   at:chatact2:<date> -> per-person chat message counts by hour for a finished day (cache)
 //   bot:me             -> the control bot's @username (for the «Подключить Telegram» link)
 //   bot:qrun           -> last time a page visit kicked the AI queue
 //   kb:*               -> «База знаний» update requests — see "Avito Tasks → «База знаний»" below
@@ -5611,22 +5611,33 @@ async function atToken(team, user) {
 async function atTgStartParam(team, user) {
   return `at_${user.id}_${(await atHmac(team.secret, `tg:${user.id}.${user.v}`)).slice(0, 16)}`;
 }
-// Team member named in free text ("Евгений", "Менеджер — Cantor Agency", "Женя"), or null.
+// A name in Latin letters, spelled loosely: Telegram names are often typed in Latin ("al'bina",
+// "Evgeny"), the team list is in Cyrillic ("Альбина", "Евгений") — both come out as "albina",
+// "evgeni". Used as a second try when the plain comparison finds nobody.
+function atLatin(value) {
+  return String(value || '').toLowerCase().replace(/ё/g, 'е').split('').map((c) => (c in BOT_TRANSLIT ? BOT_TRANSLIT[c] : c)).join('')
+    .replace(/['’ʼ`´]/g, '').replace(/kh/g, 'h').replace(/[yj]/g, 'i').replace(/i+/g, 'i')
+    .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+// Team member named in free text ("Евгений", "Менеджер — Cantor Agency", "Женя", "al'bina"), or null.
 function atMatchUser(name, users) {
-  const n = ` ${botNorm(name)} `;
+  return atMatchUserBy(name, users, botNorm) || atMatchUserBy(name, users, atLatin);
+}
+function atMatchUserBy(name, users, norm) {
+  const n = ` ${norm(name)} `;
   if (!n.trim()) return null;
   let best = null;
   let bestScore = 0;
   let tie = false;
   for (const u of users) {
     let score = 0;
-    const full = botNorm(u.name);
+    const full = norm(u.name);
     if (full && n.includes(` ${full} `)) score = 3;
     for (const a of u.aliases || []) {
-      const an = botNorm(a);
+      const an = norm(a);
       if (an && n.includes(` ${an} `)) score = Math.max(score, an.includes(' ') ? 3 : 2);
     }
-    const first = botNorm(atFirstName(u.name));
+    const first = norm(atFirstName(u.name));
     if (!score && first.length >= 4 && n.includes(` ${first.slice(0, first.length - 1)}`)) score = 1;
     if (score > bestScore) { best = u; bestScore = score; tie = false; } else if (score && score === bestScore && best !== u) tie = true;
   }
@@ -6626,7 +6637,8 @@ async function atKbCron(env) {
 //     key, scroll, touch while the tab is visible) and sends them with a sync every ~10 minutes;
 //     stored per person and day in at:act:<userId>:<date> = { slots: [0..143] } (a slot = 10 min).
 //   • chats — messages the control bot logged (work chat topics and client chats), matched to a
-//     person by Telegram id or name; past days are cached in at:chatact:<date> once computed.
+//     person by Telegram id or name; past days are cached in at:chatact2:<date> once computed
+//     (the 2 dropped the days counted before Latin-spelled names were matched).
 //   • actions — task changes made in the tracker (each task's activity list).
 //   • site — other cantor.agency pages the team works on (knowledge base, dashboard, academy and other
 //     internal tools) load /at-visit.js; when that browser is signed in to the tracker it reports page
@@ -6712,7 +6724,7 @@ async function atChatSources(kv) {
 async function atChatActivityForDate(env, users, date, sources, isToday) {
   const kv = env.AGENCY_DASHBOARD_KV;
   if (!isToday) {
-    const cached = await kv.get(`at:chatact:${date}`, 'json');
+    const cached = await kv.get(`at:chatact2:${date}`, 'json');
     if (cached) return cached;
   } else {
     const hit = AT_ACT_CACHE.get(date);
@@ -6736,7 +6748,7 @@ async function atChatActivityForDate(env, users, date, sources, isToday) {
     }
   });
   if (isToday) AT_ACT_CACHE.set(date, { at: Date.now(), data });
-  else await kv.put(`at:chatact:${date}`, JSON.stringify(data), { expirationTtl: AT_ACT_TTL });
+  else await kv.put(`at:chatact2:${date}`, JSON.stringify(data), { expirationTtl: AT_ACT_TTL });
   return data;
 }
 // Per date and person: p = tracker minutes per hour, c = chat messages per hour, a = task changes
