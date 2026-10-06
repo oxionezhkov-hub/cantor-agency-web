@@ -4297,12 +4297,12 @@ async function botOnMessage(env, msg, edited) {
 
 // ── reactions ──
 // A reaction from the team counts as an answer: on a client's message in the client chat it settles
-// "the client is waiting", and on the message a task was found in it moves the task on — 👍 👌 🫡 ✍
-// 👨‍💻 🤝 👀 ⚡ = taken (by the person who reacted, if nobody had it), 💯 🏆 = done. The reaction is also
+// "the client is waiting", and on the message a task was found in it marks the task taken — 👍 👌 🫡 ✍
+// 👨‍💻 🤝 👀 ⚡ (by the person who reacted, if nobody had it). Done is never set from a reaction: only a
+// person marks a task done. The reaction is also
 // put on the logged message, so the AI sees it alongside the text. Telegram only sends reactions to
 // a bot that is an administrator of the group.
 const BOT_REACT_TAKEN = new Set(['👍', '👌', '🫡', '✍', '✍️', '👨‍💻', '🤝', '👀', '⚡']);
-const BOT_REACT_DONE = new Set(['💯', '🏆']);
 
 function botReactionEmojis(list) {
   return (Array.isArray(list) ? list : []).map((r) => (r && r.type === 'emoji' ? r.emoji : r && r.type === 'custom_emoji' ? '★' : r && r.type === 'paid' ? '⭐' : null)).filter(Boolean);
@@ -4362,19 +4362,14 @@ async function botOnReaction(env, upd) {
   }
   if (task) {
     const taken = added.some((e) => BOT_REACT_TAKEN.has(e));
-    const done = added.some((e) => BOT_REACT_DONE.has(e));
     const what = [];
     const nowIso = new Date(t).toISOString();
     const prevAssignee = atAssigneeId(task, team.users);
-    if ((taken || done) && !prevAssignee && reactor && reactor.role !== 'owner' && reactor.role !== 'assistant') {
+    if (taken && !prevAssignee && reactor && reactor.role !== 'owner' && reactor.role !== 'assistant') {
       Object.assign(task, { assigneeId: reactor.id, owner: reactor.name });
       what.push(`исполнитель → ${atFirstName(reactor.name)}`);
     }
-    if (task.status === 'open' && done) {
-      if (atNeedsInform(task, team.users)) Object.assign(task, { status: 'done', doneAt: nowIso });
-      else Object.assign(task, { status: 'closed', doneAt: nowIso });
-      what.push('сделано');
-    } else if (task.status === 'open' && taken && !task.takenAt) {
+    if (task.status === 'open' && taken && !task.takenAt) {
       task.takenAt = nowIso;
       what.push('взяли в работу');
     }
@@ -4385,7 +4380,6 @@ async function botOnReaction(env, upd) {
       await kv.put(`task:${task.id}`, JSON.stringify(task));
       if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(task.id, task);
       touched.push(task.id);
-      if (task.status === 'done') await atNotifyInform(env, team, task, reactor ? reactor.name : botUserName(user), reactor ? [reactor.id] : []);
     }
   }
   if (touched.length) await atTouch(kv, touched);
@@ -4615,6 +4609,8 @@ const BOT_EXTRACT_SYSTEM = [
   ' {"type":"new_task","msg":<id сообщения>,"text":"<суть задачи до 15 слов>","assignee":"<имя исполнителя или null>","due":"<YYYY-MM-DD HH:MM или null>"},',
   ' {"type":"update","task":"<id открытой задачи>","msg":<id сообщения>,"status":"taken|done|informed|cancelled","assignee":"<имя или null>","due":"<YYYY-MM-DD HH:MM или null>"}',
   ']}',
+  'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя, @username) или сам пишет, что сделает. Не угадывай по роли',
+  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок, иначе null.',
   'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
@@ -4713,6 +4709,17 @@ async function botProcessQueue(env) {
   return { processed };
 }
 
+// The bot only puts a task on someone the message itself names — by name, alias or @username — or
+// on the person who wrote it ("сделаю"). A guess from context leaves the task unclaimed: it waits at
+// the top of the tracker for someone to take it and set the deadline.
+function botNamedIn(src, who) {
+  if (!src || !who) return false;
+  if (atMatchUser(src.from, [who])) return true;
+  const text = String(src.text || '');
+  if (who.tgUsername && text.toLowerCase().includes(`@${String(who.tgUsername).toLowerCase()}`)) return true;
+  return !!atMatchUser(text, [who]);
+}
+
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -4721,7 +4728,7 @@ async function botApplyEvents(env, events, ctx) {
   const users = ctx.team ? ctx.team.users : [];
   const touched = [];
   const assigned = []; // [task, source message] — the person gets a (quiet) heads-up in Avito Tasks / Telegram
-  const finished = []; // [task, source message] — done in the chat: the client manager passes it on
+  const hinted = []; // tasks the chat suggests are done / reported / cancelled — a person confirms
   for (const ev of Array.isArray(events) ? events : []) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
@@ -4733,10 +4740,13 @@ async function botApplyEvents(env, events, ctx) {
         id,
         text: String(ev.text).slice(0, 300),
         status: 'open',
-        owner: ev.assignee && ev.assignee !== 'null' ? String(ev.assignee).slice(0, 80) : null,
+        owner: null,
         assigneeId: null,
         priority: 'normal',
-        due: dueMs ? botIsoMsk(dueMs) : null,
+        // No deadline from the bot: whoever takes the task sets it. A date the message names is kept
+        // as a hint for the «Взять задачу» form.
+        due: null,
+        suggestedDue: dueMs ? botIsoMsk(dueMs) : null,
         projectId: ctx.topic.projectId || null,
         topicName: ctx.topic.name,
         source: 'bot',
@@ -4752,8 +4762,11 @@ async function botApplyEvents(env, events, ctx) {
         createdAt: nowIso,
         updatedAt: nowIso,
       };
-      const who = task.owner && atMatchUser(task.owner, users);
-      if (who) Object.assign(task, { assigneeId: who.id, owner: who.name });
+      const who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
+      if (who && botNamedIn(src, who)) {
+        Object.assign(task, { assigneeId: who.id, owner: who.name });
+        if (dueMs) task.due = task.suggestedDue; // the person was asked directly, with a date
+      }
       await kv.put(`task:${id}`, JSON.stringify(task));
       openById.set(id, task);
       ctx.openTasks.push(task);
@@ -4764,21 +4777,24 @@ async function botApplyEvents(env, events, ctx) {
       if (ev.assignee && ev.assignee !== 'null') {
         const who = atMatchUser(ev.assignee, users);
         const prevId = atAssigneeId(task, users);
-        task.owner = who ? who.name : String(ev.assignee).slice(0, 80);
-        task.assigneeId = who ? who.id : null;
-        if (who && who.id !== prevId) assigned.push([task, src]);
+        if (who && who.id !== prevId && botNamedIn(src, who)) {
+          Object.assign(task, { owner: who.name, assigneeId: who.id });
+          assigned.push([task, src]);
+        }
       }
       if (dueMs) task.due = botIsoMsk(dueMs);
       if (ev.status === 'taken' && !task.takenAt) task.takenAt = src ? new Date(src.t).toISOString() : nowIso;
-      if (ev.status === 'done' && task.status === 'open') {
-        // Internal tasks have nothing to pass on to the client — done closes them.
-        Object.assign(task, { status: atNeedsInform(task, users) ? 'done' : 'closed', doneAt: src ? new Date(src.t).toISOString() : nowIso });
-        if (task.status === 'done') finished.push([task, src]);
+      // The bot never closes a task itself: "done" / "клиенту сообщили" / "отменена" read from the chat
+      // only mark it (task.hint) and ask the person to confirm with a button.
+      const closes = (ev.status === 'done' || ev.status === 'cancelled') ? task.status === 'open'
+        : ev.status === 'informed' ? task.status === 'open' || task.status === 'done' : false;
+      if (closes && (!task.hint || task.hint.status !== ev.status)) {
+        task.hint = { status: ev.status, at: src ? new Date(src.t).toISOString() : nowIso, msgId: src ? src.id : null, from: src ? src.from : null, text: src ? String(src.text).slice(0, 200) : null };
+        hinted.push(task);
       }
-      if (ev.status === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || nowIso, informedAt: src ? new Date(src.t).toISOString() : nowIso });
-      if (ev.status === 'cancelled') task.status = 'cancelled';
       task.updatedAt = nowIso;
-      task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: 'Бот', what: `обновил по переписке${ev.status ? ` (${ { taken: 'взяли в работу', done: 'сделано', informed: 'клиенту сообщили', cancelled: 'отменена' }[ev.status] || ev.status })` : ''}` }].slice(-20);
+      const label = { taken: 'взяли в работу', done: 'похоже, сделано — ждёт подтверждения', informed: 'похоже, клиенту сообщили — ждёт подтверждения', cancelled: 'похоже, не нужна — ждёт подтверждения' }[ev.status];
+      task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: 'Бот', what: `по переписке${label ? `: ${label}` : ''}` }].slice(-20);
       await kv.put(`task:${task.id}`, JSON.stringify(task));
       touched.push(task.id);
     }
@@ -4794,12 +4810,20 @@ async function botApplyEvents(env, events, ctx) {
       extra: { ...atTgButtons(task, true), disable_notification: true },
     });
   }
-  // Done in the chat → «Сообщите клиенту», unless the manager said it themselves or the task was
-  // already reported in the same batch.
-  for (const [task, src] of finished) {
-    if (task.status !== 'done') continue;
-    const by = src ? atMatchUser(src.from, users) : null;
-    await atNotifyInform(env, ctx.team, task, src ? src.from : null, by ? [by.id] : []);
+  // "Похоже, сделано": the assignee (for «клиенту сообщили» — the client manager) confirms with a button.
+  for (const task of hinted) {
+    const h = task.hint;
+    const projectName = task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName;
+    const to = h.status === 'informed'
+      ? users.filter((u) => u.role === 'manager' && u.active).map((u) => u.id)
+      : [atAssigneeId(task, users)].filter(Boolean);
+    if (!to.length) continue;
+    const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
+    const action = { done: ['✅ Да, готово', 'done'], informed: ['✅ Да, закрыть', 'close'], cancelled: ['✖️ Да, отменить', 'cancel'] }[h.status];
+    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' }, {
+      text: `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectName)}${h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : ''}`,
+      extra: { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], [{ text: 'Открыть в трекере', url: atTaskUrl(task.id) }]] }, disable_notification: true },
+    });
   }
 }
 
@@ -4872,7 +4896,8 @@ async function botBuildSummary(env, nowMs) {
   const ownerId = (team.users.find((u) => u.role === 'owner') || {}).id;
   const open = tasks.filter((t) => t.status === 'open');
   const overdue = open.filter((t) => botDueMs(t) && botDueMs(t) < nowMs).sort((a, b) => botDueMs(a) - botDueMs(b));
-  const noDue = open.filter((t) => !botDueMs(t) && botWorkingMinutes(Date.parse(t.startedAt || t.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN);
+  const unclaimed = open.filter((t) => atIsUnclaimed(t, team.users));
+  const noDue = open.filter((t) => !botDueMs(t) && !atIsUnclaimed(t, team.users) && botWorkingMinutes(Date.parse(t.startedAt || t.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN);
   const notInformed = tasks.filter((t) => t.status === 'done' && t.doneAt && atNeedsInform(t, team.users) && botWorkingMinutes(Date.parse(t.doneAt), nowMs) >= BOT_NOT_INFORMED_WMIN)
     .sort((a, b) => Date.parse(a.doneAt) - Date.parse(b.doneAt));
   const notPassed = open.filter((t) => t.notified && t.notified.handoff && t.notified.handoff !== 'ok' && !t.takenAt);
@@ -4886,6 +4911,11 @@ async function botBuildSummary(env, nowMs) {
   const lines = [`☀️ <b>Сводка на ${wd}, ${botShortDate(botMskStartOfDay(nowMs) + 12 * 3600000).slice(0, 5)}</b>`];
   lines.push(`Открыто задач: <b>${open.length}</b> · просрочено: <b>${overdue.length}</b>${noDue.length ? ` · без срока: <b>${noDue.length}</b>` : ''}`);
   if (state.limited) lines.push('⚠️ ИИ бота на лимите — последние сообщения из чатов ещё не разобраны.');
+  if (unclaimed.length) {
+    lines.push('', `🙋 <b>Ничьи задачи из чатов: ${unclaimed.length}</b> — никто не взял, в трекере они наверху`);
+    lines.push(...unclaimed.slice(0, 8).map((t) => botOwnerTaskLine(t, byId, nowMs, 'since')));
+    if (unclaimed.length > 8) lines.push(`  …и ещё ${unclaimed.length - 8} — в трекере`);
+  }
   if (overdue.length) lines.push('', `🔴 <b>Просрочено: ${overdue.length}</b> — у кого`, ...botTasksByPerson(overdue, team, byId, nowMs, 'overdue', ownerId));
   if (notInformed.length) {
     lines.push('', `📨 <b>Сделано, но клиенту не сообщили: ${notInformed.length}</b> — сообщает ${escapeHtml(managers)}`);
@@ -4910,7 +4940,7 @@ async function botBuildSummary(env, nowMs) {
     lines.push(...noDue.slice(0, 6).map((t) => botOwnerTaskLine(t, byId, nowMs, 'since')));
     if (noDue.length > 6) lines.push(`  …и ещё ${noDue.length - 6} — в трекере`);
   }
-  if (!overdue.length && !notInformed.length && !notPassed.length && !pending.length && !noDue.length) lines.push('', 'Всё в порядке: просрочек нет, клиенты не ждут ✅');
+  if (!unclaimed.length && !overdue.length && !notInformed.length && !notPassed.length && !pending.length && !noDue.length) lines.push('', 'Всё в порядке: просрочек нет, клиенты не ждут ✅');
   return lines.join('\n');
 }
 
@@ -5002,7 +5032,7 @@ async function botRunChecks(env, nowMs) {
         task.notified.overdue = new Date(nowMs).toISOString();
         changed = true;
       }
-      if (!due && !task.notified.noDue && botWorkingMinutes(Date.parse(task.startedAt || task.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN) {
+      if (!due && !task.notified.noDue && !atIsUnclaimed(task, team.users) && botWorkingMinutes(Date.parse(task.startedAt || task.createdAt), nowMs) >= BOT_NO_DUE_AFTER_WMIN) {
         noDue.push(task);
         task.notified.noDue = new Date(nowMs).toISOString();
         changed = true;
@@ -5648,6 +5678,10 @@ function atAssigneeId(task, users) {
   const u = task.owner ? atMatchUser(task.owner, users) : null;
   return u ? u.id : null;
 }
+// Found by the bot with nobody named: waits at the top of the tracker for someone to take it.
+function atIsUnclaimed(task, users) {
+  return !!task && task.status === 'open' && !atAssigneeId(task, users) && !task.owner;
+}
 function atIsTrackerTask(t) {
   return !!t && (t.source === 'bot' || t.source === 'tracker');
 }
@@ -5746,6 +5780,8 @@ function atPublicTask(t, users) {
     doneAt: t.doneAt || null,
     informedAt: t.informedAt || null,
     due: t.due || null,
+    suggestedDue: t.suggestedDue || null,
+    hint: t.hint && t.status !== 'closed' && t.status !== 'cancelled' ? { status: t.hint.status, at: t.hint.at, from: t.hint.from || null } : null,
     priority: AT_PRIORITIES.includes(t.priority) ? t.priority : 'normal',
     projectId: t.projectId || null,
     topicName: t.topicName || null,
@@ -5912,6 +5948,7 @@ async function atSaveTask(env, team, user, input) {
     if (existing) changes.push(`приоритет → ${AT_PRIORITY_LABEL[input.priority]}`);
   }
   let statusChange = null;
+  if ('status' in input && task.hint) delete task.hint; // a person decided — the bot's guess is settled
   if ('status' in input) {
     const inform = atNeedsInform(task, team.users);
     // Nothing to tell the client about an internal task, so «готово» closes it.
@@ -6980,6 +7017,12 @@ async function atBuildMyTasks(env, user, digest) {
     }
   }
   const seesInform = user.role === 'manager' || user.role === 'owner' || user.role === 'assistant';
+  const unclaimed = all.filter((t) => atIsUnclaimed(t, team.users));
+  if (unclaimed.length) {
+    lines.push('', `🙋 <b>Ничьи задачи из чатов: ${unclaimed.length}</b> — посмотрите, нет ли среди них ваших, и возьмите в трекере:`);
+    for (const t of unclaimed.slice(0, 8)) lines.push(`• <a href="${escapeHtml(atTaskUrl(t.id))}">${escapeHtml(t.text)}</a> — <i>${escapeHtml(clientOf(t))}</i>`);
+    if (unclaimed.length > 8) lines.push(`…и ещё ${unclaimed.length - 8} — в трекере.`);
+  }
   if (doneMine.length && !seesInform) { // the manager sees these in «сообщить клиентам» below
     lines.push('', `✅ <b>Сделано, ждёт сообщения клиенту: ${doneMine.length}</b>`);
     for (const t of doneMine) lines.push(`• ${escapeHtml(t.text)} — <i>${escapeHtml(clientOf(t))}</i>`);
@@ -7014,14 +7057,17 @@ async function atStaleClients(env, tasks, byId, nowMs) {
 // «Беру в работу» / «Готово» under a task message.
 async function atOnCallback(env, cq) {
   const answer = (text) => botApi(env, 'answerCallbackQuery', { callback_query_id: cq.id, text });
-  const m = String(cq.data || '').match(/^at:(take|done):([A-Za-z0-9_-]{1,40})$/);
+  const m = String(cq.data || '').match(/^at:(take|done|close|cancel):([A-Za-z0-9_-]{1,40})$/);
   if (!m) return answer('');
   const team = await atGetTeam(env);
   const user = team.users.find((u) => u.active && u.tgId && String(u.tgId) === String(cq.from && cq.from.id));
   if (!user) return answer('Нет доступа к Avito Tasks');
-  const res = await atSaveTask(env, team, user, { id: m[2], status: m[1] === 'take' ? 'progress' : 'done' });
+  const current = await env.AGENCY_DASHBOARD_KV.get(`task:${m[2]}`, 'json');
+  const claim = current && m[1] === 'take' && atIsUnclaimed(current, team.users) ? { assigneeId: user.id } : {};
+  const status = { take: 'progress', done: 'done', close: 'closed', cancel: 'cancelled' }[m[1]];
+  const res = await atSaveTask(env, team, user, { id: m[2], status, ...claim });
   if (res.error) return answer(res.error === 'not_found' ? 'Задача удалена' : 'Не получилось');
-  await answer(m[1] === 'take' ? 'Взято в работу ▶️' : 'Отмечено: готово ✅');
+  await answer({ take: 'Взято в работу ▶️', done: 'Отмечено: готово ✅', close: 'Закрыто: клиенту сообщили ✅', cancel: 'Задача отменена' }[m[1]]);
   if (cq.message) {
     await botApi(env, 'editMessageReplyMarkup', {
       chat_id: cq.message.chat.id,

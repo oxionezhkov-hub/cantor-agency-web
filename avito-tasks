@@ -179,6 +179,21 @@ a{color:inherit}
 .filters .select{width:auto;min-width:0;max-width:220px;min-height:34px;padding:5px 30px 5px 12px;font-size:13px;border-radius:999px}
 .filters .select.set{border-color:var(--ink);font-weight:600}
 .st-wrap{position:relative}
+/* выпадающие списки в нашем стиле: настоящий <select> скрыт, вместо него кнопка и плавающее меню */
+.dd-native{position:absolute!important;opacity:0;pointer-events:none;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;border:0!important;overflow:hidden}
+.dd-btn{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.dd-btn[disabled]{opacity:.6;cursor:default}
+.dd-btn.dd-on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.dd-pop{position:fixed;z-index:80;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:6px;display:flex;flex-direction:column;animation:drop .14s ease-out;max-width:calc(100vw - 16px)}
+.dd-pop .dd-search{margin:2px 2px 6px;min-height:36px;font-size:14px;border-radius:999px}
+.dd-list{overflow:auto;overscroll-behavior:contain;display:grid;gap:1px}
+.dd-opt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:10px;font-size:14px;color:var(--text);line-height:1.35}
+.dd-opt:hover,.dd-opt:focus-visible{background:var(--sunken);outline:none}
+.dd-opt .ic{width:16px;height:16px;color:var(--accent);visibility:hidden;flex:none}
+.dd-opt.on{color:var(--ink);font-weight:600}
+.dd-opt.on .ic{visibility:visible}
+.dd-group{font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px 2px}
+.dd-empty{padding:10px;color:var(--muted);font-size:13px}
 .st-btn{text-align:left;white-space:nowrap;overflow:hidden}
 .st-pop{position:absolute;left:0;top:calc(100% + 6px);z-index:35;width:270px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:8px;animation:drop .14s ease-out}
 .st-pop .st-presets{display:flex;gap:6px;padding:2px 2px 8px;border-bottom:1px solid var(--line-2);margin-bottom:6px}
@@ -248,6 +263,12 @@ a{color:inherit}
 .task.expanded .t-chev{transform:rotate(180deg)}
 
 /* inline editor */
+.claim-sec .sec-sub{font-size:13px;color:var(--muted);margin:-6px 2px 10px}
+.task.unclaimed{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 0 0 3px var(--accent-ring)}
+.claim-btn{min-height:30px;padding:0 12px;font-size:12.5px}
+.tag-hint{background:var(--green-bg);color:var(--green)}
+.claim{border-top:1px solid var(--line-2);background:var(--surface-2);padding:14px 16px;display:grid;gap:12px;animation:open .16s ease-out}
+.claim-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .editor{border-top:1px solid var(--line-2);background:var(--surface-2);padding:16px 16px 14px;display:grid;gap:14px;animation:open .16s ease-out}
 @keyframes open{from{opacity:0;transform:translateY(-4px)}}
 .ed-title{font-size:16px;font-weight:600;color:var(--ink);min-height:44px}
@@ -768,7 +789,7 @@ const S = {
   ver: null, bot: null, tgStart: null,
   view: 'tasks', expanded: null,
   f: { scope: prefs.scope, q: '', client: '', assignee: '', status: normStatuses(prefs.status), priority: '', group: prefs.group },
-  draft: null, team: null, freshMember: null,
+  draft: null, team: null, freshMember: null, claim: null,
   lastSync: 0, syncing: false, offline: false, pendingRender: false,
 };
 function savePrefs() {
@@ -778,6 +799,122 @@ function savePrefs() {
 
 // ── helpers ──
 const $ = (id) => document.getElementById(id);
+
+// ── выпадающие списки в нашем стиле ──
+// Каждый <select class="select"> на странице сам получает кнопку и меню в нашем дизайне. Настоящий
+// select остаётся (скрытым): хранит значение и шлёт change, так что остальной код ничего не замечает.
+const DD = { open: null };
+const _selValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+Object.defineProperty(HTMLSelectElement.prototype, 'value', {
+  configurable: true, enumerable: true,
+  get() { return _selValue.get.call(this); },
+  set(v) { _selValue.set.call(this, v); if (this._dd) this._dd.sync(); },
+});
+function ddEnhance(sel) {
+  if (sel._dd) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.setAttribute('aria-haspopup', 'listbox');
+  sel.after(btn);
+  const sync = () => {
+    const o = sel.options[sel.selectedIndex];
+    btn.className = `${sel.className.replace(/\bdd-native\b/g, '').trim()} dd-btn${DD.open && DD.open.sel === sel ? ' dd-on' : ''}`;
+    btn.textContent = o ? o.textContent : '';
+    btn.disabled = sel.disabled;
+    const lab = sel.getAttribute('aria-label') || (sel.labels && sel.labels[0] && sel.labels[0].textContent);
+    if (lab) btn.setAttribute('aria-label', `${lab}: ${btn.textContent}`);
+  };
+  sel._dd = { btn, sync };
+  sel.classList.add('dd-native');
+  sel.tabIndex = -1;
+  sync();
+  new MutationObserver(sync).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled'] });
+  btn.addEventListener('click', () => (DD.open && DD.open.sel === sel ? ddClose() : ddOpen(sel)));
+  btn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); ddOpen(sel); } });
+  if (sel.labels) sel.labels.forEach((l) => l.addEventListener('click', (e) => { e.preventDefault(); btn.focus(); }));
+}
+function ddOpen(sel) {
+  ddClose();
+  const btn = sel._dd.btn;
+  const pop = document.createElement('div');
+  pop.className = 'dd-pop';
+  pop.setAttribute('role', 'listbox');
+  const opts = [...sel.options];
+  const many = opts.length > 8;
+  pop.innerHTML = `${many ? '<input class="input dd-search" type="search" placeholder="Поиск" autocomplete="off">' : ''}<div class="dd-list"></div>`;
+  const list = pop.querySelector('.dd-list');
+  const fill = (q) => {
+    const norm = (v) => v.toLowerCase().replace(/ё/g, 'е');
+    let html = '';
+    let lastGroup = null;
+    for (const o of opts) {
+      if (q && !norm(o.textContent).includes(norm(q))) continue;
+      const g = o.parentElement && o.parentElement.tagName === 'OPTGROUP' ? o.parentElement.label : null;
+      if (g && g !== lastGroup) html += `<div class="dd-group">${esc(g)}</div>`;
+      lastGroup = g;
+      html += `<button type="button" class="dd-opt ${o.selected ? 'on' : ''}" role="option" aria-selected="${o.selected}" data-v="${esc(o.value)}" ${o.disabled ? 'disabled' : ''}>${ico('check')}<span>${esc(o.textContent)}</span></button>`;
+    }
+    list.innerHTML = html || '<div class="dd-empty">Ничего не нашлось</div>';
+  };
+  fill('');
+  document.body.appendChild(pop);
+  DD.open = { sel, pop, many };
+  sel._dd.sync();
+  ddPlace();
+  const search = pop.querySelector('.dd-search');
+  if (search) search.addEventListener('input', () => fill(search.value.trim()));
+  pop.addEventListener('click', (e) => {
+    const b = e.target.closest('.dd-opt');
+    if (!b) return;
+    const changed = sel.value !== b.dataset.v;
+    sel.value = b.dataset.v;
+    ddClose(true);
+    if (changed) sel.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  pop.addEventListener('keydown', (e) => {
+    const items = [...pop.querySelectorAll('.dd-opt:not([disabled])')];
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); (items[i + 1] || items[0]).focus(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); (i > 0 ? items[i - 1] : search || items[items.length - 1]).focus(); }
+    if (e.key === 'Enter' && document.activeElement === search && items[0]) { e.preventDefault(); items[0].click(); }
+    if (e.key === 'Tab') ddClose(true);
+  });
+  const focusTo = (search && !('ontouchstart' in window)) ? search : pop.querySelector('.dd-opt.on') || pop.querySelector('.dd-opt');
+  if (focusTo) focusTo.focus({ preventScroll: true });
+}
+// Под кнопкой, а если внизу тесно — над ней. Зовётся и при прокрутке: меню едет вместе с кнопкой.
+function ddPlace() {
+  const o = DD.open;
+  if (!o) return;
+  const r = o.sel._dd.btn.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > window.innerHeight || !r.width) return ddClose();
+  const width = Math.min(Math.max(r.width, 220), 340, window.innerWidth - 16);
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+  const below = window.innerHeight - r.bottom - 12;
+  const above = r.top - 12;
+  const up = below < 240 && above > below;
+  const maxH = Math.min(360, Math.max(140, up ? above : below));
+  Object.assign(o.pop.style, { left: `${left}px`, width: `${width}px`, maxHeight: `${maxH}px`, top: up ? '' : `${r.bottom + 6}px`, bottom: up ? `${window.innerHeight - r.top + 6}px` : '' });
+  o.pop.querySelector('.dd-list').style.maxHeight = `${maxH - (o.many ? 56 : 12)}px`;
+}
+function ddClose(refocus) {
+  const o = DD.open;
+  if (!o) return;
+  DD.open = null;
+  o.pop.remove();
+  if (o.sel._dd) o.sel._dd.sync();
+  if (refocus && document.contains(o.sel._dd.btn)) o.sel._dd.btn.focus({ preventScroll: true });
+  if (S.pendingRender) setTimeout(() => { if (!isEditing()) render(); }, 0);
+}
+document.addEventListener('mousedown', (e) => { if (DD.open && !DD.open.pop.contains(e.target) && e.target !== DD.open.sel._dd.btn) ddClose(); }, true);
+document.addEventListener('touchstart', (e) => { if (DD.open && !DD.open.pop.contains(e.target) && e.target !== DD.open.sel._dd.btn) ddClose(); }, { capture: true, passive: true });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && DD.open) { e.stopPropagation(); ddClose(true); } }, true);
+window.addEventListener('resize', ddPlace);
+document.addEventListener('scroll', (e) => { if (DD.open && !DD.open.pop.contains(e.target)) ddPlace(); }, true);
+function ddScan(root) { (root.querySelectorAll ? root.querySelectorAll('select.select') : []).forEach(ddEnhance); if (root.matches && root.matches('select.select')) ddEnhance(root); }
+new MutationObserver((muts) => { for (const m of muts) m.addedNodes.forEach((n) => { if (n.nodeType === 1) ddScan(n); }); })
+  .observe(document.documentElement, { childList: true, subtree: true });
+ddScan(document); // скрипт стоит в конце страницы — статичные списки уже есть
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ico = (name, cls) => `<svg class="ic ${cls || ''}"><use href="#i-${name}"/></svg>`;
 const first = (name) => String(name || '').trim().split(/\s+/)[0] || '';
@@ -1029,6 +1166,7 @@ function applySync(d, fromCache) {
 
 function isEditing() {
   const a = document.activeElement;
+  if (DD.open) return true; // открыто выпадающее меню — не перерисовываем под ним
   return a && a.closest && a.closest('#view-tasks, #view-clients, #view-team, #view-activity, #view-kb') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
@@ -1175,6 +1313,17 @@ const PRIO = { urgent: ['Срочно', 'var(--p-urgent)'], high: ['Высоки
 const STATUS = { new: 'Новая', progress: 'В работе', done: 'Готово — сообщить клиенту', closed: 'Закрыта', cancelled: 'Отменена' };
 
 // ── фильтры ──
+// Клиент, исполнитель, приоритет и поиск — без «Все/Мои» и статусов (ими же фильтруются «ничьи» задачи).
+function matchesBasics(t) {
+  const f = S.f;
+  if (f.client && (t.projectId || '__none') !== f.client) return false;
+  if (f.priority && (t.priority || 'normal') !== f.priority) return false;
+  if (f.q) {
+    const hay = `${t.text} ${t.note} ${clientName(t)}`.toLowerCase().replace(/ё/g, 'е');
+    if (!f.q.toLowerCase().replace(/ё/g, 'е').split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false;
+  }
+  return true;
+}
 function matches(t, now) {
   const f = S.f;
   if (f.scope === 'mine' && t.assigneeId !== S.me.id) return false;
@@ -1311,7 +1460,11 @@ function byUrgency(now) { return (a, b) => urgency(b, now) - urgency(a, now) || 
 
 function renderLists() {
   const now = Date.now();
-  const list = S.tasks.filter((t) => matches(t, now));
+  // Ничьи задачи (бот нашёл в чате, исполнитель не назван) — над всеми, пока кто-нибудь не возьмёт.
+  const unclaimed = S.f.scope === 'byme' || S.f.assignee ? [] : S.tasks.filter((t) => isUnclaimed(t) && matchesBasics(t))
+    .sort((a, b) => String(b.startedAt || b.createdAt).localeCompare(String(a.startedAt || a.createdAt)));
+  const unIds = new Set(unclaimed.map((t) => t.id));
+  const list = S.tasks.filter((t) => !unIds.has(t.id) && matches(t, now));
   const sort = byUrgency(now);
   const informFirst = canSeeClients() && !stIs('done');
   const inform = informFirst ? list.filter((t) => needsInform(t) && t.assigneeId !== S.me.id).sort(sort) : [];
@@ -1321,6 +1474,11 @@ function renderLists() {
   // Главное — до трёх горящих задач: подсвечены и с причиной.
   const focus = new Set(mine.filter((t) => isOpen(t) && urgency(t, now) >= 150).slice(0, 3).map((t) => t.id));
   let html = '';
+  if (unclaimed.length) {
+    html += `<div class="section claim-sec"><div class="sec-head"><h2>Ничьи задачи — кто возьмёт?</h2><span class="n">${unclaimed.length}</span></div>`
+      + '<div class="sec-sub">Бот нашёл их в чатах, но исполнитель не назван. Нажмите «Взять задачу» — выберите, кто делает, срок и приоритет.</div>'
+      + unclaimed.map((t) => card(t, now)).join('') + '</div>';
+  }
   if (S.f.scope !== 'byme' || mine.length) {
     html += `<div class="section"><div class="sec-head"><h2>Мои задачи</h2><span class="n">${mine.length}</span></div>`;
     html += mine.length ? mine.map((t) => card(t, now, focus.has(t.id))).join('') : `<div class="empty">${S.f.q || S.f.client || S.f.priority || !stActive() ? 'Ничего не нашлось по фильтрам' : 'На вас сейчас ничего нет 🎉'}</div>`;
@@ -1394,10 +1552,16 @@ function card(t, now, focus) {
   if (sk === 'done') tags.push(`<span class="tag tag-done">${needsInform(t) ? 'готово · сообщить клиенту' : 'готово'}</span>`);
   if (t.internal && isOpen(t)) tags.push('<span class="tag" title="Задача внутри команды: клиенту сообщать не нужно, клиентскому менеджеру не приходит">внутренняя</span>');
   if (sk === 'cancelled') tags.push('<span class="tag tag-cancelled">отменена</span>');
+  if (t.hint && (isOpen(t) || t.status === 'done')) {
+    const hl = { done: 'похоже, сделано', informed: 'похоже, клиенту сообщили', cancelled: 'похоже, не нужна' }[t.hint.status] || '';
+    tags.push(`<span class="tag tag-hint" title="Так решил бот по переписке${t.hint.from ? ` (${esc(t.hint.from)})` : ''}. Сам он статус не меняет — подтвердите, если так.">${ico('bot', 'ic-sm')}${hl}?</span>`);
+  }
+  const unclaimed = isUnclaimed(t);
+  const claiming = unclaimed && S.claim && S.claim.id === t.id;
   const assignee = u ? `<span>${avatar(u, 'xs')}${esc(u.id === S.me.id ? 'я' : first(u.name))}</span>` : t.owner ? `<span>${esc(t.owner)}</span>` : '<span>без исполнителя</span>';
   const pc = isOpen(t) ? PRIO[t.priority] && t.priority !== 'normal' ? PRIO[t.priority][1] : 'transparent' : 'transparent';
   const expanded = S.expanded === t.id;
-  return `<article class="task ${sk} ${focus ? 'focus' : ''} ${expanded ? 'expanded' : ''}" data-id="${esc(t.id)}" style="--pc:${pc}">
+  return `<article class="task ${sk} ${focus ? 'focus' : ''} ${expanded ? 'expanded' : ''} ${unclaimed ? 'unclaimed' : ''}" data-id="${esc(t.id)}" style="--pc:${pc}">
     <div class="t-row" data-act="expand">
       <button class="check ${checkClass(t)}" data-act="check" aria-label="${isOpen(t) ? 'Отметить готовой' : 'Изменить статус'}" title="${esc(STATUS[sk] || '')}">${ico(t.status === 'cancelled' ? 'x' : 'check')}</button>
       <div style="min-width:0">
@@ -1411,11 +1575,12 @@ function card(t, now, focus) {
         </div>
       </div>
       <div class="t-side">
+        ${unclaimed && !claiming ? `<button class="btn btn-primary claim-btn" data-act="claim">${ico('plus', 'ic-sm')}Взять задачу</button>` : ''}
         ${t.link ? `<a class="tg-link tg" href="${esc(t.link)}" title="Открыть сообщение в Telegram" data-act="none">${ico('tg')}</a>` : ''}
         <span class="t-chev">${ico('chev')}</span>
       </div>
     </div>
-    ${expanded ? editor(t, now) : ''}
+    ${claiming ? claimPanel(t, now) : expanded ? editor(t, now) : ''}
   </article>`;
 }
 
@@ -1441,6 +1606,24 @@ function clientOptions(cur) {
 }
 function userOptions(cur) {
   return `<option value="">Без исполнителя</option>` + S.users.filter((u) => u.active || u.id === cur).map((u) => `<option value="${esc(u.id)}" ${u.id === cur ? 'selected' : ''}>${esc(u.name)}${u.id === S.me.id ? ' (я)' : ''} — ${esc(u.roleLabel)}</option>`).join('');
+}
+function claimPanel(t, now) {
+  const c = S.claim;
+  const hint = t.suggestedDue ? Date.parse(t.suggestedDue) : null;
+  return `<div class="claim" data-claim>
+    <div class="grid2">
+      <div><label class="label">Кто делает</label><select class="select" data-c="assigneeId">${userOptions(c.assigneeId).replace('<option value="">Без исполнителя</option>', '')}</select></div>
+      <div><label class="label">Клиент</label><select class="select" data-c="projectId">${clientOptions(c.projectId)}</select></div>
+    </div>
+    <div><label class="label">Срок${hint ? ` · в сообщении: ${esc(fmtDay(hint, now))} ${fmtTime(hint)}` : ''}</label>${dueChips(c.due, now)}</div>
+    <div><label class="label">Приоритет</label>${prioPills(c.priority)}</div>
+    <div class="claim-foot">
+      <button type="button" class="btn btn-quiet btn-sm btn-danger" data-act="claim-reject">Это не задача</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn btn-ghost btn-sm" data-act="claim-cancel">Отмена</button>
+      <button type="button" class="btn btn-primary btn-sm" data-act="claim-save">${ico('check', 'ic-sm')}Взять</button>
+    </div>
+  </div>`;
 }
 function editor(t, now) {
   const sk = statusKey(t);
@@ -1495,6 +1678,7 @@ function applyLocal(t, patch) {
   if ('due' in patch) t.due = patch.due ? patch.due + ':00+03:00' : null;
   if ('status' in patch) {
     const s = patch.status;
+    t.hint = null; // решение человека снимает догадку бота
     if (s === 'new') Object.assign(t, { status: 'open', takenAt: null });
     if (s === 'progress') Object.assign(t, { status: 'open', takenAt: t.takenAt || now });
     const inform = t.projectId && !t.internal;
@@ -1575,6 +1759,39 @@ $('lists').addEventListener('click', (e) => {
   const t = taskById(id);
   if (!t) return;
   if (e.target.closest('a')) return;
+  // «Взять задачу»: исполнитель, срок и приоритет — и только тогда задача становится чьей-то.
+  if (act && act.dataset.act === 'claim') {
+    S.expanded = null;
+    S.claim = { id, assigneeId: S.me.id, projectId: t.projectId || '', due: t.suggestedDue ? toInput(Date.parse(t.suggestedDue)) : null, priority: t.priority || 'normal' };
+    rerenderCard(id);
+    return;
+  }
+  if (e.target.closest('[data-claim]')) {
+    const c = S.claim;
+    const due = e.target.closest('[data-due]');
+    if (due) { c.due = due.dataset.due || null; rerenderCard(id); return; }
+    const prio = e.target.closest('[data-prio]');
+    if (prio) { c.priority = prio.dataset.prio; rerenderCard(id); return; }
+    if (act && act.dataset.act === 'claim-cancel') { S.claim = null; rerenderCard(id); return; }
+    if (act && act.dataset.act === 'claim-reject') {
+      S.claim = null;
+      saveTask(id, { status: 'cancelled' });
+      renderLists();
+      toast('Убрано: это не задача', 'Отменить', () => { saveTask(id, { status: 'new' }); renderLists(); });
+      return;
+    }
+    if (act && act.dataset.act === 'claim-save') {
+      if (!c.assigneeId) return toast('Выберите, кто будет делать задачу');
+      S.claim = null;
+      const mine = c.assigneeId === S.me.id;
+      saveTask(id, { assigneeId: c.assigneeId, projectId: c.projectId || null, due: c.due || null, priority: c.priority, status: mine ? 'progress' : 'new' });
+      renderLists();
+      const u = userById(c.assigneeId);
+      toast(mine ? 'Задача ваша — в работе' : `Задача передана: ${first(u ? u.name : '')}`);
+      return;
+    }
+    return;
+  }
   if (act && act.dataset.act === 'check') {
     e.stopPropagation();
     const before = statusKey(t);
@@ -1612,6 +1829,11 @@ $('lists').addEventListener('click', (e) => {
   }
 });
 $('lists').addEventListener('change', (e) => {
+  if (e.target.closest('[data-claim]') && S.claim) {
+    const k = e.target.dataset.c || (e.target.dataset.f === 'due' ? 'due' : null);
+    if (k) { S.claim[k] = e.target.value || (k === 'due' ? null : ''); if (k === 'due') rerenderCard(S.claim.id); }
+    return;
+  }
   const f = e.target.dataset.f;
   const cardEl = e.target.closest('.task');
   if (!f || !cardEl) return;
@@ -1728,6 +1950,7 @@ $('fab').addEventListener('click', () => openComposer());
 const CLIENT_STALE_MS = 24 * 3600000; // ждёт ответа больше суток — бот уже не напоминает
 const CF = { q: '', show: '' }; // поиск и фильтр-плашка: '' | 'waiting' | 'red' | 'inform' | 'green'
 let linksOpen = null; // id клиента, у которого открыта правка ссылок
+function isUnclaimed(t) { return isOpen(t) && !t.assigneeId && !t.owner; }
 function needsInform(t) { return t.status === 'done' && t.projectId && !t.internal; }
 function clientInfo(p) {
   const now = Date.now();
