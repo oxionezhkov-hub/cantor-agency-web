@@ -880,6 +880,11 @@ function showGate(kind) {
   }[kind] || [];
   $('gateTitle').textContent = texts[0];
   $('gateText').textContent = texts[1];
+  // Встроенный браузер Telegram не всегда помнит вход: подсказываем, как войти без писем Олегу.
+  // На iPhone браузер Telegram не всегда называет себя в userAgent — подсказка нужна любому телефону.
+  if (kind === 'none' && (/Telegram/i.test(navigator.userAgent) || window.TelegramWebviewProxy || /iPhone|Android/i.test(navigator.userAgent))) {
+    $('gateText').textContent = 'Если открыли из Telegram: встроенный браузер Telegram может не помнить вход. Нажмите кнопку «Открыть в трекере» в сообщении бота — она входит сразу, или откройте свою личную ссылку в Safari / Chrome (⋯ → «Открыть в браузере»). Нет ссылки — напишите Олегу.';
+  }
   document.title = 'Avito Tasks — нет доступа';
 }
 function signOut(kind) {
@@ -894,14 +899,21 @@ async function boot() {
   if (invite) {
     params.delete('invite');
     const qs = params.toString();
-    history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+    const bare = location.pathname + (qs ? '?' + qs : '') + location.hash;
     try {
       const res = await api('activate', { invite });
       if (res.ok && res.data.token) {
         if (S.token !== res.data.token) store.del(K_CACHE);
         S.token = res.data.token; store.set(K_TOKEN, S.token);
         S.justActivated = res.data.me;
-      } else if (!S.token) return showGate(res.data.error === 'blocked' ? 'blocked' : 'invite');
+        // Встроенный браузер Telegram может не сохранять вход — тогда ссылка-приглашение остаётся
+        // в адресе, и обновление страницы снова пускает внутрь, а не показывает «Нет доступа».
+        if (store.get(K_TOKEN) === S.token) history.replaceState(null, '', bare);
+        else S.noStorage = true;
+      } else {
+        history.replaceState(null, '', bare);
+        if (!S.token) return showGate(res.data.error === 'blocked' ? 'blocked' : 'invite');
+      }
     } catch (e) {
       if (!S.token) { showGate('none'); $('gateTitle').textContent = 'Нет связи'; $('gateText').textContent = 'Не получилось связаться с сервером. Проверьте интернет и обновите страницу.'; return; }
     }
