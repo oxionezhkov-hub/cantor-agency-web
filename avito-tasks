@@ -363,6 +363,8 @@ a{color:inherit}
 .axis-row{display:grid;grid-template-columns:96px minmax(0,1fr);column-gap:10px;margin:0 17px 6px}
 .p-where{font-size:12.5px;color:var(--muted);margin-top:9px}
 .p-where b{color:var(--text);font-weight:600}
+.p-where a{text-decoration:none}
+.p-where a:hover b{color:var(--accent)}
 .tip{position:fixed;z-index:70;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:10px;pointer-events:none;box-shadow:var(--shadow-lg);max-width:240px}
 .week{width:100%;border-collapse:separate;border-spacing:4px;font-size:12.5px}
 .week th{font-weight:600;color:var(--muted);text-align:left;padding:4px 6px;white-space:nowrap}
@@ -658,7 +660,7 @@ a{color:inherit}
       <div class="hello">
         <div>
           <h1>Активность команды</h1>
-          <div class="sub">Когда кто работал: время в трекере, сообщения в чатах и действия с задачами. По часам, московское время.</div>
+          <div class="sub">Когда кто работал: время и заходы в трекер и на сайт (база знаний, дашборд и другие рабочие страницы), сообщения в чатах и действия с задачами. По часам, московское время.</div>
         </div>
       </div>
       <div class="act-top">
@@ -1999,7 +2001,15 @@ function actPeople() {
   Object.entries(D.others).forEach(([k, name]) => list.push({ key: k, user: { id: k, name }, name, sub: 'пишет в чатах, нет в трекере', inTeam: false }));
   return list;
 }
-function activeHours(r) { let n = 0; for (let h = 0; h < 24; h += 1) if ((r.p[h] || 0) + (r.c[h] || 0) + (r.a[h] || 0)) n += 1; return n; }
+const ACT_KEYS = ['p', 'po', 's', 'so', 'c', 'a'];
+function activeHours(r) { let n = 0; for (let h = 0; h < 24; h += 1) if (ACT_KEYS.some((k) => r[k] && r[k][h])) n += 1; return n; }
+// «Трекер» / «Сайт»: минуты и заходы. Заход без действий на странице всё равно отмечает час.
+function visitsLabel(mins, opens) {
+  const parts = [];
+  if (mins) parts.push(dur(mins));
+  if (opens) parts.push(`${opens} ${plural(opens, 'заход', 'захода', 'заходов')}`);
+  return parts.join(' · ') || '—';
+}
 function renderActivity() {
   const D = ACT.data;
   if (!D) return;
@@ -2015,9 +2025,12 @@ function renderActivity() {
   let maxC = 1; let maxA = 1;
   Object.values(day).forEach((r) => { r.c.forEach((v) => { if (v > maxC) maxC = v; }); r.a.forEach((v) => { if (v > maxA) maxA = v; }); });
   const lvl = (v, max) => (v ? Math.max(1, Math.min(5, Math.ceil((v / max) * 5))) : 0);
-  const lane = (key, name, label, total, arr, kind) => `<div class="lane-label">${label}<b>${total}</b></div><div class="cells">${arr.map((v, h) => {
-    const l = kind === 'p' ? lvl(v, 60) : lvl(v, kind === 'c' ? maxC : maxA);
-    return `<div class="cell ${l ? 'l' + l : ''} ${isToday && h === nowH ? 'now' : ''}" data-tip="${esc(`${name} · ${pad(h)}:00–${pad((h + 1) % 24)}:00 · ${kind === 'p' ? (v ? `в трекере ~${v} мин` : 'в трекере не был(а)') : kind === 'c' ? `${v} ${plural(v, 'сообщение', 'сообщения', 'сообщений')} в чатах` : `${v} ${plural(v, 'действие', 'действия', 'действий')} с задачами`}`)}"></div>`;
+  const visitTip = (where, v, o) => (v || o ? `${where}${v ? ` ~${v} мин` : ''}${o ? `${v ? ',' : ''} ${o} ${plural(o, 'заход', 'захода', 'заходов')}` : ''}` : `${where} не был(а)`);
+  const lane = (key, name, label, total, arr, kind, opens) => `<div class="lane-label">${label}<b>${total}</b></div><div class="cells">${(arr || []).map((v, h) => {
+    const o = (opens && opens[h]) || 0;
+    const l = kind === 'p' || kind === 's' ? lvl(Math.max(v, o ? 10 : 0), 60) : lvl(v, kind === 'c' ? maxC : maxA);
+    const tip = kind === 'p' ? visitTip('в трекере', v, o) : kind === 's' ? visitTip('на сайте', v, o) : kind === 'c' ? `${v} ${plural(v, 'сообщение', 'сообщения', 'сообщений')} в чатах` : `${v} ${plural(v, 'действие', 'действия', 'действий')} с задачами`;
+    return `<div class="cell ${l ? 'l' + l : ''} ${isToday && h === nowH ? 'now' : ''}" data-tip="${esc(`${name} · ${pad(h)}:00–${pad((h + 1) % 24)}:00 · ${tip}`)}"></div>`;
   }).join('')}</div>`;
   const axis = `<div class="axis-row"><span></span><div class="axis">${Array.from({ length: 24 }, (_, h) => `<span class="${h % 3 === 0 ? 'k' : ''} ${h >= 10 && h < 18 ? 'work' : ''}">${h % 3 === 0 ? h : ''}</span>`).join('')}</div></div>`;
   const cards = people.map((p) => {
@@ -2027,11 +2040,13 @@ function renderActivity() {
     const where = Object.entries(r.w || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
     return `<div class="person">${head}<div class="p-span"><b>${hm(r.f)}–${hm(r.l)}</b><br>активен(на) ${activeHours(r)} ${plural(activeHours(r), 'час', 'часа', 'часов')}</div></div>
       <div class="lanes">
-        ${p.inTeam ? lane(p.key, first(p.name), 'Трекер', sum(r.p) ? dur(sum(r.p)) : '—', r.p, 'p') : ''}
+        ${p.inTeam ? lane(p.key, first(p.name), 'Трекер', visitsLabel(sum(r.p), sum(r.po)), r.p, 'p', r.po) : ''}
+        ${p.inTeam ? lane(p.key, first(p.name), 'Сайт', visitsLabel(sum(r.s), sum(r.so)), r.s || new Array(24).fill(0), 's', r.so) : ''}
         ${lane(p.key, first(p.name), 'Чаты', sum(r.c) ? `${sum(r.c)} сообщ.` : '—', r.c, 'c')}
         ${p.inTeam ? lane(p.key, first(p.name), 'Задачи', sum(r.a) ? `${sum(r.a)} действ.` : '—', r.a, 'a') : ''}
       </div>
       ${where.length ? `<div class="p-where">Где писал(а): ${where.map(([w, n]) => `<b>${esc(w)}</b> ${n}`).join(' · ')}</div>` : ''}
+      ${(r.sp || []).length ? `<div class="p-where">Что открывал(а) на сайте: ${r.sp.slice(0, 12).map((pg) => `<a href="https://cantor.agency${esc(pg.path)}" target="_blank" rel="noopener"><b>${esc(pg.t || pg.path)}</b></a>${pg.n > 1 ? ` ×${pg.n}` : ''}`).join(' · ')}${r.sp.length > 12 ? ` · и ещё ${r.sp.length - 12}` : ''}</div>` : ''}
     </div>`;
   }).join('');
   $('actBody').innerHTML = `<div class="legend"><span>Меньше</span>${[1, 2, 3, 4, 5].map((l) => `<span class="sw" style="background:var(--h${l})"></span>`).join('')}<span>Больше</span><span class="gap"></span><span class="sw" style="background:var(--h0)"></span><span>нет активности</span>${isToday ? '<span class="gap"></span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--accent)"></span><span>сейчас</span>' : ''}</div>`
@@ -2049,11 +2064,11 @@ function renderWeek() {
       if (!r || r.f == null) return `<td data-date="${d}"><span class="h">—</span></td>`;
       const hrs = activeHours(r);
       total += hrs;
-      return `<td data-date="${d}" title="${esc(`${p.name}: ${hm(r.f)}–${hm(r.l)}, активен(на) ${hrs} ч; трекер ${dur(sum(r.p))}, чаты ${sum(r.c)}, задачи ${sum(r.a)}`)}"><div class="t">${hm(r.f)}–${hm(r.l)}</div><div class="h">${hrs} ч · ${sum(r.c)} сообщ.</div><div class="bar"><i style="width:${Math.min(100, Math.round((hrs / 10) * 100))}%"></i></div></td>`;
+      return `<td data-date="${d}" title="${esc(`${p.name}: ${hm(r.f)}–${hm(r.l)}, активен(на) ${hrs} ч; трекер ${visitsLabel(sum(r.p), sum(r.po))}, сайт ${visitsLabel(sum(r.s), sum(r.so))}, чаты ${sum(r.c)}, задачи ${sum(r.a)}`)}"><div class="t">${hm(r.f)}–${hm(r.l)}</div><div class="h">${hrs} ч · ${sum(r.c)} сообщ.</div><div class="bar"><i style="width:${Math.min(100, Math.round((hrs / 10) * 100))}%"></i></div></td>`;
     }).join('');
     return `<tr><td class="who"><div class="p-head" style="margin:0">${avatar(p.user, '')}<div><div class="p-name">${esc(p.name)}</div><div class="p-role">${esc(p.sub || '')}</div></div></div></td>${cells}<td class="who"><b>${total} ч</b><div class="h muted" style="font-size:11.5px">активных часов</div></td></tr>`;
   }).join('');
-  $('actBody').innerHTML = `<div class="legend">Время — с первого до последнего действия за день. «ч» — часы, в которые человек был активен в трекере, чатах или задачах. Нажмите на день, чтобы открыть его по часам.</div><div class="week-wrap"><table class="week">${head}${rows}</table></div>`;
+  $('actBody').innerHTML = `<div class="legend">Время — с первого до последнего действия за день. «ч» — часы, в которые человек был активен в трекере, на сайте (база знаний, дашборд и другие рабочие страницы), в чатах или задачах. Нажмите на день, чтобы открыть его по часам.</div><div class="week-wrap"><table class="week">${head}${rows}</table></div>`;
 }
 $('actMode').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (!b) return; ACT.mode = b.dataset.mode; renderActivity(); });
 $('actDays').addEventListener('click', (e) => { const b = e.target.closest('[data-date]'); if (!b) return; ACT.date = b.dataset.date; renderActivity(); });

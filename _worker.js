@@ -5896,6 +5896,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       if (nowMs - seen > AT_SEEN_EVERY_MS) await kv.put(seenKey, new Date(nowMs).toISOString());
       atKickQueue(env, ctx);
     }
+    if (body.initial) await atSaveOpen(kv, me, nowMs);
     if (body.activity) await atSaveActivity(kv, me, body.activity, nowMs);
     const [mem, notifications] = await Promise.all([atSnapshot(env), kv.get(`at:notif:${me.id}`, 'json')]);
     const ver = `${mem.v}.${mem.stamp}`;
@@ -5916,6 +5917,12 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (!me.tgId) out.tgStart = await atTgStartParam(team, me);
     out.bot = await atBotUsername(env);
     return json(out);
+  }
+
+  // /at-visit.js on other cantor.agency pages (knowledge base, dashboard, …) — see «Activity» below.
+  if (action === 'visit') {
+    const res = await atSaveSiteVisit(kv, me, body, nowMs);
+    return json(res, res.error ? 400 : 200);
   }
 
   if (action === 'task-save') {
@@ -6511,10 +6518,52 @@ async function atKbCron(env) {
 //   • chats — messages the control bot logged (work chat topics and client chats), matched to a
 //     person by Telegram id or name; past days are cached in at:chatact:<date> once computed.
 //   • actions — task changes made in the tracker (each task's activity list).
+//   • site — other cantor.agency pages the team works on (knowledge base, dashboard, academy and other
+//     internal tools) load /at-visit.js; when that browser is signed in to the tracker it reports page
+//     opens and 10-minute slots of activity there: at:site:<userId>:<date> = { slots, opens: [minute],
+//     pages: { <path>: { t: title, n: opens } } }. Tracker opens themselves land in at:act … opens.
 const AT_ACT_TTL = 60 * 60 * 24 * 120;
+const AT_SITE_MAX_PAGES = 80;
 const AT_ACT_CACHE = new Map(); // `${date}` -> { at, data } for today's chat counts (recomputed every 3 min)
 
 function atMskDate(ms) { return botMsk(ms).date; }
+
+// A tracker page load (sync with initial: true) — counted as one visit at that minute.
+async function atSaveOpen(kv, user, nowMs) {
+  const key = `at:act:${user.id}:${atMskDate(nowMs)}`;
+  const rec = (await kv.get(key, 'json')) || { slots: [] };
+  const p = botMsk(nowMs);
+  rec.opens = [...(rec.opens || []), p.hh * 60 + p.mm].slice(-300);
+  await kv.put(key, JSON.stringify(rec), { expirationTtl: AT_ACT_TTL });
+}
+// /at-visit.js on other site pages: { page: { path, title }, opened, slots: { <date>: [slot] } }.
+async function atSaveSiteVisit(kv, user, body, nowMs) {
+  const path = String((body.page && body.page.path) || '').slice(0, 160);
+  if (!/^\/[^\s?#]*$/.test(path)) return { error: 'bad_path' };
+  const title = atClean(body.page && body.page.title, 140).replace(/\s*[—|]\s*(База знаний )?Cantor Agency\s*$/i, '') || path;
+  const recent = new Set([0, 1].map((d) => atMskDate(nowMs - d * 86400000)));
+  const today = atMskDate(nowMs);
+  const byDate = {};
+  for (const [date, raw] of Object.entries((body.slots && typeof body.slots === 'object') ? body.slots : {}).slice(0, 2)) {
+    if (!recent.has(date) || !Array.isArray(raw)) continue;
+    byDate[date] = raw.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n < 144).slice(0, 144);
+  }
+  if (body.opened && !byDate[today]) byDate[today] = [];
+  for (const [date, slots] of Object.entries(byDate)) {
+    const key = `at:site:${user.id}:${date}`;
+    const rec = (await kv.get(key, 'json')) || { slots: [], opens: [], pages: {} };
+    const before = JSON.stringify(rec);
+    rec.slots = [...new Set([...rec.slots, ...slots])].sort((a, b) => a - b);
+    if (body.opened && date === today) {
+      const p = botMsk(nowMs);
+      rec.opens = [...rec.opens, p.hh * 60 + p.mm].slice(-500);
+      const page = rec.pages[path] || (Object.keys(rec.pages).length < AT_SITE_MAX_PAGES ? (rec.pages[path] = { t: title, n: 0 }) : null);
+      if (page) { page.t = title; page.n += 1; }
+    }
+    if (JSON.stringify(rec) !== before) await kv.put(key, JSON.stringify(rec), { expirationTtl: AT_ACT_TTL });
+  }
+  return { ok: true };
+}
 
 async function atSaveActivity(kv, user, activity, nowMs) {
   if (!activity || typeof activity !== 'object') return;
@@ -6526,7 +6575,7 @@ async function atSaveActivity(kv, user, activity, nowMs) {
     const key = `at:act:${user.id}:${date}`;
     const rec = (await kv.get(key, 'json')) || { slots: [] };
     const merged = [...new Set([...rec.slots, ...slots])].sort((a, b) => a - b);
-    if (merged.length !== rec.slots.length) await kv.put(key, JSON.stringify({ slots: merged }), { expirationTtl: AT_ACT_TTL });
+    if (merged.length !== rec.slots.length) await kv.put(key, JSON.stringify({ ...rec, slots: merged }), { expirationTtl: AT_ACT_TTL });
   }
 }
 
@@ -6590,7 +6639,9 @@ async function atBuildActivity(env, team, days, nowMs) {
   const today = dates[0];
   const sources = await atChatSources(kv);
   const mem = await atSnapshot(env);
-  const blank = () => ({ p: new Array(24).fill(0), c: new Array(24).fill(0), a: new Array(24).fill(0), f: null, l: null, w: {} });
+  // p / s = minutes in the tracker / on other site pages, po / so = opens of the tracker / site pages,
+  // c = chat messages, a = task changes (all per MSK hour); sp = site pages opened that day.
+  const blank = () => ({ p: new Array(24).fill(0), po: new Array(24).fill(0), s: new Array(24).fill(0), so: new Array(24).fill(0), c: new Array(24).fill(0), a: new Array(24).fill(0), f: null, l: null, w: {}, sp: [] });
   const span = (rec, min) => { rec.f = rec.f == null ? min : Math.min(rec.f, min); rec.l = rec.l == null ? min : Math.max(rec.l, min); };
   const data = {};
   const others = {};
@@ -6598,13 +6649,27 @@ async function atBuildActivity(env, team, days, nowMs) {
     const day = (data[date] = {});
     const get = (k) => day[k] || (day[k] = blank());
     // tracker
-    const acts = await Promise.all(users.map((u) => kv.get(`at:act:${u.id}:${date}`, 'json')));
+    const [acts, sites] = await Promise.all([
+      Promise.all(users.map((u) => kv.get(`at:act:${u.id}:${date}`, 'json'))),
+      Promise.all(users.map((u) => kv.get(`at:site:${u.id}:${date}`, 'json'))),
+    ]);
     users.forEach((u, i) => {
-      for (const slot of (acts[i] && acts[i].slots) || []) {
-        const rec = get(u.id);
-        rec.p[Math.floor(slot / 6)] += 10;
-        span(rec, slot * 10);
-        span(rec, slot * 10 + 9);
+      for (const [rec0, mins, opens] of [[acts[i], 'p', 'po'], [sites[i], 's', 'so']]) {
+        if (!rec0) continue;
+        for (const slot of rec0.slots || []) {
+          const rec = get(u.id);
+          rec[mins][Math.floor(slot / 6)] += 10;
+          span(rec, slot * 10);
+          span(rec, slot * 10 + 9);
+        }
+        for (const min of rec0.opens || []) {
+          const rec = get(u.id);
+          rec[opens][Math.floor(min / 60)] += 1;
+          span(rec, min);
+        }
+      }
+      if (sites[i] && sites[i].pages) {
+        get(u.id).sp = Object.entries(sites[i].pages).map(([path, pg]) => ({ path, t: pg.t, n: pg.n })).sort((a, b) => b.n - a.n).slice(0, 30);
       }
     });
     // chats
@@ -6653,7 +6718,8 @@ async function atActivityText(env) {
     const r = day[u.id];
     if (!r || r.f == null) { lines.push(`⚪ ${escapeHtml(u.name)} — активности нет`); continue; }
     const parts = [`${atFmtMinutes(r.f)}–${atFmtMinutes(r.l)}`];
-    if (sum(r.p)) parts.push(`трекер ${atFmtDuration(sum(r.p))}`);
+    if (sum(r.p) || sum(r.po)) parts.push(`трекер ${atFmtDuration(sum(r.p))}${sum(r.po) ? `, заходов ${sum(r.po)}` : ''}`);
+    if (sum(r.s) || sum(r.so)) parts.push(`сайт ${atFmtDuration(sum(r.s))}${sum(r.so) ? `, заходов ${sum(r.so)}` : ''}`);
     if (sum(r.c)) parts.push(`чаты ${sum(r.c)} сообщ.`);
     if (sum(r.a)) parts.push(`задачи ${sum(r.a)} действ.`);
     lines.push(`🟢 ${escapeHtml(u.name)}: ${parts.join(' · ')}`);
