@@ -6057,6 +6057,21 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (body.initial) await atSaveOpen(kv, me, nowMs);
     if (body.activity) await atSaveActivity(kv, me, body.activity, nowMs);
     const [mem, notifications] = await Promise.all([atSnapshot(env), kv.get(`at:notif:${me.id}`, 'json')]);
+    // Tasks this device saved lately (body.known). An isolate in another Cloudflare location may not
+    // have heard of them yet (its snapshot is rebuilt from KV every 10 minutes, and the change log can
+    // lose an entry when two saves race), so they are read straight from KV and put into the snapshot
+    // — for everyone this isolate serves. Ids KV doesn't have come back as `gone`.
+    const known = Array.isArray(body.known) ? body.known.filter((id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(id)).slice(0, 60) : [];
+    const gone = [];
+    const missing = known.filter((id) => !mem.tasks.has(id));
+    if (missing.length) {
+      const found = await Promise.all(missing.map((id) => kv.get(`task:${id}`, 'json')));
+      let healed = false;
+      found.forEach((t, i) => {
+        if (atIsTrackerTask(t)) { mem.tasks.set(t.id, t); healed = true; } else gone.push(missing[i]);
+      });
+      if (healed) mem.stamp = `${Date.now().toString(36)}h`;
+    }
     const ver = `${mem.v}.${mem.stamp}`;
     const out = {
       ver,
@@ -6064,6 +6079,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       notifications: notifications || [],
       serverTime: nowMs,
     };
+    if (gone.length) out.gone = gone;
     if (body.ver === ver) return json({ ...out, unchanged: true });
     const cutoff = nowMs - AT_HIDE_CLOSED_AFTER_MS;
     out.users = team.users.map(atPublicUser);
