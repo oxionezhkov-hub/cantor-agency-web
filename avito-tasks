@@ -749,6 +749,7 @@ const API_PATH = '/api/dashboard/avito-tasks/';
 const OWNER_TG = 'oleg_ezhkov';
 const POLL_MS = 60000;
 const K_TOKEN = 'avitoTasks.token', K_CACHE = 'avitoTasks.cache', K_PREFS = 'avitoTasks.prefs';
+const K_DRAFT = 'avitoTasks.draft', K_MINE = 'avitoTasks.saved';
 
 const ROUTES = (() => {
   const host = location.hostname;
@@ -1141,7 +1142,8 @@ async function sync(initial) {
   try {
     if (initial) markActive(true);
     const activity = activityPayload(initial);
-    const res = await api('sync', { ver: initial ? null : S.ver, initial: !!initial, activity: activity || undefined });
+    const known = Object.keys(mineSaved);
+    const res = await api('sync', { ver: initial ? null : S.ver, initial: !!initial, activity: activity || undefined, known: known.length ? known : undefined });
     if (res.ok && activity) activitySent(activity);
     if (res.status === 401) return signOut(S.me ? 'reset' : 'none');
     if (res.status === 403) return signOut('blocked');
@@ -1165,6 +1167,32 @@ async function sync(initial) {
   }
 }
 
+// Задачи, сохранённые с этого устройства за последние 30 минут. Сервер Cloudflare в другом
+// дата-центре может какое-то время отдавать список, где их ещё нет, — страница не прячет их из-за
+// этого, а просит сервер дочитать (known), и тот чинит свой список для всех.
+const MINE_KEEP_MS = 30 * 60000;
+const mineSaved = (() => { const m = store.json(K_MINE) || {}; for (const id of Object.keys(m)) if (Date.now() - m[id].at > MINE_KEEP_MS) delete m[id]; return m; })();
+function rememberSaved(task) { if (!task || !task.id) return; mineSaved[task.id] = { at: Date.now(), task }; store.set(K_MINE, JSON.stringify(mineSaved)); }
+function forgetSaved(id) { if (mineSaved[id]) { delete mineSaved[id]; store.set(K_MINE, JSON.stringify(mineSaved)); } }
+function mergeSaved(tasks, gone) {
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  const now = Date.now();
+  for (const [id, m] of Object.entries(mineSaved)) {
+    const server = byId.get(id);
+    if (now - m.at > MINE_KEEP_MS) { forgetSaved(id); continue; }
+    if (server) {
+      // Сервер уже знает эту задачу — берём его версию, если она не старше нашей.
+      if (String(server.updatedAt || '') >= String(m.task.updatedAt || '')) forgetSaved(id);
+      else byId.set(id, m.task);
+    } else if ((gone || []).includes(id) && now - m.at > 2 * 60000) {
+      forgetSaved(id); // сервер прочитал её напрямую и не нашёл — значит, удалили
+    } else {
+      byId.set(id, m.task);
+    }
+  }
+  return [...byId.values()];
+}
+
 function applySync(d, fromCache) {
   const hadMe = !!S.me;
   S.me = d.me || S.me;
@@ -1173,7 +1201,7 @@ function applySync(d, fromCache) {
     S.ver = fromCache ? null : d.ver;
     S.users = d.users || [];
     S.projects = d.projects || [];
-    S.tasks = d.tasks || [];
+    S.tasks = mergeSaved(d.tasks || [], d.gone);
     S.clients = d.clients || null;
     S.tgStart = d.tgStart || null;
     S.bot = d.bot || null;
@@ -1739,6 +1767,7 @@ async function saveTask(id, patch, opts) {
     const res = await api('task-save', { task: Object.assign({ id }, patch) });
     if (!res.ok) throw new Error(res.data.error);
     Object.assign(t, res.data.task);
+    rememberSaved(res.data.task);
     const saved = document.querySelector(`.task[data-id="${CSS.escape(id)}"] [data-saved]`);
     if (saved) { saved.classList.add('show'); setTimeout(() => saved.classList.remove('show'), 1600); }
     if (opts && opts.rerenderAfter) rerenderCard(id, true);
@@ -1848,6 +1877,7 @@ $('lists').addEventListener('click', (e) => {
   if (act && act.dataset.act === 'delete') {
     if (!confirm(`Удалить задачу «${t.text}»? Это нельзя отменить. Если задача просто больше не нужна — лучше поставьте статус «Отменена».`)) return;
     S.tasks = S.tasks.filter((x) => x.id !== id);
+    forgetSaved(id);
     S.expanded = null;
     renderLists();
     api('task-delete', { id }).then((r) => { if (!r.ok) throw new Error(); toast('Задача удалена'); }).catch(() => { S.tasks.push(t); renderLists(); toast('Не получилось удалить'); });
@@ -1896,12 +1926,47 @@ $('lists').addEventListener('focusout', (e) => {
 $('lists').addEventListener('keydown', (e) => {
   if (e.target.dataset.f === 'text' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.blur(); }
 });
-$('lists').addEventListener('input', (e) => { if (e.target.classList.contains('ed-title')) autosize(); });
+// Название и описание открытой задачи сохраняются сами через секунду после паузы в наборе —
+// не только при уходе из поля (на телефоне при переключении в Telegram он может и не случиться).
+const editTimers = {};
+$('lists').addEventListener('input', (e) => {
+  if (e.target.classList.contains('ed-title')) autosize();
+  const f = e.target.dataset.f;
+  const cardEl = e.target.closest('.task');
+  if (!cardEl || (f !== 'text' && f !== 'note')) return;
+  const id = cardEl.dataset.id;
+  const key = `${id}:${f}`;
+  clearTimeout(editTimers[key]);
+  editTimers[key] = setTimeout(() => {
+    const t = taskById(id);
+    const v = e.target.value.trim();
+    if (!t || !document.contains(e.target) || v === (t[f] || '').trim() || (f === 'text' && !v)) return;
+    saveTask(id, { [f]: v }, { noRender: true });
+  }, 1000);
+});
 
 // ── новая задача (прямо в списке) ──
 function newDraft() { return { text: '', note: '', projectId: '', assigneeId: S.me ? S.me.id : '', due: null, priority: 'normal', open: false }; }
+// Черновик новой задачи живёт не только в полях: каждое нажатие клавиши переносится в S.draft и в
+// память браузера. Иначе любая перерисовка (обновление списка раз в минуту, выход в Telegram и
+// обратно, выбор в списке) рисовала форму из старой копии — и набранный текст пропадал.
+let draftSaveTimer = null;
+function saveDraftSoon() {
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(() => {
+    const d = S.draft;
+    if (d && (d.text.trim() || d.note.trim())) store.set(K_DRAFT, JSON.stringify({ ...d, savedAt: Date.now() }));
+    else store.del(K_DRAFT);
+  }, 300);
+}
+function restoreDraft() {
+  const saved = store.json(K_DRAFT);
+  if (saved && (saved.text || saved.note) && Date.now() - (saved.savedAt || 0) < 7 * 86400000) {
+    S.draft = Object.assign(newDraft(), saved, { open: true });
+  }
+}
 function renderComposer() {
-  if (!S.draft) S.draft = newDraft();
+  if (!S.draft) { restoreDraft(); if (!S.draft) S.draft = newDraft(); }
   const d = S.draft;
   const el = $('composer');
   el.classList.toggle('open', d.open);
@@ -1947,17 +2012,18 @@ $('composer').addEventListener('click', (e) => {
   const c = e.target.closest('[data-c]');
   const due = e.target.closest('[data-due]');
   const prio = e.target.closest('[data-prio]');
-  if (due) { draftFromDom(); S.draft.due = due.dataset.due || null; renderComposer(); return; }
-  if (prio) { draftFromDom(); S.draft.priority = prio.dataset.prio; renderComposer(); return; }
+  if (due) { draftFromDom(); S.draft.due = due.dataset.due || null; saveDraftSoon(); renderComposer(); return; }
+  if (prio) { draftFromDom(); S.draft.priority = prio.dataset.prio; saveDraftSoon(); renderComposer(); return; }
   if (!c) return;
   if (c.dataset.c === 'open') openComposer();
-  if (c.dataset.c === 'cancel') { S.draft = newDraft(); renderComposer(); }
+  if (c.dataset.c === 'cancel') { S.draft = newDraft(); store.del(K_DRAFT); renderComposer(); }
   if (c.dataset.c === 'create') createTask();
 });
 $('composer').addEventListener('change', (e) => {
-  if (e.target.dataset.f === 'due') { draftFromDom(); S.draft.due = e.target.value || null; renderComposer(); }
-  if (e.target.id === 'cAssignee') { draftFromDom(); renderComposer(); }
+  if (e.target.dataset.f === 'due') { draftFromDom(); S.draft.due = e.target.value || null; saveDraftSoon(); renderComposer(); }
+  if (e.target.id === 'cAssignee' || e.target.id === 'cClient') { draftFromDom(); saveDraftSoon(); renderComposer(); }
 });
+$('composer').addEventListener('input', () => { draftFromDom(); saveDraftSoon(); });
 $('composer').addEventListener('keydown', (e) => {
   if (e.target.id === 'cText' && e.key === 'Enter') { e.preventDefault(); createTask(); }
   if (e.key === 'Escape') { S.draft.open = false; draftFromDom(); renderComposer(); }
@@ -1974,8 +2040,10 @@ async function createTask() {
     const res = await api('task-save', { task: { text: d.text.trim(), note: d.note.trim(), projectId: d.projectId || null, assigneeId: d.assigneeId || null, due: d.due || null, priority: d.priority } });
     if (!res.ok) throw new Error(res.data.error);
     S.tasks.push(res.data.task);
+    rememberSaved(res.data.task);
     const u = userById(res.data.task.assigneeId);
     S.draft = Object.assign(newDraft(), { open: true, projectId: d.projectId, assigneeId: d.assigneeId });
+    store.del(K_DRAFT);
     renderComposer();
     renderLists();
     const el = document.querySelector(`.task[data-id="${CSS.escape(res.data.task.id)}"]`);
