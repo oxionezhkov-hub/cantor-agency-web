@@ -4604,7 +4604,11 @@ const BOT_EXTRACT_SYSTEM = [
   'Роли: «Олег Ежков» — руководитель; «Менеджер — Cantor Agency» (КМ) — общается с клиентами и передаёт задачи;',
   'остальные в рабочем чате — специалисты по Авито. Задача = просьба что-то сделать для клиента или в его кабинете Авито',
   '(правки объявлений, фото, ставки, города, отчёт, ответ на вопрос клиента, проверка и т.п.). Болтовня, благодарности,',
-  'статистика без просьбы — не задачи.',
+  'статистика без просьбы — не задачи. Новости и отчёты клиента о результатах («пришла заявка», «была продажа», «ученик',
+  'записался»), приветствия и ответы «спасибо/хорошо/ок» — тоже НЕ задачи: в том числе не заводи задач вида «подтвердить',
+  'получение», «ответить клиенту», «поблагодарить», «отреагировать». Задача из чата клиента — только конкретная просьба',
+  'клиента что-то сделать или вопрос, на который команда ещё не ответила в этих же сообщениях.',
+  'Реакции (👍 и т.п.) показаны в квадратных скобках после текста: реакция команды на просьбу = её приняли/взяли.',
   'Тебе дают новые сообщения из одного топика/чата, контекст до них и список открытых задач этого клиента.',
   'Верни ТОЛЬКО JSON без пояснений:',
   '{"events":[',
@@ -4614,11 +4618,14 @@ const BOT_EXTRACT_SYSTEM = [
   'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
-  'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если событий нет — {"events":[]}.',
+  'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если КМ или Олег уже ответили клиенту',
+  'по задаче вида «ответить на вопрос клиента» — это informed. Если событий нет — {"events":[]}.',
 ].join('\n');
 
 function botFormatLogLines(entries) {
-  return entries.map((e) => `[${e.id}] ${botFmtDate(e.t)} ${e.from}${e.team === false ? ' (клиент)' : ''}${e.reply ? ` (ответ на ${e.reply})` : ''}: ${String(e.text).replace(/\s+/g, ' ').slice(0, 700)}`).join('\n');
+  const reacts = (e) => (Array.isArray(e.reactions) && e.reactions.length
+    ? ` [реакции: ${e.reactions.map((r) => `${r.by}${r.team === false ? ' (клиент)' : ''} ${r.e}`).join(', ')}]` : '');
+  return entries.map((e) => `[${e.id}] ${botFmtDate(e.t)} ${e.from}${e.team === false ? ' (клиент)' : ''}${e.reply ? ` (ответ на ${e.reply})` : ''}: ${String(e.text).replace(/\s+/g, ' ').slice(0, 700)}${reacts(e)}`).join('\n');
 }
 
 // Feeds new messages to the AI, a few topics per cron run. The dirty flag is cleared before the
@@ -4992,9 +4999,12 @@ async function botCheckHandoffs(env, nowMs, allTasks, byId) {
   const team = await atGetTeam(env);
   const recent = (iso) => { const ms = Date.parse(iso || 0); return ms && nowMs - ms <= BOT_SLA_LOOKBACK_MS ? ms : 0; };
   const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && (u.role === 'specialist' || u.role === 'trainee'); };
+  // A task on the manager (or the owner / assistant) is answered right in the client's chat — there
+  // is nothing to pass on to the specialists, so only unassigned client requests are checked.
+  const handledInChat = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['manager', 'owner', 'assistant'].includes(u.role); };
 
   const toHandoff = allTasks.filter((t) => t.status === 'open' && t.origin === 'client' && t.projectId
-    && !t.takenAt && !isSpec(atAssigneeId(t, team.users)) && !(t.notified && t.notified.handoff)
+    && !t.takenAt && !isSpec(atAssigneeId(t, team.users)) && !handledInChat(atAssigneeId(t, team.users)) && !(t.notified && t.notified.handoff)
     && recent(t.startedAt || t.createdAt) && botWorkingMinutes(recent(t.startedAt || t.createdAt), nowMs) >= BOT_HANDOFF_WMIN);
   const toInform = allTasks.filter((t) => t.status === 'done' && atNeedsInform(t, team.users)
     && !(t.notified && t.notified.informLate) && recent(t.doneAt) && botWorkingMinutes(recent(t.doneAt), nowMs) >= BOT_NOT_INFORMED_WMIN);
