@@ -3853,6 +3853,7 @@ function botIsOwner(env, userId) {
 // Telegram rejects messages over 4096 chars, so long texts go out in several messages,
 // split on line breaks (every line is self-contained HTML).
 async function botSend(env, chatId, text, extra = {}) {
+  extra = await atPersonalizeExtra(env, chatId, extra);
   const chunks = [];
   let cur = '';
   for (const line of String(text).split('\n')) {
@@ -5696,6 +5697,28 @@ async function atNotify(env, team, userIds, n, tg) {
     if (tg && user.tgId) await botSend(env, user.tgId, tg.text, tg.extra || {});
   }
 }
+// Telegram on phones opens links in its own in-app browser, which may not keep the tracker's
+// sign-in (it lives in localStorage) — then a bare tracker link shows «Нет доступа». So tracker
+// buttons in a team member's private chat carry their own invite: it signs them in on the spot,
+// in whatever browser opens it. (The bot already sends people their invite link the same way.)
+function atPersonalUrl(url, user) {
+  if (!user || !user.invite || !user.active || !String(url).startsWith(AT_PAGE_URL)) return url;
+  const u = new URL(url);
+  u.searchParams.set('invite', user.invite);
+  return u.toString();
+}
+function atPersonalizeMarkup(markup, user) {
+  const rows = markup && markup.inline_keyboard;
+  if (!rows || !user) return markup;
+  return { ...markup, inline_keyboard: rows.map((row) => row.map((b) => (b.url ? { ...b, url: atPersonalUrl(b.url, user) } : b))) };
+}
+async function atPersonalizeExtra(env, chatId, extra) {
+  const rows = extra && extra.reply_markup && extra.reply_markup.inline_keyboard;
+  if (!rows || !rows.some((row) => row.some((b) => b.url && b.url.startsWith(AT_PAGE_URL)))) return extra;
+  const team = await atGetTeam(env);
+  const user = team.users.find((u) => u.tgId && String(u.tgId) === String(chatId));
+  return user ? { ...extra, reply_markup: atPersonalizeMarkup(extra.reply_markup, user) } : extra;
+}
 function atTaskUrl(taskId) {
   return `${AT_PAGE_URL}#t=${encodeURIComponent(taskId)}`;
 }
@@ -6904,7 +6927,7 @@ async function atOnCallback(env, cq) {
     await botApi(env, 'editMessageReplyMarkup', {
       chat_id: cq.message.chat.id,
       message_id: cq.message.message_id,
-      reply_markup: atTgButtons(res.task, true).reply_markup,
+      reply_markup: atPersonalizeMarkup(atTgButtons(res.task, true).reply_markup, user),
     });
   }
 }
