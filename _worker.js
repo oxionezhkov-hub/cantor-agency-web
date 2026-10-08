@@ -4822,7 +4822,7 @@ async function botApplyEvents(env, events, ctx) {
     const action = { done: ['✅ Да, готово', 'done'], informed: ['✅ Да, закрыть', 'close'], cancelled: ['✖️ Да, отменить', 'cancel'] }[h.status];
     await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' }, {
       text: `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectName)}${h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : ''}`,
-      extra: { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], [{ text: 'Открыть в трекере', url: atTaskUrl(task.id) }]] }, disable_notification: true },
+      extra: { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], atOpenTaskRow(task.id)] }, disable_notification: true },
     });
   }
 }
@@ -5836,8 +5836,12 @@ async function atNotify(env, team, userIds, n, tg) {
 // sign-in (it lives in localStorage) — then a bare tracker link shows «Нет доступа». So tracker
 // buttons in a team member's private chat carry their own invite: it signs them in on the spot,
 // in whatever browser opens it. (The bot already sends people their invite link the same way.)
+// The tracker opens two ways: cantor.agency (its API goes through the Yandex Cloud proxy — works in
+// Russia without a VPN) and the worker's own address (*.workers.dev — quicker, but needs a VPN there).
+const AT_PAGE_URL_VPN = `${BOT_WORKER_ORIGIN}/avito-tasks`;
+const atIsTrackerUrl = (url) => String(url).startsWith(AT_PAGE_URL) || String(url).startsWith(AT_PAGE_URL_VPN);
 function atPersonalUrl(url, user) {
-  if (!user || !user.invite || !user.active || !String(url).startsWith(AT_PAGE_URL)) return url;
+  if (!user || !user.invite || !user.active || !atIsTrackerUrl(url)) return url;
   const u = new URL(url);
   u.searchParams.set('invite', user.invite);
   return u.toString();
@@ -5849,20 +5853,24 @@ function atPersonalizeMarkup(markup, user) {
 }
 async function atPersonalizeExtra(env, chatId, extra) {
   const rows = extra && extra.reply_markup && extra.reply_markup.inline_keyboard;
-  if (!rows || !rows.some((row) => row.some((b) => b.url && b.url.startsWith(AT_PAGE_URL)))) return extra;
+  if (!rows || !rows.some((row) => row.some((b) => b.url && atIsTrackerUrl(b.url)))) return extra;
   const team = await atGetTeam(env);
   const user = team.users.find((u) => u.tgId && String(u.tgId) === String(chatId));
   return user ? { ...extra, reply_markup: atPersonalizeMarkup(extra.reply_markup, user) } : extra;
 }
-function atTaskUrl(taskId) {
-  return `${AT_PAGE_URL}#t=${encodeURIComponent(taskId)}`;
+function atTaskUrl(taskId, vpn) {
+  return `${vpn ? AT_PAGE_URL_VPN : AT_PAGE_URL}#t=${encodeURIComponent(taskId)}`;
+}
+// Bottom row under a task message: the same task, without and with a VPN.
+function atOpenTaskRow(taskId) {
+  return [{ text: 'Без VPN', url: atTaskUrl(taskId) }, { text: 'С VPN', url: atTaskUrl(taskId, true) }];
 }
 function atTgButtons(task, withActions) {
   const row = [];
   if (withActions && task.status === 'open' && !task.takenAt) row.push({ text: '▶️ Беру в работу', callback_data: `at:take:${task.id}` });
   if (withActions && task.status === 'open') row.push({ text: '✅ Готово', callback_data: `at:done:${task.id}` });
   const rows = row.length ? [row] : [];
-  rows.push([{ text: 'Открыть в трекере', url: atTaskUrl(task.id) }]);
+  rows.push(atOpenTaskRow(task.id));
   return { reply_markup: { inline_keyboard: rows } };
 }
 function atTgTaskBlock(task, projectName) {
