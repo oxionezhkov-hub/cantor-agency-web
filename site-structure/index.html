@@ -27,11 +27,12 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
 /* sections: each header sticks to the top while its section is on screen,
    so the current section title changes by itself while scrolling */
 .sec{padding-bottom:28px}
-.sec-h{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:14px;align-items:baseline;
-  padding:14px 0 12px;border-top:3px solid var(--ink);border-bottom:1px solid var(--line)}
+.sec-h{position:sticky;top:0;z-index:5;padding:14px 0 12px;border-top:3px solid var(--ink);border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4)}
+.sec-t{display:flex;gap:14px;align-items:baseline}
 .sec-h .num{font-size:14px;color:var(--red)}
 .sec-h h2{font-size:clamp(18px,3.2vw,24px);line-height:1.2}
-.purpose{margin-top:12px;font-size:14px;color:var(--muted);max-width:720px}
+.purpose{margin-top:6px;font-size:14px;color:var(--muted);max-width:720px}
 .body{margin-top:18px;display:grid;gap:16px}
 
 .big{font-family:'Unbounded',sans-serif;font-size:clamp(26px,5vw,42px);line-height:1.1}
@@ -100,8 +101,9 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
 .ask li{padding-left:16px;position:relative}
 .ask li::before{content:'?';position:absolute;left:0;color:var(--red);font-weight:700}
 
-.skipped .sec-h{background:var(--red);border-top-color:var(--red);color:#fff;border-bottom:none;padding-left:16px;padding-right:16px;border-radius:0 0 10px 10px}
+.skipped .sec-h{background:rgba(232,57,29,.88);border-top-color:var(--red);color:#fff;border-bottom:none;padding-left:16px;padding-right:16px;border-radius:0 0 10px 10px}
 .skipped .sec-h .num{color:#fff}
+.skipped .sec-h .purpose{color:rgba(255,255,255,.9)}
 .skip-box{margin-top:14px;border:2px solid var(--red);border-radius:14px;background:var(--red-bg);padding:6px 18px}
 .skip-box .item{display:grid;grid-template-columns:minmax(170px,250px) 1fr;gap:12px;padding:14px 0;border-bottom:1px solid rgba(232,57,29,.25);font-size:14px}
 .skip-box .item:last-child{border-bottom:none}
@@ -114,6 +116,7 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
 
 @media (max-width:600px){
   .tl{grid-template-columns:1fr;gap:2px}
+  .sec-h .purpose{font-size:13px;line-height:1.45}
   .skip-box .item{grid-template-columns:1fr;gap:4px}
 }
 @media print{
@@ -220,9 +223,10 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
     var html = '';
 
     sections.forEach(function (s, i) {
-      html += '<section class="sec" id="' + esc(s.id) + '"><div class="sec-h"><span class="num">' + pad(i + 1) + '</span>'
+      // Number, title and purpose stick together while the section is on screen.
+      html += '<section class="sec" id="' + esc(s.id) + '"><div class="sec-h"><div class="sec-t"><span class="num">' + pad(i + 1) + '</span>'
         + '<h2>' + esc(s.title) + '</h2></div>'
-        + (s.purpose ? '<p class="purpose">' + esc(s.purpose) + '</p>' : '')
+        + (s.purpose ? '<p class="purpose">' + esc(s.purpose) + '</p>' : '') + '</div>'
         + '<div class="body">' + arr(s.blocks).map(function (b) {
           var fn = BLOCKS[b.type];
           return fn ? fn(b) : '';
@@ -230,8 +234,8 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
     });
 
     if (skipped.length) {
-      html += '<section class="sec skipped" id="skipped"><div class="sec-h"><span class="num">×</span><h2>Чего не будет на сайте</h2></div>'
-        + '<p class="purpose">Эти блоки есть на других сайтах, но здесь мы их не ставим — причины ниже. Если материал появится, блок можно добавить.</p>'
+      html += '<section class="sec skipped" id="skipped"><div class="sec-h"><div class="sec-t"><span class="num">×</span><h2>Чего не будет на сайте</h2></div>'
+        + '<p class="purpose">Эти блоки есть на других сайтах, но здесь мы их не ставим — причины ниже. Если материал появится, блок можно добавить.</p></div>'
         + '<div class="skip-box">' + skipped.map(function (s) {
           return '<div class="item"><b>' + esc(s.title) + '</b><span>' + esc(s.reason) + '</span></div>';
         }).join('') + '</div></section>';
