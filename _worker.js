@@ -8259,6 +8259,16 @@ async function handleApi(request, env, url, ctx) {
 // host — see corsHeaders() above — where only the static HTML tags and robots.txt apply).
 const NOINDEX_ALLOWED_PATHS = new Set(['/', '/index.html', '/adviser-anketa', '/avito-anketa', '/club-anketa']);
 
+// Most pages here are extensionless files (/mba-otchet, /dashboard, /client/<slug>, …): nginx on
+// cantor.agency serves them as text/html, but the assets binding sends no Content-Type at all,
+// so on the workers.dev domain browsers may show them as text or download them. Label them.
+function withHtmlContentType(response) {
+  if (!response.ok || response.headers.get('Content-Type')) return response;
+  const headers = new Headers(response.headers);
+  headers.set('Content-Type', 'text/html; charset=utf-8');
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 function withNoIndexHeader(response) {
   const headers = new Headers(response.headers);
   headers.set('X-Robots-Tag', 'noindex, nofollow');
@@ -8293,14 +8303,17 @@ export default {
     // holds per-client podcast materials pages (mba-mybrand/<slug>-podcastN). Handles
     // both with and without the trailing slash since production (cantor.agency, served
     // by plain nginx, not this Worker) 301s the bare path to the slash form itself.
+    // Asking the assets binding for /mba-mybrand/index.html answers with a 307 back to
+    // /mba-mybrand/ (its html_handling strips "index.html"), which this branch would then
+    // rewrite again — an endless redirect on the workers.dev domain. Ask for the directory.
     if (url.pathname === '/mba-mybrand' || url.pathname === '/mba-mybrand/') {
       const assetUrl = new URL(request.url);
-      assetUrl.pathname = '/mba-mybrand/index.html';
-      return withNoIndexHeader(await env.ASSETS.fetch(new Request(assetUrl, request)));
+      assetUrl.pathname = '/mba-mybrand/';
+      return withNoIndexHeader(withHtmlContentType(await env.ASSETS.fetch(new Request(assetUrl, request))));
     }
 
     if (!url.pathname.startsWith('/api/')) {
-      const response = await env.ASSETS.fetch(request);
+      const response = withHtmlContentType(await env.ASSETS.fetch(request));
       return NOINDEX_ALLOWED_PATHS.has(url.pathname) ? response : withNoIndexHeader(response);
     }
 

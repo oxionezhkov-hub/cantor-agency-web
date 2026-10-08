@@ -8,8 +8,9 @@ argument-hint: "<Имя Фамилия> [<Имя Фамилия> ...]"
 
 Мини-сервис: `site-structure/index.html` — одна страница-рендер для всех.
 Наполнение каждого преподавателя — `site-structure/data/<slug>.json`.
-Ссылка клиенту: `https://cantor.agency/site-structure/?client=<slug>`
-(то же работает на воркере: `https://mainweb.oxion-ezhkov.workers.dev/site-structure/?client=<slug>`).
+Ссылки клиенту (в сообщении — обе):
+- без VPN: `https://cantor.agency/site-structure/?client=<slug>`;
+- с VPN: `https://mainweb.oxion-ezhkov.workers.dev/site-structure/?client=<slug>`.
 
 Без дизайна: чёрный, белый и оранжевый `#E8391D`. Картинки не вставляем —
 пишем, какая картинка нужна (блок `image` / `images` / `video`).
