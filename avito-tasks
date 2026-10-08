@@ -350,6 +350,53 @@ a{color:inherit}
 .cc-touch .input{min-height:32px;font-size:13px;border-radius:999px;flex:1;min-width:0}
 .cc-empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:28px 0;font-size:14px}
 
+/* рефлексия */
+.rf-wrap{max-width:640px;margin:0 auto}
+.rf-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px 24px 22px;box-shadow:var(--shadow);display:grid;gap:20px}
+.rf-progress{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);font-weight:600}
+.rf-bar{flex:1;height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.rf-bar span{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .3s ease}
+.rf-name{font-family:var(--display);font-size:24px;font-weight:700;color:var(--ink);line-height:1.25;letter-spacing:-.015em}
+.rf-q{font-size:14px;color:var(--muted);margin-top:4px}
+.rf-scale{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+.rf-scale button{aspect-ratio:1/1;max-height:54px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-size:16px;font-weight:700;color:var(--text);transition:transform .08s,background .15s,border-color .15s,color .15s}
+.rf-scale button:hover{border-color:var(--sc);color:var(--sc)}
+.rf-scale button.lit{background:color-mix(in srgb,var(--sc) 16%,var(--surface));border-color:color-mix(in srgb,var(--sc) 45%,var(--line));color:var(--sc)}
+.rf-scale button.on{background:var(--sc);border-color:var(--sc);color:#fff;transform:scale(1.06)}
+.rf-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
+.rf-verdict{min-height:24px;font-size:15px;font-weight:700;text-align:center}
+.rf-comment{min-height:92px;font-size:15px;line-height:1.5}
+.rf-hint{font-size:12px;color:var(--faint);display:flex;justify-content:space-between;margin-top:4px}
+.rf-actions{display:flex;gap:8px;align-items:center}
+.rf-actions .grow{flex:1}
+.rf-done{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0 4px}
+.rf-done .big{width:64px;height:64px;border-radius:22px;background:var(--green-bg);color:var(--green);display:grid;place-items:center}
+.rf-done .big .ic{width:30px;height:30px}
+.rf-done h2{font-family:var(--display);font-size:20px;color:var(--ink)}
+.rf-list{display:grid;gap:8px;margin-top:6px;text-align:left;width:100%}
+.rf-row{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:var(--sunken)}
+.rf-row .sc{min-width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:700;color:#fff;background:var(--sc);flex:none}
+.rf-row .nm{font-weight:600;color:var(--ink);font-size:14px}
+.rf-row .cm{font-size:13px;color:var(--muted)}
+.rf-row button{margin-left:auto;flex:none}
+.rf-res{display:grid;gap:12px}
+.rf-people{display:flex;flex-wrap:wrap;gap:8px}
+.rf-person{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600}
+.rf-person .st{font-weight:500;color:var(--muted)}
+.rf-client{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;gap:8px}
+.rf-client h3{font-size:15px;color:var(--ink);display:flex;align-items:center;gap:10px}
+.rf-client h3 .avg{margin-left:auto;font-size:13px;color:var(--muted);font-weight:600}
+.rf-ans{display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+.rf-ans .sc{min-width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;background:var(--sc);flex:none}
+.rf-ans .who{font-weight:600;color:var(--ink)}
+.rf-ans .none{color:var(--faint)}
+@media (max-width:760px){
+  .rf-card{padding:20px 16px 16px;border-radius:18px}
+  .rf-name{font-size:20px}
+  .rf-scale{gap:4px}
+  .rf-scale button{border-radius:11px;font-size:15px}
+}
+
 /* team */
 .team-add{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:10px;align-items:end}
 .member{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:10px;display:grid;gap:14px}
@@ -589,6 +636,7 @@ a{color:inherit}
   <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 20.5A2.5 2.5 0 006.5 23H20v-5M8 7.5h8M8 11h5"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24"><path d="M20.5 11.5l-8.2 8.2a5 5 0 01-7.1-7.1l8.5-8.5a3.3 3.3 0 014.7 4.7l-8.5 8.5a1.7 1.7 0 01-2.4-2.4l7.8-7.8"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
@@ -712,6 +760,17 @@ a{color:inherit}
     </section>
 
     <!-- База знаний (руководитель и ассистент) -->
+    <!-- Рефлексия -->
+    <section id="view-reflection" hidden>
+      <div class="hello">
+        <div>
+          <h1 id="rfTitle">Рефлексия</h1>
+          <div class="sub" id="rfSub"></div>
+        </div>
+      </div>
+      <div id="rfBody"></div>
+    </section>
+
     <section id="view-kb" hidden>
       <div class="hello">
         <div>
@@ -810,7 +869,7 @@ const S = {
   ver: null, bot: null, tgStart: null,
   view: 'tasks', expanded: null,
   f: { scope: prefs.scope, q: '', client: '', assignee: '', status: normStatuses(prefs.status), priority: '', group: prefs.group },
-  draft: null, team: null, freshMember: null, claim: null,
+  draft: null, team: null, freshMember: null, claim: null, reflection: null,
   lastSync: 0, syncing: false, offline: false, pendingRender: false,
 };
 function savePrefs() {
@@ -1197,6 +1256,7 @@ function applySync(d, fromCache) {
   const hadMe = !!S.me;
   S.me = d.me || S.me;
   S.notifications = d.notifications || S.notifications;
+  if ('reflection' in d || !d.unchanged) setReflection(d.reflection || null);
   if (!d.unchanged) {
     S.ver = fromCache ? null : d.ver;
     S.users = d.users || [];
@@ -1215,7 +1275,7 @@ function applySync(d, fromCache) {
 function isEditing() {
   const a = document.activeElement;
   if (DD.open) return true; // открыто выпадающее меню — не перерисовываем под ним
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-team, #view-activity, #view-kb') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-reflection, #view-team, #view-activity, #view-kb') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -1226,6 +1286,7 @@ function render() {
   if (S.view === 'team') renderTeamStatic();
   if (S.view === 'activity') loadActivity();
   if (S.view === 'kb' && !KB.rendered) renderKb();
+  if (S.view === 'reflection') renderReflection();
 }
 document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRender && !isEditing()) render(); }, 150));
 
@@ -1233,6 +1294,7 @@ document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRend
 function views() {
   const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }];
   if (canSeeClients()) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
+  if (S.reflection || isAdmin()) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
   if (isAdmin()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
   if (isAdmin()) v.push({ id: 'activity', label: 'Активность', icon: 'pulse' });
   if (isAdmin()) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
@@ -1247,13 +1309,16 @@ function renderHeader() {
   const vs = views();
   if (!vs.some((v) => v.id === S.view)) S.view = 'tasks';
   const alerts = clientAlerts();
-  const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${v.id === 'clients' && alerts ? `<span class="count">${alerts}</span>` : ''}</button>`;
+  // Кружок с числом: у «Клиентов» — сколько требуют внимания, у «Рефлексии» — сколько клиентов осталось оценить.
+  const left = reflLeft();
+  const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : 0);
+  const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
-  $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.short || v.label)}${v.id === 'clients' && alerts ? `<span class="count">${alerts}</span>` : ''}</button>`).join('');
+  $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.short || v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`).join('');
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'clients', 'team', 'activity', 'kb'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'clients', 'reflection', 'team', 'activity', 'kb'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
   if ($('meAvatar').dataset.uid !== S.me.id + S.me.name) { $('meAvatar').outerHTML = avatar(S.me, '', 'meAvatar'); $('meAvatar').dataset.uid = S.me.id + S.me.name; }
   const unread = S.notifications.filter((n) => !n.read).length;
   $('bellBadge').hidden = !unread;
@@ -1797,6 +1862,7 @@ function openTask(id) {
   });
 }
 function openFromHash() {
+  if (location.hash === '#reflection') { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === 'reflection')) setView('reflection'); return; }
   const m = location.hash.match(/^#(t|kb)=(.+)$/);
   if (!m) return;
   history.replaceState(null, '', location.pathname + location.search);
@@ -2206,6 +2272,191 @@ $('clientCards').addEventListener('click', async (e) => {
     } catch (err) { touch.disabled = false; toast('Не сохранилось — нет связи'); }
   }
 });
+
+// ── вкладка «Рефлексия» ──
+// Раз в неделю (со среды) каждый сотрудник оценивает активных клиентов по шкале 1–10 с парой
+// предложений — по одному клиенту на экран. Ответ уходит на сервер при «Дальше»; недописанный
+// комментарий и выбранная оценка держатся в памяти браузера, так что можно выйти в любой момент
+// и продолжить с того же места. Руководитель и ассистент видят здесь ответы команды.
+const K_REFL = 'avitoTasks.refl';
+const RF = { idx: null, local: store.json(K_REFL) || {}, saving: false, results: null, resultsWeek: null, editing: null };
+const RF_WORDS = [null, 'Всё плохо', 'Очень плохо', 'Плохо', 'Есть проблемы', 'Так себе', 'Нормально', 'Неплохо', 'Хорошо', 'Очень хорошо', 'Отлично'];
+function rfColor(n) {
+  // красный → янтарный → зелёный; в обеих темах одни и те же насыщенные цвета для текста на кнопке
+  const stops = ['#D5311A', '#E0531C', '#E5701E', '#E88A1F', '#D99A16', '#B9A21A', '#8FA627', '#5E9F35', '#33923F', '#1C8048'];
+  return stops[Math.min(9, Math.max(0, n - 1))];
+}
+function setReflection(r) {
+  const prev = S.reflection;
+  S.reflection = r;
+  if (r && RF.local.week !== r.week) { RF.local = { week: r.week, drafts: {} }; store.set(K_REFL, JSON.stringify(RF.local)); RF.idx = null; }
+  if (!!prev !== !!r) renderHeader();
+}
+function reflClientsList() {
+  const r = S.reflection;
+  if (!r) return [];
+  return r.clients.map((id) => projectById(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+function reflAnswered(p) { const a = S.reflection && S.reflection.answers[p.id]; return !!(a && a.score > 0); }
+function reflLeft() { const r = S.reflection; if (!r) return 0; return reflClientsList().filter((p) => !reflAnswered(p)).length; }
+function rfDraft(pid) {
+  const d = (RF.local.drafts || {})[pid];
+  const a = S.reflection.answers[pid] || {};
+  return { score: d && d.score != null ? d.score : a.score || 0, comment: d && d.comment != null ? d.comment : a.comment || '' };
+}
+function rfSetDraft(pid, patch) {
+  RF.local.drafts = RF.local.drafts || {};
+  RF.local.drafts[pid] = Object.assign(rfDraft(pid), patch);
+  store.set(K_REFL, JSON.stringify(RF.local));
+}
+function fmtLongDate(ymd) {
+  const d = new Date(ymd + 'T12:00:00Z');
+  return `${['воскресенье', 'понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу'][d.getUTCDay()]}, ${d.getUTCDate()} ${['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'][d.getUTCMonth()]}`;
+}
+function renderReflection() {
+  if (S.view !== 'reflection') return;
+  if (!S.reflection) return renderReflectionResults();
+  const r = S.reflection;
+  const list = reflClientsList();
+  const left = reflLeft();
+  $('rfTitle').textContent = 'Рефлексия за неделю';
+  if (!list.length) { $('rfSub').textContent = ''; $('rfBody').innerHTML = '<div class="empty">Активных клиентов пока нет.</div>'; return; }
+  if (!left && RF.editing == null) {
+    $('rfSub').textContent = `Неделя с ${fmtDate(Date.parse(r.week + 'T09:00:00Z'))}. Следующая рефлексия — в ${fmtLongDate(r.next)}.`;
+    $('rfBody').innerHTML = `<div class="rf-wrap"><div class="rf-card"><div class="rf-done">
+      <div class="big">${ico('check')}</div>
+      <h2>Готово — спасибо!</h2>
+      <div class="muted">Все ${list.length} ${plural(list.length, 'клиент оценён', 'клиента оценены', 'клиентов оценены')}. До следующей среды здесь ничего не нужно.</div>
+      <div class="rf-list">${list.map((p) => { const a = r.answers[p.id]; return `<div class="rf-row" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cm">${esc(a.comment || '—')}</div></div><button class="btn btn-quiet btn-sm" data-rf-edit="${esc(p.id)}">${ico('edit', 'ic-sm')}</button></div>`; }).join('')}</div>
+    </div></div></div>`;
+    return;
+  }
+  // Где продолжаем: правим выбранного, иначе — первый неоценённый (или тот, на котором остановились).
+  if (RF.editing != null) RF.idx = list.findIndex((p) => p.id === RF.editing);
+  if (RF.idx == null || RF.idx < 0 || RF.idx >= list.length) RF.idx = Math.max(0, list.findIndex((p) => !reflAnswered(p)));
+  const p = list[RF.idx];
+  const d = rfDraft(p.id);
+  const doneCount = list.length - left;
+  $('rfSub').textContent = left ? `Осталось ${left} из ${list.length}. Можно выйти в любой момент — продолжим с этого места.` : 'Правка оценки';
+  $('rfBody').innerHTML = `<div class="rf-wrap"><div class="rf-card" data-rf="${esc(p.id)}">
+    <div class="rf-progress"><span>${RF.idx + 1} / ${list.length}</span><div class="rf-bar"><span style="width:${Math.round(doneCount / list.length * 100)}%"></span></div><span>${doneCount} ${plural(doneCount, 'готов', 'готово', 'готово')}</span></div>
+    <div>
+      <div class="rf-name">${esc(p.name)}</div>
+      <div class="rf-q">Как идёт проект на этой неделе?</div>
+    </div>
+    <div>
+      <div class="rf-scale" role="radiogroup" aria-label="Оценка от 1 до 10">${Array.from({ length: 10 }, (_, i) => i + 1).map((n) => `<button type="button" role="radio" aria-checked="${d.score === n}" class="${d.score === n ? 'on' : d.score && n < d.score ? 'lit' : ''}" style="--sc:${rfColor(n)}" data-score="${n}">${n}</button>`).join('')}</div>
+      <div class="rf-ends"><span>1 — всё плохо</span><span>10 — отлично</span></div>
+    </div>
+    <div class="rf-verdict" style="color:${d.score ? rfColor(d.score) : 'var(--faint)'}">${d.score ? RF_WORDS[d.score] : 'Выберите оценку'}</div>
+    <div>
+      <label class="label" for="rfComment">Почему такая оценка</label>
+      <textarea class="textarea rf-comment" id="rfComment" maxlength="400" placeholder="1–2 предложения: что получилось, что мешает, что дальше">${esc(d.comment)}</textarea>
+      <div class="rf-hint"><span>Коротко — одно-два предложения</span><span id="rfCount">${d.comment.length}/400</span></div>
+    </div>
+    <div class="rf-actions">
+      <button class="btn btn-ghost btn-sm" data-rf-prev ${RF.idx === 0 ? 'disabled' : ''}>← Назад</button>
+      <span class="grow"></span>
+      <button class="btn btn-primary" data-rf-next ${!d.score || d.comment.trim().length < 3 || RF.saving ? 'disabled' : ''}>${RF.editing != null ? 'Сохранить' : left <= 1 && !reflAnswered(p) ? 'Завершить' : 'Дальше →'}</button>
+    </div>
+  </div></div>`;
+}
+function rfRefreshNext() {
+  const card = document.querySelector('[data-rf]');
+  if (!card) return;
+  const d = rfDraft(card.dataset.rf);
+  const b = card.querySelector('[data-rf-next]');
+  if (b) b.disabled = !d.score || d.comment.trim().length < 3 || RF.saving;
+  const c = $('rfCount'); if (c) c.textContent = `${d.comment.length}/400`;
+}
+async function rfSave(pid) {
+  const r = S.reflection;
+  const d = rfDraft(pid);
+  RF.saving = true; rfRefreshNext();
+  // Отправляем все известные ответы недели — сервер объединит их со своими.
+  const answers = Object.assign({}, r.answers, { [pid]: { score: d.score, comment: d.comment.trim() } });
+  try {
+    const res = await api('refl-save', { week: r.week, answers });
+    if (res.status === 409) { toast('Неделя сменилась — открылась новая рефлексия'); await sync(false); return false; }
+    if (!res.ok) throw new Error();
+    S.reflection = res.data.reflection;
+    if (RF.local.drafts) delete RF.local.drafts[pid];
+    store.set(K_REFL, JSON.stringify(RF.local));
+    renderHeader();
+    return true;
+  } catch (e) {
+    toast('Не сохранилось — нет связи. Ответ не потерян, попробуйте ещё раз.');
+    return false;
+  } finally { RF.saving = false; rfRefreshNext(); }
+}
+$('rfBody').addEventListener('click', async (e) => {
+  const card = e.target.closest('[data-rf]');
+  const edit = e.target.closest('[data-rf-edit]');
+  if (edit) { RF.editing = edit.dataset.rfEdit; renderReflection(); return; }
+  const prevR = e.target.closest('[data-rf-week]');
+  if (prevR) { RF.resultsWeek = prevR.dataset.rfWeek; RF.results = null; renderReflectionResults(); return; }
+  if (!card) return;
+  const pid = card.dataset.rf;
+  const sc = e.target.closest('[data-score]');
+  if (sc) { rfSetDraft(pid, { score: Number(sc.dataset.score) }); renderReflection(); const t = $('rfComment'); if (t && !t.value) t.focus({ preventScroll: true }); return; }
+  if (e.target.closest('[data-rf-prev]')) { RF.editing = null; RF.idx = Math.max(0, RF.idx - 1); renderReflection(); return; }
+  if (e.target.closest('[data-rf-next]')) {
+    const wasEditing = RF.editing != null;
+    if (!(await rfSave(pid))) return;
+    RF.editing = null;
+    const list = reflClientsList();
+    if (!wasEditing) {
+      // следующий неоценённый после текущего, иначе — первый неоценённый вообще
+      let next = list.findIndex((p, i) => i > RF.idx && !reflAnswered(p));
+      if (next < 0) next = list.findIndex((p) => !reflAnswered(p));
+      RF.idx = next < 0 ? null : next;
+    }
+    if (!reflLeft()) toast('Рефлексия заполнена — спасибо!');
+    renderReflection();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+$('rfBody').addEventListener('input', (e) => {
+  if (e.target.id !== 'rfComment') return;
+  const card = e.target.closest('[data-rf]');
+  rfSetDraft(card.dataset.rf, { comment: e.target.value });
+  rfRefreshNext();
+});
+document.addEventListener('keydown', (e) => {
+  if (S.view !== 'reflection' || !document.querySelector('[data-rf]') || /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
+  const n = e.key === '0' ? 10 : Number(e.key);
+  if (n >= 1 && n <= 10) { rfSetDraft(document.querySelector('[data-rf]').dataset.rf, { score: n }); renderReflection(); }
+});
+
+// Руководитель и ассистент: ответы команды за неделю.
+async function renderReflectionResults() {
+  $('rfTitle').textContent = 'Рефлексия команды';
+  if (!RF.results) {
+    $('rfSub').textContent = '';
+    $('rfBody').innerHTML = '<div class="empty">Загружаю ответы…</div>';
+    const res = await api('refl-results', { week: RF.resultsWeek || undefined });
+    if (!res.ok) { $('rfBody').innerHTML = '<div class="empty">Не получилось загрузить — нет связи.</div>'; return; }
+    RF.results = res.data.results; RF.current = res.data.current;
+  }
+  const R = RF.results;
+  const clients = R.clients.map((id) => projectById(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const week = R.week;
+  const prevWeek = new Date(Date.parse(week + 'T12:00:00Z') - 7 * 86400000).toISOString().slice(0, 10);
+  const nextWeek = new Date(Date.parse(week + 'T12:00:00Z') + 7 * 86400000).toISOString().slice(0, 10);
+  $('rfSub').textContent = `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки 1–10 от сотрудников, по одной на клиента. Задача «заполнить рефлексию» ставится каждую среду.`;
+  const person = (u) => `<span class="rf-person">${avatar(userById(u.id) || u, 'xs')}${esc(first(u.name))} <span class="st">${u.done >= clients.length && clients.length ? 'готово' : `${u.done}/${clients.length}`}</span></span>`;
+  $('rfBody').innerHTML = `<div class="rf-res">
+    <div class="rf-actions"><button class="btn btn-ghost btn-sm" data-rf-week="${prevWeek}">← Прошлая неделя</button><span class="grow"></span>${week < RF.current ? `<button class="btn btn-ghost btn-sm" data-rf-week="${nextWeek}">Следующая →</button>` : ''}</div>
+    <div class="rf-people">${R.people.map(person).join('') || '<span class="muted">Нет сотрудников, которые заполняют рефлексию</span>'}</div>
+    ${clients.map((p) => {
+      const ans = R.people.map((u) => ({ u, a: u.answers[p.id] })).filter((x) => x.a && x.a.score);
+      const avg = ans.length ? (ans.reduce((s, x) => s + x.a.score, 0) / ans.length) : null;
+      return `<div class="rf-client"><h3>${esc(p.name)}<span class="avg">${avg == null ? 'нет оценок' : `в среднем ${Math.round(avg * 10) / 10}`}</span></h3>
+        ${R.people.map((u) => { const a = u.answers[p.id]; return a && a.score ? `<div class="rf-ans" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div><span class="who">${esc(first(u.name))}:</span> ${esc(a.comment || '')}</div></div>` : `<div class="rf-ans"><span class="none">${esc(first(u.name))} — ещё не оценил(а)</span></div>`; }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
 
 // ── вкладка «Команда» (только руководитель) ──
 function renderTeamStatic() {

@@ -5423,6 +5423,7 @@ async function handleBotApi(request, env, url) {
 //   bot:me             -> the control bot's @username (for the «Подключить Telegram» link)
 //   bot:qrun           -> last time a page visit kicked the AI queue
 //   kb:*               -> «База знаний» update requests — see "Avito Tasks → «База знаний»" below
+//   refl:<wed>:<userId> -> «Рефлексия» for the week starting on that Wednesday — see below
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -6016,6 +6017,136 @@ async function atNotifyInform(env, team, task, byName, skipIds) {
   });
 }
 
+// ── «Рефлексия»: weekly project ratings from the team ──
+// Every Wednesday (00:00 MSK) a new week opens: each employee (client manager, specialists,
+// trainees) rates every active client 1–10 with a comment of a sentence or two, one client at a
+// time, and can leave and come back to the same place. Done — the tab is quiet until next Wednesday.
+// The cron puts a «Заполнить рефлексию» task on each of them and closes it once they are done.
+// The client manager's and the specialist's scores also land in the dashboard's weekly project
+// ratings (projectRating:<project>:<monday>:<role>), so the Projects tab fills itself.
+//   refl:<wed>:<userId> -> { week, userId, answers: { <projectId>: { score, comment, at } }, taskId, doneAt }
+// One record per person and week, written only by that person; the page always sends every answer
+// it knows, so a save from one Cloudflare location can't drop one made a moment ago from another.
+const REFL_ROLES = new Set(['manager', 'specialist', 'trainee']);
+const REFL_TTL = 60 * 60 * 24 * 400;
+const REFL_COMMENT_MAX = 400;
+
+function reflWeek(nowMs) {
+  const d = botMsk(nowMs);
+  const back = (d.dow - 3 + 7) % 7; // days since Wednesday
+  return botMsk(botMskStartOfDay(nowMs) - back * 24 * 3600000 + 12 * 3600000).date;
+}
+function reflAddDays(ymd, n) {
+  return new Date(Date.parse(`${ymd}T12:00:00Z`) + n * 24 * 3600000).toISOString().slice(0, 10);
+}
+function reflClients(projects) {
+  return projects.filter((p) => !p.inactive).map((p) => p.id);
+}
+function reflDone(rec, clientIds) {
+  const a = (rec && rec.answers) || {};
+  return clientIds.filter((id) => a[id] && a[id].score > 0).length;
+}
+// What the page needs: this week's open clients and my answers.
+async function atReflectionState(kv, me, mem, nowMs) {
+  if (!REFL_ROLES.has(me.role)) return null;
+  const week = reflWeek(nowMs);
+  const rec = (await kv.get(`refl:${week}:${me.id}`, 'json')) || { answers: {} };
+  const clients = reflClients(mem.projects);
+  return { week, next: reflAddDays(week, 7), clients, answers: rec.answers || {}, done: reflDone(rec, clients), total: clients.length, doneAt: rec.doneAt || null };
+}
+async function atReflectionSave(env, team, me, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!REFL_ROLES.has(me.role)) return { error: 'forbidden', status: 403 };
+  const week = reflWeek(nowMs);
+  if (body.week !== week) return { error: 'week_closed', status: 409, week };
+  const key = `refl:${week}:${me.id}`;
+  const rec = (await kv.get(key, 'json')) || { week, userId: me.id, answers: {} };
+  const mem = await atSnapshot(env);
+  const clientIds = new Set(mem.projects.map((p) => p.id));
+  const changed = [];
+  for (const [pid, a] of Object.entries(body.answers && typeof body.answers === 'object' ? body.answers : {})) {
+    const score = Number(a && a.score);
+    if (!clientIds.has(pid) || !Number.isInteger(score) || score < 1 || score > 10) continue;
+    const comment = atClean(a.comment, REFL_COMMENT_MAX);
+    const prev = rec.answers[pid];
+    if (prev && prev.score === score && prev.comment === comment) continue;
+    rec.answers[pid] = { score, comment, at: new Date(nowMs).toISOString() };
+    changed.push(pid);
+  }
+  const active = reflClients(mem.projects);
+  const doneNow = reflDone(rec, active) >= active.length && active.length > 0;
+  if (!changed.length && (!doneNow || rec.doneAt)) return { state: await atReflectionState(kv, me, mem, nowMs) };
+  if (doneNow && !rec.doneAt) rec.doneAt = new Date(nowMs).toISOString();
+  rec.updatedAt = new Date(nowMs).toISOString();
+  await kv.put(key, JSON.stringify(rec), { expirationTtl: REFL_TTL });
+  // The dashboard's weekly ratings (Monday-based weeks) get the manager's and the specialist's scores.
+  const role = me.role === 'manager' ? 'manager' : me.role === 'specialist' ? 'specialist' : null;
+  if (role) {
+    const monday = reflAddDays(week, -2);
+    await Promise.all(changed.map((pid) => kv.put(`projectRating:${pid}:${monday}:${role}`, JSON.stringify({
+      projectId: pid, weekStart: monday, role, score: rec.answers[pid].score, comment: rec.answers[pid].comment, by: me.name, updatedAt: rec.updatedAt,
+    }))));
+  }
+  if (doneNow && rec.taskId) {
+    const task = await kv.get(`task:${rec.taskId}`, 'json');
+    if (task && task.status === 'open') {
+      Object.assign(task, { status: 'closed', doneAt: rec.doneAt, updatedAt: rec.doneAt, updatedBy: me.name });
+      task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: nowMs, by: me.name, what: 'заполнил(а) рефлексию — закрыто само' }].slice(-20);
+      await kv.put(`task:${task.id}`, JSON.stringify(task));
+      if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(task.id, task);
+      await atTouch(kv, [task.id]);
+    }
+  }
+  return { state: await atReflectionState(kv, me, mem, nowMs) };
+}
+// Owner / assistant: everyone's answers for a week.
+async function atReflectionResults(env, team, week) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const people = team.users.filter((u) => u.active && REFL_ROLES.has(u.role));
+  const recs = await Promise.all(people.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
+  const mem = await atSnapshot(env);
+  const clients = reflClients(mem.projects);
+  return {
+    week,
+    clients,
+    people: people.map((u, i) => ({ id: u.id, name: u.name, role: u.role, answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], clients), doneAt: (recs[i] && recs[i].doneAt) || null })),
+  };
+}
+// Cron: from Wednesday 10:00, once a week per person — a task to fill it in, with a link.
+async function atReflectionCron(env, team, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (botMsk(nowMs).hh < 10 && botMsk(nowMs).dow === 3) return;
+  const week = reflWeek(nowMs);
+  const mem = await atSnapshot(env);
+  const clients = reflClients(mem.projects);
+  if (!clients.length) return;
+  for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
+    const key = `refl:${week}:${u.id}`;
+    const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
+    if (rec.taskId || rec.doneAt) continue;
+    if (!(await botOnce(kv, `refltask:${week}:${u.id}`, 60 * 60 * 24 * 9))) continue;
+    // Due at the end of the working day it is set (or the next one, if set after 18:00).
+    const due = atWorkdayAt(nowMs, BOT_WORK_END_H, botMsk(nowMs).hh < BOT_WORK_END_H);
+    const id = `trrefl${atRandom(8)}`;
+    const now = new Date(nowMs).toISOString();
+    const task = {
+      id, text: `Заполнить рефлексию по клиентам (неделя с ${week.slice(8, 10)}.${week.slice(5, 7)})`,
+      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому активному клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
+      status: 'open', priority: 'normal', source: 'tracker', origin: 'tracker', author: 'Бот', createdById: null,
+      assigneeId: u.id, owner: u.name, due: botIsoMsk(due), link: `${AT_PAGE_URL}#reflection`, startedAt: now,
+      notified: {}, activity: [{ t: nowMs, by: 'Бот', what: 'поставил задачу на рефлексию' }], createdAt: now, updatedAt: now,
+    };
+    await kv.put(`task:${id}`, JSON.stringify(task));
+    rec.taskId = id;
+    await kv.put(key, JSON.stringify(rec), { expirationTtl: REFL_TTL });
+    await atTouch(kv, [id]);
+    await atNotify(env, team, [u.id], { kind: 'assigned', taskId: id, text: `Рефлексия за неделю: оцените клиентов (${clients.length})`, by: 'Бот' }, {
+      text: `🪞 <b>Рефлексия за неделю</b>\nОцените каждого активного клиента по шкале 1–10 и коротко объясните почему — ${clients.length} ${clients.length % 10 === 1 && clients.length % 100 !== 11 ? 'клиент' : 'клиентов'}. Можно прерваться и продолжить потом.`,
+      extra: { reply_markup: { inline_keyboard: [[{ text: 'Заполнить рефлексию', url: `${AT_PAGE_URL}#reflection` }]] }, disable_notification: true },
+    });
+  }
+}
+
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
 async function handleAvitoTasksApi(request, env, url, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -6080,6 +6211,8 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       serverTime: nowMs,
     };
     if (gone.length) out.gone = gone;
+    const reflection = await atReflectionState(kv, me, mem, nowMs);
+    if (reflection) out.reflection = reflection;
     if (body.ver === ver) return json({ ...out, unchanged: true });
     const cutoff = nowMs - AT_HIDE_CLOSED_AFTER_MS;
     out.users = team.users.map(atPublicUser);
@@ -6130,6 +6263,17 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       await atPutTeam(kv, team);
     }
     return json({ ok: true });
+  }
+
+  if (action === 'refl-save') {
+    const res = await atReflectionSave(env, team, me, body, nowMs);
+    if (res.error) return json({ error: res.error, week: res.week }, res.status || 400);
+    return json({ reflection: res.state });
+  }
+  if (action === 'refl-results') {
+    if (!isAdmin) return json({ error: 'forbidden' }, 403);
+    const week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : reflWeek(nowMs);
+    return json({ results: await atReflectionResults(env, team, week), current: reflWeek(nowMs) });
   }
 
   // «Клиенту написали» — the client manager's mark on the Clients tab.
@@ -7104,6 +7248,13 @@ async function atRunChecks(env, nowMs, tasks, byId) {
   // them with 🔴, a message per task on top of it is noise. The owner gets missed deadlines in the
   // summary and the "только что вышел срок" message, so no per-task pings for him either.
   const digestDue = workday && hh >= 10 && hh < 12 && !(await kv.get(`bot:once:atdigest:${date}`));
+  if (inHours) {
+    try {
+      await atReflectionCron(env, team, nowMs);
+    } catch (err) {
+      console.error('reflection cron failed', err && err.stack);
+    }
+  }
   if (inHours) {
     for (const task of tasks.filter((t) => t.status === 'open')) {
       const due = botDueMs(task);
