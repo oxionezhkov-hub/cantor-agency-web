@@ -24,44 +24,14 @@ a{color:inherit}
 h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
 .wrap{max-width:960px;margin:0 auto;padding:0 16px 80px}
 
-/* top bar */
-.bar{background:var(--ink);color:#fff}
-.bar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
-.brand{font-family:'Unbounded',sans-serif;font-size:13px;letter-spacing:.02em}
-.brand i{font-style:normal;color:var(--red)}
-.bar small{font-size:12px;color:#bdbab4}
-
-/* intro */
-.intro{padding:40px 0 8px}
-.eyebrow{display:inline-block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--red);margin-bottom:12px}
-.intro h1{font-size:clamp(26px,5vw,40px);line-height:1.15}
-.intro .sub{margin-top:10px;color:var(--muted);font-size:15px;max-width:680px}
-.legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:22px;font-size:13px;color:var(--muted)}
-.legend span{display:inline-flex;align-items:center;gap:8px}
-.sw{display:inline-block;flex:none;width:22px;height:14px;border-radius:3px}
-.sw.img{border:1.5px dashed var(--red);background:var(--red-bg)}
-.sw.dark{background:var(--ink)}
-.sw.txt{border:1px solid var(--line);background:#fff}
-
-/* notes + map */
-.panel{border:1px solid var(--ink);border-radius:14px;padding:20px;margin-top:26px}
-.panel h2{font-size:15px;margin-bottom:12px}
-.notes{list-style:none;display:grid;gap:8px;font-size:14px}
-.notes li{padding-left:18px;position:relative}
-.notes li::before{content:'';position:absolute;left:0;top:.62em;width:8px;height:8px;background:var(--red);border-radius:2px}
-.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
-.map a{display:flex;gap:10px;align-items:baseline;text-decoration:none;font-size:14px;padding:8px 10px;border-radius:8px;background:var(--soft)}
-.map a:hover{background:var(--red-bg)}
-.map .num{font-size:11px;color:var(--red);min-width:20px}
-.map .off{background:#fff;border:1px dashed var(--line);color:var(--muted);text-decoration:line-through}
-
-/* sections */
-.sec{margin-top:44px;border-top:3px solid var(--ink);padding-top:18px;scroll-margin-top:12px}
-.sec-h{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+/* sections: each header sticks to the top while its section is on screen,
+   so the current section title changes by itself while scrolling */
+.sec{padding-bottom:28px}
+.sec-h{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:14px;align-items:baseline;
+  padding:14px 0 12px;border-top:3px solid var(--ink);border-bottom:1px solid var(--line)}
 .sec-h .num{font-size:14px;color:var(--red)}
-.sec-h h2{font-size:clamp(20px,3.4vw,26px);line-height:1.2}
-.sec-h .nav{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
-.purpose{margin-top:8px;font-size:14px;color:var(--muted);max-width:720px}
+.sec-h h2{font-size:clamp(18px,3.2vw,24px);line-height:1.2}
+.purpose{margin-top:12px;font-size:14px;color:var(--muted);max-width:720px}
 .body{margin-top:18px;display:grid;gap:16px}
 
 .big{font-family:'Unbounded',sans-serif;font-size:clamp(26px,5vw,42px);line-height:1.1}
@@ -130,27 +100,28 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
 .ask li{padding-left:16px;position:relative}
 .ask li::before{content:'?';position:absolute;left:0;color:var(--red);font-weight:700}
 
-.skipped .item{display:grid;grid-template-columns:minmax(160px,240px) 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
-.skipped .item b{text-decoration:line-through;color:var(--muted)}
+.skipped .sec-h{background:var(--red);border-top-color:var(--red);color:#fff;border-bottom:none;padding-left:16px;padding-right:16px;border-radius:0 0 10px 10px}
+.skipped .sec-h .num{color:#fff}
+.skip-box{margin-top:14px;border:2px solid var(--red);border-radius:14px;background:var(--red-bg);padding:6px 18px}
+.skip-box .item{display:grid;grid-template-columns:minmax(170px,250px) 1fr;gap:12px;padding:14px 0;border-bottom:1px solid rgba(232,57,29,.25);font-size:14px}
+.skip-box .item:last-child{border-bottom:none}
+.skip-box .item b{font-size:15px;display:flex;gap:10px;align-items:baseline}
+.skip-box .item b::before{content:'×';color:var(--red);font-family:'Unbounded',sans-serif;font-size:16px}
 
-.how{margin-top:44px;background:var(--soft);border-radius:14px;padding:20px;font-size:14px}
-.how h2{font-size:15px;margin-bottom:8px}
 
 .state{padding:80px 0;text-align:center;color:var(--muted)}
 .state h1{font-size:22px;color:var(--text);margin-bottom:8px}
 
 @media (max-width:600px){
   .tl{grid-template-columns:1fr;gap:2px}
-  .skipped .item{grid-template-columns:1fr;gap:2px}
+  .skip-box .item{grid-template-columns:1fr;gap:4px}
 }
 @media print{
-  .bar{background:#fff;color:var(--ink);border-bottom:2px solid var(--ink)}
-  .sec{break-inside:avoid-page}
+  .sec-h{position:static}
 }
 </style>
 </head>
 <body>
-<div class="bar"><div class="wrap"><div class="brand">Cantor <i>Agency</i></div><small>МБА «Личный бренд» · структура сайта</small></div></div>
 <main class="wrap" id="app"><div class="state">Загружаем структуру…</div></main>
 
 <script>
@@ -248,28 +219,9 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
     var skipped = arr(d.skipped);
     var html = '';
 
-    html += '<section class="intro"><span class="eyebrow">Структура сайта · на согласование</span>'
-      + '<h1>' + esc(d.name) + '</h1>'
-      + '<p class="sub">' + esc(d.intro || 'Это не дизайн, а план будущего сайта: какие будут разделы, в каком порядке и с каким текстом. Дизайн сделаем после согласования структуры.') + '</p>'
-      + '<div class="legend"><span><i class="sw txt"></i>Текст для сайта — черновик по вашему брифу</span>'
-      + '<span><i class="sw img"></i>Место под фото или видео — что именно нужно</span>'
-      + '<span><i class="sw dark"></i>Что нужно уточнить или прислать</span></div></section>';
-
-    if (arr(d.notes).length) {
-      html += '<div class="panel"><h2>Общее по сайту</h2><ul class="notes">'
-        + d.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul></div>';
-    }
-
-    html += '<div class="panel"><h2>Разделы сайта по порядку</h2><div class="map">'
-      + sections.map(function (s, i) {
-        return '<a href="#' + esc(s.id) + '"><span class="num">' + pad(i + 1) + '</span>' + esc(s.title) + '</a>';
-      }).join('')
-      + skipped.map(function (s) { return '<a class="off" href="#skipped"><span class="num">—</span>' + esc(s.title) + '</a>'; }).join('')
-      + '</div></div>';
-
     sections.forEach(function (s, i) {
       html += '<section class="sec" id="' + esc(s.id) + '"><div class="sec-h"><span class="num">' + pad(i + 1) + '</span>'
-        + '<h2>' + esc(s.title) + '</h2>' + (s.nav && s.nav !== '—' ? '<span class="nav">в меню: ' + esc(s.nav) + '</span>' : '') + '</div>'
+        + '<h2>' + esc(s.title) + '</h2></div>'
         + (s.purpose ? '<p class="purpose">' + esc(s.purpose) + '</p>' : '')
         + '<div class="body">' + arr(s.blocks).map(function (b) {
           var fn = BLOCKS[b.type];
@@ -278,15 +230,12 @@ h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
     });
 
     if (skipped.length) {
-      html += '<section class="sec skipped" id="skipped"><div class="sec-h"><span class="num">—</span><h2>Чего не будет на сайте</h2></div>'
-        + '<p class="purpose">Эти блоки есть в других сайтах, но вам мы их не ставим — по причинам ниже. Если что-то из этого есть — напишите, добавим.</p>'
-        + '<div class="body"><div>' + skipped.map(function (s) {
+      html += '<section class="sec skipped" id="skipped"><div class="sec-h"><span class="num">×</span><h2>Чего не будет на сайте</h2></div>'
+        + '<p class="purpose">Эти блоки есть на других сайтах, но здесь мы их не ставим — причины ниже. Если материал появится, блок можно добавить.</p>'
+        + '<div class="skip-box">' + skipped.map(function (s) {
           return '<div class="item"><b>' + esc(s.title) + '</b><span>' + esc(s.reason) + '</span></div>';
-        }).join('') + '</div></div></section>';
+        }).join('') + '</div></section>';
     }
-
-    html += '<div class="how"><h2>Как согласовать</h2><p>' + esc(d.howTo || 'Посмотрите разделы и тексты. Если всё подходит — напишите менеджеру «Структуру согласовываю». Если нужно что-то поменять, убрать или добавить — пришлите правки в том же чате, можно голосовым. Чёрные блоки «Нужно от вас» — то, без чего раздел не получится: пришлите это вместе с ответом.') + '</p>'
-      + (d.updated ? '<p style="margin-top:8px;color:var(--muted);font-size:12px">Версия от ' + esc(d.updated) + '</p>' : '') + '</div>';
 
     app.innerHTML = html;
     if (location.hash) {
