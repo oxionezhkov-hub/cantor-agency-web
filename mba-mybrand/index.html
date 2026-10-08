@@ -272,6 +272,15 @@ input,textarea,select{font-family:inherit}
 .crm-group.open .crm-group-chevron{transform:rotate(180deg)}
 .crm-group-chevron{transition:transform 0.18s;flex-shrink:0}
 .crm-row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ss-intro{font-size:13px;color:var(--muted);margin:-10px 0 18px;max-width:720px}
+.ss-card{background:white;border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;display:grid;gap:10px}
+.ss-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ss-name{font-weight:600;font-size:15px;color:var(--dark)}
+.ss-status{font-size:12px;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--bg);color:var(--muted)}
+.ss-status.done{background:#E7F6EE;color:#1E9E5A}
+.ss-link{font-size:13px;color:var(--red);word-break:break-all}
+.ss-msg{width:100%;min-height:96px;font:inherit;font-size:13px;line-height:1.5;border:1px solid var(--border);border-radius:var(--r-sm, 8px);padding:10px 12px;resize:vertical;color:var(--text);background:var(--bg)}
+.ss-actions{display:flex;gap:8px;flex-wrap:wrap}
 .crm-dash-overlay{position:fixed;inset:0;background:rgba(10,10,10,0.45);backdrop-filter:blur(3px);z-index:1200;display:flex;align-items:flex-start;justify-content:center;padding:70px 20px;overflow-y:auto}
 .crm-dash-popup{width:100%;max-width:420px;background:white;border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:22px}
 .crm-dash-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
@@ -341,6 +350,7 @@ input,textarea,select{font-family:inherit}
     <button class="admin-tab" data-tab="settings" onclick="switchAdminTab('settings')">⚙️ Настройки</button>
     <button class="admin-tab" data-tab="responses" onclick="switchAdminTab('responses')">📋 Ответы</button>
     <button class="admin-tab active" data-tab="crm" onclick="switchAdminTab('crm')">🗂️ CRM</button>
+    <button class="admin-tab" data-tab="sites" onclick="switchAdminTab('sites')">🌐 Структура сайтов</button>
   </div>
   <div class="admin-main">
     <div class="admin-page" id="page-settings">
@@ -420,6 +430,16 @@ input,textarea,select{font-family:inherit}
         </div>
       </div>
       <div class="client-list" id="crmList"></div>
+    </div>
+    <div class="admin-page" id="page-sites">
+      <div class="admin-head">
+        <h2>Структура сайтов — на согласование</h2>
+      </div>
+      <p class="ss-intro">Ссылка на структуру сайта каждого клиента и готовое сообщение для Telegram (без форматирования): скопируйте и отправьте клиенту. Статус «согласовано» — галочка задачи «Согласована структура сайта» в CRM.</p>
+      <div class="search-row">
+        <input type="text" id="ssSearch" placeholder="Поиск по имени…" oninput="renderSiteStructures()">
+      </div>
+      <div class="client-list" id="ssList"><p class="empty-note">Загрузка…</p></div>
     </div>
   </div>
 </div>
@@ -778,6 +798,7 @@ function switchAdminTab(tab) {
   document.querySelectorAll('.admin-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.admin-page').forEach((p) => p.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
+  if (tab === 'sites') renderSiteStructures();
 }
 
 async function initAdmin() {
@@ -793,6 +814,7 @@ async function initAdmin() {
     adminState.schema = schema;
     adminState.clients = clientsRes.clients || [];
     crmState.clients = crmRes.clients || [];
+    loadSiteStructures();
     renderBlocksEditor();
     renderClientList();
     renderCrmList();
@@ -1745,6 +1767,83 @@ function openCrmDashboard() {
   `;
   document.getElementById('crmDashOverlay').classList.remove('hidden');
 }
+/* ════════════ SITE STRUCTURES ════════════ */
+// Registry of /site-structure/ pages (slug, name, firstName, crmIds) — site-structure/clients.json.
+const SITE_STRUCTURE_BASE = 'https://cantor.agency/site-structure/?client=';
+const ssState = { list: null };
+
+function siteStructureUrl(slug) { return SITE_STRUCTURE_BASE + encodeURIComponent(slug); }
+
+function siteStructureMessage(entry) {
+  return `${entry.firstName}, добрый день!
+
+Мы подготовили структуру вашего личного сайта: какие на нём будут разделы, в каком порядке и с какими текстами. Это ещё не дизайн, а наполнение — его нужно согласовать, прежде чем мы начнём делать сайт.
+
+Посмотреть можно по ссылке:
+${siteStructureUrl(entry.slug)}
+
+Как проверить:
+1. Откройте ссылку и пролистайте страницу сверху вниз — разделы идут в том же порядке, что и на будущем сайте.
+2. Тексты написаны по вашему брифу и подкастам — проверьте, всё ли верно и звучит ли как вы.
+3. В оранжевых рамках описано, какие фото и видео нужны для сайта — их нужно будет прислать.
+4. В чёрных блоках «Нужно от вас» — вопросы, пришлите, пожалуйста, ответы на них.
+5. В самом конце — что мы на сайт не ставим и почему.
+
+Если всё подходит — напишите «Согласовываю». Если нужно что-то поправить, убрать или добавить — пришлите правки и ответы на вопросы сюда, можно голосовым.`;
+}
+
+async function loadSiteStructures() {
+  try {
+    const res = await fetch('/site-structure/clients.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error(res.status);
+    ssState.list = await res.json();
+  } catch (e) {
+    ssState.list = [];
+    document.getElementById('ssList').innerHTML = '<p class="empty-note">Не удалось загрузить список структур.</p>';
+    return;
+  }
+  renderSiteStructures();
+}
+
+function siteStructureDone(entry) {
+  return (entry.crmIds || []).some((id) => {
+    const c = getCrmClient(id);
+    return c && c.tasks && c.tasks.siteStructure && c.tasks.siteStructure.done;
+  });
+}
+
+function renderSiteStructures() {
+  const el = document.getElementById('ssList');
+  if (!ssState.list) return;
+  const q = (document.getElementById('ssSearch').value || '').trim().toLowerCase();
+  const rows = ssState.list.filter((e) => !q || e.name.toLowerCase().includes(q));
+  if (!rows.length) { el.innerHTML = '<p class="empty-note">Ничего не найдено.</p>'; return; }
+  el.innerHTML = rows.map((e) => {
+    const done = siteStructureDone(e);
+    const url = siteStructureUrl(e.slug);
+    return `
+      <div class="ss-card">
+        <div class="ss-top">
+          <div class="ss-name">${escapeHtml(e.name)}</div>
+          <span class="ss-status ${done ? 'done' : ''}">${done ? 'Согласовано' : 'Ждём согласования'}</span>
+        </div>
+        <a class="ss-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>
+        <textarea class="ss-msg" readonly id="ssMsg-${escapeHtml(e.slug)}">${escapeHtml(siteStructureMessage(e))}</textarea>
+        <div class="ss-actions">
+          <button class="btn-red" onclick="copySiteStructure('${escapeHtml(e.slug)}', 'msg')">Скопировать сообщение</button>
+          <button class="btn-outline" onclick="copySiteStructure('${escapeHtml(e.slug)}', 'link')">Скопировать ссылку</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function copySiteStructure(slug, what) {
+  const entry = (ssState.list || []).find((e) => e.slug === slug);
+  if (!entry) return;
+  navigator.clipboard.writeText(what === 'link' ? siteStructureUrl(slug) : siteStructureMessage(entry));
+  showToast(what === 'link' ? 'Ссылка скопирована' : 'Сообщение скопировано');
+}
+
 function closeCrmDashboard(e) {
   if (e && e.target !== document.getElementById('crmDashOverlay')) return;
   document.getElementById('crmDashOverlay').classList.add('hidden');
