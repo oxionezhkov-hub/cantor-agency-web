@@ -5202,11 +5202,67 @@ async function botScheduled(env) {
   await botRunChecks(env, Date.now());
 }
 
-// Free-text question from the owner, answered from the last two weeks of logs.
+// Free-text question from the owner. A question about one person's tasks ("какие у Альбины задачи",
+// "что делает Евгений") is answered straight from the tracker — exact, no AI. Anything else goes to
+// the AI with the whole picture: the team, every open task and the last two weeks' closed ones, the
+// clients with their last 7 days of metrics, clients waiting for an answer, this week's reflection,
+// and the chat logs (30 days for clients the question names, otherwise the last 3 days).
+const BOT_PERSON_TASKS_RE = /задач|дела[ею]т|делает|занят|поручен|на (н[её]м|ней)|что у н|работает над|в работе/i;
+
 async function botAnswerQuestion(env, question) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const now = Date.now();
+  const team = await atGetTeam(env);
+  const people = team.users.filter((u) => u.active);
   const byId = await botProjectsById(kv);
+  const q = ` ${botNorm(question)} `;
+  // Declensions: "Агешиной" → "агешин", "Альбины" → "альбин"; short aliases ("Женя" → "Жени") by stem too.
+  const hits = (name) => botNorm(name).split(' ').some((w) => w.length > 3 && q.includes(` ${w.slice(0, Math.max(4, w.length - 2))}`));
+  const aliasHit = (u) => (u.aliases || []).some((a) => { const w = botNorm(a); return w.length >= 4 && !w.includes(' ') && new RegExp(` ${w.slice(0, -1)}[а-яё]{0,2} `).test(q); });
+  const person = atMatchUser(question, people) || (() => { const m = people.filter(aliasHit); return m.length === 1 ? m[0] : null; })();
+  // A client sharing the first name ("задачи по Ольге Агешиной") makes it a question about the client.
+  const surnameHit = (name) => botNorm(name).split(' ').slice(1).some((w) => hits(w));
+  const clientNamed = Object.values(byId).some((p) => (person ? surnameHit(p.name) : hits(p.name)));
+  if (person && BOT_PERSON_TASKS_RE.test(question) && !clientNamed && !/клиент|проект/i.test(question.replace(/задач\S*/gi, ''))) {
+    const list = await atBuildMyTasks(env, person, false, true);
+    return `👤 <b>${escapeHtml(person.name)}</b> · ${escapeHtml(person.roleLabel || AT_ROLES[person.role] || '')}\n${list}`;
+  }
+
+  const projects = Object.values(byId);
+  const tasks = await botAllTasks(kv);
+  const fmt = (ms) => (ms ? botFmtDate(ms) : '—');
+  const nameOf = (t) => (t.projectId && byId[t.projectId] ? byId[t.projectId].name : t.topicName || 'без клиента');
+  const whoOf = (t) => { const uid = atAssigneeId(t, team.users); const u = uid && team.users.find((x) => x.id === uid); return u ? u.name : t.owner || 'никто (ничья)'; };
+  const statusOf = (t) => (t.status === 'open' ? (t.takenAt ? 'в работе' : 'новая') : { done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[t.status] || t.status);
+  const recentMs = now - 14 * 24 * 3600000;
+  const shown = tasks.filter((t) => t.status === 'open' || t.status === 'done' || Date.parse(t.updatedAt || t.createdAt || 0) > recentMs)
+    .sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'ru'));
+  const taskLines = shown.map((t) => {
+    const due = botDueMs(t);
+    const creator = t.createdById ? (team.users.find((u) => u.id === t.createdById) || {}).name : t.author;
+    return `- ${nameOf(t)} | ${t.text} | исполнитель: ${whoOf(t)} | статус: ${statusOf(t)} | срок: ${due ? `${fmt(due)}${due < now && t.status === 'open' ? ' (ПРОСРОЧЕНО)' : ''}` : 'нет'} | поставил: ${creator || '—'} ${fmt(Date.parse(t.startedAt || t.createdAt || 0))}${t.doneAt ? ` | сделано: ${fmt(Date.parse(t.doneAt))}` : ''}`;
+  });
+
+  // Last 7 days of the dashboard's daily numbers, per client.
+  const days = [];
+  for (let i = 1; i <= 7; i += 1) days.push(botMsk(now - i * 24 * 3600000).date);
+  const clientLines = await Promise.all(projects.map(async (p) => {
+    if (p.inactive) return `- ${p.name}: неактивный`;
+    const recs = (await Promise.all(days.map((d) => kv.get(`dailyMetrics:${p.id}:${d}`, 'json')))).filter(Boolean);
+    const sum = (k) => recs.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+    return `- ${p.name}: за 7 дней бюджет ${sum('budget')} ₽, просмотры ${sum('views')}, контакты ${sum('contacts')}, диагностики ${sum('diagnostics')}, продажи ${sum('sales')} (дней с данными: ${recs.length})`;
+  }));
+
+  const pending = (await botPendingList(env, now)).map((p) => `- ${p.projectId && byId[p.projectId] ? byId[p.projectId].name : p.title}: «${String(p.text).slice(0, 160)}» — ждёт с ${fmt(p.since)}`);
+
+  let reflLines = [];
+  try {
+    const week = reflWeek(now);
+    const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
+    reflLines = recs.flatMap(([u, r]) => Object.entries((r && r.answers) || {}).map(([pid, a]) => `- ${(byId[pid] || {}).name || pid}: ${u.name} — ${a.score}/10, «${a.comment}»`));
+  } catch (err) { /* reflection is optional context */ }
+
+  // Chats: the clients the question names (30 days), otherwise everything from the last 3 days.
   const chats = await listByPrefix(kv, 'bot:chat:');
   const sources = [];
   for (const c of chats) {
@@ -5220,27 +5276,40 @@ async function botAnswerQuestion(env, question) {
       sources.push({ chatId: c.id, threadId: '0', name: (c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title });
     }
   }
-  const q = ` ${botNorm(question)} `;
-  // Match on surname stems ("Агешиной" → "агешин") so declensions still hit.
-  const focused = sources.filter((s) => botNorm(s.name).split(' ').some((w) => w.length > 3 && q.includes(w.slice(0, Math.max(4, w.length - 2)))));
+  const focused = sources.filter((s) => hits(s.name));
   const picked = focused.length ? focused : sources;
-  const days = focused.length ? 30 : 7;
+  const span = focused.length ? 30 : 3;
   let transcript = '';
   for (const s of picked) {
-    const logs = await botReadLogs(kv, s.chatId, s.threadId, now - days * 24 * 3600000, now);
-    if (!logs.length) continue;
-    transcript += `\n### ${s.name}\n${botFormatLogLines(logs)}\n`;
+    const logs = await botReadLogs(kv, s.chatId, s.threadId, now - span * 24 * 3600000, now);
+    if (logs.length) transcript += `\n### ${s.name}\n${botFormatLogLines(logs)}\n`;
   }
-  if (!transcript) return 'В сохранённой переписке пока ничего нет — бот видит только сообщения после того, как его добавили в чат.';
-  if (transcript.length > 45000) transcript = transcript.slice(-45000);
+  if (transcript.length > 22000) transcript = transcript.slice(-22000);
+
+  const d = botMsk(now);
+  const context = [
+    `СЕЙЧАС: ${d.date} ${fmt(now).split(' ')[1]} (МСК), ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][d.dow]}.`,
+    `КОМАНДА:\n${people.map((u) => `- ${u.name} — ${u.roleLabel || AT_ROLES[u.role] || u.role}`).join('\n')}`,
+    `ЗАДАЧИ (все открытые и изменённые за 14 дней; формат: клиент | задача | исполнитель | статус | срок | кто и когда поставил):\n${taskLines.join('\n') || '—'}`,
+    `КЛИЕНТЫ И МЕТРИКИ (из дашборда):\n${clientLines.join('\n') || '—'}`,
+    `КЛИЕНТЫ ЖДУТ ОТВЕТА В ЧАТЕ:\n${pending.join('\n') || '—'}`,
+    `РЕФЛЕКСИЯ ЭТОЙ НЕДЕЛИ (оценки проектов командой):\n${reflLines.join('\n') || '—'}`,
+    `ПЕРЕПИСКА (${focused.length ? 'по клиентам из вопроса, 30 дней' : 'все чаты, последние 3 дня'}; формат [id] дата автор: текст):${transcript || '\n—'}`,
+  ].join('\n\n');
   try {
-    const answer = await botAi(env,
-      'Ты помощник руководителя агентства Cantor Agency. Отвечай по-русски, коротко и по делу, только по переписке ниже. '
-      + 'Ссылайся на сообщения в формате [id]. Если ответа в переписке нет — так и скажи.',
-      `Вопрос: ${question}\n\nПереписка (формат: [id] дата автор: текст):\n${transcript}`, 900);
-    return escapeHtml(answer || 'Не получилось сформулировать ответ.');
+    const answer = await botAi(env, [
+      'Ты — умный помощник руководителя агентства Cantor Agency (продвижение репетиторов на Авито). Отвечаешь Олегу Ежкову в Telegram.',
+      'Ниже — актуальные данные из трекера задач, дашборда и рабочих чатов. Отвечай ТОЛЬКО по ним, но пользуйся ими по-настоящему:',
+      'фильтруй, считай, сравнивай, группируй (по людям, клиентам, срокам). Вопросы о задачах — по разделу ЗАДАЧИ',
+      '(исполнитель, статус, срок), о цифрах — по КЛИЕНТЫ И МЕТРИКИ, о том, что обсуждали, — по ПЕРЕПИСКЕ.',
+      'Имена в вопросе могут быть в любом падеже и уменьшительными (Альбины, Жени, Оли) — сопоставляй с КОМАНДОЙ и клиентами.',
+      'Ответ: по-русски, коротко и конкретно, сначала главное. Списки — строками с «• ». Без markdown-таблиц и решёток.',
+      'Если данных для ответа нет — скажи прямо, чего именно не хватает, и не выдумывай.',
+    ].join('\n'), `Вопрос: ${question}\n\n${context}`, 1200);
+    const safe = escapeHtml(answer || 'Не получилось сформулировать ответ.').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#+\s*/gm, '');
+    return safe;
   } catch (err) {
-    if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится.'; }
+    if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится. Про задачи человека можно спросить и сейчас: «какие задачи у Альбины».'; }
     return `Ошибка ИИ: ${escapeHtml(err && err.message)}`;
   }
 }
@@ -7233,7 +7302,8 @@ function atUrgency(t, nowMs) {
   }
   return s;
 }
-async function atBuildMyTasks(env, user, digest) {
+// about: the owner asking about this person — no «вы», no unclaimed/inform sections meant for them.
+async function atBuildMyTasks(env, user, digest, about) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const nowMs = Date.now();
   const team = await atGetTeam(env);
@@ -7250,7 +7320,7 @@ async function atBuildMyTasks(env, user, digest) {
   const today = mine.filter((t) => botDueMs(t) && botDueMs(t) >= nowMs && botMsk(botDueMs(t)).date === botMsk(nowMs).date).length;
   const inWork = mine.filter((t) => t.takenAt).length;
   if (digest) lines.push(`☀️ <b>Доброе утро, ${escapeHtml(atFirstName(user.name))}!</b>`);
-  if (!mine.length) lines.push('Открытых задач на вас нет 👌');
+  if (!mine.length) lines.push(about ? 'Открытых задач нет 👌' : 'Открытых задач на вас нет 👌');
   else {
     lines.push(`📋 <b>Незакрытые задачи: ${mine.length}</b>${overdue ? ` · 🔴 просрочено ${overdue}` : ''}${today ? ` · на сегодня ${today}` : ''}${inWork ? ` · ▶️ в работе ${inWork}` : ''}`);
     const groups = new Map();
@@ -7270,16 +7340,16 @@ async function atBuildMyTasks(env, user, digest) {
   }
   const seesInform = user.role === 'manager' || user.role === 'owner' || user.role === 'assistant';
   const unclaimed = all.filter((t) => atIsUnclaimed(t, team.users));
-  if (unclaimed.length) {
+  if (unclaimed.length && !about) {
     lines.push('', `🙋 <b>Ничьи задачи из чатов: ${unclaimed.length}</b> — посмотрите, нет ли среди них ваших, и возьмите в трекере:`);
     for (const t of unclaimed.slice(0, 8)) lines.push(`• <a href="${escapeHtml(atTaskUrl(t.id))}">${escapeHtml(t.text)}</a> — <i>${escapeHtml(clientOf(t))}</i>`);
     if (unclaimed.length > 8) lines.push(`…и ещё ${unclaimed.length - 8} — в трекере.`);
   }
-  if (doneMine.length && !seesInform) { // the manager sees these in «сообщить клиентам» below
+  if (doneMine.length && (about || !seesInform)) { // the manager sees these in «сообщить клиентам» below
     lines.push('', `✅ <b>Сделано, ждёт сообщения клиенту: ${doneMine.length}</b>`);
     for (const t of doneMine) lines.push(`• ${escapeHtml(t.text)} — <i>${escapeHtml(clientOf(t))}</i>`);
   }
-  if (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant') {
+  if (!about && (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant')) {
     const toInform = all.filter((t) => t.status === 'done' && atNeedsInform(t, team.users));
     if (toInform.length) {
       lines.push('', `📨 <b>Готово — сообщить клиентам: ${toInform.length}</b>`);
