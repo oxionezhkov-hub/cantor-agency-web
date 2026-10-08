@@ -75,6 +75,17 @@ a{color:inherit}
 .gate-ic .ic{width:26px;height:26px}
 .gate h1{font-family:var(--display);font-size:19px;font-weight:700;color:var(--ink);margin-bottom:10px;letter-spacing:-.01em}
 .gate p{color:var(--muted);font-size:14.5px;margin-bottom:22px}
+.gate-alt{display:inline-block;margin-top:14px;font-size:13px;color:var(--muted);text-decoration:none}
+.gate-alt:hover{color:var(--ink)}
+.gl-people{display:grid;gap:6px;text-align:left;margin-bottom:4px;max-height:52vh;overflow:auto}
+.gl-person{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:left;transition:border-color .15s,background .15s}
+.gl-person:hover{border-color:var(--accent);background:var(--accent-bg)}
+.gl-person[disabled]{opacity:.5;pointer-events:none}
+.gl-person .nm{font-weight:600;color:var(--ink);font-size:15px;line-height:1.3}
+.gl-person .rl{font-size:12.5px;color:var(--muted)}
+.gl-code{width:100%;text-align:center;font-size:30px;font-weight:700;letter-spacing:.35em;padding:12px 0 12px .35em;border-radius:14px;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.gl-err{min-height:20px;font-size:13px;color:var(--red);margin:-4px 0 10px}
+.gl-row{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
 .spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -650,7 +661,8 @@ a{color:inherit}
     <div class="gate-ic"><svg class="ic"><use href="#i-lock"/></svg></div>
     <h1 id="gateTitle">Нет доступа</h1>
     <p id="gateText">Avito Tasks — рабочее пространство команды Cantor Agency. Войти можно по личной пригласительной ссылке. Запросите доступ у Олега.</p>
-    <a class="btn btn-primary btn-block tg" id="gateBtn" href="https://t.me/oleg_ezhkov"><svg class="ic"><use href="#i-tg"/></svg>Написать Олегу в Telegram</a>
+    <div id="gateLogin"></div>
+    <a class="gate-alt tg" id="gateBtn" href="https://t.me/oleg_ezhkov">Не приходит код? Написать Олегу в Telegram</a>
   </div>
 </div>
 
@@ -1092,20 +1104,125 @@ function toast(text, actionLabel, action, ms) {
 function showGate(kind) {
   $('boot').hidden = true; $('app').hidden = true; $('gate').hidden = false;
   const texts = {
-    none: ['Нет доступа', 'Avito Tasks — рабочее пространство команды Cantor Agency. Войти можно по личной пригласительной ссылке. Запросите доступ у Олега.'],
+    none: ['Вход в Avito Tasks', 'Рабочее пространство команды Cantor Agency. Нажмите «Получить код», выберите себя — бот пришлёт код в Telegram.'],
     blocked: ['Доступ отключён', 'Руководитель отключил вам доступ к Avito Tasks. Если это ошибка — напишите Олегу.'],
-    invite: ['Ссылка не работает', 'Эта пригласительная ссылка устарела или уже заменена новой. Попросите у Олега актуальную.'],
-    reset: ['Нужна новая ссылка', 'Ваша ссылка доступа была обновлена. Попросите у Олега новую пригласительную ссылку.'],
+    invite: ['Ссылка не работает', 'Эта пригласительная ссылка устарела. Войдите по коду: нажмите «Получить код» и выберите себя — бот пришлёт код в Telegram.'],
+    reset: ['Нужно войти заново', 'Доступ был обновлён. Нажмите «Получить код» и выберите себя — бот пришлёт код в Telegram.'],
   }[kind] || [];
   $('gateTitle').textContent = texts[0];
   $('gateText').textContent = texts[1];
   // Встроенный браузер Telegram не всегда помнит вход: подсказываем, как войти без писем Олегу.
   // На iPhone браузер Telegram не всегда называет себя в userAgent — подсказка нужна любому телефону.
-  if (kind === 'none' && (/Telegram/i.test(navigator.userAgent) || window.TelegramWebviewProxy || /iPhone|Android/i.test(navigator.userAgent))) {
-    $('gateText').textContent = 'Если открыли из Telegram: встроенный браузер Telegram может не помнить вход. Нажмите кнопку «Открыть в трекере» в сообщении бота — она входит сразу, или откройте свою личную ссылку в Safari / Chrome (⋯ → «Открыть в браузере»). Нет ссылки — напишите Олегу.';
-  }
-  document.title = 'Avito Tasks — нет доступа';
+  GL.step = kind === 'blocked' ? 'off' : 'start';
+  renderGateLogin();
+  $('gateBtn').textContent = kind === 'blocked' ? 'Написать Олегу в Telegram' : 'Не приходит код? Написать Олегу в Telegram';
+  document.title = 'Avito Tasks — вход';
 }
+// ── вход по коду из бота: «Получить код» → выбрать себя → ввести 6 цифр из Telegram ──
+const GL = { step: 'start', people: null, user: null, challenge: null, sentAt: 0, busy: false, err: '', code: '' };
+function renderGateLogin() {
+  const el = $('gateLogin');
+  if (!el) return;
+  clearInterval(GL.timer);
+  if (GL.step === 'off') { el.innerHTML = ''; return; }
+  if (GL.step === 'start') {
+    el.innerHTML = `<button class="btn btn-primary btn-block" data-gl="pick">${ico('lock')}Получить код</button>`;
+    return;
+  }
+  if (GL.step === 'pick') {
+    $('gateTitle').textContent = 'Кто вы?';
+    $('gateText').textContent = 'Выберите себя — бот пришлёт код для входа вам в Telegram.';
+    if (!GL.people) { el.innerHTML = '<div class="spinner" style="margin:10px auto 18px"></div>'; return; }
+    el.innerHTML = `<div class="gl-people">${GL.people.map((u) => `<button class="gl-person" data-gl-user="${esc(u.id)}" ${u.tg ? '' : 'disabled'}>${avatar(u, '')}<span><span class="nm">${esc(u.name)}</span><br><span class="rl">${esc(u.tg ? u.roleLabel : 'бот в Telegram не подключён — напишите Олегу')}</span></span></button>`).join('')}</div>
+      ${GL.err ? `<div class="gl-err">${esc(GL.err)}</div>` : ''}
+      <div class="gl-row"><button class="btn btn-quiet btn-sm" data-gl="back">← Назад</button></div>`;
+    return;
+  }
+  if (GL.step === 'code') {
+    $('gateTitle').textContent = 'Введите код';
+    $('gateText').textContent = `Бот прислал код в Telegram — ${first(GL.user.name)}, проверьте сообщения от «Cantor Agency · помощник». Код действует 10 минут.`;
+    const wait = Math.max(0, 60 - Math.floor((Date.now() - GL.sentAt) / 1000));
+    el.innerHTML = `<input class="input gl-code" id="glCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="Код из Telegram" value="${esc(GL.code)}">
+      <div class="gl-err" id="glErr">${esc(GL.err)}</div>
+      <button class="btn btn-primary btn-block" data-gl="verify" ${GL.busy ? 'disabled' : ''}>Войти</button>
+      <div class="gl-row"><button class="btn btn-quiet btn-sm" data-gl="pick">← Другой сотрудник</button><button class="btn btn-quiet btn-sm" data-gl="resend" id="glResend" ${wait ? 'disabled' : ''}>${wait ? `Ещё раз через ${wait} с` : 'Отправить код ещё раз'}</button></div>`;
+    setTimeout(() => { const f = $('glCode'); if (f) { f.focus(); if (GL.err) f.select(); } }, 50);
+    GL.timer = setInterval(() => {
+      const b = $('glResend'); if (!b) return clearInterval(GL.timer);
+      const w = Math.max(0, 60 - Math.floor((Date.now() - GL.sentAt) / 1000));
+      b.disabled = !!w; b.textContent = w ? `Ещё раз через ${w} с` : 'Отправить код ещё раз';
+      if (!w) clearInterval(GL.timer);
+    }, 1000);
+  }
+}
+async function glSend(userId) {
+  GL.busy = true; GL.err = '';
+  const res = await api('login-code', { userId }).catch(() => ({ ok: false, data: {} }));
+  GL.busy = false;
+  if (res.ok) {
+    GL.user = GL.people.find((u) => u.id === userId); GL.challenge = res.data.challenge; GL.sentAt = Date.now(); GL.step = 'code'; GL.code = '';
+  } else {
+    const e = (res.data || {}).error;
+    GL.err = e === 'too_soon' ? `Код уже отправлен — новый можно запросить через ${res.data.wait} с.`
+      : e === 'no_telegram' ? 'У этого сотрудника не подключён бот — напишите Олегу.'
+        : e === 'blocked' ? 'Доступ этому сотруднику отключён.'
+          : e === 'send_failed' ? 'Бот не смог отправить сообщение — откройте бота «Cantor Agency · помощник» в Telegram и нажмите «Старт», затем попробуйте снова.'
+            : 'Не получилось отправить код — проверьте интернет.';
+    if (e === 'too_soon' && GL.challenge && GL.user && GL.user.id === userId) GL.step = 'code';
+  }
+  renderGateLogin();
+}
+async function glVerify() {
+  const code = ($('glCode') || {}).value || '';
+  if (!/^\d{6}$/.test(code.replace(/\D/g, ''))) { GL.err = 'Код — 6 цифр из сообщения бота'; renderGateLogin(); return; }
+  GL.busy = true; GL.err = '';
+  const res = await api('login-verify', { challenge: GL.challenge, code }).catch(() => ({ ok: false, data: {} }));
+  GL.busy = false;
+  if (res.ok && res.data.token) {
+    store.del(K_CACHE);
+    S.token = res.data.token; store.set(K_TOKEN, S.token);
+    if (store.get(K_TOKEN) !== S.token) S.noStorage = true;
+    S.justActivated = res.data.me;
+    GL.step = 'start'; GL.challenge = null;
+    $('gate').hidden = true; $('boot').hidden = false;
+    await sync(true);
+    return;
+  }
+  const e = (res.data || {}).error;
+  GL.err = e === 'wrong_code' ? `Неверный код${res.data.left > 0 ? ` — осталось попыток: ${res.data.left}` : ''}`
+    : e === 'too_many' ? 'Слишком много попыток — запросите новый код.'
+      : e === 'expired' ? 'Код устарел — запросите новый.'
+        : e === 'blocked' ? 'Доступ отключён — напишите Олегу.'
+          : 'Не получилось войти — проверьте интернет.';
+  renderGateLogin();
+}
+$('gate').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-gl]');
+  const u = e.target.closest('[data-gl-user]');
+  if (u) { await glSend(u.dataset.glUser); return; }
+  if (!b) return;
+  const a = b.dataset.gl;
+  if (a === 'pick') {
+    GL.step = 'pick'; GL.err = ''; renderGateLogin();
+    if (!GL.people) {
+      const res = await api('login-people', {}).catch(() => ({ ok: false, data: {} }));
+      GL.people = res.ok ? res.data.people : [];
+      if (!res.ok) GL.err = 'Не получилось загрузить список — проверьте интернет.';
+      renderGateLogin();
+    }
+  }
+  if (a === 'back') { GL.step = 'start'; GL.err = ''; showGate('none'); }
+  if (a === 'resend' && GL.user) await glSend(GL.user.id);
+  if (a === 'verify') await glVerify();
+});
+$('gate').addEventListener('input', (e) => {
+  if (e.target.id !== 'glCode') return;
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+  GL.code = e.target.value;
+  if (e.target.value.length === 6 && !GL.busy) glVerify();
+});
+$('gate').addEventListener('keydown', (e) => { if (e.target.id === 'glCode' && e.key === 'Enter') glVerify(); });
+
 function signOut(kind) {
   S.token = null; store.del(K_TOKEN); store.del(K_CACHE);
   stopPolling();

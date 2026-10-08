@@ -6147,6 +6147,85 @@ async function atReflectionCron(env, team, nowMs) {
   }
 }
 
+// ── Sign-in with a code from the control bot ──
+// The gate's «Получить код»: pick yourself from the team list, the bot sends you a 6-digit code in
+// Telegram, type it in. Nothing about the code is stored: the server hands the page a signed
+// challenge (who, until when, a random nonce) and the code is derived from it, so checking it needs
+// no KV read — the request can land on any Cloudflare location. KV only rate-limits (best effort):
+// one code a minute per person, 5 wrong tries per challenge. The code lives 10 minutes and works
+// once (a used challenge is remembered until it would expire anyway).
+const AT_CODE_TTL_MS = 10 * 60000;
+const AT_CODE_TRIES = 5;
+async function atLoginCode(team, challenge) {
+  const h = await atHmac(team.secret, `code:${challenge}`);
+  return String(parseInt(h.slice(0, 12), 16) % 1000000).padStart(6, '0');
+}
+async function atLoginChallenge(team, user, nowMs) {
+  const body = `${user.id}.${user.v}.${nowMs + AT_CODE_TTL_MS}.${atRandom(10)}`;
+  return `${body}.${(await atHmac(team.secret, `ch:${body}`)).slice(0, 24)}`;
+}
+async function atCheckChallenge(team, challenge, nowMs) {
+  const m = String(challenge || '').match(/^([A-Za-z0-9_-]{1,40})\.(\d{1,6})\.(\d{10,16})\.([A-Za-z0-9]{6,20})\.([0-9a-f]{24})$/);
+  if (!m) return null;
+  const body = `${m[1]}.${m[2]}.${m[3]}.${m[4]}`;
+  if ((await atHmac(team.secret, `ch:${body}`)).slice(0, 24) !== m[5]) return null;
+  if (Number(m[3]) < nowMs) return { expired: true };
+  const user = team.users.find((u) => u.id === m[1]);
+  if (!user || String(user.v) !== m[2]) return null;
+  return { user, nonce: m[4], exp: Number(m[3]) };
+}
+async function atLoginApi(env, team, action, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  // Who can sign in this way: active people the bot can write to.
+  if (action === 'login-people') {
+    return json({
+      people: team.users.filter((u) => u.active).map((u) => ({ id: u.id, name: u.name, roleLabel: u.roleLabel || AT_ROLES[u.role] || '', tg: !!u.tgId })),
+      owner: AT_OWNER_TG,
+    });
+  }
+  if (action === 'login-code') {
+    const user = team.users.find((u) => u.id === atClean(body.userId, 40));
+    if (!user) return json({ error: 'not_found' }, 404);
+    if (!user.active) return json({ error: 'blocked' }, 403);
+    if (!user.tgId) return json({ error: 'no_telegram', owner: AT_OWNER_TG }, 409);
+    const rlKey = `at:coderl:${user.id}`;
+    const last = Number(await kv.get(rlKey)) || 0;
+    if (nowMs - last < 60000) return json({ error: 'too_soon', wait: Math.ceil((60000 - (nowMs - last)) / 1000) }, 429);
+    await kv.put(rlKey, String(nowMs), { expirationTtl: 120 });
+    const challenge = await atLoginChallenge(team, user, nowMs);
+    const code = await atLoginCode(team, challenge);
+    const res = await botApi(env, 'sendMessage', {
+      chat_id: user.tgId,
+      parse_mode: 'HTML',
+      text: `🔐 Код для входа в Avito Tasks: <code>${code}</code>\nДействует 10 минут. Если вход запросили не вы — просто проигнорируйте это сообщение.`,
+    });
+    if (!res || !res.ok) return json({ error: 'send_failed', owner: AT_OWNER_TG }, 502);
+    return json({ challenge, ttl: AT_CODE_TTL_MS });
+  }
+  if (action === 'login-verify') {
+    const ch = await atCheckChallenge(team, body.challenge, nowMs);
+    if (!ch) return json({ error: 'bad_challenge' }, 400);
+    if (ch.expired) return json({ error: 'expired' }, 410);
+    if (!ch.user.active) return json({ error: 'blocked' }, 403);
+    const triesKey = `at:codetry:${ch.nonce}`;
+    const tries = Number(await kv.get(triesKey)) || 0;
+    if (tries >= AT_CODE_TRIES) return json({ error: 'too_many' }, 429);
+    const code = String(body.code || '').replace(/\D/g, '');
+    if (code !== await atLoginCode(team, body.challenge)) {
+      await kv.put(triesKey, String(tries + 1), { expirationTtl: Math.ceil(AT_CODE_TTL_MS / 1000) + 60 });
+      return json({ error: 'wrong_code', left: AT_CODE_TRIES - tries - 1 }, 401);
+    }
+    await kv.put(triesKey, String(AT_CODE_TRIES), { expirationTtl: Math.ceil(AT_CODE_TTL_MS / 1000) + 60 }); // used up
+    const user = ch.user;
+    if (!user.activatedAt) {
+      user.activatedAt = new Date(nowMs).toISOString();
+      await atPutTeam(kv, team);
+    }
+    return json({ token: await atToken(team, user), me: atPublicUser(user) });
+  }
+  return null;
+}
+
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
 async function handleAvitoTasksApi(request, env, url, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -6156,6 +6235,11 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   const action = url.pathname.slice('/api/dashboard/avito-tasks/'.length);
   const team = await atGetTeam(env);
   const nowMs = Date.now();
+
+  if (action.startsWith('login-')) {
+    const res = await atLoginApi(env, team, action, body, nowMs);
+    if (res) return res;
+  }
 
   if (action === 'activate') {
     const code = atClean(body.invite, 64);
