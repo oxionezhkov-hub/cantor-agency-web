@@ -53,7 +53,7 @@ argument-hint: "<Имя Фамилия> [<Имя Фамилия> ...]"
 ## 3. Формат JSON
 
 ```json
-{ "slug", "name", "updated", "notes": [..],
+{ "slug", "name", "updated",
   "sections": [{ "id", "title", "purpose", "blocks": [..], "ask": [..] }],
   "skipped": [{ "title", "reason" }] }
 ```
