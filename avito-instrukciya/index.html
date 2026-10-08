@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Диалоги на Авито: от заявки до диагностики — Cantor Agency</title>
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --green:#2F9E44;
+  --green-bg:#EAF7EC;
+}
+@page{size:A4;margin:15mm 15mm 16mm}
+@page cover{margin:0}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--white);font-size:10.5pt;line-height:1.55;-webkit-font-smoothing:antialiased}
+@media screen{
+  body{background:var(--bg)}
+  .doc{max-width:210mm;margin:0 auto;background:var(--white);padding:0 15mm 15mm}
+  .cover{margin:0 -15mm 12mm}
+}
+
+/* ---------- обложка ---------- */
+.cover{page:cover;height:297mm;background:var(--dark);color:#fff;padding:22mm 20mm 20mm;display:flex;flex-direction:column;break-after:page;position:relative;overflow:hidden}
+.cover::after{content:"";position:absolute;right:-60mm;top:-60mm;width:170mm;height:170mm;border-radius:50%;background:var(--red);opacity:.95}
+.cover-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.cover-logo{width:54px;height:54px;border-radius:15px;background:#fff;display:flex;align-items:center;justify-content:center}
+.cover-logo img{width:42px;height:auto}
+.cover-brand{font-size:13pt;font-weight:700;letter-spacing:-0.01em}
+.cover-brand span{color:var(--red)}
+.cover-main{margin-top:auto;position:relative;z-index:1}
+.cover-kicker{display:inline-block;font-size:9pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:999px;margin-bottom:18px}
+.cover h1{font-family:'Unbounded',sans-serif;font-size:31pt;line-height:1.12;font-weight:800;letter-spacing:-0.02em;margin-bottom:18px}
+.cover h1 em{font-style:normal;color:var(--red)}
+.cover-lead{font-size:12.5pt;line-height:1.5;color:rgba(255,255,255,.75);max-width:140mm}
+.cover-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14mm;position:relative;z-index:1}
+.cover-stat{border-top:2px solid var(--red);padding-top:10px}
+.cover-stat b{display:block;font-family:'Unbounded',sans-serif;font-size:19pt;font-weight:700;line-height:1.1;margin-bottom:4px}
+.cover-stat span{font-size:9.5pt;color:rgba(255,255,255,.7);line-height:1.4;display:block}
+
+/* ---------- разделы ---------- */
+.toc{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:12mm;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}
+.toc div{font-size:10pt;display:flex;gap:8px;color:rgba(255,255,255,.85)}
+.toc b{font-family:'Unbounded',sans-serif;font-size:8.5pt;color:var(--red);font-weight:700;min-width:18px;padding-top:1px}
+
+.sec{margin-bottom:26px}
+.sec-head{padding-top:4px}
+.sec.page{break-before:page}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;break-after:avoid}
+.sec-num{font-family:'Unbounded',sans-serif;font-size:11pt;font-weight:700;color:var(--red)}
+.sec h2{font-family:'Unbounded',sans-serif;font-size:16pt;font-weight:700;color:var(--dark);letter-spacing:-0.015em;line-height:1.25}
+.sec-lead{font-size:10.5pt;color:var(--muted);margin-bottom:14px}
+h3{font-size:11.5pt;font-weight:700;color:var(--dark);margin:16px 0 8px;break-after:avoid}
+p{margin-bottom:8px}
+ul{padding-left:18px;margin-bottom:8px;break-inside:avoid}
+li{margin-bottom:4px}
+strong{font-weight:700;color:var(--dark)}
+
+/* три правила */
+.rules{display:grid;gap:10px;margin-bottom:14px}
+.rule{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;break-inside:avoid}
+.rule-n{width:44px;height:44px;border-radius:12px;background:var(--red);color:#fff;font-family:'Unbounded',sans-serif;font-weight:700;font-size:15pt;display:flex;align-items:center;justify-content:center}
+.rule h4{font-size:12pt;font-weight:700;color:var(--dark);margin-bottom:3px}
+.rule p{margin:0;font-size:10pt}
+
+.norms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;break-inside:avoid}
+.norm{background:var(--accent-bg);border-radius:12px;padding:12px 14px}
+.norm b{display:block;font-family:'Unbounded',sans-serif;font-size:14pt;color:var(--red-dark);font-weight:700;line-height:1.15;margin-bottom:4px}
+.norm span{font-size:9.5pt;line-height:1.4;display:block}
+
+/* путь клиента */
+.flow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:6px 0 12px;break-inside:avoid}
+.flow-step{background:var(--bg);border-radius:10px;padding:10px 8px 11px;position:relative;font-size:8.6pt;line-height:1.35}
+.flow-step b{display:flex;width:22px;height:22px;border-radius:50%;background:var(--dark);color:#fff;font-size:8.5pt;align-items:center;justify-content:center;margin-bottom:7px}
+.flow-step.hot{background:var(--red);color:#fff}
+.flow-step.hot b{background:#fff;color:var(--red)}
+
+/* переписка */
+.chat{background:var(--bg);border-radius:14px;padding:14px 14px 6px;margin:8px 0 14px;break-inside:avoid}
+.chat-title{font-size:8.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px}
+.msg{max-width:84%;padding:9px 12px;border-radius:12px;margin-bottom:8px;font-size:10pt;line-height:1.45}
+.msg i{display:block;font-style:normal;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.msg.c{background:var(--white);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.c i{color:var(--muted)}
+.msg.me{background:var(--accent-bg);border:1px solid #F8D3C9;margin-left:auto;border-bottom-right-radius:4px}
+.msg.me i{color:var(--red-dark)}
+.msg.me.tg{background:#EAF3FB;border-color:#C9DFF2}
+.msg.me.tg i{color:#2A6FA8}
+.chat-note{font-size:9pt;color:var(--muted);text-align:center;margin:2px 0 10px}
+
+/* шаблон */
+.tpl{border:1.5px dashed #F0B4A6;border-radius:12px;padding:12px 14px;margin:8px 0 12px;break-inside:avoid}
+.tpl-label{font-size:8.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red-dark);margin-bottom:5px}
+.tpl p{margin:0;font-size:10pt}
+.tpl p + p{margin-top:6px}
+
+/* таблицы */
+table{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:9.6pt}
+th{text-align:left;font-size:8.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:0 10px 6px;border-bottom:2px solid var(--dark)}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45}
+tr{break-inside:avoid}
+td:first-child{font-weight:600;color:var(--dark);width:31%}
+
+/* так / не так */
+.dont{background:var(--bg);border-radius:12px;padding:12px 14px;margin:8px 0 12px;break-inside:avoid}
+.dont-label{font-size:8.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--dark);margin-bottom:6px}
+.dont div{display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:10pt;margin-bottom:5px}
+.dont div:last-child{margin-bottom:0}
+.dont div::before{content:"✕";color:var(--red);font-weight:700}
+
+/* напоминания */
+.timeline{break-inside:avoid;margin:8px 0 12px 8px;border-left:2px solid var(--border);padding-left:18px}
+.tl{position:relative;padding-bottom:12px;break-inside:avoid}
+.tl:last-child{padding-bottom:0}
+.tl::before{content:"";position:absolute;left:-26.5px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--white);border:2.5px solid var(--dark)}
+.tl.must::before{background:var(--red);border-color:var(--red)}
+.tl-when{font-size:10.5pt;font-weight:700;color:var(--dark)}
+.tl-when span{display:inline-block;font-size:7.8pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--red);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:1px}
+.tl-text{font-size:10pt;background:var(--bg);border-radius:10px;padding:8px 12px;margin-top:5px}
+
+.note{background:var(--accent-bg);border-left:3px solid var(--red);border-radius:0 10px 10px 0;padding:10px 14px;font-size:10pt;margin:8px 0 12px;break-inside:avoid}
+.note.green{background:var(--green-bg);border-left-color:var(--green)}
+
+.keep{break-inside:avoid}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two .tpl{margin:0}
+
+.green-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:0}
+
+/* чек-лист */
+.check{columns:1;margin-top:6px}
+.check div{display:grid;grid-template-columns:20px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:10.3pt;break-inside:avoid}
+.check div::before{content:"";width:14px;height:14px;border:2px solid var(--dark);border-radius:4px;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="doc">
+
+<section class="cover">
+  <div class="cover-top">
+    <div class="cover-logo"><img src="/images/brand/logo.svg" alt=""></div>
+    <div class="cover-brand">Cantor <span>Agency</span></div>
+  </div>
+  <div class="cover-main">
+    <div class="cover-kicker">Инструкция для репетиторов</div>
+    <h1>Диалоги на Авито:<br>от заявки <em>до&nbsp;диагностики</em></h1>
+    <p class="cover-lead">Как отвечать на заявки и отклики с рассылок, не называть цену, переводить человека в мессенджер, напоминать и переносить запись так, чтобы он дошёл до бесплатной диагностики.</p>
+  <div class="toc">
+    <div><b>01</b>Три главных правила</div>
+    <div><b>07</b>Напоминания перед диагностикой</div>
+    <div><b>02</b>Путь клиента</div>
+    <div><b>08</b>Если человек замолчал</div>
+    <div><b>03</b>Первый ответ</div>
+    <div><b>09</b>Перенос диагностики</div>
+    <div><b>04</b>Цена и вопросы в чате</div>
+    <div><b>10</b>Отказы</div>
+    <div><b>05</b>Перевод в мессенджер</div>
+    <div><b>11</b>Рассылки: зелёный диалог</div>
+    <div><b>06</b>Подтверждение и ссылка</div>
+    <div><b>12</b>Чек-лист на каждый день</div>
+  </div>
+  </div>
+  <div class="cover-stats">
+    <div class="cover-stat"><b>15 минут</b><span>на первый ответ</span></div>
+    <div class="cover-stat"><b>5 из 10</b><span>написавших должны дойти до диагностики</span></div>
+    <div class="cover-stat"><b>за 1 час</b><span>последнее напоминание со ссылкой на Zoom</span></div>
+  </div>
+</section>
+
+<!-- 01 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Три главных правила</h2></div>
+  <p class="sec-lead">Всё остальное в инструкции — способы выполнить эти три правила в разных ситуациях.</p>
+
+  <div class="rules">
+    <div class="rule">
+      <div class="rule-n">1</div>
+      <div>
+        <h4>Цель любого диалога — запись на диагностику</h4>
+        <p>Не консультируем в чате и не рассказываем подробно про методику и опыт. Всё это — на диагностике. Уже в первом сообщении предлагаем конкретное время.</p>
+      </div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">2</div>
+      <div>
+        <h4>Цену в переписке не называем</h4>
+        <p>Получив цифру, человек уходит сравнивать её с другими объявлениями и пропадает. Стоимость обсуждаем на диагностике, когда он уже понимает, за что платит.</p>
+      </div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">3</div>
+      <div>
+        <h4>Напоминаем, пока не получим ответ</h4>
+        <p>Каждое сообщение заканчиваем вопросом. Замолчал — пишем снова. Записался — подтверждаем и напоминаем перед диагностикой в Авито и в мессенджере. Человек должен постоянно видеть уведомления от вас, тогда диалог не теряется среди других чатов.</p>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="norms">
+    <div class="norm"><b>15–30 мин</b><span>на первый ответ. Позже человек уже записался к другому репетитору.</span></div>
+    <div class="norm"><b>Каждые 30 мин</b><span>проверяйте Авито в течение дня. Уведомления приложения на телефоне включены.</span></div>
+    <div class="norm"><b>50%</b><span>из 10 написавших минимум 5 должны дойти до диагностики.</span></div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="sec keep">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Путь клиента</h2></div>
+  <p class="sec-lead">Семь шагов от первого сообщения до диагностики. На любом из них человек может замолчать — ваша задача вернуть его к следующему шагу вопросом, а не ждать.</p>
+  <div class="flow">
+    <div class="flow-step"><b>1</b>Заявка или отклик на рассылку</div>
+    <div class="flow-step"><b>2</b>Ответ за 15 минут и два варианта времени</div>
+    <div class="flow-step"><b>3</b>Время согласовано</div>
+    <div class="flow-step"><b>4</b>Контакт в Telegram, ВК или Макс</div>
+    <div class="flow-step"><b>5</b>Подтверждение и ссылка на Zoom в оба чата</div>
+    <div class="flow-step"><b>6</b>Напоминания: накануне и за час</div>
+    <div class="flow-step hot"><b>7</b>Диагностика</div>
+  </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Первый ответ</h2></div>
+  <p class="sec-lead">Короткий, по делу и с вопросом о времени. Четыре части, 3–4 предложения.</p>
+
+  <ul>
+    <li><strong>Приветствие и имя.</strong> Человеку проще ответить живому преподавателю, чем объявлению.</li>
+    <li><strong>Одна фраза по сути вопроса.</strong> Не больше.</li>
+    <li><strong>Что такое диагностика.</strong> Бесплатно, 30 минут, в Zoom, и что человек получит в итоге.</li>
+    <li><strong>Два варианта времени вопросом.</strong> Сегодня или завтра, с точным временем и часовым поясом.</li>
+  </ul>
+  </div>
+
+  <div class="note">Предлагайте выбор из двух конкретных вариантов. На вопрос «Когда вам удобно?» отвечают реже, а договорённость растягивается на несколько сообщений.</div>
+
+  <div class="chat">
+    <div class="chat-title">Пример: обычная заявка</div>
+    <div class="msg c"><i>Клиент</i>Здравствуйте, сыну нужна подготовка к ОГЭ по математике. Ещё актуально?</div>
+    <div class="msg me"><i>Вы</i>Здравствуйте! Да, актуально. Меня зовут Анна, готовлю к ОГЭ по математике. Начинаю с бесплатной диагностики в Zoom: за 30 минут посмотрю, какие темы у сына уже получаются, а какие нужно подтянуть, и расскажу, как будем готовиться. Удобно сегодня в 19:00 или завтра в 17:00 по Москве?</div>
+    <div class="msg c"><i>Клиент</i>Завтра в 17 удобно</div>
+    <div class="msg me"><i>Вы</i>Отлично, записываю вас на завтра, 17:00 по Москве. Как зовут сына и в каком он классе?</div>
+  </div>
+
+  <div class="tpl">
+    <div class="tpl-label">Шаблон первого ответа</div>
+    <p>Здравствуйте! Меня зовут [имя], [чем занимаетесь — одной фразой]. Начинаю с бесплатной диагностики в Zoom: за 30 минут [что человек получит]. Удобно сегодня в [время] или завтра в [время] по Москве?</p>
+  </div>
+
+  <div class="note">Время всегда пишите с часовым поясом. На Авито пишут из разных городов, и «в 17:00» без уточнения — частая причина, по которой человек не приходит. Если город известен, переведите: «в 17:00 по Москве, у вас это 19:00».</div>
+</section>
+
+<!-- 04 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Цена и вопросы в чате</h2></div>
+  <p class="sec-lead">На любой вопрос — одна короткая фраза по сути и сразу предложение времени. Подробности — на диагностике.</p>
+
+  <table>
+    <tr><th>Вопрос клиента</th><th>Как ответить</th></tr>
+    <tr><td>«Сколько стоит занятие?»</td><td>Стоимость зависит от цели и количества занятий в неделю, поэтому назову её после диагностики, когда составим план. Сама диагностика бесплатная и ни к чему не обязывает. Удобно завтра в 17:00 или в 19:00?</td></tr>
+    <tr><td>«Назовите хотя бы примерно» <span style="font-weight:400;color:var(--muted)">(спрашивает второй раз)</span></td><td>Понимаю, хочется сразу знать бюджет. Не хочу называть цифру, которая потом не совпадёт с вашей программой: кому-то хватает одного занятия в неделю, кому-то нужно два. На диагностике скажу точно. Записать вас на завтра в 17:00?</td></tr>
+    <tr><td>«Какой у вас опыт?»</td><td>Преподаю 8 лет, готовлю к ОГЭ и ЕГЭ. На диагностике покажу, как строю занятия. Удобно сегодня в 19:00?</td></tr>
+    <tr><td>«Как проходят занятия?»</td><td>Онлайн в Zoom, с интерактивной доской и домашними заданиями. Лучше один раз увидеть — на диагностике всё покажу. Завтра в 17:00 подойдёт?</td></tr>
+    <tr><td>«Успеем подготовиться к экзамену?»</td><td>Зависит от того, с какого уровня начинаем. Это и покажет диагностика — после неё честно скажу, какой результат реален. Когда удобнее: сегодня вечером или завтра?</td></tr>
+    <tr><td>«Есть время по вторникам?»</td><td>Расписание подберём вместе после диагностики. Саму диагностику могу провести завтра в 17:00 или в 19:00 — как удобнее?</td></tr>
+  </table>
+  </div>
+
+  <div class="chat">
+    <div class="chat-title">Пример: человек настаивает на цене</div>
+    <div class="msg c"><i>Клиент</i>Добрый день. Сколько стоит одно занятие?</div>
+    <div class="msg me"><i>Вы</i>Добрый день! Стоимость зависит от цели и количества занятий, поэтому назову её после бесплатной диагностики, когда составим план. Удобно сегодня в 19:00 или завтра в 17:00 по Москве?</div>
+    <div class="msg c"><i>Клиент</i>Мне просто сравнить, скажите примерно</div>
+    <div class="msg me"><i>Вы</i>Понимаю. Цифра без программы будет неточной, а на диагностике скажу точно и под вашу задачу. Она бесплатная и ни к чему не обязывает. Записать вас на завтра в 17:00?</div>
+  </div>
+
+  <div class="dont">
+    <div class="dont-label">Так не пишем</div>
+    <div>«Занятие стоит 2000 ₽, пишите, если что» — человек уходит сравнивать цены и не возвращается.</div>
+    <div>Рассказ о себе, методике и дипломах на пол-экрана — до вопроса о времени уже не дочитывают.</div>
+    <div>«Напишите, когда вам будет удобно» — откладывают и забывают.</div>
+    <div>Сообщение без вопроса в конце — на него не отвечают.</div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Перевод в мессенджер</h2></div>
+  <p class="sec-lead">Чат на Авито теряется среди других, а уведомления Авито у многих отключены. Чтобы ссылка и напоминания точно дошли, дублируем запись в мессенджер, которым человек пользуется каждый день: Telegram, ВКонтакте или Макс.</p>
+
+  <p>Делаем это сразу после того, как согласовали время. Есть два способа.</p>
+  </div>
+
+  <div class="two">
+    <div class="tpl">
+      <div class="tpl-label">Способ 1. Попросить контакт</div>
+      <p>Чтобы ссылка и напоминание не потерялись, продублирую их в мессенджер. Вам удобнее Telegram, ВКонтакте или Макс? Пришлите, пожалуйста, номер или ник.</p>
+    </div>
+    <div class="tpl">
+      <div class="tpl-label">Способ 2. Дать свой контакт</div>
+      <p>Чтобы ссылка не потерялась, напишите мне, пожалуйста, в Telegram: [ваш ник] или в Макс по номеру [ваш номер]. Отправлю туда ссылку на Zoom и напомню перед началом. Напишете?</p>
+    </div>
+  </div>
+
+  <div class="chat" style="margin-top:14px">
+    <div class="chat-title">Пример: продолжение диалога из раздела 03</div>
+    <div class="msg c"><i>Клиент</i>Артём, 9 класс</div>
+    <div class="msg me"><i>Вы · Авито</i>Спасибо! Чтобы ссылка и напоминание не потерялись, продублирую их в мессенджер. Вам удобнее Telegram, ВКонтакте или Макс?</div>
+    <div class="msg c"><i>Клиент</i>Телеграм</div>
+    <div class="msg me"><i>Вы · Авито</i>Пришлите, пожалуйста, номер или ник — или напишите мне сами: [ваш ник в Telegram].</div>
+    <div class="msg c"><i>Клиент</i>+7 912 345-67-89</div>
+    <div class="msg me tg"><i>Вы · Telegram</i>Мария, здравствуйте! Это Анна, репетитор по математике с Авито. Подтверждаю диагностику для Артёма: завтра, четверг 15 октября, в 17:00 по Москве. Ссылка на Zoom: [ссылка]. Напомню за час до начала. Всё верно?</div>
+  </div>
+
+  <ul>
+    <li>Не хочет переходить в мессенджер — не настаиваем. Всё ведём в Авито, напоминания тоже там.</li>
+    <li>Не получилось отправить сообщение с номером или ником — попросите человека прислать свой контакт.</li>
+    <li>Чат в Авито после перехода не бросаем: подтверждение, ссылку и напоминания дублируем в оба канала. Где человек увидит сообщение раньше, там и ответит.</li>
+  </ul>
+</section>
+
+<!-- 06 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Подтверждение и ссылка на Zoom</h2></div>
+  <p class="sec-lead">Сразу после записи отправляем одно сообщение со всеми данными — и в Авито, и в мессенджер.</p>
+
+  <div class="tpl">
+    <div class="tpl-label">Шаблон подтверждения</div>
+    <p>[Имя], подтверждаю запись на бесплатную диагностику: [день недели, дата], в [время] по Москве. Ссылка на Zoom: [ссылка]. Займёт 30 минут, нужен компьютер или телефон с камерой и микрофоном. Напомню за час до начала. Всё верно?</p>
+    <p>Если занятия для ребёнка, добавьте: «Будет здорово, если в начале подключитесь и вы — расскажу о результатах и отвечу на вопросы».</p>
+  </div>
+  </div>
+
+  <div class="note">Заведите одну постоянную ссылку на Zoom для всех диагностик. При переносе не придётся создавать новую, и в переписке не окажется двух разных ссылок.</div>
+</section>
+
+<!-- 07 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Напоминания перед диагностикой</h2></div>
+  <p class="sec-lead">Записался — ещё не значит придёт. Без напоминаний до диагностики доходит заметно меньше людей. Каждое напоминание — в Авито и в мессенджер.</p>
+
+  <div class="timeline">
+    <div class="tl">
+      <div class="tl-when">Сразу после записи</div>
+      <div class="tl-text">Подтверждение со ссылкой — шаблон из раздела 06.</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Накануне вечером или утром в день диагностики</div>
+      <div class="tl-text">Добрый вечер! Напоминаю: завтра в 17:00 по Москве диагностика по математике. Ссылка: [ссылка]. Всё в силе?</div>
+    </div>
+    <div class="tl must">
+      <div class="tl-when">За 1 час <span>обязательно</span></div>
+      <div class="tl-text">Мария, через час, в 17:00 по Москве, начинаем диагностику. Ссылка: [ссылка]. Успеваете?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">За 5 минут до начала</div>
+      <div class="tl-text">Я уже в Zoom, подключайтесь: [ссылка]</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Через 5–10 минут, если не подключились</div>
+      <div class="tl-text">Мария, не вижу вас в Zoom. Всё в порядке? Могу подождать до 17:20 или перенесём на другое время — как удобнее?</div>
+    </div>
+  </div>
+  </div>
+
+  <ul>
+    <li>Нет ответа на «Всё в силе?» — напишите ещё раз через 1–2 часа. Если человек оставил номер, можно коротко позвонить.</li>
+    <li>Записался на ближайшие 1–2 часа — достаточно подтверждения сразу и напоминания за 15 минут.</li>
+    <li>Ответ «да» на напоминание — не повод замолчать. Напоминание за час отправляем всё равно.</li>
+  </ul>
+</section>
+
+<!-- 08 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Если человек замолчал</h2></div>
+  <p class="sec-lead">Прочитал и не ответил — чаще всего просто отвлёкся. Новое сообщение приходит уведомлением и поднимает ваш чат наверх списка. Не ждём, а пишем по графику.</p>
+
+  <div class="timeline">
+    <div class="tl">
+      <div class="tl-when">Касание 1 — через 2–3 часа</div>
+      <div class="tl-text">Мария, удалось посмотреть сообщение? Могу провести диагностику сегодня в 19:00 или завтра в 17:00. Какое время удобнее?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Касание 2 — вечером того же дня, 19:00–21:00</div>
+      <div class="tl-text">Добрый вечер! Напомню про бесплатную диагностику по математике. На завтра есть время в 17:00 и в 19:00 — оставить одно за вами?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Касание 3 — на следующий день</div>
+      <div class="tl-text">Мария, пишу последний раз, чтобы не надоедать. Если занятия ещё актуальны — подберу время на этой неделе. Если уже нашли преподавателя, просто напишите. Актуально?</div>
+    </div>
+  </div>
+  </div>
+
+  <ul>
+    <li>После третьего касания без ответа диалог закрываем и больше не пишем.</li>
+    <li>Каждое напоминание — новым текстом, а не копией предыдущего. 1–3 предложения и вопрос в конце.</li>
+    <li>Не пишем «Ау?», «?» и «Вы тут?» — на такое не отвечают.</li>
+    <li>Человек явно отказался — не напоминаем, переходим к разделу 10.</li>
+  </ul>
+</section>
+
+<!-- 09 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">09</span><h2>Перенос диагностики</h2></div>
+  <p class="sec-lead">Перенос — не отказ. Сразу предлагаем два новых варианта времени, а не «Напишите, когда сможете».</p>
+
+  <h3>Человек просит перенести</h3>
+  </div>
+  <div class="chat">
+    <div class="msg c"><i>Клиент</i>Извините, сегодня не получится, Артём заболел</div>
+    <div class="msg me"><i>Вы</i>Ничего страшного, пусть выздоравливает! Давайте перенесём: могу в пятницу в 17:00 или в субботу в 12:00. Как удобнее?</div>
+    <div class="msg c"><i>Клиент</i>В субботу</div>
+    <div class="msg me"><i>Вы</i>Записываю на субботу, 17 октября, в 12:00 по Москве. Ссылка та же: [ссылка]. Напомню накануне и за час до начала. Договорились?</div>
+  </div>
+  <p>Подтверждение с новой датой — в Авито и в мессенджер. Напоминания идут по графику из раздела 07 заново.</p>
+
+  <div class="keep">
+  <h3>Не пришёл и не предупредил</h3>
+  <div class="timeline">
+    <div class="tl">
+      <div class="tl-when">Через 10 минут после начала</div>
+      <div class="tl-text">Мария, не получилось подключиться? Могу подождать ещё 10 минут или перенесём — как удобнее?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Вечером того же дня</div>
+      <div class="tl-text">Сегодня не получилось встретиться, так бывает. Давайте подберём другое время: завтра в 17:00 или в 19:00?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">На следующий день</div>
+      <div class="tl-text">Мария, диагностика для Артёма ещё актуальна? Есть время в четверг и в пятницу после 16:00 — какой день удобнее?</div>
+    </div>
+  </div>
+  </div>
+  <p>Без ответа после третьего сообщения — диалог закрываем. Без упрёков: человеку должно быть легко вернуться.</p>
+
+  <div class="keep">
+  <h3>Переносить нужно вам</h3>
+  <p>Предупредите как можно раньше, минимум за 2–3 часа, и сразу предложите два варианта.</p>
+  <div class="tpl">
+    <div class="tpl-label">Шаблон</div>
+    <p>Мария, добрый день! Прошу прощения, у меня изменилось расписание на сегодня. Могу провести диагностику сегодня в 19:30 или завтра в 17:00. Какой вариант удобнее?</p>
+  </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Отказы</h2></div>
+  <p class="sec-lead">Удерживаем один раз — мягко и с пользой для человека. Повторил отказ — благодарим и прощаемся. Хорошее прощание часто возвращает человека через месяц-другой, например перед экзаменами.</p>
+
+  <div class="keep">
+  <h3>Попробовать удержать</h3>
+  <table>
+    <tr><th>Что пишет клиент</th><th>Как ответить</th></tr>
+    <tr><td>«Я подумаю»</td><td>Конечно. Чтобы было из чего выбирать: диагностика бесплатная и ни к чему не обязывает, а после неё у вас останется план подготовки, даже если решите заниматься не со мной. Записать на завтра в 17:00?</td></tr>
+    <tr><td>«Наверное, дорого»</td><td>Давайте сначала посмотрим, сколько занятий действительно нужно, — иногда хватает одного в неделю. Это и покажет бесплатная диагностика. Удобно завтра в 17:00?</td></tr>
+    <tr><td>«Мы хотим очно»</td><td>Понимаю. Многие сначала сомневаются в онлайн-формате, а на диагностике видят, как проходит занятие, и решают уже по факту. Попробуем? Могу завтра в 17:00.</td></tr>
+    <tr><td>«Сейчас нет времени»</td><td>Понимаю. Диагностика занимает 30 минут, могу подстроиться под вечер или выходные. Удобно в субботу в 12:00?</td></tr>
+  </table>
+  </div>
+  </div>
+
+  <div class="keep">
+  <h3>Попрощаться на хорошей ноте</h3>
+  <table>
+    <tr><th>Что пишет клиент</th><th>Как ответить</th></tr>
+    <tr><td>«Уже нашли преподавателя»</td><td>Спасибо, что написали! Желаю успехов в учёбе. Если понадобится помощь, например перед экзаменом, — пишите сюда, отвечу быстро.</td></tr>
+    <tr><td>«Неактуально», «Передумали»</td><td>Спасибо, что ответили! Если занятия снова понадобятся — пишите, с радостью помогу. Хорошего дня!</td></tr>
+    <tr><td>Повторный отказ после попытки удержать</td><td>Хорошо, понимаю вас. Спасибо за время! Если решите вернуться к занятиям — пишите, подберём удобное время.</td></tr>
+  </table>
+  </div>
+
+  <div class="note">После отказа больше не пишем и напоминаний не отправляем. Не спорим, не уговариваем второй раз и не задаём вопросов «Почему?».</div>
+</section>
+
+<!-- 11 -->
+<section class="sec">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">11</span><h2><span class="green-dot"></span>Рассылки: зелёный диалог</h2></div>
+  <p class="sec-lead">Когда человек откликается на рассылку Авито — например, на предложение бесплатной диагностики, — у вас появляется диалог с зелёной отметкой. Обычно человек ничего не пишет сам: он только нажал на предложение. Поэтому первыми пишете вы.</p>
+
+  <div class="note green">Рассылка оплачивается из рекламного бюджета, каждый отклик стоит денег. Отвечаем на все зелёные диалоги, в течение 15 минут, пока человек помнит, на что нажал.</div>
+  </div>
+
+  <h3>Первое сообщение</h3>
+  <p>Напомнить, на что человек откликнулся, и сразу предложить время. Без «Чем могу помочь?» и без рассказа о себе.</p>
+  <div class="tpl">
+    <div class="tpl-label">Шаблон</div>
+    <p>Здравствуйте! Вы откликнулись на предложение бесплатной диагностики по [предмет]. Меня зовут [имя]. Диагностика проходит в Zoom, 30 минут: посмотрю уровень и составлю план занятий. Удобно сегодня в [время] или завтра в [время] по Москве?</p>
+  </div>
+
+  <div class="keep">
+  <h3>Что обычно отвечают</h3>
+  <table>
+    <tr><th>Ответ</th><th>Что делать</th></tr>
+    <tr><td>«Да, давайте», выбрал время</td><td>Фиксируем время, переводим в мессенджер, отправляем подтверждение и ссылку — разделы 05–07.</td></tr>
+    <tr><td>«А сколько стоят занятия?»</td><td>Отвечаем по разделу 04: стоимость — после диагностики, и сразу время.</td></tr>
+    <tr><td>«А что за диагностика?»</td><td>Это бесплатное занятие-знакомство на 30 минут: проверю, какие темы уже получаются, и скажу, что подтянуть в первую очередь. Удобно завтра в 17:00?</td></tr>
+    <tr><td>Рассказывает ситуацию: «Дочь в 7 классе, двойки по алгебре»</td><td>Спасибо, что рассказали, с этим и разберёмся на диагностике. Сегодня в 19:00 или завтра в 17:00 — что удобнее?</td></tr>
+    <tr><td>«Нажал случайно»</td><td>Ничего страшного! Если занятия понадобятся — пишите, с радостью помогу. Больше не пишем.</td></tr>
+    <tr><td>Молчит</td><td>Напоминаем по графику ниже.</td></tr>
+  </table>
+  </div>
+
+  <div class="keep">
+  <h3>Сколько раз напоминать</h3>
+  <p>Отклик с рассылки «холоднее», чем человек, который написал сам. Итого: первое сообщение и три напоминания. Дальше диалог закрываем.</p>
+  <div class="timeline">
+    <div class="tl">
+      <div class="tl-when">Напоминание 1 — через 2–3 часа</div>
+      <div class="tl-text">Удалось посмотреть сообщение? Могу провести бесплатную диагностику сегодня в 19:00 или завтра в 17:00 — что удобнее?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Напоминание 2 — на следующий день</div>
+      <div class="tl-text">Добрый день! Предложение бесплатной диагностики ещё в силе. Подобрать вам время на этой неделе?</div>
+    </div>
+    <div class="tl">
+      <div class="tl-when">Напоминание 3 — через 2–3 дня, последнее</div>
+      <div class="tl-text">Пишу последний раз, чтобы не беспокоить. Если занятия актуальны — ответьте «да», и я подберу удобное время.</div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="sec keep">
+  <div class="keep">
+  <div class="sec-head"><span class="sec-num">12</span><h2>Чек-лист на каждый день</h2></div>
+  <p class="sec-lead">Пройдитесь по нему в начале и в конце рабочего дня.</p>
+  <div class="check">
+    <div>Уведомления Авито и мессенджеров на телефоне включены</div>
+    <div>Проверяю Авито каждые 30 минут в течение дня</div>
+    <div>На новые заявки и зелёные диалоги отвечаю за 15–30 минут</div>
+    <div>Каждое сообщение заканчиваю вопросом</div>
+    <div>Цену в переписке не называю</div>
+    <div>Предлагаю два конкретных варианта времени с часовым поясом</div>
+    <div>После записи беру контакт в Telegram, ВК или Макс</div>
+    <div>Подтверждение и ссылку на Zoom отправляю в Авито и в мессенджер</div>
+    <div>Напоминаю накануне или утром и обязательно за 1 час до диагностики</div>
+    <div>Не пришёл — сразу предлагаю два варианта переноса</div>
+    <div>Замолчавшим пишу по графику: 3 касания, потом закрываю диалог</div>
+    <div>Отказавшимся — одна попытка удержать и вежливое прощание</div>
+    <div>В конце дня ни один диалог не остался без ответа</div>
+  </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
