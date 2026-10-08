@@ -45,7 +45,9 @@
  *   crm:client:<id>  -> { id, email, name, problem, problemComment, createdAt, updatedAt, fromBrief,
  *                          tasks: { brief:{done,comment}, serp:{done,comment},
  *                                   podcast1:{date,script,recording,editing,texts: {done,comment}},
- *                                   podcast2:{...}, podcast3:{...}, site:{done,comment} } }
+ *                                   podcast2:{...}, podcast3:{...}, siteStructure:{done,comment},
+ *                                   site:{done,comment} } }
+ *   siteStructure.comment holds the client's /site-structure/?client=<slug> link (see site-structure/).
  *
  * It also powers /avito-export: a button-triggered export of Avito Messenger dialogs and
  * per-listing stats (impressions/views/contacts/spend), for pasting into quality-of-communication
@@ -754,6 +756,7 @@ const CRM_CHECKLIST = [
   { id: 'podcast1', label: 'Записан подкаст 1', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
   { id: 'podcast2', label: 'Записан подкаст 2', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
   { id: 'podcast3', label: 'Записан подкаст 3', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
+  { id: 'siteStructure', label: 'Согласована структура сайта', type: 'single' },
   { id: 'site', label: 'Создан сайт', type: 'single' },
 ];
 
