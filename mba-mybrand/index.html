@@ -1333,6 +1333,7 @@ const CRM_CHECKLIST = [
   { id: 'podcast1', label: 'Записан подкаст 1', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
   { id: 'podcast2', label: 'Записан подкаст 2', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
   { id: 'podcast3', label: 'Записан подкаст 3', type: 'group', subtasks: CRM_PODCAST_SUBTASKS },
+  { id: 'siteFormat', label: 'Выбран формат сайта', type: 'single', hint: 'Дизайн 1, 2 или 3 · Тильда или HTML' },
   { id: 'siteStructure', label: 'Согласована структура сайта', type: 'single' },
   { id: 'site', label: 'Создан сайт', type: 'single' },
 ];
@@ -1558,7 +1559,7 @@ function crmProblemCommentEditHtml(c) {
 function crmChecklistHtml(c) {
   const items = CRM_CHECKLIST.map((item) => (item.type === 'group'
     ? crmGroupHtml(c, item)
-    : crmTaskHtml(c.id, item.id, null, item.label, c.tasks[item.id]))).join('');
+    : crmTaskHtml(c.id, item.id, null, item.label, c.tasks[item.id], item.hint))).join('');
   return `${items}
     <div class="crm-row-actions">
       <button class="btn-ghost-sm" onclick="toggleCrmProblem('${c.id}')">${c.problem ? 'Снять пометку «проблемный»' : 'Пометить проблемным'}</button>
@@ -1587,7 +1588,7 @@ function crmGroupHtml(c, item) {
   `;
 }
 
-function crmTaskHtml(clientId, groupId, subId, label, taskObj) {
+function crmTaskHtml(clientId, groupId, subId, label, taskObj, hint) {
   const t = taskObj || { done: false, comment: '' };
   const comment = t.comment || '';
   const link = crmCommentLinkIcon(comment);
@@ -1600,7 +1601,7 @@ function crmTaskHtml(clientId, groupId, subId, label, taskObj) {
         <span>${escapeHtml(label)}</span>
       </label>
       <div class="crm-comment">
-        <input type="text" value="${escapeHtml(comment)}" placeholder="Комментарий или ссылка на файл — кликабельно" onblur="updateCrmComment('${clientId}','${groupId}',${subArg},this.value)">
+        <input type="text" value="${escapeHtml(comment)}" placeholder="${escapeHtml(hint || 'Комментарий или ссылка на файл — кликабельно')}" onblur="updateCrmComment('${clientId}','${groupId}',${subArg},this.value)">
         ${link}
       </div>
       ${fileBadge}
