@@ -1769,18 +1769,22 @@ function openCrmDashboard() {
 }
 /* ════════════ SITE STRUCTURES ════════════ */
 // Registry of /site-structure/ pages (slug, name, firstName, crmIds) — site-structure/clients.json.
+// cantor.agency (Russian hosting) opens without a VPN; the workers.dev mirror is for those on a VPN.
 const SITE_STRUCTURE_BASE = 'https://cantor.agency/site-structure/?client=';
+const SITE_STRUCTURE_VPN_BASE = 'https://mainweb.oxion-ezhkov.workers.dev/site-structure/?client=';
 const ssState = { list: null };
 
 function siteStructureUrl(slug) { return SITE_STRUCTURE_BASE + encodeURIComponent(slug); }
+function siteStructureVpnUrl(slug) { return SITE_STRUCTURE_VPN_BASE + encodeURIComponent(slug); }
 
 function siteStructureMessage(entry) {
   return `${entry.firstName}, добрый день!
 
 Мы подготовили структуру вашего личного сайта: какие на нём будут разделы, в каком порядке и с какими текстами. Это ещё не дизайн, а наполнение — его нужно согласовать, прежде чем мы начнём делать сайт.
 
-Посмотреть можно по ссылке:
-${siteStructureUrl(entry.slug)}
+Открыть наполнение сайта:
+без VPN — ${siteStructureUrl(entry.slug)}
+с VPN — ${siteStructureVpnUrl(entry.slug)}
 
 Как проверить:
 1. Откройте ссылку и пролистайте страницу сверху вниз — разделы идут в том же порядке, что и на будущем сайте.
@@ -1827,7 +1831,8 @@ function renderSiteStructures() {
           <div class="ss-name">${escapeHtml(e.name)}</div>
           <span class="ss-status ${done ? 'done' : ''}">${done ? 'Согласовано' : 'Ждём согласования'}</span>
         </div>
-        <a class="ss-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>
+        <a class="ss-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">Без VPN: ${escapeHtml(url)}</a>
+        <a class="ss-link" href="${escapeHtml(siteStructureVpnUrl(e.slug))}" target="_blank" rel="noopener">С VPN: ${escapeHtml(siteStructureVpnUrl(e.slug))}</a>
         <textarea class="ss-msg" readonly id="ssMsg-${escapeHtml(e.slug)}">${escapeHtml(siteStructureMessage(e))}</textarea>
         <div class="ss-actions">
           <button class="btn-red" onclick="copySiteStructure('${escapeHtml(e.slug)}', 'msg')">Скопировать сообщение</button>
