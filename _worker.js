@@ -4822,7 +4822,7 @@ async function botApplyEvents(env, events, ctx) {
     const action = { done: ['✅ Да, готово', 'done'], informed: ['✅ Да, закрыть', 'close'], cancelled: ['✖️ Да, отменить', 'cancel'] }[h.status];
     await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' }, {
       text: `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectName)}${h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : ''}`,
-      extra: { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], [{ text: 'Открыть в трекере', url: atTaskUrl(task.id) }]] }, disable_notification: true },
+      extra: { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], atOpenTaskRow(task.id)] }, disable_notification: true },
     });
   }
 }
@@ -5202,11 +5202,67 @@ async function botScheduled(env) {
   await botRunChecks(env, Date.now());
 }
 
-// Free-text question from the owner, answered from the last two weeks of logs.
+// Free-text question from the owner. A question about one person's tasks ("какие у Альбины задачи",
+// "что делает Евгений") is answered straight from the tracker — exact, no AI. Anything else goes to
+// the AI with the whole picture: the team, every open task and the last two weeks' closed ones, the
+// clients with their last 7 days of metrics, clients waiting for an answer, this week's reflection,
+// and the chat logs (30 days for clients the question names, otherwise the last 3 days).
+const BOT_PERSON_TASKS_RE = /задач|дела[ею]т|делает|занят|поручен|на (н[её]м|ней)|что у н|работает над|в работе/i;
+
 async function botAnswerQuestion(env, question) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const now = Date.now();
+  const team = await atGetTeam(env);
+  const people = team.users.filter((u) => u.active);
   const byId = await botProjectsById(kv);
+  const q = ` ${botNorm(question)} `;
+  // Declensions: "Агешиной" → "агешин", "Альбины" → "альбин"; short aliases ("Женя" → "Жени") by stem too.
+  const hits = (name) => botNorm(name).split(' ').some((w) => w.length > 3 && q.includes(` ${w.slice(0, Math.max(4, w.length - 2))}`));
+  const aliasHit = (u) => (u.aliases || []).some((a) => { const w = botNorm(a); return w.length >= 4 && !w.includes(' ') && new RegExp(` ${w.slice(0, -1)}[а-яё]{0,2} `).test(q); });
+  const person = atMatchUser(question, people) || (() => { const m = people.filter(aliasHit); return m.length === 1 ? m[0] : null; })();
+  // A client sharing the first name ("задачи по Ольге Агешиной") makes it a question about the client.
+  const surnameHit = (name) => botNorm(name).split(' ').slice(1).some((w) => hits(w));
+  const clientNamed = Object.values(byId).some((p) => (person ? surnameHit(p.name) : hits(p.name)));
+  if (person && BOT_PERSON_TASKS_RE.test(question) && !clientNamed && !/клиент|проект/i.test(question.replace(/задач\S*/gi, ''))) {
+    const list = await atBuildMyTasks(env, person, false, true);
+    return `👤 <b>${escapeHtml(person.name)}</b> · ${escapeHtml(person.roleLabel || AT_ROLES[person.role] || '')}\n${list}`;
+  }
+
+  const projects = Object.values(byId);
+  const tasks = await botAllTasks(kv);
+  const fmt = (ms) => (ms ? botFmtDate(ms) : '—');
+  const nameOf = (t) => (t.projectId && byId[t.projectId] ? byId[t.projectId].name : t.topicName || 'без клиента');
+  const whoOf = (t) => { const uid = atAssigneeId(t, team.users); const u = uid && team.users.find((x) => x.id === uid); return u ? u.name : t.owner || 'никто (ничья)'; };
+  const statusOf = (t) => (t.status === 'open' ? (t.takenAt ? 'в работе' : 'новая') : { done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[t.status] || t.status);
+  const recentMs = now - 14 * 24 * 3600000;
+  const shown = tasks.filter((t) => t.status === 'open' || t.status === 'done' || Date.parse(t.updatedAt || t.createdAt || 0) > recentMs)
+    .sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'ru'));
+  const taskLines = shown.map((t) => {
+    const due = botDueMs(t);
+    const creator = t.createdById ? (team.users.find((u) => u.id === t.createdById) || {}).name : t.author;
+    return `- ${nameOf(t)} | ${t.text} | исполнитель: ${whoOf(t)} | статус: ${statusOf(t)} | срок: ${due ? `${fmt(due)}${due < now && t.status === 'open' ? ' (ПРОСРОЧЕНО)' : ''}` : 'нет'} | поставил: ${creator || '—'} ${fmt(Date.parse(t.startedAt || t.createdAt || 0))}${t.doneAt ? ` | сделано: ${fmt(Date.parse(t.doneAt))}` : ''}`;
+  });
+
+  // Last 7 days of the dashboard's daily numbers, per client.
+  const days = [];
+  for (let i = 1; i <= 7; i += 1) days.push(botMsk(now - i * 24 * 3600000).date);
+  const clientLines = await Promise.all(projects.map(async (p) => {
+    if (p.inactive) return `- ${p.name}: неактивный`;
+    const recs = (await Promise.all(days.map((d) => kv.get(`dailyMetrics:${p.id}:${d}`, 'json')))).filter(Boolean);
+    const sum = (k) => recs.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+    return `- ${p.name}: за 7 дней бюджет ${sum('budget')} ₽, просмотры ${sum('views')}, контакты ${sum('contacts')}, диагностики ${sum('diagnostics')}, продажи ${sum('sales')} (дней с данными: ${recs.length})`;
+  }));
+
+  const pending = (await botPendingList(env, now)).map((p) => `- ${p.projectId && byId[p.projectId] ? byId[p.projectId].name : p.title}: «${String(p.text).slice(0, 160)}» — ждёт с ${fmt(p.since)}`);
+
+  let reflLines = [];
+  try {
+    const week = reflWeek(now);
+    const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
+    reflLines = recs.flatMap(([u, r]) => Object.entries((r && r.answers) || {}).map(([pid, a]) => `- ${(byId[pid] || {}).name || pid}: ${u.name} — ${a.score}/10, «${a.comment}»`));
+  } catch (err) { /* reflection is optional context */ }
+
+  // Chats: the clients the question names (30 days), otherwise everything from the last 3 days.
   const chats = await listByPrefix(kv, 'bot:chat:');
   const sources = [];
   for (const c of chats) {
@@ -5220,27 +5276,40 @@ async function botAnswerQuestion(env, question) {
       sources.push({ chatId: c.id, threadId: '0', name: (c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title });
     }
   }
-  const q = ` ${botNorm(question)} `;
-  // Match on surname stems ("Агешиной" → "агешин") so declensions still hit.
-  const focused = sources.filter((s) => botNorm(s.name).split(' ').some((w) => w.length > 3 && q.includes(w.slice(0, Math.max(4, w.length - 2)))));
+  const focused = sources.filter((s) => hits(s.name));
   const picked = focused.length ? focused : sources;
-  const days = focused.length ? 30 : 7;
+  const span = focused.length ? 30 : 3;
   let transcript = '';
   for (const s of picked) {
-    const logs = await botReadLogs(kv, s.chatId, s.threadId, now - days * 24 * 3600000, now);
-    if (!logs.length) continue;
-    transcript += `\n### ${s.name}\n${botFormatLogLines(logs)}\n`;
+    const logs = await botReadLogs(kv, s.chatId, s.threadId, now - span * 24 * 3600000, now);
+    if (logs.length) transcript += `\n### ${s.name}\n${botFormatLogLines(logs)}\n`;
   }
-  if (!transcript) return 'В сохранённой переписке пока ничего нет — бот видит только сообщения после того, как его добавили в чат.';
-  if (transcript.length > 45000) transcript = transcript.slice(-45000);
+  if (transcript.length > 22000) transcript = transcript.slice(-22000);
+
+  const d = botMsk(now);
+  const context = [
+    `СЕЙЧАС: ${d.date} ${fmt(now).split(' ')[1]} (МСК), ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][d.dow]}.`,
+    `КОМАНДА:\n${people.map((u) => `- ${u.name} — ${u.roleLabel || AT_ROLES[u.role] || u.role}`).join('\n')}`,
+    `ЗАДАЧИ (все открытые и изменённые за 14 дней; формат: клиент | задача | исполнитель | статус | срок | кто и когда поставил):\n${taskLines.join('\n') || '—'}`,
+    `КЛИЕНТЫ И МЕТРИКИ (из дашборда):\n${clientLines.join('\n') || '—'}`,
+    `КЛИЕНТЫ ЖДУТ ОТВЕТА В ЧАТЕ:\n${pending.join('\n') || '—'}`,
+    `РЕФЛЕКСИЯ ЭТОЙ НЕДЕЛИ (оценки проектов командой):\n${reflLines.join('\n') || '—'}`,
+    `ПЕРЕПИСКА (${focused.length ? 'по клиентам из вопроса, 30 дней' : 'все чаты, последние 3 дня'}; формат [id] дата автор: текст):${transcript || '\n—'}`,
+  ].join('\n\n');
   try {
-    const answer = await botAi(env,
-      'Ты помощник руководителя агентства Cantor Agency. Отвечай по-русски, коротко и по делу, только по переписке ниже. '
-      + 'Ссылайся на сообщения в формате [id]. Если ответа в переписке нет — так и скажи.',
-      `Вопрос: ${question}\n\nПереписка (формат: [id] дата автор: текст):\n${transcript}`, 900);
-    return escapeHtml(answer || 'Не получилось сформулировать ответ.');
+    const answer = await botAi(env, [
+      'Ты — умный помощник руководителя агентства Cantor Agency (продвижение репетиторов на Авито). Отвечаешь Олегу Ежкову в Telegram.',
+      'Ниже — актуальные данные из трекера задач, дашборда и рабочих чатов. Отвечай ТОЛЬКО по ним, но пользуйся ими по-настоящему:',
+      'фильтруй, считай, сравнивай, группируй (по людям, клиентам, срокам). Вопросы о задачах — по разделу ЗАДАЧИ',
+      '(исполнитель, статус, срок), о цифрах — по КЛИЕНТЫ И МЕТРИКИ, о том, что обсуждали, — по ПЕРЕПИСКЕ.',
+      'Имена в вопросе могут быть в любом падеже и уменьшительными (Альбины, Жени, Оли) — сопоставляй с КОМАНДОЙ и клиентами.',
+      'Ответ: по-русски, коротко и конкретно, сначала главное. Списки — строками с «• ». Без markdown-таблиц и решёток.',
+      'Если данных для ответа нет — скажи прямо, чего именно не хватает, и не выдумывай.',
+    ].join('\n'), `Вопрос: ${question}\n\n${context}`, 1200);
+    const safe = escapeHtml(answer || 'Не получилось сформулировать ответ.').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#+\s*/gm, '');
+    return safe;
   } catch (err) {
-    if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится.'; }
+    if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится. Про задачи человека можно спросить и сейчас: «какие задачи у Альбины».'; }
     return `Ошибка ИИ: ${escapeHtml(err && err.message)}`;
   }
 }
@@ -5836,8 +5905,12 @@ async function atNotify(env, team, userIds, n, tg) {
 // sign-in (it lives in localStorage) — then a bare tracker link shows «Нет доступа». So tracker
 // buttons in a team member's private chat carry their own invite: it signs them in on the spot,
 // in whatever browser opens it. (The bot already sends people their invite link the same way.)
+// The tracker opens two ways: cantor.agency (its API goes through the Yandex Cloud proxy — works in
+// Russia without a VPN) and the worker's own address (*.workers.dev — quicker, but needs a VPN there).
+const AT_PAGE_URL_VPN = `${BOT_WORKER_ORIGIN}/avito-tasks`;
+const atIsTrackerUrl = (url) => String(url).startsWith(AT_PAGE_URL) || String(url).startsWith(AT_PAGE_URL_VPN);
 function atPersonalUrl(url, user) {
-  if (!user || !user.invite || !user.active || !String(url).startsWith(AT_PAGE_URL)) return url;
+  if (!user || !user.invite || !user.active || !atIsTrackerUrl(url)) return url;
   const u = new URL(url);
   u.searchParams.set('invite', user.invite);
   return u.toString();
@@ -5849,20 +5922,24 @@ function atPersonalizeMarkup(markup, user) {
 }
 async function atPersonalizeExtra(env, chatId, extra) {
   const rows = extra && extra.reply_markup && extra.reply_markup.inline_keyboard;
-  if (!rows || !rows.some((row) => row.some((b) => b.url && b.url.startsWith(AT_PAGE_URL)))) return extra;
+  if (!rows || !rows.some((row) => row.some((b) => b.url && atIsTrackerUrl(b.url)))) return extra;
   const team = await atGetTeam(env);
   const user = team.users.find((u) => u.tgId && String(u.tgId) === String(chatId));
   return user ? { ...extra, reply_markup: atPersonalizeMarkup(extra.reply_markup, user) } : extra;
 }
-function atTaskUrl(taskId) {
-  return `${AT_PAGE_URL}#t=${encodeURIComponent(taskId)}`;
+function atTaskUrl(taskId, vpn) {
+  return `${vpn ? AT_PAGE_URL_VPN : AT_PAGE_URL}#t=${encodeURIComponent(taskId)}`;
+}
+// Bottom row under a task message: the same task, without and with a VPN.
+function atOpenTaskRow(taskId) {
+  return [{ text: 'Без VPN', url: atTaskUrl(taskId) }, { text: 'С VPN', url: atTaskUrl(taskId, true) }];
 }
 function atTgButtons(task, withActions) {
   const row = [];
   if (withActions && task.status === 'open' && !task.takenAt) row.push({ text: '▶️ Беру в работу', callback_data: `at:take:${task.id}` });
   if (withActions && task.status === 'open') row.push({ text: '✅ Готово', callback_data: `at:done:${task.id}` });
   const rows = row.length ? [row] : [];
-  rows.push([{ text: 'Открыть в трекере', url: atTaskUrl(task.id) }]);
+  rows.push(atOpenTaskRow(task.id));
   return { reply_markup: { inline_keyboard: rows } };
 }
 function atTgTaskBlock(task, projectName) {
@@ -6147,6 +6224,85 @@ async function atReflectionCron(env, team, nowMs) {
   }
 }
 
+// ── Sign-in with a code from the control bot ──
+// The gate's «Получить код»: pick yourself from the team list, the bot sends you a 6-digit code in
+// Telegram, type it in. Nothing about the code is stored: the server hands the page a signed
+// challenge (who, until when, a random nonce) and the code is derived from it, so checking it needs
+// no KV read — the request can land on any Cloudflare location. KV only rate-limits (best effort):
+// one code a minute per person, 5 wrong tries per challenge. The code lives 10 minutes and works
+// once (a used challenge is remembered until it would expire anyway).
+const AT_CODE_TTL_MS = 10 * 60000;
+const AT_CODE_TRIES = 5;
+async function atLoginCode(team, challenge) {
+  const h = await atHmac(team.secret, `code:${challenge}`);
+  return String(parseInt(h.slice(0, 12), 16) % 1000000).padStart(6, '0');
+}
+async function atLoginChallenge(team, user, nowMs) {
+  const body = `${user.id}.${user.v}.${nowMs + AT_CODE_TTL_MS}.${atRandom(10)}`;
+  return `${body}.${(await atHmac(team.secret, `ch:${body}`)).slice(0, 24)}`;
+}
+async function atCheckChallenge(team, challenge, nowMs) {
+  const m = String(challenge || '').match(/^([A-Za-z0-9_-]{1,40})\.(\d{1,6})\.(\d{10,16})\.([A-Za-z0-9]{6,20})\.([0-9a-f]{24})$/);
+  if (!m) return null;
+  const body = `${m[1]}.${m[2]}.${m[3]}.${m[4]}`;
+  if ((await atHmac(team.secret, `ch:${body}`)).slice(0, 24) !== m[5]) return null;
+  if (Number(m[3]) < nowMs) return { expired: true };
+  const user = team.users.find((u) => u.id === m[1]);
+  if (!user || String(user.v) !== m[2]) return null;
+  return { user, nonce: m[4], exp: Number(m[3]) };
+}
+async function atLoginApi(env, team, action, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  // Who can sign in this way: active people the bot can write to.
+  if (action === 'login-people') {
+    return json({
+      people: team.users.filter((u) => u.active).map((u) => ({ id: u.id, name: u.name, roleLabel: u.roleLabel || AT_ROLES[u.role] || '', tg: !!u.tgId })),
+      owner: AT_OWNER_TG,
+    });
+  }
+  if (action === 'login-code') {
+    const user = team.users.find((u) => u.id === atClean(body.userId, 40));
+    if (!user) return json({ error: 'not_found' }, 404);
+    if (!user.active) return json({ error: 'blocked' }, 403);
+    if (!user.tgId) return json({ error: 'no_telegram', owner: AT_OWNER_TG }, 409);
+    const rlKey = `at:coderl:${user.id}`;
+    const last = Number(await kv.get(rlKey)) || 0;
+    if (nowMs - last < 60000) return json({ error: 'too_soon', wait: Math.ceil((60000 - (nowMs - last)) / 1000) }, 429);
+    await kv.put(rlKey, String(nowMs), { expirationTtl: 120 });
+    const challenge = await atLoginChallenge(team, user, nowMs);
+    const code = await atLoginCode(team, challenge);
+    const res = await botApi(env, 'sendMessage', {
+      chat_id: user.tgId,
+      parse_mode: 'HTML',
+      text: `🔐 Код для входа в Avito Tasks: <code>${code}</code>\nДействует 10 минут. Если вход запросили не вы — просто проигнорируйте это сообщение.`,
+    });
+    if (!res || !res.ok) return json({ error: 'send_failed', owner: AT_OWNER_TG }, 502);
+    return json({ challenge, ttl: AT_CODE_TTL_MS });
+  }
+  if (action === 'login-verify') {
+    const ch = await atCheckChallenge(team, body.challenge, nowMs);
+    if (!ch) return json({ error: 'bad_challenge' }, 400);
+    if (ch.expired) return json({ error: 'expired' }, 410);
+    if (!ch.user.active) return json({ error: 'blocked' }, 403);
+    const triesKey = `at:codetry:${ch.nonce}`;
+    const tries = Number(await kv.get(triesKey)) || 0;
+    if (tries >= AT_CODE_TRIES) return json({ error: 'too_many' }, 429);
+    const code = String(body.code || '').replace(/\D/g, '');
+    if (code !== await atLoginCode(team, body.challenge)) {
+      await kv.put(triesKey, String(tries + 1), { expirationTtl: Math.ceil(AT_CODE_TTL_MS / 1000) + 60 });
+      return json({ error: 'wrong_code', left: AT_CODE_TRIES - tries - 1 }, 401);
+    }
+    await kv.put(triesKey, String(AT_CODE_TRIES), { expirationTtl: Math.ceil(AT_CODE_TTL_MS / 1000) + 60 }); // used up
+    const user = ch.user;
+    if (!user.activatedAt) {
+      user.activatedAt = new Date(nowMs).toISOString();
+      await atPutTeam(kv, team);
+    }
+    return json({ token: await atToken(team, user), me: atPublicUser(user) });
+  }
+  return null;
+}
+
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
 async function handleAvitoTasksApi(request, env, url, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -6156,6 +6312,11 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   const action = url.pathname.slice('/api/dashboard/avito-tasks/'.length);
   const team = await atGetTeam(env);
   const nowMs = Date.now();
+
+  if (action.startsWith('login-')) {
+    const res = await atLoginApi(env, team, action, body, nowMs);
+    if (res) return res;
+  }
 
   if (action === 'activate') {
     const code = atClean(body.invite, 64);
@@ -7141,7 +7302,8 @@ function atUrgency(t, nowMs) {
   }
   return s;
 }
-async function atBuildMyTasks(env, user, digest) {
+// about: the owner asking about this person — no «вы», no unclaimed/inform sections meant for them.
+async function atBuildMyTasks(env, user, digest, about) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const nowMs = Date.now();
   const team = await atGetTeam(env);
@@ -7158,7 +7320,7 @@ async function atBuildMyTasks(env, user, digest) {
   const today = mine.filter((t) => botDueMs(t) && botDueMs(t) >= nowMs && botMsk(botDueMs(t)).date === botMsk(nowMs).date).length;
   const inWork = mine.filter((t) => t.takenAt).length;
   if (digest) lines.push(`☀️ <b>Доброе утро, ${escapeHtml(atFirstName(user.name))}!</b>`);
-  if (!mine.length) lines.push('Открытых задач на вас нет 👌');
+  if (!mine.length) lines.push(about ? 'Открытых задач нет 👌' : 'Открытых задач на вас нет 👌');
   else {
     lines.push(`📋 <b>Незакрытые задачи: ${mine.length}</b>${overdue ? ` · 🔴 просрочено ${overdue}` : ''}${today ? ` · на сегодня ${today}` : ''}${inWork ? ` · ▶️ в работе ${inWork}` : ''}`);
     const groups = new Map();
@@ -7178,16 +7340,16 @@ async function atBuildMyTasks(env, user, digest) {
   }
   const seesInform = user.role === 'manager' || user.role === 'owner' || user.role === 'assistant';
   const unclaimed = all.filter((t) => atIsUnclaimed(t, team.users));
-  if (unclaimed.length) {
+  if (unclaimed.length && !about) {
     lines.push('', `🙋 <b>Ничьи задачи из чатов: ${unclaimed.length}</b> — посмотрите, нет ли среди них ваших, и возьмите в трекере:`);
     for (const t of unclaimed.slice(0, 8)) lines.push(`• <a href="${escapeHtml(atTaskUrl(t.id))}">${escapeHtml(t.text)}</a> — <i>${escapeHtml(clientOf(t))}</i>`);
     if (unclaimed.length > 8) lines.push(`…и ещё ${unclaimed.length - 8} — в трекере.`);
   }
-  if (doneMine.length && !seesInform) { // the manager sees these in «сообщить клиентам» below
+  if (doneMine.length && (about || !seesInform)) { // the manager sees these in «сообщить клиентам» below
     lines.push('', `✅ <b>Сделано, ждёт сообщения клиенту: ${doneMine.length}</b>`);
     for (const t of doneMine) lines.push(`• ${escapeHtml(t.text)} — <i>${escapeHtml(clientOf(t))}</i>`);
   }
-  if (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant') {
+  if (!about && (user.role === 'manager' || user.role === 'owner' || user.role === 'assistant')) {
     const toInform = all.filter((t) => t.status === 'done' && atNeedsInform(t, team.users));
     if (toInform.length) {
       lines.push('', `📨 <b>Готово — сообщить клиентам: ${toInform.length}</b>`);
