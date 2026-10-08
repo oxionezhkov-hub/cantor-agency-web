@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Структура сайта | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+/* Структура личного сайта преподавателя — черновик без дизайна.
+   Страница одна на всех: ?client=<slug> подгружает data/<slug>.json.
+   Цвета — только чёрный, белый и наш оранжевый. */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-bg:#FFF1EC;--ink:#111;--text:#1C1C1C;--muted:#6F6B66;
+  --line:#E2E0DC;--bg:#fff;--soft:#F6F5F2;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+h1,h2,h3,.num,.stat b{font-family:'Unbounded',sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px 80px}
+
+/* sections: each header sticks to the top while its section is on screen,
+   so the current section title changes by itself while scrolling */
+.sec{padding-bottom:28px}
+.sec-h{position:sticky;top:0;z-index:5;padding:14px 0 12px;border-top:3px solid var(--ink);border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4)}
+.sec-t{display:flex;gap:14px;align-items:baseline}
+.sec-h .num{font-size:14px;color:var(--red)}
+.sec-h h2{font-size:clamp(18px,3.2vw,24px);line-height:1.2}
+.purpose{margin-top:6px;font-size:14px;color:var(--muted);max-width:720px}
+.body{margin-top:18px;display:grid;gap:16px}
+
+.big{font-family:'Unbounded',sans-serif;font-size:clamp(26px,5vw,42px);line-height:1.1}
+.lead{font-size:18px;font-weight:500;max-width:740px}
+.text{font-size:15px;max-width:740px;white-space:pre-line}
+.h3{font-size:16px;font-weight:700;font-family:'Unbounded',sans-serif;margin-top:4px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:600;font-size:14px;border:1.5px solid var(--ink)}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.stat{border:1px solid var(--ink);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1;color:var(--red)}
+.stat span{display:block;font-size:13px;margin-top:6px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+.card .meta{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--red);margin-bottom:6px}
+.card h4{font-size:15px;margin-bottom:6px}
+.card p{font-size:14px;color:#3d3a36;white-space:pre-line}
+.card .res{margin-top:10px;font-family:'Unbounded',sans-serif;font-size:13px}
+
+.list{list-style:none;display:grid;gap:6px;font-size:15px;max-width:740px}
+.list li{padding-left:22px;position:relative}
+.list li::before{content:'—';position:absolute;left:0;color:var(--red);font-weight:700}
+.list.no li::before{content:'×'}
+
+.steps{list-style:none;display:grid;gap:8px;counter-reset:st;max-width:740px}
+.steps li{counter-increment:st;display:grid;grid-template-columns:34px 1fr;gap:10px;font-size:15px}
+.steps li::before{content:counter(st);font-family:'Unbounded',sans-serif;font-size:13px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center}
+.steps b{font-weight:600}
+
+.timeline{display:grid;gap:0;max-width:740px}
+.tl{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.tl:first-child{border-top:1px solid var(--line)}
+.tl .y{font-family:'Unbounded',sans-serif;font-size:13px;color:var(--red)}
+.tl b{display:block;font-size:15px}
+.tl p{font-size:14px;color:var(--muted)}
+
+.quote{border-left:4px solid var(--red);padding:6px 0 6px 18px;font-size:19px;font-weight:500;max-width:740px}
+.quote small{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:6px}
+
+.links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.lnk{border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;word-break:break-word}
+.lnk b{display:block;font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+
+.form{border:1px solid var(--ink);border-radius:12px;padding:16px;display:grid;gap:10px;max-width:560px}
+.form .f{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--muted)}
+.form .f b{color:var(--text);font-weight:600}
+.form .topics{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.form .topics span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--text)}
+
+/* image / video placeholders: what picture is needed, not the picture */
+.ph-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ph{border:1.5px dashed var(--red);background:var(--red-bg);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:120px}
+.ph .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red)}
+.ph b{font-size:15px}
+.ph p{font-size:13px;color:#4a4540}
+.ph .src{font-size:12px;color:var(--muted)}
+.ph.tall{min-height:260px}
+
+/* what we still need from the teacher */
+.ask{background:var(--ink);color:#fff;border-radius:12px;padding:14px 16px;font-size:14px}
+.ask b{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--red);margin-bottom:6px}
+.ask ul{list-style:none;display:grid;gap:4px}
+.ask li{padding-left:16px;position:relative}
+.ask li::before{content:'?';position:absolute;left:0;color:var(--red);font-weight:700}
+
+.skipped .sec-h{background:rgba(232,57,29,.88);border-top-color:var(--red);color:#fff;border-bottom:none;padding-left:16px;padding-right:16px;border-radius:0 0 10px 10px}
+.skipped .sec-h .num{color:#fff}
+.skipped .sec-h .purpose{color:rgba(255,255,255,.9)}
+.skip-box{margin-top:14px;border:2px solid var(--red);border-radius:14px;background:var(--red-bg);padding:6px 18px}
+.skip-box .item{display:grid;grid-template-columns:minmax(170px,250px) 1fr;gap:12px;padding:14px 0;border-bottom:1px solid rgba(232,57,29,.25);font-size:14px}
+.skip-box .item:last-child{border-bottom:none}
+.skip-box .item b{font-size:15px;display:flex;gap:10px;align-items:baseline}
+.skip-box .item b::before{content:'×';color:var(--red);font-family:'Unbounded',sans-serif;font-size:16px}
+
+
+.state{padding:80px 0;text-align:center;color:var(--muted)}
+.state h1{font-size:22px;color:var(--text);margin-bottom:8px}
+
+@media (max-width:600px){
+  .tl{grid-template-columns:1fr;gap:2px}
+  .sec-h .purpose{font-size:13px;line-height:1.45}
+  .skip-box .item{grid-template-columns:1fr;gap:4px}
+}
+@media print{
+  .sec-h{position:static}
+}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"><div class="state">Загружаем структуру…</div></main>
+
+<script>
+(function () {
+  var app = document.getElementById('app');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function arr(v) { return Array.isArray(v) ? v : []; }
+
+  // One renderer per block type in data/<slug>.json → sections[].blocks[].
+  var BLOCKS = {
+    big: function (b) { return '<div class="big">' + esc(b.text) + '</div>'; },
+    lead: function (b) { return '<p class="lead">' + esc(b.text) + '</p>'; },
+    text: function (b) { return '<p class="text">' + esc(b.text) + '</p>'; },
+    h3: function (b) { return '<h3 class="h3">' + esc(b.text) + '</h3>'; },
+    buttons: function (b) {
+      return '<div class="btns">' + arr(b.items).map(function (t, i) {
+        return '<span class="btn' + (i === 0 ? ' main' : '') + '">' + esc(t) + '</span>';
+      }).join('') + '</div>';
+    },
+    stats: function (b) {
+      return '<div class="stats">' + arr(b.items).map(function (s) {
+        return '<div class="stat"><b>' + esc(s.value) + '</b><span>' + esc(s.label) + '</span></div>';
+      }).join('') + '</div>';
+    },
+    cards: function (b) {
+      return '<div class="cards">' + arr(b.items).map(function (c) {
+        return '<div class="card">' + (c.meta ? '<div class="meta">' + esc(c.meta) + '</div>' : '')
+          + (c.title ? '<h4>' + esc(c.title) + '</h4>' : '')
+          + (c.text ? '<p>' + esc(c.text) + '</p>' : '')
+          + (c.result ? '<div class="res">' + esc(c.result) + '</div>' : '') + '</div>';
+      }).join('') + '</div>';
+    },
+    list: function (b) {
+      return (b.title ? '<h3 class="h3">' + esc(b.title) + '</h3>' : '')
+        + '<ul class="list' + (b.negative ? ' no' : '') + '">' + arr(b.items).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
+    },
+    steps: function (b) {
+      return (b.title ? '<h3 class="h3">' + esc(b.title) + '</h3>' : '')
+        + '<ol class="steps">' + arr(b.items).map(function (s) {
+          return typeof s === 'string' ? '<li><span>' + esc(s) + '</span></li>'
+            : '<li><span><b>' + esc(s.title) + '</b>' + (s.text ? ' — ' + esc(s.text) : '') + '</span></li>';
+        }).join('') + '</ol>';
+    },
+    timeline: function (b) {
+      return '<div class="timeline">' + arr(b.items).map(function (t) {
+        return '<div class="tl"><div class="y">' + esc(t.year) + '</div><div><b>' + esc(t.title) + '</b>'
+          + (t.text ? '<p>' + esc(t.text) + '</p>' : '') + '</div></div>';
+      }).join('') + '</div>';
+    },
+    quote: function (b) {
+      return '<blockquote class="quote">«' + esc(b.text) + '»' + (b.author ? '<small>' + esc(b.author) + '</small>' : '') + '</blockquote>';
+    },
+    links: function (b) {
+      return '<div class="links">' + arr(b.items).map(function (l) {
+        return '<div class="lnk"><b>' + esc(l.label) + '</b>' + esc(l.value) + '</div>';
+      }).join('') + '</div>';
+    },
+    form: function (b) {
+      return '<div class="form">' + arr(b.fields).map(function (f) {
+        return '<div class="f"><b>' + esc(f) + '</b></div>';
+      }).join('')
+        + (arr(b.topics).length ? '<div class="f"><b>Тема обращения</b><div class="topics">' + arr(b.topics).map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div></div>' : '')
+        + '<span class="btn main" style="justify-self:start">' + esc(b.button || 'Отправить') + '</span></div>';
+    },
+    // Placeholder: describes which picture/video is needed and where it comes from.
+    image: function (b) { return '<div class="ph-row">' + ph(b, 'Картинка') + '</div>'; },
+    images: function (b) {
+      return '<div class="ph-row">' + arr(b.items).map(function (i) { return ph(i, b.kind || 'Картинка'); }).join('') + '</div>';
+    },
+    video: function (b) { return '<div class="ph-row">' + ph(b, 'Видео') + '</div>'; },
+    ask: function (b) { return askBox(b.items); },
+  };
+
+  function ph(b, kind) {
+    return '<div class="ph' + (b.tall ? ' tall' : '') + '"><span class="k">' + esc(b.kind || kind) + (b.size ? ' · ' + esc(b.size) : '') + '</span>'
+      + '<b>' + esc(b.title) + '</b>'
+      + (b.need ? '<p>' + esc(b.need) + '</p>' : '')
+      + (b.source ? '<span class="src">Откуда: ' + esc(b.source) + '</span>' : '') + '</div>';
+  }
+
+  function askBox(items) {
+    items = arr(items);
+    if (!items.length) return '';
+    return '<div class="ask"><b>Нужно от вас</b><ul>' + items.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
+  }
+
+  function render(d) {
+    document.title = 'Структура сайта — ' + d.name + ' | Cantor Agency';
+    var sections = arr(d.sections);
+    var skipped = arr(d.skipped);
+    var html = '';
+
+    sections.forEach(function (s, i) {
+      // Number, title and purpose stick together while the section is on screen.
+      html += '<section class="sec" id="' + esc(s.id) + '"><div class="sec-h"><div class="sec-t"><span class="num">' + pad(i + 1) + '</span>'
+        + '<h2>' + esc(s.title) + '</h2></div>'
+        + (s.purpose ? '<p class="purpose">' + esc(s.purpose) + '</p>' : '') + '</div>'
+        + '<div class="body">' + arr(s.blocks).map(function (b) {
+          var fn = BLOCKS[b.type];
+          return fn ? fn(b) : '';
+        }).join('') + askBox(s.ask) + '</div></section>';
+    });
+
+    if (skipped.length) {
+      html += '<section class="sec skipped" id="skipped"><div class="sec-h"><div class="sec-t"><span class="num">×</span><h2>Чего не будет на сайте</h2></div>'
+        + '<p class="purpose">Эти блоки есть на других сайтах, но здесь мы их не ставим — причины ниже. Если материал появится, блок можно добавить.</p></div>'
+        + '<div class="skip-box">' + skipped.map(function (s) {
+          return '<div class="item"><b>' + esc(s.title) + '</b><span>' + esc(s.reason) + '</span></div>';
+        }).join('') + '</div></section>';
+    }
+
+    app.innerHTML = html;
+    if (location.hash) {
+      var el = document.getElementById(location.hash.slice(1));
+      if (el) el.scrollIntoView();
+    }
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+  function fail(title, text) {
+    app.innerHTML = '<div class="state"><h1>' + esc(title) + '</h1><p>' + esc(text) + '</p></div>';
+  }
+
+  // A pre-baked preview can inline its data instead of fetching it.
+  if (window.SITE_STRUCTURE) { render(window.SITE_STRUCTURE); return; }
+
+  var params = new URLSearchParams(location.search);
+  var slug = (params.get('client') || '').trim().toLowerCase();
+  if (!/^[a-z0-9-]{2,80}$/.test(slug)) {
+    fail('Не указан преподаватель', 'Откройте ссылку, которую прислал менеджер Cantor Agency, — в ней есть параметр ?client=…');
+    return;
+  }
+  fetch('/site-structure/data/' + slug + '.json', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(render)
+    .catch(function () { fail('Структура не найдена', 'Проверьте ссылку или напишите менеджеру Cantor Agency.'); });
+})();
+</script>
+</body>
+</html>
