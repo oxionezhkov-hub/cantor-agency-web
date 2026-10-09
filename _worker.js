@@ -1108,6 +1108,89 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
   return (data && (data.voices_urls || data.urls)) || data || {};
 }
 
+// ── Autoload reports ──
+// Avito keeps one report per autoload run. /autoload/v3 (falling back to v2) gives the report
+// itself; /autoload/v2/reports/{id}/items pages through every listing of that run with its
+// Avito id/url, section (success / error / problem …) and the messages explaining a failure.
+async function fetchAvitoAutoloadReport(env, account, reportId) {
+  const token = await avitoGetToken(env, account);
+  const tried = [];
+  const get = async (path) => {
+    const res = await avitoRequest(token, path);
+    const text = await res.text().catch(() => '');
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) { /* not JSON */ }
+    tried.push(`${path} → ${res.status}${res.ok ? '' : ` ${text.slice(0, 160)}`}`);
+    return { ok: res.ok, data };
+  };
+  let report = null;
+  for (const v of ['v3', 'v2']) {
+    const r = await get(reportId ? `/autoload/${v}/reports/${encodeURIComponent(reportId)}` : `/autoload/${v}/reports/last_completed_report`);
+    if (r.ok && r.data) { report = r.data; break; }
+  }
+  if (!report) throw new Error(`autoload report unavailable: ${tried.join(' | ')}`);
+  const id = report.report_id || report.id;
+  const items = [];
+  for (let page = 0; id && page < 60; page += 1) {
+    const r = await get(`/autoload/v2/reports/${encodeURIComponent(id)}/items?per_page=200&page=${page}`);
+    if (!r.ok || !r.data) break;
+    const batch = r.data.items || r.data.result || [];
+    items.push(...batch.map(normalizeAutoloadItem));
+    const pages = r.data.meta && Number(r.data.meta.pages);
+    if (!batch.length || (pages && page + 1 >= pages)) break;
+  }
+  const bySection = {};
+  items.forEach((it) => { bySection[it.section || '—'] = (bySection[it.section || '—'] || 0) + 1; });
+  return {
+    summary: {
+      reportId: id || null,
+      status: report.status || null,
+      startedAt: report.started_at || report.startedAt || null,
+      finishedAt: report.finished_at || report.finishedAt || null,
+      sectionStats: report.section_stats || report.sectionStats || null,
+      items: items.length,
+      problems: items.filter((it) => it.problem).length,
+      bySection,
+    },
+    items,
+    report,
+    tried,
+  };
+}
+
+function normalizeAutoloadItem(it) {
+  const clean = (t) => String(t || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const messages = (it.messages || it.errors || []).map((m) => (typeof m === 'string' ? { type: '', code: '', text: clean(m) } : {
+    type: m.type || m.level || '',
+    code: m.code != null ? String(m.code) : '',
+    text: clean([m.title, m.description || m.message || m.text].filter(Boolean).join(': ')),
+  }));
+  const section = it.section && typeof it.section === 'object' ? it.section : { slug: it.section || '', title: it.section || '' };
+  return {
+    adId: it.ad_id != null ? String(it.ad_id) : (it.id != null ? String(it.id) : ''),
+    avitoId: it.avito_id != null ? String(it.avito_id) : '',
+    url: it.url || '',
+    section: section.title || section.slug || '',
+    sectionSlug: section.slug || '',
+    problem: !/^success/.test(section.slug || ''),
+    avitoStatus: it.avito_status || it.status || '',
+    title: it.title || '',
+    applied: it.applied_vas || it.fee_info || null,
+    messages,
+  };
+}
+
+function autoloadCsv(rows) {
+  const esc = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const head = ['ID в файле', 'ID на Авито', 'Раздел отчёта', 'Статус на Авито', 'Тип', 'Код', 'Сообщение', 'Ссылка'];
+  const lines = [head.map(esc).join(';')];
+  rows.forEach((it) => {
+    const msgs = it.messages.length ? it.messages : [{ type: '', code: '', text: '' }];
+    msgs.forEach((m) => lines.push([it.adId, it.avitoId, it.section, it.avitoStatus, m.type, m.code, m.text, it.url].map(esc).join(';')));
+  });
+  return lines.join('\r\n');
+}
+
 async function fetchAvitoSelf(token) {
   return avitoJson(token, '/core/v1/accounts/self');
 }
@@ -1603,6 +1686,35 @@ async function handleAvitoApi(request, env, url) {
       return json(await runAvitoChatList(env, account, limit, offset));
     } catch (e) {
       return json({ error: 'chats_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
+  // Autoload (автовыгрузка) report: GET /api/avito/autoload?accountId=…[&reportId=…][&format=csv|raw]
+  // — the last completed report by default, with every listing's status and error messages.
+  if (pathname === '/api/avito/autoload' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    if (!accountId) return json({ error: 'missing_fields' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    try {
+      const result = await fetchAvitoAutoloadReport(env, account, url.searchParams.get('reportId'));
+      const format = url.searchParams.get('format');
+      if (format === 'raw') return json(result);
+      if (format === 'csv') {
+        const onlyProblems = url.searchParams.get('all') !== '1';
+        const rows = result.items.filter((it) => !onlyProblems || it.problem);
+        const name = `autoload_${(account.name || accountId).replace(/[^\wа-яё-]+/gi, '_')}_${result.summary.reportId || 'last'}.csv`;
+        return new Response(`\ufeff${autoloadCsv(rows)}`, {
+          headers: {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(name)}`,
+            ...corsHeaders(),
+          },
+        });
+      }
+      return json({ summary: result.summary, items: result.items });
+    } catch (e) {
+      return json({ error: 'autoload_failed', message: String(e && e.message) }, 502);
     }
   }
 
@@ -3732,7 +3844,7 @@ async function handleReportJobCallback(request, env, url) {
 //                                              origin, chatId, threadId, msgId, link, author,
 //                                              doneAt, informedAt, notified, createdAt, updatedAt }
 
-const BOT_SETUP_VERSION = '4'; // 2: callback buttons + employees' private chats (Avito Tasks); 3: /activity in the owner's menu; 4: reactions
+const BOT_SETUP_VERSION = '5'; // 2: callback buttons + employees' private chats (Avito Tasks); 3: /activity in the owner's menu; 4: reactions; 5: /errors (autoload report)
 const BOT_WORKER_ORIGIN = 'https://mainweb.oxion-ezhkov.workers.dev';
 const BOT_AI_MODEL_DEFAULT = '@cf/qwen/qwen3-30b-a3b-fp8';
 const BOT_LOG_TTL = 60 * 60 * 24 * 180;
@@ -3768,6 +3880,7 @@ const BOT_OWNER_COMMANDS = [
   { command: 'tasks', description: 'Открытые задачи по клиентам' },
   { command: 'overdue', description: 'Просроченные задачи' },
   { command: 'metrics', description: 'Проверка метрик из дашборда' },
+  { command: 'errors', description: 'Файл ошибок автозагрузки Авито: /errors Добрынина' },
   { command: 'topics', description: 'Чаты и топики → клиенты' },
   { command: 'ai', description: 'Статус ИИ и очереди' },
   { command: 'help', description: 'Что умеет бот' },
@@ -4410,6 +4523,7 @@ async function botOnOwnerMessage(env, msg) {
       '/tasks — открытые задачи по клиентам (/tasks Агешина — только один клиент)',
       '/overdue — просроченные',
       '/metrics — проверка метрик из дашборда',
+      '/errors Добрынина — файл ошибок автозагрузки Авито (или просто «дай файл ошибок Добрыниной»)',
       '/topics — какие чаты и топики к каким клиентам привязаны',
       '/ai — статус ИИ и очереди',
       '/done &lt;id&gt; · /informed &lt;id&gt; · /cancel &lt;id&gt; — поправить задачу вручную',
@@ -4482,9 +4596,100 @@ async function botOnOwnerMessage(env, msg) {
     }
     return reply(`Топик «${escapeHtml(rec.name)}» больше не считается клиентом.${removed}`);
   }
+  if (cmd === 'errors') return botSendAutoloadErrors(env, msg.chat.id, args.join(' '));
   if (cmd) return reply('Не знаю такой команды. /help — список.');
   if (!text) return;
+  // «дай файл ошибок Добрыниной», «ошибки автозагрузки Верхотуровой»
+  if (/ошиб|автозагруз|автовыгруз|выгрузк/i.test(text) && (await botFindAvitoAccounts(env, text)).length) {
+    return botSendAutoloadErrors(env, msg.chat.id, text);
+  }
   return reply(await botAnswerQuestion(env, text));
+}
+
+// ── autoload errors on request: /errors <client> or «дай файл ошибок Добрыниной» ──
+// Matches a connected Avito cabinet by any word of its name (a stem, so «Добрыниной» finds
+// «Елена Добрынина»), says it's working on it, then sends a summary and a CSV of the problem
+// listings from the cabinet's last completed autoload report.
+async function botFindAvitoAccounts(env, text) {
+  const words = botNorm(text).split(' ').filter((w) => w.length >= 4);
+  if (!words.length) return [];
+  const hit = (part) => part.length >= 4 && words.some((w) => w.startsWith(part.slice(0, Math.max(4, part.length - 2))));
+  // A surname hit (last word of the name) beats a first-name hit: «Елены Добрыниной» → Добрынина only.
+  const scored = (await listByPrefix(env.AVITO_KV, 'account:')).map((a) => {
+    const parts = botNorm(a.name).split(' ').filter(Boolean);
+    const score = parts.length && hit(parts[parts.length - 1]) ? 2 : (parts.some(hit) ? 1 : 0);
+    return { a, score };
+  }).filter((x) => x.score);
+  const best = Math.max(0, ...scored.map((x) => x.score));
+  return scored.filter((x) => x.score === best).map((x) => x.a);
+}
+
+async function botSendAutoloadErrors(env, chatId, query) {
+  const reply = (body) => botSend(env, chatId, body);
+  const found = await botFindAvitoAccounts(env, query);
+  if (!found.length) {
+    const all = (await listByPrefix(env.AVITO_KV, 'account:')).map((a) => a.name).sort();
+    return reply(`Не нашёл кабинет Авито по «${escapeHtml(query || '')}». Подключены: ${escapeHtml(all.join(', '))}.`);
+  }
+  if (found.length > 1) return reply(`Подходит несколько кабинетов: ${escapeHtml(found.map((a) => a.name).join(', '))}. Уточните фамилию.`);
+  const account = found[0];
+  await reply(`⏳ Собираю отчёт автозагрузки по кабинету «${escapeHtml(account.name)}», подождите немного…`);
+  let result;
+  try {
+    result = await fetchAvitoAutoloadReport(env, account, null);
+  } catch (e) {
+    return reply(`Не получилось получить отчёт автозагрузки «${escapeHtml(account.name)}»: ${escapeHtml(String(e && e.message).slice(0, 300))}`);
+  }
+  const s = result.summary;
+  const lines = [`<b>Автозагрузка — ${escapeHtml(account.name)}</b>`];
+  if (s.finishedAt) lines.push(`Отчёт ${escapeHtml(String(s.reportId))} от ${botFmtDate(Date.parse(s.finishedAt))}, всего объявлений: ${s.items}`);
+  const stats = s.sectionStats && Array.isArray(s.sectionStats.sections) ? s.sectionStats.sections : [];
+  stats.forEach((sec) => {
+    const subs = (sec.sections || []).filter((x) => x.count).map((x) => `${x.title} ${x.count}`).join(', ');
+    lines.push(`• ${escapeHtml(sec.title)}: <b>${sec.count}</b>${subs && (sec.sections || []).length > 1 ? ` (${escapeHtml(subs)})` : ''}`);
+  });
+  const problems = result.items.filter((it) => it.problem);
+  if (!problems.length) {
+    lines.push('', '✅ Ошибок нет — все объявления опубликованы.');
+    return reply(lines.join('\n'));
+  }
+  const reasons = {};
+  problems.forEach((it) => it.messages.filter((m) => m.type === 'error' || m.type === 'alarm').forEach((m) => {
+    const short = m.text.split(/[.:]\s/)[0].slice(0, 120);
+    reasons[short] = (reasons[short] || 0) + 1;
+  }));
+  const top = Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (top.length) {
+    lines.push('', '<b>Основные причины:</b>');
+    top.forEach(([r, n]) => lines.push(`${n} — ${escapeHtml(r)}`));
+  }
+  await reply(lines.join('\n'));
+  const date = s.finishedAt ? s.finishedAt.slice(0, 10) : 'last';
+  const name = `Oshibki_avtozagruzki_${botTranslit(account.name)}_${date}.csv`;
+  return botSendDocument(env, chatId, name, `\ufeff${autoloadCsv(problems)}`, `Проблемные объявления: ${problems.length}`);
+}
+
+function botTranslit(s) {
+  const map = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
+  return String(s || '').toLowerCase().split('').map((c) => (c in map ? map[c] : c)).join('').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+async function botSendDocument(env, chatId, filename, content, caption) {
+  const token = env.CONTROL_BOT_TOKEN;
+  if (!token) return null;
+  const form = new FormData();
+  form.append('chat_id', String(chatId));
+  if (caption) form.append('caption', caption);
+  form.append('document', new Blob([content], { type: 'text/csv' }), filename);
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, { method: 'POST', body: form, signal: AbortSignal.timeout(20000) });
+    const data = await res.json().catch(() => null);
+    if (!data || !data.ok) console.error('control bot sendDocument failed', data && data.description);
+    return data;
+  } catch (err) {
+    console.error('control bot sendDocument failed', String(err && err.message));
+    return null;
+  }
 }
 
 function botStatusLabel(task) {
