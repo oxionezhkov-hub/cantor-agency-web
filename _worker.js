@@ -4794,8 +4794,13 @@ async function botApplyEvents(env, events, ctx) {
       // only mark it (task.hint) and ask the person to confirm with a button.
       const closes = (ev.status === 'done' || ev.status === 'cancelled') ? task.status === 'open'
         : ev.status === 'informed' ? task.status === 'open' || task.status === 'done' : false;
-      if (closes && (!task.hint || task.hint.status !== ev.status)) {
+      // A question ("а это сделали?") is not an answer; and a task already asked about with the same
+      // guess in the last day isn't asked about again (a save in the tracker clears task.hint).
+      const asking = src && /\?[\s)!.]*$/.test(String(src.text || '').trim());
+      const lastAsked = task.hintSeen && task.hintSeen[ev.status] ? Date.parse(task.hintSeen[ev.status]) : 0;
+      if (closes && !asking && (!task.hint || task.hint.status !== ev.status) && !(lastAsked && Date.now() - lastAsked < 24 * 3600000)) {
         task.hint = { status: ev.status, at: src ? new Date(src.t).toISOString() : nowIso, msgId: src ? src.id : null, from: src ? src.from : null, text: src ? String(src.text).slice(0, 200) : null };
+        task.hintSeen = { ...(task.hintSeen || {}), [ev.status]: nowIso };
         hinted.push(task);
       }
       task.updatedAt = nowIso;
@@ -4817,19 +4822,41 @@ async function botApplyEvents(env, events, ctx) {
     });
   }
   // "Похоже, сделано": the assignee (for «клиенту сообщили» — the client manager) confirms with a button.
+  // One chat message that seems to settle several tasks makes ONE Telegram message per person, with
+  // a button per task — not a message per task.
+  const groups = new Map();
   for (const task of hinted) {
     const h = task.hint;
-    const projectName = task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName;
     const to = h.status === 'informed'
       ? users.filter((u) => u.role === 'manager' && u.active).map((u) => u.id)
       : [atAssigneeId(task, users)].filter(Boolean);
-    if (!to.length) continue;
     const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
+    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' });
+    for (const uid of to) {
+      const key = `${uid}|${h.status}|${h.msgId || task.id}`;
+      if (!groups.has(key)) groups.set(key, { uid, h, tasks: [] });
+      groups.get(key).tasks.push(task);
+    }
+  }
+  for (const { uid, h, tasks: list } of groups.values()) {
+    const user = users.find((u) => u.id === uid && u.active);
+    if (!user || !user.tgId) continue;
     const action = { done: ['✅ Да, готово', 'done'], informed: ['✅ Да, закрыть', 'close'], cancelled: ['✖️ Да, отменить', 'cancel'] }[h.status];
-    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' }, {
-      text: `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectName)}${h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : ''}`,
-      extra: { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], atOpenTaskRow(task.id)] }, disable_notification: true },
-    });
+    const quote = h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : '';
+    const projectOf = (task) => (task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName);
+    if (list.length === 1) {
+      const task = list[0];
+      const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
+      await botSend(env, user.tgId, `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectOf(task))}${quote}`,
+        { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], atOpenTaskRow(task.id)] }, disable_notification: true });
+      continue;
+    }
+    const what = { done: 'сделаны', informed: 'уже сообщили клиенту', cancelled: 'больше не нужны' }[h.status];
+    const client = projectOf(list[0]);
+    const lines = [`🤖 <b>Похоже, задачи ${what}: ${list.length}</b>${client ? ` · ${escapeHtml(client)}` : ''} — подтвердите те, что так (сам бот статус не меняет)`, quote.trim(), ''];
+    list.forEach((task, i) => lines.push(`${i + 1}. <a href="${escapeHtml(atTaskUrl(task.id))}">${escapeHtml(task.text)}</a>`));
+    const buttons = list.map((task, i) => [{ text: `${action[0].split(',')[0].replace('Да', '')} ${i + 1}. ${String(task.text).slice(0, 40)}`.replace(/\s+/g, ' ').trim(), callback_data: `at:${action[1]}:${task.id}` }]);
+    await botSend(env, user.tgId, lines.filter((l, i) => l || i === 2).join('\n'), { reply_markup: { inline_keyboard: buttons }, disable_notification: true });
   }
 }
 
@@ -5179,6 +5206,26 @@ async function botCheckHandoffs(env, nowMs, allTasks, byId) {
   if (touched.length) await atTouch(kv, touched);
 }
 
+// Since the 08.10 deploy Cloudflare fires every 10-minute tick twice (two invocations a few seconds
+// apart, one schedule registered), and the second one re-sent the morning summary. Each tick is
+// claimed in KV: the invocation that finds it taken stops. Both write, wait, read back — the last
+// writer wins, so two that started together still leave only one running.
+async function cronClaimTick(env, scheduledTime) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv) return true;
+  const key = `cron:tick:${Math.floor((Number(scheduledTime) || Date.now()) / 600000)}`;
+  try {
+    if (await kv.get(key)) return false;
+    const me = crypto.randomUUID();
+    await kv.put(key, me, { expirationTtl: 60 * 60 });
+    await new Promise((r) => setTimeout(r, 1500));
+    const owner = await kv.get(key);
+    return !owner || owner === me;
+  } catch (err) {
+    console.error('cron claim failed', err && err.message);
+    return true;
+  }
+}
 async function botScheduled(env) {
   if (!env.CONTROL_BOT_TOKEN || !env.AGENCY_DASHBOARD_KV) return;
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -5235,37 +5282,46 @@ async function botAnswerQuestion(env, question) {
   }
 
   const projects = Object.values(byId);
+  // Clients the question names ("что с Шевчуком"): then everything is about them, in more depth.
+  const named = new Set(projects.filter((p) => (person ? surnameHit(p.name) : hits(p.name))).map((p) => p.id));
+  const about = (pid) => !named.size || named.has(pid);
   const tasks = await botAllTasks(kv);
   const fmt = (ms) => (ms ? botFmtDate(ms) : '—');
   const nameOf = (t) => (t.projectId && byId[t.projectId] ? byId[t.projectId].name : t.topicName || 'без клиента');
-  const whoOf = (t) => { const uid = atAssigneeId(t, team.users); const u = uid && team.users.find((x) => x.id === uid); return u ? u.name : t.owner || 'никто (ничья)'; };
+  const whoOf = (t) => { const uid = atAssigneeId(t, team.users); const u = uid && team.users.find((x) => x.id === uid); return u ? u.name : t.owner || 'ничья'; };
   const statusOf = (t) => (t.status === 'open' ? (t.takenAt ? 'в работе' : 'новая') : { done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[t.status] || t.status);
-  const recentMs = now - 14 * 24 * 3600000;
-  const shown = tasks.filter((t) => t.status === 'open' || t.status === 'done' || Date.parse(t.updatedAt || t.createdAt || 0) > recentMs)
-    .sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'ru'));
+  const recentMs = now - (named.size ? 45 : 7) * 24 * 3600000;
+  const live = (t) => t.status === 'open' || t.status === 'done';
+  const shown = tasks.filter((t) => about(t.projectId) && (live(t) || Date.parse(t.updatedAt || t.createdAt || 0) > recentMs))
+    .sort((a, b) => Number(live(b)) - Number(live(a)) || nameOf(a).localeCompare(nameOf(b), 'ru'));
   const taskLines = shown.map((t) => {
     const due = botDueMs(t);
     const creator = t.createdById ? (team.users.find((u) => u.id === t.createdById) || {}).name : t.author;
-    return `- ${nameOf(t)} | ${t.text} | исполнитель: ${whoOf(t)} | статус: ${statusOf(t)} | срок: ${due ? `${fmt(due)}${due < now && t.status === 'open' ? ' (ПРОСРОЧЕНО)' : ''}` : 'нет'} | поставил: ${creator || '—'} ${fmt(Date.parse(t.startedAt || t.createdAt || 0))}${t.doneAt ? ` | сделано: ${fmt(Date.parse(t.doneAt))}` : ''}`;
+    return `- ${nameOf(t)} | ${String(t.text).slice(0, 150)} | ${whoOf(t)} | ${statusOf(t)} | срок ${due ? `${fmt(due)}${due < now && t.status === 'open' ? ' ПРОСРОЧЕНО' : ''}` : 'нет'} | поставил ${creator || '—'} ${fmt(Date.parse(t.startedAt || t.createdAt || 0))}${t.doneAt ? ` | сделано ${fmt(Date.parse(t.doneAt))}` : ''}`;
   });
 
-  // Last 7 days of the dashboard's daily numbers, per client.
+  // Last 7 days of the dashboard's daily numbers, per client (day by day for a named client).
   const days = [];
   for (let i = 1; i <= 7; i += 1) days.push(botMsk(now - i * 24 * 3600000).date);
-  const clientLines = await Promise.all(projects.map(async (p) => {
-    if (p.inactive) return `- ${p.name}: неактивный`;
-    const recs = (await Promise.all(days.map((d) => kv.get(`dailyMetrics:${p.id}:${d}`, 'json')))).filter(Boolean);
-    const sum = (k) => recs.reduce((a, r) => a + (Number(r[k]) || 0), 0);
-    return `- ${p.name}: за 7 дней бюджет ${sum('budget')} ₽, просмотры ${sum('views')}, контакты ${sum('contacts')}, диагностики ${sum('diagnostics')}, продажи ${sum('sales')} (дней с данными: ${recs.length})`;
+  const inactive = projects.filter((p) => p.inactive && about(p.id)).map((p) => p.name);
+  const clientLines = await Promise.all(projects.filter((p) => !p.inactive && about(p.id)).map(async (p) => {
+    const recs = (await Promise.all(days.map(async (d) => [d, await kv.get(`dailyMetrics:${p.id}:${d}`, 'json')]))).filter(([, r]) => r);
+    const sum = (k) => recs.reduce((acc, [, r]) => acc + (Number(r[k]) || 0), 0);
+    const line = `- ${p.name}: за 7 дней бюджет ${sum('budget')} ₽, просмотры ${sum('views')}, контакты ${sum('contacts')}, диагностики ${sum('diagnostics')}, продажи ${sum('sales')} (дней с данными: ${recs.length})`;
+    if (!named.size) return line;
+    return [line, ...recs.map(([d, r]) => `  ${d}: бюджет ${Number(r.budget) || 0}, просмотры ${Number(r.views) || 0}, контакты ${Number(r.contacts) || 0}, диагностики ${Number(r.diagnostics) || 0}, продажи ${Number(r.sales) || 0}`)].join('\n');
   }));
+  if (inactive.length) clientLines.push(`- неактивные: ${inactive.join(', ')}`);
 
-  const pending = (await botPendingList(env, now)).map((p) => `- ${p.projectId && byId[p.projectId] ? byId[p.projectId].name : p.title}: «${String(p.text).slice(0, 160)}» — ждёт с ${fmt(p.since)}`);
+  const pending = (await botPendingList(env, now)).filter((p) => about(p.projectId))
+    .map((p) => `- ${p.projectId && byId[p.projectId] ? byId[p.projectId].name : p.title}: «${String(p.text).slice(0, 160)}» — ждёт с ${fmt(p.since)}`);
 
   let reflLines = [];
   try {
     const week = reflWeek(now);
     const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
-    reflLines = recs.flatMap(([u, r]) => Object.entries((r && r.answers) || {}).map(([pid, a]) => `- ${(byId[pid] || {}).name || pid}: ${u.name} — ${a.score}/10, «${a.comment}»`));
+    reflLines = recs.flatMap(([u, r]) => Object.entries((r && r.answers) || {}).filter(([pid]) => about(pid))
+      .map(([pid, a]) => `- ${(byId[pid] || {}).name || pid}: ${u.name} — ${a.score}/10, «${String(a.comment || '').slice(0, 200)}»`));
   } catch (err) { /* reflection is optional context */ }
 
   // Chats: the clients the question names (30 days), otherwise everything from the last 3 days.
@@ -5275,49 +5331,68 @@ async function botAnswerQuestion(env, question) {
     if (c.isForum) {
       for (const k of (await kv.list({ prefix: `bot:topic:${c.id}:` })).keys) {
         const rec = await kv.get(k.name, 'json');
-        sources.push({ chatId: c.id, threadId: k.name.split(':').pop(), name: (rec && rec.projectId && byId[rec.projectId] && byId[rec.projectId].name) || (rec && rec.name) || '' });
+        sources.push({ chatId: c.id, threadId: k.name.split(':').pop(), projectId: rec && rec.projectId, name: (rec && rec.projectId && byId[rec.projectId] && byId[rec.projectId].name) || (rec && rec.name) || '' });
       }
       sources.push({ chatId: c.id, threadId: '0', name: 'Общий топик' });
     } else {
-      sources.push({ chatId: c.id, threadId: '0', name: (c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title });
+      sources.push({ chatId: c.id, threadId: '0', projectId: c.projectId, name: (c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title });
     }
   }
-  const focused = sources.filter((s) => hits(s.name));
+  const focused = sources.filter((src) => (src.projectId && named.has(src.projectId)) || hits(src.name));
   const picked = focused.length ? focused : sources;
   const span = focused.length ? 30 : 3;
-  let transcript = '';
-  for (const s of picked) {
-    const logs = await botReadLogs(kv, s.chatId, s.threadId, now - span * 24 * 3600000, now);
-    if (logs.length) transcript += `\n### ${s.name}\n${botFormatLogLines(logs)}\n`;
+  const chatParts = [];
+  for (const src of picked) {
+    const logs = await botReadLogs(kv, src.chatId, src.threadId, now - span * 24 * 3600000, now);
+    if (logs.length) chatParts.push(`### ${src.name}\n${botFormatLogLines(logs)}`);
   }
-  if (transcript.length > 22000) transcript = transcript.slice(-22000);
 
+  // The model takes 32k tokens in all, and Russian runs ~2–3 characters a token: the context is
+  // cut to a character budget — the chats first (oldest lines go), then the closed tasks.
   const d = botMsk(now);
-  const context = [
-    `СЕЙЧАС: ${d.date} ${fmt(now).split(' ')[1]} (МСК), ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][d.dow]}.`,
-    `КОМАНДА:\n${people.map((u) => `- ${u.name} — ${u.roleLabel || AT_ROLES[u.role] || u.role}`).join('\n')}`,
-    `ЗАДАЧИ (все открытые и изменённые за 14 дней; формат: клиент | задача | исполнитель | статус | срок | кто и когда поставил):\n${taskLines.join('\n') || '—'}`,
-    `КЛИЕНТЫ И МЕТРИКИ (из дашборда):\n${clientLines.join('\n') || '—'}`,
-    `КЛИЕНТЫ ЖДУТ ОТВЕТА В ЧАТЕ:\n${pending.join('\n') || '—'}`,
-    `РЕФЛЕКСИЯ ЭТОЙ НЕДЕЛИ (оценки проектов командой):\n${reflLines.join('\n') || '—'}`,
-    `ПЕРЕПИСКА (${focused.length ? 'по клиентам из вопроса, 30 дней' : 'все чаты, последние 3 дня'}; формат [id] дата автор: текст):${transcript || '\n—'}`,
-  ].join('\n\n');
-  try {
-    const answer = await botAi(env, [
-      'Ты — умный помощник руководителя агентства Cantor Agency (продвижение репетиторов на Авито). Отвечаешь Олегу Ежкову в Telegram.',
-      'Ниже — актуальные данные из трекера задач, дашборда и рабочих чатов. Отвечай ТОЛЬКО по ним, но пользуйся ими по-настоящему:',
-      'фильтруй, считай, сравнивай, группируй (по людям, клиентам, срокам). Вопросы о задачах — по разделу ЗАДАЧИ',
-      '(исполнитель, статус, срок), о цифрах — по КЛИЕНТЫ И МЕТРИКИ, о том, что обсуждали, — по ПЕРЕПИСКЕ.',
-      'Имена в вопросе могут быть в любом падеже и уменьшительными (Альбины, Жени, Оли) — сопоставляй с КОМАНДОЙ и клиентами.',
-      'Ответ: по-русски, коротко и конкретно, сначала главное. Списки — строками с «• ». Без markdown-таблиц и решёток.',
-      'Если данных для ответа нет — скажи прямо, чего именно не хватает, и не выдумывай.',
-    ].join('\n'), `Вопрос: ${question}\n\n${context}`, 1200);
-    const safe = escapeHtml(answer || 'Не получилось сформулировать ответ.').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#+\s*/gm, '');
-    return safe;
-  } catch (err) {
-    if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится. Про задачи человека можно спросить и сейчас: «какие задачи у Альбины».'; }
-    return `Ошибка ИИ: ${escapeHtml(err && err.message)}`;
+  const build = (budget) => {
+    const head = [
+      `СЕЙЧАС: ${d.date} ${fmt(now).split(' ')[1]} (МСК), ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][d.dow]}.`,
+      `КОМАНДА:\n${people.map((u) => `- ${u.name} — ${u.roleLabel || AT_ROLES[u.role] || u.role}`).join('\n')}`,
+      `КЛИЕНТЫ И МЕТРИКИ (из дашборда${named.size ? '' : ', все клиенты'}):\n${clientLines.join('\n') || '—'}`,
+      `КЛИЕНТЫ ЖДУТ ОТВЕТА В ЧАТЕ:\n${pending.join('\n') || '—'}`,
+      `РЕФЛЕКСИЯ ЭТОЙ НЕДЕЛИ (оценки проектов командой):\n${reflLines.join('\n') || '—'}`,
+    ].join('\n\n');
+    let lines = taskLines;
+    const taskTitle = `ЗАДАЧИ (${named.size ? 'по клиентам из вопроса: открытые и за 45 дней' : 'все открытые и изменённые за 7 дней'}; формат: клиент | задача | исполнитель | статус | срок | кто и когда поставил)`;
+    const taskBudget = Math.floor(budget * 0.45);
+    let cut = 0;
+    while (lines.join('\n').length > taskBudget && lines.length) { lines = lines.slice(0, -1); cut += 1; }
+    const taskBlock = `${taskTitle}:\n${lines.join('\n') || '—'}${cut ? `\n(ещё ${cut} задач не поместились — в основном закрытые)` : ''}`;
+    let chat = chatParts.join('\n\n');
+    const room = Math.max(0, budget - head.length - taskBlock.length - 300);
+    if (chat.length > room) chat = `…${chat.slice(-room)}`;
+    return [head, taskBlock, `ПЕРЕПИСКА (${focused.length ? 'по клиентам из вопроса, 30 дней' : 'все чаты, последние 3 дня'}; формат [id] дата автор: текст):\n${chat || '—'}`].join('\n\n');
+  };
+  const system = [
+    'Ты — умный помощник руководителя агентства Cantor Agency (продвижение репетиторов на Авито). Отвечаешь Олегу Ежкову в Telegram.',
+    'Ниже — актуальные данные из трекера задач, дашборда и рабочих чатов. Отвечай ТОЛЬКО по ним, но пользуйся ими по-настоящему:',
+    'фильтруй, считай, сравнивай, группируй (по людям, клиентам, срокам). Вопросы о задачах — по разделу ЗАДАЧИ',
+    '(исполнитель, статус, срок), о цифрах — по КЛИЕНТЫ И МЕТРИКИ, о том, что обсуждали, — по ПЕРЕПИСКЕ.',
+    'На вопрос «что с клиентом» ответь сводкой: что сейчас делаем (открытые задачи, кто и к какому сроку), что сделано недавно,',
+    'что клиент просил и ждёт ли ответа, как идут цифры, и есть ли проблемы.',
+    'Имена в вопросе могут быть в любом падеже и уменьшительными (Альбины, Жени, Шевчуком) — сопоставляй с КОМАНДОЙ и клиентами.',
+    'Ответ: по-русски, коротко и конкретно, сначала главное. Списки — строками с «• ». Без markdown-таблиц и решёток.',
+    'Если данных для ответа нет — скажи прямо, чего именно не хватает, и не выдумывай.',
+  ].join('\n');
+  let lastErr = null;
+  for (const budget of [36000, 18000]) {
+    try {
+      const answer = await botAi(env, system, `Вопрос: ${question}\n\n${build(budget)}`, 1200);
+      return escapeHtml(answer || 'Не получилось сформулировать ответ.').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#+\s*/gm, '');
+    } catch (err) {
+      if (botIsLimitError(err)) { await botSetAiLimited(env, true); return '🔴 Лимит ИИ на сегодня исчерпан — отвечу, когда он обновится. Про задачи человека можно спросить и сейчас: «какие задачи у Альбины».'; }
+      lastErr = err;
+      if (!/context length|input_tokens|too long/i.test(String(err && err.message))) break; // only a too-long prompt is worth a smaller retry
+    }
   }
+  console.error('bot answer failed', lastErr && lastErr.message);
+  return 'Не получилось ответить — спросите конкретнее: про одного клиента или человека.';
 }
 
 // History import from a Telegram Desktop export (the bot can't read messages sent before it joined):
@@ -5726,6 +5801,25 @@ function atLatin(value) {
     .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 // Team member named in free text ("Евгений", "Менеджер — Cantor Agency", "Женя", "al'bina"), or null.
+const AT_NAME_FORMS = {
+  екатерина: ['катерина', 'катя', 'катю', 'кати', 'кате'],
+  евгений: ['женя', 'жене', 'жени', 'женю', 'евгению', 'евгения'],
+  евгения: ['женя', 'жене', 'жени', 'женю'],
+  ольга: ['оля', 'оле', 'оли', 'олю', 'ольге', 'ольги', 'ольгу'],
+  александр: ['саша', 'саше', 'саши', 'сашу'],
+  александра: ['саша', 'саше', 'саши', 'сашу'],
+  анастасия: ['настя', 'насте', 'насти', 'настю'],
+  мария: ['маша', 'маше', 'маши', 'машу'],
+  наталья: ['наташа', 'наташе', 'наташи', 'наталия'],
+  наталия: ['наташа', 'наташе', 'наташи', 'наталья'],
+  елена: ['лена', 'лене', 'лены', 'лену'],
+  татьяна: ['таня', 'тане', 'тани', 'таню'],
+  анна: ['аня', 'ане', 'ани', 'аню'],
+  дарья: ['даша', 'даше', 'даши', 'дашу'],
+  юлия: ['юля', 'юле', 'юли', 'юлю'],
+  софия: ['соня', 'соне', 'сони', 'софья'],
+  альбина: ['аля'],
+};
 function atMatchUser(name, users) {
   return atMatchUserBy(name, users, botNorm) || atMatchUserBy(name, users, atLatin);
 }
@@ -5744,6 +5838,10 @@ function atMatchUserBy(name, users, norm) {
       if (an && n.includes(` ${an} `)) score = Math.max(score, an.includes(' ') ? 3 : 2);
     }
     const first = norm(atFirstName(u.name));
+    // Everyday forms of the first name ("Катерина", "Катя" → Екатерина), whole words only.
+    for (const alt of AT_NAME_FORMS[botNorm(atFirstName(u.name))] || []) {
+      if (n.includes(` ${norm(alt)} `)) score = Math.max(score, 2);
+    }
     if (!score && first.length >= 4 && n.includes(` ${first.slice(0, first.length - 1)}`)) score = 1;
     if (score > bestScore) { best = u; bestScore = score; tie = false; } else if (score && score === bestScore && best !== u) tie = true;
   }
@@ -6100,6 +6198,111 @@ async function atNotifyInform(env, team, task, byName, skipIds) {
   });
 }
 
+// ── «Встречи»: slots for calls with clients ──
+// The owner (or assistant) opens 30-minute slots on the days they pick; the client manager books a
+// client into a free slot with one tap (and clears it to move them). Everyone else sees only the
+// booked meetings — with the one Zoom link — and can mark «хочу прийти»; the owner sees their avatars.
+// Two KV records, so the owner's edits and the manager's bookings don't overwrite each other:
+//   at:meet:days  { 'YYYY-MM-DD': ['10:00', '10:30', …] }   open slots per day (a day with [] is shown empty)
+//   at:meet:book  { 'YYYY-MM-DD HH:MM': { client, projectId, by, at, want: [userId] } }
+const AT_MEET_ZOOM = 'https://us06web.zoom.us/j/82724621140?pwd=SDp78Esp8JRp83P4BsJRuKyvxuDrNI.1';
+const AT_MEET_KEEP_DAYS = 60;
+const atMeetDate = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : null);
+const atMeetTime = (v) => (/^([01]\d|2[0-3]):[03]0$/.test(String(v || '')) ? String(v) : null);
+async function atMeetLoad(kv) {
+  const [days, book] = await Promise.all([kv.get('at:meet:days', 'json'), kv.get('at:meet:book', 'json')]);
+  return { days: days || {}, book: book || {} };
+}
+// What a person sees: the owner/assistant and the manager — the open slots and every booking; the
+// rest — only the bookings (from yesterday on).
+function atMeetView(state, me, nowMs) {
+  const manages = me.role === 'owner' || me.role === 'assistant' || me.role === 'manager';
+  const from = botMsk(nowMs - 24 * 3600000).date;
+  const book = {};
+  for (const [key, b] of Object.entries(state.book)) if (manages || key.slice(0, 10) >= from) book[key] = b;
+  return { days: manages ? state.days : null, book, zoom: AT_MEET_ZOOM, today: botMsk(nowMs).date };
+}
+async function atMeetApi(env, team, me, action, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const isAdmin = me.role === 'owner' || me.role === 'assistant';
+  const state = await atMeetLoad(kv);
+  if (action === 'meet') return { state: atMeetView(state, me, nowMs) };
+  const oldest = botMsk(nowMs - AT_MEET_KEEP_DAYS * 24 * 3600000).date;
+
+  // Owner: days on/off and slots open/closed, in one batch (a drag across days is one save).
+  if (action === 'meet-days') {
+    if (!isAdmin) return { error: 'forbidden', status: 403 };
+    const days = state.days;
+    for (const d of Array.isArray(body.addDays) ? body.addDays.slice(0, 60) : []) if (atMeetDate(d) && !days[d]) days[d] = [];
+    for (const d of Array.isArray(body.removeDays) ? body.removeDays.slice(0, 60) : []) {
+      if (!atMeetDate(d)) continue;
+      const booked = Object.keys(state.book).filter((k) => k.startsWith(`${d} `)).map((k) => k.slice(11));
+      if (booked.length) days[d] = booked; else delete days[d]; // booked slots stay until the manager moves them
+    }
+    for (const op of Array.isArray(body.ops) ? body.ops.slice(0, 400) : []) {
+      const d = op && atMeetDate(op.date);
+      const t = op && atMeetTime(op.time);
+      if (!d || !t) continue;
+      const set = new Set(days[d] || []);
+      if (op.open) set.add(t); else if (!state.book[`${d} ${t}`]) set.delete(t);
+      days[d] = [...set].sort();
+    }
+    for (const d of Object.keys(days)) if (d < oldest) delete days[d];
+    await kv.put('at:meet:days', JSON.stringify(days));
+    return { state: atMeetView({ days, book: state.book }, me, nowMs) };
+  }
+
+  // Manager (or owner): put a client into a slot, or clear it.
+  if (action === 'meet-book') {
+    if (!isAdmin && me.role !== 'manager') return { error: 'forbidden', status: 403 };
+    const d = atMeetDate(body.date);
+    const t = atMeetTime(body.time);
+    if (!d || !t) return { error: 'bad_slot', status: 400 };
+    const key = `${d} ${t}`;
+    const prev = state.book[key];
+    if (body.clear) {
+      delete state.book[key];
+    } else {
+      const projectId = atClean(body.projectId, 80) || null;
+      const project = projectId ? await kv.get(`project:${projectId}`, 'json') : null;
+      const client = (project && project.name) || atClean(body.client, 120);
+      if (!client) return { error: 'missing_client', status: 400 };
+      state.book[key] = { client, projectId: project ? projectId : null, by: me.name, byId: me.id, at: new Date(nowMs).toISOString(), want: prev && prev.client === client ? prev.want || [] : [] };
+      // The slot is open from now on even if the owner's list (another location's KV) hasn't caught up.
+      const set = new Set(state.days[d] || []);
+      if (!set.has(t)) { set.add(t); state.days[d] = [...set].sort(); await kv.put('at:meet:days', JSON.stringify(state.days)); }
+    }
+    for (const k of Object.keys(state.book)) if (k.slice(0, 10) < oldest) delete state.book[k];
+    await kv.put('at:meet:book', JSON.stringify(state.book));
+    // The owner hears about it in the bell (not in Telegram — they asked for less noise there).
+    const b = state.book[key];
+    if (b && (!prev || prev.client !== b.client)) {
+      const owners = team.users.filter((u) => (u.role === 'owner' || u.role === 'assistant') && u.active && u.id !== me.id).map((u) => u.id);
+      await atNotify(env, team, owners, { kind: 'meet', ref: key, text: `${me.name} записал(а) на встречу: ${b.client} — ${atMeetHuman(d, t)}`, by: me.name });
+    }
+    return { state: atMeetView(state, me, nowMs) };
+  }
+
+  // Anyone but the manager: «хочу прийти» on a booked meeting.
+  if (action === 'meet-want') {
+    if (me.role === 'manager') return { error: 'forbidden', status: 403 };
+    const key = `${atMeetDate(String(body.key || '').slice(0, 10))} ${atMeetTime(String(body.key || '').slice(11))}`;
+    const b = state.book[key];
+    if (!b) return { error: 'not_found', status: 404 };
+    const want = new Set(b.want || []);
+    if (body.on) want.add(me.id); else want.delete(me.id);
+    b.want = [...want];
+    await kv.put('at:meet:book', JSON.stringify(state.book));
+    return { state: atMeetView(state, me, nowMs) };
+  }
+  return { error: 'unknown_action', status: 404 };
+}
+function atMeetHuman(date, time) {
+  const ms = Date.parse(`${date}T${time}:00+03:00`);
+  const d = new Date(ms + BOT_MSK_OFFSET_MS);
+  return `${['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][d.getUTCDay()]} ${date.slice(8, 10)}.${date.slice(5, 7)} в ${time}`;
+}
+
 // ── «Рефлексия»: weekly project ratings from the team ──
 // Every Wednesday (00:00 MSK) a new week opens: each employee (client manager, specialists,
 // trainees) rates every active client 1–10 with a comment of a sentence or two, one client at a
@@ -6441,6 +6644,11 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (!isAdmin) return json({ error: 'forbidden' }, 403);
     const week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : reflWeek(nowMs);
     return json({ results: await atReflectionResults(env, team, week), current: reflWeek(nowMs) });
+  }
+
+  if (action === 'meet' || action.startsWith('meet-')) {
+    const res = await atMeetApi(env, team, me, action, body, nowMs);
+    return json(res.error ? { error: res.error } : res, res.status || 200);
   }
 
   // «Клиенту написали» — the client manager's mark on the Clients tab.
@@ -7397,11 +7605,13 @@ async function atOnCallback(env, cq) {
   if (res.error) return answer(res.error === 'not_found' ? 'Задача удалена' : 'Не получилось');
   await answer({ take: 'Взято в работу ▶️', done: 'Отмечено: готово ✅', close: 'Закрыто: клиенту сообщили ✅', cancel: 'Задача отменена' }[m[1]]);
   if (cq.message) {
-    await botApi(env, 'editMessageReplyMarkup', {
-      chat_id: cq.message.chat.id,
-      message_id: cq.message.message_id,
-      reply_markup: atPersonalizeMarkup(atTgButtons(res.task, true).reply_markup, user),
-    });
+    // A grouped «похоже, сделаны задачи» message has a button per task: only the pressed one goes.
+    const rows = (cq.message.reply_markup && cq.message.reply_markup.inline_keyboard) || [];
+    const taskButtons = rows.flat().filter((b) => /^at:(done|close|cancel):/.test(b.callback_data || ''));
+    const markup = taskButtons.length > 1
+      ? { inline_keyboard: rows.filter((row) => !row.some((b) => b.callback_data === cq.data)) }
+      : atPersonalizeMarkup(atTgButtons(res.task, true).reply_markup, user);
+    await botApi(env, 'editMessageReplyMarkup', { chat_id: cq.message.chat.id, message_id: cq.message.message_id, reply_markup: markup });
   }
 }
 
@@ -8330,6 +8540,7 @@ export default {
 
   // Cron trigger (wrangler.jsonc "triggers") — drives the control bot: AI queue, deadline checks, summaries.
   async scheduled(event, env, ctx) {
+    if (!(await cronClaimTick(env, event && event.scheduledTime))) return;
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
     ctx.waitUntil(avitoNotifyCron(env).catch((err) => console.error('avito notify cron failed', err && err.stack)));

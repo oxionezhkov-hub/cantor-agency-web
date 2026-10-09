@@ -42,6 +42,7 @@ input,textarea,select{font-family:inherit}
 .btn-red:disabled{opacity:0.55;cursor:wait}
 .btn-outline{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all 0.18s;white-space:nowrap}
 .btn-outline:hover{border-color:var(--red);color:var(--red)}
+.nav-link{display:inline-flex;align-items:center;gap:7px;text-decoration:none;height:36px;padding:0 13px}
 .btn-outline.active{border-color:var(--red);color:var(--red);background:var(--accent-bg)}
 .btn-icon{background:white;color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.18s;flex-shrink:0}
 .btn-icon:hover{border-color:var(--red);color:var(--red)}
@@ -279,6 +280,8 @@ tbody tr:hover .row-del,.lead-card:hover .row-del{opacity:1}
 
 @media (max-width:640px){
   .topbar{padding:12px 14px}
+  .nav-link{padding:0 10px}
+  .nav-link span{display:none}
   .wrap{padding:14px}
   .search-field input{width:90px}
   .kpi-card .stat-big{font-size:20px}
@@ -305,6 +308,14 @@ tbody tr:hover .row-del,.lead-card:hover .row-del{opacity:1}
       <input type="text" id="searchInput" placeholder="Поиск…" oninput="renderTable()">
     </div>
     <div class="topbar-right">
+      <a class="btn-outline nav-link" href="/avito-tasks" title="Avito Tasks — задачи команды">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+        <span>Задачи</span>
+      </a>
+      <a class="btn-outline nav-link" href="/dashboard" title="Дашборд по клиентам">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <span>Дашборд</span>
+      </a>
       <div class="filter-wrap">
         <button class="btn-icon" title="Фильтр по группе, приоритету и статусу">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
