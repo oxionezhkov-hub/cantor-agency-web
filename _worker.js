@@ -6198,6 +6198,111 @@ async function atNotifyInform(env, team, task, byName, skipIds) {
   });
 }
 
+// ── «Встречи»: slots for calls with clients ──
+// The owner (or assistant) opens 30-minute slots on the days they pick; the client manager books a
+// client into a free slot with one tap (and clears it to move them). Everyone else sees only the
+// booked meetings — with the one Zoom link — and can mark «хочу прийти»; the owner sees their avatars.
+// Two KV records, so the owner's edits and the manager's bookings don't overwrite each other:
+//   at:meet:days  { 'YYYY-MM-DD': ['10:00', '10:30', …] }   open slots per day (a day with [] is shown empty)
+//   at:meet:book  { 'YYYY-MM-DD HH:MM': { client, projectId, by, at, want: [userId] } }
+const AT_MEET_ZOOM = 'https://us06web.zoom.us/j/82724621140?pwd=SDp78Esp8JRp83P4BsJRuKyvxuDrNI.1';
+const AT_MEET_KEEP_DAYS = 60;
+const atMeetDate = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : null);
+const atMeetTime = (v) => (/^([01]\d|2[0-3]):[03]0$/.test(String(v || '')) ? String(v) : null);
+async function atMeetLoad(kv) {
+  const [days, book] = await Promise.all([kv.get('at:meet:days', 'json'), kv.get('at:meet:book', 'json')]);
+  return { days: days || {}, book: book || {} };
+}
+// What a person sees: the owner/assistant and the manager — the open slots and every booking; the
+// rest — only the bookings (from yesterday on).
+function atMeetView(state, me, nowMs) {
+  const manages = me.role === 'owner' || me.role === 'assistant' || me.role === 'manager';
+  const from = botMsk(nowMs - 24 * 3600000).date;
+  const book = {};
+  for (const [key, b] of Object.entries(state.book)) if (manages || key.slice(0, 10) >= from) book[key] = b;
+  return { days: manages ? state.days : null, book, zoom: AT_MEET_ZOOM, today: botMsk(nowMs).date };
+}
+async function atMeetApi(env, team, me, action, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const isAdmin = me.role === 'owner' || me.role === 'assistant';
+  const state = await atMeetLoad(kv);
+  if (action === 'meet') return { state: atMeetView(state, me, nowMs) };
+  const oldest = botMsk(nowMs - AT_MEET_KEEP_DAYS * 24 * 3600000).date;
+
+  // Owner: days on/off and slots open/closed, in one batch (a drag across days is one save).
+  if (action === 'meet-days') {
+    if (!isAdmin) return { error: 'forbidden', status: 403 };
+    const days = state.days;
+    for (const d of Array.isArray(body.addDays) ? body.addDays.slice(0, 60) : []) if (atMeetDate(d) && !days[d]) days[d] = [];
+    for (const d of Array.isArray(body.removeDays) ? body.removeDays.slice(0, 60) : []) {
+      if (!atMeetDate(d)) continue;
+      const booked = Object.keys(state.book).filter((k) => k.startsWith(`${d} `)).map((k) => k.slice(11));
+      if (booked.length) days[d] = booked; else delete days[d]; // booked slots stay until the manager moves them
+    }
+    for (const op of Array.isArray(body.ops) ? body.ops.slice(0, 400) : []) {
+      const d = op && atMeetDate(op.date);
+      const t = op && atMeetTime(op.time);
+      if (!d || !t) continue;
+      const set = new Set(days[d] || []);
+      if (op.open) set.add(t); else if (!state.book[`${d} ${t}`]) set.delete(t);
+      days[d] = [...set].sort();
+    }
+    for (const d of Object.keys(days)) if (d < oldest) delete days[d];
+    await kv.put('at:meet:days', JSON.stringify(days));
+    return { state: atMeetView({ days, book: state.book }, me, nowMs) };
+  }
+
+  // Manager (or owner): put a client into a slot, or clear it.
+  if (action === 'meet-book') {
+    if (!isAdmin && me.role !== 'manager') return { error: 'forbidden', status: 403 };
+    const d = atMeetDate(body.date);
+    const t = atMeetTime(body.time);
+    if (!d || !t) return { error: 'bad_slot', status: 400 };
+    const key = `${d} ${t}`;
+    const prev = state.book[key];
+    if (body.clear) {
+      delete state.book[key];
+    } else {
+      const projectId = atClean(body.projectId, 80) || null;
+      const project = projectId ? await kv.get(`project:${projectId}`, 'json') : null;
+      const client = (project && project.name) || atClean(body.client, 120);
+      if (!client) return { error: 'missing_client', status: 400 };
+      state.book[key] = { client, projectId: project ? projectId : null, by: me.name, byId: me.id, at: new Date(nowMs).toISOString(), want: prev && prev.client === client ? prev.want || [] : [] };
+      // The slot is open from now on even if the owner's list (another location's KV) hasn't caught up.
+      const set = new Set(state.days[d] || []);
+      if (!set.has(t)) { set.add(t); state.days[d] = [...set].sort(); await kv.put('at:meet:days', JSON.stringify(state.days)); }
+    }
+    for (const k of Object.keys(state.book)) if (k.slice(0, 10) < oldest) delete state.book[k];
+    await kv.put('at:meet:book', JSON.stringify(state.book));
+    // The owner hears about it in the bell (not in Telegram — they asked for less noise there).
+    const b = state.book[key];
+    if (b && (!prev || prev.client !== b.client)) {
+      const owners = team.users.filter((u) => (u.role === 'owner' || u.role === 'assistant') && u.active && u.id !== me.id).map((u) => u.id);
+      await atNotify(env, team, owners, { kind: 'meet', ref: key, text: `${me.name} записал(а) на встречу: ${b.client} — ${atMeetHuman(d, t)}`, by: me.name });
+    }
+    return { state: atMeetView(state, me, nowMs) };
+  }
+
+  // Anyone but the manager: «хочу прийти» on a booked meeting.
+  if (action === 'meet-want') {
+    if (me.role === 'manager') return { error: 'forbidden', status: 403 };
+    const key = `${atMeetDate(String(body.key || '').slice(0, 10))} ${atMeetTime(String(body.key || '').slice(11))}`;
+    const b = state.book[key];
+    if (!b) return { error: 'not_found', status: 404 };
+    const want = new Set(b.want || []);
+    if (body.on) want.add(me.id); else want.delete(me.id);
+    b.want = [...want];
+    await kv.put('at:meet:book', JSON.stringify(state.book));
+    return { state: atMeetView(state, me, nowMs) };
+  }
+  return { error: 'unknown_action', status: 404 };
+}
+function atMeetHuman(date, time) {
+  const ms = Date.parse(`${date}T${time}:00+03:00`);
+  const d = new Date(ms + BOT_MSK_OFFSET_MS);
+  return `${['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][d.getUTCDay()]} ${date.slice(8, 10)}.${date.slice(5, 7)} в ${time}`;
+}
+
 // ── «Рефлексия»: weekly project ratings from the team ──
 // Every Wednesday (00:00 MSK) a new week opens: each employee (client manager, specialists,
 // trainees) rates every active client 1–10 with a comment of a sentence or two, one client at a
@@ -6539,6 +6644,11 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (!isAdmin) return json({ error: 'forbidden' }, 403);
     const week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : reflWeek(nowMs);
     return json({ results: await atReflectionResults(env, team, week), current: reflWeek(nowMs) });
+  }
+
+  if (action === 'meet' || action.startsWith('meet-')) {
+    const res = await atMeetApi(env, team, me, action, body, nowMs);
+    return json(res.error ? { error: res.error } : res, res.status || 200);
   }
 
   // «Клиенту написали» — the client manager's mark on the Clients tab.

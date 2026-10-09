@@ -117,8 +117,9 @@ a{color:inherit}
 .sync-dot.off{background:var(--faint);box-shadow:0 0 0 3px var(--sunken)}
 .sync-dot.busy{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.35}}
-.tabs{display:flex;gap:4px;margin-left:12px}
-.tab{height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+.tabs{display:flex;gap:4px;margin-left:12px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
 .tab:hover{color:var(--ink);background:var(--sunken)}
 .tab.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line)}
 .tab .count{font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
@@ -408,6 +409,83 @@ a{color:inherit}
   .rf-scale button{border-radius:11px;font-size:15px}
 }
 
+/* meet */
+.mt-save{font-size:13px;color:var(--faint);font-weight:600}
+.mt-save:empty{display:none}
+.mt-save.err{color:var(--red)}
+.mt-top{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:16px;align-items:start;margin-bottom:16px}
+.mt-cal{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 12px 14px;box-shadow:var(--shadow)}
+.mt-cal-head{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--ink);margin-bottom:6px}
+.mt-cal-head .icon-btn{width:34px;height:34px}
+.mt-cal-head .icon-btn[disabled]{opacity:.3;pointer-events:none}
+.ic.rot-l{transform:rotate(90deg)}
+.ic.rot-r{transform:rotate(-90deg)}
+.mt-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mt-cal-grid .w{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--faint);text-align:center;padding:2px 0 4px}
+.mt-cd{position:relative;aspect-ratio:1;border-radius:12px;font-size:14px;font-weight:600;color:var(--text);display:grid;place-items:center;background:var(--surface-2);border:1px solid transparent;transition:background .12s,transform .08s}
+.mt-cd:hover{border-color:var(--line)}
+.mt-cd:active{transform:scale(.94)}
+.mt-cd.today{border-color:var(--accent)}
+.mt-cd.on{background:var(--accent);color:#fff}
+.mt-cd[disabled]{color:var(--faint);background:transparent;pointer-events:none}
+.mt-cd i{position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:currentColor;opacity:.8}
+.mt-cal-hint{font-size:12.5px;color:var(--muted);margin-top:10px;text-align:center}
+.mt-side{min-width:0}
+.mt-dgroup{margin-bottom:12px}
+.mt-dlabel{font-size:13px;font-weight:700;color:var(--muted);margin:0 2px 6px}
+.mt-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:6px;flex-wrap:wrap}
+.mt-item .tm{font-family:var(--display);font-weight:700;font-size:15px;color:var(--ink);min-width:48px}
+.mt-item .cl{flex:1;min-width:140px}
+.mt-item .nm{font-weight:600;color:var(--ink)}
+.mt-item .by{font-size:12.5px;color:var(--muted)}
+.btn-on{background:var(--green-bg);color:var(--green);border-color:transparent}
+.mt-av{display:inline-flex;align-items:center;padding-left:6px}
+.mt-av .avatar{margin-left:-6px;box-shadow:0 0 0 2px var(--surface)}
+.mt-grid-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);user-select:none;-webkit-user-select:none}
+.mt-grid{display:grid;grid-template-columns:52px repeat(var(--cols),minmax(108px,1fr));min-width:min-content}
+.mt-corner,.mt-dh{position:sticky;top:0;background:var(--surface);z-index:2;border-bottom:1px solid var(--line)}
+.mt-corner{left:0;z-index:3}
+.mt-dh{padding:10px 30px 8px 10px;font-size:14px;color:var(--ink);position:sticky}
+.mt-dh .n{font-size:12px;color:var(--muted);margin-top:1px}
+.mt-more{position:absolute;top:8px;right:6px;width:26px;height:26px;border-radius:8px;color:var(--muted);font-weight:700;line-height:1}
+.mt-more:hover{background:var(--sunken);color:var(--ink)}
+.mt-menu{position:absolute;top:36px;right:6px;z-index:10;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:4px;display:grid;min-width:220px}
+.mt-menu button{text-align:left;padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--text)}
+.mt-menu button:hover{background:var(--sunken)}
+.mt-menu .danger{color:var(--red)}
+.mt-t{position:sticky;left:0;z-index:1;background:var(--surface);font-size:11.5px;color:var(--faint);font-weight:600;padding:3px 8px 0 10px;height:34px;border-top:1px solid var(--line-2)}
+.mt-c{height:34px;border-top:1px solid var(--line-2);border-left:1px solid var(--line-2);background:transparent;font-size:12px;font-weight:600;color:var(--green);display:flex;align-items:center;gap:6px;padding:0 8px;min-width:0;cursor:pointer;transition:background .08s}
+.mt-c:hover{background:var(--sunken)}
+.mt-c.open{background:var(--green-bg)}
+.mt-c.open:hover{filter:brightness(.97)}
+.mt-c.booked{background:var(--accent-bg);color:var(--accent-600);cursor:default;box-shadow:inset 3px 0 0 var(--accent)}
+.mt-c .cl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left}
+.mt-c .mt-av .avatar{box-shadow:0 0 0 2px var(--accent-bg)}
+.mt-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}
+.mt-day{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.mt-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px;color:var(--ink)}
+.mt-day-head span{font-size:12.5px;color:var(--muted)}
+.mt-slots{display:grid;gap:6px}
+.mt-slot{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 6px 0 12px;border-radius:12px;border:1px dashed var(--line);background:var(--surface-2);text-align:left;width:100%}
+button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
+.mt-slot .tm{font-family:var(--display);font-weight:700;font-size:14px;color:var(--ink);min-width:44px}
+.mt-slot .free{color:var(--green);font-size:13.5px;font-weight:600}
+.mt-slot.picking{border-style:solid;border-color:var(--green);background:var(--green-bg)}
+.mt-slot.booked{border-style:solid;border-color:transparent;background:var(--accent-bg)}
+.mt-slot.booked .cl{flex:1;font-weight:600;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mt-x{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.mt-x:hover{background:var(--surface);color:var(--red)}
+.mt-pick{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px;box-shadow:var(--shadow-lg)}
+.mt-opts{max-height:240px;overflow:auto;margin-top:6px;display:grid}
+.mt-opt{text-align:left;padding:9px 10px;border-radius:8px;font-size:14px;color:var(--text);display:flex;align-items:center;gap:6px}
+.mt-opt:hover,.mt-opt:focus{background:var(--sunken);outline:none}
+.mt-opt.new{color:var(--accent-600);font-weight:600}
+.mt-none{padding:10px;color:var(--muted);font-size:13px}
+.mt-wrap{max-width:760px}
+.team-seg{align-self:center}
+@media (max-width:900px){.mt-top{grid-template-columns:1fr}.mt-cal{max-width:420px}}
+@media (max-width:760px){.mt-grid{grid-template-columns:46px repeat(var(--cols),minmax(92px,1fr))}.mt-item{gap:8px 10px}.mt-item .cl{min-width:0;flex-basis:calc(100% - 70px)}}
+
 /* team */
 .team-add{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:10px;align-items:end}
 .member{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:10px;display:grid;gap:14px}
@@ -651,6 +729,10 @@ a{color:inherit}
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-crm" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0110 4h4a1.5 1.5 0 011.5 1.5V7M3 12.5h18"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
 </svg>
 
@@ -674,6 +756,8 @@ a{color:inherit}
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <a class="icon-btn" id="dashLink" href="/dashboard" title="Дашборд" aria-label="Дашборд" hidden><svg class="ic"><use href="#i-chart"/></svg></a>
+        <a class="icon-btn" id="crmLink" href="/sales-crm" title="CRM продаж" aria-label="CRM продаж" hidden><svg class="ic"><use href="#i-crm"/></svg></a>
         <button class="me-btn" id="meBtn" aria-label="Профиль"><span class="avatar" id="meAvatar"></span></button>
       </div>
     </div>
@@ -744,9 +828,10 @@ a{color:inherit}
     <section id="view-team" hidden>
       <div class="hello">
         <div>
-          <h1>Команда и доступы</h1>
+          <h1>Команда</h1>
           <div class="sub">У каждого своя ссылка. Открыв её один раз, человек входит на этом устройстве. Выключите доступ — и все его устройства сразу потеряют вход.</div>
         </div>
+        <div class="seg team-seg"><button data-teamtab="activity">Активность</button><button data-teamtab="access">Доступы</button></div>
       </div>
       <div class="team-add">
         <div><label class="label" for="newName">Новый сотрудник</label><input class="input" id="newName" placeholder="Имя и фамилия" autocomplete="off"></div>
@@ -756,19 +841,32 @@ a{color:inherit}
       <div id="members"><div class="empty">Загружаю…</div></div>
     </section>
 
-    <!-- Активность (только руководитель) -->
+    <!-- Активность (только руководитель) — вторая половина вкладки «Команда» -->
     <section id="view-activity" hidden>
       <div class="hello">
         <div>
-          <h1>Активность команды</h1>
+          <h1>Команда</h1>
           <div class="sub">Когда кто работал: время и заходы в трекер и на сайт (база знаний, дашборд и другие рабочие страницы), сообщения в чатах и действия с задачами. По часам, московское время.</div>
         </div>
+        <div class="seg team-seg"><button data-teamtab="activity">Активность</button><button data-teamtab="access">Доступы</button></div>
       </div>
       <div class="act-top">
         <div class="seg" id="actMode"><button data-mode="day" class="on">День</button><button data-mode="week">Неделя</button></div>
         <div class="days" id="actDays"></div>
       </div>
       <div id="actBody"><div class="empty">Загружаю…</div></div>
+    </section>
+
+    <!-- Встречи -->
+    <section id="view-meet" hidden>
+      <div class="hello">
+        <div>
+          <h1 id="mtTitle">Встречи</h1>
+          <div class="sub" id="mtSub"></div>
+        </div>
+        <span class="mt-save" id="mtSave"></span>
+      </div>
+      <div id="mtBody"><div class="empty">Загружаю…</div></div>
     </section>
 
     <!-- База знаний (руководитель и ассистент) -->
@@ -879,6 +977,7 @@ const S = {
   token: store.get(K_TOKEN),
   me: null, users: [], projects: [], tasks: [], clients: null, notifications: [],
   ver: null, bot: null, tgStart: null,
+  teamTab: prefs.teamTab === 'access' ? 'access' : 'activity',
   view: 'tasks', expanded: null,
   f: { scope: prefs.scope, q: '', client: '', assignee: '', status: normStatuses(prefs.status), priority: '', group: prefs.group },
   draft: null, team: null, freshMember: null, claim: null, reflection: null,
@@ -1339,7 +1438,8 @@ async function sync(initial) {
     dot.classList.toggle('off', S.offline);
     dot.title = S.offline ? 'Нет связи — повторю через минуту' : `Обновлено в ${fmtTime(Date.now())} · обновляется само каждую минуту`;
     renderBanners();
-    if (S.view === 'activity' && !S.offline) loadActivity();
+    if (S.view === 'team' && S.teamTab !== 'access' && !S.offline) loadActivity();
+    if (!S.offline && (S.view === 'meet' || Date.now() - MT.loadedAt > 5 * 60000)) loadMeet(S.view === 'meet');
   }
 }
 
@@ -1392,7 +1492,7 @@ function applySync(d, fromCache) {
 function isEditing() {
   const a = document.activeElement;
   if (DD.open) return true; // открыто выпадающее меню — не перерисовываем под ним
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-reflection, #view-team, #view-activity, #view-kb') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -1400,8 +1500,8 @@ function render() {
   renderHeader();
   if (S.view === 'tasks') renderTasks();
   if (S.view === 'clients') renderClients();
-  if (S.view === 'team') renderTeamStatic();
-  if (S.view === 'activity') loadActivity();
+  if (S.view === 'team') { if (S.teamTab === 'access') renderTeamStatic(); else loadActivity(); }
+  if (S.view === 'meet') renderMeet();
   if (S.view === 'kb' && !KB.rendered) renderKb();
   if (S.view === 'reflection') renderReflection();
 }
@@ -1411,9 +1511,9 @@ document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRend
 function views() {
   const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }];
   if (canSeeClients()) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
+  v.push({ id: 'meet', label: 'Встречи', icon: 'cal' });
   if (S.reflection || isAdmin()) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
   if (isAdmin()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
-  if (isAdmin()) v.push({ id: 'activity', label: 'Активность', icon: 'pulse' });
   if (isAdmin()) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
   return v;
 }
@@ -1428,14 +1528,22 @@ function renderHeader() {
   const alerts = clientAlerts();
   // Кружок с числом: у «Клиентов» — сколько требуют внимания, у «Рефлексии» — сколько клиентов осталось оценить.
   const left = reflLeft();
-  const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : 0);
+  // …у «Встреч» — сколько встреч сегодня.
+  const meetToday = mtTodayCount();
+  const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : v.id === 'meet' && meetToday ? meetToday : 0);
   const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
   $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.short || v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`).join('');
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'clients', 'reflection', 'team', 'activity', 'kb'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'clients', 'reflection', 'kb', 'meet'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  // «Команда» — одна вкладка из двух половин: активность и доступы.
+  $('view-team').hidden = !(S.view === 'team' && S.teamTab === 'access');
+  $('view-activity').hidden = !(S.view === 'team' && S.teamTab !== 'access');
+  document.querySelectorAll('[data-teamtab]').forEach((b) => b.classList.toggle('on', b.dataset.teamtab === (S.teamTab === 'access' ? 'access' : 'activity')));
+  $('dashLink').hidden = !canSeeClients();
+  $('crmLink').hidden = !isAdmin();
   if ($('meAvatar').dataset.uid !== S.me.id + S.me.name) { $('meAvatar').outerHTML = avatar(S.me, '', 'meAvatar'); $('meAvatar').dataset.uid = S.me.id + S.me.name; }
   const unread = S.notifications.filter((n) => !n.read).length;
   $('bellBadge').hidden = !unread;
@@ -1447,13 +1555,21 @@ function setView(v) {
   S.view = v;
   closeMenus();
   render();
-  if (v === 'team') loadTeam();
+  if (v === 'team' && S.teamTab === 'access') loadTeam();
+  if (v === 'meet') loadMeet(true);
   if (v === 'kb') renderKb();
   window.scrollTo({ top: 0 });
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-view]');
   if (b) setView(b.dataset.view);
+  const t = e.target.closest('[data-teamtab]');
+  if (t && S.teamTab !== t.dataset.teamtab) {
+    S.teamTab = t.dataset.teamtab;
+    prefs.teamTab = S.teamTab; savePrefs();
+    renderHeader();
+    if (S.teamTab === 'access') { renderTeamStatic(); loadTeam(); } else loadActivity();
+  }
 });
 
 // профиль
@@ -1483,7 +1599,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-tgconnec
 function tgConnectUrl() { return S.bot && S.tgStart ? `https://t.me/${S.bot}?start=${S.tgStart}` : null; }
 
 // ── уведомления ──
-const N_ICON = { assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], handoff: ['msg', 'var(--red-bg)', 'var(--red)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'] };
+const N_ICON = { meet: ['cal', 'var(--blue-bg)', 'var(--blue)'], assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], handoff: ['msg', 'var(--red-bg)', 'var(--red)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'] };
 $('bellBtn').addEventListener('click', openNotifications);
 
 // ── светлая / тёмная тема ──
@@ -1533,7 +1649,7 @@ function openNotifications() {
 $('drawerRoot').addEventListener('click', (e) => {
   if (e.target.closest('[data-close]')) { $('drawerRoot').innerHTML = ''; return; }
   const n = e.target.closest('.notif');
-  if (n) { $('drawerRoot').innerHTML = ''; if (n.dataset.task) openTask(n.dataset.task); else if (n.dataset.ref.startsWith('kb:')) openKbJob(n.dataset.ref.slice(3)); }
+  if (n) { $('drawerRoot').innerHTML = ''; if (n.dataset.task) openTask(n.dataset.task); else if (n.dataset.ref.startsWith('kb:')) openKbJob(n.dataset.ref.slice(3)); else if (/^\d{4}-\d\d-\d\d /.test(n.dataset.ref)) setView('meet'); }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $('drawerRoot').innerHTML = ''; closeMenus(); } });
 
@@ -2574,6 +2690,348 @@ async function renderReflectionResults() {
     }).join('')}
   </div>`;
 }
+
+// ── вкладка «Встречи»: окна для созвонов с клиентами ──
+// Руководитель выбирает дни и отмечает свободные окна по 30 минут (мышью можно вести по нескольким
+// сразу, в том числе через разные дни). Менеджер нажимает на свободное окно и выбирает клиента —
+// сохраняется сразу; чтобы перенести, очищает окно и записывает в другое. Остальные видят только
+// назначенные встречи со ссылкой Zoom и могут отметить «хочу прийти» — руководитель видит их аватарки.
+const MT_TIMES = (() => { const a = []; for (let h = 9; h < 21; h += 1) a.push(`${pad(h)}:00`, `${pad(h)}:30`); return a; })();
+const MT = { state: null, loadedAt: 0, loading: false, queue: [], add: new Set(), remove: new Set(), timer: null, saving: false, saveState: '', pick: null, q: '', calWeek: 0, menu: null, paint: null, mouseAt: 0 };
+const mtToday = () => { const p = msk(Date.now()); return `${p.y}-${pad(p.m + 1)}-${pad(p.d)}`; };
+function mtAddDays(ymd, n) { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function mtDay(ymd) { const d = new Date(ymd + 'T12:00:00Z'); return { dow: DOW[d.getUTCDay()], dm: `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}`, day: d.getUTCDate(), month: d.getUTCMonth() }; }
+const MT_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+function mtTodayCount() {
+  if (!MT.state) return 0;
+  const today = mtToday();
+  const now = fmtTime(Date.now());
+  return Object.keys(MT.state.book).filter((k) => k.slice(0, 10) === today && mtEnd(k.slice(11)) > now).length;
+}
+async function loadMeet(force) {
+  if (MT.loading || MT.queue.length || MT.add.size || MT.remove.size || MT.saving || MT.inflight) return;
+  if (!force && MT.state && Date.now() - MT.loadedAt < 25000) return renderMeet();
+  MT.loading = true;
+  try {
+    const res = await api('meet');
+    if (res.ok && res.data.state) { MT.state = res.data.state; MT.loadedAt = Date.now(); }
+  } catch (e) { /* нет связи — покажем, что было */ }
+  MT.loading = false;
+  renderHeader();
+  renderMeet();
+}
+// Пока страница открыта на «Встречах» — обновляем раз в 30 секунд (менеджер мог записать клиента).
+setInterval(() => { if (S.view === 'meet' && !document.hidden && !MT.pick && !MT.paint && !MT.menu) loadMeet(true); }, 30000);
+
+function mtBookings(fromDate) {
+  return Object.entries(MT.state.book).filter(([k]) => k.slice(0, 10) >= fromDate).sort(([a], [b]) => (a < b ? -1 : 1));
+}
+function mtAvatars(ids) {
+  const people = (ids || []).map(userById).filter(Boolean);
+  return people.length ? `<span class="mt-av" title="${esc(people.map((u) => u.name).join(', '))}">${people.map((u) => avatar(u, 'xs')).join('')}</span>` : '';
+}
+function mtSave(state) {
+  MT.saveState = state;
+  const el = $('mtSave');
+  if (!el) return;
+  el.textContent = state === 'saving' ? 'Сохраняю…' : state === 'ok' ? 'Сохранено' : state === 'err' ? 'Нет связи — повторю' : '';
+  el.className = `mt-save ${state}`;
+}
+
+function renderMeet() {
+  if (S.view !== 'meet' || !S.me) return;
+  if (document.activeElement && document.activeElement.id === 'mtQ') return; // менеджер печатает имя клиента
+  if (!MT.state) { $('mtBody').innerHTML = '<div class="empty">Загружаю…</div>'; loadMeet(true); return; }
+  if (isAdmin()) mtRenderOwner();
+  else if (S.me.role === 'manager') mtRenderManager();
+  else mtRenderTeam();
+  mtSave(MT.saveState);
+}
+
+// Список назначенных встреч по дням (руководитель и команда).
+function mtListHtml(withWant) {
+  const list = mtBookings(mtToday());
+  if (!list.length) return `<div class="empty">${ico('cal')}<div style="margin-top:6px">Встреч пока нет.</div></div>`;
+  const byDay = new Map();
+  list.forEach(([k, b]) => { const d = k.slice(0, 10); if (!byDay.has(d)) byDay.set(d, []); byDay.get(d).push([k, b]); });
+  const today = mtToday();
+  return [...byDay].map(([d, items]) => {
+    const x = mtDay(d);
+    return `<div class="mt-dgroup"><div class="mt-dlabel">${d === today ? 'Сегодня' : d === mtAddDays(today, 1) ? 'Завтра' : esc(x.dow)}, ${esc(x.dm)}</div>
+      ${items.map(([k, b]) => {
+        const mine = (b.want || []).includes(S.me.id);
+        return `<div class="mt-item">
+          <div class="tm">${esc(k.slice(11))}</div>
+          <div class="cl"><div class="nm">${esc(b.client)}</div><div class="by">до ${esc(mtEnd(k.slice(11)))}${b.by ? ` · записал(а) ${esc(first(b.by))}` : ''}</div></div>
+          ${mtAvatars(b.want)}
+          ${withWant ? `<button class="btn btn-sm ${mine ? 'btn-on' : 'btn-ghost'}" data-mt-want="${esc(k)}">${mine ? `${ico('check', 'ic-sm')}Приду` : 'Хочу прийти'}</button>` : ''}
+          <a class="btn btn-ghost btn-sm" href="${esc(MT.state.zoom)}" target="_blank" rel="noopener">${ico('video', 'ic-sm')}Zoom</a>
+        </div>`;
+      }).join('')}</div>`;
+  }).join('');
+}
+function mtEnd(t) { const [h, m] = t.split(':').map(Number); const e = h * 60 + m + 30; return `${pad(Math.floor(e / 60))}:${pad(e % 60)}`; }
+
+// ── руководитель ──
+function mtRenderOwner() {
+  $('mtTitle').textContent = 'Встречи с клиентами';
+  $('mtSub').textContent = 'Выберите дни в календаре и отметьте свободные окна по 30 минут — менеджер запишет в них клиентов. Мышью можно провести сразу по нескольким окнам.';
+  const today = mtToday();
+  const days = Object.keys(MT.state.days).filter((d) => d >= today).sort();
+  // Календарь: 4 недели с понедельника.
+  const dow = new Date(today + 'T12:00:00Z').getUTCDay();
+  const start = mtAddDays(today, -((dow + 6) % 7) + MT.calWeek * 7);
+  const cells = Array.from({ length: 28 }, (_, i) => mtAddDays(start, i));
+  const booked = new Set(Object.keys(MT.state.book).map((k) => k.slice(0, 10)));
+  const a = mtDay(cells[0]); const z = mtDay(cells[27]);
+  const cal = `<div class="mt-cal">
+    <div class="mt-cal-head"><button class="icon-btn" data-mt-cal="-1" ${MT.calWeek <= 0 ? 'disabled' : ''} aria-label="Раньше">${ico('chev', 'ic-sm rot-l')}</button>
+      <b>${a.day} ${MT_MONTHS[a.month]} — ${z.day} ${MT_MONTHS[z.month]}</b>
+      <button class="icon-btn" data-mt-cal="1" aria-label="Позже">${ico('chev', 'ic-sm rot-r')}</button></div>
+    <div class="mt-cal-grid">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}
+      ${cells.map((d) => { const x = mtDay(d); const on = !!MT.state.days[d]; return `<button class="mt-cd ${on ? 'on' : ''} ${d === today ? 'today' : ''}" data-mt-day="${d}" ${d < today ? 'disabled' : ''} title="${on ? 'Убрать день' : 'Добавить день'}">${x.day}${booked.has(d) ? '<i></i>' : ''}</button>`; }).join('')}
+    </div>
+    <div class="mt-cal-hint">Нажмите на даты, чтобы добавить дни для встреч.</div>
+  </div>`;
+  const grid = days.length ? `<div class="mt-grid-wrap"><div class="mt-grid" style="--cols:${days.length}">
+    <div class="mt-corner"></div>
+    ${days.map((d) => { const x = mtDay(d); const n = (MT.state.days[d] || []).length; return `<div class="mt-dh"><div><b>${esc(x.dow)}</b> ${esc(x.dm)}</div><div class="n">${n ? `${n} ${plural(n, 'окно', 'окна', 'окон')}` : 'нет окон'}</div><button class="mt-more" data-mt-menu="${d}" aria-label="Действия с днём">⋯</button>${MT.menu === d ? `<div class="mt-menu">
+        <button data-mt-act="all" data-d="${d}">Весь день свободен</button>
+        <button data-mt-act="copy" data-d="${d}">Такие же окна — во все дни</button>
+        <button data-mt-act="clear" data-d="${d}">Очистить окна</button>
+        <button data-mt-act="remove" data-d="${d}" class="danger">Убрать день</button></div>` : ''}</div>`; }).join('')}
+    ${MT_TIMES.map((t) => `<div class="mt-t">${t}</div>${days.map((d) => mtCell(d, t)).join('')}`).join('')}
+  </div></div>` : '<div class="empty">Выберите в календаре дни, когда можно созваниваться с клиентами.</div>';
+  $('mtBody').innerHTML = `<div class="mt-top">${cal}<div class="mt-side"><div class="sec-head"><h2>Записи</h2></div>${mtListHtml(false)}</div></div>${grid}`;
+}
+function mtCell(d, t) {
+  const key = `${d} ${t}`;
+  const b = MT.state.book[key];
+  if (b) return `<button class="mt-c booked" data-mt-cell="${key}" title="${esc(b.client)}"><span class="cl">${esc(b.client)}</span>${mtAvatars(b.want)}</button>`;
+  const open = (MT.state.days[d] || []).includes(t);
+  return `<button class="mt-c ${open ? 'open' : ''}" data-mt-cell="${key}" aria-pressed="${open}"><span>${open ? t : ''}</span></button>`;
+}
+function mtApply(st, op) {
+  const set = new Set(st.days[op.date] || []);
+  if (op.open) set.add(op.time); else if (!st.book[`${op.date} ${op.time}`]) set.delete(op.time);
+  st.days[op.date] = [...set].sort();
+}
+function mtApplyDays(st, add, remove) {
+  add.forEach((d) => { if (!st.days[d]) st.days[d] = []; });
+  remove.forEach((d) => {
+    const booked = Object.keys(st.book).filter((k) => k.startsWith(d + ' ')).map((k) => k.slice(11));
+    if (booked.length) st.days[d] = booked; else delete st.days[d];
+  });
+}
+function mtQueue(ops, addDays, removeDays, quiet) {
+  (addDays || []).forEach((d) => { MT.add.add(d); MT.remove.delete(d); });
+  (removeDays || []).forEach((d) => { MT.remove.add(d); MT.add.delete(d); MT.queue = MT.queue.filter((o) => o.date !== d); });
+  mtApplyDays(MT.state, addDays || [], removeDays || []);
+  (ops || []).forEach((op) => { mtApply(MT.state, op); MT.queue.push(op); });
+  if (!quiet) renderMeet();
+  clearTimeout(MT.timer);
+  MT.timer = setTimeout(mtFlush, 700);
+}
+async function mtFlush() {
+  if (MT.paint) { MT.timer = setTimeout(mtFlush, 300); return; }
+  if (MT.saving) { MT.timer = setTimeout(mtFlush, 400); return; }
+  const ops = MT.queue; const addDays = [...MT.add]; const removeDays = [...MT.remove];
+  if (!ops.length && !addDays.length && !removeDays.length) return;
+  MT.queue = []; MT.add = new Set(); MT.remove = new Set();
+  MT.saving = true; mtSave('saving');
+  try {
+    const res = await api('meet-days', { ops, addDays, removeDays });
+    if (!res.ok || !res.data.state) throw new Error('save');
+    MT.state = res.data.state; MT.loadedAt = Date.now();
+    // правки, сделанные, пока шло сохранение
+    mtApplyDays(MT.state, [...MT.add], [...MT.remove]);
+    MT.queue.forEach((op) => mtApply(MT.state, op));
+    mtSave('ok');
+  } catch (e) {
+    MT.queue = ops.concat(MT.queue);
+    addDays.forEach((d) => { if (!MT.remove.has(d)) MT.add.add(d); });
+    removeDays.forEach((d) => { if (!MT.add.has(d)) MT.remove.add(d); });
+    mtSave('err');
+    MT.timer = setTimeout(mtFlush, 5000);
+  }
+  MT.saving = false;
+  if (!MT.paint) renderMeet();
+}
+// Покраска окон: нажали на окно — оно переключилось, и дальше, пока кнопка мыши зажата, все окна под
+// курсором становятся такими же (в любых днях). На телефоне — просто нажатие на окно.
+function mtPaintCell(el) {
+  if (!el || !MT.paint || el.classList.contains('booked')) return;
+  const key = el.dataset.mtCell;
+  if (MT.paint.done.has(key)) return;
+  MT.paint.done.add(key);
+  const [date, time] = key.split(' ');
+  mtQueue([{ date, time, open: MT.paint.open }], null, null, true);
+  el.classList.toggle('open', MT.paint.open);
+  el.setAttribute('aria-pressed', MT.paint.open);
+  el.innerHTML = `<span>${MT.paint.open ? time : ''}</span>`;
+}
+$('mtBody').addEventListener('pointerdown', (e) => {
+  const c = e.target.closest('.mt-c');
+  if (!c || !isAdmin() || e.pointerType !== 'mouse' || e.button !== 0 || c.classList.contains('booked')) return;
+  e.preventDefault();
+  MT.mouseAt = Date.now();
+  MT.paint = { open: !c.classList.contains('open'), done: new Set() };
+  mtPaintCell(c);
+});
+$('mtBody').addEventListener('pointerover', (e) => { if (MT.paint) mtPaintCell(e.target.closest('.mt-c')); });
+document.addEventListener('pointerup', () => { if (MT.paint) { MT.paint = null; renderMeet(); } });
+
+// ── менеджер ──
+function mtRenderManager() {
+  $('mtTitle').textContent = 'Запись на встречу';
+  $('mtSub').textContent = 'Нажмите на свободное окно и выберите клиента — сохранится сразу. Чтобы перенести, очистите окно (×) и запишите клиента в другое.';
+  const today = mtToday();
+  const days = Object.keys(MT.state.days).filter((d) => d >= today && (MT.state.days[d] || []).length).sort();
+  if (!days.length) { $('mtBody').innerHTML = '<div class="empty">Свободных окон пока нет — их открывает Олег.</div>'; return; }
+  $('mtBody').innerHTML = `<div class="mt-days">${days.map((d) => {
+    const x = mtDay(d);
+    const times = MT.state.days[d].slice().sort();
+    const free = times.filter((t) => !MT.state.book[`${d} ${t}`]).length;
+    return `<div class="mt-day"><div class="mt-day-head"><b>${d === today ? 'Сегодня' : esc(x.dow)}, ${esc(x.dm)}</b><span>${free ? `свободно ${free}` : 'всё занято'}</span></div>
+      <div class="mt-slots">${times.map((t) => {
+        const key = `${d} ${t}`;
+        const b = MT.state.book[key];
+        if (b) return `<div class="mt-slot booked"><span class="tm">${t}</span><span class="cl">${esc(b.client)}</span>${mtAvatars(b.want)}<button class="mt-x" data-mt-clear="${key}" aria-label="Очистить окно" title="Очистить окно">${ico('x', 'ic-sm')}</button></div>`;
+        return `<button class="mt-slot ${MT.pick === key ? 'picking' : ''}" data-mt-pick="${key}"><span class="tm">${t}</span><span class="free">${MT.pick === key ? 'выберите клиента' : 'свободно'}</span></button>${MT.pick === key ? mtPickerHtml() : ''}`;
+      }).join('')}</div></div>`;
+  }).join('')}</div>`;
+  if (MT.pick) { const q = $('mtQ'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+}
+function mtClients() {
+  const q = MT.q.trim().toLowerCase().replace(/ё/g, 'е');
+  const list = S.projects.filter((p) => !p.inactive && (!q || p.name.toLowerCase().replace(/ё/g, 'е').includes(q))).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  return list;
+}
+function mtOptsHtml() {
+  const list = mtClients();
+  const q = MT.q.trim();
+  const exact = list.some((p) => p.name.toLowerCase() === q.toLowerCase());
+  return `${list.map((p) => `<button class="mt-opt" data-mt-client="${esc(p.id)}">${esc(p.name)}</button>`).join('')}${q && !exact ? `<button class="mt-opt new" data-mt-custom="1">${ico('plus', 'ic-sm')}Записать «${esc(q)}»</button>` : ''}${!list.length && !q ? '<div class="mt-none">Клиентов нет</div>' : ''}`;
+}
+function mtPickerHtml() {
+  return `<div class="mt-pick"><input class="input" id="mtQ" placeholder="Клиент — начните вводить имя" value="${esc(MT.q)}" autocomplete="off"><div class="mt-opts" id="mtOpts">${mtOptsHtml()}</div></div>`;
+}
+async function mtBook(key, data) {
+  const [date, time] = key.split(' ');
+  const prev = MT.state.book[key];
+  if (data.clear) delete MT.state.book[key];
+  else MT.state.book[key] = { client: data.client, projectId: data.projectId || null, by: S.me.name, want: [] };
+  MT.pick = null; MT.q = '';
+  renderHeader(); renderMeet();
+  MT.inflight = (MT.inflight || 0) + 1;
+  try {
+    const res = await api('meet-book', Object.assign({ date, time }, data));
+    if (!res.ok || !res.data.state) throw new Error('save');
+    MT.inflight -= 1;
+    if (!MT.inflight) { MT.state = res.data.state; MT.loadedAt = Date.now(); }
+    mtSave('ok');
+  } catch (e) {
+    MT.inflight -= 1;
+    if (prev) MT.state.book[key] = prev; else delete MT.state.book[key];
+    toast('Не получилось сохранить — проверьте интернет');
+  }
+  renderHeader(); renderMeet();
+}
+function mtChoose(el) {
+  if (!MT.pick) return;
+  if (el.dataset.mtClient) { const p = projectById(el.dataset.mtClient); if (p) mtBook(MT.pick, { projectId: p.id, client: p.name }); }
+  else if (el.dataset.mtCustom && MT.q.trim()) mtBook(MT.pick, { client: MT.q.trim() });
+}
+$('mtBody').addEventListener('input', (e) => {
+  if (e.target.id !== 'mtQ') return;
+  MT.q = e.target.value;
+  $('mtOpts').innerHTML = mtOptsHtml();
+});
+$('mtBody').addEventListener('keydown', (e) => {
+  if (e.target.id !== 'mtQ') return;
+  if (e.key === 'Enter') { e.preventDefault(); const o = $('mtOpts').querySelector('.mt-opt'); if (o) mtChoose(o); }
+  if (e.key === 'Escape') { MT.pick = null; MT.q = ''; e.target.blur(); renderMeet(); }
+});
+
+// ── остальные сотрудники ──
+function mtRenderTeam() {
+  $('mtTitle').textContent = 'Встречи с клиентами';
+  $('mtSub').textContent = 'Когда мы созваниваемся с клиентами. Подключайтесь по ссылке Zoom, а «Хочу прийти» покажет Олегу, что вы будете.';
+  $('mtBody').innerHTML = `<div class="mt-wrap">${mtListHtml(S.me.role !== 'owner')}</div>`;
+}
+async function mtWant(key) {
+  const b = MT.state.book[key];
+  if (!b) return;
+  const on = !(b.want || []).includes(S.me.id);
+  const prev = (b.want || []).slice();
+  b.want = on ? prev.concat(S.me.id) : prev.filter((id) => id !== S.me.id);
+  renderMeet();
+  MT.inflight = (MT.inflight || 0) + 1;
+  try {
+    const res = await api('meet-want', { key, on });
+    if (!res.ok || !res.data.state) throw new Error('save');
+    MT.inflight -= 1;
+    if (!MT.inflight) { MT.state = res.data.state; MT.loadedAt = Date.now(); }
+  } catch (e) {
+    MT.inflight -= 1;
+    b.want = prev;
+    toast('Не получилось сохранить — проверьте интернет');
+  }
+  renderMeet();
+}
+
+$('mtBody').addEventListener('click', (e) => {
+  const t = e.target;
+  const cal = t.closest('[data-mt-cal]');
+  if (cal) { MT.calWeek = Math.max(0, MT.calWeek + Number(cal.dataset.mtCal) * 4); renderMeet(); return; }
+  const day = t.closest('[data-mt-day]');
+  if (day) { const d = day.dataset.mtDay; if (MT.state.days[d]) mtQueue(null, null, [d]); else mtQueue(null, [d], null); return; }
+  const more = t.closest('[data-mt-menu]');
+  if (more) { e.stopPropagation(); MT.menu = MT.menu === more.dataset.mtMenu ? null : more.dataset.mtMenu; renderMeet(); return; }
+  const act = t.closest('[data-mt-act]');
+  if (act) {
+    const d = act.dataset.d;
+    MT.menu = null;
+    if (act.dataset.mtAct === 'all') mtQueue(MT_TIMES.map((time) => ({ date: d, time, open: true })));
+    if (act.dataset.mtAct === 'clear') mtQueue(MT_TIMES.map((time) => ({ date: d, time, open: false })));
+    if (act.dataset.mtAct === 'remove') mtQueue(null, null, [d]);
+    if (act.dataset.mtAct === 'copy') {
+      const src = new Set(MT.state.days[d] || []);
+      const ops = [];
+      Object.keys(MT.state.days).filter((x) => x >= mtToday() && x !== d).forEach((x) => MT_TIMES.forEach((time) => ops.push({ date: x, time, open: src.has(time) })));
+      mtQueue(ops);
+    }
+    return;
+  }
+  const cell = t.closest('[data-mt-cell]');
+  if (cell && isAdmin()) {
+    if (Date.now() - MT.mouseAt < 600) return; // уже переключено нажатием мыши
+    const key = cell.dataset.mtCell;
+    const b = MT.state.book[key];
+    if (b) { toast(`${b.client} — ${key.slice(11)}`, 'Освободить окно', () => mtBook(key, { clear: true }), 6000); return; }
+    const [date, time] = key.split(' ');
+    mtQueue([{ date, time, open: !cell.classList.contains('open') }]);
+    return;
+  }
+  const pick = t.closest('[data-mt-pick]');
+  if (pick) { MT.pick = MT.pick === pick.dataset.mtPick ? null : pick.dataset.mtPick; MT.q = ''; renderMeet(); return; }
+  const opt = t.closest('.mt-opt');
+  if (opt) { mtChoose(opt); return; }
+  const clear = t.closest('[data-mt-clear]');
+  if (clear) {
+    const key = clear.dataset.mtClear;
+    const b = MT.state.book[key];
+    mtBook(key, { clear: true });
+    if (b) toast(`Окно ${key.slice(11)} освобождено`, 'Вернуть', () => mtBook(key, { projectId: b.projectId, client: b.client }));
+    return;
+  }
+  const want = t.closest('[data-mt-want]');
+  if (want) mtWant(want.dataset.mtWant);
+});
+document.addEventListener('click', (e) => {
+  if (MT.menu && !e.target.closest('.mt-menu') && !e.target.closest('[data-mt-menu]')) { MT.menu = null; renderMeet(); }
+  if (MT.pick && S.view === 'meet' && !e.target.closest('.mt-pick') && !e.target.closest('[data-mt-pick]') && !e.target.closest('.mt-opt')) { MT.pick = null; MT.q = ''; renderMeet(); }
+});
 
 // ── вкладка «Команда» (только руководитель) ──
 function renderTeamStatic() {
