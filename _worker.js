@@ -1149,7 +1149,7 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
       finishedAt: report.finished_at || report.finishedAt || null,
       sectionStats: report.section_stats || report.sectionStats || null,
       items: items.length,
-      withMessages: items.filter((it) => it.messages.length).length,
+      problems: items.filter((it) => it.problem).length,
       bySection,
     },
     items,
@@ -1159,16 +1159,20 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
 }
 
 function normalizeAutoloadItem(it) {
-  const messages = (it.messages || it.errors || []).map((m) => (typeof m === 'string' ? { text: m } : {
+  const clean = (t) => String(t || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const messages = (it.messages || it.errors || []).map((m) => (typeof m === 'string' ? { type: '', code: '', text: clean(m) } : {
     type: m.type || m.level || '',
     code: m.code != null ? String(m.code) : '',
-    text: [m.title, m.description || m.message || m.text].filter(Boolean).join(': '),
+    text: clean([m.title, m.description || m.message || m.text].filter(Boolean).join(': ')),
   }));
+  const section = it.section && typeof it.section === 'object' ? it.section : { slug: it.section || '', title: it.section || '' };
   return {
     adId: it.ad_id != null ? String(it.ad_id) : (it.id != null ? String(it.id) : ''),
     avitoId: it.avito_id != null ? String(it.avito_id) : '',
     url: it.url || '',
-    section: it.section || (it.section_info && it.section_info.slug) || '',
+    section: section.title || section.slug || '',
+    sectionSlug: section.slug || '',
+    problem: !/^success/.test(section.slug || ''),
     avitoStatus: it.avito_status || it.status || '',
     title: it.title || '',
     applied: it.applied_vas || it.fee_info || null,
@@ -1698,7 +1702,7 @@ async function handleAvitoApi(request, env, url) {
       if (format === 'raw') return json(result);
       if (format === 'csv') {
         const onlyProblems = url.searchParams.get('all') !== '1';
-        const rows = result.items.filter((it) => !onlyProblems || it.messages.length);
+        const rows = result.items.filter((it) => !onlyProblems || it.problem);
         const name = `autoload_${(account.name || accountId).replace(/[^\wа-яё-]+/gi, '_')}_${result.summary.reportId || 'last'}.csv`;
         return new Response(`\ufeff${autoloadCsv(rows)}`, {
           headers: {
