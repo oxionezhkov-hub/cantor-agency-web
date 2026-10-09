@@ -1108,6 +1108,85 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
   return (data && (data.voices_urls || data.urls)) || data || {};
 }
 
+// ── Autoload reports ──
+// Avito keeps one report per autoload run. /autoload/v3 (falling back to v2) gives the report
+// itself; /autoload/v2/reports/{id}/items pages through every listing of that run with its
+// Avito id/url, section (success / error / problem …) and the messages explaining a failure.
+async function fetchAvitoAutoloadReport(env, account, reportId) {
+  const token = await avitoGetToken(env, account);
+  const tried = [];
+  const get = async (path) => {
+    const res = await avitoRequest(token, path);
+    const text = await res.text().catch(() => '');
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) { /* not JSON */ }
+    tried.push(`${path} → ${res.status}${res.ok ? '' : ` ${text.slice(0, 160)}`}`);
+    return { ok: res.ok, data };
+  };
+  let report = null;
+  for (const v of ['v3', 'v2']) {
+    const r = await get(reportId ? `/autoload/${v}/reports/${encodeURIComponent(reportId)}` : `/autoload/${v}/reports/last_completed_report`);
+    if (r.ok && r.data) { report = r.data; break; }
+  }
+  if (!report) throw new Error(`autoload report unavailable: ${tried.join(' | ')}`);
+  const id = report.report_id || report.id;
+  const items = [];
+  for (let page = 0; id && page < 60; page += 1) {
+    const r = await get(`/autoload/v2/reports/${encodeURIComponent(id)}/items?per_page=200&page=${page}`);
+    if (!r.ok || !r.data) break;
+    const batch = r.data.items || r.data.result || [];
+    items.push(...batch.map(normalizeAutoloadItem));
+    const pages = r.data.meta && Number(r.data.meta.pages);
+    if (!batch.length || (pages && page + 1 >= pages)) break;
+  }
+  const bySection = {};
+  items.forEach((it) => { bySection[it.section || '—'] = (bySection[it.section || '—'] || 0) + 1; });
+  return {
+    summary: {
+      reportId: id || null,
+      status: report.status || null,
+      startedAt: report.started_at || report.startedAt || null,
+      finishedAt: report.finished_at || report.finishedAt || null,
+      sectionStats: report.section_stats || report.sectionStats || null,
+      items: items.length,
+      withMessages: items.filter((it) => it.messages.length).length,
+      bySection,
+    },
+    items,
+    report,
+    tried,
+  };
+}
+
+function normalizeAutoloadItem(it) {
+  const messages = (it.messages || it.errors || []).map((m) => (typeof m === 'string' ? { text: m } : {
+    type: m.type || m.level || '',
+    code: m.code != null ? String(m.code) : '',
+    text: [m.title, m.description || m.message || m.text].filter(Boolean).join(': '),
+  }));
+  return {
+    adId: it.ad_id != null ? String(it.ad_id) : (it.id != null ? String(it.id) : ''),
+    avitoId: it.avito_id != null ? String(it.avito_id) : '',
+    url: it.url || '',
+    section: it.section || (it.section_info && it.section_info.slug) || '',
+    avitoStatus: it.avito_status || it.status || '',
+    title: it.title || '',
+    applied: it.applied_vas || it.fee_info || null,
+    messages,
+  };
+}
+
+function autoloadCsv(rows) {
+  const esc = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const head = ['ID в файле', 'ID на Авито', 'Раздел отчёта', 'Статус на Авито', 'Тип', 'Код', 'Сообщение', 'Ссылка'];
+  const lines = [head.map(esc).join(';')];
+  rows.forEach((it) => {
+    const msgs = it.messages.length ? it.messages : [{ type: '', code: '', text: '' }];
+    msgs.forEach((m) => lines.push([it.adId, it.avitoId, it.section, it.avitoStatus, m.type, m.code, m.text, it.url].map(esc).join(';')));
+  });
+  return lines.join('\r\n');
+}
+
 async function fetchAvitoSelf(token) {
   return avitoJson(token, '/core/v1/accounts/self');
 }
@@ -1603,6 +1682,35 @@ async function handleAvitoApi(request, env, url) {
       return json(await runAvitoChatList(env, account, limit, offset));
     } catch (e) {
       return json({ error: 'chats_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
+  // Autoload (автовыгрузка) report: GET /api/avito/autoload?accountId=…[&reportId=…][&format=csv|raw]
+  // — the last completed report by default, with every listing's status and error messages.
+  if (pathname === '/api/avito/autoload' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    if (!accountId) return json({ error: 'missing_fields' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    try {
+      const result = await fetchAvitoAutoloadReport(env, account, url.searchParams.get('reportId'));
+      const format = url.searchParams.get('format');
+      if (format === 'raw') return json(result);
+      if (format === 'csv') {
+        const onlyProblems = url.searchParams.get('all') !== '1';
+        const rows = result.items.filter((it) => !onlyProblems || it.messages.length);
+        const name = `autoload_${(account.name || accountId).replace(/[^\wа-яё-]+/gi, '_')}_${result.summary.reportId || 'last'}.csv`;
+        return new Response(`\ufeff${autoloadCsv(rows)}`, {
+          headers: {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(name)}`,
+            ...corsHeaders(),
+          },
+        });
+      }
+      return json({ summary: result.summary, items: result.items });
+    } catch (e) {
+      return json({ error: 'autoload_failed', message: String(e && e.message) }, 502);
     }
   }
 
