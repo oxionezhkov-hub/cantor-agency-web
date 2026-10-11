@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Александра Щукина — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для учеников и родителей</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1231748004?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Александра Щукина - Подкаст 3"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1231748004" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">Английский без учебников и оценок: как дети учат язык в Roblox. Александра Щукина, школа «Не ради оценок»</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Александра Щукина — преподаватель английского с двадцатилетним стажем и основатель школы «Не ради оценок», где 11 преподавателей учат около 80 учеников от первого класса до взрослых. В выпуске — почему дети, которые не хотели учить английский, просят у родителей «ещё», как устроен урок в Roblox, как родители видят прогресс без оценок, как ученица за четыре урока поднялась с двойки до четвёрки на ОГЭ и что посоветовать родителям, которые выбирают преподавателя.
+
+🔗 Школа «Не ради оценок»: [ссылка]
+🔗 Записаться на две бесплатные недели: [ссылка]
+🔗 Продюсирование подкастов для экспертов — Cantor Agency: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">английский для детей, английский для школьников, геймификация, Roblox, подготовка к ОГЭ по английскому, репетитор по английскому, онлайн-школа английского, как выбрать репетитора, Не ради оценок, Александра Щукина</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #английскийдлядетей #английскийязык #геймификация #Roblox #ОГЭ #родителям #образование</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/alexandra-shchukina-podcast3-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Мы не ставим оценок и учим английскому в Roblox. Через месяц дети сами записывают ролики целыми предложениями</h1>
+
+      <p>Я преподаю английский больше двадцати лет. В какой-то момент поняла, что хочу учить больше детей, — так появилась школа «Не ради оценок». Сейчас у нас 11 преподавателей и около восьмидесяти учеников: от первоклассников, то есть с семи лет, до выпускников, а в этом году пришли и взрослые. Около 80% занятий — английский, есть ещё русский, математика, физика, обществознание и японский. Название не случайное: мы учим не ради четвёрки в четверти, а чтобы английский потом пригодился в жизни.</p>
+
+      <h2>Большинство детей приходят к нам без всякого желания учить английский</h2>
+      <p>К нам в основном приходят именно такие дети — незамотивированные. Математику, русский, историю они ещё как-то связывают с жизнью: книжки читать, даты знать. А зачем им английский, не понимают. Школьные уроки их не вовлекают и не впечатляют, поэтому родители их буквально притаскивают, и ребёнок сидит на занятии с кислой миной.</p>
+      <p>Я сама начинала с такой ученицы. Ещё в девятом классе знакомая предложила мне позаниматься с девочкой, которая совершенно не хотела учить английский. Я тогда училась в английской спецшколе, к седьмому классу уже получила сертификат B1+ и свободно говорила — и с этой девочки начался мой путь в профессии.</p>
+
+      <h2>Сначала вовлечь — потом учить</h2>
+      <p>Когда я придумывала свою методику, я всегда держала в голове одну мысль.</p>
+      <blockquote>Ребёнка в первую очередь нужно вовлечь, и только потом обучить. Если человеку что-то неинтересно, он либо не будет это делать, либо будет делать, но очень неэффективно.</blockquote>
+      <p>Примерно с первого по пятый-шестой класс детям нужна внешняя мотивация. К восьмому классу она перерастает во внутреннюю: кто-то собирается связать с языком профессию, кто-то смотрит фильмы и слушает музыку. Английский становится частью их жизни. Наша задача — довести ребёнка до этого момента, не потеряв его интерес по дороге.</p>
+
+      <h2>Ни учебников, ни тетрадей: как проходит урок</h2>
+      <p>У нас нет учебников и тетрадей. Первые 15–20 минут урока проходят на интерактивной платформе: там мы в классическом формате разбираем лексику или грамматику. А потом идём закреплять это в настоящую игру в Roblox — на отдельный сервер, без посторонних игроков.</p>
+      <p>Например, выучили лексику про покупки и посмотрели видео, как поговорить с кассиром. Дальше в игре один ребёнок встаёт за кассу, а остальные по очереди подходят со своими покупками и разыгрывают этот диалог. Ребёнок сразу понимает, зачем учил названия продуктов: когда он окажется в супермаркете за границей, он воспроизведёт ту же ситуацию.</p>
+      <p>Игры при этом не хаотичные: у каждой есть сценарий. Месяц мы работаем в одной игре и разбираем в ней разные лексические и грамматические темы, на следующий месяц переходим в другую. Недавно, например, учили направления — «иди прямо, поверни направо» — и ходили по городу, искали клады, выполняли квесты.</p>
+
+      <h2>Почему игра работает лучше разговора «в лоб»</h2>
+      <p>Можно было бы просто проговорить этот диалог вслух, как мы с вами сейчас разговариваем. Но это дети и подростки, у них много комплексов и возрастных особенностей. Когда ребёнок говорит не сам, а как бы из-за маски своего героя, ему намного проще: он ошибается, смеётся, шутит — ведь это не он, а его аватар.</p>
+      <p>Плюс преподаватели общаются с детьми не сверху вниз, а почти на равных — с некоторыми ученики даже на «ты». Уважение и ответственность никуда не деваются, но дети намного лучше раскрываются и не боятся ошибиться. В какой-то момент у них загораются глаза, и они сами просят родителей: «Хотим ещё на английский». Вот тогда начинается настоящее обучение.</p>
+
+      <h2>Награды, которые сами исправляют поведение</h2>
+      <p>В конце каждого урока мы подводим итоги: кто как работал, кто был самым активным. Правила, что на уроке можно, а что нельзя, дети составляют сами. За урок начисляются баллы, а когда через месяц игра заканчивается, баллы обмениваются на настоящие Робуксы — игровую валюту Roblox, на которую дети покупают своему аватару скин, одежду или «крутую тачку».</p>
+      <p>Через награды можно корректировать поведение группы. Если дети не делают домашку — вводим отдельную награду за выполненное домашнее задание. Если кто-то постоянно опаздывает — награду за то, что пришёл вовремя. И проблема уходит без нотаций.</p>
+
+      <h2>Как родители видят прогресс, если мы не ставим оценок</h2>
+      <p>С родителями никакой геймификации нет — тут всё серьёзно. Несмотря на игровой формат, мы идём по программе, которая соответствует и школьной, и международным. После каждого восьмого занятия ребёнок проходит срез знаний: небольшой тест из десяти вопросов по пройденным темам. Каждый месяц родители получают отчёт с результатом в процентах. Ниже 70% показатель у нас не опускается, а если он около этой границы, мы возвращаемся к темам в следующем месяце уже в новой игре.</p>
+      <p>Второе — отчётные видео. В конце месяца дети сами записывают экран в Roblox: например, собирают корзину в супермаркете и проговаривают «I take some bread, I put it into my basket». Обычно за месяц получается четыре таких ролика — по четыре лексических и грамматических темы. Родители видят, что ребёнок не просто играет, а уже применяет материал в предложениях.</p>
+
+      <h2>Кейс Даши: с двойки до четвёрки за четыре урока</h2>
+      <p>У нас учатся и те, кто готовится к ОГЭ и ЕГЭ. В прошлом году ОГЭ сдавали 20 наших учеников, и была одна двойка — совершенно неожиданная. Даша занималась индивидуально, всё выполняла, мы ждали от неё четвёрку, а то и пятёрку. Когда мы созвонились с ней, мамой и преподавателем, Даша призналась, что всё это время списывала ответы у нейросети.</p>
+      <p>Мы похвалили её за то, что она классно умеет пользоваться искусственным интеллектом, и сказали: «Всё, теперь собираемся». На пересдачу был месяц. За четыре занятия мы взяли задания, на которых можно заработать больше всего баллов, выучили шаблоны, разобрали самые частые ошибки и базовую грамматику. Даша сдала на четвёрку — до пятёрки не хватило двух баллов. Теперь она готовится у нас к ЕГЭ и сказала, что нейросетью на экзамене больше пользоваться не будет.</p>
+
+      <h2>Чем мы гордимся больше всего</h2>
+      <p>Мы гордимся любым учеником и любым результатом. Для кого-то результат — победа на всероссийском этапе олимпиады, а для кого-то — четвёрка по английскому в четверти. Но больше всего меня трогает, когда дети сами просятся вернуться к нам на следующий год. Родители звонят и говорят: «Можно к тому же преподавателю или к другому — неважно, ребёнок очень хочет». Бывало, что ради нас меняли расписание и отказывались от других секций. Для меня это главный показатель качества.</p>
+
+      <h2>Полностью на английском — и «старший брат» на уроке</h2>
+      <p>Методику я разработала сама и продолжаю её развивать. Сейчас мы переводим обучение полностью на английский язык. Исключение — первоклассники, чтобы им не было страшно, но уже ко второму месяцу 70% общения на уроке идёт на английском, а со второго класса — всё.</p>
+      <p>Ещё на уроке есть дополнительный человек — подросток чуть старше учеников группы. Если в группе третьеклассники, это ребёнок пятого-шестого класса, который уже хорошо говорит по-английски. Он играет с детьми в Roblox, может ошибаться и шутить, но на русский не переключается никогда. Для младших он как старший брат, к которому тянутся, — и они больше слушают живую английскую речь.</p>
+
+      <h2>Не только игры: классический формат, ОГЭ, ЕГЭ и взрослые</h2>
+      <p>Основная аудитория для игрового формата — с первого по седьмой класс. Но если семья принципиально против игр и планшетов, у нас есть классический формат. Он тоже не школьный: это интерактивная платформа и программа Кембриджа с фиксацией уровня по кембриджским экзаменам. Дальше — подготовка к ОГЭ и ЕГЭ. Взрослых пока учим индивидуально и планируем открыть разговорный клуб с носителем языка, чтобы им было проще разговориться.</p>
+
+      <h2>Что я советую родителям, которых пугают слова «Roblox» и «телефон»</h2>
+      <p>Когда родители слышат «геймификация», «Roblox», «компьютер», это часто вызывает отторжение. Я спрашиваю: а кто будет учиться — вы или ваш ребёнок? И предлагаю показать ребёнку наше видео и спросить, пошёл бы он учить английский вот так. Дети отвечают «да» — все.</p>
+      <p>Дальше я показываю наши результаты: ролики, где дети после месяца занятий говорят целыми предложениями, и результаты срезов. Ребёнок хочет учиться, и у детей есть результаты — так почему бы не попробовать? Чтобы родители убедились сами, мы даём две недели бесплатного обучения. Около 90% семей после них остаются с нами и идут дальше из года в год.</p>
+
+      <p class="art-signature">Александра Щукина,<br>основатель и преподаватель школы «Не ради оценок»</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про уроки в Roblox</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🎮 Мы учим детей английскому в Roblox. Вот что происходит на таком уроке</h3>
+        <p>Учебников и тетрадей у нас нет вообще.</p>
+        <p>Первые 15–20 минут — интерактивная платформа: разбираем новые слова или грамматику. А потом все заходят в Roblox, на отдельный сервер без посторонних игроков, и закрепляют выученное в игре.</p>
+        <h4>Например</h4>
+        <p>Выучили, как разговаривать с кассиром. В игре один ребёнок встаёт за кассу, остальные по очереди подходят с покупками и разыгрывают этот диалог по-английски.
+
+Ребёнок сразу понимает, зачем учил названия продуктов. А из-за «маски» своего героя ему не страшно ошибиться — это ведь не он, а его аватар.</p>
+        <p>Игры не хаотичные: у каждой есть сценарий и план тем на месяц.</p>
+        <p>✨ Сначала вовлечь — потом учить. Так дети, которых раньше «притаскивали» на английский, начинают просить ещё.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про прогресс без оценок</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📊 «Как понять, что ребёнок не просто играет?» — самый частый вопрос родителей</h3>
+        <p>Оценок мы не ставим. Но прогресс видно — и его видно родителям.</p>
+        <h4>Срез знаний</h4>
+        <p>После каждого восьмого занятия — короткий тест из десяти вопросов по пройденным темам. Родители каждый месяц получают отчёт в процентах. Ниже 70% у нас не опускается, а если результат около этой границы, мы возвращаемся к темам в следующем месяце.</p>
+        <h4>Отчётное видео</h4>
+        <p>В конце месяца дети сами записывают экран в игре: собирают корзину в супермаркете и проговаривают по-английски, что берут. Обычно таких роликов за месяц четыре.</p>
+        <p>👀 Родители видят не оценку в дневнике, а то, как их ребёнок говорит целыми предложениями.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про кейс с ОГЭ</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🤖 Ученица списывала ОГЭ у нейросети и получила двойку. Через четыре урока — четвёрка</h3>
+        <p>В прошлом году ОГЭ по английскому у нас сдавали 20 человек. Двойка была одна, и её никто не ждал: Даша хорошо занималась, мы рассчитывали минимум на четвёрку.</p>
+        <p>Выяснилось, что все задания она делала с помощью нейросети.</p>
+        <h4>Что мы сделали</h4>
+        <p>Похвалили — пользоваться ИИ она умеет классно. А потом сели вместе и составили план на четыре занятия до пересдачи: задания, которые приносят больше всего баллов, шаблоны, самые частые ошибки и базовая грамматика без лишних глубин.</p>
+        <p>Даша сдала на четвёрку, до пятёрки не хватило двух баллов. Теперь готовится у нас к ЕГЭ и сказала, что нейросетью на экзамене больше пользоваться не будет.</p>
+        <p>💡 Иногда двойка — лучший урок. Главное, чтобы он случился вовремя.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про награды вместо нотаций</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🏆 Ребёнок не делает домашку? Мы не читаем нотаций. Мы вводим награду</h3>
+        <p>В конце каждого урока дети получают баллы: за активность, за лучший урок. Правила поведения на уроке они составляют сами.</p>
+        <p>Через месяц баллы меняются на настоящие Робуксы — игровую валюту, на которую можно купить своему герою скин или «крутую тачку». Мотивирует очень.</p>
+        <h4>Самое интересное</h4>
+        <p>Через награды можно исправлять поведение группы. Дети не делают домашнее задание — вводим награду за сделанную домашку. Кто-то постоянно опаздывает — награду за то, что пришёл вовремя.
+
+И проблема уходит. Без разбирательств и звонков родителям.</p>
+        <p>🎯 Детям проще стремиться к чему-то, чем бояться наказания.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост для родителей, которые выбирают преподавателя</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>👨‍👩‍👧 Родителей пугает слово «Roblox». Я задаю им один вопрос</h3>
+        <p>Когда родители слышат «геймификация», «телефон», «компьютерные игры», многие сразу против. Я их понимаю.</p>
+        <p>И спрашиваю: а кто будет учиться — вы или ваш ребёнок?</p>
+        <h4>Что я предлагаю</h4>
+        <p>Показать ребёнку наше видео и спросить: «Пошёл бы ты учить английский вот так?» Отвечают «да» все дети.
+
+Дальше смотрим результаты: ролики, где после месяца занятий дети говорят целыми предложениями, и проценты по срезам знаний.</p>
+        <p>Чтобы не верить на слово, у нас есть две недели бесплатного обучения. Около 90% семей после них остаются с нами на годы.</p>
+        <p>💬 Если ребёнок хочет учиться, половина дела уже сделана.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT -->
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/alexandra-shchukina-podcast3-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Школа «Не ради оценок»: кто такая Александра Щукина</a></li>
+        <li><a href="#t2">2. С чего начался мой путь в преподавании</a></li>
+        <li><a href="#t3">3. Почему большинство учеников сначала не хотят учить английский</a></li>
+        <li><a href="#t4">4. Технология видеоигр: как устроен урок в Roblox</a></li>
+        <li><a href="#t5">5. Кейс с супермаркетом: игра как языковая практика</a></li>
+        <li><a href="#t6">6. Почему именно игровой формат</a></li>
+        <li><a href="#t7">7. Система наград и Робуксы</a></li>
+        <li><a href="#t8">8. Как мы показываем родителям, что это серьёзно</a></li>
+        <li><a href="#t9">9. Кейс Даши: с двойки до четвёрки за четыре урока</a></li>
+        <li><a href="#t10">10. Что вызывает у меня больше всего гордости</a></li>
+        <li><a href="#t11">11. Моя сильная сторона как руководителя</a></li>
+        <li><a href="#t12">12. Управление и методика: как я делю своё время</a></li>
+        <li><a href="#t13">13. Что заряжает меня в преподавании больше всего</a></li>
+        <li><a href="#t14">14. Как выбрать преподавателя английского для ребёнка</a></li>
+        <li><a href="#t15">15. Кому подходит наш формат, а кому — классический</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Школа «Не ради оценок»: кто такая Александра Щукина</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сегодня мы пообщаемся с Александрой Щукиной, руководителем и владельцем школы «Не ради оценок». Расскажите поподробнее, кто вы и чем занимается школа с таким интересным названием?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Далеко не все школы работают ради оценок, как бы странно это ни звучало, и мы в том числе. Сама я преподаватель по английскому языку, преподаю уже более двадцати лет. В какой-то момент поняла, что хочу организовать своё дело, хочу брать больше учеников и учить больше людей. Мне нравится моя методика, она классно работает, и, как показывает практика, все наши выпускники успешно применяют английский язык в будущем — не только ради сдачи экзамена и поступления в вуз, но и для того, чтобы стать успешными по жизни. В этот момент я приняла решение о создании школы.</p>
+        <p>На настоящий момент в школе «Не ради оценок» работает уже 11 преподавателей, занимается порядка восьмидесяти учеников. Мы обучаем английскому языку всех, начиная с первого класса, то есть с семи лет, до окончания школы, до одиннадцатого класса. В этом году мы ещё расширились до взрослых, потому что идут запросы и от них. Также у нас есть несколько преподавателей по другим предметам — русский, математика, физика, обществознание, японский — но они не являются нашими профильными: около 80% — это английский язык, и это наш основной предмет.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t2">
+      <h3>2. С чего начался мой путь в преподавании</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорили однажды, что начали преподавать ещё не будучи дипломированным специалистом. А как вы поняли, что хотите учить именно английскому языку? Почему не русскому, например?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Я сама училась в английской школе — на тот момент одной из лучших по рейтингам школ с углублённым изучением английского в Москве, которая сотрудничала с британскими и американскими школами. К нам приезжали представители из Великобритании и Америки принимать экзамены, а наши учителя подолгу жили в этих странах — у нас было две параллели, один преподаватель из Британии, другой из Америки, и мы даже иногда не понимали друг друга, потому что одни учили американский вариант, а другие британский.</p>
+        <p>Уже в седьмом классе мой уровень английского языка позволил получить сертификат B1+ — тот, который сейчас нужен, чтобы сдать ЕГЭ, хотя тогда ЕГЭ ещё не было. Я свободно выражала свои мысли, понимала всё, что говорят носители языка. Одна из моих знакомых сказала: «Слушай, ты же хорошо знаешь английский, есть одна ученица, она живёт на Автозаводской, не готова много платить, но ты же сама школьница — попробуй». Я всегда хотела сама зарабатывать и начала заниматься с этой девочкой, которая совершенно не хотела учить английский. Так, ещё в девятом классе, начался мой путь в этой истории — именно потому, что на тот момент я сама хорошо знала английский.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t3">
+      <h3>3. Почему большинство учеников сначала не хотят учить английский</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>В связи с этой девочкой, которая не особо хотела учить английский, — если к вам в школу приходят такие ребята, которым не хочется учиться, мотивации нет, родители привели, — как вы подбираете подход?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>К нам в школу в большинстве своём приходят именно такие дети — незамотивированные, которые не понимают, зачем им английский язык. Математику, русский, историю, литературу они ещё понимают, как применить в жизни, а вот зачем нужен английский — не понимают. Поэтому их, точнее, притаскивают родители, и они сидят с кислой миной на уроке и совершенно не хотят учиться.</p>
+        <p>Именно под таких детей у нас и выстроена методика обучения. Когда я её придумывала, я всегда держала в голове, что ребёнка в первую очередь нужно вовлечь, и только потом уже обучить — вовлечение первично. Если человеку что-то делать неинтересно, он либо не будет это делать, либо будет делать очень неэффективно. Поэтому у нас представлены различные технологии геймификации — тем, чем живёт современное поколение. Примерно до пятого-шестого класса необходима внешняя мотивация, а к восьмому классу она уже автоматизируется и перерастает во внутреннюю: дети понимают, что английский может стать частью их жизни и полезным инструментом.</p>
+        <p>У нас нету учебников, у нас нету тетрадок — всё, что мы делаем, это абсолютно интерактивная среда. Плюс у наших преподавателей есть установка общаться с детьми не сверху вниз, а более или менее на равных, при этом сохраняя субординацию — уважение, ответственность. С некоторыми преподавателями наши ученики даже общаются на «ты». Сначала это кажется немного странным, но со временем мы понимаем, что дети намного лучше раскрываются, им комфортнее, они не боятся ошибиться и самовыразиться. За счёт такой среды плюс технологий геймификации мы вовлекаем детей — и видим, что у них горят глаза, и они просят у родителей ещё занятий на английском.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t4">
+      <h3>4. Технология видеоигр: как устроен урок в Roblox</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы несколько раз рассказали про технологию видеоигр. Не могли бы рассказать поподробнее, как это происходит изнутри?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Сейчас мы используем Roblox — многие дети играют на этой платформе, и эта среда для них естественная и обычная. Мы взяли несколько игр и на их основе разработали методику обучения английскому языку. Часть урока — примерно первые 15–20 минут — проходит на интерактивной платформе: там мы в классическом формате берём учебный материал, лексику или грамматику, либо отрабатываем какой-то навык.</p>
+        <p>А дальше для автоматизации этого навыка мы идём в реальную игру в Roblox: учитель и дети заходят в игру, мы делаем отдельный сервер, чтобы не было других игроков и посторонних отвлекающих моментов, и там отрабатываем то, что только-только выучили.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t5">
+      <h3>5. Кейс с супермаркетом: игра как языковая практика</h3>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>К примеру, мы выучили лексику про покупки в супермаркете — посмотрели видео, как можно поговорить с кассиром при оформлении покупки. Дальше в игре мы идём в супермаркет: один ребёнок, точнее, его Roblox-персонаж, становится за кассу, к нему по очереди подходят другие дети со своими покупками и разыгрывают этот же диалог.</p>
+        <p>Получается, что ребёнок автоматически понимает, зачем он только что выучил названия этих продуктов и посмотрел это видео — он оказывается в реальной жизненной ситуации, только в игровой. Мозг его понимает, что когда он попадёт в такую же реальную ситуацию — поедет за границу, окажется в супермаркете — он воспроизведёт её сам.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t6">
+      <h3>6. Почему именно игровой формат</h3>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Почему это именно игровой формат, а не так, как мы с вами сейчас сидим и проговариваем? Потому что это дети, это подростки, у них много комплексов и возрастных особенностей. Когда ребёнок делает это не сам, а как бы за маской своего героя, ему намного проще: он будет ошибаться, смеяться, шутить, потому что это не он, а его аватар. За счёт этого происходит раскрепощение, и дети намного быстрее усваивают учебный материал.</p>
+        <p>При этом мы не просто играем — все игры прописаны, у нас есть сценарий каждой игры: что мы делаем, куда идём, хотя бывают и спонтанные ситуации. В одной игре мы месяц прорабатываем разные лексические и грамматические темы, на следующий месяц идём в другую игру. Например, недавно с одной группой изучали направления — «иди прямо, поверни направо» — и ходили по городу, искали клады, выполняли квесты, отрабатывая то, что выучили на уроке.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t7">
+      <h3>7. Система наград и Робуксы</h3>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>В конце каждого урока у нас идёт система награждения — кто как работал. У нас есть правила, которые, кстати, дети составляют сами — что на уроке можно, а что нельзя. Есть баллы за лучший урок, за самого активного. По истечении месяца, когда мы заканчиваем одну игру, эти баллы обмениваются на настоящие Робуксы — игровую валюту внутри Roblox, за которые дети могут купить своему аватару крутой скин, одежду или тачку. Это очень мотивирует их работать лучше.</p>
+        <p>Интересно, что за счёт этих наград можно корректировать поведение группы. Если, допустим, в определённой группе дети не делают домашние задания, мы вводим отдельную награду именно за выполненное домашнее задание. Если кто-то постоянно опаздывает на урок — вводим награду за то, что пришёл вовремя. И проблемы исправляются.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t8">
+      <h3>8. Как мы показываем родителям, что это серьёзно</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Учитывая, что вы не ставите в школе оценок, как родитель понимает, что у ребёнка наметился прогресс?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>С родителями у нас нету геймификации — здесь всё серьёзно, это уже взрослое общение. После каждого восьмого занятия у нас идёт срез знаний: несмотря на то, что это игра, программа всё равно соответствует и школьной, и разным международным программам по перечню лексических и грамматических тем. Мы делаем срез в виде небольшого теста — десять вопросов, закрытые и открытые варианты ответов, — и по процентному соотношению ребёнок получает результат. Ниже 70% у нас показатель никогда не опускается; если результат в районе этой границы, в следующем блоке мы возвращаемся к теме и докручиваем её уже в рамках новой игры.</p>
+        <p>Второе — в конце каждого месяца мы снимаем отчётное видео. Например, я даю задание снять видео с записью экрана — допустим, собрать корзину в том же супермаркете, проговаривая фразы по теме, и присылаю детям видео-пример, как это должно быть. В прошлом месяце с одной группы получилось четыре таких видео — в среднем за месяц мы берём четыре лексических и четыре грамматических темы. За счёт этих видео родители понимают, что ребёнок с удовольствием играет и реально умеет применять материал в предложениях на реальных ситуациях.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t9">
+      <h3>9. Кейс Даши: с двойки до четвёрки за четыре урока</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Я знаю, что у вас есть уникальный случай, когда девочка за четыре урока дошла от двойки до четвёрки. Как это было возможно?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Эта девочка сдавала у нас ОГЭ — здесь мы отходим от темы геймификации, потому что в школе учатся и те, кто готовится к экзаменам, по такой же интерактивной системе подготовки, как и со всеми. В прошлом году ОГЭ сдавали 20 человек, и была одна двойка, причём мы её совершенно не ожидали: девочка очень хорошо занималась индивидуально с преподавателем, всё прекрасно выполняла, и мы ждали от неё как минимум четвёрку, а то и пятёрку.</p>
+        <p>Когда она пришла с двойкой, мы созвонились с Дашей, с мамой, с преподавателем — и Даша призналась, что всё списывала с нейросети: забивала вопрос, а нейросеть выдавала ей ответ, который она тут же записывала. Мы похвалили её за умение пользоваться искусственным интеллектом, но сказали: теперь у нас есть месяц, чтобы пересдать, других вариантов нет.</p>
+        <p>Мы все сели и придумали, как подготовиться за четыре занятия: взяли задания, на которых можно заработать больше всего баллов, выучили шаблоны, разобрали самые частые ошибки — как пишутся и произносятся самые сложные слова, — базовую грамматику, не углубляясь в сложные темы. За счёт такой собранности удалось сдать на четвёрку, буквально двух баллов не хватило Даше до пятёрки. Даша осталась готовиться к ЕГЭ и сказала, что больше искусственный интеллект на экзамене использовать не будет — урок на всю жизнь.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t10">
+      <h3>10. Что вызывает у меня больше всего гордости</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Каким моментом-событием в истории работы школы вы особенно гордитесь?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Таких случаев достаточно много — мы гордимся вообще любым учеником и любым результатом. Для кого-то результат — это победа на всероссийском этапе олимпиады, а для кого-то — четвёрка по английскому в четверти. Результаты абсолютно разные, и каждый ученик — это наша гордость, 99% наших учеников успешны в своём роде.</p>
+        <p>Но больше всего лично меня трогают, радуют и вызывают гордость моменты, когда дети сами просятся вернуться к нам в школу на следующий год. Родители звонят и спрашивают, можно ли позаниматься с тем или другим преподавателем, потому что ребёнок очень хочет. Бывали случаи, когда меняли расписание, отказывались от каких-то секций ради того, чтобы остаться у нас. Я считаю, это действительно показывает высокий уровень вовлечённости — детям нравится, родители видят результат, и это для меня показатель качественного обучения. Качество, конечно, на первом месте.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t11">
+      <h3>11. Моя сильная сторона как руководителя</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы и преподаватель, и руководитель команды преподавателей. Как думаете, на что вы в первую очередь опираетесь в своей работе — в чём ваша сильная сторона как преподавателя и как руководителя?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Сложный вопрос. Во-первых, я точно могу сказать, что ещё учусь быть хорошим руководителем — это небыстрый процесс. Кажется, что взял преподавателей, рассказал, как работать, дал доступ к платформе — и всё. Но в итоге получается большая работа: есть путь ученика — на входе в школу, на моменте, когда он движется по этому пути, и даже в момент, когда он сдаёт экзамен и уходит из школы, — везде нужен контроль качества и определённые действия. Со временем всё это складывается в систему, и, считаю, у меня получилось её создать — такую, в которой комфортно всем: и преподавателям, и ученикам, и их родителям.</p>
+        <p>Многие внутри коллектива общаются на «вы», такие все серьёзные, в галстуках. У нас такого нет, мы со многими общаемся на «ты» — больше неформальное общение, мы любим шутить и смеяться. С одной стороны, мы системные, с другой — добрые, открытые. Я считаю своей сильной стороной то, что я очень активный человек по жизни — постоянно что-то придумываю, генерирую, со мной не бывает скучно. Это не раз отмечали и мои ученики, и преподаватели, и административный состав школы: говорят, что со мной никогда не бывает скучно, я постоянно придумываю что-то интересное. В общем, удаётся это всё совмещать, но, повторюсь, я только становлюсь хорошим руководителем и учусь этому — процесс оказался совсем небыстрым, но считаю, у нас неплохо получается.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t12">
+      <h3>12. Управление и методика: как я делю своё время</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что постоянно чему-то учитесь. Если сравнивать — продвинутым методикам или управлению школой, чему в первую очередь вы обучаетесь?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>На данный момент управление школой стоит у меня на первом месте. Методика, поскольку она полностью мной разработана, придумана и спроектирована, — это то, над чем я тоже продолжаю работать. У меня выделено определённое время в сутках под управление и под методику — я их не смешиваю: утром занимаюсь управлением, вечером — методикой. У меня как будто две работы.</p>
+        <p>Но больше всего мне нравится именно методика — это прямо моё. Я читаю разные книги, беру из разных методик что-то интересное. Последняя книга, которую я прочитала и хочу частично внедрить, — англоязычная, смысл в том, что английский изучается при помощи аудирования: мы учимся говорить через слушание, а писать — через чтение, как ребёнок сначала слушает, понимает и только потом начинает говорить. Сейчас мы полностью переводим обучение на английский язык, за исключением первоклассников, чтобы им не было страшно, — но уже ко второму месяцу обучения у первоклассников 70% общения с преподавателем на английском, а ко второму классу это уже полностью английский язык.</p>
+        <p>Плюс на уроках есть дополнительный человек — подросток, максимально близкий по возрасту к ученикам группы, своего рода старший брат, который вместе с преподавателем создаёт англоязычную среду на уроке: может ошибаться, шутить, но, в отличие от учителя, уже не может переключиться на русский. Со временем он становится примером, к которому дети тянутся — играет с ними в Roblox, но делает это на английском. Я хочу по-научному внедрить это в описание своей методики, потому что понимаю, что это классно работает.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t13">
+      <h3>13. Что заряжает меня в преподавании больше всего</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А в самом преподавании английского — что вас заряжает больше всего, топ-1?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Я очень люблю разрабатывать уроки — я методист по своей сути. Мне нравится придумывать необычные задания, находить нестандартные решения, использовать необычные ресурсы. Например, на уроках можно спокойно открыть TikTok, где сидят дети, и взять оттуда что-то адекватное с английскими словами — спросить у ребёнка, каких блогеров он смотрит, тут же открыть, вместе посмотреть и разобрать.</p>
+        <p>Отвечая на ваш вопрос — придумывать необычные, интересные, близкие детям уроки, потом реализовывать их и видеть, что детям это действительно нравится, когда они говорят: «А почему у нас в школе так не преподают?» Это меня прямо очень сильно греет — я понимаю, что им не просто нравится, а что это ещё и приносит результат.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t14">
+      <h3>14. Как выбрать преподавателя английского для ребёнка</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Родители, которые сейчас в поиске преподавателя или репетитора по английскому, — что бы вы им посоветовали? Как верно подойти к выбору?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Мы часто сталкиваемся с тем, что когда рассказываем про методику и родители слышат «геймификация», «Roblox», «телефон», «компьютер» — это вызывает отрицательную реакцию. И здесь я спрашиваю: а кто будет учиться, вы или ваш ребёнок? Давайте спросим у ребёнка, какую реакцию это вызвало бы у него. У нас даже есть специальное видео, которое я прошу родителей показать ребёнку и после просмотра спросить: «Ты пойдёшь учить английский вот сюда?» 100% детей отвечают: да.</p>
+        <p>И тогда я говорю родителям: смотрите, ваш ребёнок уже хочет учить английский, а теперь посмотрите на наши результаты — как дети после месяца обучения записывают ролики и говорят целыми предложениями, какие у них результаты по срезу знаний. Дети хотят учить английский, и у них есть классные результаты — так почему бы не пойти к нам? Более того, в подтверждение того, что методика работает, мы даём две недели бесплатного обучения. И около 90% детей, которые у нас учатся эти две недели, остаются с нами дальше и показывают классные результаты.</p>
+      </div></div>
+    </div>
+
+    <div class="tr-section" id="t15">
+      <h3>15. Кому подходит наш формат, а кому — классический</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы берёте учеников с первого по одиннадцатый класс?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Александра</div><div class="tr-txt">
+        <p>Наша основная целевая аудитория — примерно первый-седьмой класс, именно с этими ребятами мы используем технологии геймификации. Но если родители принципиально против и никак не поддаются на уговоры даже попробовать — а такие семьи есть, где просто не принято играть или использовать планшет, — у нас есть классический формат обучения. Он тоже не такой, как в школе: это интерактивная платформа и определённая система обучения по программе Кембриджа, с фиксацией текущего уровня по кембриджским экзаменам.</p>
+        <p>С первого по седьмой класс — вот такая история, дальше — подготовка к ОГЭ и ЕГЭ. И взрослые: с ними мы пока работаем в индивидуальном формате, но планируем сделать разговорный клуб с носителем языка, чтобы им было проще разговориться. По сути, мы учим английскому всех.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
