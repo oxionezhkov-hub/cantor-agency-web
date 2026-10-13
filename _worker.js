@@ -5069,7 +5069,7 @@ async function botApplyEvents(env, events, ctx) {
 // ── plain-language lines for the owner's automatic messages ──
 // (/tasks and /overdue keep botTaskLine with task ids — those are for /done <id>.)
 const BOT_ACK_WORDS = new Set(('да нет ок окей ok хорошо понятно ясно спасибо благодарю отлично супер класс договорились '
-  + 'принято принял приняла ага угу конечно согласна согласен жду ждем ждём поняла понял вас большое очень пожалуйста').split(/\s+/));
+  + 'принято принял приняла ага угу конечно согласна согласен жду ждем ждём поняла понял вас большое очень пожалуйста давайте давай').split(/\s+/));
 // "Хорошо", "Здравствуйте, нет", "Спасибо большое!" — a reply that needs no answer back.
 function botIsAckText(text) {
   const t = String(text || '').toLowerCase().replace(/ё/g, 'е');
@@ -5146,39 +5146,54 @@ async function botBuildSummary(env, nowMs) {
   const state = (await kv.get('bot:ai', 'json')) || {};
   const wd = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][botMsk(nowMs).dow];
 
-  const lines = [`☀️ <b>Сводка на ${wd}, ${botShortDate(botMskStartOfDay(nowMs) + 12 * 3600000).slice(0, 5)}</b>`];
-  lines.push(`Открыто задач: <b>${open.length}</b> · просрочено: <b>${overdue.length}</b>${noDue.length ? ` · без срока: <b>${noDue.length}</b>` : ''}`);
-  if (state.limited) lines.push('⚠️ ИИ бота на лимите — последние сообщения из чатов ещё не разобраны.');
-  if (unclaimed.length) {
-    lines.push('', `🙋 <b>Ничьи задачи из чатов: ${unclaimed.length}</b> — никто не взял, в трекере они наверху`);
-    lines.push(...unclaimed.slice(0, 8).map((t) => botOwnerTaskLine(t, byId, nowMs, 'since')));
-    if (unclaimed.length > 8) lines.push(`  …и ещё ${unclaimed.length - 8} — в трекере`);
+  // One short message: counts per problem and per person, details are in the tracker. Only the
+  // owner's own tasks are listed one by one — those are his to do.
+  const firstOf = (t) => {
+    const uid = atAssigneeId(t, team.users);
+    const u = uid && team.users.find((x) => x.id === uid);
+    return u ? atFirstName(u.name) : null;
+  };
+  const byPerson = (list) => {
+    const m = new Map();
+    for (const t of list) { const n = firstOf(t); if (n && t.assigneeId !== ownerId && atAssigneeId(t, team.users) !== ownerId) m.set(n, (m.get(n) || 0) + 1); }
+    return [...m].sort((x, y) => y[1] - x[1]).map(([n, c]) => `${escapeHtml(n)} ${c}`).join(' · ');
+  };
+  const mine = (t) => atAssigneeId(t, team.users) === ownerId;
+  const clientName = (p) => (p.projectId && byId[p.projectId] ? byId[p.projectId].name : String(p.title).replace(/^Авито\s*[—-]\s*/, ''));
+  const kbIndex = (await kv.get('kb:index', 'json')) || [];
+  const kbDay = kbIndex.filter((x) => nowMs - Date.parse(x.updatedAt || 0) < 24 * 3600000);
+  const kbDone = kbDay.filter((x) => x.status === 'done').length;
+  const kbFailed = kbDay.filter((x) => x.status === 'failed' || x.status === 'stuck').length;
+
+  const lines = [`☀️ <b>Сводка на ${wd}, ${botShortDate(botMskStartOfDay(nowMs) + 12 * 3600000).slice(0, 5)}</b>`, ''];
+  if (state.limited) lines.push('⚠️ ИИ бота на лимите — последние сообщения из чатов ещё не разобраны.', '');
+  const othersOverdue = overdue.filter((t) => !mine(t));
+  if (othersOverdue.length) lines.push(`🔴 Просрочено у команды: <b>${othersOverdue.length}</b>${byPerson(othersOverdue) ? ` — ${byPerson(othersOverdue)}` : ''}`);
+  if (unclaimed.length) lines.push(`🙋 Ничьи задачи из чатов: <b>${unclaimed.length}</b> — их никто не взял`);
+  if (notInformed.length) lines.push(`📨 Сделано, клиенту не сообщили: <b>${notInformed.length}</b> — ${escapeHtml(managers)}`);
+  if (notPassed.length) lines.push(`⏱ Просьбы клиентов не переданы в рабочий чат: <b>${notPassed.length}</b>`);
+  if (pending.length) {
+    const names = [...new Set(pending.map(clientName))];
+    lines.push(`💬 Ждут ответа: <b>${pending.length}</b> — ${names.slice(0, 4).map(escapeHtml).join(', ')}${names.length > 4 ? ` и ещё ${names.length - 4}` : ''}`);
   }
-  if (overdue.length) lines.push('', `🔴 <b>Просрочено: ${overdue.length}</b> — у кого`, ...botTasksByPerson(overdue, team, byId, nowMs, 'overdue', ownerId));
-  if (notInformed.length) {
-    lines.push('', `📨 <b>Сделано, но клиенту не сообщили: ${notInformed.length}</b> — сообщает ${escapeHtml(managers)}`);
-    lines.push(...notInformed.slice(0, 8).map((t) => botOwnerTaskLine(t, byId, nowMs, 'done')));
-    if (notInformed.length > 8) lines.push(`  …и ещё ${notInformed.length - 8} — в трекере`);
+  const othersNoDue = noDue.filter((t) => !mine(t));
+  if (othersNoDue.length) lines.push(`⚪ Без срока: <b>${othersNoDue.length}</b>`);
+  if (kbDone || kbFailed) lines.push(`📚 База знаний за сутки: обновлено ${kbDone}${kbFailed ? `, не получилось ${kbFailed}` : ''}`);
+  if (lines.length === 2) lines.push('Всё в порядке: просрочек нет, клиенты не ждут ✅');
+
+  // The owner's own: overdue, due today, without a deadline.
+  const today = botMsk(nowMs).date;
+  const myOpen = open.filter(mine);
+  const myLate = myOpen.filter((t) => botDueMs(t) && botDueMs(t) < nowMs).sort((x, y) => botDueMs(x) - botDueMs(y));
+  const myToday = myOpen.filter((t) => botDueMs(t) && botDueMs(t) >= nowMs && botMsk(botDueMs(t)).date === today);
+  const myNoDue = myOpen.filter((t) => !botDueMs(t));
+  if (myLate.length || myToday.length || myNoDue.length) {
+    const line = (t, mark) => `${mark} <a href="${escapeHtml(atTaskUrl(t.id))}">${escapeHtml(t.text)}</a>${t.projectId && byId[t.projectId] ? ` — ${escapeHtml(byId[t.projectId].name)}` : ''}`;
+    const mineLines = [...myLate.map((t) => line(t, '🔴')), ...myToday.map((t) => line(t, '🟠')), ...myNoDue.map((t) => line(t, '⚪'))];
+    lines.push('', `👤 <b>Ваши задачи</b>: ${[myLate.length && `просрочено ${myLate.length}`, myToday.length && `сегодня ${myToday.length}`, myNoDue.length && `без срока ${myNoDue.length}`].filter(Boolean).join(' · ')}`);
+    lines.push(...mineLines.slice(0, 8));
+    if (mineLines.length > 8) lines.push(`…и ещё ${mineLines.length - 8} — в трекере`);
   }
-  if (notPassed.length) {
-    lines.push('', `⏱ <b>Просьбы клиентов не переданы в рабочий чат: ${notPassed.length}</b>`);
-    lines.push(...notPassed.slice(0, 8).map((t) => botOwnerTaskLine(t, byId, nowMs, 'since')));
-  }
-  if (pending.length || stalePending) {
-    lines.push('', `💬 <b>Клиенты ждут ответа: ${pending.length}</b>`);
-    for (const p of pending) {
-      const name = p.projectId && byId[p.projectId] ? byId[p.projectId].name : p.title;
-      const link = botMessageLink(p.chatId, null, p.msgId);
-      lines.push(`• <b>${escapeHtml(name)}</b>: «${escapeHtml(String(p.text).slice(0, 100))}» — ждёт ${botHoursAgo(p.since, nowMs)}${link ? ` · <a href="${link}">открыть</a>` : ''}`);
-    }
-    if (stalePending) lines.push(`  ещё ${stalePending} — без ответа больше суток (видно во вкладке «Клиенты»)`);
-  }
-  if (noDue.length) {
-    lines.push('', `⚪ <b>Без срока: ${noDue.length}</b> — поставьте срок в трекере`);
-    lines.push(...noDue.slice(0, 6).map((t) => botOwnerTaskLine(t, byId, nowMs, 'since')));
-    if (noDue.length > 6) lines.push(`  …и ещё ${noDue.length - 6} — в трекере`);
-  }
-  if (!unclaimed.length && !overdue.length && !notInformed.length && !notPassed.length && !pending.length && !noDue.length) lines.push('', 'Всё в порядке: просрочек нет, клиенты не ждут ✅');
   return lines.join('\n');
 }
 
@@ -5277,14 +5292,13 @@ async function botRunChecks(env, nowMs) {
       }
       if (changed) await kv.put(`task:${task.id}`, JSON.stringify(task));
     }
-    if (overdue.length && !morning) {
-      await botNotifyOwner(env, [`🔴 <b>Только что вышел срок: ${overdue.length}</b>`, ...botTasksByPerson(overdue, team, byId, nowMs, 'overdue', ownerId)].join('\n'));
-    }
-    if (noDue.length && !morning) {
-      await botNotifyOwner(env, [`⚪ <b>Задачи без срока уже 2+ рабочих часа: ${noDue.length}</b> — поставьте срок`, ...botTasksByPerson(noDue, team, byId, nowMs, 'since', ownerId)].join('\n'), { disable_notification: true });
-    }
-    // Client waiting for an answer. A message nobody answered for over a day is stale (the talk
-    // moved on elsewhere, or it needed no answer) — nobody gets pinged about it.
+    // The owner isn't pinged about other people's missed deadlines or tasks without one during the
+    // day (they are in the 10:00 summary — the owner asked for fewer messages); his own deadlines
+    // come in one message from atRunChecks. The flags above still mark what was already counted.
+    // Client waiting for an answer: one message per check to the client manager, whose job it is;
+    // the owner sees them in the summary. A message nobody answered for over a day is stale (the
+    // talk moved on elsewhere, or it needed no answer) — nobody gets pinged about it.
+    const waiting = [];
     for (const k of (await kv.list({ prefix: 'bot:pending:' })).keys) {
       const p = await kv.get(k.name, 'json');
       if (!p || botWorkingMinutes(p.since, nowMs) < BOT_CLIENT_REPLY_WMIN) continue;
@@ -5293,9 +5307,10 @@ async function botRunChecks(env, nowMs) {
       if (!(await botOnce(kv, `pending:${chatId}:${p.msgId}`, 60 * 60 * 24 * 7))) continue;
       const chat = await kv.get(`bot:chat:${chatId}`, 'json');
       const link = botMessageLink(chatId, null, p.msgId);
-      const note = `💬 <b>${escapeHtml(chat ? chat.title : chatId)}</b>: клиент ждёт ответа больше 30 рабочих минут\n«${escapeHtml(p.text)}»${link ? ` <a href="${link}">сообщение</a>` : ''}`;
-      if (!morning) await botNotifyOwner(env, note); // in the morning it is in the summary
-      // …and the client manager, whose job this is.
+      waiting.push(`• <b>${escapeHtml(chat ? chat.title.replace(/^Авито\s*[—-]\s*/, '') : chatId)}</b>: «${escapeHtml(String(p.text).slice(0, 140))}»${link ? ` · <a href="${link}">открыть</a>` : ''}`);
+    }
+    if (waiting.length) {
+      const note = [`💬 <b>Клиенты ждут ответа больше 30 рабочих минут: ${waiting.length}</b>`, ...waiting].join('\n');
       for (const m of team.users.filter((u) => u.role === 'manager' && u.active && u.tgId)) await botSend(env, m.tgId, note);
     }
     try {
@@ -7397,9 +7412,10 @@ async function kbNotify(env, job) {
     };
   }
   if (requester) await atNotify(env, team, [requester.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: inApp, by: 'Claude' }, tg);
-  if (owner && owner.id !== job.byId && owner.tgId) {
-    const head = job.status === 'done' ? `📚 <i>${escapeHtml(job.byName)} обновил(а) базу знаний.</i>` : `⚠️ <i>Не выполнен запрос в базу знаний (автор — ${escapeHtml(job.byName)}).</i>`;
-    await botSend(env, owner.tgId, `${head}\n${tg.text}`, { ...tg.extra, disable_notification: job.status === 'done' });
+  // The owner: only the bell in Avito Tasks — a Telegram message per request was too much (one
+  // dictation makes a dozen requests). The morning summary has a line with the day's count.
+  if (owner && owner.id !== job.byId) {
+    await atNotify(env, team, [owner.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: `${job.byName}: ${inApp}`, by: 'Claude' });
   }
 }
 
@@ -7851,6 +7867,7 @@ async function atRunChecks(env, nowMs, tasks, byId) {
       console.error('reflection cron failed', err && err.stack);
     }
   }
+  const ownerDue = []; // [kind, task] — the owner's own deadlines go out as one message
   if (inHours) {
     for (const task of tasks.filter((t) => t.status === 'open')) {
       const due = botDueMs(task);
@@ -7865,7 +7882,8 @@ async function atRunChecks(env, nowMs, tasks, byId) {
       if (!kind) continue;
       task.notified[kind === 'overdue' ? 'overdueUser' : 'soonUser'] = new Date(nowMs).toISOString();
       await kv.put(`task:${task.id}`, JSON.stringify(task));
-      if (kind === 'overdue' && (digestDue || user.role === 'owner')) continue;
+      if (kind === 'overdue' && digestDue) continue;
+      if (user.role === 'owner') { ownerDue.push([kind, task]); continue; }
       const projectName = task.projectId && byId[task.projectId] ? byId[task.projectId].name : null;
       await atNotify(env, team, [user.id], {
         kind,
@@ -7876,6 +7894,19 @@ async function atRunChecks(env, nowMs, tasks, byId) {
         extra: atTgButtons(task, true),
       });
     }
+  }
+  if (ownerDue.length) {
+    const owner = team.users.find((u) => u.role === 'owner' && u.tgId);
+    const line = (t) => {
+      const project = t.projectId && byId[t.projectId] ? byId[t.projectId].name : null;
+      return `• <a href="${escapeHtml(atTaskUrl(t.id))}">${escapeHtml(t.text)}</a>${project ? ` — ${escapeHtml(project)}` : ''} · ${botFmtDate(botDueMs(t)).slice(6)}`;
+    };
+    const soon = ownerDue.filter(([k]) => k === 'soon').map(([, t]) => t);
+    const late = ownerDue.filter(([k]) => k === 'overdue').map(([, t]) => t);
+    const lines = ['⏰ <b>Ваши сроки</b>'];
+    if (soon.length) lines.push(`Через час: ${soon.length}`, ...soon.map(line));
+    if (late.length) lines.push(`${soon.length ? '\n' : ''}🔴 Срок вышел: ${late.length}`, ...late.map(line));
+    if (owner) await botSend(env, owner.tgId, lines.join('\n'), { disable_notification: !late.length });
   }
   // 10:00 — each connected person's own list (the owner gets the full /summary instead).
   if (workday && hh >= 10 && hh < 12 && (await botOnce(kv, `atdigest:${date}`, 60 * 60 * 36))) {
