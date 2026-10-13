@@ -5804,6 +5804,21 @@ const AT_ROLES = {
   trainee: 'Стажёр по Авито',
   assistant: 'Ассистент', // same access as the owner, except the owner's own record
 };
+// Tracker sections («Задачи» is always on). By default they follow the role; the owner can turn
+// any section on or off for a person in Команда → Доступы (user.sections), the owner always has all.
+const AT_SECTIONS = ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'];
+const AT_ROLE_SECTIONS = {
+  owner: AT_SECTIONS,
+  assistant: AT_SECTIONS,
+  manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'],
+  specialist: ['tasks', 'meet', 'reflection'],
+  trainee: ['tasks', 'meet', 'reflection'],
+};
+function atSections(u) {
+  if (!u || u.role === 'owner') return AT_SECTIONS.slice();
+  const s = Array.isArray(u.sections) ? u.sections : AT_ROLE_SECTIONS[u.role] || ['tasks'];
+  return AT_SECTIONS.filter((k) => k === 'tasks' || s.includes(k));
+}
 const AT_PRIORITIES = ['urgent', 'high', 'normal', 'low'];
 const AT_PRIORITY_LABEL = { urgent: 'срочно', high: 'высокий', normal: 'обычный', low: 'низкий' };
 const AT_FULL_REBUILD_MS = 10 * 60 * 1000;
@@ -6744,6 +6759,164 @@ async function atLoginApi(env, team, action, body, nowMs) {
 }
 
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
+// ── «Аналитика» и цифры клиентов в Avito Tasks ──
+// The tracker reuses the dashboard's own handlers (daily metrics, Avito pull, cabinets, report):
+// the person is already checked by their tracker token and section, so the call goes in with the
+// dashboard password the browser never sees.
+async function atDashCall(env, ctx, url, method, path, body) {
+  const target = new URL(path, url.origin);
+  const req = new Request(target, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'x-dashboard-password': DASHBOARD_PASSWORD },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return handleDashboardApi(req, env, target, ctx);
+}
+const AT_AN_RAW = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
+let AT_DM = null; // { at, rows } — every dailyMetrics record, kept a minute per isolate
+async function atDailyMetrics(kv) {
+  if (AT_DM && Date.now() - AT_DM.at < 60000) return AT_DM.rows;
+  const rows = await listByPrefix(kv, 'dailyMetrics:');
+  AT_DM = { at: Date.now(), rows };
+  return rows;
+}
+const atZeroMetric = () => ({ budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+function atAddMetric(acc, r) { AT_AN_RAW.forEach((k) => { acc[k] += Number(r[k]) || 0; }); return acc; }
+// The latest Avito pull that has this client's numbers (yesterday's, or the day before if the
+// morning pull hasn't run yet) — for the advance currently left in the cabinet.
+async function atLatestPull(kv) {
+  const y = mskYesterday();
+  for (const d of [y, avitoAddDays(y, -1)]) {
+    const pull = await kv.get(`avitoPull:${d}`, 'json');
+    if (pull && pull.results && Object.keys(pull.results).length) return pull;
+  }
+  return null;
+}
+async function atClientsMetrics(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const [projects, rows, pull] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv)]);
+  const y = mskYesterday();
+  const monthKey = y.slice(0, 7);
+  const weekFrom = avitoAddDays(y, -6);
+  const out = {};
+  for (const p of projects) {
+    if (p.inactive) continue;
+    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null };
+    const r = pull && pull.results && pull.results[p.id];
+    if (r && r.advance != null) out[p.id].advance = r.advance;
+    else if (r && r.wallet != null) out[p.id].advance = r.wallet;
+  }
+  for (const r of rows) {
+    const m = out[r.projectId];
+    if (!m || !r.date || r.date > y) continue;
+    if (r.date === y) atAddMetric(m.day, r);
+    if (r.date.startsWith(monthKey)) atAddMetric(m.month, r);
+    if (r.date >= weekFrom) atAddMetric(m.week, r);
+  }
+  Object.values(out).forEach((m) => { m.perDay = m.week.budget / 7; delete m.week; });
+  return out;
+}
+// The Avito pull for a day in the shape the tracker's «Подтянуть» window shows.
+async function atAvitoDay(env, pull) {
+  const projects = (await listByPrefix(env.AGENCY_DASHBOARD_KV, 'project:')).filter((p) => !p.inactive);
+  const pending = new Set((pull && pull.pending) || []);
+  const rows = projects.map((p) => {
+    if (!p.avitoAccountId) return { projectId: p.id, off: 'кабинет не подключен' };
+    const r = pull && pull.results && pull.results[p.id];
+    if (!r) return { projectId: p.id, off: pending.has(p.id) ? 'загружается…' : '—' };
+    if (r.views == null && r.contacts == null && r.spend == null) return { projectId: p.id, off: r.errors && r.errors.length ? 'ошибка Авито' : 'нет данных' };
+    return { projectId: p.id, views: r.views, contacts: r.contacts, spend: r.spend, advance: r.advance != null ? r.advance : r.wallet != null ? r.wallet : null, error: r.errors && r.errors.length ? r.errors[0] : null };
+  });
+  return { date: pull ? pull.date : null, status: pull ? pull.status : 'none', finishedAt: pull ? pull.finishedAt : null, rows };
+}
+async function atAnalyticsApi(env, ctx, url, action, body) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const isDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ''));
+  const dash = async (method, path, payload) => {
+    const res = await atDashCall(env, ctx, url, method, path, payload);
+    return { res, data: await res.json().catch(() => ({})) };
+  };
+  // Таблица: один день (только его записи) или итоги за месяц / всё время, посчитанные здесь.
+  if (action === 'an-table') {
+    const projects = await listByPrefix(kv, 'project:');
+    if (body.mode === 'day') {
+      if (!isDate(body.date)) return json({ error: 'bad_date' }, 400);
+      const recs = await Promise.all(projects.map((p) => kv.get(`dailyMetrics:${p.id}:${body.date}`, 'json')));
+      return json({ rows: projects.map((p, i) => ({ projectId: p.id, ...atAddMetric(atZeroMetric(), recs[i] || {}) })) });
+    }
+    const month = /^\d{4}-\d{2}$/.test(String(body.month || '')) ? body.month : null;
+    const sums = Object.fromEntries(projects.map((p) => [p.id, atZeroMetric()]));
+    for (const r of await atDailyMetrics(kv)) {
+      if (!sums[r.projectId] || (month && !String(r.date || '').startsWith(month))) continue;
+      atAddMetric(sums[r.projectId], r);
+    }
+    return json({ rows: projects.map((p) => ({ projectId: p.id, ...sums[p.id] })) });
+  }
+  if (action === 'an-save') {
+    if (!AT_AN_RAW.includes(body.key)) return json({ error: 'bad_key' }, 400);
+    const { res, data } = await dash('POST', '/api/dashboard/daily-metric', { projectId: body.projectId, date: body.date, [body.key]: body.value });
+    AT_DM = null;
+    return json(data, res.status);
+  }
+  // «Подтянуть»: цифры из кабинетов Авито за день. Нет сбора за этот день (или «Загрузить заново») —
+  // запускаем его; дальше страница опрашивает, пока статус не станет done.
+  if (action === 'an-avito') {
+    const date = isDate(body.date) ? body.date : mskYesterday();
+    let { data } = await dash('GET', `/api/dashboard/avito-pull?date=${date}`);
+    if (!data.pull || body.force) ({ data } = await dash('POST', '/api/dashboard/avito-pull', { date, force: !!body.force }));
+    return json(await atAvitoDay(env, data.pull));
+  }
+  if (action === 'an-avito-apply') {
+    const date = isDate(body.date) ? body.date : null;
+    const pull = date && (await kv.get(`avitoPull:${date}`, 'json'));
+    if (!pull) return json({ error: 'not_found' }, 404);
+    let saved = 0;
+    for (const [projectId, r] of Object.entries(pull.results || {})) {
+      if (!r || !r.linked) continue;
+      const payload = { projectId, date };
+      if (r.views != null) payload.views = r.views;
+      if (r.contacts != null) payload.contacts = r.contacts;
+      if (r.spend != null) payload.budget = r.spend; // a missing spend never overwrites a hand-entered budget
+      if (Object.keys(payload).length === 2) continue;
+      const { res } = await dash('POST', '/api/dashboard/daily-metric', payload);
+      if (res.ok) saved += 1;
+    }
+    AT_DM = null;
+    return json({ saved });
+  }
+  // «Кабинеты Авито» (шестерёнка): ключи и какой кабинет у какого клиента.
+  if (action === 'an-cabinets' || action === 'an-cabinet-link' || action === 'an-cabinet-import') {
+    let out;
+    if (action === 'an-cabinets') out = (await dash('GET', '/api/dashboard/avito-links')).data;
+    if (action === 'an-cabinet-link') out = (await dash('POST', '/api/dashboard/avito-link', { projectId: body.projectId, accountId: body.accountId || null })).data;
+    if (action === 'an-cabinet-import') {
+      const r = await dash('POST', '/api/dashboard/avito-import', { text: String(body.text || '') });
+      if (!r.res.ok) return json(r.data, r.res.status);
+      out = r.data;
+    }
+    const projects = (await listByPrefix(kv, 'project:')).filter((p) => !p.inactive).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    const linkOf = Object.fromEntries((out.links || []).map((l) => [l.projectId, l.accountId]));
+    return json({
+      results: out.results || null,
+      accounts: out.accounts || [],
+      projects: projects.map((p) => ({ id: p.id, name: p.name, accountId: linkOf[p.id] || null })),
+    });
+  }
+  // «Отчёт»: тот же отчёт через рутину Claude Code, что и в дашборде.
+  if (action === 'an-reports') {
+    const [{ data: jobs }, { data: last }] = await Promise.all([dash('GET', '/api/dashboard/report-jobs'), dash('GET', '/api/dashboard/report-last')]);
+    return json({ jobs: jobs.jobs || [], lastTo: last.lastTo || null, yesterday: last.yesterday || mskYesterday() });
+  }
+  if (action === 'an-report') {
+    const { res, data } = await dash('POST', '/api/dashboard/report-job', { dateFrom: body.dateFrom, dateTo: body.dateTo });
+    return json(data, res.status);
+  }
+  if (action === 'an-report-file') {
+    return atDashCall(env, ctx, url, 'GET', `/api/dashboard/report-job/file?id=${encodeURIComponent(String(body.id || ''))}`);
+  }
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleAvitoTasksApi(request, env, url, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   if (!kv) return json({ error: 'kv_not_configured' }, 500);
@@ -6777,7 +6950,9 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   // The assistant sees and manages everything the owner does (Clients, Team, Activity); only the
   // owner's own record (and invite link) stays out of her reach.
   const isAdmin = isOwner || me.role === 'assistant';
-  const seesClients = isAdmin || me.role === 'manager';
+  const sections = atSections(me);
+  const seesClients = sections.includes('clients');
+  const seesAnalytics = sections.includes('analytics');
 
   if (action === 'sync') {
     if (body.initial) {
@@ -6807,7 +6982,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const ver = `${mem.v}.${mem.stamp}`;
     const out = {
       ver,
-      me: { ...atPublicUser(me), roleLabel: me.roleLabel },
+      me: { ...atPublicUser(me), roleLabel: me.roleLabel, sections },
       notifications: notifications || [],
       serverTime: nowMs,
     };
@@ -6917,6 +7092,11 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       if (body[key] && !link(body[key])) return json({ error: 'bad_url', field: key }, 400);
       project[key] = link(body[key]);
     }
+    // «Неактивный клиент» (the pencil on the client card). Grey in the old dashboard meant the same.
+    if ('inactive' in body) {
+      project.inactive = !!body.inactive;
+      project.rowColor = project.inactive ? 'gray' : project.rowColor === 'gray' ? '' : project.rowColor || '';
+    }
     project.updatedAt = new Date(nowMs).toISOString();
     await kv.put(`project:${projectId}`, JSON.stringify(project));
     await atTouch(kv, ['#projects']);
@@ -6925,11 +7105,39 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ ok: true, project: pub });
   }
 
-  // ── Команда и Активность (owner and assistant) ──
-  if (!isAdmin) return json({ error: 'forbidden' }, 403);
+  // A new client (it used to be «Новый проект» in the dashboard).
+  if (action === 'client-new') {
+    if (!seesClients || !isAdmin) return json({ error: 'forbidden' }, 403);
+    const name = atClean(body.name, 120).replace(/\s+/g, ' ');
+    if (name.length < 2) return json({ error: 'bad_name' }, 400);
+    const res = await atDashCall(env, ctx, url, 'POST', '/api/dashboard/project', { name });
+    const data = await res.json();
+    if (!res.ok) return json(data, res.status);
+    const p = data.project;
+    return json({ ok: true, project: { id: p.id, name: p.name, inactive: false, profileUrl: null, briefUrl: null } });
+  }
+
+  // Цифры по клиентам для вкладки «Клиенты»: вчера, текущий месяц, траты за неделю и аванс.
+  if (action === 'clients-metrics') {
+    if (!seesClients) return json({ error: 'forbidden' }, 403);
+    return json({ clients: await atClientsMetrics(env) });
+  }
+
+  // ── «Аналитика» (бывший дашборд): данные грузятся только при открытой вкладке ──
+  if (action.startsWith('an-')) {
+    if (!seesAnalytics) return json({ error: 'forbidden' }, 403);
+    return atAnalyticsApi(env, ctx, url, action, body);
+  }
+
+  // ── Команда, Активность, База знаний ──
+  if (!sections.includes('team') && !sections.includes('kb')) return json({ error: 'forbidden' }, 403);
 
   // «База знаний»: updates to cantor.agency/base through the Claude Code routine.
-  if (action.startsWith('kb-')) return atKbApi(env, me, action, body);
+  if (action.startsWith('kb-')) {
+    if (!sections.includes('kb')) return json({ error: 'forbidden' }, 403);
+    return atKbApi(env, me, action, body);
+  }
+  if (!sections.includes('team')) return json({ error: 'forbidden' }, 403);
 
   const teamView = async () => {
     const seen = await Promise.all(team.users.map((u) => kv.get(`at:seen:${u.id}`)));
@@ -6944,8 +7152,10 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
         activatedAt: u.activatedAt || null,
         seenAt: seen[i] || null,
         createdAt: u.createdAt || null,
+        sections: Array.isArray(u.sections) ? u.sections : null,
       })),
       roles: AT_ROLES,
+      roleSections: AT_ROLE_SECTIONS,
     });
   };
   const target = body.id ? team.users.find((u) => u.id === body.id) : null;
@@ -6963,7 +7173,8 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const name = atClean(input.name, 80).replace(/\s+/g, ' ');
     if (name.length < 2) return json({ error: 'bad_name' }, 400);
     // Nobody becomes owner from the Team tab; the one owner stays as they are.
-    const role = AT_ROLES[input.role] && input.role !== 'owner' ? input.role : 'specialist';
+    // Only the owner and the assistant hand out the assistant role (it sees everything).
+    const role = AT_ROLES[input.role] && input.role !== 'owner' && (isAdmin || input.role !== 'assistant') ? input.role : 'specialist';
     const aliases = Array.isArray(input.aliases) ? input.aliases.map((a) => atClean(a, 60)).filter(Boolean).slice(0, 8) : null;
     const now = new Date(nowMs).toISOString();
     let user = input.id ? team.users.find((u) => u.id === input.id) : null;
@@ -6991,6 +7202,20 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       };
       team.users.push(user);
     }
+    await atPutTeam(kv, team);
+    await atTouch(kv, ['#team']);
+    return teamView();
+  }
+
+  // Разделы для одного человека: null — как у роли.
+  if (action === 'user-sections') {
+    if (!isAdmin) return json({ error: 'forbidden' }, 403);
+    if (!target) return json({ error: 'not_found' }, 404);
+    if (target.role === 'owner') return json({ error: 'forbidden' }, 403);
+    let next = Array.isArray(body.sections) ? AT_SECTIONS.filter((k) => k === 'tasks' || body.sections.includes(k)) : null;
+    const byRole = AT_ROLE_SECTIONS[target.role] || [];
+    if (next && next.length === byRole.length && next.every((k) => byRole.includes(k))) next = null;
+    if (next) target.sections = next; else delete target.sections;
     await atPutTeam(kv, team);
     await atTouch(kv, ['#team']);
     return teamView();

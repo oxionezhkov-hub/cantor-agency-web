@@ -230,7 +230,6 @@ a{color:inherit}
 .st-pop label{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;font-size:14px;cursor:pointer;color:var(--text)}
 .st-pop label:hover{background:var(--sunken)}
 .st-pop input{width:17px;height:17px;accent-color:var(--accent);flex:none}
-.st-pop .st-hint{font-size:12px;color:var(--muted);padding:8px 8px 4px;border-top:1px solid var(--line-2);margin-top:6px;line-height:1.4}
 .st-pop .st-group{font-size:11.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px 2px}
 .filter-toggle{display:none}
 
@@ -254,7 +253,7 @@ a{color:inherit}
 
 /* task card */
 .task{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px;position:relative;overflow:hidden;transition:border-color .15s,box-shadow .15s}
-.task::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pc,transparent)}
+.task::before{content:none}
 .task:hover{border-color:color-mix(in srgb,var(--faint) 60%,var(--line))}
 .task.expanded{border-color:var(--faint);box-shadow:var(--shadow-lg)}
 .task.focus{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:linear-gradient(0deg,var(--surface),var(--surface)),var(--surface)}
@@ -694,6 +693,201 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
   .t-chev{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.rot90{transform:rotate(90deg)} .rot-90{transform:rotate(-90deg)}
+.sk{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--sunken),var(--surface-2),var(--sunken));background-size:200% 100%;animation:skl 1.1s linear infinite}
+@keyframes skl{to{background-position:-200% 0}}
+
+/* ── аналитика ── */
+.an-actions{display:flex;gap:6px;flex-wrap:wrap}
+.an-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.an-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.an-day{display:inline-flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
+.an-day .icon-btn{width:32px;height:32px}
+.an-day .icon-btn[disabled]{opacity:.35;pointer-events:none}
+.an-date{font-weight:600;color:var(--ink);font-size:14px;padding:0 8px;min-width:128px;text-align:center;font-variant-numeric:tabular-nums}
+.an-months{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.an-months::-webkit-scrollbar{display:none}
+.an-months .chip{flex:none;height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--muted)}
+.an-months .chip:hover{color:var(--ink);border-color:var(--faint)}
+.an-months .chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.an-table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.an-skel{display:grid;gap:14px;padding:18px}
+.an-table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+.an-table th{position:sticky;top:0;background:var(--surface-2);font-size:12px;font-weight:600;color:var(--muted);text-align:right;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.an-table td{padding:6px 12px;text-align:right;border-bottom:1px solid var(--line-2);white-space:nowrap;color:var(--text)}
+.an-table:not(.edit) td{padding:11px 12px}
+.an-table th:first-child,.an-table td:first-child{text-align:left;position:sticky;left:0;z-index:1;background:var(--surface);min-width:170px}
+.an-table:not(.edit) th,.an-table:not(.edit) td{padding-left:9px;padding-right:9px}
+.an-table th:first-child{background:var(--surface-2);z-index:2}
+.an-table tbody tr:hover td{background:var(--surface-2)}
+.an-table tr.off td{color:var(--faint)}
+.an-table .gd{border-left:1px solid var(--line)}
+.an-table td.nil{color:var(--faint)}
+.an-table tfoot td{font-weight:700;color:var(--ink);background:var(--surface-2);border-bottom:0;padding:11px 12px}
+.an-table tfoot td:first-child{background:var(--surface-2)}
+.an-name{font-weight:600;color:var(--ink);text-align:left;font-size:14px}
+.an-name:hover{color:var(--accent)}
+.an-tag{display:inline-block;margin-left:8px;font-size:11.5px;font-weight:600;color:var(--muted);background:var(--sunken);border-radius:999px;padding:1px 8px}
+.an-in{width:92px;height:34px;border:1px solid transparent;border-radius:8px;background:var(--sunken);text-align:right;padding:0 10px;font-variant-numeric:tabular-nums;font-size:14px;-moz-appearance:textfield}
+.an-in::-webkit-outer-spin-button,.an-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.an-in:hover{border-color:var(--line)}
+.an-in:focus{outline:none;border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--accent-ring)}
+.an-in::placeholder{color:var(--faint)}
+.an-in[disabled]{opacity:.5}
+.an-cards{display:none}
+.an-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;gap:10px}
+.an-card.off{opacity:.6}
+.an-card-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.an-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.an-fields.der{border-top:1px solid var(--line-2);padding-top:10px}
+.an-f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.an-f span{font-size:11.5px;color:var(--muted);font-weight:500}
+.an-f b{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.an-f .an-in{width:100%}
+.an-foot{margin-top:14px}
+.drawer-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line-2);flex-wrap:wrap}
+.an-drawer{width:min(520px,100%)}
+.an-drawer .drawer-body{padding:14px 16px}
+.an-sum-p{font-size:13px;color:var(--muted);margin-bottom:10px}
+.an-sum{display:grid;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.an-sum-r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 14px;border-bottom:1px solid var(--line-2)}
+.an-sum-r:last-child{border-bottom:0}
+.an-sum-r span{color:var(--muted);font-size:13.5px}
+.an-sum-r b{font-family:var(--display);font-weight:600;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.an-sum-r em{grid-column:2;font-style:normal;font-size:12px;color:var(--faint);text-align:right}
+.an-av-top{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 12px;margin-bottom:12px}
+.an-av-top .label{margin:0}
+.an-av-top .input{max-width:190px}
+.an-av-sub{grid-column:1/-1;font-size:12.5px;color:var(--muted)}
+.an-mini-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.an-mini{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.an-mini th{font-size:11.5px;font-weight:600;color:var(--muted);text-align:right;padding:8px 10px;background:var(--surface-2);white-space:nowrap}
+.an-mini td{padding:8px 10px;text-align:right;border-top:1px solid var(--line-2);white-space:nowrap}
+.an-mini th:first-child,.an-mini td:first-child{text-align:left}
+.an-mini td.nil{color:var(--faint);text-align:left}
+.an-mini td.low{color:var(--red);font-weight:600}
+.an-mini tr.tot td{font-weight:700;color:var(--ink);background:var(--surface-2)}
+.an-mini td .sk{width:100%}
+.an-sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px}
+.an-links{display:grid;gap:2px}
+.an-link{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:10px;font-size:14px}
+.an-link:nth-child(odd){background:var(--surface-2)}
+.an-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:760px){
+  .an-actions{width:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin:0 -12px;padding:0 12px;width:calc(100% + 24px)}
+  .an-actions::-webkit-scrollbar{display:none}
+  .an-actions .btn{flex:none}
+  .an-bar .seg{width:100%;display:flex}
+  .an-bar .seg button{flex:1}
+  .an-nav{width:100%}
+  .an-day{flex:1;justify-content:space-between}
+  .an-table-wrap{display:none}
+  .an-cards{display:grid;gap:10px}
+  .bottom-nav{overflow-x:auto;scrollbar-width:none}
+  .bottom-nav button{min-width:58px}
+}
+
+/* ── клиенты (переработано) ── */
+.ccard{gap:12px;padding:16px}
+.ccard.focus{box-shadow:0 0 0 3px var(--accent-ring);border-color:var(--accent)}
+.cc-state.st-off{background:var(--sunken);color:var(--muted)}
+.cc-todo{display:grid;gap:6px}
+.cc-do{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:9px 12px;font-size:13.5px;color:var(--ink);min-width:0}
+.cc-do>div{flex:1;min-width:0}
+.cc-do>.ic{margin-top:2px}
+.cc-reply{margin-top:8px;background:var(--surface)}
+.cc-do.red{background:var(--red-bg)} .cc-do.red>.ic{color:var(--red)}
+.cc-do.amber{background:var(--amber-bg)} .cc-do.amber>.ic{color:var(--amber)}
+.cc-sub2{font-size:12.5px;color:var(--muted);margin-top:1px}
+.cc-do .cc-tasks{margin-top:3px}
+.cc-do .cc-tasks button{font-size:12.5px;color:var(--text);position:relative;padding-left:12px}
+.cc-do .cc-tasks button::before{content:'';position:absolute;left:2px;top:9px;width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5}
+.cc-foot{gap:6px}
+.cc-mini{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 9px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none}
+.cc-mini:hover{color:var(--ink);background:var(--sunken)}
+.cc-mini .ic{width:13px;height:13px}
+.cc-links2{margin-left:auto;display:inline-flex;align-items:center}
+.cc-mini.edit{width:30px;padding:0;justify-content:center;color:var(--faint)}
+.cc-touch{flex-wrap:wrap}
+@media (max-width:760px){.cc-links2{margin-left:0}}
+.c-row{flex-wrap:nowrap}
+.c-row .search{flex:0 0 240px;min-width:0}
+.c-filt{flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);padding-right:24px}
+.c-filt::-webkit-scrollbar{display:none}
+.c-filt .stat{flex:none}
+@media (max-width:760px){.c-row .search{flex-basis:132px;order:0}.c-row .c-filt{margin:0;width:auto;padding:0 24px 0 0}}
+.cc-metrics2{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px 18px;align-items:baseline;background:var(--surface-2);border-radius:12px;padding:10px 12px;font-variant-numeric:tabular-nums}
+.cc-metrics2 .h{font-size:11.5px;color:var(--muted);font-weight:600;text-align:right}
+.cc-metrics2 .l{font-size:13px;color:var(--muted)}
+.cc-metrics2 b{font-size:14px;color:var(--ink);text-align:right;white-space:nowrap}
+.cc-metrics2 b.warn{color:var(--red)}
+.cc-metrics2 .adv{border-top:1px solid var(--line-2);padding-top:6px;margin-top:2px}
+.cc-metrics2 b.adv{grid-column:2/4}
+.cc-metrics2 em{font-style:normal;font-weight:500;font-size:12.5px}
+.cc-metrics2 .sk{grid-column:1/-1;width:100%}
+.t-row{flex-wrap:nowrap;margin-bottom:18px}
+.t-row .search{flex:0 0 240px;min-width:0}
+.t-row .filter-toggle{display:none!important}
+.t-filt{display:flex!important;flex:1;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0;align-items:center;padding-right:24px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.t-filt::-webkit-scrollbar{display:none}
+.t-filt>*{flex:none}
+.t-filt .seg{order:0;width:auto;display:inline-flex}
+.t-filt .seg button{flex:none;padding:0 12px}
+.t-filt .select,.t-filt .dd-btn{max-width:none;width:auto}
+.t-filt .st-pop{position:fixed;width:270px}
+@media (max-width:760px){.t-row .search{flex-basis:132px;order:0}.t-filt .seg{width:auto}}
+/* Без заголовков и подписей разделов: сразу к делу (кнопки в шапке разделов остаются) */
+.hello .sub{display:none}
+.toolbar.t-row>.search,.c-tools.c-row>.search{flex:none;width:240px;min-width:0;max-width:none}
+@media (max-width:760px){.toolbar.t-row>.search,.c-tools.c-row>.search{width:132px}}
+#fStatusPop{position:fixed;width:270px;max-width:calc(100vw - 16px)}
+.an-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:0;max-width:100%}
+.an-right .an-bar{margin:0;justify-content:flex-end}
+.an-right .an-actions{justify-content:flex-end}
+@media (max-width:760px){.an-right{align-items:stretch;width:100%}.an-right .an-bar{justify-content:flex-start}}
+.an-table td.bad{background:var(--red-bg);color:var(--red);font-weight:600}
+.an-table tbody tr:hover td.bad{background:var(--red-bg)}
+.an-f.bad{background:var(--red-bg);border-radius:8px;padding:4px 6px;margin:-4px -6px}
+.an-f.bad b,.an-f.bad span{color:var(--red)}
+.an-row2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.an-row2 .an-bar{margin:0;justify-content:flex-end;min-width:0}
+.an-row2 .an-actions{flex-wrap:nowrap}
+@media (max-width:760px){.an-row2{flex-direction:column;align-items:stretch}.an-row2 .an-bar{justify-content:flex-start}}
+#view-tasks>.hello{display:none}
+.toolbar.t-row{padding-left:0;padding-right:0}
+.hello h1{display:none}
+#view-clients>.hello,#view-analytics>.hello,#view-reflection>.hello{display:none}
+.hello{justify-content:flex-end}
+.cc-ico{width:32px;height:32px;border-radius:50%;display:inline-grid;place-items:center;color:var(--muted)}
+.cc-ico:hover{background:var(--sunken);color:var(--ink)}
+.cc-ico .ic{width:17px;height:17px}
+.cc-links2{gap:2px}
+.cc-adv{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--muted)}
+.cc-adv .ic{width:16px;height:16px}
+.cc-adv b{color:var(--ink);font-size:14.5px;margin-left:auto;font-variant-numeric:tabular-nums}
+.cc-adv em{flex-basis:100%;font-style:normal;font-size:12.5px;color:var(--muted);padding-left:24px}
+.cc-adv.low{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
+.cc-adv.low em{color:var(--amber);font-weight:500}
+.cc-adv.off em{flex-basis:auto;margin-left:auto;padding:0}
+.cc-check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;color:var(--ink)!important;font-size:13.5px!important;padding:4px 0}
+.cc-check input{width:18px;height:18px;accent-color:var(--accent);margin-top:1px;flex:none}
+.cc-check small{font-size:12px;color:var(--muted);font-weight:500}
+.m-secs{display:grid;gap:8px;padding:10px 12px;background:var(--surface-2);border-radius:12px}
+.m-secs-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.m-secs-list{display:flex;gap:6px;flex-wrap:wrap}
+.sec-chip{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--muted)}
+.sec-chip:hover{border-color:var(--faint);color:var(--ink)}
+.sec-chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.sec-chip[disabled]{opacity:.55;cursor:default}
+.an-table-wrap{scrollbar-width:none}
+.an-table-wrap::-webkit-scrollbar{display:none}
+.an-table:not(.edit){font-size:13px}
+.an-table:not(.edit) th{white-space:normal;line-height:1.25;vertical-align:bottom;min-width:0}
+.an-table:not(.edit) th,.an-table:not(.edit) td{padding-left:7px;padding-right:7px}
+.an-table:not(.edit) th:first-child,.an-table:not(.edit) td:first-child{min-width:140px;padding-left:12px}
+.an-table:not(.edit) .an-name{font-size:13px}
+.c-new{flex:none}
+@media (max-width:760px){.c-new{width:40px;padding:0}.c-new span{display:none}}
 </style>
 </head>
 <body>
@@ -734,6 +928,12 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
   <symbol id="i-crm" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0110 4h4a1.5 1.5 0 011.5 1.5V7M3 12.5h18"/></symbol>
   <symbol id="i-video" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12.2V4.5A1.5 1.5 0 014.5 3h7.7l8.8 8.8a1.5 1.5 0 010 2.1l-7.1 7.1a1.5 1.5 0 01-2.1 0z"/><circle cx="8" cy="8" r="1.5"/></symbol>
+  <symbol id="i-sum" viewBox="0 0 24 24"><path d="M18 5H6l6 7-6 7h12"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-report" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 7a2 2 0 012-2h12v4"/><rect x="3.5" y="8" width="17" height="12" rx="2.5"/><path d="M16 14h.01"/></symbol>
 </svg>
 
 <div id="boot" class="center"><div class="spinner" aria-label="Загрузка"></div></div>
@@ -756,7 +956,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
-        <a class="icon-btn" id="dashLink" href="/dashboard" title="Дашборд" aria-label="Дашборд" hidden><svg class="ic"><use href="#i-chart"/></svg></a>
         <a class="icon-btn" id="crmLink" href="/sales-crm" title="CRM продаж" aria-label="CRM продаж" hidden><svg class="ic"><use href="#i-crm"/></svg></a>
         <button class="me-btn" id="meBtn" aria-label="Профиль"><span class="avatar" id="meAvatar"></span></button>
       </div>
@@ -776,34 +975,34 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       </div>
       <div id="banners"></div>
       <div class="composer" id="composer"></div>
-      <div class="toolbar">
-        <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Поиск по задачам" autocomplete="off"></div>
+      <div class="toolbar t-row">
+        <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Поиск" autocomplete="off"></div>
         <button class="btn btn-ghost btn-sm filter-toggle" id="filterToggle"><svg class="ic ic-sm"><use href="#i-filter"/></svg><span>Фильтры</span></button>
-        <div class="seg" id="scopeSeg">
+        <div class="filters t-filt" id="filters">
+          <div class="seg" id="scopeSeg">
           <button data-scope="all">Все</button>
           <button data-scope="mine">Мои</button>
           <button data-scope="byme">Поставил(а) я</button>
         </div>
-      </div>
-      <div class="filters" id="filters">
-        <select class="select" id="fClient"></select>
-        <select class="select" id="fAssignee"></select>
-        <div class="st-wrap" id="fStatusWrap">
-          <button type="button" class="select st-btn" id="fStatus" aria-haspopup="true" aria-expanded="false">Активные</button>
-          <div class="st-pop" id="fStatusPop" hidden></div>
+          <select class="select" id="fClient"></select>
+          <select class="select" id="fAssignee"></select>
+          <div class="st-wrap" id="fStatusWrap">
+            <button type="button" class="select st-btn" id="fStatus" aria-haspopup="true" aria-expanded="false">Активные</button>
+            <div class="st-pop" id="fStatusPop" hidden></div>
+          </div>
+          <select class="select" id="fPriority">
+            <option value="">Любой приоритет</option>
+            <option value="urgent">Срочно</option>
+            <option value="high">Высокий</option>
+            <option value="normal">Обычный</option>
+            <option value="low">Низкий</option>
+          </select>
+          <select class="select" id="fGroup">
+            <option value="client">Группировать: клиенты</option>
+            <option value="assignee">Группировать: исполнители</option>
+            <option value="due">Группировать: сроки</option>
+          </select>
         </div>
-        <select class="select" id="fPriority">
-          <option value="">Любой приоритет</option>
-          <option value="urgent">Срочно</option>
-          <option value="high">Высокий</option>
-          <option value="normal">Обычный</option>
-          <option value="low">Низкий</option>
-        </select>
-        <select class="select" id="fGroup">
-          <option value="client">Группировать: клиенты</option>
-          <option value="assignee">Группировать: исполнители</option>
-          <option value="due">Группировать: сроки</option>
-        </select>
       </div>
       <div id="lists"></div>
     </section>
@@ -813,15 +1012,35 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="hello">
         <div>
           <h1>Статусы клиентов</h1>
-          <div class="sub">Кому давно не писали, чьи вопросы ждут ответа и какие результаты пора передать клиенту.</div>
+          <div class="sub">Что сделать по каждому клиенту прямо сейчас и как у него идут дела на Авито.</div>
         </div>
-        <div class="stats" id="clientStats"></div>
       </div>
-      <div class="c-tools">
-        <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="cq" type="search" placeholder="Поиск клиента" autocomplete="off"></div>
+      <div class="c-tools c-row">
+        <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="cq" type="search" placeholder="Поиск" autocomplete="off"></div>
+        <div class="stats c-filt" id="clientStats"></div>
+        <button class="btn btn-primary btn-sm c-new" id="newClient" hidden><svg class="ic ic-sm"><use href="#i-plus"/></svg><span>Клиент</span></button>
       </div>
       <div class="cards" id="clientCards"></div>
       <div style="margin-top:14px"><button class="btn btn-quiet btn-sm" id="toggleInactive"></button></div>
+    </section>
+
+    <!-- Аналитика -->
+    <section id="view-analytics" hidden>
+      <div class="hello">
+        <div>
+          <h1>Аналитика</h1>
+          <div class="sub" id="anSub"></div>
+        </div>
+      </div>
+      <div class="an-row2">
+        <div class="an-actions" id="anActions"></div>
+        <div class="an-bar">
+          <div class="seg"><button data-anmode="day">По дням</button><button data-anmode="total">За всё время</button></div>
+          <div class="an-nav" id="anNav"></div>
+        </div>
+      </div>
+      <div id="anBody"></div>
+      <div class="an-foot"><button class="btn btn-quiet btn-sm" id="anInactive" hidden></button></div>
     </section>
 
     <!-- Команда -->
@@ -1157,7 +1376,13 @@ function clientName(t) { const p = t.projectId && projectById(t.projectId); retu
 const isOwner = () => S.me && S.me.role === 'owner';
 // Ассистент видит и делает всё, что руководитель (кроме правки самого руководителя).
 const isAdmin = () => S.me && (S.me.role === 'owner' || S.me.role === 'assistant');
-const canSeeClients = () => S.me && (isAdmin() || S.me.role === 'manager');
+// Разделы трекера: какие видит человек, решает сервер (по роли или как настроил руководитель).
+const SEC_BY_ROLE = {
+  owner: ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'], assistant: ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'],
+  manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'], specialist: ['tasks', 'meet', 'reflection'], trainee: ['tasks', 'meet', 'reflection'],
+};
+const hasSec = (k) => !!S.me && (S.me.sections || SEC_BY_ROLE[S.me.role] || ['tasks']).includes(k);
+const canSeeClients = () => hasSec('clients');
 
 // ── Telegram: открываем приложение, а не вкладку ──
 function tgAppUrl(url) {
@@ -1492,7 +1717,7 @@ function applySync(d, fromCache) {
 function isEditing() {
   const a = document.activeElement;
   if (DD.open) return true; // открыто выпадающее меню — не перерисовываем под ним
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-analytics, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -1500,6 +1725,7 @@ function render() {
   renderHeader();
   if (S.view === 'tasks') renderTasks();
   if (S.view === 'clients') renderClients();
+  if (S.view === 'analytics') renderAnalytics();
   if (S.view === 'team') { if (S.teamTab === 'access') renderTeamStatic(); else loadActivity(); }
   if (S.view === 'meet') renderMeet();
   if (S.view === 'kb' && !KB.rendered) renderKb();
@@ -1510,11 +1736,12 @@ document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRend
 // ── header / navigation ──
 function views() {
   const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }];
-  if (canSeeClients()) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
-  v.push({ id: 'meet', label: 'Встречи', icon: 'cal' });
-  if (S.reflection || isAdmin()) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
-  if (isAdmin()) v.push({ id: 'team', label: 'Команда', icon: 'users' });
-  if (isAdmin()) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
+  if (hasSec('clients')) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
+  if (hasSec('analytics')) v.push({ id: 'analytics', label: 'Аналитика', icon: 'chart' });
+  if (hasSec('meet')) v.push({ id: 'meet', label: 'Встречи', icon: 'cal' });
+  if (hasSec('reflection') && (S.reflection || isAdmin())) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
+  if (hasSec('team')) v.push({ id: 'team', label: 'Команда', icon: 'users' });
+  if (hasSec('kb')) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
   return v;
 }
 function clientAlerts() {
@@ -1537,12 +1764,11 @@ function renderHeader() {
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'clients', 'reflection', 'kb', 'meet'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'clients', 'analytics', 'reflection', 'kb', 'meet'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
   // «Команда» — одна вкладка из двух половин: активность и доступы.
   $('view-team').hidden = !(S.view === 'team' && S.teamTab === 'access');
   $('view-activity').hidden = !(S.view === 'team' && S.teamTab !== 'access');
   document.querySelectorAll('[data-teamtab]').forEach((b) => b.classList.toggle('on', b.dataset.teamtab === (S.teamTab === 'access' ? 'access' : 'activity')));
-  $('dashLink').hidden = !canSeeClients();
   $('crmLink').hidden = !isAdmin();
   if ($('meAvatar').dataset.uid !== S.me.id + S.me.name) { $('meAvatar').outerHTML = avatar(S.me, '', 'meAvatar'); $('meAvatar').dataset.uid = S.me.id + S.me.name; }
   const unread = S.notifications.filter((n) => !n.read).length;
@@ -1557,6 +1783,7 @@ function setView(v) {
   render();
   if (v === 'team' && S.teamTab === 'access') loadTeam();
   if (v === 'meet') loadMeet(true);
+  if (v === 'analytics') loadAnalytics();
   if (v === 'kb') renderKb();
   window.scrollTo({ top: 0 });
 }
@@ -1745,16 +1972,22 @@ function renderStatusFilter() {
   const row = ([k, n]) => `<label><input type="checkbox" data-st="${k}" ${S.f.status.includes(k) ? 'checked' : ''}>${esc(n)}</label>`;
   pop.innerHTML = `<div class="st-presets"><button type="button" data-preset="active" class="${stActive() ? 'on' : ''}">Активные</button><button type="button" data-preset="all" class="${S.f.status.length ? '' : 'on'}">Все</button></div>`
     + '<div class="st-group">По сроку</div>' + ST_OPTS.slice(0, 2).map(row).join('')
-    + '<div class="st-group">По статусу</div>' + ST_OPTS.slice(2).map(row).join('')
-    + '<div class="st-hint">Срок и статус сочетаются: «Срок сегодня» + «В работе» — задачи в работе со сроком сегодня.</div>';
+    + '<div class="st-group">По статусу</div>' + ST_OPTS.slice(2).map(row).join('');
 }
 function setStatuses(list) { S.f.status = list; savePrefs(); renderTasks(); }
 $('fStatus').addEventListener('click', () => {
   const pop = $('fStatusPop');
   pop.hidden = !pop.hidden;
+  if (!pop.hidden) { stOpenedAt = Date.now(); $('fStatus').scrollIntoView({ block: 'nearest', inline: 'nearest' }); const r = $('fStatus').getBoundingClientRect(); Object.assign(pop.style, { left: `${Math.max(8, Math.min(r.left, window.innerWidth - 278))}px`, top: `${r.bottom + 6}px` }); }
   $('fStatus').setAttribute('aria-expanded', String(!pop.hidden));
   renderStatusFilter();
 });
+// меню статусов закреплено у кнопки — при прокрутке закрываем его (кроме первых мгновений после открытия)
+let stOpenedAt = 0;
+document.body.appendChild($('fStatusPop')); // вне листалки фильтров, иначе меню обрезается
+const stCloseOnScroll = () => { if (Date.now() - stOpenedAt > 400) $('fStatusPop').hidden = true; };
+$('filters').addEventListener('scroll', stCloseOnScroll, { passive: true });
+window.addEventListener('scroll', stCloseOnScroll, { passive: true });
 $('fStatusPop').addEventListener('change', (e) => {
   const k = e.target.dataset.st;
   if (!k) return;
@@ -1766,7 +1999,7 @@ $('fStatusPop').addEventListener('click', (e) => {
 });
 document.addEventListener('click', (e) => {
   // Цель могла уже пропасть из DOM (меню перерисовалось по клику внутри него) — это тоже клик внутри.
-  if ($('fStatusPop').hidden || $('fStatusWrap').contains(e.target) || !document.contains(e.target)) return;
+  if ($('fStatusPop').hidden || $('fStatusWrap').contains(e.target) || $('fStatusPop').contains(e.target) || !document.contains(e.target)) return;
   $('fStatusPop').hidden = true;
   $('fStatus').setAttribute('aria-expanded', 'false');
 });
@@ -1792,7 +2025,6 @@ function renderTasks() {
   const f = S.f;
   $('stats').innerHTML = [
     overdue ? stat('overdue', overdue, 'Просрочено', 'var(--red)', f.scope === 'mine' && stIs('overdue') ? 'on' : '') : '',
-    stat('today', today, 'На сегодня', 'var(--amber)', f.scope === 'mine' && stIs('today') ? 'on' : ''),
     stat('progress', inWork, 'В работе', 'var(--blue)', f.scope === 'mine' && stIs('progress') ? 'on' : ''),
     canSeeClients() && toInform ? stat('inform', toInform, 'Сообщить клиенту', 'var(--amber)', f.scope === 'all' && stIs('done') ? 'on' : '') : '',
   ].join('');
@@ -2095,6 +2327,8 @@ function openTask(id) {
   });
 }
 function openFromHash() {
+  const sec = (location.hash.match(/^#(analytics|clients|meet|team|kb)$/) || [])[1];
+  if (sec) { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === sec)) setView(sec); return; }
   if (location.hash === '#reflection') { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === 'reflection')) setView('reflection'); return; }
   const m = location.hash.match(/^#(t|kb)=(.+)$/);
   if (!m) return;
@@ -2393,6 +2627,7 @@ function linksHtml(p) {
     return `<form class="cc-linkform" data-linkform>
       <label>Профиль на Авито<input class="input" name="profileUrl" type="url" inputmode="url" placeholder="https://www.avito.ru/…" value="${esc(p.profileUrl || '')}"></label>
       <label>Бриф<input class="input" name="briefUrl" type="url" inputmode="url" placeholder="Ссылка на анкету или документ" value="${esc(p.briefUrl || '')}"></label>
+      <label class="cc-check"><input type="checkbox" name="inactive" ${p.inactive ? 'checked' : ''}><span>Неактивный клиент</span></label>
       <div class="row"><button type="button" class="btn btn-quiet btn-sm" data-links-cancel>Отмена</button><button class="btn btn-primary btn-sm">Сохранить</button></div>
     </form>`;
   }
@@ -2400,49 +2635,6 @@ function linksHtml(p) {
     ? `<a class="cc-link" href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}${ico('ext')}</a>`
     : `<button class="cc-link add" data-links-edit>${ico('plus')}${esc(label)}</button>`);
   return `<div class="cc-links">${link(p.profileUrl, 'Профиль Авито')}${link(p.briefUrl, 'Бриф')}${p.profileUrl || p.briefUrl ? `<button class="cc-link edit" data-links-edit aria-label="Изменить ссылки" title="Изменить ссылки">${ico('edit')}</button>` : ''}</div>`;
-}
-function renderClients() {
-  if (!canSeeClients()) return;
-  const now = Date.now();
-  const all = S.projects.map((p) => ({ p, i: clientInfo(p) }));
-  const active = all.filter((r) => !r.p.inactive);
-  const waiting = all.filter((r) => r.i.b.pending).length;
-  const red = active.filter((r) => r.i.level === 'red').length;
-  const green = active.filter((r) => r.i.level === 'green').length;
-  const informN = all.reduce((s, r) => s + r.i.inform.length, 0);
-  const stat = (key, n, label, color) => `<button class="stat ${CF.show === key ? 'on' : ''}" data-cstat="${key}"><span class="dot" style="background:${color}"></span>${label} <b>${n}</b></button>`;
-  $('clientStats').innerHTML = [
-    waiting ? stat('waiting', waiting, 'Ждут ответа', 'var(--red)') : '',
-    stat('red', red, 'Нужно внимание', 'var(--red)'),
-    informN ? stat('inform', informN, 'Сообщить результаты', 'var(--amber)') : '',
-    stat('green', green, 'В порядке', 'var(--green)'),
-  ].join('');
-  const filtering = !!(CF.q || CF.show);
-  const rows = all.filter((r) => (prefs.showInactive || filtering || !r.p.inactive) && clientShown(r.p, r.i))
-    .sort((a, b) => (a.p.inactive - b.p.inactive) || b.i.score - a.i.score || a.p.name.localeCompare(b.p.name, 'ru'));
-  const anyChat = (S.clients || []).some((c) => c.chat);
-  $('clientCards').innerHTML = (anyChat ? '' : `<div class="banner" style="grid-column:1/-1;margin:0"><div class="b-ic">${ico('bot')}</div><div class="b-text"><b>Бот пока только в рабочем чате.</b> Когда его добавят в чаты клиентов, здесь сами появятся вопросы клиентов, которые ждут ответа, и дата последнего сообщения от команды. Пока — отмечайте «Клиенту написали» вручную.</div></div>`)
-    + (rows.length ? '' : `<div class="cc-empty">${filtering ? 'Никого не нашлось' : 'Клиентов пока нет'}</div>`)
-    + rows.map(({ p, i }) => {
-      const pend = i.b.pending;
-      const stale = pend && now - pend.since > CLIENT_STALE_MS;
-      const stLabel = pend ? 'Ждёт ответа' : i.wd == null ? 'Нет обновлений' : i.wd === 0 ? 'Писали сегодня' : i.wd === 1 ? 'Писали вчера' : `${i.wd} ${plural(i.wd, 'рабочий день', 'рабочих дня', 'рабочих дней')} без обновлений`;
-      return `<div class="ccard ${i.level === 'red' && !p.inactive ? 'red' : ''} ${p.inactive ? 'off' : ''}" data-client="${esc(p.id)}">
-        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${p.inactive ? '<div class="cc-sub">неактивный клиент</div>' : ''}</div><span class="cc-state st-${i.level}">${esc(stLabel)}</span></div>
-        ${linksHtml(p)}
-        ${pend ? `<div class="cc-line alert ${stale ? 'stale' : ''}">${ico('msg')}<div><b>${stale ? 'Без ответа больше суток' : 'Клиент ждёт ответа'}</b> · ${esc(ago(pend.since, now))}${pend.link ? ` · <a class="tg" href="${esc(pend.link)}"><b>Открыть</b></a>` : ''}<div class="cc-quote">«${esc(pend.text)}»</div></div></div>` : ''}
-        ${i.inform.length ? `<div class="cc-line inform">${ico('check')}<div><b>Готово — передать клиенту: ${i.inform.length}</b><div class="cc-tasks">${i.inform.slice(0, 4).map((t) => `<button data-open="${esc(t.id)}">• ${esc(t.text)}</button>`).join('')}${i.inform.length > 4 ? `<button data-filter>…и ещё ${i.inform.length - 4}</button>` : ''}</div></div></div>` : ''}
-        <div class="cc-last">${ico('send')}<span>${i.last ? `Обновление клиенту: <b>${esc(fmtDay(i.last, now))} в ${fmtTime(i.last)}</b>${i.lastBy ? ` · ${esc(first(i.lastBy))}` : ''} — ${esc(i.lastWhat || '')}` : 'Обновлений клиенту пока не отмечено'}</span></div>
-        <div class="cc-touch"><input class="input" data-touch-note placeholder="Что отправили?" title="Необязательно: что именно отправили клиенту" maxlength="300"><button class="btn btn-primary btn-sm" data-touch>${ico('check', 'ic-sm')}Клиенту написали</button></div>
-        <div class="cc-foot">
-          <div class="cc-nums"><button data-filter title="Задачи клиента">Открыто <b>${i.open.length}</b> →</button>${i.overdue.length ? `<button data-filter style="color:var(--red)">Просрочено <b style="color:inherit">${i.overdue.length}</b></button>` : ''}${i.b.chat ? `<span title="${esc(i.b.chat.title || '')}">${ico('bot', 'ic-sm')} бот в чате</span>` : ''}</div>
-          <button class="btn btn-ghost btn-sm" data-newtask>${ico('plus', 'ic-sm')}Задача</button>
-        </div>
-      </div>`;
-    }).join('');
-  const inactive = S.projects.filter((p) => p.inactive).length;
-  $('toggleInactive').hidden = !inactive || filtering;
-  $('toggleInactive').textContent = prefs.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
 }
 $('toggleInactive').addEventListener('click', () => { prefs.showInactive = !prefs.showInactive; store.set(K_PREFS, JSON.stringify(prefs)); renderClients(); });
 $('cq').addEventListener('input', (e) => { CF.q = e.target.value.trim().toLowerCase().replace(/ё/g, 'е'); renderClients(); });
@@ -2460,13 +2652,13 @@ $('clientCards').addEventListener('submit', async (e) => {
   const btn = form.querySelector('button:not([type])');
   btn.disabled = true;
   try {
-    const res = await api('client-links', { projectId: pid, profileUrl: form.profileUrl.value.trim(), briefUrl: form.briefUrl.value.trim() });
+    const res = await api('client-links', { projectId: pid, profileUrl: form.profileUrl.value.trim(), briefUrl: form.briefUrl.value.trim(), inactive: form.inactive.checked });
     if (res.status === 400) { btn.disabled = false; toast('Это не похоже на ссылку — проверьте адрес'); return; }
     if (!res.ok) throw new Error();
     S.projects = S.projects.map((p) => (p.id === pid ? Object.assign({}, p, res.data.project) : p));
     linksOpen = null;
     renderClients();
-    toast('Ссылки сохранены');
+    toast('Сохранено');
   } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
 });
 $('clientCards').addEventListener('keydown', (e) => {
@@ -3063,6 +3255,7 @@ function renderMembers() {
     ].join('');
     return `<div class="member ${u.active ? '' : 'off'} ${S.freshMember === u.id ? 'fresh' : ''}" data-member="${esc(u.id)}">
       <div class="m-head">${avatar(u, 'lg')}<div><div class="m-name">${esc(u.name)}${me ? ' <span class="muted" style="font-weight:500">(вы)</span>' : ''}</div><div class="m-role">${esc(u.roleLabel)}</div></div><div class="m-flags">${flags}</div></div>
+      ${memberSectionsHtml(u, u.role === 'owner' || locked || !isAdmin())}
       ${S.freshMember === u.id ? '<div class="banner" style="margin:0"><div class="b-ic">' + ico('send') + '</div><div class="b-text"><b>Ссылка готова.</b> Отправьте её человеку — по ней он войдёт в трекер.</div></div>' : ''}
       ${locked ? '' : `<div class="m-link">
         <input class="input" value="${esc(u.invite)}" readonly aria-label="Пригласительная ссылка" onclick="this.select()">
@@ -3630,6 +3823,491 @@ document.addEventListener('paste', (e) => {
   e.preventDefault();
   kbAddFiles(files);
   toast(files.length > 1 ? `Добавлено файлов: ${files.length}` : 'Скриншот добавлен');
+});
+
+// ── вкладка «Аналитика» (то, что было в дашборде) ──
+// Данные грузятся, только когда вкладку открыли, и только за выбранный день или период —
+// итоги за всё время считает сервер. Уже открытые дни берутся из памяти без запроса.
+const AN_RAW = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
+const AN_RAW_L = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
+const AN_DER = ['convAd', 'convDialog', 'convDiag', 'costContact', 'costDiag', 'costClient'];
+const AN_DER_L = { convAd: '% Объявления', convDialog: '% Диалога', convDiag: '% Диагностики', costContact: '₽ Контакта', costDiag: '₽ Диагностики', costClient: '₽ Клиента' };
+const AN_RATE = { views: 'CPV', contacts: 'CPL', diagnostics: 'CPA', sales: 'CAC' };
+const AN_MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const AN_GEN = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+const AN = { mode: 'day', day: null, month: null, rows: null, loading: false, cache: {}, showInactive: false, avDate: null, avRows: null, links: null, jobs: null };
+const anIso = (ms) => new Date(ms + MSK).toISOString().slice(0, 10);
+const anYesterday = () => anIso(Date.now() - 86400000);
+const anAdd = (d, n) => new Date(Date.parse(d + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+const anNum = (v) => Math.round(v || 0).toLocaleString('ru-RU');
+const anMoney = (v) => (v == null ? '—' : `${anNum(v)} ₽`);
+const anPct = (v) => (v == null ? '—' : `${v.toFixed(1).replace('.', ',')}%`);
+const AN_FMT = { convAd: anPct, convDialog: anPct, convDiag: anPct, costContact: anMoney, costDiag: anMoney, costClient: anMoney };
+function anDayLabel(d) {
+  const t = new Date(d + 'T12:00:00Z');
+  const rel = d === anIso(Date.now()) ? 'Сегодня, ' : d === anYesterday() ? 'Вчера, ' : '';
+  return `${rel}${DOW[t.getUTCDay()]} ${t.getUTCDate()} ${AN_GEN[t.getUTCMonth()]}`;
+}
+function anMonths() {
+  const last = anYesterday().slice(0, 7);
+  const out = [];
+  for (let y = 2026, m = 6; `${y}-${pad(m)}` <= last; m === 12 ? (y += 1, m = 1) : (m += 1)) out.push({ key: `${y}-${pad(m)}`, label: AN_MONTHS[m - 1] + (y !== 2026 ? ` ${y}` : '') });
+  return out;
+}
+function anDerive(c) {
+  return {
+    convAd: c.views > 0 ? (c.contacts / c.views) * 100 : null,
+    convDialog: c.contacts > 0 ? (c.diagnostics / c.contacts) * 100 : null,
+    convDiag: c.diagnostics > 0 ? (c.sales / c.diagnostics) * 100 : null,
+    costContact: c.contacts > 0 ? c.budget / c.contacts : null,
+    costDiag: c.diagnostics > 0 ? c.budget / c.diagnostics : null,
+    costClient: c.sales > 0 ? c.budget / c.sales : null,
+  };
+}
+const anKey = () => (AN.mode === 'day' ? `d:${AN.day}` : `t:${AN.month || 'all'}`);
+async function loadAnalytics() {
+  if (!AN.day) AN.day = anYesterday();
+  const key = anKey();
+  if (AN.cache[key]) { AN.rows = AN.cache[key]; AN.loading = false; return renderAnalytics(); }
+  AN.loading = true; AN.rows = null;
+  renderAnalytics();
+  try {
+    const res = await api('an-table', AN.mode === 'day' ? { mode: 'day', date: AN.day } : { mode: 'total', month: AN.month });
+    if (!res.ok) throw new Error();
+    AN.cache[key] = res.data.rows;
+    if (key === anKey()) { AN.rows = res.data.rows; AN.loading = false; renderAnalytics(); }
+  } catch (e) { AN.loading = false; if (key === anKey()) { $('anBody').innerHTML = '<div class="empty">Не получилось загрузить цифры — нет связи. Попробую снова, когда откроете вкладку.</div>'; } }
+}
+function anProjects() { return S.projects.filter((p) => AN.showInactive || !p.inactive).sort((a, b) => (a.inactive - b.inactive) || a.name.localeCompare(b.name, 'ru')); }
+function anRow(pid) { return (AN.rows || []).find((r) => r.projectId === pid) || { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 }; }
+function anTotals() {
+  const ids = new Set(anProjects().map((p) => p.id));
+  return (AN.rows || []).filter((r) => ids.has(r.projectId)).reduce((a, r) => { AN_RAW.forEach((k) => { a[k] += r[k] || 0; }); return a; }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+function renderAnalytics() {
+  if (S.view !== 'analytics') return;
+  const day = AN.mode === 'day';
+  const per = day ? anDayLabel(AN.day || anYesterday()) : AN.month ? anMonths().find((m) => m.key === AN.month).label : 'всё время';
+  $('anSub').textContent = day ? 'Бюджет, просмотры и контакты — из кабинетов Авито, диагностики и продажи вносит менеджер. Ячейки сохраняются сами.' : 'Итоги и конверсии считаются по всем дням периода.';
+  document.querySelectorAll('[data-anmode]').forEach((b) => b.classList.toggle('on', b.dataset.anmode === AN.mode));
+  $('anNav').innerHTML = day
+    ? `<div class="an-day"><button class="icon-btn" data-an="prev" aria-label="Предыдущий день">${ico('chev', 'rot90')}</button><span class="an-date">${esc(per)}</span><button class="icon-btn" data-an="next" aria-label="Следующий день" ${AN.day >= anYesterday() ? 'disabled' : ''}>${ico('chev', 'rot-90')}</button></div>${AN.day !== anYesterday() ? '<button class="btn btn-ghost btn-sm" data-an="yesterday">Вчера</button>' : ''}`
+    : `<div class="an-months"><button class="chip ${AN.month ? '' : 'on'}" data-an="month" data-m="">Всё время</button>${anMonths().map((m) => `<button class="chip ${AN.month === m.key ? 'on' : ''}" data-an="month" data-m="${m.key}">${m.label}</button>`).join('')}</div>`;
+  const ps = anProjects();
+  if (!AN.rows) {
+    $('anBody').innerHTML = `<div class="an-table-wrap"><div class="an-skel">${ps.map(() => '<i class="sk"></i>').join('')}</div></div>`;
+  } else {
+    const cell = (p, k) => {
+      const v = anRow(p.id)[k];
+      if (!day) return k === 'budget' ? anMoney(v) : anNum(v);
+      return `<input class="an-in" type="number" min="0" inputmode="numeric" data-pid="${esc(p.id)}" data-k="${k}" value="${v || ''}" placeholder="—" aria-label="${esc(p.name)}: ${AN_RAW_L[k]}" ${p.inactive ? 'disabled' : ''}>`;
+    };
+    // Подсветка того, что проседает: сравниваем клиента со средним по всем клиентам за тот же период.
+    // Конверсия ниже средней на 25% и больше или стоимость выше средней на 30% и больше — красным.
+    const t = anTotals(); const td = anDerive(t);
+    const keys = day ? [] : AN_DER; // в режиме «По дням» — только вводимые цифры, без конверсий
+    const gd = (k) => (k === keys[0] || k === 'costContact' ? 'gd' : '');
+    const bad = (k, v) => { const avg = td[k]; if (v == null || avg == null) return false; return k.startsWith('conv') ? v < avg * 0.75 : v > avg * 1.3; };
+    const dcell = (k, v, tag) => `<${tag} class="${tag === 'td' ? gd(k) : 'an-f'} ${v == null ? 'nil' : ''} ${bad(k, v) ? 'bad' : ''}"${bad(k, v) ? ` title="Среднее по клиентам: ${AN_FMT[k](td[k])}"` : ''}>`;
+    const der = (p) => { const d = anDerive(anRow(p.id)); return keys.map((k) => `${dcell(k, d[k], 'td')}${AN_FMT[k](d[k])}</td>`).join(''); };
+    const table = `<div class="an-table-wrap"><table class="an-table ${day ? 'edit' : ''}">
+      <thead><tr><th>Клиент</th>${AN_RAW.map((k) => `<th>${AN_RAW_L[k]}</th>`).join('')}${keys.map((k) => `<th class="${gd(k)}">${AN_DER_L[k]}</th>`).join('')}</tr></thead>
+      <tbody>${ps.map((p) => `<tr class="${p.inactive ? 'off' : ''}"><td><button class="an-name" data-an="client" data-pid="${esc(p.id)}">${esc(p.name)}</button>${p.inactive ? '<span class="an-tag">неактивный</span>' : ''}</td>${AN_RAW.map((k) => `<td>${cell(p, k)}</td>`).join('')}${der(p)}</tr>`).join('')}</tbody>
+      <tfoot><tr><td>Итого</td>${AN_RAW.map((k) => `<td>${k === 'budget' ? anMoney(t[k]) : anNum(t[k])}</td>`).join('')}${keys.map((k) => `<td class="${gd(k)}">${AN_FMT[k](td[k])}</td>`).join('')}</tr></tfoot>
+    </table></div>`;
+    const cards = `<div class="an-cards">${ps.map((p) => { const d = anDerive(anRow(p.id)); return `<div class="an-card ${p.inactive ? 'off' : ''}">
+      <div class="an-card-h"><button class="an-name" data-an="client" data-pid="${esc(p.id)}">${esc(p.name)}</button></div>
+      <div class="an-fields">${AN_RAW.map((k) => `<label class="an-f"><span>${AN_RAW_L[k]}</span>${day ? cell(p, k) : `<b>${cell(p, k)}</b>`}</label>`).join('')}</div>
+      ${keys.length ? `<div class="an-fields der">${keys.map((k) => `${dcell(k, d[k], 'div')}<span>${AN_DER_L[k]}</span><b>${AN_FMT[k](d[k])}</b></div>`).join('')}</div>` : ''}
+    </div>`; }).join('')}</div>`;
+    $('anBody').innerHTML = table + cards;
+  }
+  const inactive = S.projects.filter((p) => p.inactive).length;
+  $('anInactive').hidden = !inactive;
+  $('anInactive').textContent = AN.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
+}
+function anRenderActions() {
+  const a = (id, icon, label) => `<button class="btn btn-ghost btn-sm" data-an="${id}">${ico(icon, 'ic-sm')}<span>${label}</span></button>`;
+  $('anActions').innerHTML = a('summary', 'sum', 'Итого') + a('avito', 'refresh', 'Подтянуть') + a('report', 'report', 'Отчёт');
+}
+anRenderActions();
+
+// ── окна аналитики: итоги, Авито, кабинеты, отчёт ──
+function anDrawer(title, body, foot, extra) {
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <aside class="drawer an-drawer" role="dialog" aria-label="${esc(title)}">
+      <div class="drawer-head"><h2>${esc(title)}</h2>${extra || ''}<button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
+      <div class="drawer-body">${body}</div>${foot ? `<div class="drawer-foot">${foot}</div>` : ''}
+    </aside>`;
+}
+function anSummaryLines() {
+  const t = anTotals();
+  return AN_RAW.map((k) => (k === 'budget' ? { label: 'Бюджет', value: `${anNum(t.budget)} руб` } : { label: AN_RAW_L[k], value: anNum(t[k]), sub: `${AN_RATE[k]} ${anNum(t[k] ? t.budget / t[k] : 0)} руб` }));
+}
+function anPeriodText() { return AN.mode === 'day' ? anDayLabel(AN.day) : AN.month ? anMonths().find((m) => m.key === AN.month).label : 'За всё время'; }
+function openAnSummary() {
+  anDrawer('Итого', `<div class="an-sum-p">${esc(anPeriodText())} · все активные клиенты</div><div class="an-sum">${anSummaryLines().map((r) => `<div class="an-sum-r"><span>${r.label}</span><b>${r.value}</b>${r.sub ? `<em>${r.sub}</em>` : '<em></em>'}</div>`).join('')}</div>`,
+    `<button class="btn btn-primary" data-an="copy">${ico('copy', 'ic-sm')}Скопировать</button>`);
+}
+// «Подтянуть»: цифры из кабинетов Авито за день. Если за этот день ещё не собирали — сервер начинает
+// сбор, а окно само обновляется, пока он идёт.
+let anAvitoTimer = null;
+async function openAnAvito(date, force) {
+  clearTimeout(anAvitoTimer);
+  AN.avDate = date || AN.avDate || anYesterday();
+  AN.avRows = null;
+  const body = () => {
+    const pr = AN.avRows;
+    const tot = { views: 0, contacts: 0, spend: 0 };
+    const rows = S.projects.filter((p) => !p.inactive).sort((a, b) => a.name.localeCompare(b.name, 'ru')).map((p) => {
+      const r = pr && pr.rows.find((x) => x.projectId === p.id);
+      if (!pr) return `<tr><td>${esc(p.name)}</td><td colspan="4"><i class="sk"></i></td></tr>`;
+      if (!r || r.off) return `<tr><td>${esc(p.name)}</td><td colspan="4" class="nil">${esc(r ? r.off : '—')}</td></tr>`;
+      tot.views += r.views || 0; tot.contacts += r.contacts || 0; tot.spend += r.spend || 0;
+      const low = r.advance != null && r.advance < 1500;
+      const n = (v) => (v == null ? '—' : anNum(v));
+      return `<tr><td>${esc(p.name)}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : anMoney(r.spend)}</td><td class="${low ? 'low' : ''}">${anMoney(r.advance)}</td></tr>`;
+    }).join('');
+    const sub = !pr ? 'Загружаю…' : pr.status === 'running' ? 'Собираю данные из кабинетов…' : pr.finishedAt ? `Собрано в ${fmtTime(Date.parse(pr.finishedAt))}` : '';
+    return `<div class="an-av-top"><label class="label" for="anAvDate">За дату</label><input class="input" type="date" id="anAvDate" value="${AN.avDate}" max="${anYesterday()}"><div class="an-av-sub">${esc(sub)}</div></div>
+      <div class="an-mini-wrap"><table class="an-mini"><thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th>Аванс сейчас</th></tr></thead><tbody>${rows}${pr ? `<tr class="tot"><td>Итого</td><td>${anNum(tot.views)}</td><td>${anNum(tot.contacts)}</td><td>${anMoney(tot.spend)}</td><td></td></tr>` : ''}</tbody></table></div>`;
+  };
+  const ready = () => AN.avRows && AN.avRows.status === 'done';
+  const draw = () => anDrawer('Подтянуть', body(), `<button class="btn btn-ghost" data-an="av-reload" ${AN.avRows && !ready() ? 'disabled' : ''}>${ico('refresh', 'ic-sm')}Загрузить заново</button><button class="btn btn-primary" data-an="av-apply" ${ready() ? '' : 'disabled'}>Внести в таблицу</button>`,
+    `<button class="icon-btn" data-an="keys" title="Кабинеты Авито" aria-label="Кабинеты Авито">${ico('settings')}</button>`);
+  draw();
+  const want = AN.avDate;
+  const tick = async (again) => {
+    try {
+      const res = await api('an-avito', { date: want, force: !again && !!force });
+      if (!res.ok || AN.avDate !== want || !$('anAvDate')) return;
+      AN.avRows = res.data;
+      draw();
+      if (res.data.status === 'running') anAvitoTimer = setTimeout(() => tick(true), 5000);
+    } catch (e) { if ($('anAvDate')) toast('Не получилось загрузить — нет связи'); }
+  };
+  tick(false);
+}
+// «Кабинеты Авито» (шестерёнка): вставить ключи и выбрать, какой кабинет у какого клиента.
+async function openAnKeys(data) {
+  const accOpts = (sel) => `<option value="">— не подключен —</option>${(AN.cab ? AN.cab.accounts : []).map((a) => `<option value="${esc(a.id)}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)}${a.userId ? ` (${esc(a.userId)})` : ''}</option>`).join('')}`;
+  const results = data && data.results ? `<div class="an-res">${data.results.map((r) => `<div class="${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓' : '✕'} ${esc(r.project || r.name || `строка ${r.line}`)} — ${esc(r.message || '')}</div>`).join('')}</div>` : '';
+  const draw = () => anDrawer('Кабинеты Авито', `<textarea class="textarea" id="anKeys" rows="4" placeholder="Алексей Шевчук	client_id	client_secret"></textarea>${results}
+    <div class="an-links">${AN.cab ? AN.cab.projects.map((p) => `<label class="an-link"><span>${esc(p.name)}</span><select class="select an-cab" data-pid="${esc(p.id)}" aria-label="Кабинет: ${esc(p.name)}">${accOpts(p.accountId)}</select></label>`).join('') : '<i class="sk"></i>'}</div>`,
+  `<button class="btn btn-ghost" data-an="avito">Назад</button><button class="btn btn-primary" data-an="keys-import">Подключить</button>`);
+  if (data) AN.cab = data;
+  draw();
+  if (!AN.cab) { const res = await api('an-cabinets'); if (res.ok) { AN.cab = res.data; draw(); } }
+}
+// «Отчёт»: отчёт по клиентам за период (собирает рутина Claude Code), потом скачать .docx.
+const AN_REP_STATUS = { done: 'готов', not_configured: 'готов', failed: 'готов', queued: 'собирается…', sent: 'собирается…', running: 'собирается…' };
+let anReportTimer = null;
+async function openAnReport() {
+  clearTimeout(anReportTimer);
+  const y = anYesterday();
+  let from = anAdd(y, -6);
+  const draw = () => anDrawer('Отчёт', `<div class="an-dates"><div><label class="label" for="anRepFrom">С</label><input class="input" type="date" id="anRepFrom" value="${from}" max="${y}"></div><div><label class="label" for="anRepTo">По</label><input class="input" type="date" id="anRepTo" value="${y}" max="${y}"></div></div>
+    <div class="an-links">${AN.jobs ? AN.jobs.map((j) => `<div class="an-link"><span>${esc(j.periodLabel || '')}</span>${AN_REP_STATUS[j.status] === 'готов' ? `<button class="btn btn-quiet btn-sm" data-an="rep-file" data-id="${esc(j.id)}" data-name="${esc(j.fileName || 'report.docx')}">${ico('download', 'ic-sm')}Скачать</button>` : '<span class="muted">собирается…</span>'}</div>`).join('') : '<i class="sk"></i>'}</div>`,
+  `<button class="btn btn-primary btn-block" data-an="rep-go">Сформировать</button>`);
+  draw();
+  const load = async () => {
+    const res = await api('an-reports');
+    if (!res.ok || !$('anRepFrom')) return;
+    AN.jobs = res.data.jobs;
+    // По умолчанию — всё, что прошло с прошлого отчёта (выходные, пропуски), но не больше недели.
+    if (res.data.lastTo && res.data.lastTo < y && anAdd(res.data.lastTo, 1) >= anAdd(y, -6) && !AN.repTouched) from = anAdd(res.data.lastTo, 1);
+    const keep = [$('anRepFrom').value, $('anRepTo').value];
+    draw();
+    if (AN.repTouched) { $('anRepFrom').value = keep[0]; $('anRepTo').value = keep[1]; }
+    if (AN.jobs.some((j) => AN_REP_STATUS[j.status] !== 'готов')) anReportTimer = setTimeout(load, 5000);
+  };
+  AN.repTouched = false;
+  AN.reloadReports = load;
+  load();
+}
+async function anDownloadReport(id, name) {
+  const payload = JSON.stringify({ token: S.token, id });
+  for (let n = 0; n < ROUTES.length; n += 1) {
+    const idx = (routeFirst + n) % ROUTES.length;
+    try {
+      const res = await fetch(ROUTES[idx](API_PATH + 'an-report-file'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload });
+      if (!res.ok) { if (n < ROUTES.length - 1 && (res.status === 502 || res.status === 504)) continue; break; }
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = url; a.download = name || 'report.docx';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      return;
+    } catch (e) { /* следующий маршрут */ }
+  }
+  toast('Не удалось скачать отчёт');
+}
+
+$('view-analytics').addEventListener('click', (e) => {
+  const m = e.target.closest('[data-anmode]');
+  if (m && AN.mode !== m.dataset.anmode) { AN.mode = m.dataset.anmode; loadAnalytics(); return; }
+  if (e.target.closest('#anInactive')) { AN.showInactive = !AN.showInactive; renderAnalytics(); return; }
+  const b = e.target.closest('[data-an]');
+  if (!b) return;
+  const a = b.dataset.an;
+  if (a === 'prev' || a === 'next') { AN.day = anAdd(AN.day, a === 'prev' ? -1 : 1); if (AN.day > anYesterday()) AN.day = anYesterday(); loadAnalytics(); }
+  if (a === 'yesterday') { AN.day = anYesterday(); loadAnalytics(); }
+  if (a === 'month') { AN.month = b.dataset.m || null; loadAnalytics(); }
+  if (a === 'client') { CF.q = ''; CF.show = ''; CF.focus = b.dataset.pid; setView('clients'); }
+  if (a === 'summary') { if (!AN.rows) { toast('Цифры ещё загружаются…'); return; } openAnSummary(); }
+  if (a === 'avito') openAnAvito();
+  if (a === 'report') openAnReport();
+});
+$('view-analytics').addEventListener('focusout', async (e) => {
+  const inp = e.target.closest('.an-in');
+  if (!inp) return;
+  const r = (AN.rows || []).find((x) => x.projectId === inp.dataset.pid);
+  const v = Math.max(0, Math.round(+inp.value || 0));
+  if (!r || (r[inp.dataset.k] || 0) === v) return;
+  const before = r[inp.dataset.k];
+  r[inp.dataset.k] = v;
+  Object.keys(AN.cache).filter((k) => k.startsWith('t:')).forEach((k) => delete AN.cache[k]);
+  try {
+    const res = await api('an-save', { projectId: inp.dataset.pid, date: AN.day, key: inp.dataset.k, value: v });
+    if (!res.ok) throw new Error();
+    toast('Сохранено');
+  } catch (err) { r[inp.dataset.k] = before; toast('Не сохранилось — нет связи'); renderAnalytics(); }
+});
+$('view-analytics').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.closest('.an-in')) e.target.blur(); });
+$('drawerRoot').addEventListener('click', async (e) => {
+  if (e.target.closest('[data-close]')) { clearTimeout(anAvitoTimer); clearTimeout(anReportTimer); }
+  const b = e.target.closest('[data-an]');
+  if (!b) return;
+  const a = b.dataset.an;
+  if (a === 'copy') {
+    const text = `${anPeriodText()}\n` + anSummaryLines().map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
+    try { await navigator.clipboard.writeText(text); toast('Скопировано'); } catch (err) { toast('Не получилось скопировать — выделите текст вручную'); }
+  }
+  if (a === 'avito') openAnAvito();
+  if (a === 'keys') { clearTimeout(anAvitoTimer); openAnKeys(); }
+  if (a === 'av-reload') openAnAvito(AN.avDate, true);
+  if (a === 'av-apply' && AN.avRows) {
+    b.disabled = true;
+    try {
+      const res = await api('an-avito-apply', { date: AN.avDate });
+      if (!res.ok) throw new Error();
+      delete AN.cache[`d:${AN.avDate}`];
+      Object.keys(AN.cache).filter((k) => k.startsWith('t:')).forEach((k) => delete AN.cache[k]);
+      $('drawerRoot').innerHTML = '';
+      Object.assign(AN, { mode: 'day', day: AN.avDate });
+      loadAnalytics();
+      CM.data = null;
+      toast(`Внесено клиентов: ${res.data.saved}`);
+    } catch (err) { b.disabled = false; toast('Не сохранилось — нет связи'); }
+  }
+  if (a === 'keys-import') {
+    const text = ($('anKeys') || {}).value || '';
+    if (!text.trim()) { toast('Вставьте хотя бы одну строку с ключами'); return; }
+    b.disabled = true; b.textContent = 'Проверяю ключи…';
+    try {
+      const res = await api('an-cabinet-import', { text });
+      if (!res.ok) throw new Error();
+      openAnKeys(res.data);
+    } catch (err) { b.disabled = false; b.textContent = 'Подключить'; toast('Не получилось — нет связи'); }
+  }
+  if (a === 'rep-go') {
+    const dateFrom = $('anRepFrom').value; const dateTo = $('anRepTo').value;
+    if (!dateFrom || !dateTo || dateFrom > dateTo) { toast('Проверьте даты'); return; }
+    b.disabled = true;
+    try {
+      const res = await api('an-report', { dateFrom, dateTo });
+      if (!res.ok) throw new Error();
+      toast('Отчёт собирается — можно закрыть окно');
+      clearTimeout(anReportTimer);
+      AN.reloadReports();
+    } catch (err) { toast('Отчёт не запустился — попробуйте ещё раз'); }
+    b.disabled = false;
+  }
+  if (a === 'rep-file') anDownloadReport(b.dataset.id, b.dataset.name);
+});
+$('drawerRoot').addEventListener('change', async (e) => {
+  if (e.target.id === 'anAvDate' && e.target.value) openAnAvito(e.target.value);
+  if (e.target.id === 'anRepFrom' || e.target.id === 'anRepTo') AN.repTouched = true;
+  const cab = e.target.closest('.an-cab');
+  if (cab) {
+    try {
+      const res = await api('an-cabinet-link', { projectId: cab.dataset.pid, accountId: cab.value || null });
+      if (!res.ok) throw new Error();
+      AN.cab = res.data;
+      toast('Сохранено');
+    } catch (err) { toast('Не сохранилось — нет связи'); }
+  }
+});
+
+// ── вкладка «Клиенты»: по каждому клиенту — что сделать сейчас и как идут дела на Авито ──
+// Цифры с Авито (неделя, ₽ контакта, аванс) грузятся отдельно и только когда вкладка открыта.
+const CM = { data: null, loading: false, loadedAt: 0 };
+async function loadClientMetrics(force) {
+  if (CM.loading || (!force && CM.data && Date.now() - CM.loadedAt < 5 * 60000)) return;
+  CM.loading = true;
+  try { const res = await api('clients-metrics'); if (res.ok) { CM.data = res.data.clients; CM.loadedAt = Date.now(); } } catch (e) { /* покажем без цифр */ }
+  CM.loading = false;
+  if (S.view === 'clients' && !isEditing()) renderClients();
+}
+function clientTodo(p, i, m, now) {
+  const out = [];
+  const pend = i.b.pending;
+  if (i.wd == null || i.wd >= 3) out.push({ kind: 'silent', tone: 'red', html: `${ico('send')}<div><b>Пора написать клиенту</b><div class="cc-sub2">${i.last ? `последний раз ${esc(fmtDay(i.last, now))}${i.lastWhat ? ` — ${esc(i.lastWhat)}` : ''}` : 'обновлений ещё не было'}</div></div>` });
+  if (i.inform.length) out.push({ kind: 'inform', tone: 'amber', html: `${ico('check')}<div><b>Сделано — расскажите клиенту</b><div class="cc-tasks">${i.inform.slice(0, 3).map((t) => `<button data-open="${esc(t.id)}">${esc(t.text)}</button>`).join('')}${i.inform.length > 3 ? `<button data-filter>…и ещё ${i.inform.length - 3}</button>` : ''}</div></div>` });
+  const daysLeft = m && m.advance != null && m.perDay > 0 ? Math.floor(m.advance / m.perDay) : null;
+  if (m && m.advance != null && m.advance < 1500) out.push({ kind: 'money', tone: 'amber', html: `${ico('wallet')}<div><b>Заканчивается аванс: ${anMoney(m.advance)}</b><div class="cc-sub2">${daysLeft < 1 ? 'хватит меньше чем на день' : `хватит примерно на ${daysLeft} ${plural(daysLeft, 'день', 'дня', 'дней')}`} — попросите пополнить</div></div>` });
+  return out;
+}
+function clientMetricsHtml(p, m) {
+  if (p.inactive) return '';
+  if (!CM.data) return `<div class="cc-metrics2"><i class="sk"></i><i class="sk"></i><i class="sk"></i></div>`;
+  if (!m) return '';
+  const cpl = (r) => (r.contacts ? r.budget / r.contacts : null);
+  const conv = (r) => (r.views ? (r.contacts / r.views) * 100 : null);
+  const mon = AN_MONTHS[+m.monthKey.slice(5, 7) - 1];
+  const dayCpl = cpl(m.day); const monCpl = cpl(m.month);
+  const dayConv = conv(m.day); const monConv = conv(m.month);
+  return `<div class="cc-metrics2">
+    <span></span><span class="h">Вчера</span><span class="h">${esc(mon)}</span>
+    <span class="l">Контакты</span><b>${anNum(m.day.contacts)}</b><b>${anNum(m.month.contacts)}</b>
+    <span class="l">% в контакт</span><b class="${dayConv != null && monConv && dayConv < monConv * 0.75 ? 'warn' : ''}">${anPct(dayConv)}</b><b>${anPct(monConv)}</b>
+    <span class="l">₽ контакта</span><b class="${dayCpl && monCpl && dayCpl > monCpl * 1.2 ? 'warn' : ''}">${anMoney(dayCpl)}</b><b>${anMoney(monCpl)}</b>
+    <span class="l">Бюджет</span><b>${anMoney(m.day.budget)}</b><b>${anMoney(m.month.budget)}</b>
+  </div>`;
+}
+// Аванс — отдельным блоком: сумма в кабинете и на сколько дней её хватит при нынешних тратах.
+function clientAdvanceHtml(p, m) {
+  if (p.inactive || !CM.data || !m) return '';
+  if (m.advance == null) return `<div class="cc-adv off">${ico('wallet')}<span>Аванс</span><em>${m.linked ? 'нет данных' : 'кабинет не подключён'}</em></div>`;
+  const days = m.perDay > 0 ? Math.floor(m.advance / m.perDay) : null;
+  const low = m.advance < 1500; // предупреждаем, только когда в кабинете меньше 1 500 ₽
+  return `<div class="cc-adv ${low ? 'low' : ''}">${ico('wallet')}<span>Аванс сейчас</span><b>${anMoney(m.advance)}</b>${low ? `<em>${days != null && days >= 1 ? `хватит на ~${days} ${plural(days, 'день', 'дня', 'дней')}` : 'хватит меньше чем на день'} — попросите пополнить</em>` : ''}</div>`;
+}
+function renderClients() {
+  if (!canSeeClients()) return;
+  if (S.view === 'clients') loadClientMetrics(false);
+  const now = Date.now();
+  const all = S.projects.map((p) => { const i = clientInfo(p); const m = CM.data && CM.data[p.id]; return { p, i, m, todo: p.inactive ? [] : clientTodo(p, i, m, now) }; });
+  const active = all.filter((r) => !r.p.inactive);
+  const has = (kind) => active.filter((r) => r.todo.some((t) => t.kind === kind)).length;
+  const attention = active.filter((r) => r.todo.length).length;
+  const stat = (key, n, label, color) => (n || key === '' ? `<button class="stat ${CF.show === key ? 'on' : ''}" data-cstat="${key}">${color ? `<span class="dot" style="background:${color}"></span>` : ''}${label} <b>${n}</b></button>` : '');
+  $('clientStats').innerHTML = [
+    stat('', active.length, 'Все', ''),
+    stat('attention', attention, 'Нужно действие', 'var(--accent)'),
+    stat('silent', has('silent'), 'Давно не писали', 'var(--red)'),
+    stat('inform', has('inform'), 'Рассказать о сделанном', 'var(--amber)'),
+    stat('money', has('money'), 'Кончается аванс', 'var(--amber)'),
+  ].join('');
+  const filtering = !!(CF.q || CF.show);
+  const shown = (r) => {
+    if (CF.q && !r.p.name.toLowerCase().replace(/ё/g, 'е').includes(CF.q)) return false;
+    if (CF.show === 'attention') return r.todo.length > 0;
+    if (CF.show) return r.todo.some((t) => t.kind === CF.show);
+    return true;
+  };
+  const weight = { waiting: 1000, silent: 400, money: 300, overdue: 200, inform: 150 };
+  // наверх — клиенты с уведомлениями (сначала самые срочные), остальные ниже по алфавиту
+  const score = (r) => r.todo.reduce((s, t) => s + (weight[t.kind] || 0), 0);
+  const rows = all.filter((r) => (prefs.showInactive || filtering || !r.p.inactive) && shown(r))
+    .sort((a, b) => (a.p.inactive - b.p.inactive) || score(b) - score(a) || a.p.name.localeCompare(b.p.name, 'ru'));
+  $('clientCards').innerHTML = (rows.length ? '' : `<div class="cc-empty">${filtering ? 'Никого не нашлось' : 'Клиентов пока нет'}</div>`)
+    + rows.map(({ p, i, m, todo }) => {
+      const stLabel = p.inactive ? 'неактивный' : i.wd == null ? 'Нет обновлений' : i.wd === 0 ? 'Писали сегодня' : i.wd === 1 ? 'Писали вчера' : `${i.wd} ${plural(i.wd, 'рабочий день', 'рабочих дня', 'рабочих дней')} тишины`;
+      const level = p.inactive ? 'off' : todo.some((t) => t.tone === 'red') ? 'red' : todo.length ? 'amber' : 'green';
+      const link = (url, label, icon) => (url ? `<a class="cc-ico" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}</a>` : '');
+      return `<div class="ccard lv-${level} ${p.inactive ? 'off' : ''} ${CF.focus === p.id ? 'focus' : ''}" data-client="${esc(p.id)}">
+        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div></div>
+          ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
+        ${clientMetricsHtml(p, m)}
+        ${clientAdvanceHtml(p, m)}
+        ${p.inactive ? '' : todo.some((t) => t.kind !== 'money') ? `<div class="cc-todo">${todo.filter((t) => t.kind !== 'money').map((t) => `<div class="cc-do ${t.tone}">${t.html}</div>`).join('')}</div>` : ''}
+        ${linksOpen === p.id ? linksHtml(p) : ''}
+        <div class="cc-foot">
+          <button class="btn btn-ghost btn-sm" data-newtask>${ico('plus', 'ic-sm')}Задача</button>
+          <button class="cc-mini" data-filter>Задачи: ${i.open.length}${ico('chev', 'rot-90')}</button>
+          <span class="cc-links2">${link(p.profileUrl, 'Профиль на Авито', 'tag')}${link(p.briefUrl, 'Бриф', 'report')}<button class="cc-ico" data-links-edit title="Изменить клиента: ссылки, активность" aria-label="Изменить клиента">${ico('edit')}</button></span>
+        </div>
+      </div>`;
+    }).join('');
+  $('newClient').hidden = !isAdmin();
+  const inactive = S.projects.filter((p) => p.inactive).length;
+  $('toggleInactive').hidden = !inactive || filtering;
+  $('toggleInactive').textContent = prefs.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
+  if (CF.focus) {
+    const el = $('clientCards').querySelector(`[data-client="${CSS.escape(CF.focus)}"]`);
+    CF.focus = null;
+    if (el) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50);
+  }
+}
+
+// ── доступ к разделам: по умолчанию от роли, руководитель может включить или выключить любой раздел человеку ──
+const SEC_ALL = [['tasks', 'Задачи'], ['clients', 'Клиенты'], ['analytics', 'Аналитика'], ['meet', 'Встречи'], ['reflection', 'Рефлексия'], ['team', 'Команда'], ['kb', 'База знаний']];
+const roleSections = (role) => ((S.team && S.team.roleSections) || SEC_BY_ROLE)[role] || ['tasks'];
+function memberSections(u) { return u.role === 'owner' ? SEC_ALL.map(([k]) => k) : u.sections || roleSections(u.role); }
+function memberSectionsHtml(u, locked) {
+  const on = memberSections(u);
+  const custom = !!u.sections;
+  return `<div class="m-secs">
+    <div class="m-secs-h"><span class="label" style="margin:0">Разделы</span>${custom ? `<span class="tag tag-progress">своя настройка</span>${locked ? '' : '<button class="btn btn-quiet btn-sm" data-sec-reset>Как у роли</button>'}` : '<span class="muted" style="font-size:12.5px">как у роли</span>'}</div>
+    <div class="m-secs-list">${SEC_ALL.map(([k, label]) => {
+      const fixed = locked || k === 'tasks';
+      return `<button type="button" class="sec-chip ${on.includes(k) ? 'on' : ''}" data-sec-toggle="${k}" ${fixed ? 'disabled' : ''} aria-pressed="${on.includes(k)}">${on.includes(k) ? ico('check', 'ic-sm') : ''}${label}</button>`;
+    }).join('')}</div>
+  </div>`;
+}
+$('members').addEventListener('click', async (e) => {
+  const card = e.target.closest('[data-member]');
+  if (!card || !S.team) return;
+  const u = S.team.users.find((x) => x.id === card.dataset.member);
+  const t = e.target.closest('[data-sec-toggle]');
+  const r = e.target.closest('[data-sec-reset]');
+  if (!u || (!t && !r)) return;
+  const before = u.sections;
+  if (r) u.sections = null;
+  else {
+    const k = t.dataset.secToggle;
+    const cur = memberSections(u);
+    const next = cur.includes(k) ? cur.filter((x) => x !== k) : SEC_ALL.map(([x]) => x).filter((x) => cur.includes(x) || x === k);
+    const role = roleSections(u.role);
+    u.sections = next.length === role.length && next.every((x) => role.includes(x)) ? null : next;
+  }
+  renderMembers();
+  try {
+    const res = await api('user-sections', { id: u.id, sections: u.sections });
+    if (!res.ok) throw new Error();
+    S.team = res.data;
+    renderMembers();
+    toast(`${first(u.name)}: доступ к разделам обновлён`);
+  } catch (err) { u.sections = before; renderMembers(); toast('Не сохранилось — нет связи'); }
+});
+
+// Новый клиент (раньше — «Новый проект» в дашборде).
+$('newClient').addEventListener('click', () => {
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <aside class="drawer an-drawer" role="dialog" aria-label="Новый клиент">
+      <div class="drawer-head"><h2>Новый клиент</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
+      <form class="drawer-body" id="newClientForm"><label class="label" for="newClientName">Имя</label><input class="input" id="newClientName" maxlength="120" placeholder="Имя Фамилия" autocomplete="off" required></form>
+      <div class="drawer-foot"><button class="btn btn-primary" type="submit" form="newClientForm">Создать</button></div>
+    </aside>`;
+  setTimeout(() => $('newClientName') && $('newClientName').focus(), 30);
+});
+$('drawerRoot').addEventListener('submit', async (e) => {
+  if (e.target.id !== 'newClientForm') return;
+  e.preventDefault();
+  const name = $('newClientName').value.trim();
+  if (name.length < 2) return;
+  const btn = $('drawerRoot').querySelector('[form="newClientForm"]');
+  btn.disabled = true;
+  try {
+    const res = await api('client-new', { name });
+    if (!res.ok) throw new Error();
+    S.projects = [...S.projects, res.data.project];
+    $('drawerRoot').innerHTML = '';
+    CM.data = null;
+    renderClients();
+    toast(`Клиент «${name}» добавлен`);
+  } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
 });
 
 boot();
