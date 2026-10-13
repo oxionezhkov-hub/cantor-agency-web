@@ -5926,7 +5926,34 @@ async function atSeedTeam(env) {
 // gets her invite link from the bot; the owner is told either way.
 const AT_NEW_MEMBERS = [
   { id: 'sofia', name: 'София Романовна', role: 'assistant', aliases: ['София', 'Софья', 'Соня'], tgId: '993366229', tgUsername: 'sofiuspasskaya' },
+  { id: 'stanislav', name: 'Станислав', role: 'trainee', aliases: ['Станислав', 'Стас'], tgId: '426349175' },
 ];
+// The access message for a new member: their own invite link (both addresses) and what the bot does.
+// Sent when they are added — or, if they hadn't opened the bot yet (Telegram doesn't let a bot write
+// first), as soon as they press Start.
+async function atWelcomeMember(env, user) {
+  const res = await botApi(env, 'sendMessage', {
+    chat_id: Number(user.tgId),
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    text: [
+      `<b>${escapeHtml(atFirstName(user.name))}, вас добавили в Avito Tasks</b> — трекер задач команды Cantor Agency.`,
+      '',
+      'Откройте свою ссылку один раз — дальше трекер будет открываться на этом устройстве сам:',
+      atInviteUrl(user),
+      `Если без VPN не открывается: ${BOT_WORKER_ORIGIN}/avito-tasks?invite=${user.invite}`,
+      '',
+      'Telegram уже подключён: сюда будут приходить ваши задачи, напоминания о сроках и сводка в 10:00. /tasks — ваши задачи.',
+    ].join('\n'),
+    reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: atInviteUrl(user) }]] },
+  });
+  if (!res || !res.ok) return false;
+  await botApi(env, 'setMyCommands', { commands: AT_EMPLOYEE_COMMANDS, scope: { type: 'chat', chat_id: Number(user.tgId) } });
+  const team = await atGetTeam(env);
+  const rec = team.users.find((u) => u.id === user.id);
+  if (rec && !rec.welcomedAt) { rec.welcomedAt = new Date().toISOString(); await atPutTeam(env.AGENCY_DASHBOARD_KV, team); }
+  return true;
+}
 async function atEnsureNewMembers(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
   for (const m of AT_NEW_MEMBERS) {
@@ -5942,28 +5969,12 @@ async function atEnsureNewMembers(env) {
     team.users.push(user);
     await atPutTeam(kv, team);
     await atTouch(kv, ['#team']);
-    const first = atFirstName(user.name);
-    const res = await botApi(env, 'sendMessage', {
-      chat_id: Number(user.tgId),
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-      text: [
-        `<b>${escapeHtml(first)}, вас добавили в Avito Tasks</b> — трекер задач команды Cantor Agency.`,
-        '',
-        'Откройте свою ссылку один раз — дальше трекер будет открываться на этом устройстве сам:',
-        atInviteUrl(user),
-        `Если без VPN не открывается: ${BOT_WORKER_ORIGIN}/avito-tasks?invite=${user.invite}`,
-        '',
-        'Telegram уже подключён: сюда будут приходить ваши задачи, напоминания о сроках и сводка в 10:00. /tasks — ваши задачи.',
-      ].join('\n'),
-      reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: atInviteUrl(user) }]] },
-    });
-    if (res && res.ok) await botApi(env, 'setMyCommands', { commands: AT_EMPLOYEE_COMMANDS, scope: { type: 'chat', chat_id: Number(user.tgId) } });
+    const sent = await atWelcomeMember(env, user);
     await botNotifyOwner(env, [
-      `👤 <b>В команду добавлена ${escapeHtml(user.name)}</b> — ${escapeHtml(user.roleLabel)}${user.tgUsername ? ` (@${escapeHtml(user.tgUsername)})` : ''}.`,
-      res && res.ok
-        ? 'Бот уже отправил ей ссылку и будет присылать задачи.'
-        : `Бот не смог написать ей: она ещё не открывала бота. Отправьте ей ссылку:\n${atInviteUrl(user)}\nи попросите нажать Start у бота — тогда начнут приходить задачи.`,
+      `👤 <b>В команду добавлен(а) ${escapeHtml(user.name)}</b> — ${escapeHtml(user.roleLabel)}${user.tgUsername ? ` (@${escapeHtml(user.tgUsername)})` : ''}.`,
+      sent
+        ? 'Бот уже отправил ссылку на трекер и будет присылать задачи.'
+        : `Бот пока не может написать: человек ещё не открывал бота. Как только нажмёт Start — бот сам пришлёт ссылку на трекер. Ссылка на всякий случай:\n${atInviteUrl(user)}`,
     ].join('\n'));
   }
 }
@@ -7701,6 +7712,8 @@ const AT_EMPLOYEE_COMMANDS = [
 // Private chat with a team member the bot knows (not the owner — see botOnOwnerMessage).
 async function atOnMemberMessage(env, msg, user) {
   const text = String(msg.text || '').trim();
+  // Added before they had opened the bot: the first message (usually /start) gets their access.
+  if (!user.welcomedAt && !user.activatedAt && AT_NEW_MEMBERS.some((m) => m.id === user.id) && (await atWelcomeMember(env, user))) return;
   const cmd = text.startsWith('/') ? text.slice(1).split(/[\s@]/)[0].toLowerCase() : null;
   if (cmd === 'tasks' || cmd === 'my') return botSend(env, msg.chat.id, await atBuildMyTasks(env, user), { reply_markup: { inline_keyboard: [[{ text: 'Открыть Avito Tasks', url: AT_PAGE_URL }]] } });
   return botSend(env, msg.chat.id, [
