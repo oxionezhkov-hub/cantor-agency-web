@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аналитика проектов Cantor Agency (старая версия)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;--red-dark:#C42D13;--red-light:#FF6347;
+  --dark:#0F0F0F;--dark2:#1A1A1A;--text:#1C1C1C;--muted:#888;
+  --bg:#F6F5F2;--white:#FFFFFF;--border:#E2E0DC;
+  --accent-bg:#FFF3F0;--warm-bg:#FFFBF9;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --shadow-red:0 8px 28px rgba(232,57,29,0.28);
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:20px;
+  --green:#1e8449;--green-bg:#eafaf1;
+  --amber:#9a6f00;--amber-bg:#fef9e7;
+  --gray:#6b6b6b;--gray-bg:#f1f0ed;
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+.hidden{display:none !important}
+.dim{visibility:hidden}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+
+/* ── Password gate ── */
+#gate{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+#gate .box{background:var(--white);border-radius:var(--r-lg);padding:36px 32px;width:100%;max-width:340px;box-shadow:var(--shadow-md);text-align:center}
+#gate h1{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;margin-bottom:18px}
+#gate input{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;font-size:15px;margin-bottom:12px}
+#gate button{width:100%;background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:12px;font-size:14px;font-weight:600}
+#gate button:hover{background:var(--red-dark)}
+#gate .err{color:var(--red);font-size:12px;margin-bottom:10px;min-height:14px}
+
+/* ── App shell ── */
+#app{display:none}
+#app.ready{display:block}
+header.top{background:var(--dark);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.top-actions{display:flex;gap:10px;align-items:center;min-height:20px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab-btn{background:none;border:none;color:#bbb;padding:10px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600}
+.tab-btn.active{background:var(--red);color:#fff}
+.tab-btn:hover:not(.active){background:#2a2a2a;color:#fff}
+main{padding:24px 28px 80px;max-width:1300px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+
+.month-toggle{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.month-toggle button{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:8px 16px;font-size:13px;font-weight:600;color:var(--muted)}
+.month-toggle button.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+.btn{background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:10px 16px;font-size:13px;font-weight:600;box-shadow:var(--shadow-red)}
+.btn:hover{background:var(--red-dark)}
+.btn.secondary{background:var(--white);color:var(--text);border:1.5px solid var(--border);box-shadow:none}
+.btn.secondary:hover{border-color:var(--red);color:var(--red)}
+.btn.small{padding:6px 10px;font-size:12px}
+.btn.danger{background:var(--white);color:var(--red);border:1.5px solid var(--border);box-shadow:none}
+.btn.danger:hover{border-color:var(--red);background:var(--accent-bg)}
+.btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(255,255,255,.18);box-shadow:none}
+.btn.ghost:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.32)}
+
+/* Analytics range nav */
+.range-nav{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.range-nav .arrow{width:36px;height:36px;border-radius:50%;background:var(--white);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);flex-shrink:0;transition:all .15s}
+.range-nav .arrow:hover{border-color:var(--red);color:var(--red)}
+.range-nav .label{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800;background:var(--dark);color:#fff;padding:11px 24px;border-radius:30px;letter-spacing:.01em;min-width:150px;text-align:center}
+.range-nav .today-btn{background:none;border:none;color:var(--red);font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.range-nav .today-btn:hover{color:var(--red-dark)}
+
+/* Analytics */
+.analytics-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.analytics-toolbar .range-nav{margin-bottom:0}
+.analytics-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.analytics-right .month-toggle{margin-bottom:0}
+#analyticsViewToggle{min-width:172px;text-align:center;flex-shrink:0}
+.analytics-table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--r-lg);background:var(--white);scrollbar-width:none;-ms-overflow-style:none}
+.analytics-table-wrap::-webkit-scrollbar{display:none;height:0}
+.analytics-table{border-collapse:collapse;width:100%;font-size:13px}
+.analytics-table th{background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:13px 12px;text-align:left;white-space:nowrap}
+.analytics-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.analytics-table tbody tr:last-child td{border-bottom:none}
+.analytics-table tbody tr:hover{background:var(--warm-bg)}
+.analytics-table td.name-cell,.analytics-table th.name-th{position:sticky;left:0;background:var(--white);font-weight:700;z-index:1;box-shadow:2px 0 6px rgba(0,0,0,.05)}
+.analytics-table tbody tr:hover td.name-cell{background:var(--warm-bg)}
+.analytics-table th.name-th{background:var(--dark);z-index:2}
+.analytics-table th.group-divider,.analytics-table td.group-divider{border-left:2px solid var(--border)}
+.analytics-table input{width:78px;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-weight:600;cursor:auto}
+.analytics-table input:focus{outline:none;border-color:var(--red-light)}
+.analytics-table .derived{font-weight:700;color:var(--text)}
+.analytics-table .derived.empty{color:var(--muted);font-weight:400}
+.analytics-table .total-value{font-weight:700;color:var(--text)}
+.analytics-table td.empty{color:var(--muted);text-align:center;white-space:normal;cursor:default}
+
+/* Soft per-row status marker, cycled by clicking the row */
+.analytics-table tbody tr.row-green{background:var(--green-bg)}
+.analytics-table tbody tr.row-yellow{background:var(--amber-bg)}
+.analytics-table tbody tr.row-red{background:var(--accent-bg)}
+.analytics-table tbody tr.row-gray{background:var(--gray-bg)}
+.analytics-table tbody tr.row-green td.name-cell{background:var(--green-bg)}
+.analytics-table tbody tr.row-yellow td.name-cell{background:var(--amber-bg)}
+.analytics-table tbody tr.row-red td.name-cell{background:var(--accent-bg)}
+.analytics-table tbody tr.row-gray td.name-cell{background:var(--gray-bg)}
+
+/* Hide the native up/down stepper on number inputs everywhere in the dashboard */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+/* All-clients summary popup */
+.summary-popup{position:fixed;top:78px;left:28px;z-index:950;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);padding:20px 22px;width:300px}
+.summary-popup-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.summary-popup-head h4{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800}
+.popup-close{background:none;border:none;font-size:20px;line-height:1;color:var(--muted);padding:0;width:26px;height:26px;border-radius:50%;flex-shrink:0}
+.popup-close:hover{background:var(--warm-bg);color:var(--text)}
+.summary-rows{display:flex;flex-direction:column;margin-bottom:16px}
+.summary-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none;padding-bottom:0}
+.summary-row .label{font-size:12.5px;color:var(--muted);font-weight:600}
+.summary-row .value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:800;color:var(--text);text-align:right;white-space:nowrap}
+.summary-row .value .derived{display:block;font-family:'Geologica',sans-serif;font-size:11px;font-weight:600;color:var(--red-dark);margin-top:2px}
+#summaryCopyBtn{width:100%}
+
+/* Avito "вчера" side panel (beta) */
+.side-panel{position:fixed;top:78px;right:20px;bottom:20px;z-index:950;width:min(620px,calc(100vw - 32px));background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden}
+.side-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:18px 20px 12px;border-bottom:1px solid var(--border)}
+.side-panel-head h4{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:800}
+.side-panel-head .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.beta-pill{display:inline-block;font-family:'Geologica',sans-serif;font-size:10px;font-weight:700;background:var(--accent-bg);color:var(--red-dark);padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.side-panel-body{overflow:auto;flex:1}
+.side-panel-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border)}
+.mini-table{border-collapse:collapse;width:100%;font-size:13px}
+.mini-table th{position:sticky;top:0;background:var(--dark);color:#fff;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:10px;text-align:right;white-space:nowrap}
+.mini-table th:first-child,.mini-table td:first-child{text-align:left}
+.mini-table td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+.mini-table td.muted{color:var(--muted);font-size:12px}
+.mini-table tr.total td{font-weight:800;background:var(--warm-bg)}
+.mini-table .warn{color:var(--amber);cursor:help;margin-left:4px}
+.mini-table .src{display:block;font-size:10px;color:var(--muted);font-weight:400}
+
+.modal.wide{max-width:720px;max-height:calc(100vh - 40px);overflow:auto}
+.modal .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.modal textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:12.5px;min-height:130px;font-family:ui-monospace,Menlo,monospace}
+.modal .date-row{display:flex;gap:10px}
+.modal .date-row>div{flex:1}
+.link-list{border:1.5px solid var(--border);border-radius:var(--r-sm);max-height:260px;overflow:auto;margin-top:6px}
+.link-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:13px}
+.link-row:last-child{border-bottom:none}
+.link-row select{max-width:260px;padding:5px 8px;font-size:12px}
+.import-result{font-size:12px;padding:4px 0}
+.import-result.ok{color:var(--green)}
+.import-result.bad{color:var(--red-dark)}
+.job-status{margin-top:14px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warm-bg);font-size:13px;line-height:1.5}
+.job-status a{color:var(--red)}
+.job-status ul{margin:6px 0 0 18px;font-size:12px;color:var(--amber)}
+
+/* Modal */
+#overlay{position:fixed;inset:0;background:rgba(10,10,10,0.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+#overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--r-lg);padding:26px;width:100%;max-width:380px;box-shadow:var(--shadow-md)}
+.modal h3{font-family:'Unbounded',sans-serif;font-size:15px;margin-bottom:16px}
+.modal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.modal input,.modal select{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;font-size:13px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+.empty{color:var(--muted);font-size:13px;padding:20px;text-align:center}
+/* Icons + icon buttons (top bar); labels hide on phones */
+.ic{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top-actions .btn,.tab-btn{display:inline-flex;align-items:center;gap:7px}
+.top-actions .btn{padding:9px 13px}
+.icon-btn{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
+.icon-btn:hover{border-color:var(--red);color:var(--red)}
+@media (max-width:760px){
+  /* Two short lines: sections + service icons, then the current section's buttons (scroll sideways if they don't fit) */
+  header.top{padding:8px 10px;gap:8px}
+  .top-right{order:-1;width:100%;flex-wrap:nowrap;gap:6px}
+  .top-right .tabs{flex:1;flex-wrap:nowrap;gap:4px}
+  .top-divider{display:none}
+  .tab-btn{padding:8px 11px}
+  .icon-link{width:34px;height:34px}
+  .top-actions{width:100%;flex-wrap:nowrap;overflow-x:auto;gap:6px;scrollbar-width:none}
+  .top-actions::-webkit-scrollbar{display:none}
+  .top-actions > *{flex-shrink:0}
+  .top-actions .btn .lbl{display:none}
+  .top-actions .btn{padding:8px 10px}
+  .week-nav .lbl-week small{display:none}
+  main{padding:18px 14px 80px}
+  .summary-popup{left:14px;right:14px;width:auto;top:100px}
+  .side-panel{top:100px;right:8px;left:8px;width:auto}
+}
+@media (max-width:400px){ .tab-btn .lbl{display:none} }
+
+/* Date picker in the Avito panel head */
+.avito-date-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.avito-date-row label{font-size:12px;color:var(--muted)}
+.avito-date-row input{border:1.5px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;font-size:13px}
+
+/* Background-job notices (report export, Avito pull) — bottom right, stay until closed */
+.notices{position:fixed;right:20px;bottom:20px;z-index:1050;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 32px))}
+.notice{background:var(--white);border:1.5px solid var(--border);border-left:4px solid var(--amber);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:12px 14px;font-size:13px;line-height:1.45}
+.notice.ok{border-left-color:var(--green)}
+.notice.bad{border-left-color:var(--red)}
+.notice-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.notice-head b{font-size:13px}
+.notice .popup-close{width:22px;height:22px;font-size:17px}
+.notice-text{color:var(--muted);font-size:12px;margin-top:3px;white-space:pre-line}
+.notice-actions{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;margin-right:6px;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Projects: cards + table ── */
+/* Each card spans 9 rows of the shared grid (head, 3 text fields, week line, 3 ratings, colour)
+   and takes them as a subgrid, so every block's heading sits at the same height in all cards
+   of a row; a field with less text just leaves space under it. */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));column-gap:16px;row-gap:0}
+.pcard{background:var(--white);border:1.5px solid var(--border);border-top:4px solid var(--border);border-radius:var(--r-lg);padding:16px 18px 14px;box-shadow:var(--shadow-sm);display:grid;grid-row:span 9;grid-template-rows:subgrid;row-gap:0;margin-bottom:16px;min-width:0}
+.pcard > *{align-self:start;min-width:0}
+.pcard.c-green{border-top-color:var(--green)}
+.pcard.c-yellow{border-top-color:#e0b400}
+.pcard.c-red{border-top-color:var(--red)}
+.pcard.c-gray{border-top-color:var(--gray);opacity:.6}
+.pcard-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.pcard-head h3{font-size:16px;font-weight:700}
+.avg-pill{display:inline-flex;align-items:center;background:var(--accent-bg);color:var(--red-dark);font-family:'Unbounded',sans-serif;font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;flex-shrink:0;cursor:default}
+.inactive-tag{font-size:11px;font-weight:600;color:var(--gray);background:var(--gray-bg);padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.f{padding:7px 0}
+.pcard .f + .f,.pcard .r + .r{border-top:1px solid #f0eeea}
+.f .q,.color-row .q{font-size:11.5px;font-weight:600;color:var(--muted)}
+.f .q{margin-bottom:3px}
+textarea.auto{width:100%;border:1.5px solid transparent;background:var(--warm-bg);border-radius:var(--r-sm);padding:6px 9px;font-size:13.5px;line-height:1.45;resize:none;overflow:hidden;display:block;color:var(--text)}
+textarea.auto:hover{border-color:var(--border)}
+textarea.auto:focus{outline:none;border-color:var(--red-light);background:var(--white)}
+/* An empty field collapses into one short line */
+.f.is-empty{display:flex;align-items:center;gap:10px;padding:5px 0}
+.f.is-empty .q{margin:0;flex-shrink:0;min-width:122px}
+.f.is-empty textarea.auto{background:none;border:1.5px dashed var(--border);padding:3px 9px;font-size:12.5px}
+textarea.auto::placeholder{color:#bbb}
+.week-sep{display:flex;align-items:center;gap:8px;margin:10px 0 2px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.week-sep::after{content:"";flex:1;height:1px;background:var(--border)}
+.r{padding:7px 0}
+.r-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;min-height:22px}
+.r-head .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.r-head .score{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:800;color:#fff;background:var(--red);border-radius:6px;padding:1px 7px}
+.r-head .link-btn{margin-left:auto;background:none;border:none;color:var(--muted);font-size:11.5px;padding:0}
+.r-head .link-btn:hover{color:var(--red)}
+.r-comment{font-size:13.5px;line-height:1.45;white-space:pre-line;margin-top:4px;overflow-wrap:anywhere}
+.pcard .r-comment{padding-left:16px}
+.r .chips{margin-top:6px}
+.r textarea.auto{margin-top:6px}
+/* An empty rating is one line: who + the 1–10 buttons */
+.r.is-empty{display:flex;align-items:center;gap:10px;padding:5px 0}
+.r.is-empty .r-head{min-width:122px;color:var(--muted)}
+.r.is-empty .chips{margin-top:0}
+.chips{flex:1;display:grid;grid-template-columns:repeat(10,1fr);gap:3px;min-width:0}
+.chips button{height:22px;border-radius:5px;border:1.5px solid var(--border);background:var(--warm-bg);font-size:10.5px;font-weight:700;color:var(--muted);padding:0}
+.chips button:hover{border-color:var(--red-light);color:var(--red)}
+.chips button.on{background:var(--red);border-color:var(--red);color:#fff}
+.color-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.color-row .q{min-width:122px}
+.swatches{display:flex;gap:6px}
+.swatch{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);padding:0;flex-shrink:0}
+.swatch.on{outline:2px solid var(--text);outline-offset:2px}
+.swatch[data-color=""]{background:var(--white);background-image:linear-gradient(135deg,transparent 45%,var(--border) 45%,var(--border) 55%,transparent 55%)}
+.swatch[data-color=green]{background:var(--green-bg);border-color:var(--green)}
+.swatch[data-color=yellow]{background:var(--amber-bg);border-color:var(--amber)}
+.swatch[data-color=red]{background:var(--accent-bg);border-color:var(--red)}
+.swatch[data-color=gray]{background:var(--gray-bg);border-color:var(--gray)}
+.analytics-table td.name-cell .inactive-tag{font-weight:600}
+/* Table view: wide columns so text wraps as little as possible */
+/* the table is wide on purpose — let it use the whole screen instead of the 1300px column */
+main:has(#panel-projects.active #projectsTableWrap:not(.hidden)){max-width:none}
+.projects-table td{white-space:normal;vertical-align:top}
+.projects-table td.name-cell{white-space:nowrap}
+.projects-table th.wk small{display:block;font-size:9.5px;color:#aaa;text-transform:none;letter-spacing:0;font-weight:500}
+.projects-table td.t-text{min-width:210px;max-width:300px}
+.projects-table td.t-wide{min-width:380px;max-width:460px}
+.projects-table td.t-rate{min-width:300px;max-width:380px}
+.projects-table textarea.auto{background:transparent;padding:4px 7px;font-size:13px}
+.projects-table textarea.auto:focus{background:var(--white)}
+.projects-table tbody tr.row-gray{color:var(--gray)}
+.projects-table .swatches{gap:5px}
+.projects-table .swatch{width:16px;height:16px}
+.projects-table th.wk{background:#2a2a2a}
+.projects-table td.t-avg{white-space:nowrap}
+.projects-table .r{padding:0}
+
+/* Projects toolbar in the top bar: week ‹ › + cards/table switch */
+.week-nav{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--r-sm);padding:2px}
+.week-nav button{background:none;border:none;color:#fff;height:30px;border-radius:5px}
+.week-nav .arr{width:30px;font-size:17px}
+.week-nav .lbl-week{font-size:13px;font-weight:700;padding:0 8px;white-space:nowrap}
+.week-nav .lbl-week small{font-weight:500;color:#aaa;margin-left:4px}
+.week-nav button:hover{background:rgba(255,255,255,.14)}
+.seg{display:flex;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.18);border-radius:var(--r-sm);padding:2px}
+.seg button{background:none;border:none;color:#bbb;width:32px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.seg button.on{background:var(--white);color:var(--dark)}
+.top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top-divider{width:1px;height:26px;background:rgba(255,255,255,.18)}
+.icon-link{width:36px;height:36px;border-radius:var(--r-sm);border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.icon-link:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.32)}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;border-radius:var(--r-sm);font-size:13px;z-index:1100;opacity:0;transform:translateY(8px);transition:all .2s}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <h1>Аналитика проектов Cantor Agency</h1>
+    <div class="err" id="gateErr"></div>
+    <input type="password" id="gatePassword" placeholder="Пароль" autocomplete="off" autofocus>
+    <button id="gateSubmit">Войти</button>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div class="top-actions" id="topActions"></div>
+    <div class="top-right">
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="projects" title="Проекты"><svg class="ic" data-icon="folder"></svg><span class="lbl">Проекты</span></button>
+        <button class="tab-btn" data-tab="analytics" title="Аналитика"><svg class="ic" data-icon="chart"></svg><span class="lbl">Аналитика</span></button>
+      </nav>
+      <span class="top-divider"></span>
+      <a class="icon-link" href="/avito-tasks" title="Avito Tasks" aria-label="Avito Tasks"><svg class="ic" data-icon="tasks"></svg></a>
+      <a class="icon-link" href="/sales-crm" title="CRM" aria-label="CRM"><svg class="ic" data-icon="crm"></svg></a>
+    </div>
+  </header>
+
+  <main>
+    <!-- PROJECTS -->
+    <section class="panel active" id="panel-projects">
+      <div class="grid" id="projectsGrid"></div>
+      <div class="analytics-table-wrap hidden" id="projectsTableWrap">
+        <table class="analytics-table projects-table" id="projectsTable"></table>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="panel" id="panel-analytics">
+      <div class="analytics-toolbar">
+        <div class="range-nav" id="analyticsRangeNav">
+          <button class="arrow" id="dayPrev" aria-label="Предыдущий день">‹</button>
+          <div class="label" id="dayLabel"></div>
+          <button class="arrow" id="dayNext" aria-label="Следующий день">›</button>
+          <button class="today-btn" id="dayYesterday">Вчера</button>
+        </div>
+        <div class="analytics-right">
+          <div class="month-toggle" id="analyticsMonthToggle"></div>
+          <button class="btn secondary small" id="analyticsViewToggle">Показать за всё время</button>
+        </div>
+      </div>
+      <div class="analytics-table-wrap">
+        <table class="analytics-table" id="analyticsTable"></table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="overlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<div class="summary-popup hidden" id="summaryPopup">
+  <div class="summary-popup-head">
+    <h4 id="summaryTitle">Сводка по всем клиентам</h4>
+    <button class="popup-close" id="summaryPopupClose" aria-label="Закрыть">×</button>
+  </div>
+  <div class="summary-rows" id="summaryRows"></div>
+  <button class="btn small" id="summaryCopyBtn">⧉ Скопировать</button>
+</div>
+
+<div class="side-panel hidden" id="avitoPanel">
+  <div class="side-panel-head">
+    <div>
+      <h4>Аналитика из Авито<span class="beta-pill">бета</span></h4>
+      <div class="avito-date-row"><label for="avitoPanelDate">За дату</label><input type="date" id="avitoPanelDate"></div>
+      <div class="sub" id="avitoPanelSub"></div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="icon-btn" id="avitoPanelSettings" title="Кабинеты Авито: ключи и подключения" aria-label="Кабинеты Авито"><svg class="ic" data-icon="settings"></svg></button>
+      <button class="popup-close" id="avitoPanelClose" aria-label="Закрыть">×</button>
+    </div>
+  </div>
+  <div class="side-panel-body"><table class="mini-table" id="avitoPanelTable"></table></div>
+  <div class="side-panel-foot">
+    <button class="btn secondary small" id="avitoPanelRefresh">Загрузить заново</button>
+    <button class="btn small" id="avitoPanelApply">Внести в таблицу</button>
+  </div>
+</div>
+
+<div class="notices" id="notices"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_STORAGE_KEY = 'agency_dashboard_ok';
+const ROLE_LABELS = { client: 'От клиента', manager: 'От менеджера', specialist: 'От специалиста' };
+const ROLE_DOT = { client: 'var(--red)', manager: 'var(--amber)', specialist: 'var(--green)' };
+const MONTHS_GENITIVE_SHORT = ['янв', 'февр', 'мар', 'апр', 'мая', 'июня', 'июля', 'авг', 'сент', 'окт', 'нояб', 'дек'];
+
+let state = { projects: [], employees: [], analytics: [], projectRatings: [], dailyMetrics: [], tasks: [], salePrices: { primary: 50000, repeat: 25000 } };
+let currentRatingWeek = isoMonday(new Date());
+let currentAnalyticsDay = addDays(todayIso(), -1);
+
+// ── Gate ──
+function isUnlocked() { try { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; } catch { return false; } }
+function unlock(pw) {
+  try { localStorage.setItem(ADMIN_STORAGE_KEY, '1'); localStorage.setItem('agency_dashboard_pw', pw); } catch {}
+}
+function getPassword() { try { return localStorage.getItem('agency_dashboard_pw') || ''; } catch { return ''; } }
+
+document.getElementById('gateSubmit').addEventListener('click', tryGate);
+document.getElementById('gatePassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryGate(); });
+async function tryGate() {
+  const pw = document.getElementById('gatePassword').value;
+  const ok = await api('/api/dashboard/bootstrap', {}, pw, true);
+  if (ok) {
+    unlock(pw);
+    document.getElementById('gate').style.display = 'none';
+    boot();
+  } else {
+    document.getElementById('gateErr').textContent = 'Неверный пароль';
+  }
+}
+
+// ── API helper ──
+// cantor.agency is a plain nginx static host, not the Cloudflare Worker itself, so /api/*
+// has to be called on the Worker's own origin (same pattern as serp-analysis/avito-export/
+// utm-create's API_BASE), relying on the worker's permissive CORS headers.
+//
+// Without a VPN *.workers.dev often doesn't load from Russia, while with a VPN cantor.agency
+// (reg.ru) doesn't — so on cantor.agency the API goes through a Yandex Cloud function
+// (yc-dashboard-api-proxy, reachable from anywhere) and falls back to the Worker directly;
+// opened on the Worker's own domain (the VPN case) it talks to the Worker same-origin.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const API_PROXY_URL = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch'; // yc-dashboard-api-proxy — see its README
+
+const API_ROUTES = (() => {
+  const direct = (path) => API_BASE + path;
+  const proxy = (path) => `${API_PROXY_URL}?p=${encodeURIComponent(path)}`;
+  if (location.hostname.endsWith('workers.dev')) return [(path) => location.origin + path, proxy];
+  return API_PROXY_URL ? [proxy, direct] : [direct];
+})().filter((r, i) => i === 0 || API_PROXY_URL);
+let apiRouteIndex = 0;
+
+// fetch() against the API with automatic failover between the proxy and the Worker:
+// a route that fails at the network level (blocked / timed out) is swapped for the other
+// one and the choice sticks for the rest of the session.
+async function apiFetch(path, init) {
+  let lastErr;
+  for (let attempt = 0; attempt < API_ROUTES.length; attempt += 1) {
+    const idx = (apiRouteIndex + attempt) % API_ROUTES.length;
+    try {
+      const res = await fetch(API_ROUTES[idx](path), { ...init, signal: AbortSignal.timeout(35000) });
+      apiRouteIndex = idx;
+      return res;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
+async function api(path, options = {}, pwOverride, silent) {
+  const pw = pwOverride || getPassword();
+  let res;
+  try {
+    res = await apiFetch(path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw, ...(options.headers || {}) },
+    });
+  } catch {
+    if (silent) return false;
+    toast('Нет связи с сервером — попробуйте ещё раз');
+    return null;
+  }
+  if (res.status === 401) {
+    if (silent) return false;
+    try { localStorage.removeItem(ADMIN_STORAGE_KEY); } catch {}
+    location.reload();
+    return null;
+  }
+  if (silent) return true; // password accepted — any other status is a separate (server-side) problem
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    toast((data && data.message) || 'Ошибка сохранения');
+    return null;
+  }
+  return res.json().catch(() => null);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── Boot ──
+let currentTab = 'projects';
+let bootstrapped = false;
+
+async function boot() {
+  document.getElementById('app').classList.add('ready');
+  renderTopActions(currentTab);
+  const data = await api('/api/dashboard/bootstrap');
+  if (!data) return;
+  state = data;
+  bootstrapped = true;
+  renderProjects();
+  renderAnalytics();
+  renderTopActions(currentTab); // whatever tab the user moved to while data was loading
+  resumeBackgroundJobs();
+}
+
+
+// ── Tabs ──
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    currentTab = btn.dataset.tab;
+    renderTopActions(currentTab);
+  });
+});
+
+// ── Icons (inline SVG, lucide-style strokes) ──
+const ICON_PATHS = {
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  tasks: '<path d="M9 11l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
+  crm: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.5A6.5 6.5 0 0 1 21.5 20"/>',
+  cards: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  sum: '<path d="M18 5H6l6 7-6 7h12"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  avito: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  report: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+};
+function icon(name) { return `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name] || ''}</svg>`; }
+document.querySelectorAll('svg[data-icon]').forEach((el) => { el.outerHTML = icon(el.dataset.icon); });
+
+// Per-tab actions. Always rendered for currentTab (also before data arrives), so the bar
+// can never keep a previous tab's buttons.
+const TOP_ACTIONS = {
+  projects: [{ icon: 'plus', label: 'Новый проект', primary: true, run: () => openAddProjectModal() }],
+  analytics: [
+    { icon: 'sum', label: 'Итоги по клиентам', run: () => toggleSummaryPopup() },
+    { icon: 'download', label: 'Экспорт в CSV', run: () => exportDailyMetricsCsv() },
+    { icon: 'avito', label: 'Аналитика из Авито', run: () => toggleAvitoPanel() },
+    { icon: 'report', label: 'Выгрузка отчёта', run: () => openReportModal() },
+  ],
+};
+
+function renderTopActions(tab) {
+  const el = document.getElementById('topActions');
+  el.innerHTML = '';
+  if (tab !== 'analytics') {
+    document.getElementById('summaryPopup').classList.add('hidden');
+    document.getElementById('avitoPanel').classList.add('hidden');
+  }
+  if (tab === 'projects') el.append(weekNav(), viewSwitch());
+  (TOP_ACTIONS[tab] || []).forEach((a) => {
+    const btn = document.createElement('button');
+    btn.className = a.primary ? 'btn' : 'btn ghost';
+    btn.title = a.label;
+    btn.setAttribute('aria-label', a.label);
+    btn.innerHTML = `${icon(a.icon)}<span class="lbl">${a.label}</span>`;
+    btn.addEventListener('click', () => {
+      if (!bootstrapped) { toast('Данные ещё загружаются…'); return; }
+      a.run();
+    });
+    el.appendChild(btn);
+  });
+}
+
+// ── Notices: background jobs report here, so any tab stays usable meanwhile ──
+function notice(id, { title, text = '', kind = '', busy = false, actions = [] }) {
+  const box = document.getElementById('notices');
+  let el = document.getElementById(`notice-${id}`);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = `notice-${id}`;
+    box.appendChild(el);
+  }
+  el.className = `notice ${kind}`;
+  el.innerHTML = `<div class="notice-head"><b>${busy ? '<span class="spin"></span>' : ''}${escapeHtml(title)}</b><button class="popup-close" aria-label="Закрыть">×</button></div>
+    ${text ? `<div class="notice-text">${escapeHtml(text)}</div>` : ''}
+    ${actions.length ? '<div class="notice-actions"></div>' : ''}`;
+  el.querySelector('.popup-close').addEventListener('click', () => dismissNotice(id));
+  actions.forEach((a) => {
+    const b = document.createElement('button');
+    b.className = `btn small ${a.secondary ? 'secondary' : ''}`;
+    b.textContent = a.label;
+    b.addEventListener('click', a.run);
+    el.querySelector('.notice-actions').appendChild(b);
+  });
+}
+const noticeCloseHooks = {};
+function dismissNotice(id) {
+  const el = document.getElementById(`notice-${id}`);
+  if (el) el.remove();
+  if (noticeCloseHooks[id]) noticeCloseHooks[id]();
+}
+
+function storedJob(key, value) {
+  try {
+    if (value === undefined) return JSON.parse(localStorage.getItem(key) || 'null');
+    if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value));
+  } catch { return null; }
+  return value;
+}
+
+function resumeBackgroundJobs() {
+  const report = storedJob('dash_report_job');
+  if (report && report.id) trackReportJob(report.id);
+  const pull = storedJob('dash_avito_pull');
+  if (pull && pull.date) trackAvitoPull(pull.date);
+}
+
+// ── Modal helpers ──
+function openModal(html) {
+  document.getElementById('modalBody').classList.remove('wide');
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
+
+// ══════════════════════ PROJECTS ══════════════════════
+// One place per client: the permanent fields (status, stage, current work, colour) plus the
+// three ratings of the week picked in the top bar — the week arrows change only the ratings.
+const PROJECT_FIELDS = [
+  { key: 'status', label: 'Статус' },
+  { key: 'stage', label: 'Этап работы' },
+  { key: 'currentWork', label: 'Сейчас работаем над' },
+];
+const COLOR_TITLES = { '': 'Без цвета', green: 'Зелёный', yellow: 'Жёлтый', red: 'Красный', gray: 'Серый — неактивный клиент' };
+
+let projectsView = (() => { try { return localStorage.getItem('dash_projects_view') === 'table' ? 'table' : 'cards'; } catch { return 'cards'; } })();
+
+function weekNav() {
+  const wrap = document.createElement('div');
+  wrap.className = 'week-nav';
+  const isCurrent = currentRatingWeek === isoMonday(new Date());
+  wrap.innerHTML = `<button class="arr" aria-label="Предыдущая неделя" title="Предыдущая неделя">‹</button>`
+    + `<button class="lbl-week" title="К текущей неделе">${formatWeekRange(currentRatingWeek)}${isCurrent ? '<small>текущая</small>' : ''}</button>`
+    + `<button class="arr" aria-label="Следующая неделя" title="Следующая неделя">›</button>`;
+  const [prev, label, next] = wrap.querySelectorAll('button');
+  prev.addEventListener('click', () => setRatingWeek(addDays(currentRatingWeek, -7)));
+  label.addEventListener('click', () => setRatingWeek(isoMonday(new Date())));
+  next.addEventListener('click', () => setRatingWeek(addDays(currentRatingWeek, 7)));
+  return wrap;
+}
+
+function setRatingWeek(week) {
+  currentRatingWeek = week;
+  renderTopActions(currentTab);
+  if (bootstrapped) renderProjects();
+}
+
+function viewSwitch() {
+  const wrap = document.createElement('div');
+  wrap.className = 'seg';
+  [['cards', 'Карточки'], ['table', 'Таблица']].forEach(([view, title]) => {
+    const b = document.createElement('button');
+    b.className = projectsView === view ? 'on' : '';
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.innerHTML = icon(view);
+    b.addEventListener('click', () => {
+      projectsView = view;
+      try { localStorage.setItem('dash_projects_view', view); } catch {}
+      renderTopActions(currentTab);
+      if (bootstrapped) renderProjects();
+    });
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+
+// Textareas grow with their text — no empty space under a short answer.
+function fitTextarea(t) {
+  if (!t.isConnected || !t.offsetParent) return;
+  t.style.height = 'auto';
+  t.style.height = `${t.scrollHeight + t.offsetHeight - t.clientHeight}px`;
+}
+function fitAllTextareas() { document.querySelectorAll('#panel-projects textarea.auto').forEach(fitTextarea); }
+let refitTimer = null;
+window.addEventListener('resize', () => { clearTimeout(refitTimer); refitTimer = setTimeout(fitAllTextareas, 120); });
+if (document.fonts) document.fonts.ready.then(fitAllTextareas);
+
+function autoTextarea(value, placeholder, onSave) {
+  const t = document.createElement('textarea');
+  t.className = 'auto';
+  t.rows = 1;
+  t.placeholder = placeholder;
+  t.value = value || '';
+  let saved = t.value;
+  t.addEventListener('input', () => fitTextarea(t));
+  t.addEventListener('blur', () => { if (t.value !== saved) { saved = t.value; onSave(t.value); } });
+  return t;
+}
+
+async function saveProjectField(p, field, value) {
+  const res = await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ id: p.id, name: p.name, [field]: value }) });
+  if (!res || !res.project) return false;
+  Object.assign(p, res.project); // picks up what the server derives too (grey ⇒ inactive)
+  toast('Сохранено');
+  return true;
+}
+
+function weekAvgText(p) {
+  const d = projectRatingFor(p.id, currentRatingWeek);
+  return `${fmtAvg(avgScore([d.client.score, d.manager.score, d.specialist.score]))}/${fmtAvg(allTimeAvgFor(p.id))}`;
+}
+
+function inactiveTag(p) { return isInactive(p) ? '<span class="inactive-tag">неактивный</span>' : ''; }
+
+// Status / stage / current work: heading on top, answer below; an empty one is a single short line.
+function textField(p, key, label) {
+  const f = document.createElement('div');
+  f.className = 'f';
+  f.innerHTML = `<div class="q">${label}</div>`;
+  const t = autoTextarea(p[key], 'добавить…', (v) => saveProjectField(p, key, v));
+  // re-checked on blur, not while typing, so the field doesn't jump under the cursor
+  const syncEmpty = () => { f.classList.toggle('is-empty', !t.value.trim()); fitTextarea(t); };
+  t.addEventListener('blur', syncEmpty);
+  f.appendChild(t);
+  syncEmpty();
+  return f;
+}
+
+// One role's rating for the selected week. Filled: who · score, comment below.
+// Empty: who + 1–10 in one line. «изменить» (or picking a score) opens the 1–10 + comment editor.
+function raterBlock(p, role, { label = true, onSaved } = {}) {
+  const el = document.createElement('div');
+  const week = currentRatingWeek;
+  let editing = false;
+  let renderGen = 0; // a blur from the editor that the re-render itself removed must not count
+  const current = () => projectRatingFor(p.id, week)[role];
+
+  async function save(score, comment) {
+    const res = await api('/api/dashboard/project-rating', {
+      method: 'POST',
+      body: JSON.stringify({ projectId: p.id, weekStart: week, role, score, comment }),
+    });
+    if (!res || !res.projectRating) return;
+    // Client/manager/specialist are three different people, often on three different
+    // devices — each role is its own independent record server-side (see _worker.js),
+    // so this save can never race with or clobber another role's concurrent save.
+    state.projectRatings = state.projectRatings.filter((r) => !(r.projectId === p.id && r.weekStart === week && r.role === role));
+    state.projectRatings.push(res.projectRating);
+    toast('Оценка сохранена');
+    if (onSaved) onSaved();
+  }
+
+  function render() {
+    const gen = ++renderGen;
+    const d = current();
+    const filled = d.score > 0 || Boolean(d.comment.trim());
+    el.className = `r${filled || editing ? '' : ' is-empty'}`;
+    const who = label ? `<span class="dot" style="background:${ROLE_DOT[role]}"></span>${ROLE_LABELS[role]}` : '';
+    const score = d.score ? `<span class="score">${d.score}</span>` : '';
+    const action = filled || editing ? `<button type="button" class="link-btn">${editing ? 'готово' : 'изменить'}</button>` : '';
+    el.innerHTML = who || score || action ? `<div class="r-head">${who}${score}${action}</div>` : '';
+
+    let comment = null;
+    const finish = async () => {
+      if (!editing || gen !== renderGen) return;
+      editing = false;
+      if (comment && comment.value !== d.comment) await save(d.score, comment.value);
+      render();
+    };
+
+    if (!filled || editing) {
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      for (let i = 1; i <= 10; i++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = String(i);
+        if (i === d.score) b.classList.add('on');
+        b.addEventListener('mousedown', (e) => e.preventDefault()); // keep the comment focused
+        b.addEventListener('click', async () => {
+          // clicking the already-set score again clears it back to unrated
+          await save(d.score === i ? 0 : i, comment ? comment.value : d.comment);
+          editing = true;
+          render();
+        });
+        chips.appendChild(b);
+      }
+      el.appendChild(chips);
+    }
+    if (editing) {
+      comment = autoTextarea(d.comment, 'Комментарий к оценке…', () => {});
+      comment.addEventListener('blur', finish);
+      el.appendChild(comment);
+      fitTextarea(comment);
+      comment.focus();
+    } else if (d.comment.trim()) {
+      el.insertAdjacentHTML('beforeend', `<div class="r-comment">${escapeHtml(d.comment)}</div>`);
+    }
+
+    const btn = el.querySelector('.link-btn');
+    if (btn) {
+      btn.addEventListener('mousedown', (e) => e.preventDefault());
+      btn.addEventListener('click', () => { if (editing) finish(); else { editing = true; render(); } });
+    }
+  }
+
+  render();
+  return el;
+}
+
+function colorPicker(p, withLabel) {
+  const row = document.createElement('div');
+  row.className = withLabel ? 'color-row' : '';
+  row.innerHTML = `${withLabel ? '<span class="q">Цвет в аналитике</span>' : ''}<div class="swatches"></div>`;
+  const current = displayColor(p);
+  ROW_COLORS.forEach((c) => {
+    const sw = document.createElement('button');
+    sw.className = `swatch${current === c ? ' on' : ''}`;
+    sw.dataset.color = c;
+    sw.title = COLOR_TITLES[c];
+    sw.setAttribute('aria-label', COLOR_TITLES[c]);
+    sw.addEventListener('click', async () => {
+      if (await saveProjectField(p, 'rowColor', c)) {
+        renderProjects(); // grey moves the client to the bottom
+        renderAnalytics();
+      }
+    });
+    row.querySelector('.swatches').appendChild(sw);
+  });
+  return row;
+}
+
+function projectCard(p) {
+  const card = document.createElement('div');
+  const color = displayColor(p);
+  card.className = `pcard${color ? ' c-' + color : ''}`;
+  card.innerHTML = `<div class="pcard-head"><h3>${escapeHtml(p.name)}${inactiveTag(p)}</h3>`
+    + `<span class="avg-pill" title="Средняя оценка за неделю / за всё время">${weekAvgText(p)}</span></div>`;
+  const pill = card.querySelector('.avg-pill');
+  PROJECT_FIELDS.forEach(({ key, label }) => card.appendChild(textField(p, key, label)));
+  card.insertAdjacentHTML('beforeend', `<div class="week-sep">Оценки · ${formatWeekRange(currentRatingWeek)}</div>`);
+  Object.keys(ROLE_LABELS).forEach((role) => card.appendChild(raterBlock(p, role, { onSaved: () => { pill.textContent = weekAvgText(p); } })));
+  card.appendChild(colorPicker(p, true));
+  return card;
+}
+
+function renderProjectsTable(projects) {
+  const table = document.getElementById('projectsTable');
+  const week = formatWeekRange(currentRatingWeek);
+  table.innerHTML = `<thead><tr><th class="name-th">Клиент</th><th class="wk">Средняя<small>неделя / всё время</small></th>`
+    + PROJECT_FIELDS.map((f) => `<th>${f.label}</th>`).join('')
+    + Object.values(ROLE_LABELS).map((l) => `<th class="wk">${l}<small>${week}</small></th>`).join('')
+    + '<th>Цвет</th></tr></thead><tbody></tbody>';
+  const tbody = table.querySelector('tbody');
+  if (!projects.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Пока нет ни одного проекта</td></tr>';
+    return;
+  }
+  projects.forEach((p) => {
+    const tr = document.createElement('tr');
+    applyRowColor(tr, displayColor(p));
+    const cell = (cls) => { const td = document.createElement('td'); if (cls) td.className = cls; tr.appendChild(td); return td; };
+    cell('name-cell').innerHTML = escapeHtml(p.name) + inactiveTag(p);
+    const avg = cell('t-avg');
+    avg.innerHTML = `<span class="avg-pill" title="Средняя оценка за неделю / за всё время">${weekAvgText(p)}</span>`;
+    PROJECT_FIELDS.forEach(({ key }) => {
+      cell(key === 'currentWork' ? 't-wide' : 't-text').appendChild(autoTextarea(p[key], '—', (v) => saveProjectField(p, key, v)));
+    });
+    Object.keys(ROLE_LABELS).forEach((role) => {
+      cell('t-rate').appendChild(raterBlock(p, role, { label: false, onSaved: () => { avg.firstChild.textContent = weekAvgText(p); } }));
+    });
+    cell().appendChild(colorPicker(p, false));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderProjects() {
+  const cards = projectsView === 'cards';
+  const grid = document.getElementById('projectsGrid');
+  grid.classList.toggle('hidden', !cards);
+  document.getElementById('projectsTableWrap').classList.toggle('hidden', cards);
+  grid.innerHTML = '';
+  document.getElementById('projectsTable').innerHTML = '';
+
+  const projects = orderedProjects();
+  if (cards) {
+    if (!projects.length) grid.innerHTML = '<div class="empty">Пока нет ни одного проекта</div>';
+    projects.forEach((p) => grid.appendChild(projectCard(p)));
+  } else {
+    renderProjectsTable(projects);
+  }
+  fitAllTextareas();
+}
+
+function openAddProjectModal() {
+  openModal(`
+    <h3>Новый проект</h3>
+    <label>Название клиента</label>
+    <input type="text" id="mProjectName" placeholder="Имя Фамилия">
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn" id="mProjectSave">Создать</button>
+    </div>
+  `);
+  document.getElementById('mProjectSave').addEventListener('click', async () => {
+    const name = document.getElementById('mProjectName').value.trim();
+    if (!name) return;
+    const res = await api('/api/dashboard/project', { method: 'POST', body: JSON.stringify({ name }) });
+    if (res && res.project) { state.projects.push(res.project); renderProjects(); closeModal(); }
+  });
+}
+
+// ══════════════════════ ANALYTICS (по дням, все клиенты) ══════════════════════
+const WEEKDAYS_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+// Local calendar date as YYYY-MM-DD. Deliberately not .toISOString().slice(0,10):
+// that serializes in UTC, which silently rolls back a day for any positive UTC
+// offset (e.g. Moscow) — "today" and "+/- N days" must stay in local time.
+function ymd(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function todayIso() {
+  return ymd(new Date());
+}
+
+function fmtPct(n) { return n == null ? '—' : `${n.toFixed(1)}%`; }
+function fmtMoney(n) { return n == null ? '—' : `${Math.round(n).toLocaleString('ru-RU')} ₽`; }
+
+function formatDayLabel(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const today = todayIso();
+  const yesterday = addDays(today, -1);
+  let rel = '';
+  if (dateStr === today) rel = 'Сегодня, ';
+  else if (dateStr === yesterday) rel = 'Вчера, ';
+  return `${rel}${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()} ${MONTHS_GENITIVE_SHORT[d.getMonth()]}`;
+}
+
+function dailyMetricFor(projectId, date) {
+  const found = state.dailyMetrics.find((r) => r.projectId === projectId && r.date === date);
+  return found ? found : { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 };
+}
+
+function cumulativeFor(projectId, month) {
+  return state.dailyMetrics
+    .filter((r) => r.projectId === projectId && (!month || r.date.slice(0, 7) === month))
+    .reduce((acc, r) => {
+      acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
+      acc.diagnostics += r.diagnostics; acc.sales += r.sales;
+      return acc;
+    }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+
+function deriveStats(c) {
+  return {
+    convAd: c.views > 0 ? (c.contacts / c.views) * 100 : null,
+    convDialog: c.contacts > 0 ? (c.diagnostics / c.contacts) * 100 : null,
+    convDiag: c.diagnostics > 0 ? (c.sales / c.diagnostics) * 100 : null,
+    costContact: c.contacts > 0 ? c.budget / c.contacts : null,
+    costDiag: c.diagnostics > 0 ? c.budget / c.diagnostics : null,
+    costClient: c.sales > 0 ? c.budget / c.sales : null,
+  };
+}
+
+const DERIVED_KEYS = ['convAd', 'convDialog', 'convDiag', 'costContact', 'costDiag', 'costClient'];
+const DERIVED_FMT = { convAd: fmtPct, convDialog: fmtPct, convDiag: fmtPct, costContact: fmtMoney, costDiag: fmtMoney, costClient: fmtMoney };
+const DERIVED_LABELS = { convAd: '% Объявления', convDialog: '% Диалога', convDiag: '% Диагностики', costContact: '₽ Контакта', costDiag: '₽ Диагностики', costClient: '₽ Клиента' };
+const RAW_KEYS = ['budget', 'views', 'contacts', 'diagnostics', 'sales'];
+const RAW_LABELS = { budget: 'Бюджет', views: 'Просмотры', contacts: 'Контакты', diagnostics: 'Диагностики', sales: 'Продажи' };
+
+// Grey in the colour picker is what marks a client inactive (the server keeps `inactive`
+// in sync with it); `inactive` alone still counts until that migration has run.
+function isInactive(p) { return p.rowColor === 'gray' || Boolean(p.inactive); }
+function displayColor(p) { return isInactive(p) ? 'gray' : p.rowColor || ''; }
+
+// Clients in the order they came: oldest first, newest after them, inactive (grey) last.
+// A client's start is the first day with any numbers in Analytics — the seeded clients all
+// share one createdAt — falling back to when the project was added.
+function orderedProjects() {
+  const firstDay = {};
+  state.dailyMetrics.forEach((r) => {
+    if (RAW_KEYS.some((k) => r[k] > 0) && (!firstDay[r.projectId] || r.date < firstDay[r.projectId])) firstDay[r.projectId] = r.date;
+  });
+  const start = (p) => firstDay[p.id] || String(p.createdAt || '').slice(0, 10) || '9999-12-31';
+  return [...state.projects].sort((a, b) => (isInactive(a) ? 1 : 0) - (isInactive(b) ? 1 : 0)
+    || start(a).localeCompare(start(b))
+    || a.name.localeCompare(b.name, 'ru'));
+}
+
+// Soft per-client status colour for the Analytics row, picked on the client's Projects card.
+const ROW_COLORS = ['', 'green', 'yellow', 'red', 'gray'];
+function applyRowColor(tr, color) {
+  ROW_COLORS.forEach((c) => { if (c) tr.classList.remove('row-' + c); });
+  if (color) tr.classList.add('row-' + color);
+}
+
+let analyticsView = 'day'; // 'day' | 'total'
+
+// Month filter for the "total" view: from June 2026 (the start of the seeded CSV history) up to
+// the current month or the latest month with numbers, so a new month shows up by itself.
+const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+function analyticsMonths() {
+  let last = todayIso().slice(0, 7);
+  state.dailyMetrics.forEach((r) => { if (r.date && r.date.slice(0, 7) > last) last = r.date.slice(0, 7); });
+  const out = [];
+  for (let [y, m] = [2026, 6]; `${y}-${String(m).padStart(2, '0')}` <= last; m === 12 ? (y += 1, m = 1) : (m += 1)) {
+    out.push({ key: `${y}-${String(m).padStart(2, '0')}`, label: MONTH_NAMES[m - 1] + (y !== 2026 ? ` ${y}` : '') });
+  }
+  return out;
+}
+let analyticsMonth = null; // null = every period combined; a month key narrows to just that month
+
+document.getElementById('dayPrev').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, -1); renderAnalytics(); });
+document.getElementById('dayNext').addEventListener('click', () => { currentAnalyticsDay = addDays(currentAnalyticsDay, 1); renderAnalytics(); });
+document.getElementById('dayYesterday').addEventListener('click', () => { currentAnalyticsDay = addDays(todayIso(), -1); renderAnalytics(); });
+document.getElementById('analyticsViewToggle').addEventListener('click', () => {
+  analyticsView = analyticsView === 'day' ? 'total' : 'day';
+  renderAnalytics();
+});
+
+function renderAnalyticsMonthToggle() {
+  const el = document.getElementById('analyticsMonthToggle');
+  el.innerHTML = '';
+  if (analyticsView !== 'total') return;
+  analyticsMonths().forEach((m) => {
+    const b = document.createElement('button');
+    b.textContent = m.label;
+    if (m.key === analyticsMonth) b.classList.add('active');
+    // clicking the already-active month deselects it, back to all periods combined
+    b.addEventListener('click', () => { analyticsMonth = analyticsMonth === m.key ? null : m.key; renderAnalytics(); });
+    el.appendChild(b);
+  });
+}
+
+function renderAnalytics() {
+  document.getElementById('dayLabel').textContent = formatDayLabel(currentAnalyticsDay);
+  // visibility, not display:none — keeps its layout space so the toggle button never shifts
+  document.getElementById('analyticsRangeNav').classList.toggle('dim', analyticsView === 'total');
+  document.getElementById('analyticsViewToggle').textContent = analyticsView === 'day' ? 'Показать за всё время' : 'Показать по дням';
+  renderAnalyticsMonthToggle();
+
+  const table = document.getElementById('analyticsTable');
+  const colCount = 1 + RAW_KEYS.length + (analyticsView === 'total' ? DERIVED_KEYS.length : 0);
+  table.innerHTML = `
+    <thead><tr>
+      <th class="name-th">Клиент</th>
+      ${RAW_KEYS.map((k) => `<th>${RAW_LABELS[k]}</th>`).join('')}
+      ${analyticsView === 'total' ? DERIVED_KEYS.map((k, i) => `<th${i === 0 || i === 3 ? ' class="group-divider"' : ''}>${DERIVED_LABELS[k]}</th>`).join('') : ''}
+    </tr></thead>
+    <tbody id="analyticsTbody"></tbody>
+  `;
+  const tbody = document.getElementById('analyticsTbody');
+
+  const projects = orderedProjects();
+  if (!projects.length) {
+    tbody.innerHTML = `<tr><td colspan="${colCount}" class="empty">Пока нет ни одного проекта</td></tr>`;
+    return;
+  }
+
+  projects.forEach((p) => {
+    const tr = document.createElement('tr');
+    tr.dataset.projectId = p.id;
+    applyRowColor(tr, displayColor(p));
+
+    const nameTd = document.createElement('td');
+    nameTd.className = 'name-cell';
+    nameTd.innerHTML = escapeHtml(p.name) + inactiveTag(p);
+    tr.appendChild(nameTd);
+
+    if (analyticsView === 'day') {
+      const dayData = dailyMetricFor(p.id, currentAnalyticsDay);
+      RAW_KEYS.forEach((key) => {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.dataset.key = key;
+        input.value = dayData[key] || '';
+        input.addEventListener('blur', () => saveDailyMetric(p.id, tr, key));
+        td.appendChild(input);
+        tr.appendChild(td);
+      });
+    } else {
+      const totals = cumulativeFor(p.id, analyticsMonth);
+      RAW_KEYS.forEach((key) => {
+        const td = document.createElement('td');
+        td.innerHTML = `<span class="total-value">${key === 'budget' ? fmtMoney(totals[key]) : totals[key].toLocaleString('ru-RU')}</span>`;
+        tr.appendChild(td);
+      });
+
+      DERIVED_KEYS.forEach((key, i) => {
+        const td = document.createElement('td');
+        td.dataset.derived = key;
+        if (i === 0 || i === 3) td.classList.add('group-divider');
+        td.innerHTML = '<span class="derived"></span>';
+        tr.appendChild(td);
+      });
+    }
+
+    tbody.appendChild(tr);
+    if (analyticsView === 'total') fillDerivedRow(tr, p.id);
+  });
+}
+
+function fillDerivedRow(tr, projectId) {
+  const derived = deriveStats(cumulativeFor(projectId, analyticsView === 'total' ? analyticsMonth : null));
+  tr.querySelectorAll('td[data-derived]').forEach((td) => {
+    const key = td.dataset.derived;
+    const span = td.querySelector('.derived');
+    span.textContent = DERIVED_FMT[key](derived[key]);
+    span.classList.toggle('empty', derived[key] == null);
+  });
+}
+
+async function saveDailyMetric(projectId, tr, key) {
+  // Send only the field that actually changed — the row may reflect a stale
+  // snapshot of the other 4 if someone else edited this same day elsewhere in
+  // the meantime, and the server now merges by field rather than overwriting.
+  const input = tr.querySelector(`input[data-key="${key}"]`);
+  const res = await api('/api/dashboard/daily-metric', {
+    method: 'POST',
+    body: JSON.stringify({ projectId, date: currentAnalyticsDay, [key]: input.value }),
+  });
+  if (res && res.dailyMetric) {
+    state.dailyMetrics = state.dailyMetrics.filter((r) => !(r.projectId === projectId && r.date === currentAnalyticsDay));
+    state.dailyMetrics.push(res.dailyMetric);
+    fillDerivedRow(tr, projectId);
+    toast('Сохранено');
+  }
+}
+
+function exportDailyMetricsCsv() {
+  const nameById = Object.fromEntries(state.projects.map((p) => [p.id, p.name]));
+  const header = ['Клиент', 'Дата', 'Бюджет', 'Просмотры', 'Контакты', 'Диагностики', 'Продажи'];
+  const rows = state.dailyMetrics
+    .slice()
+    .sort((a, b) => (nameById[a.projectId] || '').localeCompare(nameById[b.projectId] || '', 'ru') || (a.date < b.date ? -1 : 1))
+    .map((r) => [nameById[r.projectId] || r.projectId, r.date, r.budget, r.views, r.contacts, r.diagnostics, r.sales]);
+  const csvEscape = (v) => { const s = String(v); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = [header, ...rows].map((row) => row.map(csvEscape).join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `analytics_${currentAnalyticsDay}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ── All-clients summary popup ──
+const SUMMARY_METRICS = [
+  { key: 'budget', label: 'Бюджет' },
+  { key: 'views', label: 'Просмотры', rate: 'CPV' },
+  { key: 'contacts', label: 'Контакты', rate: 'CPL' },
+  { key: 'diagnostics', label: 'Диагностики', rate: 'CPA' },
+  { key: 'sales', label: 'Продажи', rate: 'CAC' },
+];
+
+// The month picked in the "total" view narrows the summary too; otherwise it covers all time.
+function summaryMonth() {
+  return analyticsView === 'total' && analyticsMonth ? analyticsMonths().find((m) => m.key === analyticsMonth) || null : null;
+}
+
+function allClientsTotals() {
+  const month = summaryMonth();
+  return state.dailyMetrics.filter((r) => !month || r.date.slice(0, 7) === month.key).reduce((acc, r) => {
+    acc.budget += r.budget; acc.views += r.views; acc.contacts += r.contacts;
+    acc.diagnostics += r.diagnostics; acc.sales += r.sales;
+    return acc;
+  }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+
+function summaryLines() {
+  const t = allClientsTotals();
+  const n = (v) => Math.round(v).toLocaleString('ru-RU');
+  return SUMMARY_METRICS.map(({ key, label, rate }) => {
+    if (key === 'budget') return { label, value: `${n(t.budget)} руб`, sub: null };
+    const perUnit = t[key] > 0 ? Math.round(t.budget / t[key]) : 0;
+    return { label, value: n(t[key]), sub: `${rate} ${n(perUnit)} руб` };
+  });
+}
+
+function summaryText() {
+  const month = summaryMonth();
+  return (month ? `${month.label}\n` : '') + summaryLines().map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
+}
+
+function renderSummaryPopup() {
+  const month = summaryMonth();
+  document.getElementById('summaryTitle').textContent = month ? `Сводка по всем клиентам · ${month.label}` : 'Сводка по всем клиентам';
+  document.getElementById('summaryRows').innerHTML = summaryLines().map((r) => `
+    <div class="summary-row">
+      <span class="label">${r.label}</span>
+      <span class="value">${r.value}${r.sub ? `<span class="derived">${r.sub}</span>` : ''}</span>
+    </div>
+  `).join('');
+}
+
+function toggleSummaryPopup() {
+  const popup = document.getElementById('summaryPopup');
+  const opening = popup.classList.contains('hidden');
+  if (opening) renderSummaryPopup();
+  popup.classList.toggle('hidden', !opening);
+}
+
+document.getElementById('summaryPopupClose').addEventListener('click', () => {
+  document.getElementById('summaryPopup').classList.add('hidden');
+});
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('summaryPopup');
+  if (popup.classList.contains('hidden')) return;
+  if (popup.contains(e.target) || e.target.closest('#topActions')) return;
+  popup.classList.add('hidden');
+});
+document.getElementById('summaryCopyBtn').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(summaryText());
+    toast('Скопировано');
+  } catch {
+    toast('Не удалось скопировать');
+  }
+});
+
+// ══════════════════════ AVITO: ВЧЕРА (бета) ══════════════════════
+// Yesterday's views / contacts / spend + current advance from every linked Avito cabinet.
+// The pull runs on the server (and is prepared automatically every morning), so the panel
+// just shows its state: press "Авито за вчера", go do something else, and a notice pops up
+// when all cabinets are done — or reopen the panel later, the result is kept for the day.
+let avitoLinks = null; // { accounts, links }
+let avitoRows = {}; // projectId -> per-cabinet result from the pull
+let avitoDate = null;
+let avitoPull = null;
+let avitoPollTimer = null;
+
+async function loadAvitoLinks() {
+  const res = await api('/api/dashboard/avito-links');
+  if (res) avitoLinks = res;
+  return avitoLinks;
+}
+function linkedAccountId(projectId) {
+  const l = avitoLinks && avitoLinks.links.find((x) => x.projectId === projectId);
+  return l ? l.accountId : null;
+}
+
+async function toggleAvitoPanel() {
+  const panel = document.getElementById('avitoPanel');
+  if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
+  document.getElementById('summaryPopup').classList.add('hidden');
+  panel.classList.remove('hidden');
+  await loadAvitoLinks();
+  await showAvitoDate(addDays(todayIso(), -1)); // yesterday by default, another day via the date field
+}
+
+// Shows the stored pull for a day, starting one if that day was never pulled.
+async function showAvitoDate(date) {
+  avitoDate = date;
+  avitoPull = null;
+  avitoRows = {};
+  const input = document.getElementById('avitoPanelDate');
+  input.value = date;
+  input.max = addDays(todayIso(), -1);
+  renderAvitoPanel();
+  const res = await api(`/api/dashboard/avito-pull?date=${date}`);
+  if (avitoDate !== date) return; // the user picked another day meanwhile
+  if (res && res.pull) {
+    applyAvitoPull(res.pull);
+    if (res.pull.status !== 'done') trackAvitoPull(res.pull.date); // e.g. the morning auto-pull still running
+  } else startAvitoPull(false); // nothing prepared for this day yet — start it now
+  renderAvitoPanel();
+}
+
+async function startAvitoPull(force) {
+  const res = await api('/api/dashboard/avito-pull', { method: 'POST', body: JSON.stringify({ date: avitoDate, force }) });
+  if (res && res.pull) { applyAvitoPull(res.pull); trackAvitoPull(avitoDate); }
+}
+
+function applyAvitoPull(pull) {
+  avitoPull = pull;
+  avitoRows = pull.results || {};
+  renderAvitoPanel();
+}
+
+// Polls the server-side pull until it's done, then leaves a notice with a short per-cabinet
+// summary. Remembered in localStorage so a reload keeps tracking it.
+function trackAvitoPull(date) {
+  storedJob('dash_avito_pull', { date });
+  clearTimeout(avitoPollTimer);
+  const tick = async () => {
+    const res = await api(`/api/dashboard/avito-pull?date=${date}`, {}, null, false);
+    const pull = res && res.pull;
+    if (!pull) { storedJob('dash_avito_pull', null); dismissNotice('avito'); return; }
+    if (date === avitoDate) applyAvitoPull(pull);
+    const dayLabel = date === addDays(todayIso(), -1) ? 'вчера' : date.split('-').reverse().slice(0, 2).join('.');
+    const total = Object.keys(pull.results || {}).length + (pull.pending || []).length;
+    if (pull.status !== 'done') {
+      notice('avito', { title: `Авито за ${dayLabel}: собираю данные`, text: `Готово кабинетов: ${Object.keys(pull.results || {}).length} из ${total}. Можно работать в других разделах.`, busy: true });
+      avitoPollTimer = setTimeout(tick, 5000);
+      return;
+    }
+    storedJob('dash_avito_pull', null);
+    const failed = Object.entries(pull.results || {}).filter(([, r]) => r.errors && r.errors.length);
+    const nameOf = (id) => (state.projects.find((p) => p.id === id) || {}).name || id;
+    notice('avito', {
+      title: `Авито за ${dayLabel}: готово`,
+      kind: failed.length ? 'bad' : 'ok',
+      text: failed.length
+        ? `Получено: ${total - failed.length} из ${total}.\nС ошибками: ${failed.map(([id]) => nameOf(id)).join(', ')}`
+        : `Все ${total} кабинетов загружены.`,
+      actions: [{ label: 'Открыть', run: async () => {
+        dismissNotice('avito');
+        if (document.getElementById('avitoPanel').classList.contains('hidden')) await openAnalyticsAnd(toggleAvitoPanel);
+        if (avitoDate !== date) showAvitoDate(date);
+      } }],
+    });
+  };
+  tick();
+}
+
+function openAnalyticsAnd(fn) {
+  const tabBtn = document.querySelector('.tab-btn[data-tab="analytics"]');
+  if (currentTab !== 'analytics') tabBtn.click();
+  return fn();
+}
+
+function renderAvitoPanel() {
+  const table = document.getElementById('avitoPanelTable');
+  const sub = document.getElementById('avitoPanelSub');
+  const n = (v) => (v == null ? '—' : Math.round(v).toLocaleString('ru-RU'));
+  const total = { views: 0, contacts: 0, spend: 0 };
+  const pending = new Set((avitoPull && avitoPull.pending) || []);
+  if (!avitoPull) sub.textContent = `${formatDayLabel(avitoDate || addDays(todayIso(), -1))} · загрузка…`;
+  else if (avitoPull.status !== 'done') sub.textContent = `${formatDayLabel(avitoPull.date)} · собираю данные, можно закрыть окно — придёт уведомление`;
+  else sub.textContent = `${formatDayLabel(avitoPull.date)} · собрано ${new Date(avitoPull.finishedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+  const rows = orderedProjects().map((p) => {
+    const name = `${escapeHtml(p.name)}${isInactive(p) ? ' <span class="src">неактивный</span>' : ''}`;
+    if (!avitoLinks) return `<tr><td>${name}</td><td colspan="4" class="muted">…</td></tr>`;
+    if (!linkedAccountId(p.id)) return `<tr><td>${name}</td><td colspan="4" class="muted">кабинет не подключен</td></tr>`;
+    const r = avitoRows[p.id];
+    if (!r) return `<tr><td>${name}</td><td colspan="4" class="muted">${pending.has(p.id) ? 'в очереди…' : isInactive(p) ? 'не загружается' : '—'}</td></tr>`;
+    ['views', 'contacts', 'spend'].forEach((k) => { if (r[k] != null) total[k] += r[k]; });
+    const warn = r.errors && r.errors.length ? `<span class="warn" title="${escapeHtml(r.errors.join('\n'))}">⚠</span>` : '';
+    const advance = r.advance != null
+      ? `${n(r.advance)} ₽`
+      : r.wallet != null ? `${n(r.wallet)} ₽<span class="src">кошелёк</span>` : '—';
+    return `<tr><td>${name}${warn}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : `${n(r.spend)} ₽`}</td><td>${advance}</td></tr>`;
+  });
+  table.innerHTML = `
+    <thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th title="Текущий аванс в кабинете, не на выбранную дату">Аванс сейчас</th></tr></thead>
+    <tbody>${rows.join('')}
+      <tr class="total"><td>Итого</td><td>${n(total.views)}</td><td>${n(total.contacts)}</td><td>${n(total.spend)} ₽</td><td></td></tr>
+    </tbody>`;
+}
+
+// Writes the pulled numbers into the Analytics table for that day (only fields Avito
+// actually returned — a missing spend never overwrites a hand-entered budget with 0).
+async function applyAvitoToTable() {
+  const entries = Object.entries(avitoRows).filter(([, r]) => r && r.linked);
+  if (!entries.length) { toast('Нечего вносить'); return; }
+  if (!confirm(`Внести просмотры, контакты и бюджет за ${formatDayLabel(avitoDate)} в таблицу аналитики? Уже внесённые за этот день значения будут заменены.`)) return;
+  let saved = 0;
+  for (const [projectId, r] of entries) {
+    const body = { projectId, date: avitoDate };
+    if (r.views != null) body.views = r.views;
+    if (r.contacts != null) body.contacts = r.contacts;
+    if (r.spend != null) body.budget = r.spend;
+    if (Object.keys(body).length === 2) continue;
+    const res = await api('/api/dashboard/daily-metric', { method: 'POST', body: JSON.stringify(body) });
+    if (res && res.dailyMetric) {
+      state.dailyMetrics = state.dailyMetrics.filter((m) => !(m.projectId === projectId && m.date === avitoDate));
+      state.dailyMetrics.push(res.dailyMetric);
+      saved += 1;
+    }
+  }
+  currentAnalyticsDay = avitoDate || currentAnalyticsDay;
+  renderAnalytics();
+  toast(`Внесено клиентов: ${saved}`);
+}
+
+document.getElementById('avitoPanelClose').addEventListener('click', () => document.getElementById('avitoPanel').classList.add('hidden'));
+document.getElementById('avitoPanelRefresh').addEventListener('click', () => {
+  if (avitoPull && avitoPull.status !== 'done') { toast('Уже собираю — дождитесь уведомления'); return; }
+  startAvitoPull(true);
+});
+document.getElementById('avitoPanelSettings').addEventListener('click', () => openAvitoKeysModal());
+document.getElementById('avitoPanelDate').addEventListener('change', (e) => {
+  const date = e.target.value;
+  if (!date || date > addDays(todayIso(), -1)) { e.target.value = avitoDate; toast('Можно выбрать вчера или раньше'); return; }
+  showAvitoDate(date);
+});
+document.getElementById('avitoPanelApply').addEventListener('click', applyAvitoToTable);
+
+// ── Кабинеты Авито: bulk paste of keys + manual linking ──
+async function openAvitoKeysModal() {
+  openModal(`
+    <h3>Кабинеты Авито</h3>
+    <div class="hint">Вставьте ключи сразу по всем клиентам — по одной строке на клиента: имя (можно только фамилию), client_id, client_secret и, если есть, user id. Подойдёт копия строк из таблицы (Excel/Google Sheets) или просто через пробел / «;». User id можно не указывать — он подтянется из Авито сам.</div>
+    <textarea id="mKeysText" placeholder="Алексей Шевчук	a1b2c3d4e5f6g7h8i9j0	s3cr3ts3cr3ts3cr3ts3cr3t&#10;Соболева; k1l2m3n4o5p6q7r8s9t0; an0th3rs3cr3tan0th3rs3cr3t; 123456789"></textarea>
+    <div id="mKeysResults"></div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn" id="mKeysImport">Подключить</button>
+    </div>
+    <label>Подключения по клиентам</label>
+    <div class="link-list" id="mKeysLinks"><div class="empty">Загрузка…</div></div>
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Закрыть</button>
+    </div>
+  `);
+  document.getElementById('modalBody').classList.add('wide');
+  document.getElementById('mKeysImport').addEventListener('click', async () => {
+    const text = document.getElementById('mKeysText').value;
+    if (!text.trim()) return;
+    const btn = document.getElementById('mKeysImport');
+    btn.disabled = true; btn.textContent = 'Проверяю ключи в Авито…';
+    const res = await api('/api/dashboard/avito-import', { method: 'POST', body: JSON.stringify({ text }) });
+    btn.disabled = false; btn.textContent = 'Подключить';
+    if (!res) return;
+    avitoLinks = { accounts: res.accounts, links: res.links };
+    document.getElementById('mKeysResults').innerHTML = res.results.map((r) =>
+      `<div class="import-result ${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓' : '✕'} Строка ${r.line}: ${escapeHtml(r.project || r.name || '')} — ${escapeHtml(r.message)}</div>`
+    ).join('');
+    if (res.results.every((r) => r.ok)) document.getElementById('mKeysText').value = '';
+    renderAvitoLinksList();
+  });
+  await loadAvitoLinks();
+  renderAvitoLinksList();
+}
+
+function renderAvitoLinksList() {
+  const el = document.getElementById('mKeysLinks');
+  if (!el || !avitoLinks) return;
+  const options = (selected) => ['<option value="">— не подключен —</option>',
+    ...avitoLinks.accounts.map((a) => `<option value="${a.id}"${a.id === selected ? ' selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.userId || '')})</option>`)].join('');
+  el.innerHTML = orderedProjects().map((p) =>
+    `<div class="link-row"><span>${linkedAccountId(p.id) ? '🟢' : '⚪'} ${escapeHtml(p.name)}</span><select data-project="${p.id}">${options(linkedAccountId(p.id))}</select></div>`
+  ).join('');
+  el.querySelectorAll('select').forEach((sel) => sel.addEventListener('change', async () => {
+    const res = await api('/api/dashboard/avito-link', { method: 'POST', body: JSON.stringify({ projectId: sel.dataset.project, accountId: sel.value || null }) });
+    if (res) { avitoLinks = res; renderAvitoLinksList(); renderAvitoPanel(); toast('Сохранено'); }
+  }));
+}
+
+// ══════════════════════ ВЫГРУЗКА ОТЧЁТА (через рутину Claude Code) ══════════════════════
+// The worker snapshots the Analytics table for the period, fires the Claude Code routine,
+// and the routine posts back "Текущие наблюдения" per client; the .docx is then assembled
+// by the worker in the agency's usual format. The modal closes right after "Сформировать";
+// progress and the download button live in a notice, so every tab stays usable meanwhile.
+let reportPollTimer = null;
+const REPORT_TIMEOUT_MS = 15 * 60 * 1000;
+
+async function openReportModal() {
+  const info = await api('/api/dashboard/report-last');
+  const yesterday = addDays(todayIso(), -1);
+  // Default period: everything since the last generated report (covers weekends / skipped
+  // days, which the report then shows as "За DD–DD месяц"), capped to a week back.
+  let from = yesterday;
+  if (info && info.lastTo && info.lastTo < yesterday) {
+    const next = addDays(info.lastTo, 1);
+    if (next >= addDays(yesterday, -6)) from = next;
+  }
+  openModal(`
+    <h3>Выгрузка отчёта</h3>
+    <div class="hint">Цифры берутся из таблицы аналитики, неактивные клиенты в отчёт не попадают. Если период больше одного дня — в отчёте будет блок «За DD–DD месяц» вместо «Вчера». Отчёт готовится в фоне — когда будет готов, появится уведомление с кнопкой «Скачать».</div>
+    <div class="date-row">
+      <div><label>С</label><input type="date" id="mRepFrom" value="${from}"></div>
+      <div><label>По</label><input type="date" id="mRepTo" value="${yesterday}"></div>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn" id="mRepGo">Сформировать</button>
+    </div>
+    <label>Готовые отчёты</label>
+    <div class="link-list" id="mRepHistory"><div class="empty">Загрузка…</div></div>
+  `);
+  loadReportHistory();
+  document.getElementById('mRepGo').addEventListener('click', async () => {
+    const dateFrom = document.getElementById('mRepFrom').value;
+    const dateTo = document.getElementById('mRepTo').value;
+    closeModal();
+    notice('report', { title: 'Выгрузка отчёта: запускаю…', busy: true });
+    const res = await api('/api/dashboard/report-job', { method: 'POST', body: JSON.stringify({ dateFrom, dateTo }) });
+    if (!res || !res.job) { notice('report', { title: 'Выгрузка отчёта не запустилась', kind: 'bad', text: 'Попробуйте ещё раз.' }); return; }
+    storedJob('dash_report_job', { id: res.job.id, startedAt: Date.now() });
+    trackReportJob(res.job.id);
+  });
+}
+
+const REPORT_STATUS_LABELS = {
+  done: 'готов',
+  not_configured: 'с авто-наблюдениями',
+  failed: 'с авто-наблюдениями',
+  queued: 'готовится…',
+  sent: 'готовится…',
+  running: 'готовится…',
+};
+
+// Every report requested in the last 14 days, newest first, each with its own download
+// button — the place to find a file again after reloading the page.
+async function loadReportHistory() {
+  const el = document.getElementById('mRepHistory');
+  const res = await api('/api/dashboard/report-jobs');
+  if (!el || !document.body.contains(el)) return;
+  const jobs = (res && res.jobs) || [];
+  if (!jobs.length) { el.innerHTML = '<div class="empty">Пока нет ни одного отчёта</div>'; return; }
+  el.innerHTML = '';
+  jobs.forEach((job) => {
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    const created = new Date(job.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    row.innerHTML = `<span>${escapeHtml(job.periodLabel)} <span class="src" style="display:inline">· создан ${created} · ${REPORT_STATUS_LABELS[job.status] || job.status}</span></span>`;
+    const btn = document.createElement('button');
+    btn.className = 'btn small secondary';
+    btn.textContent = 'Скачать';
+    btn.addEventListener('click', () => downloadReport(job));
+    row.appendChild(btn);
+    el.appendChild(row);
+  });
+}
+
+function trackReportJob(id) {
+  clearTimeout(reportPollTimer);
+  const started = (storedJob('dash_report_job') || {}).startedAt || Date.now();
+  const tick = async () => {
+    const res = await api(`/api/dashboard/report-job?id=${id}`, {}, null, false);
+    const job = res && res.job;
+    if (!job) { storedJob('dash_report_job', null); dismissNotice('report'); return; }
+    const period = `${job.periodLabel}, клиентов: ${job.clientsCount}`;
+    const warnings = job.warnings && job.warnings.length ? `\n${job.warnings.join('\n')}` : '';
+    const download = { label: 'Скачать', run: () => downloadReport(job) };
+    const session = job.sessionUrl ? [{ label: 'Сессия Claude', secondary: true, run: () => window.open(job.sessionUrl, '_blank', 'noopener') }] : [];
+    if (job.status === 'done') {
+      // Kept in localStorage until this notice is closed, so a reload shows it again.
+      notice('report', { title: 'Отчёт готов', kind: 'ok', text: period + warnings, actions: [download] });
+      return;
+    }
+    const timedOut = Date.now() - started > REPORT_TIMEOUT_MS;
+    if (job.status === 'not_configured' || job.status === 'failed' || timedOut) {
+      notice('report', {
+        title: timedOut ? 'Claude не ответил за 15 минут' : job.status === 'not_configured' ? 'Рутина Claude не подключена' : 'Рутина Claude не запустилась',
+        kind: 'bad',
+        text: `${period}\nМожно скачать отчёт с автоматическими наблюдениями.${warnings}`,
+        actions: [{ ...download, label: 'Скачать с авто-наблюдениями' }, ...session],
+      });
+      return;
+    }
+    notice('report', {
+      title: job.status === 'running' ? 'Claude пишет наблюдения…' : 'Отчёт готовится…',
+      text: `${period}. Можно работать в других разделах — здесь появится кнопка «Скачать».`,
+      busy: true,
+      actions: [{ label: 'Скачать черновик сейчас', secondary: true, run: () => downloadReport(job) }, ...session],
+    });
+    reportPollTimer = setTimeout(tick, 5000);
+  };
+  tick();
+}
+noticeCloseHooks.report = () => { clearTimeout(reportPollTimer); storedJob('dash_report_job', null); };
+noticeCloseHooks.avito = () => { clearTimeout(avitoPollTimer); storedJob('dash_avito_pull', null); };
+
+async function downloadReport(job) {
+  let res;
+  try {
+    res = await apiFetch(`/api/dashboard/report-job/file?id=${job.id}`, { headers: { 'x-dashboard-password': getPassword() } });
+  } catch { res = null; }
+  if (!res || !res.ok) { toast('Не удалось скачать'); return; }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = job.fileName || 'report.docx';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ══════════════════════ WEEKS + RATINGS (shown on the Projects cards / table) ══════════════════════
+function isoMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  return ymd(date);
+}
+
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return ymd(d);
+}
+
+function formatWeekRange(weekStart) {
+  const start = new Date(weekStart + 'T00:00:00');
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const sm = start.getMonth(), em = end.getMonth();
+  if (sm === em) return `${start.getDate()}-${end.getDate()} ${MONTHS_GENITIVE_SHORT[em]}`;
+  return `${start.getDate()} ${MONTHS_GENITIVE_SHORT[sm]} - ${end.getDate()} ${MONTHS_GENITIVE_SHORT[em]}`;
+}
+
+// state.projectRatings is a flat list of independent per-(project, week, role)
+// rows — group the three roles for this project/week here for rendering.
+function projectRatingFor(projectId, weekStart) {
+  const draft = { client: { score: 0, comment: '' }, manager: { score: 0, comment: '' }, specialist: { score: 0, comment: '' } };
+  state.projectRatings
+    .filter((r) => r.projectId === projectId && r.weekStart === weekStart)
+    .forEach((r) => { draft[r.role] = { score: r.score, comment: r.comment }; });
+  return draft;
+}
+
+function avgScore(scores) {
+  const valid = scores.filter((s) => s > 0);
+  return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+}
+
+function allTimeAvgFor(projectId) {
+  const scores = state.projectRatings
+    .filter((r) => r.projectId === projectId && r.score > 0)
+    .map((r) => r.score);
+  return avgScore(scores);
+}
+
+function fmtAvg(n) { return n == null ? '—' : String(Math.round(n * 10) / 10); }
+
+// ── util ──
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Auto-login last, once every const above (icons, top-bar actions…) is initialised.
+if (isUnlocked()) {
+  document.getElementById('gate').style.display = 'none';
+  boot();
+}
+</script>
+<script src="/at-visit.js" defer></script>
+</body>
+</html>
