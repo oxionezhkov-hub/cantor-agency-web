@@ -4328,6 +4328,34 @@ async function botMayAddBot(env, from) {
   return team.users.some((u) => u.active && u.tgId && String(u.tgId) === String(from.id));
 }
 
+// «Сделано» tasks that our message in the client's chat reports: the task was done (a person marked
+// it), and now someone from the team wrote to the client about it — its words are in the message
+// (at least half of the task's word stems, two or more). Then «клиенту сообщили» is a fact, not a
+// guess: the task closes, with the message in its history. No AI involved.
+async function botCloseReported(env, chatRec, text, t, from) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const msgStems = botTaskStems(text);
+  if (msgStems.size < 2) return 0;
+  const mem = await atSnapshot(env);
+  let closed = 0;
+  for (const m of mem.tasks.values()) {
+    if (m.status !== 'done' || m.projectId !== chatRec.projectId || !m.doneAt || Date.parse(m.doneAt) > t) continue;
+    const stems = botTaskStems(m.text);
+    const common = [...stems].filter((x) => msgStems.has(x)).length;
+    if (common < Math.min(2, stems.size) || common / stems.size < 0.5) continue;
+    const task = await kv.get(`task:${m.id}`, 'json');
+    if (!task || task.status !== 'done') continue;
+    const nowIso = new Date(t).toISOString();
+    Object.assign(task, { status: 'closed', informedAt: nowIso, updatedAt: nowIso, updatedBy: from });
+    delete task.hint;
+    task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: 'Бот', what: `клиенту сообщили в чате (${from}): «${String(text).slice(0, 160)}»` }].slice(-20);
+    await kv.put(`task:${task.id}`, JSON.stringify(task));
+    if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(task.id, task);
+    await atTouch(kv, [task.id]);
+    closed += 1;
+  }
+  return closed;
+}
 async function botOnMessage(env, msg, edited) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const chat = msg.chat;
@@ -4402,6 +4430,9 @@ async function botOnMessage(env, msg, edited) {
           await kv.put('at:clients', JSON.stringify(clients));
           signalChanged = true;
         }
+      }
+      if (chatRec.projectId) {
+        try { await botCloseReported(env, chatRec, text, t, botUserName(msg.from)); } catch (err) { console.error('close reported failed', err && err.message); }
       }
       const { date, hh } = botMsk(t);
       const reportKey = `bot:report:${chat.id}:${date}`;
@@ -4481,7 +4512,9 @@ async function botOnReaction(env, upd) {
       touched.push('#clients');
     }
   }
-  if (task) {
+  // The client manager's 👍 in the work chat means «увидела», not «беру»: it neither takes the
+  // task nor puts it on her.
+  if (task && reactor && reactor.role !== 'manager') {
     const taken = added.some((e) => BOT_REACT_TAKEN.has(e));
     const what = [];
     const nowIso = new Date(t).toISOString();
@@ -4815,6 +4848,9 @@ const BOT_EXTRACT_SYSTEM = [
   'записался»), приветствия и ответы «спасибо/хорошо/ок» — тоже НЕ задачи: в том числе не заводи задач вида «подтвердить',
   'получение», «ответить клиенту», «поблагодарить», «отреагировать». Задача из чата клиента — только конкретная просьба',
   'клиента что-то сделать или вопрос, на который команда ещё не ответила в этих же сообщениях.',
+  'Просьба команды КЛИЕНТУ (пополнить баланс, прислать скриншот или файл, выбрать время, ответить на вопрос, подтвердить) —',
+  'это дело клиента, а НЕ задача команды: такие задачи не заводи.',
+  'В рабочем чате задачу на КМ («Менеджер — Cantor Agency») ставь только если КМ прямо тегнули (@username) или назвали по имени.',
   'Реакции (👍 и т.п.) показаны в квадратных скобках после текста: реакция команды на просьбу = её приняли/взяли.',
   'Тебе дают новые сообщения из одного топика/чата, контекст до них и список открытых задач этого клиента.',
   'Верни ТОЛЬКО JSON без пояснений:',
@@ -4925,9 +4961,13 @@ async function botProcessQueue(env) {
 // The bot only puts a task on someone the message itself names — by name, alias or @username — or
 // on the person who wrote it ("сделаю"). A guess from context leaves the task unclaimed: it waits at
 // the top of the tracker for someone to take it and set the deadline.
+// "Сделаю к вечеру", "проверю", "беру" — the author takes it on themselves.
+const BOT_SELF_COMMIT_RE = /(^|[^а-яё])(сделаю|сделаем|беру|возьму|возьм[её]м|займусь|займ[её]мся|подготовлю|подготовим|отправлю|отправим|пришлю|пришл[её]м|проверю|проверим|посмотрю|посмотрим|исправлю|исправим|настрою|настроим|загружу|выложу|поправлю|передам|напишу|уточню|созвонюсь|разберусь|доделаю)([^а-яё]|$)/i;
+// The person was asked: tagged (@username) or named in the message — or wrote it themselves as a
+// commitment. Being the author of a request to someone else ("Пополните аванс") isn't enough.
 function botNamedIn(src, who) {
   if (!src || !who) return false;
-  if (atMatchUser(src.from, [who])) return true;
+  if (atMatchUser(src.from, [who]) && BOT_SELF_COMMIT_RE.test(String(src.text || ''))) return true;
   const text = String(src.text || '');
   if (who.tgUsername && text.toLowerCase().includes(`@${String(who.tgUsername).toLowerCase()}`)) return true;
   return !!atMatchUser(text, [who]);
@@ -4960,6 +5000,16 @@ function botFindTwinTask(openTasks, text, projectId, chatId, threadId) {
     return common >= Math.min(2, Math.min(a.size, b.size)) && common / Math.max(a.size, b.size) >= 0.5;
   }) || null;
 }
+// Our message in the client's chat asking the CLIENT to do something ("Пополните, пожалуйста, аванс",
+// "Пришлите скриншот", "Подскажите удобное время") — the client's to-do, not a task for the team.
+// Our own commitments in it ("проверю и напишу") still are.
+function botIsRequestToClient(chatRec, src) {
+  if (!chatRec || chatRec.kind !== 'client' || !src || !src.team) return false;
+  const text = String(src.text || '');
+  if (BOT_SELF_COMMIT_RE.test(text)) return false;
+  return /(^|[^а-яё])(пополн|пришл|отправ|выбер|подскаж|напиш|подтверд|оплат|скин|загруз|заполн|посмотр|проверь|дайте|сообщ)[а-яё]*(ите|йте)([^а-яё]|$)/i.test(text)
+    || /(^|[^а-яё])нужно пополн|необходимо пополн|пополните/i.test(text);
+}
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -4973,6 +5023,7 @@ async function botApplyEvents(env, events, ctx) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
     const dueMs = botParseMskDateTime(ev.due);
+    if (ev.type === 'new_task' && ev.text && botIsRequestToClient(ctx.chatRec, src)) continue;
     if (ev.type === 'new_task' && ev.text) {
       // The same request often comes twice: the client asks in their chat and the manager passes it
       // on in the work chat, or two messages in a row repeat it — the AI then proposes it again.
@@ -5045,8 +5096,11 @@ async function botApplyEvents(env, events, ctx) {
       // A question ("а это сделали?") is not an answer; and a task already asked about with the same
       // guess in the last day isn't asked about again (a save in the tracker clears task.hint).
       const asking = src && /\?[\s)!.]*$/.test(String(src.text || '').trim());
+      // Only our own messages say that something is done or was told to the client — not the
+      // client's, and not a bare «хорошо» / «окей».
+      const weak = !src || src.team === false || botIsAckText(src.text) || String(src.text || '').trim().length < 12;
       const lastAsked = task.hintSeen && task.hintSeen[ev.status] ? Date.parse(task.hintSeen[ev.status]) : 0;
-      if (closes && !asking && (!task.hint || task.hint.status !== ev.status) && !(lastAsked && Date.now() - lastAsked < 24 * 3600000)) {
+      if (closes && !asking && !weak && (!task.hint || task.hint.status !== ev.status) && !(lastAsked && Date.now() - lastAsked < 24 * 3600000)) {
         task.hint = { status: ev.status, at: src ? new Date(src.t).toISOString() : nowIso, msgId: src ? src.id : null, from: src ? src.from : null, text: src ? String(src.text).slice(0, 200) : null };
         task.hintSeen = { ...(task.hintSeen || {}), [ev.status]: nowIso };
         hinted.push(task);
@@ -5489,6 +5543,25 @@ async function cronClaimTick(env, scheduledTime) {
     return true;
   }
 }
+// Once: «🤖 похоже, сделано?» marks the AI put on tasks from a client's message or a bare «хорошо»
+// before such messages stopped counting — they only cluttered the tracker.
+async function botDropWeakHintsOnce(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (await kv.get('at:migr:hints-v1')) return;
+  await kv.put('at:migr:hints-v1', '1');
+  const team = await atGetTeam(env);
+  const ours = (name) => !!atMatchUser(String(name || ''), team.users) || /менеджер|cantor/i.test(String(name || ''));
+  const touched = [];
+  for (const task of await botAllTasks(kv)) {
+    const h = task.hint;
+    if (!h || (task.status !== 'open' && task.status !== 'done')) continue;
+    if (ours(h.from) && !botIsAckText(h.text) && String(h.text || '').trim().length >= 12) continue;
+    delete task.hint;
+    await kv.put(`task:${task.id}`, JSON.stringify(task));
+    touched.push(task.id);
+  }
+  if (touched.length) await atTouch(kv, touched);
+}
 async function botScheduled(env) {
   if (!env.CONTROL_BOT_TOKEN || !env.AGENCY_DASHBOARD_KV) return;
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -5509,6 +5582,11 @@ async function botScheduled(env) {
     await atEnsureNewMembers(env);
   } catch (err) {
     console.error('team members seed failed', err && err.stack);
+  }
+  try {
+    await botDropWeakHintsOnce(env);
+  } catch (err) {
+    console.error('hint cleanup failed', err && err.stack);
   }
   try {
     await botProcessQueue(env);
