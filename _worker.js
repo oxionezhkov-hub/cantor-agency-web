@@ -2800,6 +2800,7 @@ async function handleDashboardApi(request, env, url, ctx) {
       // Links on the client's card in Avito Tasks (edited there; the Avito pull fills avitoProfileUrl).
       profileUrl: existing.profileUrl || null,
       briefUrl: existing.briefUrl || null,
+      staffUrl: existing.staffUrl || null, // ссылка Авито «доступ для сотрудников» — вход команды в кабинет клиента
       avitoProfileUrl: existing.avitoProfileUrl || null,
       // Inactive clients sink to the bottom of the Projects/Analytics lists and are left out of
       // the daily report and the Avito pull — history stays, nothing is deleted. The dashboard
@@ -4385,6 +4386,7 @@ async function botOnMessage(env, msg, edited) {
   }, t);
   const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
   if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
+  if (isTeam) await botSaveStaffLink(env, chatRec, threadId, text);
 
   if (chatRec.kind === 'client' && !edited) {
     const pendingKey = `bot:pending:${chat.id}`;
@@ -5624,6 +5626,24 @@ async function botAnswerQuestion(env, question) {
 //   { chatId? | chatTitle?, topics: { <threadId>: name }, entries: [{ thread, id, t, from, team, text, reply }], tasks: [...] }
 // chatTitle ("Авито — Ольга Агешина", as in the export) finds the client chat the bot is in; with
 // neither, the work chat is used.
+// «Ссылка для подключения сотрудников» (приглашение в кабинет Авито клиента), отправленная командой в
+// топик клиента рабочего чата или в чат клиента, сохраняется в карточку клиента — кнопка «Кабинет»
+// в Avito Tasks. В журнал переписки ссылка попадает скрытой, как и раньше.
+const BOT_STAFF_LINK_RE = /https?:\/\/(?:www\.)?avito\.ru\/(?:to\/)?employees\/invite\/[A-Za-z0-9_-]+/i;
+async function botSaveStaffLink(env, chatRec, threadId, text) {
+  const m = String(text || '').match(BOT_STAFF_LINK_RE);
+  if (!m) return;
+  const kv = env.AGENCY_DASHBOARD_KV;
+  let projectId = chatRec.kind === 'client' ? chatRec.projectId : null;
+  if (chatRec.kind === 'work') {
+    const topic = await kv.get(`bot:topic:${chatRec.id}:${threadId}`, 'json');
+    projectId = topic && topic.projectId;
+  }
+  const project = projectId && (await kv.get(`project:${projectId}`, 'json'));
+  if (!project || project.staffUrl === m[0]) return;
+  await kv.put(`project:${projectId}`, JSON.stringify({ ...project, staffUrl: m[0], updatedAt: new Date().toISOString() }));
+  await atTouch(kv, ['#projects']);
+}
 function botRedactSecrets(text) {
   return String(text || '')
     // API keys / client secrets pasted into chats: long unbroken letter+digit runs.
@@ -6143,6 +6163,7 @@ async function atLoadProjects(kv) {
     inactive: !!p.inactive,
     profileUrl: p.profileUrl || p.avitoProfileUrl || null,
     briefUrl: p.briefUrl || null,
+    staffUrl: p.staffUrl || null,
   })).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
 async function atLoadClientSignals(kv) {
@@ -7087,7 +7108,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       if (v && !/^https?:\/\//i.test(v)) v = `https://${v}`;
       return v && isValidHttpUrl(v) ? v : null;
     };
-    for (const key of ['profileUrl', 'briefUrl']) {
+    for (const key of ['profileUrl', 'briefUrl', 'staffUrl']) {
       if (!(key in body)) continue;
       if (body[key] && !link(body[key])) return json({ error: 'bad_url', field: key }, 400);
       project[key] = link(body[key]);
@@ -7100,7 +7121,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     project.updatedAt = new Date(nowMs).toISOString();
     await kv.put(`project:${projectId}`, JSON.stringify(project));
     await atTouch(kv, ['#projects']);
-    const pub = { id: project.id, name: project.name, inactive: !!project.inactive, profileUrl: project.profileUrl || project.avitoProfileUrl || null, briefUrl: project.briefUrl || null };
+    const pub = { id: project.id, name: project.name, inactive: !!project.inactive, profileUrl: project.profileUrl || project.avitoProfileUrl || null, briefUrl: project.briefUrl || null, staffUrl: project.staffUrl || null };
     if (AT_MEM && AT_MEM.projects) AT_MEM.projects = AT_MEM.projects.map((p) => (p.id === projectId ? pub : p));
     return json({ ok: true, project: pub });
   }
@@ -7114,7 +7135,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const data = await res.json();
     if (!res.ok) return json(data, res.status);
     const p = data.project;
-    return json({ ok: true, project: { id: p.id, name: p.name, inactive: false, profileUrl: null, briefUrl: null } });
+    return json({ ok: true, project: { id: p.id, name: p.name, inactive: false, profileUrl: null, briefUrl: null, staffUrl: null } });
   }
 
   // Цифры по клиентам для вкладки «Клиенты»: вчера, текущий месяц, траты за неделю и аванс.
