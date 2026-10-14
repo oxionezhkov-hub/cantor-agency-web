@@ -4933,6 +4933,33 @@ function botNamedIn(src, who) {
   return !!atMatchUser(text, [who]);
 }
 
+// Same client, still open or done-not-reported, made in the last 7 days, and the same request: the
+// same words, or one text is the other plus extra words ("Проверить причину отсутствия заявок" /
+// "… с 1 октября"), starting with the same action. Different specifics on both sides — «фото для математики» / «… информатики»,
+// 17:00 / 18:30, two different names — are different tasks.
+const BOT_TWIN_FILLER = new Set(['нужно', 'нужна', 'нужен', 'надо', 'необходимо', 'пожалуйста', 'срочно', 'сегодня', 'завтра', 'все', 'всё', 'еще', 'ещё', 'для', 'это']);
+function botTaskStems(text) {
+  return new Set(botNorm(text).split(' ').filter((w) => (w.length > 2 || /\d/.test(w)) && !BOT_TWIN_FILLER.has(w)).map((w) => (/\d/.test(w) ? w : w.slice(0, 5))));
+}
+function botFindTwinTask(openTasks, text, projectId, chatId, threadId) {
+  const a = botTaskStems(text);
+  if (!a.size) return null;
+  const weekAgo = Date.now() - 7 * 24 * 3600000;
+  return (openTasks || []).find((t) => {
+    if (t.status !== 'open' && t.status !== 'done') return false;
+    if (Date.parse(t.createdAt || 0) < weekAgo) return false;
+    const same = projectId ? t.projectId === projectId : String(t.chatId) === String(chatId) && String(t.threadId) === String(threadId);
+    if (!same) return false;
+    const b = botTaskStems(t.text);
+    if (!b.size) return false;
+    if ([...a][0] !== [...b][0]) return false; // the action itself («пополнить» / «сообщить о пополнении»)
+    const onlyA = [...a].filter((x) => !b.has(x)).length;
+    const onlyB = [...b].filter((x) => !a.has(x)).length;
+    if (onlyA && onlyB) return false;
+    const common = a.size - onlyA;
+    return common >= Math.min(2, Math.min(a.size, b.size)) && common / Math.max(a.size, b.size) >= 0.5;
+  }) || null;
+}
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -4947,11 +4974,25 @@ async function botApplyEvents(env, events, ctx) {
     const src = byMsg.get(Number(ev.msg));
     const dueMs = botParseMskDateTime(ev.due);
     if (ev.type === 'new_task' && ev.text) {
+      // The same request often comes twice: the client asks in their chat and the manager passes it
+      // on in the work chat, or two messages in a row repeat it — the AI then proposes it again.
+      // A task of the same client with (nearly) the same words, still open, is the same task: the
+      // new message is noted on it instead of a second card.
+      const twin = botFindTwinTask(ctx.openTasks, String(ev.text), ctx.topic.projectId, ctx.chatRec.id, ctx.threadId);
+      if (twin) {
+        twin.activity = [...(Array.isArray(twin.activity) ? twin.activity : []), { t: Date.now(), by: 'Бот', what: `снова в ${ctx.chatRec.kind === 'client' ? 'чате клиента' : 'рабочем чате'}${src ? ` (${src.from}): «${String(src.text).slice(0, 160)}»` : ''}` }].slice(-20);
+        twin.updatedAt = nowIso;
+        await kv.put(`task:${twin.id}`, JSON.stringify(twin));
+        touched.push(twin.id);
+        continue;
+      }
       const msgId = src ? src.id : ctx.fresh[ctx.fresh.length - 1].id;
       const id = `bot${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`;
       const task = {
         id,
         text: String(ev.text).slice(0, 300),
+        // The message the task came from, as the description: who asked and in what words.
+        note: src && src.text ? `${src.from}: «${String(src.text).slice(0, 1500)}»` : '',
         status: 'open',
         owner: null,
         assigneeId: null,
