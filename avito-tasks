@@ -928,6 +928,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
   <symbol id="i-crm" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0110 4h4a1.5 1.5 0 011.5 1.5V7M3 12.5h18"/></symbol>
   <symbol id="i-video" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12.2V4.5A1.5 1.5 0 014.5 3h7.7l8.8 8.8a1.5 1.5 0 010 2.1l-7.1 7.1a1.5 1.5 0 01-2.1 0z"/><circle cx="8" cy="8" r="1.5"/></symbol>
   <symbol id="i-sum" viewBox="0 0 24 24"><path d="M18 5H6l6 7-6 7h12"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
@@ -2627,6 +2628,7 @@ function linksHtml(p) {
     return `<form class="cc-linkform" data-linkform>
       <label>Профиль на Авито<input class="input" name="profileUrl" type="url" inputmode="url" placeholder="https://www.avito.ru/…" value="${esc(p.profileUrl || '')}"></label>
       <label>Бриф<input class="input" name="briefUrl" type="url" inputmode="url" placeholder="Ссылка на анкету или документ" value="${esc(p.briefUrl || '')}"></label>
+      <label>Вход в кабинет для сотрудников<input class="input" name="staffUrl" type="url" inputmode="url" placeholder="Ссылка Авито для подключения сотрудника" value="${esc(p.staffUrl || '')}"></label>
       <label class="cc-check"><input type="checkbox" name="inactive" ${p.inactive ? 'checked' : ''}><span>Неактивный клиент</span></label>
       <div class="row"><button type="button" class="btn btn-quiet btn-sm" data-links-cancel>Отмена</button><button class="btn btn-primary btn-sm">Сохранить</button></div>
     </form>`;
@@ -2652,7 +2654,7 @@ $('clientCards').addEventListener('submit', async (e) => {
   const btn = form.querySelector('button:not([type])');
   btn.disabled = true;
   try {
-    const res = await api('client-links', { projectId: pid, profileUrl: form.profileUrl.value.trim(), briefUrl: form.briefUrl.value.trim(), inactive: form.inactive.checked });
+    const res = await api('client-links', { projectId: pid, profileUrl: form.profileUrl.value.trim(), briefUrl: form.briefUrl.value.trim(), staffUrl: form.staffUrl.value.trim(), inactive: form.inactive.checked });
     if (res.status === 400) { btn.disabled = false; toast('Это не похоже на ссылку — проверьте адрес'); return; }
     if (!res.ok) throw new Error();
     S.projects = S.projects.map((p) => (p.id === pid ? Object.assign({}, p, res.data.project) : p));
@@ -4226,7 +4228,7 @@ function renderClients() {
         <div class="cc-foot">
           <button class="btn btn-ghost btn-sm" data-newtask>${ico('plus', 'ic-sm')}Задача</button>
           <button class="cc-mini" data-filter>Задачи: ${i.open.length}${ico('chev', 'rot-90')}</button>
-          <span class="cc-links2">${link(p.profileUrl, 'Профиль на Авито', 'tag')}${link(p.briefUrl, 'Бриф', 'report')}<button class="cc-ico" data-links-edit title="Изменить клиента: ссылки, активность" aria-label="Изменить клиента">${ico('edit')}</button></span>
+          <span class="cc-links2">${link(p.staffUrl, 'Подключиться к кабинету Авито (ссылка для сотрудников)', 'key')}${link(p.profileUrl, 'Профиль на Авито', 'tag')}${link(p.briefUrl, 'Бриф', 'report')}<button class="cc-ico" data-links-edit title="Изменить клиента: ссылки, вход в кабинет, активность" aria-label="Изменить клиента">${ico('edit')}</button></span>
         </div>
       </div>`;
     }).join('');
