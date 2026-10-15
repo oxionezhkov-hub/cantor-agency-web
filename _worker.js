@@ -7821,7 +7821,7 @@ async function handleKbJobCallback(request, env, url) {
       job.status = 'running';
       await kbPutJob(kv, job);
     }
-    if (job.mode === 'assistant') return json(aiJobPayload(job, base, q));
+    if (job.mode === 'assistant') return json(await aiJobPayload(env, job, base, q));
     return json({
       jobId: job.id,
       instructions: kbInstructions(job),
@@ -7986,16 +7986,17 @@ async function atKbCron(env) {
 
 // ── Avito Tasks → «ИИ-помощник»: a chat with Claude for everyone on the team ──
 // Every message goes to the same Claude Code routine as the knowledge base (a kb:job with mode
-// 'assistant' — callbacks, file storage and stuck handling are shared). The session reads the
-// request from DATA_URL, pulls whatever it needs through token-scoped data tools
-// (/api/kb-jobs/<id>/ai/<tool>: clients, one client in depth, tasks, chats, team, Avito cabinet and
-// export) plus the knowledge base in the cloned repo, and posts back the answer, an updated short
-// memory of the dialog and, when asked for an export, files.
+// 'assistant' — callbacks, file storage and stuck handling are shared). The worker gathers the data
+// the question needs (all clients, the clients and people it names, tasks, chats, the Avito cabinet
+// and a CSV export when asked) and hands it over in DATA_URL's payload: the session's own fetches of
+// client data get stopped by its safety checks. A few token-scoped lookups
+// (/api/kb-jobs/<id>/ai/<tool>) remain for what the payload lacks. The session posts back the
+// answer, an updated short memory of the dialog and, rarely, files of its own.
 // A dialog keeps its last messages for display; Claude gets only the memory and the last few
 // messages, so the context stays small. The page folds a finished job into its dialog when it next
 // reads it, so only the tracker side ever writes a dialog (the routine's callbacks come in through
 // another Cloudflare location and would race it).
-// Everyone sees their own dialogs; the owner also sees everyone else's (read only).
+// Everyone sees their own dialogs; the owner also sees everyone else's (read only), deleted ones too.
 //
 // KV keys (AGENCY_DASHBOARD_KV):
 //   ai:dlgs:<userId> -> [{ id, title, main, createdAt, updatedAt, last }]  newest first
@@ -8018,42 +8019,69 @@ function aiInstructions(job) {
   return [
     `Задача: ответить на сообщение в разделе «ИИ-помощник» трекера Cantor Agency. Пишет: ${job.byName} (${a.role || 'сотрудник'}). Агентство продвигает репетиторов и онлайн-школы на Авито: ведёт кабинеты клиентов, объявления, ставки, рассылки и диалоги.`,
     'Репозиторий НЕ меняй: ничего не коммить, не пушь, не открывай PR. Он нужен только чтобы читать базу знаний.',
-    'Контекст диалога — поле context: memory (сжатая память прошлых сообщений этого диалога) и recent (последние сообщения). Новое сообщение — request.text. Отвечай именно на него, опираясь на контекст.',
-    'Данные бери через GET (curl -sS "<url>"), URL из tools уже с токеном — параметры добавляй через &. Что есть:',
-    '• tools.clients — все клиенты: id, статус, этап, ответственный, деньги на Авито (аванс, кошелёк), цифры за вчера и за месяц, открытые задачи, ждёт ли клиент ответа.',
-    '• tools.client + &id=<id или имя клиента> [&days=30&chatDays=14] — всё по одному клиенту: карточка, цифры по дням (бюджет, просмотры, контакты, диагностики, продажи), деньги, задачи, рефлексия команды, итоги встреч, переписка в Telegram-чатах.',
-    '• tools.tasks [&client=&person=&status=live|open|done|closed|cancelled|all&q=&days=] — задачи трекера (live = открытые и сделанные, но клиенту ещё не сообщили).',
-    '• tools.chats [&client=&days=&q=] — переписка из рабочего чата (топики клиентов) и клиентских чатов Telegram.',
-    '• tools.team — сотрудники и роли.',
-    '• tools.avito + &client=<id>&from=ГГГГ-ММ-ДД&to=ГГГГ-ММ-ДД — кабинет Авито: объявления с просмотрами, контактами и избранным за период, рейтинг, отзывы, баланс.',
-    '• tools.avitoExport + &client=&from=&to= — полная выгрузка за период (до 31 дня): статистика по объявлениям, диалоги и сообщения покупателей.',
-    '• tools.avitoChats + &client=[&limit=50&offset=0] и tools.avitoChat + &client=&chat=<id> — диалоги Авито и сообщения одного диалога.',
-    '• База знаний (регламенты агентства) — папка base/ репозитория: HTML-файлы без расширения, каталог в base/index.html. Ссылка на регламент: https://cantor.agency/base/<slug>.',
-    'Бери только то, что нужно для ответа, — не выгружай всё подряд. Считай, сравнивай, делай выводы. Не выдумывай: если данных нет или их не хватает — скажи прямо, чего именно.',
-    'Перед началом и на долгих шагах — POST на callbacks.progress с {"note":"<что делаешь, 2–5 слов>"}.',
-    'Ответ: по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку, ссылки как есть. Без markdown-таблиц и заголовков с #. Если просят выгрузку или таблицу — приложи файл (CSV с разделителем ; в UTF-8 с BOM, либо XLSX), а в тексте дай краткий итог.',
-    'В конце — POST на callbacks.done с JSON: {"answer":"<ответ>","memory":"<сжатая память диалога до 1200 символов: о чём просит человек, ключевые факты, цифры, выводы и договорённости, его предпочтения — всё, что нужно, чтобы продолжить разговор без повторов; старую память обнови, лишнее выкинь>","title":"<тема диалога, 2–5 слов>","files":[{"name":"<имя файла>","type":"<MIME>","base64":"<содержимое>"}]}. files — только если есть файл (всего до 10 МБ). Если ответить невозможно — POST на callbacks.fail с {"error":"<понятная причина>"}.',
-    'Токены, ключи и пароли из данных в ответ не включай.',
+    'Новое сообщение — request.text. Контекст диалога — context.memory (сжатая память прошлых сообщений) и context.recent (последние сообщения): отвечай именно на новое сообщение, опираясь на них.',
+    'ДАННЫЕ УЖЕ СОБРАНЫ трекером — поле context.data: команда, все клиенты с цифрами за 7 дней, деньгами и задачами; по клиентам из вопроса — карточка, цифры по дням, задачи, рефлексия, итоги встреч, переписка, а если спрашивали про Авито — кабинет за период. Отвечай по ним. Если ответ этого запроса обрезан при выводе — сохрани его в файл (curl -sS "<DATA_URL>" -o job.json) и прочитай целиком.',
+    'Только если в context.data чего-то явно не хватает — дополнительные GET из tools (URL уже с токеном, параметры через &): tools.chats [&client=<id>&days=&q=], tools.daily &client=<id>&days=, tools.tasks [&client=&status=&days=], tools.avito / tools.avitoExport &client=&from=ГГГГ-ММ-ДД&to=, tools.avitoChats &client=, tools.avitoChat &client=&chat=. id клиентов — в context.data в квадратных скобках.',
+    'База знаний (регламенты агентства) — папка base/ репозитория: HTML-файлы без расширения, каталог в base/index.html. Ссылка на регламент: https://cantor.agency/base/<slug>.',
+    'Считай, сравнивай, делай выводы. Не выдумывай: если данных нет — скажи прямо, чего именно не хватает.',
+    'Перед началом — POST на callbacks.progress с {"note":"<что делаешь, 2–5 слов>"}.',
+    `Ответ: по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #.${job.prepFiles && job.prepFiles.length ? ` Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')} — в тексте дай краткий итог по нему.` : ' Если просят выгрузку, которой нет в context.data, — приложи файл сам (CSV с разделителем ; в UTF-8 с BOM).'}`,
+    'В конце — POST на callbacks.done с JSON: {"answer":"<ответ>","memory":"<сжатая память диалога до 1200 символов: о чём просит человек, ключевые факты, цифры, выводы и договорённости, его предпочтения — всё, что нужно, чтобы продолжить разговор без повторов; старую память обнови, лишнее выкинь>","title":"<тема диалога, 2–5 слов>"} (+ "files":[{"name","type","base64"}] — только если прикладываешь свой файл). Если ответить невозможно — POST на callbacks.fail с {"error":"<понятная причина>"}.',
+    'Токены, ключи и пароли в ответ не включай.',
   ].join('\n');
 }
 
-function aiJobPayload(job, base, q) {
+async function aiJobPayload(env, job, base, q) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  let changed = false;
+  if (job.dataText == null) {
+    // Normally built when the message was sent (near the team, warm tracker snapshot); this is the fallback.
+    try {
+      job.dataText = await aiBuildData(env, job, true);
+    } catch (e) {
+      console.error('assistant data failed', e && e.stack);
+      job.dataText = `Данные трекера собрать не получилось (${String(e && e.message).slice(0, 200)}). Ответь по базе знаний или скажи, что данных нет.`;
+    }
+    changed = true;
+  }
+  if (!job.avitoDone) {
+    try {
+      const av = await aiBuildAvito(env, job);
+      job.prepFiles = [];
+      for (const f of av.prepFiles.slice(0, 3)) {
+        const meta = { id: `p${job.prepFiles.length + 1}${atRandom(5)}`, name: f.name.replace(/[\\/]/g, '_'), type: f.type, size: f.bytes.length, parts: Math.ceil(f.bytes.length / KB_PART_BYTES) };
+        for (let p = 0; p < meta.parts; p += 1) await kv.put(`kb:file:${job.id}:${meta.id}:${p}`, f.bytes.slice(p * KB_PART_BYTES, (p + 1) * KB_PART_BYTES), { expirationTtl: AI_JOB_TTL });
+        job.prepFiles.push(meta);
+      }
+      if (av.text) job.dataText += `\n\n${av.text}`;
+    } catch (e) {
+      console.error('assistant avito failed', e && e.stack);
+    }
+    job.avitoDone = true;
+    changed = true;
+  }
+  if (changed) await kbPutJob(kv, job);
   const tool = (name) => `${base}/ai/${name}${q}`;
   const a = job.assistant || {};
   return {
     jobId: job.id,
     instructions: aiInstructions(job),
     request: { mode: 'assistant', text: job.text, from: job.byName, role: a.role || null, createdAt: job.createdAt },
-    context: { dialog: a.title || null, memory: a.memory || '', recent: a.recent || [] },
-    tools: {
-      clients: tool('clients'), client: tool('client'), tasks: tool('tasks'), chats: tool('chats'), team: tool('team'),
-      avito: tool('avito'), avitoExport: tool('avitoExport'), avitoChats: tool('avitoChats'), avitoChat: tool('avitoChat'),
-    },
+    context: { dialog: a.title || null, memory: a.memory || '', recent: a.recent || [], data: job.dataText },
+    tools: { chats: tool('chats'), daily: tool('daily'), tasks: tool('tasks'), avito: tool('avito'), avitoExport: tool('avitoExport'), avitoChats: tool('avitoChats'), avitoChat: tool('avitoChat') },
     callbacks: { progress: `${base}/progress${q}`, done: `${base}/done${q}`, fail: `${base}/fail${q}` },
   };
 }
 
-// ── data tools for the routine's session ──
+// ── data for the routine's session ──
+// Everything a question needs is gathered here, by the worker, and handed over in the job payload
+// (context.data): the session's own fetches of client data get stopped by its safety checks, and one
+// request may not read more than ~1000 KV keys — so no full listings of daily metrics here: per-day
+// keys are read for just the clients and days in question, tasks come from the tracker's snapshot.
+const AI_DATA_BUDGET = 17000;
+const AI_AVITO_RE = /авито|объявлен|статистик|выгруз|просмотр|избранн|отзыв|рейтинг|кабинет|позици|ставк/i;
+const AI_EXPORT_RE = /выгруз|файл|таблиц|csv|excel|xlsx|эксел/i;
+
 async function aiChatSources(kv, byId) {
   const chats = await listByPrefix(kv, 'bot:chat:');
   const out = [];
@@ -8070,180 +8098,242 @@ async function aiChatSources(kv, byId) {
   }
   return out;
 }
+async function aiMoney(kv) {
+  const [pull, live] = await Promise.all([atLatestPull(kv), kv.get('at:avitoMoney', 'json')]);
+  const pullAt = pull ? Date.parse(pull.finishedAt || pull.startedAt || 0) || 0 : 0;
+  const liveAt = live ? Date.parse(live.at) || 0 : 0;
+  return (pid) => {
+    const lr = live && live.rows && live.rows[pid];
+    const r = pull && pull.results && pull.results[pid];
+    if (lr && liveAt >= pullAt) return { advance: lr.advance, wallet: lr.wallet, at: live.at };
+    if (r) return { advance: r.advance != null ? r.advance : null, wallet: r.wallet != null ? r.wallet : null, at: pull.finishedAt || pull.startedAt || null };
+    return null;
+  };
+}
+async function aiDaily(kv, pid, days) {
+  const y = mskYesterday();
+  const dates = Array.from({ length: days }, (_, i) => avitoAddDays(y, -i)).reverse();
+  const recs = await Promise.all(dates.map((d) => kv.get(`dailyMetrics:${pid}:${d}`, 'json')));
+  return dates.map((d, i) => recs[i] && { date: d, budget: Number(recs[i].budget) || 0, views: Number(recs[i].views) || 0, contacts: Number(recs[i].contacts) || 0, diagnostics: Number(recs[i].diagnostics) || 0, sales: Number(recs[i].sales) || 0 }).filter(Boolean);
+}
+const aiSum = (rows) => rows.reduce((a, r) => { ['budget', 'views', 'contacts', 'diagnostics', 'sales'].forEach((k) => { a[k] += r[k]; }); return a; }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+const aiRub = (n) => (n == null ? '—' : `${Math.round(n).toLocaleString('ru-RU')} ₽`);
+function aiPeriod(text) {
+  const t = String(text || '').toLowerCase();
+  const m = t.match(/за\s+(?:последние\s+)?(\d{1,2})\s*(?:дн|день|дня|дней|сут)/);
+  let days = m ? Number(m[1]) : /вчера/.test(t) ? 1 : /месяц/.test(t) ? 30 : /две недели|2 недели/.test(t) ? 14 : /недел/.test(t) ? 7 : 7;
+  days = Math.max(1, Math.min(31, days));
+  const to = mskYesterday();
+  return { from: avitoAddDays(to, -(days - 1)), to, days };
+}
+// Clients the text names: by surname; a first name alone only when no one on the team shares it.
+function aiNamedClients(text, projects, people) {
+  const q = ` ${botNorm(text)} `;
+  const hit = (w) => w.length > 3 && q.includes(` ${w.slice(0, Math.max(4, w.length - 2))}`);
+  const teamFirst = new Set(people.flatMap((u) => [atFirstName(u.name), ...(u.aliases || [])]).map((x) => botNorm(x)));
+  return projects.filter((p) => {
+    const [firstName, ...rest] = botNorm(p.name).split(' ');
+    if (rest.some(hit)) return true;
+    return firstName && !teamFirst.has(firstName) && hit(firstName) && projects.filter((x) => botNorm(x.name).split(' ')[0] === firstName).length === 1;
+  });
+}
 
+async function aiBuildData(env, job, light) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const now = Date.now();
+  const a = job.assistant || {};
+  const team = await atGetTeam(env);
+  const people = team.users.filter((u) => u.active);
+  // A cold isolate rebuilds the tracker snapshot (~700 KV reads of the ~1000 a request may make): then the light way.
+  if (!AT_MEM || now - AT_MEM.builtAt >= AT_FULL_REBUILD_MS) light = true;
+  const [byId, mem, money, pending] = await Promise.all([botProjectsById(kv), atSnapshot(env), aiMoney(kv), botPendingList(env, now)]);
+  const projects = Object.values(byId).sort((x, y) => x.name.localeCompare(y.name, 'ru'));
+  const tasks = [...mem.tasks.values()];
+  const userName = (id) => { const u = team.users.find((x) => x.id === id); return u ? u.name : null; };
+  const fmt = (ms) => (ms ? botFmtDate(ms) : '—');
+  const statusOf = (t) => (t.status === 'open' ? (t.takenAt ? 'в работе' : 'новая') : { done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[t.status] || t.status);
+  const taskLine = (t, withClient = true) => {
+    const due = botDueMs(t);
+    const who = userName(atAssigneeId(t, team.users)) || t.owner || 'ничья';
+    return `- ${withClient ? `${(t.projectId && byId[t.projectId] && byId[t.projectId].name) || t.topicName || 'без клиента'} | ` : ''}${String(t.text).replace(/\s+/g, ' ').slice(0, 160)} | ${who} | ${statusOf(t)} | срок ${due ? `${fmt(due)}${due < now && t.status === 'open' ? ' ПРОСРОЧЕНО' : ''}` : 'нет'} | с ${fmt(Date.parse(t.startedAt || t.createdAt || 0))}${t.doneAt ? ` | сделано ${fmt(Date.parse(t.doneAt))}` : ''}`;
+  };
+  const live = (t) => t.status === 'open' || t.status === 'done';
+
+  // Who and what the question is about: the question first, then the dialog it continues.
+  let named = aiNamedClients(job.text, projects, people);
+  // «Ольги Климович» names a client, not Ольга from the team: client names are taken out first.
+  const clientStems = new Set(named.flatMap((p) => botNorm(p.name).split(' ')).map((w) => w.slice(0, 4)));
+  const person = atMatchUser(botNorm(job.text).split(' ').filter((w) => !clientStems.has(w.slice(0, 4))).join(' '), people);
+  // A follow-up («а за месяц?») continues the clients of the dialog.
+  if (!named.length && !person) named = aiNamedClients([...(a.recent || []).slice(-2).map((m) => m.text), a.memory || ''].join('\n'), projects, people);
+  named = named.slice(0, 3);
+  job.assistant.named = named.map((p) => p.id);
+
+  const parts = [];
+  parts.push(`СЕЙЧАС: ${fmt(now)} МСК. Цифры дашборда — по вчерашний день (${mskYesterday()}).`);
+  parts.push(`КОМАНДА:\n${people.map((u) => `- ${u.name} — ${u.roleLabel || AT_ROLES[u.role] || u.role}`).join('\n')}`);
+
+  // All clients, one line each: last 7 days, money, open tasks, waiting for a reply.
+  const active = projects.filter((p) => !p.inactive);
+  // light: a cold isolate far from the team — the tracker snapshot alone costs ~700 KV reads there.
+  const week = light ? active.map(() => []) : await Promise.all(active.map((p) => aiDaily(kv, p.id, 7)));
+  parts.push(`КЛИЕНТЫ (активные${light ? '' : '; 7 дней по вчера: бюджет / просмотры / контакты / диагностики / продажи'}):\n${active.map((p, i) => {
+    const s = aiSum(week[i]);
+    const m = money(p.id);
+    const w = pending.find((x) => x.projectId === p.id);
+    return `- ${p.name} [id ${p.id}] | ${p.status || '—'}${p.stage && p.stage !== '-' ? `, ${p.stage}` : ''} | отв. ${userName(p.responsibleId) || '—'}${light ? '' : ` | ${aiRub(s.budget)} / ${s.views} / ${s.contacts} / ${s.diagnostics} / ${s.sales}`}${m ? ` | аванс ${aiRub(m.advance)}, кошелёк ${aiRub(m.wallet)}` : ''} | открытых задач ${tasks.filter((t) => t.projectId === p.id && t.status === 'open').length}${w ? ` | ЖДЁТ ОТВЕТА с ${fmt(w.since)}` : ''}${p.avitoAccountId ? '' : ' | кабинет Авито не подключён'}`;
+  }).join('\n')}${projects.some((p) => p.inactive) ? `\nНеактивные: ${projects.filter((p) => p.inactive).map((p) => p.name).join(', ')}` : ''}`);
+
+  let chatBlock = '';
+  if (person) {
+    const pt = tasks.filter((t) => live(t) && atAssigneeId(t, team.users) === person.id);
+    parts.push(`ЗАДАЧИ СОТРУДНИКА ${person.name} (открытые и сделанные, но клиенту не сообщили):\n${pt.map((t) => taskLine(t)).join('\n') || '—'}`);
+  }
+  if (named.length) {
+    let meetingJobs = null;
+    for (const p of named) {
+      const daily = await aiDaily(kv, p.id, 30);
+      const m = money(p.id);
+      const ct = tasks.filter((t) => t.projectId === p.id && (live(t) || Date.parse(t.updatedAt || t.createdAt || 0) > now - 45 * 24 * 3600000))
+        .sort((x, y) => Number(live(y)) - Number(live(x)) || Date.parse(y.updatedAt || y.createdAt || 0) - Date.parse(x.updatedAt || x.createdAt || 0));
+      const refl = [];
+      for (const wk of [reflWeek(now), reflAddDays(reflWeek(now), -7)]) {
+        const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${wk}:${u.id}`, 'json')]));
+        for (const [u, r] of recs) { const x = r && r.answers && r.answers[p.id]; if (x && x.score) refl.push(`- неделя ${wk}: ${u.name} — ${x.score}/10${x.comment ? `, «${String(x.comment).slice(0, 200)}»` : ''}`); }
+      }
+      if (!meetingJobs) meetingJobs = (await Promise.all(((await kv.get('kb:index', 'json')) || []).slice(0, light ? 15 : 40).map((x) => kv.get(`kb:job:${x.id}`, 'json')))).filter((j) => j && j.mode === 'meeting' && j.status === 'done' && j.meeting);
+      const meets = meetingJobs.filter((j) => j.meeting.projectId === p.id).slice(0, 2).map((j) => kbMeetingText(j));
+      const w = pending.filter((x) => x.projectId === p.id);
+      parts.push([
+        `КЛИЕНТ ПОДРОБНО: ${p.name} [id ${p.id}]`,
+        `Карточка: услуга ${p.service || '—'}; статус ${p.status || '—'}; этап ${p.stage || '—'}; ответственный ${userName(p.responsibleId) || '—'}${p.currentWork ? `; текущая работа: ${p.currentWork}` : ''}${p.review ? `; отзыв: ${p.review}` : ''}`,
+        m ? `Деньги в кабинете: аванс ${aiRub(m.advance)}, кошелёк ${aiRub(m.wallet)} (на ${fmt(Date.parse(m.at))})` : 'Деньги в кабинете: нет данных',
+        `Цифры по дням (дата: бюджет / просмотры / контакты / диагностики / продажи):\n${daily.map((r) => `  ${r.date}: ${r.budget} / ${r.views} / ${r.contacts} / ${r.diagnostics} / ${r.sales}`).join('\n') || '  нет данных'}`,
+        `Задачи (клиент | задача | исполнитель | статус | срок | с какого числа):\n${ct.slice(0, 40).map((t) => taskLine(t, false)).join('\n') || '—'}`,
+        w.length ? `Клиент ждёт ответа в чате: ${w.map((x) => `с ${fmt(x.since)} — «${String(x.text).slice(0, 200)}»`).join('; ')}` : 'Ответа в чате не ждёт.',
+        refl.length ? `Рефлексия команды:\n${refl.join('\n')}` : '',
+        meets.length ? `Итоги последних встреч:\n${meets.join('\n\n')}` : '',
+      ].filter(Boolean).join('\n'));
+
+    }
+    // Chats about the named clients, 21 days.
+    const sources = (await aiChatSources(kv, byId)).filter((s) => named.some((p) => p.id === s.projectId));
+    const bits = [];
+    for (const s of sources) {
+      const logs = await botReadLogs(kv, s.chatId, s.threadId, now - (light ? 10 : 21) * 24 * 3600000, now);
+      if (logs.length) bits.push(`### ${s.name}\n${botFormatLogLines(logs)}`);
+    }
+    chatBlock = bits.length ? `ПЕРЕПИСКА по клиентам из вопроса, 21 день ([id] дата автор: текст):\n${bits.join('\n\n')}` : '';
+  } else {
+    const lt = tasks.filter(live).sort((x, y) => (byId[x.projectId] ? byId[x.projectId].name : 'я').localeCompare(byId[y.projectId] ? byId[y.projectId].name : 'я', 'ru'));
+    let lines = lt.map((t) => taskLine(t));
+    while (lines.join('\n').length > 7000 && lines.length) lines = lines.slice(0, -1);
+    parts.push(`ВСЕ ОТКРЫТЫЕ ЗАДАЧИ (клиент | задача | исполнитель | статус | срок | с какого числа):\n${lines.join('\n') || '—'}${lines.length < lt.length ? `\n(ещё ${lt.length - lines.length} не поместились)` : ''}`);
+    if (pending.length) parts.push(`КЛИЕНТЫ ЖДУТ ОТВЕТА В ЧАТЕ:\n${pending.map((x) => `- ${(x.projectId && byId[x.projectId] && byId[x.projectId].name) || x.title}: «${String(x.text).slice(0, 160)}» — с ${fmt(x.since)}`).join('\n')}`);
+    const bits = [];
+    for (const s of await aiChatSources(kv, byId)) {
+      const logs = await botReadLogs(kv, s.chatId, s.threadId, now - 2 * 24 * 3600000, now);
+      if (logs.length) bits.push(`### ${s.name}\n${botFormatLogLines(logs)}`);
+    }
+    chatBlock = bits.length ? `ПЕРЕПИСКА во всех чатах за 2 дня ([id] дата автор: текст):\n${bits.join('\n\n')}` : '';
+  }
+  if (AI_AVITO_RE.test(job.text) && !named.length) parts.push('АВИТО: клиент в вопросе не распознан — данные кабинета не загружались. Если нужен кабинет, попроси назвать клиента.');
+
+  let text = parts.join('\n\n');
+  if (text.length > AI_DATA_BUDGET) text = `${text.slice(0, AI_DATA_BUDGET)}\n…(обрезано)`;
+  const room = AI_DATA_BUDGET + 3000 - text.length;
+  if (chatBlock && room > 500) text += `\n\n${chatBlock.length > room ? `…${chatBlock.slice(-room)}` : chatBlock}`;
+  return text;
+}
+
+// The Avito cabinet of the clients in question (Avito API calls, few KV reads) — when it is asked about.
+async function aiBuildAvito(env, job) {
+  if (!AI_AVITO_RE.test(job.text) || !(job.assistant && job.assistant.named && job.assistant.named.length)) return { text: '', prepFiles: [] };
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const wantsFile = AI_EXPORT_RE.test(job.text);
+  const period = aiPeriod(job.text);
+  const parts = [];
+  const prepFiles = [];
+  for (const pid of job.assistant.named) {
+    const p = await kv.get(`project:${pid}`, 'json');
+    if (!p) continue;
+    if (!p.avitoAccountId) { parts.push(`АВИТО: у клиента ${p.name} кабинет Авито не подключён.`); continue; }
+    try {
+      const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
+      if (!account) throw new Error('кабинет не найден');
+      const ov = await runAvitoOverview(env, account, period.from, period.to);
+      const items = [...(ov.items || [])].sort((x, y) => (y.contacts || 0) - (x.contacts || 0));
+      const tot = items.reduce((acc, it) => ({ views: acc.views + (it.views || 0), contacts: acc.contacts + (it.contacts || 0), favorites: acc.favorites + (it.favorites || 0) }), { views: 0, contacts: 0, favorites: 0 });
+      const rating = ov.rating && (ov.rating.rating || ov.rating);
+      parts.push([
+        `АВИТО: ${p.name}, ${period.from} — ${period.to}`,
+        `Объявлений: ${items.length} (активных ${items.filter((it) => /active|активн/i.test(String(it.status))).length}); за период: просмотры ${tot.views}, контакты ${tot.contacts}, в избранное ${tot.favorites}`,
+        rating && typeof rating === 'object' ? `Рейтинг: ${rating.score != null ? rating.score : '—'}${rating.reviewsCount != null ? `, отзывов ${rating.reviewsCount}` : ''}` : '',
+        `Объявления по контактам (название | статус | цена | просмотры | контакты | избранное | адрес):\n${items.slice(0, 35).map((it) => `- ${String(it.title).slice(0, 80)} | ${it.status} | ${it.price} | ${it.views} | ${it.contacts} | ${it.favorites} | ${String(it.address || '').slice(0, 40)}`).join('\n')}${items.length > 35 ? `\n(ещё ${items.length - 35} объявлений — в файле выгрузки)` : ''}`,
+        ov.errors && ov.errors.length ? `Ошибки Авито: ${ov.errors.slice(0, 3).join('; ')}` : '',
+      ].filter(Boolean).join('\n'));
+      if (wantsFile && items.length) {
+        const rows = [['ID', 'Название', 'Статус', 'Цена', 'Категория', 'Адрес', 'Просмотры', 'Контакты', 'В избранное', 'Ссылка'],
+          ...items.map((it) => [it.item_id, it.title, it.status, it.price, it.category, it.address, it.views, it.contacts, it.favorites, it.url])];
+        const csv = `\ufeff${rows.map((r) => r.map((v) => { const s = String(v == null ? '' : v); return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }).join(';')).join('\r\n')}`;
+        prepFiles.push({ name: `Авито ${p.name} ${period.from}—${period.to}.csv`, type: 'text/csv', bytes: new TextEncoder().encode(csv) });
+      }
+    } catch (e) {
+      parts.push(`АВИТО: ${p.name} — не получилось загрузить данные кабинета (${String(e && e.message).slice(0, 160)})`);
+    }
+  }
+  return { text: parts.join('\n\n'), prepFiles };
+}
+
+// Optional extra lookups (GET, job token, only while the job runs). Bounded the same way.
 async function aiTool(env, tool, sp) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const now = Date.now();
-  const team = await atGetTeam(env);
   const byId = await botProjectsById(kv);
   const projects = Object.values(byId);
-  const userName = (id) => { const u = team.users.find((x) => x.id === id); return u ? u.name : null; };
+  const team = await atGetTeam(env);
   const findClient = (v) => {
     const s = String(v || '').trim();
     if (!s) return null;
-    if (byId[s]) return byId[s];
-    const n = botNorm(s);
-    return projects.find((p) => botNorm(p.name) === n)
-      || projects.find((p) => botNorm(p.name).includes(n))
-      || projects.find((p) => n.split(' ').filter((w) => w.length > 3).every((w) => botNorm(p.name).includes(w.slice(0, Math.max(4, w.length - 2)))))
-      || null;
+    return byId[s] || aiNamedClients(s, projects, [])[0] || null;
   };
   const num = (v, def, min, max) => { const x = Math.floor(Number(v)); return Number.isFinite(x) ? Math.max(min, Math.min(max, x)) : def; };
   const ymdOk = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
-  const statusOf = (t) => (t.status === 'open' ? (t.takenAt ? 'в работе' : 'новая') : { done: 'сделана, клиенту не сообщили', closed: 'закрыта', cancelled: 'отменена' }[t.status] || t.status);
-  const taskRow = (t) => {
-    const due = botDueMs(t);
-    const uid = atAssigneeId(t, team.users);
-    return {
-      id: t.id,
-      client: (t.projectId && byId[t.projectId] && byId[t.projectId].name) || t.topicName || null,
-      text: String(t.text || '').slice(0, 400),
-      note: t.note ? String(t.note).slice(0, 400) : undefined,
-      assignee: userName(uid) || t.owner || null,
-      status: statusOf(t),
-      priority: t.priority || undefined,
-      due: due ? botFmtDate(due) : null,
-      overdue: Boolean(due && due < now && t.status === 'open') || undefined,
-      createdBy: userName(t.createdById) || t.author || null,
-      createdAt: botFmtDate(Date.parse(t.startedAt || t.createdAt || 0)),
-      doneAt: t.doneAt ? botFmtDate(Date.parse(t.doneAt)) : undefined,
-    };
-  };
-  const accountOf = async (p) => {
-    if (!p) throw new Error('Клиент не найден — возьмите id из tools.clients');
+  const p = findClient(sp.get('client') || sp.get('id'));
+  if (tool === 'chats') {
+    const days = num(sp.get('days'), p ? 14 : 3, 1, p ? 60 : 7);
+    const q = botNorm(sp.get('q') || '');
+    const out = [];
+    for (const s of (await aiChatSources(kv, byId)).filter((x) => !p || x.projectId === p.id)) {
+      let logs = await botReadLogs(kv, s.chatId, s.threadId, now - days * 24 * 3600000, now);
+      if (q) logs = logs.filter((e) => botNorm(e.text).includes(q));
+      if (logs.length) out.push({ chat: s.name, messages: botFormatLogLines(logs) });
+    }
+    return { days, chats: out };
+  }
+  if (tool === 'daily') {
+    if (!p) throw new Error('Клиент не найден — нужен &client=<id из context.data>');
+    return { client: p.name, daily: await aiDaily(kv, p.id, num(sp.get('days'), 30, 1, 120)) };
+  }
+  if (tool === 'tasks') {
+    const mem = await atSnapshot(env);
+    const status = ['open', 'done', 'closed', 'cancelled', 'all'].includes(sp.get('status')) ? sp.get('status') : 'all';
+    const since = now - num(sp.get('days'), 60, 1, 365) * 24 * 3600000;
+    const list = [...mem.tasks.values()].filter((t) => (!p || t.projectId === p.id) && (status === 'all' || t.status === status) && Date.parse(t.updatedAt || t.createdAt || 0) > since);
+    return { total: list.length, tasks: list.slice(0, 300).map((t) => ({ client: (byId[t.projectId] || {}).name || t.topicName || null, text: t.text, status: t.status, assignee: (team.users.find((u) => u.id === atAssigneeId(t, team.users)) || {}).name || t.owner || null, createdAt: t.createdAt, doneAt: t.doneAt || null })) };
+  }
+  if (/^avito/.test(tool)) {
+    if (!p) throw new Error('Клиент не найден — нужен &client=<id из context.data>');
     if (!p.avitoAccountId) throw new Error(`У клиента «${p.name}» не подключён кабинет Авито`);
     const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
     if (!account) throw new Error(`Кабинет Авито клиента «${p.name}» не найден`);
-    return account;
-  };
-  const range = (maxDays) => {
     const to = ymdOk(sp.get('to')) ? sp.get('to') : mskYesterday();
     let from = ymdOk(sp.get('from')) ? sp.get('from') : avitoAddDays(to, -6);
-    if (from > to) from = to;
-    if (avitoAddDays(from, maxDays - 1) < to) from = avitoAddDays(to, -(maxDays - 1));
-    return { from, to };
-  };
-
-  if (tool === 'team') {
-    return { team: team.users.filter((u) => u.active).map((u) => ({ id: u.id, name: u.name, role: u.roleLabel || AT_ROLES[u.role] || u.role, aliases: u.aliases || [] })) };
-  }
-
-  if (tool === 'clients') {
-    const [metrics, tasks, pending] = await Promise.all([atClientsMetrics(env), botAllTasks(kv), botPendingList(env, now)]);
-    return {
-      now: botFmtDate(now),
-      clients: projects.sort((a, b) => Number(!!a.inactive) - Number(!!b.inactive) || a.name.localeCompare(b.name, 'ru')).map((p) => {
-        const m = metrics[p.id];
-        return {
-          id: p.id, name: p.name, inactive: Boolean(p.inactive), status: p.status || null, stage: p.stage || null, currentWork: p.currentWork || null,
-          service: p.service || null, responsible: userName(p.responsibleId), avitoConnected: Boolean(p.avitoAccountId),
-          money: m ? { advance: m.advance, wallet: m.wallet, at: m.moneyAt } : null,
-          yesterday: m ? m.day : null, month: m ? m.month : null, budgetPerDay7: m ? Math.round(m.perDay) : null,
-          openTasks: tasks.filter((t) => t.projectId === p.id && t.status === 'open').length,
-          waitingReplySince: (pending.find((x) => x.projectId === p.id) || {}).since ? botFmtDate(pending.find((x) => x.projectId === p.id).since) : null,
-        };
-      }),
-    };
-  }
-
-  if (tool === 'client') {
-    const p = findClient(sp.get('id') || sp.get('client') || sp.get('name'));
-    if (!p) throw new Error('Клиент не найден — возьмите id из tools.clients');
-    const days = num(sp.get('days'), 30, 1, 120);
-    const chatDays = num(sp.get('chatDays'), 14, 0, 60);
-    const from = avitoAddDays(mskYesterday(), -(days - 1));
-    const [rows, metrics, tasks, pending, sources] = await Promise.all([atDailyMetrics(kv), atClientsMetrics(env), botAllTasks(kv), botPendingList(env, now), aiChatSources(kv, byId)]);
-    const daily = rows.filter((r) => r.projectId === p.id && r.date >= from).sort((a, b) => a.date.localeCompare(b.date))
-      .map((r) => ({ date: r.date, budget: Number(r.budget) || 0, views: Number(r.views) || 0, contacts: Number(r.contacts) || 0, diagnostics: Number(r.diagnostics) || 0, sales: Number(r.sales) || 0 }));
-    const recent = now - 90 * 24 * 3600000;
-    const clientTasks = tasks.filter((t) => t.projectId === p.id && (t.status === 'open' || t.status === 'done' || Date.parse(t.updatedAt || t.createdAt || 0) > recent)).map(taskRow);
-    const refl = [];
-    let week = reflWeek(now);
-    for (let i = 0; i < 4; i += 1) {
-      const recs = await Promise.all(team.users.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
-      for (const [u, r] of recs) { const a = r && r.answers && r.answers[p.id]; if (a && a.score) refl.push({ week, by: u.name, score: a.score, comment: a.comment || '' }); }
-      week = reflAddDays(week, -7);
-    }
-    const meetings = [];
-    for (const x of ((await kv.get('kb:index', 'json')) || []).slice(0, 60)) {
-      const j = await kv.get(`kb:job:${x.id}`, 'json');
-      if (j && j.mode === 'meeting' && j.status === 'done' && j.meeting && j.meeting.projectId === p.id) meetings.push({ date: j.meeting.date, sent: Boolean(j.meeting.sentAt), text: kbMeetingText(j) });
-    }
-    const chats = [];
-    if (chatDays) {
-      for (const src of sources.filter((x) => x.projectId === p.id)) {
-        const logs = await botReadLogs(kv, src.chatId, src.threadId, now - chatDays * 24 * 3600000, now);
-        if (logs.length) chats.push({ chat: src.name, messages: botFormatLogLines(logs) });
-      }
-    }
-    const m = metrics[p.id];
-    const { staffUrl, ...card } = p; // приглашение в кабинет — не для ответа
-    return {
-      now: botFmtDate(now),
-      client: { ...card, responsible: userName(p.responsibleId) },
-      money: m ? { advance: m.advance, wallet: m.wallet, at: m.moneyAt } : null,
-      daily,
-      tasks: clientTasks,
-      waitingReply: pending.filter((x) => x.projectId === p.id).map((x) => ({ since: botFmtDate(x.since), text: String(x.text).slice(0, 400) })),
-      reflection: refl,
-      meetings,
-      chats,
-    };
-  }
-
-  if (tool === 'tasks') {
-    const tasks = await botAllTasks(kv);
-    const p = sp.get('client') ? findClient(sp.get('client')) : null;
-    if (sp.get('client') && !p) throw new Error('Клиент не найден — возьмите id из tools.clients');
-    const person = sp.get('person') ? atMatchUserBy(sp.get('person'), team.users.filter((u) => u.active), botNorm) || team.users.find((u) => u.id === sp.get('person')) : null;
-    if (sp.get('person') && !person) throw new Error('Сотрудник не найден — см. tools.team');
-    const status = ['live', 'open', 'done', 'closed', 'cancelled', 'all'].includes(sp.get('status')) ? sp.get('status') : 'live';
-    const days = num(sp.get('days'), 30, 1, 365);
-    const since = now - days * 24 * 3600000;
-    const q = botNorm(sp.get('q') || '');
-    const list = tasks.filter((t) => (!p || t.projectId === p.id)
-      && (!person || atAssigneeId(t, team.users) === person.id)
-      && (status === 'all' ? true : status === 'live' ? t.status === 'open' || t.status === 'done' : t.status === status)
-      && (t.status === 'open' || t.status === 'done' || Date.parse(t.updatedAt || t.createdAt || 0) > since)
-      && (!q || botNorm(`${t.text} ${t.note || ''}`).includes(q)))
-      .sort((a, b) => Date.parse(b.updatedAt || b.createdAt || 0) - Date.parse(a.updatedAt || a.createdAt || 0));
-    return { now: botFmtDate(now), total: list.length, tasks: list.slice(0, 300).map(taskRow) };
-  }
-
-  if (tool === 'chats') {
-    const p = sp.get('client') ? findClient(sp.get('client')) : null;
-    if (sp.get('client') && !p) throw new Error('Клиент не найден — возьмите id из tools.clients');
-    const days = num(sp.get('days'), p ? 14 : 3, 1, p ? 60 : 14);
-    const q = botNorm(sp.get('q') || '');
-    const sources = (await aiChatSources(kv, byId)).filter((x) => !p || x.projectId === p.id);
-    const out = [];
-    for (const src of sources) {
-      let logs = await botReadLogs(kv, src.chatId, src.threadId, now - days * 24 * 3600000, now);
-      if (q) logs = logs.filter((e) => botNorm(e.text).includes(q));
-      if (logs.length) out.push({ chat: src.name, messages: botFormatLogLines(logs) });
-    }
-    return { now: botFmtDate(now), days, chats: out };
-  }
-
-  if (tool === 'avito') {
-    const p = findClient(sp.get('client') || sp.get('id'));
-    const { from, to } = range(93);
-    return runAvitoOverview(env, await accountOf(p), from, to);
-  }
-  if (tool === 'avitoExport') {
-    const p = findClient(sp.get('client') || sp.get('id'));
-    const { from, to } = range(31);
-    return runAvitoExport(env, await accountOf(p), from, to);
-  }
-  if (tool === 'avitoChats') {
-    const p = findClient(sp.get('client') || sp.get('id'));
-    return runAvitoChatList(env, await accountOf(p), num(sp.get('limit'), 50, 1, 100), num(sp.get('offset'), 0, 0, 5000));
-  }
-  if (tool === 'avitoChat') {
-    const p = findClient(sp.get('client') || sp.get('id'));
-    const chat = String(sp.get('chat') || '').trim();
-    if (!chat) throw new Error('Нужен &chat=<id диалога> из tools.avitoChats');
-    return runAvitoChatMessages(env, await accountOf(p), chat);
+    if (avitoAddDays(from, 30) < to) from = avitoAddDays(to, -30);
+    if (tool === 'avito') return runAvitoOverview(env, account, from, to);
+    if (tool === 'avitoExport') return runAvitoExport(env, account, from, to);
+    if (tool === 'avitoChats') return runAvitoChatList(env, account, num(sp.get('limit'), 50, 1, 100), num(sp.get('offset'), 0, 0, 5000));
+    if (tool === 'avitoChat') return runAvitoChatMessages(env, account, String(sp.get('chat') || ''));
   }
   throw new Error(`Нет такого инструмента: ${tool}`);
 }
@@ -8272,7 +8362,7 @@ async function aiDone(env, job, body) {
     }
     files.push(file);
   }
-  job.files = files;
+  job.files = [...(job.prepFiles || []), ...files];
   job.result = {
     answer,
     memory: atClean(body.memory, 2000) || null,
@@ -8312,7 +8402,7 @@ async function aiNotify(env, job) {
 // ── tracker API: ai-* ──
 function aiPublicDialog(d, me) {
   return {
-    id: d.id, userId: d.userId, userName: d.userName, title: d.title, main: Boolean(d.main), own: d.userId === me.id,
+    id: d.id, userId: d.userId, userName: d.userName, title: d.title, main: Boolean(d.main), own: d.userId === me.id && !d.deletedAt, deletedAt: d.deletedAt || null,
     messages: d.messages.map((m) => ({ id: m.id, role: m.role, text: m.text, at: m.at, error: m.error || undefined, files: m.files || undefined, jobId: m.role === 'assistant' ? m.jobId : undefined })),
     pending: d.pending || null,
     memory: me.role === 'owner' ? d.memory || '' : undefined,
@@ -8335,8 +8425,10 @@ async function aiSaveDialog(kv, d) {
   const key = `ai:dlgs:${d.userId}`;
   const list = ((await kv.get(key, 'json')) || []).filter((x) => x.id !== d.id);
   const last = [...d.messages].reverse().find((m) => !m.error);
-  list.unshift({ id: d.id, title: d.title, main: Boolean(d.main), createdAt: d.createdAt, updatedAt: d.updatedAt, last: last ? `${last.role === 'assistant' ? 'Claude: ' : ''}${last.text.replace(/\s+/g, ' ').slice(0, 90)}` : '' });
-  await kv.put(key, JSON.stringify(list.slice(0, AI_MAX_DIALOGS + 1)));
+  list.unshift({ id: d.id, title: d.title, main: Boolean(d.main), createdAt: d.createdAt, updatedAt: d.updatedAt, deletedAt: d.deletedAt || undefined, last: last ? `${last.role === 'assistant' ? 'Claude: ' : ''}${last.text.replace(/\s+/g, ' ').slice(0, 90)}` : '' });
+  // Deleted dialogs stay for the owner (he reads everyone's) — up to 60 of them.
+  const kept = [...list.filter((x) => !x.deletedAt).slice(0, AI_MAX_DIALOGS + 1), ...list.filter((x) => x.deletedAt).slice(0, 60)];
+  await kv.put(key, JSON.stringify(kept));
 }
 // Brings finished answers into the dialog (and marks a request nobody answered).
 async function aiFold(kv, d) {
@@ -8381,7 +8473,7 @@ async function atAiApi(env, team, me, action, body) {
   const nowIso = new Date().toISOString();
 
   if (action === 'ai-list') {
-    const mine = (await kv.get(`ai:dlgs:${me.id}`, 'json')) || [];
+    const mine = ((await kv.get(`ai:dlgs:${me.id}`, 'json')) || []).filter((x) => !x.deletedAt);
     if (!mine.some((x) => x.id === aiMainId(me.id))) mine.push({ id: aiMainId(me.id), title: 'Основной', main: true, createdAt: nowIso, updatedAt: null, last: '' });
     const res = { mine: [...mine.filter((x) => x.main), ...mine.filter((x) => !x.main)] };
     if (me.role === 'owner') {
@@ -8394,7 +8486,7 @@ async function atAiApi(env, team, me, action, body) {
 
   if (action === 'ai-new') {
     const list = (await kv.get(`ai:dlgs:${me.id}`, 'json')) || [];
-    if (list.filter((x) => !x.main).length >= AI_MAX_DIALOGS) return json({ error: 'too_many', message: 'Слишком много диалогов — удалите старые.' }, 400);
+    if (list.filter((x) => !x.main && !x.deletedAt).length >= AI_MAX_DIALOGS) return json({ error: 'too_many', message: 'Слишком много диалогов — удалите старые.' }, 400);
     const title = atClean(body.title, 60);
     const d = { id: atRandom(10), userId: me.id, userName: me.name, title: title || 'Новый диалог', main: false, autoTitle: !title, memory: '', messages: [], createdAt: nowIso };
     await aiSaveDialog(kv, d);
@@ -8404,7 +8496,7 @@ async function atAiApi(env, team, me, action, body) {
   const id = String(body.id || '');
   if (!aiIdOk(id)) return json({ error: 'not_found' }, 404);
   const d = await aiLoadDialog(kv, id, me, team);
-  if (!d) return json({ error: 'not_found' }, 404);
+  if (!d || (d.deletedAt && me.role !== 'owner' && action !== 'ai-restore')) return json({ error: 'not_found' }, 404);
 
   if (action === 'ai-dialog') {
     if (await aiFold(kv, d)) await aiSaveDialog(kv, d);
@@ -8450,6 +8542,9 @@ async function atAiApi(env, team, me, action, body) {
     };
     d.messages.push({ id: atRandom(8), role: 'user', text, at: nowIso, jobId: job.id });
     if (d.autoTitle && d.messages.filter((m) => m.role === 'user').length === 1) d.title = text.replace(/\s+/g, ' ').slice(0, 40) + (text.length > 40 ? '…' : '');
+    // The data is gathered here, near the team, where the tracker snapshot is warm (the routine's
+    // request comes in through another Cloudflare location); the Avito part waits for that request.
+    try { job.dataText = await aiBuildData(env, job, false); } catch (e) { console.error('assistant data failed', e && e.stack); }
     // The job is stored before the fire: the session may ask for it within seconds.
     job.status = 'sent';
     await kbPutJob(kv, job);
@@ -8469,14 +8564,25 @@ async function atAiApi(env, team, me, action, body) {
     return json({ dialog: aiPublicDialog(d, me) });
   }
 
+  // Deleting hides a dialog from its author only — the owner still sees it (marked deleted).
+  if (action === 'ai-delete' && !d.main) {
+    d.deletedAt = nowIso;
+    await aiSaveDialog(kv, d);
+    return json({ ok: true });
+  }
+  if (action === 'ai-restore') {
+    if (!d.deletedAt) return json({ dialog: aiPublicDialog(d, me) });
+    delete d.deletedAt;
+    await aiSaveDialog(kv, d);
+    return json({ dialog: aiPublicDialog(d, me) });
+  }
+  // The main dialog is cleared instead (memory too); its old messages move to a deleted copy.
   if (action === 'ai-clear' || action === 'ai-delete') {
-    if (action === 'ai-delete' && !d.main) {
-      await kv.delete(`ai:dlg:${d.id}`);
-      const key = `ai:dlgs:${me.id}`;
-      await kv.put(key, JSON.stringify(((await kv.get(key, 'json')) || []).filter((x) => x.id !== d.id)));
-      return json({ ok: true });
+    if (d.messages.length) {
+      await aiFold(kv, d);
+      if (d.pending) return json({ error: 'busy', message: 'Claude ещё отвечает — очистить можно после ответа.' }, 409);
+      await aiSaveDialog(kv, { ...d, id: atRandom(10), main: false, autoTitle: false, title: `${d.title} до ${botFmtDate(Date.now()).split(' ')[0]}`, deletedAt: nowIso });
     }
-    // Основной диалог не удаляется — очищается (вместе с памятью).
     d.messages = [];
     d.memory = '';
     await aiSaveDialog(kv, d);
