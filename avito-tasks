@@ -1853,7 +1853,7 @@ function applySync(d, fromCache) {
     S.ver = fromCache ? null : d.ver;
     S.users = d.users || [];
     S.projects = d.projects || [];
-    S.tasks = mergeSaved(d.tasks || [], d.gone);
+    S.tasks = mergeSaved(d.tasks || [], d.gone).filter((t) => !PENDING_DELETES.has(t.id));
     S.clients = d.clients || null;
     S.tgStart = d.tgStart || null;
     S.bot = d.bot || null;
@@ -2535,6 +2535,19 @@ function openKbJob(id) {
   if (S.view === 'kb') { renderKbForm(); loadKbJobs(); } else setView('kb');
 }
 window.addEventListener('hashchange', openFromHash);
+const PENDING_DELETES = new Map();
+function taskDeleteNow(id, t) {
+  if (!PENDING_DELETES.has(id)) return;
+  PENDING_DELETES.delete(id);
+  api('task-delete', { id }).then((r) => { if (!r.ok && r.status !== 404) throw new Error(); }).catch(() => { if (t && !S.tasks.some((x) => x.id === id)) S.tasks.push(t); renderLists(); toast('Не получилось удалить — нет связи'); });
+}
+// Закрыли страницу, не дождавшись 6 секунд, — удаление всё равно уходит.
+window.addEventListener('pagehide', () => {
+  for (const id of PENDING_DELETES.keys()) {
+    try { fetch(ROUTES[routeFirst](API_PATH + 'task-delete'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: S.token, id }), keepalive: true }); } catch (e) { /* ignore */ }
+  }
+  PENDING_DELETES.clear();
+});
 function autosize() { document.querySelectorAll('.ed-title').forEach((el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 2 + 'px'; }); }
 
 $('lists').addEventListener('click', (e) => {
@@ -2598,12 +2611,20 @@ $('lists').addEventListener('click', (e) => {
   }
   if (act && act.dataset.act === 'collapse') { S.expanded = null; rerenderCard(id); return; }
   if (act && act.dataset.act === 'delete') {
-    if (!confirm(`Удалить задачу «${t.text}»? Это нельзя отменить. Если задача просто больше не нужна — лучше поставьте статус «Отменена».`)) return;
+    // Без подтверждения: задача пропадает сразу, на сервер удаление уходит через 6 секунд —
+    // до этого её можно вернуть кнопкой в уведомлении.
     S.tasks = S.tasks.filter((x) => x.id !== id);
     forgetSaved(id);
     S.expanded = null;
     renderLists();
-    api('task-delete', { id }).then((r) => { if (!r.ok) throw new Error(); toast('Задача удалена'); }).catch(() => { S.tasks.push(t); renderLists(); toast('Не получилось удалить'); });
+    const timer = setTimeout(() => taskDeleteNow(id, t), 6000);
+    PENDING_DELETES.set(id, timer);
+    toast('Задача удалена', 'Вернуть', () => {
+      clearTimeout(PENDING_DELETES.get(id));
+      PENDING_DELETES.delete(id);
+      if (!S.tasks.some((x) => x.id === id)) S.tasks.push(t);
+      renderLists();
+    }, 6000);
     return;
   }
   const inEditor = e.target.closest('[data-editor]');
