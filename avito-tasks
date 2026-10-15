@@ -666,6 +666,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .ai-title b{font-family:var(--display);font-size:19px;font-weight:700;color:var(--ink);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ai-title span{font-size:12.5px;color:var(--muted)}
 .ai-back{display:none}
+.ai-title b[data-airename]{cursor:text}
+.ai-title-input{font-family:var(--display);font-size:18px;font-weight:700;padding:4px 10px;min-height:38px;max-width:520px}
+.ai-del{font-size:11px;font-weight:600;color:var(--red);background:var(--red-bg);border-radius:999px;padding:1px 7px;flex:none}
+.ai-confirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--red-bg);color:var(--red);font-size:13.5px;font-weight:600}
+.ai-confirm[hidden]{display:none}
+.ai-confirm span{flex:1 1 220px}
+.ai-confirm .btn{background:var(--surface)}
 .ai-msgs{flex:1;display:flex;flex-direction:column;gap:10px;padding:16px 0}
 .ai-day{align-self:center;font-size:12px;color:var(--faint);font-weight:600;margin:6px 0}
 .ai-msg{display:grid;gap:3px;max-width:min(720px,88%);justify-items:start}
@@ -955,14 +962,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .cc-adv em{flex-basis:100%;font-style:normal;font-size:12.5px;color:var(--muted);padding-left:24px}
 .cc-adv.low{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
 .cc-adv.low em{color:var(--amber);font-weight:500}
+.c-refresh .c-when{font-weight:500;color:var(--muted);padding-left:8px;margin-left:2px;border-left:1px solid var(--line)}
 .cc-adv.off em{flex-basis:auto;margin-left:auto;padding:0}
 .cc-adv:not(.off){display:grid;gap:4px}
 .cc-money{display:flex;align-items:center;gap:8px}
 .cc-money span{display:inline-flex;align-items:center;gap:8px}
 .cc-money b{margin-left:auto}
 .cc-adv:not(.off) em{padding-left:24px}
-.cc-when{font-style:normal;font-size:11.5px;color:var(--faint);padding-left:24px}
-.cc-adv.low .cc-when{color:var(--amber);opacity:.8}
 .c-refresh.busy .ic{animation:spin 1s linear infinite}
 @media (max-width:760px){.c-refresh span{display:none}.c-refresh{padding:0 10px}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -3828,7 +3834,6 @@ function renderKbJobs() {
     const sentMeet = Boolean(j.meeting && j.meeting.sentAt);
     const links = sentMeet ? '' : [
       r && r.prUrl ? `<a href="${esc(r.prUrl)}" target="_blank" rel="noopener">PR на GitHub</a>` : '',
-      j.sessionUrl ? `<a href="${esc(j.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a>` : '',
     ].filter(Boolean).join(' · ');
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
       <div class="kb-job-head"><span class="tag ${cls}">${esc(sentMeet ? 'Отправлено' : r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
@@ -4373,9 +4378,20 @@ $('clientsRefresh').addEventListener('click', async () => {
     CM.data = res.data.clients; CM.loadedAt = Date.now();
     toast('Аванс и кошелёк обновлены по всем клиентам');
   } catch (e) { toast('Не получилось обновить — попробуйте ещё раз'); }
-  b.classList.remove('busy'); b.querySelector('span').textContent = 'Обновить с Авито';
+  b.classList.remove('busy');
+  clientsRefreshLabel();
   if (S.view === 'clients' && !isEditing()) renderClients();
 });
+// «Обновить · 14:20» — когда последний раз подтянули аванс и кошелёк (самое свежее по клиентам).
+function clientsRefreshLabel() {
+  const b = $('clientsRefresh');
+  if (!b || b.classList.contains('busy')) return;
+  const at = Math.max(0, ...Object.values(CM.data || {}).map((m) => Date.parse(m && m.moneyAt) || 0));
+  const now = Date.now();
+  const when = !at ? '' : fmtDay(at, now) === fmtDay(now, now) ? fmtTime(at) : `${pad(msk(at).d)}.${pad(msk(at).m + 1)}`;
+  b.querySelector('span').innerHTML = when ? `Обновить <span class="c-when">${esc(when)}</span>` : 'Обновить с Авито';
+  b.title = at ? `Аванс и кошелёк обновлены ${fmtDay(at, now)} в ${fmtTime(at)}. Нажмите, чтобы подтянуть сейчас по всем клиентам` : 'Подтянуть аванс и кошелёк по всем клиентам прямо сейчас';
+}
 function clientTodo(p, i, m, now) {
   const out = [];
   const pend = i.b.pending;
@@ -4412,16 +4428,15 @@ function clientAdvanceHtml(p, m) {
   const money = clientMoney(m);
   const days = m.perDay > 0 ? Math.floor(money / m.perDay) : null;
   const low = money < 1500; // предупреждаем, только когда в кабинете меньше 1 500 ₽
-  const at = m.moneyAt ? Date.parse(m.moneyAt) : 0;
   return `<div class="cc-adv ${low ? 'low' : ''}">
     <div class="cc-money"><span>${ico('wallet')}Аванс</span><b>${m.advance == null ? '—' : anMoney(m.advance)}</b></div>
     <div class="cc-money"><span>${ico('wallet')}Кошелёк</span><b>${m.wallet == null ? '—' : anMoney(m.wallet)}</b></div>
     ${low ? `<em>${days != null && days >= 1 ? `хватит на ~${days} ${plural(days, 'день', 'дня', 'дней')}` : 'хватит меньше чем на день'} — попросите пополнить</em>` : ''}
-    ${at ? `<i class="cc-when">обновлено ${esc(fmtDay(at, Date.now()))}${fmtDay(at, Date.now()).length < 12 ? ` в ${fmtTime(at)}` : ''}</i>` : ''}
   </div>`;
 }
 function renderClients() {
   if (!canSeeClients()) return;
+  clientsRefreshLabel();
   if (S.view === 'clients') loadClientMetrics(false);
   const now = Date.now();
   const all = S.projects.map((p) => { const i = clientInfo(p); const m = CM.data && CM.data[p.id]; return { p, i, m, todo: p.inactive ? [] : clientTodo(p, i, m, now) }; });
@@ -4602,7 +4617,7 @@ function aiOpen(id) {
 function aiItem(d, mine) {
   const when = d.updatedAt ? ago(Date.parse(d.updatedAt), Date.now()) : '';
   return `<button class="ai-item ${AI.cur === d.id ? 'on' : ''}" data-aiopen="${esc(d.id)}">
-    <span class="ai-item-t">${d.main && mine ? ico('spark', 'ic-sm') : ''}<b>${esc(d.title || 'Диалог')}</b>${when ? `<span class="ai-when">${esc(when)}</span>` : ''}</span>
+    <span class="ai-item-t">${d.main && mine ? ico('spark', 'ic-sm') : ''}<b>${esc(d.title || 'Диалог')}</b>${d.deletedAt ? '<span class="ai-del">удалён</span>' : ''}${when ? `<span class="ai-when">${esc(when)}</span>` : ''}</span>
     ${d.last ? `<span class="ai-item-last">${esc(d.last)}</span>` : ''}
   </button>`;
 }
@@ -4630,14 +4645,16 @@ function renderAiMain() {
   const meta = (AI.list || []).find((x) => x.id === AI.cur) || AI.others.flatMap((g) => g.dialogs.map((x) => ({ ...x, owner: g.user }))).find((x) => x.id === AI.cur);
   const title = (d && d.title) || (meta && meta.title) || (AI.cur === aiMainId() ? 'Основной' : 'Диалог');
   const own = d ? d.own : !meta || !meta.owner;
-  const who = d && !d.own ? d.userName : meta && meta.owner ? meta.owner.name : '';
+  const who = d && d.userId !== S.me.id ? d.userName : meta && meta.owner ? meta.owner.name : '';
+  const deleted = (d && d.deletedAt) || (meta && meta.deletedAt);
   el.innerHTML = `
     <div class="ai-head">
       <button class="icon-btn ai-back" data-ailist aria-label="Все диалоги">${ico('menu')}</button>
-      <div class="ai-title"><b>${esc(title)}</b>${who ? `<span>диалог: ${esc(who)} · только просмотр</span>` : '<span>Ответ за 1–5 минут — придёт уведомление</span>'}</div>
+      <div class="ai-title" id="aiTitle"><b ${own ? 'data-airename title="Нажмите, чтобы переименовать"' : ''}>${esc(title)}</b>${who || deleted ? `<span>${who ? `диалог: ${esc(who)} · ` : ''}${deleted ? 'удалён · ' : ''}только просмотр</span>` : '<span>Ответ за 1–5 минут — придёт уведомление</span>'}</div>
       ${own ? `<button class="icon-btn" data-airename title="Переименовать" aria-label="Переименовать">${ico('edit')}</button>
       <button class="icon-btn" data-aiclear title="${AI.cur === aiMainId() ? 'Очистить диалог' : 'Удалить диалог'}" aria-label="Удалить">${ico('trash')}</button>` : ''}
     </div>
+    <div class="ai-confirm" id="aiConfirm" hidden><span>Очистить основной диалог? Сообщения и память Claude сотрутся.</span><button class="btn btn-sm btn-danger" data-aiclearyes>Очистить</button><button class="btn btn-sm btn-ghost" data-aiclearno>Отмена</button></div>
     <div class="ai-msgs" id="aiMsgs"><div class="empty">Загружаю…</div></div>
     ${own ? `<div class="ai-compose">
       <textarea class="textarea" id="aiText" rows="1" placeholder="Напишите Claude…">${esc(AI.drafts[AI.cur] || '')}</textarea>
@@ -4676,7 +4693,7 @@ function renderAiMessages(toBottom) {
   }
   const mem = d.memory ? `<details class="ai-memory"><summary>${ico('spark', 'ic-sm')}Что Claude помнит из этого диалога</summary><div>${esc(d.memory)}</div></details>` : '';
   el.innerHTML = d.messages.length || p
-    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `Claude: ${esc(p.progress)}` : p.status === 'sent' ? 'Claude запускается…' : 'Claude разбирается…'}</div>${isOwner() && p.sessionUrl ? `<div class="ai-meta"><a href="${esc(p.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a></div>` : ''}</div>` : ''}`
+    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `Claude: ${esc(p.progress)}` : p.status === 'sent' ? 'Claude запускается…' : 'Claude разбирается…'}</div></div>` : ''}`
     : `<div class="ai-hello">${ico('spark')}<b>Спросите Claude о чём угодно по работе</b><span>Он сам посмотрит данные клиентов и цифры дашборда, задачи, переписку в чатах, кабинеты Авито и базу знаний. Может сделать выгрузку файлом.</span>
       <div class="ai-examples">${['Что сейчас с клиентом Шевчук? Коротко: цифры, задачи, что ждёт ответа', 'Выгрузи статистику объявлений Ивана Кариентиди за последние 7 дней', 'У каких клиентов падают контакты за неделю?', 'Как по регламенту запускать нового клиента?'].map((x) => `<button class="chip" data-aiexample="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
   const send = $('aiSend');
@@ -4759,24 +4776,56 @@ $('view-ai').addEventListener('click', async (e) => {
     loadAiList();
     return;
   }
-  if (e.target.closest('[data-airename]')) {
-    const cur = AI.dlg ? AI.dlg.title : '';
-    const title = prompt('Название диалога', cur);
-    if (!title || !title.trim() || title.trim() === cur) return;
-    const res = await api('ai-rename', { id: AI.cur, title: title.trim() }).catch(() => null);
-    if (!res || !res.ok) { toast('Не сохранилось — нет связи'); return; }
+  if (e.target.closest('[data-airename]')) { aiRenameStart(); return; }
+  if (e.target.closest('[data-aiclearno]')) { $('aiConfirm').hidden = true; return; }
+  if (e.target.closest('[data-aiclearyes]')) {
+    $('aiConfirm').hidden = true;
+    const res = await api('ai-clear', { id: AI.cur }).catch(() => null);
+    if (!res || !res.ok) { toast((res && res.data.message) || 'Не получилось — нет связи'); return; }
     AI.dlg = res.data.dialog; renderAiMain(); loadAiList();
+    toast('Диалог очищен');
     return;
   }
   if (e.target.closest('[data-aiclear]')) {
-    const main = AI.cur === aiMainId();
-    if (!confirm(main ? 'Очистить основной диалог? Сообщения и память Claude по нему удалятся.' : 'Удалить этот диалог?')) return;
-    const res = await api(main ? 'ai-clear' : 'ai-delete', { id: AI.cur }).catch(() => null);
+    if (AI.cur === aiMainId()) { $('aiConfirm').hidden = !$('aiConfirm').hidden; return; }
+    const id = AI.cur;
+    const res = await api('ai-delete', { id }).catch(() => null);
     if (!res || !res.ok) { toast('Не получилось — нет связи'); return; }
-    if (main) { AI.dlg = res.data.dialog; renderAiMain(); } else { AI.list = (AI.list || []).filter((x) => x.id !== AI.cur); aiOpen(aiMainId()); }
+    AI.list = (AI.list || []).filter((x) => x.id !== id);
+    aiOpen(aiMainId());
     loadAiList();
+    toast('Диалог удалён', 'Вернуть', async () => {
+      const r = await api('ai-restore', { id }).catch(() => null);
+      if (!r || !r.ok) { toast('Не получилось вернуть — нет связи'); return; }
+      await loadAiList();
+      aiOpen(id);
+    }, 7000);
   }
 });
+// Переименование — прямо в заголовке: Enter или клик мимо сохраняют, Esc отменяет.
+function aiRenameStart() {
+  const box = $('aiTitle');
+  if (!box || box.querySelector('input') || !AI.dlg || !AI.dlg.own) return;
+  const cur = AI.dlg.title || '';
+  box.innerHTML = `<input class="input ai-title-input" id="aiTitleInput" maxlength="60" value="${esc(cur)}" aria-label="Название диалога">`;
+  const inp = $('aiTitleInput');
+  inp.focus(); inp.select();
+  let done = false;
+  const finish = async (save) => {
+    if (done) return;
+    done = true;
+    const title = inp.value.trim();
+    if (!save || !title || title === cur) { renderAiMain(); return; }
+    AI.dlg.title = title;
+    renderAiMain();
+    const res = await api('ai-rename', { id: AI.cur, title }).catch(() => null);
+    if (!res || !res.ok) { AI.dlg.title = cur; renderAiMain(); toast('Не сохранилось — нет связи'); return; }
+    AI.dlg = res.data.dialog;
+    loadAiList();
+  };
+  inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); finish(true); } if (ev.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+}
 $('view-ai').addEventListener('input', (e) => { if (e.target.id === 'aiText') { AI.drafts[AI.cur] = e.target.value; aiAutosize(); } });
 $('view-ai').addEventListener('keydown', (e) => {
   if (e.target.id === 'aiText' && e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(hover: hover)').matches) { e.preventDefault(); aiSend(); }
