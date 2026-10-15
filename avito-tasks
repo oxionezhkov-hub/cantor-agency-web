@@ -112,12 +112,14 @@ a{color:inherit}
 /* ── top bar ── */
 .top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
 .top-in{max-width:1120px;margin:0 auto;height:var(--top);display:flex;align-items:center;gap:14px;padding:0 20px}
-.brand{font-family:var(--display);font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;gap:8px;white-space:nowrap}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);transition:background .3s}
-.sync-dot.off{background:var(--faint);box-shadow:0 0 0 3px var(--sunken)}
-.sync-dot.busy{animation:pulse 1s ease-in-out infinite}
+/* Статус связи — кольцо вокруг аватарки: зелёное — всё обновляется, красное — нет связи. */
+.me-btn .avatar{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--green);transition:box-shadow .3s}
+.me-btn.off .avatar{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--red)}
+.me-btn.busy .avatar{animation:pulse 1s ease-in-out infinite}
+.conn-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);flex:none;margin:0 5px}
+.conn-dot.off{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
 @keyframes pulse{50%{opacity:.35}}
-.tabs{display:flex;gap:4px;margin-left:12px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:4px;margin-left:-6px;min-width:0;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
 .tab:hover{color:var(--ink);background:var(--sunken)}
@@ -636,6 +638,87 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-job-links a:hover{color:var(--accent)}
 .tag-run::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1s ease-in-out infinite}
 @media (max-width:900px){.kb-grid{grid-template-columns:1fr}}
+/* ИИ-помощник */
+.ai-wrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;align-items:start}
+.ai-side{position:sticky;top:calc(var(--top) + 16px);display:grid;gap:6px;max-height:calc(100vh - var(--top) - 40px);overflow:auto;padding-bottom:8px}
+.ai-side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:2px 4px}
+.ai-side-head .btn{text-transform:none;letter-spacing:0}
+.ai-side-team{margin-top:12px}
+.ai-list{display:grid;gap:4px}
+.ai-item{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid transparent;width:100%}
+.ai-item:hover{background:var(--sunken)}
+.ai-item.on{background:var(--surface);border-color:var(--line);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.ai-item-t{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;color:var(--ink)}
+.ai-item-t b{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ai-item-t .ic{color:var(--accent);flex:none}
+.ai-when{margin-left:auto;font-size:12px;color:var(--faint);flex:none;font-weight:500}
+.ai-item-last{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-person{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-align:left}
+.ai-person:hover{background:var(--sunken)}
+.ai-person span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-n{font-size:12px;color:var(--muted);font-weight:600}
+.ai-person .ic{color:var(--faint);transition:transform .15s}
+.ai-group.open .ai-person .ic{transform:rotate(180deg)}
+.ai-group .ai-item{padding-left:24px}
+.ai-main{min-width:0;display:flex;flex-direction:column;min-height:calc(100vh - var(--top) - 160px)}
+.ai-head{display:flex;align-items:center;gap:6px;padding:0 0 12px;border-bottom:1px solid var(--line-2)}
+.ai-title{flex:1;min-width:0;display:grid;gap:2px}
+.ai-title b{font-family:var(--display);font-size:19px;font-weight:700;color:var(--ink);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-title span{font-size:12.5px;color:var(--muted)}
+.ai-back{display:none}
+.ai-msgs{flex:1;display:flex;flex-direction:column;gap:10px;padding:16px 0}
+.ai-day{align-self:center;font-size:12px;color:var(--faint);font-weight:600;margin:6px 0}
+.ai-msg{display:grid;gap:3px;max-width:min(720px,88%);justify-items:start}
+.ai-msg.me{align-self:flex-end;justify-items:end}
+.ai-bubble{background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:10px 14px;font-size:14.5px;line-height:1.55;color:var(--text);overflow-wrap:anywhere}
+.ai-msg.me .ai-bubble{background:var(--accent);border-color:var(--accent);color:#fff;border-radius:18px 18px 6px 18px}
+.ai-msg.err .ai-bubble{background:var(--red-bg);border-color:transparent;color:var(--red)}
+.ai-bubble p+p,.ai-bubble p+ul,.ai-bubble ul+p,.ai-bubble ul+ul{margin-top:8px}
+.ai-bubble ul{list-style:none;display:grid;gap:4px}
+.ai-bubble li{position:relative;padding-left:16px}
+.ai-bubble li::before{content:'•';position:absolute;left:3px;font-weight:700}
+.ai-bubble b{color:var(--ink);font-weight:700}
+.ai-msg.me .ai-bubble b{color:#fff}
+.ai-bubble a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.ai-meta{font-size:11.5px;color:var(--faint);padding:0 6px}
+.ai-meta a{color:var(--muted)}
+.ai-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ai-file{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--sunken);font-size:13px;font-weight:600;color:var(--ink);max-width:100%}
+.ai-file span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ai-file .muted{font-weight:500}
+.ai-wait{display:flex;align-items:center;gap:10px;color:var(--muted)}
+.ai-dots{display:inline-flex;gap:3px}
+.ai-dots i{width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.3;animation:aiDot 1.2s infinite}
+.ai-dots i:nth-child(2){animation-delay:.2s}.ai-dots i:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.ai-memory{font-size:13px;color:var(--muted);background:var(--sunken);border-radius:12px;padding:8px 12px}
+.ai-memory summary{cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;list-style:none}
+.ai-memory summary::-webkit-details-marker{display:none}
+.ai-memory div{margin-top:6px;white-space:pre-wrap;line-height:1.5}
+.ai-hello{margin:auto 0;display:grid;justify-items:center;text-align:center;gap:8px;padding:32px 12px;color:var(--muted);font-size:14px}
+.ai-hello>.ic{width:30px;height:30px;color:var(--accent)}
+.ai-hello b{font-size:16px;color:var(--ink)}
+.ai-hello>span{max-width:460px;line-height:1.5}
+.ai-examples{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px;max-width:640px}
+.ai-examples .chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--text);text-align:left;line-height:1.35}
+.ai-examples .chip:hover{border-color:var(--accent);color:var(--ink)}
+.ai-compose{position:sticky;bottom:12px;display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:6px 6px 6px 14px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+.ai-compose .textarea{border:0;box-shadow:none!important;resize:none;padding:8px 0;min-height:38px;max-height:40vh;background:transparent;font-size:15px}
+.ai-send{width:40px;min-height:40px;padding:0;flex:none}
+.ai-send:disabled{opacity:.45}
+@media (max-width:900px){
+  .ai-wrap{grid-template-columns:1fr}
+  .ai-side{display:none;position:static;max-height:none}
+  .ai-listing .ai-side{display:grid}
+  .ai-listing .ai-main{display:none}
+  .ai-back{display:grid}
+  .ai-main{min-height:calc(100vh - var(--top) - 190px)}
+}
+@media (max-width:760px){
+  .ai-compose{bottom:calc(74px + env(safe-area-inset-bottom))}
+  .ai-msg{max-width:94%}
+  .ai-title b{font-size:17px}
+}
 @media (max-width:760px){
   .kb-modes button{font-size:12.5px;padding:0 4px;white-space:nowrap;line-height:1.15}
   .kb-regs{max-height:none;overflow:visible}
@@ -908,6 +991,8 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
@@ -966,7 +1051,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 <div id="app" hidden>
   <header class="top">
     <div class="top-in">
-      <div class="brand"><span class="sync-dot" id="syncDot" title=""></span>Avito Tasks</div>
       <nav class="tabs" id="tabs"></nav>
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
@@ -1129,6 +1213,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
         <div class="kb-side">
           <div id="kbJobs"><div class="empty">Загружаю…</div></div>
         </div>
+      </div>
+    </section>
+
+    <section id="view-ai" hidden>
+      <div class="ai-wrap">
+        <aside class="ai-side" id="aiSide"></aside>
+        <div class="ai-main" id="aiMain"></div>
       </div>
     </section>
   </main>
@@ -1606,6 +1697,7 @@ function showApp() {
   document.title = 'Avito Tasks';
   if (S.justActivated) { toast(`Добро пожаловать, ${first(S.justActivated.name)}! Теперь трекер открывается на этом устройстве по обычной ссылке.`, null, null, 7000); S.justActivated = null; }
   startPolling();
+  if (!location.hash) restorePlace();
   openFromHash();
 }
 
@@ -1653,7 +1745,7 @@ function activitySent(sent) {
 async function sync(initial) {
   if (S.syncing) return;
   S.syncing = true;
-  $('syncDot').classList.add('busy');
+  $('meBtn').classList.add('busy');
   try {
     if (initial) markActive(true);
     const activity = activityPayload(initial);
@@ -1673,10 +1765,11 @@ async function sync(initial) {
   } finally {
     S.syncing = false;
     S.lastSync = Date.now();
-    const dot = $('syncDot');
-    dot.classList.remove('busy');
-    dot.classList.toggle('off', S.offline);
-    dot.title = S.offline ? 'Нет связи — повторю через минуту' : `Обновлено в ${fmtTime(Date.now())} · обновляется само каждую минуту`;
+    const me = $('meBtn');
+    me.classList.remove('busy');
+    me.classList.toggle('off', S.offline);
+    me.title = connText();
+    if (!$('meMenu').hidden && $('connRow')) $('connRow').outerHTML = connRow();
     renderBanners();
     if (S.view === 'team' && S.teamTab !== 'access' && !S.offline) loadActivity();
     if (!S.offline && (S.view === 'meet' || Date.now() - MT.loadedAt > 5 * 60000)) loadMeet(S.view === 'meet');
@@ -1732,7 +1825,7 @@ function applySync(d, fromCache) {
 function isEditing() {
   const a = document.activeElement;
   if (DD.open) return true; // открыто выпадающее меню — не перерисовываем под ним
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-analytics, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-analytics, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet, #view-ai') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -1744,13 +1837,14 @@ function render() {
   if (S.view === 'team') { if (S.teamTab === 'access') renderTeamStatic(); else loadActivity(); }
   if (S.view === 'meet') renderMeet();
   if (S.view === 'kb' && !KB.rendered) renderKb();
+  if (S.view === 'ai' && !AI.rendered) renderAi();
   if (S.view === 'reflection') renderReflection();
 }
 document.addEventListener('focusout', () => setTimeout(() => { if (S.pendingRender && !isEditing()) render(); }, 150));
 
 // ── header / navigation ──
 function views() {
-  const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }];
+  const v = [{ id: 'tasks', label: 'Задачи', icon: 'tasks' }, { id: 'ai', label: 'ИИ-помощник', short: 'ИИ', icon: 'spark' }];
   if (hasSec('clients')) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
   if (hasSec('analytics')) v.push({ id: 'analytics', label: 'Аналитика', icon: 'chart' });
   if (hasSec('meet')) v.push({ id: 'meet', label: 'Встречи', icon: 'cal' });
@@ -1779,7 +1873,7 @@ function renderHeader() {
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'clients', 'analytics', 'reflection', 'kb', 'meet'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'ai', 'clients', 'analytics', 'reflection', 'kb', 'meet'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
   // «Команда» — одна вкладка из двух половин: активность и доступы.
   $('view-team').hidden = !(S.view === 'team' && S.teamTab === 'access');
   $('view-activity').hidden = !(S.view === 'team' && S.teamTab !== 'access');
@@ -1800,7 +1894,38 @@ function setView(v) {
   if (v === 'meet') loadMeet(true);
   if (v === 'analytics') loadAnalytics();
   if (v === 'kb') renderKb();
+  if (v === 'ai') renderAi();
   window.scrollTo({ top: 0 });
+  savePlace();
+}
+
+// Обновление страницы оставляет тот же раздел и то же место (в пределах этой вкладки браузера).
+const K_PLACE = 'avitoTasks.place';
+try { history.scrollRestoration = 'manual'; } catch (e) { /* старый браузер */ }
+let placeTimer = null, placeRestoring = false;
+function savePlace() {
+  if (placeRestoring || !S.me || $('app').hidden) return;
+  try { sessionStorage.setItem(K_PLACE, JSON.stringify({ view: S.view, y: Math.round(window.scrollY), at: Date.now() })); } catch (e) { /* приватный режим */ }
+}
+window.addEventListener('scroll', () => { clearTimeout(placeTimer); placeTimer = setTimeout(savePlace, 250); }, { passive: true });
+window.addEventListener('pagehide', () => { clearTimeout(placeTimer); savePlace(); });
+function restorePlace() {
+  let p = null;
+  try { p = JSON.parse(sessionStorage.getItem(K_PLACE) || 'null'); } catch (e) { return; }
+  if (!p || Date.now() - p.at > 12 * 3600000) return;
+  if (p.view && p.view !== S.view && views().some((v) => v.id === p.view)) setView(p.view);
+  if (!(p.y > 0)) return;
+  // Раздел дорисовывается по мере загрузки (клиенты, аналитика, история базы) — докручиваем несколько
+  // раз, пока страница не станет достаточно длинной. Если человек сам прокрутил — не мешаем.
+  placeRestoring = true;
+  let tries = 0, lastY = window.scrollY;
+  const tick = () => {
+    if (Math.abs(window.scrollY - lastY) > 4) { placeRestoring = false; return; }
+    window.scrollTo(0, p.y); lastY = window.scrollY;
+    if (Math.abs(window.scrollY - p.y) > 4 && (tries += 1) < 24) setTimeout(tick, 250);
+    else { placeRestoring = false; savePlace(); }
+  };
+  requestAnimationFrame(tick);
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-view]');
@@ -1815,6 +1940,12 @@ document.addEventListener('click', (e) => {
 });
 
 // профиль
+function connText() {
+  return S.offline ? 'Нет связи — повторю через минуту' : S.lastSync ? `Связь есть · обновлено в ${fmtTime(S.lastSync)}` : 'Подключаюсь…';
+}
+function connRow() {
+  return `<button class="menu-item" id="connRow" data-act="refresh"><span class="conn-dot ${S.offline ? 'off' : ''}"></span><span>${esc(connText())}<br><span class="muted" style="font-size:12.5px">${S.offline ? 'нажмите, чтобы попробовать сейчас' : 'обновляется само каждую минуту · нажмите, чтобы сейчас'}</span></span></button>`;
+}
 $('meBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   const m = $('meMenu');
@@ -1824,8 +1955,8 @@ $('meBtn').addEventListener('click', (e) => {
     : tgConnectUrl() ? `<a class="menu-item tg" href="${esc(tgConnectUrl())}" data-tgconnect>${ico('tg')}<span>Подключить Telegram<br><span class="muted" style="font-size:12.5px">задачи и напоминания в личку</span></span></a>` : '';
   m.innerHTML = `
     <div class="menu-head">${avatar(S.me, 'lg')}<div><div style="font-weight:700;color:var(--ink)">${esc(S.me.name)}</div><div class="muted" style="font-size:13px">${esc(S.me.roleLabel || '')}</div></div></div>
+    ${connRow()}
     ${tgRow}
-    <button class="menu-item" data-act="refresh">${ico('refresh')}Обновить сейчас</button>
     <button class="menu-item" data-act="logout">${ico('out')}Выйти на этом устройстве</button>`;
   m.hidden = false;
 });
@@ -1841,7 +1972,7 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-tgconnec
 function tgConnectUrl() { return S.bot && S.tgStart ? `https://t.me/${S.bot}?start=${S.tgStart}` : null; }
 
 // ── уведомления ──
-const N_ICON = { meet: ['cal', 'var(--blue-bg)', 'var(--blue)'], assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], handoff: ['msg', 'var(--red-bg)', 'var(--red)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'] };
+const N_ICON = { meet: ['cal', 'var(--blue-bg)', 'var(--blue)'], assigned: ['tasks', 'var(--blue-bg)', 'var(--blue)'], done: ['check', 'var(--green-bg)', 'var(--green)'], inform: ['send', 'var(--amber-bg)', 'var(--amber)'], handoff: ['msg', 'var(--red-bg)', 'var(--red)'], overdue: ['clock', 'var(--red-bg)', 'var(--red)'], soon: ['clock', 'var(--amber-bg)', 'var(--amber)'], edited: ['flag', 'var(--sunken)', 'var(--muted)'], kb: ['book', 'var(--green-bg)', 'var(--green)'], kbfail: ['book', 'var(--red-bg)', 'var(--red)'], ai: ['spark', 'var(--accent-bg)', 'var(--accent)'], aifail: ['spark', 'var(--red-bg)', 'var(--red)'] };
 $('bellBtn').addEventListener('click', openNotifications);
 
 // ── светлая / тёмная тема ──
@@ -1891,7 +2022,7 @@ function openNotifications() {
 $('drawerRoot').addEventListener('click', (e) => {
   if (e.target.closest('[data-close]')) { $('drawerRoot').innerHTML = ''; return; }
   const n = e.target.closest('.notif');
-  if (n) { $('drawerRoot').innerHTML = ''; if (n.dataset.task) openTask(n.dataset.task); else if (n.dataset.ref.startsWith('kb:')) openKbJob(n.dataset.ref.slice(3)); else if (/^\d{4}-\d\d-\d\d /.test(n.dataset.ref)) setView('meet'); }
+  if (n) { $('drawerRoot').innerHTML = ''; if (n.dataset.task) openTask(n.dataset.task); else if (n.dataset.ref.startsWith('kb:')) openKbJob(n.dataset.ref.slice(3)); else if (n.dataset.ref.startsWith('ai:')) aiOpen(n.dataset.ref.slice(3)); else if (/^\d{4}-\d\d-\d\d /.test(n.dataset.ref)) setView('meet'); }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $('drawerRoot').innerHTML = ''; closeMenus(); } });
 
@@ -2345,10 +2476,11 @@ function openFromHash() {
   const sec = (location.hash.match(/^#(analytics|clients|meet|team|kb)$/) || [])[1];
   if (sec) { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === sec)) setView(sec); return; }
   if (location.hash === '#reflection') { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === 'reflection')) setView('reflection'); return; }
-  const m = location.hash.match(/^#(t|kb)=(.+)$/);
+  const m = location.hash.match(/^#(t|kb|ai)=(.+)$/);
   if (!m) return;
   history.replaceState(null, '', location.pathname + location.search);
-  if (m[1] === 'kb') openKbJob(decodeURIComponent(m[2]));
+  if (m[1] === 'ai') aiOpen(decodeURIComponent(m[2]));
+  else if (m[1] === 'kb') openKbJob(decodeURIComponent(m[2]));
   else openTask(decodeURIComponent(m[2]));
 }
 // Из уведомления «база знаний обновлена»: вкладка «База знаний» с подсвеченным запросом.
@@ -3680,7 +3812,7 @@ function renderKbJobs() {
     if (j.status === 'done' && j.mode === 'meeting' && j.meeting) {
       const m = j.meeting;
       body = m.sentAt
-        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>`
+        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено клиенту ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}</div></div>`
         : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
           <div class="kb-meet-actions"><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
     } else if (j.status === 'done' && r) {
@@ -3693,15 +3825,16 @@ function renderKbJobs() {
       body = `<div class="kb-note ${j.status === 'not_configured' ? 'warn' : 'bad'}">${esc(j.error || 'Неизвестная ошибка')}</div>
         <div><button class="btn btn-ghost btn-sm" data-kbretry="${esc(j.id)}">${ico('refresh', 'ic-sm')}Отправить снова</button></div>`;
     }
-    const links = [
+    const sentMeet = Boolean(j.meeting && j.meeting.sentAt);
+    const links = sentMeet ? '' : [
       r && r.prUrl ? `<a href="${esc(r.prUrl)}" target="_blank" rel="noopener">PR на GitHub</a>` : '',
       j.sessionUrl ? `<a href="${esc(j.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a>` : '',
     ].filter(Boolean).join(' · ');
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
-      <div class="kb-job-head"><span class="tag ${cls}">${esc(r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
+      <div class="kb-job-head"><span class="tag ${cls}">${esc(sentMeet ? 'Отправлено' : r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
       <div class="kb-job-target">${esc(j.targetLabel)}</div>
-      ${j.text && !(j.meeting && j.meeting.sentAt) ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
-      ${j.files.length ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
+      ${j.text && !sentMeet ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
+      ${j.files.length && !sentMeet ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
       ${body}
       ${links ? `<div class="kb-job-links">${links}</div>` : ''}
     </div>`;
@@ -4413,6 +4546,242 @@ $('drawerRoot').addEventListener('submit', async (e) => {
     toast(`Клиент «${name}» добавлен`);
   } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
 });
+
+// ── ИИ-помощник: диалоги с Claude ──
+// Сообщение уходит в Claude (рутина Claude Code): он сам берёт нужное по клиентам, задачам, чатам,
+// кабинетам Авито и базе знаний. Ответ приходит за 1–5 минут — сюда, в колокольчик и в Telegram.
+// Claude помнит диалог сжато: короткую память и несколько последних сообщений.
+const AI = { list: null, others: [], cur: prefs.aiCur || '', dlg: null, rendered: false, pollTimer: null, showList: false, sending: false, drafts: {}, openGroups: {} };
+function aiMainId() { return `main-${S.me.id}`; }
+function renderAi() {
+  AI.rendered = true;
+  if (!AI.cur) AI.cur = aiMainId();
+  renderAiSide();
+  renderAiMain();
+  loadAiList();
+  loadAiDialog(AI.cur, true);
+}
+async function loadAiList() {
+  try {
+    const res = await api('ai-list');
+    if (!res.ok) throw new Error();
+    AI.list = res.data.mine || [];
+    AI.others = res.data.others || [];
+  } catch (e) { if (!AI.list) AI.list = []; }
+  if (S.view === 'ai') renderAiSide();
+}
+async function loadAiDialog(id, toBottom) {
+  clearTimeout(AI.pollTimer);
+  try {
+    const res = await api('ai-dialog', { id });
+    if (res.status === 404) { if (id !== aiMainId()) { AI.cur = aiMainId(); prefs.aiCur = ''; savePrefs(); return loadAiDialog(AI.cur, true); } throw new Error(); }
+    if (!res.ok) throw new Error();
+    if (id !== AI.cur) return;
+    const was = AI.dlg && AI.dlg.id === id ? AI.dlg : null;
+    const grew = !was || res.data.dialog.messages.length !== was.messages.length;
+    const hadPending = was && was.pending;
+    AI.dlg = res.data.dialog;
+    if (S.view !== 'ai') return;
+    if (grew || !was || Boolean(hadPending) !== Boolean(AI.dlg.pending) || (hadPending && AI.dlg.pending && hadPending.progress !== AI.dlg.pending.progress)) renderAiMessages(toBottom || grew);
+    if (hadPending && !AI.dlg.pending) loadAiList();
+  } catch (e) {
+    if (!AI.dlg || AI.dlg.id !== id) { const el = $('aiMsgs'); if (el) el.innerHTML = '<div class="empty">Не получилось загрузить диалог — проверьте интернет.</div>'; }
+  }
+  if (AI.dlg && AI.dlg.pending && S.view === 'ai') AI.pollTimer = setTimeout(() => { if (S.view === 'ai' && !document.hidden) loadAiDialog(AI.cur); else AI.pollTimer = setTimeout(() => loadAiDialog(AI.cur), 4000); }, 7000);
+}
+function aiOpen(id) {
+  if (!id) return;
+  if (AI.cur !== id) { AI.drafts[AI.cur] = ($('aiText') || {}).value || ''; AI.cur = id; AI.dlg = null; }
+  prefs.aiCur = id.startsWith('main-') ? '' : id; savePrefs();
+  AI.showList = false;
+  if (S.view !== 'ai') { setView('ai'); return; }
+  renderAiSide();
+  renderAiMain();
+  loadAiDialog(id, true);
+}
+function aiItem(d, mine) {
+  const when = d.updatedAt ? ago(Date.parse(d.updatedAt), Date.now()) : '';
+  return `<button class="ai-item ${AI.cur === d.id ? 'on' : ''}" data-aiopen="${esc(d.id)}">
+    <span class="ai-item-t">${d.main && mine ? ico('spark', 'ic-sm') : ''}<b>${esc(d.title || 'Диалог')}</b>${when ? `<span class="ai-when">${esc(when)}</span>` : ''}</span>
+    ${d.last ? `<span class="ai-item-last">${esc(d.last)}</span>` : ''}
+  </button>`;
+}
+function renderAiSide() {
+  const el = $('aiSide');
+  if (!el) return;
+  const mine = AI.list || [{ id: aiMainId(), title: 'Основной', main: true }];
+  const others = AI.others.map((g) => {
+    const open = AI.openGroups[g.user.id] || g.dialogs.some((d) => d.id === AI.cur);
+    return `<div class="ai-group ${open ? 'open' : ''}">
+      <button class="ai-person" data-aigroup="${esc(g.user.id)}">${avatar(g.user, 'xs')}<span>${esc(g.user.name)}</span><span class="ai-n">${g.dialogs.length}</span>${ico('chev', 'ic-sm')}</button>
+      ${open ? g.dialogs.map((d) => aiItem(d, false)).join('') : ''}
+    </div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="ai-side-head"><span>Мои диалоги</span><button class="btn btn-ghost btn-sm" data-ainew>${ico('plus', 'ic-sm')}Новый</button></div>
+    <div class="ai-list">${mine.map((d) => aiItem(d, true)).join('')}</div>
+    ${isOwner() && AI.others.length ? `<div class="ai-side-head ai-side-team"><span>Диалоги сотрудников</span></div><div class="ai-list">${others}</div>` : ''}`;
+  $('view-ai').classList.toggle('ai-listing', AI.showList);
+}
+function renderAiMain() {
+  const el = $('aiMain');
+  if (!el) return;
+  const d = AI.dlg && AI.dlg.id === AI.cur ? AI.dlg : null;
+  const meta = (AI.list || []).find((x) => x.id === AI.cur) || AI.others.flatMap((g) => g.dialogs.map((x) => ({ ...x, owner: g.user }))).find((x) => x.id === AI.cur);
+  const title = (d && d.title) || (meta && meta.title) || (AI.cur === aiMainId() ? 'Основной' : 'Диалог');
+  const own = d ? d.own : !meta || !meta.owner;
+  const who = d && !d.own ? d.userName : meta && meta.owner ? meta.owner.name : '';
+  el.innerHTML = `
+    <div class="ai-head">
+      <button class="icon-btn ai-back" data-ailist aria-label="Все диалоги">${ico('menu')}</button>
+      <div class="ai-title"><b>${esc(title)}</b>${who ? `<span>диалог: ${esc(who)} · только просмотр</span>` : '<span>Ответ за 1–5 минут — придёт уведомление</span>'}</div>
+      ${own ? `<button class="icon-btn" data-airename title="Переименовать" aria-label="Переименовать">${ico('edit')}</button>
+      <button class="icon-btn" data-aiclear title="${AI.cur === aiMainId() ? 'Очистить диалог' : 'Удалить диалог'}" aria-label="Удалить">${ico('trash')}</button>` : ''}
+    </div>
+    <div class="ai-msgs" id="aiMsgs"><div class="empty">Загружаю…</div></div>
+    ${own ? `<div class="ai-compose">
+      <textarea class="textarea" id="aiText" rows="1" placeholder="Напишите Claude…">${esc(AI.drafts[AI.cur] || '')}</textarea>
+      <button class="btn btn-primary ai-send" id="aiSend" aria-label="Отправить">${ico('send')}</button>
+    </div>` : ''}`;
+  if (d) renderAiMessages(true);
+  aiAutosize();
+}
+// Ответ Claude: **жирный**, списки «• », абзацы, ссылки.
+function aiMd(text) {
+  const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)»])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  return String(text || '').replace(/\r/g, '').split(/\n{2,}/).map((block) => {
+    const lines = block.split('\n').filter((l) => l.trim());
+    if (!lines.length) return '';
+    if (lines.every((l) => /^\s*(?:[•\-*–]|\d+[.)])\s+/.test(l))) return `<ul>${lines.map((l) => `<li>${inline(l.replace(/^\s*(?:[•\-*–]|\d+[.)])\s+/, ''))}</li>`).join('')}</ul>`;
+    return `<p>${lines.map((l) => (/^\s*[•\-–]\s+/.test(l) ? `• ${inline(l.replace(/^\s*[•\-–]\s+/, ''))}` : inline(l))).join('<br>')}</p>`;
+  }).join('');
+}
+function aiMsgHtml(m) {
+  const t = fmtTime(Date.parse(m.at));
+  if (m.role === 'user') return `<div class="ai-msg me"><div class="ai-bubble">${esc(m.text).replace(/\n/g, '<br>')}</div><div class="ai-meta">${t}</div></div>`;
+  const files = (m.files || []).map((f) => `<button class="ai-file" data-aifile="${esc(m.jobId)}|${esc(f.id)}">${ico('clip', 'ic-sm')}<span>${esc(f.name)}</span><span class="muted">${fmtSize(f.size)}</span></button>`).join('');
+  return `<div class="ai-msg ${m.error ? 'err' : ''}"><div class="ai-bubble">${m.error ? esc(m.text) : aiMd(m.text)}${files ? `<div class="ai-files">${files}</div>` : ''}</div><div class="ai-meta">${m.error ? '' : 'Claude · '}${t}</div></div>`;
+}
+function renderAiMessages(toBottom) {
+  const el = $('aiMsgs');
+  const d = AI.dlg;
+  if (!el || !d || d.id !== AI.cur) return;
+  const p = d.pending;
+  const days = [];
+  let lastDay = '';
+  for (const m of d.messages) {
+    const day = fmtDay(Date.parse(m.at), Date.now());
+    if (day !== lastDay) { days.push(`<div class="ai-day">${esc(day)}</div>`); lastDay = day; }
+    days.push(aiMsgHtml(m));
+  }
+  const mem = d.memory ? `<details class="ai-memory"><summary>${ico('spark', 'ic-sm')}Что Claude помнит из этого диалога</summary><div>${esc(d.memory)}</div></details>` : '';
+  el.innerHTML = d.messages.length || p
+    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `Claude: ${esc(p.progress)}` : p.status === 'sent' ? 'Claude запускается…' : 'Claude разбирается…'}</div>${isOwner() && p.sessionUrl ? `<div class="ai-meta"><a href="${esc(p.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a></div>` : ''}</div>` : ''}`
+    : `<div class="ai-hello">${ico('spark')}<b>Спросите Claude о чём угодно по работе</b><span>Он сам посмотрит данные клиентов и цифры дашборда, задачи, переписку в чатах, кабинеты Авито и базу знаний. Может сделать выгрузку файлом.</span>
+      <div class="ai-examples">${['Что сейчас с клиентом Шевчук? Коротко: цифры, задачи, что ждёт ответа', 'Выгрузи статистику объявлений Ивана Кариентиди за последние 7 дней', 'У каких клиентов падают контакты за неделю?', 'Как по регламенту запускать нового клиента?'].map((x) => `<button class="chip" data-aiexample="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
+  const send = $('aiSend');
+  if (send) { send.disabled = Boolean(p) || AI.sending; send.title = p ? 'Claude ещё отвечает — дождитесь ответа или откройте другой диалог' : 'Отправить (Enter)'; }
+  if (toBottom) requestAnimationFrame(() => { const c = $('aiMsgs'); if (c && c.lastElementChild) c.lastElementChild.scrollIntoView({ block: 'end' }); window.scrollTo(0, document.documentElement.scrollHeight); });
+}
+function aiAutosize() {
+  const t = $('aiText');
+  if (!t) return;
+  t.style.height = 'auto';
+  t.style.height = Math.min(t.scrollHeight + 2, Math.round(window.innerHeight * 0.4)) + 'px';
+}
+async function aiSend() {
+  const t = $('aiText');
+  const text = t ? t.value.trim() : '';
+  if (!text || AI.sending) return;
+  if (AI.dlg && AI.dlg.pending) { toast('Claude ещё отвечает — дождитесь ответа или откройте другой диалог'); return; }
+  AI.sending = true;
+  const id = AI.cur;
+  const before = AI.dlg;
+  AI.dlg = { ...(before || { id, own: true, messages: [], title: '' }), messages: [...((before && before.messages) || []), { id: 'tmp', role: 'user', text, at: new Date().toISOString() }], pending: { status: 'sent' } };
+  t.value = ''; AI.drafts[id] = ''; aiAutosize();
+  renderAiMessages(true);
+  try {
+    const res = await api('ai-send', { id, text });
+    if (res.status === 409 && res.data.dialog) { AI.dlg = res.data.dialog; toast(res.data.message); t.value = text; }
+    else if (!res.ok) throw new Error(res.data.message || '');
+    else AI.dlg = res.data.dialog;
+  } catch (e) {
+    AI.dlg = before;
+    if ($('aiText') && AI.cur === id) { $('aiText').value = text; aiAutosize(); }
+    toast(e && e.message && !/fetch|network/i.test(e.message) ? e.message : 'Не отправилось — нет связи. Текст на месте, попробуйте ещё раз.');
+  }
+  AI.sending = false;
+  if (AI.cur !== id) return;
+  renderAiMessages(true);
+  loadAiList();
+  if (AI.dlg && AI.dlg.pending) { clearTimeout(AI.pollTimer); AI.pollTimer = setTimeout(() => loadAiDialog(AI.cur), 7000); }
+}
+async function aiDownload(jobId, fileId, btn) {
+  const m = AI.dlg && AI.dlg.messages.find((x) => x.jobId === jobId && x.role === 'assistant');
+  const f = m && (m.files || []).find((x) => x.id === fileId);
+  if (!f) return;
+  btn.disabled = true;
+  try {
+    const parts = [];
+    for (let p = 0; p < f.parts; p += 1) {
+      const res = await api('ai-file', { id: AI.cur, jobId, fileId, part: p });
+      if (!res.ok) throw new Error(res.data.message || '');
+      const bin = atob(res.data.data);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+      parts.push(bytes);
+    }
+    const url = URL.createObjectURL(new Blob(parts, { type: f.type || 'application/octet-stream' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } catch (e) { toast(e && e.message && !/fetch|network/i.test(e.message) ? e.message : 'Не скачалось — нет связи'); }
+  btn.disabled = false;
+}
+$('view-ai').addEventListener('click', async (e) => {
+  const open = e.target.closest('[data-aiopen]');
+  if (open) { aiOpen(open.dataset.aiopen); return; }
+  const g = e.target.closest('[data-aigroup]');
+  if (g) { AI.openGroups[g.dataset.aigroup] = !g.closest('.ai-group').classList.contains('open'); renderAiSide(); return; }
+  if (e.target.closest('[data-ailist]')) { AI.showList = true; renderAiSide(); window.scrollTo(0, 0); return; }
+  if (e.target.closest('#aiSend')) { aiSend(); return; }
+  const ex = e.target.closest('[data-aiexample]');
+  if (ex && $('aiText')) { $('aiText').value = ex.dataset.aiexample; aiAutosize(); $('aiText').focus(); return; }
+  const file = e.target.closest('[data-aifile]');
+  if (file) { const [jobId, fileId] = file.dataset.aifile.split('|'); aiDownload(jobId, fileId, file); return; }
+  if (e.target.closest('[data-ainew]')) {
+    const res = await api('ai-new', {}).catch(() => null);
+    if (!res || !res.ok) { toast((res && res.data.message) || 'Не получилось — нет связи'); return; }
+    AI.list = [res.data.dialog.main ? null : { id: res.data.dialog.id, title: res.data.dialog.title, createdAt: new Date().toISOString(), last: '' }, ...(AI.list || [])].filter(Boolean);
+    AI.dlg = res.data.dialog;
+    aiOpen(res.data.dialog.id);
+    setTimeout(() => $('aiText') && $('aiText').focus(), 50);
+    loadAiList();
+    return;
+  }
+  if (e.target.closest('[data-airename]')) {
+    const cur = AI.dlg ? AI.dlg.title : '';
+    const title = prompt('Название диалога', cur);
+    if (!title || !title.trim() || title.trim() === cur) return;
+    const res = await api('ai-rename', { id: AI.cur, title: title.trim() }).catch(() => null);
+    if (!res || !res.ok) { toast('Не сохранилось — нет связи'); return; }
+    AI.dlg = res.data.dialog; renderAiMain(); loadAiList();
+    return;
+  }
+  if (e.target.closest('[data-aiclear]')) {
+    const main = AI.cur === aiMainId();
+    if (!confirm(main ? 'Очистить основной диалог? Сообщения и память Claude по нему удалятся.' : 'Удалить этот диалог?')) return;
+    const res = await api(main ? 'ai-clear' : 'ai-delete', { id: AI.cur }).catch(() => null);
+    if (!res || !res.ok) { toast('Не получилось — нет связи'); return; }
+    if (main) { AI.dlg = res.data.dialog; renderAiMain(); } else { AI.list = (AI.list || []).filter((x) => x.id !== AI.cur); aiOpen(aiMainId()); }
+    loadAiList();
+  }
+});
+$('view-ai').addEventListener('input', (e) => { if (e.target.id === 'aiText') { AI.drafts[AI.cur] = e.target.value; aiAutosize(); } });
+$('view-ai').addEventListener('keydown', (e) => {
+  if (e.target.id === 'aiText' && e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(hover: hover)').matches) { e.preventDefault(); aiSend(); }
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.view === 'ai' && AI.dlg && AI.dlg.pending) loadAiDialog(AI.cur); });
 
 boot();
 </script>
