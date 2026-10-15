@@ -7787,7 +7787,7 @@ function kbInstructions(job) {
     '• Новый регламент: файл base/<slug> (латиница через дефис, без расширения) по образцу соседних регламентов (шапка, .doc-title, .doc-meta, .toc, .reg-card), плюс карточка a.cat-card в нужном .cat-section в base/index.html (новый раздел — только если ни один не подходит). В base/index.html правь только каталог.',
     '• Меняй только base/ и images/base/. Больше ничего в репозитории не трогай.',
     'Публикация: сделай один коммит, запушь ветку, открой PR в main (не черновик) и сразу смержи его (squash) через GitHub — автомерж этих правок заранее разрешён владельцем; после мержа GitHub Action сам выложит сайт. Если мерж не удался из-за конфликта — подтяни свежий main, разреши и повтори. Если GitHub-инструментов для PR нет — попробуй git push origin HEAD:main; если и это запрещено — запушь ветку и отправь done с published=false и ссылкой на ветку (https://github.com/oxionezhkov-hub/cantor-agency-web/tree/<ветка>) в prUrl. На события PR не подписывайся.',
-    `Перед началом отправь POST на callbacks.progress с {"note":"<что делаешь, коротко>"}. В конце — POST на callbacks.done с JSON: {"summary":"2–4 предложения для Софии простым языком: что именно добавлено","changes":[{"slug":"<slug>","title":"<название регламента>","what":"<что изменилось, конкретно: какой шаг/раздел добавлен или исправлен>","isNew":false}],"prUrl":"<ссылка на PR>","published":true}. published=false — если смержить не получилось и PR ждёт проверки. callbacks.fail — только если материал физически не прочитать (файл битый, пустой текст) или не удалось сохранить правки в репозиторий: {"error":"<понятная причина>"}. «Не подходит ни к одному регламенту» — не причина для fail.`,
+    `Перед началом отправь POST на callbacks.progress с {"note":"<что делаешь, коротко>"}. В конце — POST на callbacks.done с JSON: {"summary":"2–4 предложения для Софии простым языком: что именно добавлено","changes":[{"slug":"<slug>","title":"<название регламента>","what":"<что изменилось, конкретно: какой шаг/раздел добавлен или исправлен>","isNew":false}],"prUrl":"<ссылка на PR>","published":true}. published=false — если смержить не получилось и PR ждёт проверки. Если менять ничего не пришлось (знания уже есть) — changes: [] и published: true, в summary объясни, где это уже описано. callbacks.fail — только если материал физически не прочитать (файл битый, пустой текст) или не удалось сохранить правки в репозиторий: {"error":"<понятная причина>"}. «Не подходит ни к одному регламенту» — не причина для fail.`,
     `Ссылка на страницу регламента: ${KB_BASE_URL}/<slug>.`,
   ].join('\n');
 }
@@ -7910,7 +7910,8 @@ async function handleKbJobCallback(request, env, url) {
     summary,
     changes,
     prUrl: /^https:\/\/github\.com\//.test(prUrl) ? prUrl : null,
-    published: body.published !== false,
+    // Nothing changed (the knowledge was already there) — there is nothing to publish either.
+    published: !changes.length || body.published !== false,
   };
   job.status = 'done';
   job.error = null;
@@ -7943,12 +7944,13 @@ async function kbNotify(env, job) {
   } else if (job.status === 'done') {
     const r = job.result;
     const names = r.changes.map((c) => `«${c.title}»`).join(', ');
-    inApp = `${r.published ? 'База знаний обновлена' : 'Правки базы знаний готовы, ждут публикации'}${names ? `: ${names}` : ''}. ${r.summary}`.trim();
-    const lines = [r.published ? '📚 <b>База знаний обновлена</b>' : '📝 <b>Правки базы знаний готовы, но ещё не опубликованы</b>', `<i>${about}</i>`];
+    const head = !r.changes.length ? 'База знаний: менять ничего не понадобилось' : r.published ? 'База знаний обновлена' : 'Правки базы знаний готовы, ждут публикации';
+    inApp = `${head}${names ? `: ${names}` : ''}. ${r.summary}`.trim();
+    const lines = [!r.changes.length ? `📚 <b>${head}</b>` : r.published ? '📚 <b>База знаний обновлена</b>' : '📝 <b>Правки базы знаний готовы, но ещё не опубликованы</b>', `<i>${about}</i>`];
     if (r.changes.length) lines.push('', '<b>Что изменилось:</b>');
     for (const c of r.changes) lines.push(`• <b>${escapeHtml(c.title)}</b>${c.isNew ? ' (новый регламент)' : ''}${c.what ? ` — ${escapeHtml(c.what)}` : ''}`);
     if (r.summary) lines.push('', escapeHtml(r.summary));
-    if (!r.published) lines.push('', 'PR ждёт проверки Олега — после мержа изменения появятся на сайте.');
+    if (!r.published && r.changes.length) lines.push('', 'PR ждёт проверки Олега — после мержа изменения появятся на сайте.');
     const rows = r.changes.filter((c) => c.url).slice(0, 4).map((c) => [{ text: `📖 ${c.title}`.slice(0, 60), url: c.url }]);
     rows.push([{ text: 'Открыть в трекере', url: kbPage }]);
     tg = { text: lines.join('\n'), extra: { reply_markup: { inline_keyboard: rows } } };

@@ -3826,7 +3826,7 @@ function renderKbJobs() {
     } else if (j.status === 'done' && r) {
       body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(siteUrl(c.url))}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
         ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
-        ${r.published ? '' : '<div class="kb-note warn">Правки готовы, но ещё не опубликованы — PR ждёт проверки Олега.</div>'}`;
+        ${r.published || !r.changes.length ? '' : `<div class="kb-note warn">Правки готовы, но ещё не опубликованы — ${r.prUrl ? 'PR ждёт проверки Олега' : 'ссылку на правки Claude не прислал'}.</div>`}`;
     } else if (kbIsActive(j)) {
       body = `<div class="kb-note run">${j.progress ? `Claude: ${esc(j.progress)}` : j.status === 'sent' ? 'Claude запускается…' : 'Claude читает материалы и вносит правки…'}</div>`;
     } else if (j.status === 'failed' || j.status === 'stuck' || j.status === 'not_configured') {
@@ -3838,7 +3838,7 @@ function renderKbJobs() {
       r && r.prUrl ? `<a href="${esc(r.prUrl)}" target="_blank" rel="noopener">PR на GitHub</a>` : '',
     ].filter(Boolean).join(' · ');
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
-      <div class="kb-job-head"><span class="tag ${cls}">${esc(sentMeet ? 'Отправлено' : r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
+      <div class="kb-job-head"><span class="tag ${cls}">${esc(sentMeet ? 'Отправлено' : r && j.status === 'done' && j.mode !== 'meeting' && !r.changes.length ? 'Без изменений' : r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
       <div class="kb-job-target">${esc(j.targetLabel)}</div>
       ${j.text && !sentMeet ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
       ${j.files.length && !sentMeet ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
