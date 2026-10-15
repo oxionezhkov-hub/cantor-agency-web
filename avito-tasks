@@ -600,9 +600,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-meet-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .kb-meet-sent{display:flex;gap:9px;align-items:flex-start;background:var(--green-bg);color:var(--green);border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600}
 .kb-meet-sent .kb-hint{font-weight:400;color:var(--muted);margin-top:2px}
-.kb-meet-view{font-size:13.5px;color:var(--text);line-height:1.5;border-left:3px solid var(--line);padding:2px 0 2px 12px}
-.kb-meet-view b{color:var(--ink)}
-.kb-meet-view p{margin-top:8px}
 .kb-done{justify-items:center;text-align:center;padding:30px 22px}
 .kb-done h2{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
 .kb-done p{max-width:460px;font-size:14px;color:var(--text)}
@@ -3680,8 +3677,7 @@ function renderKbJobs() {
     if (j.status === 'done' && j.mode === 'meeting' && j.meeting) {
       const m = j.meeting;
       body = m.sentAt
-        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>
-          <div class="kb-meet-view">${kbMeetPreview(m.text || '')}</div>`
+        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>`
         : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
           <div class="kb-meet-actions"><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
     } else if (j.status === 'done' && r) {
@@ -3701,7 +3697,7 @@ function renderKbJobs() {
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
       <div class="kb-job-head"><span class="tag ${cls}">${esc(r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
       <div class="kb-job-target">${esc(j.targetLabel)}</div>
-      ${j.text ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
+      ${j.text && !(j.meeting && j.meeting.sentAt) ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
       ${j.files.length ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
       ${body}
       ${links ? `<div class="kb-job-links">${links}</div>` : ''}
@@ -3714,14 +3710,6 @@ function renderKbJobs() {
   }
 }
 
-// Итоги встречи: так текст будет выглядеть в Telegram — первая строка жирная, пункты с «•» и отступами.
-function kbMeetPreview(text) {
-  const lines = String(text).split('\n').map((l) => l.trim());
-  const i = lines.findIndex(Boolean);
-  if (i < 0) return '';
-  const items = lines.slice(i + 1).filter(Boolean).map((l) => l.replace(/^(?:[•\-*–—]|\d+[.)])\s*/, ''));
-  return `<b>${esc(lines[i].replace(/^\*+|\*+$/g, ''))}</b>${items.map((x) => `<p>• ${esc(x)}</p>`).join('')}`;
-}
 function todayYmd() { const p = msk(Date.now()); return `${p.y}-${pad(p.m + 1)}-${pad(p.d)}`; }
 let kbMeetTimer = null;
 $('kbJobs').addEventListener('input', (e) => {
