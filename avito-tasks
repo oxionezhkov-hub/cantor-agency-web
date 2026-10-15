@@ -597,13 +597,9 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-submit .hint{flex:1 1 220px;font-size:13px;color:var(--muted);line-height:1.4}
 .kb-submit .btn{flex:none}
 .kb-meet-text{font-size:14px;line-height:1.55;min-height:180px}
-.kb-meet-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.kb-meet-actions .kb-hint{flex:1 1 200px;font-size:12.5px}
+.kb-meet-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .kb-meet-sent{display:flex;gap:9px;align-items:flex-start;background:var(--green-bg);color:var(--green);border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600}
 .kb-meet-sent .kb-hint{font-weight:400;color:var(--muted);margin-top:2px}
-.kb-meet-view{font-size:13.5px;color:var(--text);line-height:1.5;border-left:3px solid var(--line);padding:2px 0 2px 12px}
-.kb-meet-view b{color:var(--ink)}
-.kb-meet-view p{margin-top:8px}
 .kb-done{justify-items:center;text-align:center;padding:30px 22px}
 .kb-done h2{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
 .kb-done p{max-width:460px;font-size:14px;color:var(--text)}
@@ -621,7 +617,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-note.run .ic{color:var(--blue)}
 .kb-note.warn{background:var(--amber-bg)}
 .kb-note.bad{background:var(--red-bg)}
-.kb-side .sec-head{margin-top:4px}
 .kb-job{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:8px;margin-bottom:10px}
 .kb-job.flash{animation:flash 1.6s ease-out}
 .kb-job-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -976,7 +971,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
-        <a class="icon-btn" id="kbLink" href="https://cantor.agency/base/" target="_blank" rel="noopener" title="База знаний" aria-label="База знаний"><svg class="ic"><use href="#i-book"/></svg></a>
+        <a class="icon-btn" id="kbLink" href="/base/" target="_blank" rel="noopener" title="База знаний" aria-label="База знаний"><svg class="ic"><use href="#i-book"/></svg></a>
         <a class="icon-btn" id="crmLink" href="/sales-crm" title="CRM продаж" aria-label="CRM продаж" hidden><svg class="ic"><use href="#i-crm"/></svg></a>
         <button class="me-btn" id="meBtn" aria-label="Профиль"><span class="avatar" id="meAvatar"></span></button>
       </div>
@@ -1132,7 +1127,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="kb-grid">
         <div class="kb-form" id="kbForm"></div>
         <div class="kb-side">
-          <div class="sec-head"><h2>История обновлений</h2></div>
           <div id="kbJobs"><div class="empty">Загружаю…</div></div>
         </div>
       </div>
@@ -3432,7 +3426,7 @@ function renderActivity() {
         ${p.inTeam ? lane(p.key, first(p.name), 'Задачи', sum(r.a) ? `${sum(r.a)} действ.` : '—', r.a, 'a') : ''}
       </div>
       ${where.length ? `<div class="p-where">Где писал(а): ${where.map(([w, n]) => `<b>${esc(w)}</b> ${n}`).join(' · ')}</div>` : ''}
-      ${(r.sp || []).length ? `<div class="p-where">Что открывал(а) на сайте: ${r.sp.slice(0, 12).map((pg) => `<a href="https://cantor.agency${esc(pg.path)}" target="_blank" rel="noopener"><b>${esc(pg.t || pg.path)}</b></a>${pg.n > 1 ? ` ×${pg.n}` : ''}`).join(' · ')}${r.sp.length > 12 ? ` · и ещё ${r.sp.length - 12}` : ''}</div>` : ''}
+      ${(r.sp || []).length ? `<div class="p-where">Что открывал(а) на сайте: ${r.sp.slice(0, 12).map((pg) => `<a href="${esc(location.origin + pg.path)}" target="_blank" rel="noopener"><b>${esc(pg.t || pg.path)}</b></a>${pg.n > 1 ? ` ×${pg.n}` : ''}`).join(' · ')}${r.sp.length > 12 ? ` · и ещё ${r.sp.length - 12}` : ''}</div>` : ''}
     </div>`;
   }).join('');
   $('actBody').innerHTML = `<div class="legend"><span>Меньше</span>${[1, 2, 3, 4, 5].map((l) => `<span class="sw" style="background:var(--h${l})"></span>`).join('')}<span>Больше</span><span class="gap"></span><span class="sw" style="background:var(--h0)"></span><span>нет активности</span>${isToday ? '<span class="gap"></span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--accent)"></span><span>сейчас</span>' : ''}</div>`
@@ -3482,7 +3476,10 @@ window.addEventListener('scroll', () => { if (tipEl) tipEl.hidden = true; }, { p
 // Новые знания уходят рутине Claude Code: она сама вносит их в регламенты cantor.agency/base и
 // публикует сайт. Отправил — и свободен: о готовности придёт уведомление здесь и в Telegram.
 // Список регламентов берётся из каталога /base/, поэтому новый регламент появится в нём сам.
-const KB_SITE = 'https://cantor.agency/base';
+// База знаний открывается на том же домене, что и трекер (cantor.agency или домен воркера) — без
+// перескока с одного на другой.
+const KB_SITE = `${location.origin}/base`;
+const siteUrl = (url) => String(url || '').replace(/^https:\/\/cantor\.agency(?=\/)/, location.origin);
 const K_KB_DRAFT = 'avitoTasks.kbDraft';
 const KB_FALLBACK = [
   ['Начало работы', 'zapusk-novogo-klienta', 'Регламент работы с новыми клиентами Авито'],
@@ -3668,6 +3665,9 @@ function renderKbRegs() {
 
 function renderKbJobs() {
   const el = $('kbJobs');
+  // Перерисовка (опрос раз в 20 с, уведомления) не должна сбивать курсор в редактируемых итогах встречи.
+  const ae = document.activeElement;
+  const editing = ae && el.contains(ae) && ae.dataset.kbmeet ? { id: ae.dataset.kbmeet, a: ae.selectionStart, b: ae.selectionEnd, dir: ae.selectionDirection, top: ae.scrollTop } : null;
   if (!KB.jobs) { el.innerHTML = '<div class="empty">Загружаю…</div>'; return; }
   const jobs = KB.jobs.filter((j) => j.status !== 'draft');
   if (!jobs.length) { el.innerHTML = `<div class="empty">${ico('book')}<div style="margin-top:6px">Здесь будут ваши обновления базы знаний и что Claude по ним сделал.</div></div>`; return; }
@@ -3680,12 +3680,11 @@ function renderKbJobs() {
     if (j.status === 'done' && j.mode === 'meeting' && j.meeting) {
       const m = j.meeting;
       body = m.sentAt
-        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>
-          <div class="kb-meet-view">${kbMeetPreview(m.text || '')}</div>`
+        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>`
         : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
-          <div class="kb-meet-actions"><span class="kb-hint">Первая строка — заголовок (будет жирным), пункты — с «•». Уйдёт в чат клиента и в его топик рабочего чата.</span><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
+          <div class="kb-meet-actions"><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
     } else if (j.status === 'done' && r) {
-      body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(c.url)}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
+      body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(siteUrl(c.url))}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
         ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
         ${r.published ? '' : '<div class="kb-note warn">Правки готовы, но ещё не опубликованы — PR ждёт проверки Олега.</div>'}`;
     } else if (kbIsActive(j)) {
@@ -3701,12 +3700,16 @@ function renderKbJobs() {
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
       <div class="kb-job-head"><span class="tag ${cls}">${esc(r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
       <div class="kb-job-target">${esc(j.targetLabel)}</div>
-      ${j.text ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
+      ${j.text && !(j.meeting && j.meeting.sentAt) ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
       ${j.files.length ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
       ${body}
       ${links ? `<div class="kb-job-links">${links}</div>` : ''}
     </div>`;
   }).join('');
+  if (editing) {
+    const t = el.querySelector(`[data-kbmeet="${CSS.escape(editing.id)}"]`);
+    if (t) { t.focus({ preventScroll: true }); t.setSelectionRange(editing.a, editing.b, editing.dir); t.scrollTop = editing.top; }
+  }
   if (KB.focus) {
     const card = el.querySelector(`[data-kbjob="${CSS.escape(KB.focus)}"]`);
     if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
@@ -3714,14 +3717,6 @@ function renderKbJobs() {
   }
 }
 
-// Итоги встречи: так текст будет выглядеть в Telegram — первая строка жирная, пункты с «•» и отступами.
-function kbMeetPreview(text) {
-  const lines = String(text).split('\n').map((l) => l.trim());
-  const i = lines.findIndex(Boolean);
-  if (i < 0) return '';
-  const items = lines.slice(i + 1).filter(Boolean).map((l) => l.replace(/^(?:[•\-*–—]|\d+[.)])\s*/, ''));
-  return `<b>${esc(lines[i].replace(/^\*+|\*+$/g, ''))}</b>${items.map((x) => `<p>• ${esc(x)}</p>`).join('')}`;
-}
 function todayYmd() { const p = msk(Date.now()); return `${p.y}-${pad(p.m + 1)}-${pad(p.d)}`; }
 let kbMeetTimer = null;
 $('kbJobs').addEventListener('input', (e) => {
@@ -3840,13 +3835,20 @@ async function kbSubmit() {
     kbSaveDraft();
     KB.jobs = [sent.data.job, ...(KB.jobs || []).filter((j) => j.id !== sent.data.job.id)];
     renderKbForm(); renderKbJobs();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    loadKbJobs();
+    kbToTop();
+    loadKbJobs().then(kbToTop);
   } catch (e) {
     KB.sending = null;
     renderKbForm();
     toast(e && e.message && !/fetch|network|abort/i.test(e.message) ? e.message : 'Нет связи — ничего не потерялось, попробуйте ещё раз', null, null, 7000);
   }
+}
+
+// После отправки Claude — наверх, к карточке «Отправлено». Без плавной прокрутки: её обрывает следующая перерисовка.
+function kbToTop() {
+  if (S.view !== 'kb') return;
+  window.scrollTo(0, 0);
+  requestAnimationFrame(() => window.scrollTo(0, 0));
 }
 
 async function kbRetry(id, btn) {
@@ -3856,8 +3858,9 @@ async function kbRetry(id, btn) {
     if (!res || !res.ok) throw new Error();
     const job = res.data.job;
     KB.jobs = (KB.jobs || []).map((j) => (j.id === job.id ? job : j));
-    if (KB.sent && KB.sent.id === job.id) KB.sent = job;
+    KB.sent = job;
     renderKbForm(); renderKbJobs();
+    kbToTop();
     toast(job.status === 'sent' ? 'Отправлено — Claude взялся за работу' : job.status === 'not_configured' ? 'Рутина всё ещё не подключена' : 'Снова не получилось — подробности в карточке');
     loadKbJobs();
   } catch (e) { if (btn) btn.disabled = false; toast('Не получилось — проверьте интернет'); }
