@@ -597,8 +597,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-submit .hint{flex:1 1 220px;font-size:13px;color:var(--muted);line-height:1.4}
 .kb-submit .btn{flex:none}
 .kb-meet-text{font-size:14px;line-height:1.55;min-height:180px}
-.kb-meet-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.kb-meet-actions .kb-hint{flex:1 1 200px;font-size:12.5px}
+.kb-meet-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .kb-meet-sent{display:flex;gap:9px;align-items:flex-start;background:var(--green-bg);color:var(--green);border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600}
 .kb-meet-sent .kb-hint{font-weight:400;color:var(--muted);margin-top:2px}
 .kb-meet-view{font-size:13.5px;color:var(--text);line-height:1.5;border-left:3px solid var(--line);padding:2px 0 2px 12px}
@@ -3684,7 +3683,7 @@ function renderKbJobs() {
         ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>
           <div class="kb-meet-view">${kbMeetPreview(m.text || '')}</div>`
         : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
-          <div class="kb-meet-actions"><span class="kb-hint">Первая строка — заголовок (будет жирным), пункты — с «•». Уйдёт в чат клиента и в его топик рабочего чата.</span><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
+          <div class="kb-meet-actions"><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
     } else if (j.status === 'done' && r) {
       body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(siteUrl(c.url))}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
         ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
