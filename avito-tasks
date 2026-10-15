@@ -2493,6 +2493,7 @@ function openFromHash() {
 function openKbJob(id) {
   if (!isAdmin()) return;
   KB.focus = id;
+  KB.pin = id;
   if (KB.sent && KB.sent.id === id) KB.sent = null;
   KB.loadedAt = 0;
   if (S.view === 'kb') { renderKbForm(); loadKbJobs(); } else setView('kb');
@@ -3807,7 +3808,8 @@ function renderKbJobs() {
   const ae = document.activeElement;
   const editing = ae && el.contains(ae) && ae.dataset.kbmeet ? { id: ae.dataset.kbmeet, a: ae.selectionStart, b: ae.selectionEnd, dir: ae.selectionDirection, top: ae.scrollTop } : null;
   if (!KB.jobs) { el.innerHTML = '<div class="empty">Загружаю…</div>'; return; }
-  const jobs = KB.jobs.filter((j) => j.status !== 'draft');
+  // Открыли из уведомления — эта запись первой в истории и подсвечена; страницу не прокручиваем.
+  const jobs = KB.jobs.filter((j) => j.status !== 'draft').sort((a, b) => Number(b.id === KB.pin) - Number(a.id === KB.pin));
   if (!jobs.length) { el.innerHTML = `<div class="empty">${ico('book')}<div style="margin-top:6px">Здесь будут ваши обновления базы знаний и что Claude по ним сделал.</div></div>`; return; }
   const now = Date.now();
   el.innerHTML = jobs.map((j) => {
@@ -3848,11 +3850,7 @@ function renderKbJobs() {
     const t = el.querySelector(`[data-kbmeet="${CSS.escape(editing.id)}"]`);
     if (t) { t.focus({ preventScroll: true }); t.setSelectionRange(editing.a, editing.b, editing.dir); t.scrollTop = editing.top; }
   }
-  if (KB.focus) {
-    const card = el.querySelector(`[data-kbjob="${CSS.escape(KB.focus)}"]`);
-    if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
-    KB.focus = null;
-  }
+  if (KB.focus && jobs.some((j) => j.id === KB.focus)) { const f = KB.focus; setTimeout(() => { if (KB.focus === f) KB.focus = null; }, 3000); }
 }
 
 function todayYmd() { const p = msk(Date.now()); return `${p.y}-${pad(p.m + 1)}-${pad(p.d)}`; }
@@ -4698,7 +4696,7 @@ function renderAiMessages(toBottom) {
       <div class="ai-examples">${['Что сейчас с клиентом Шевчук? Коротко: цифры, задачи, что ждёт ответа', 'Выгрузи статистику объявлений Ивана Кариентиди за последние 7 дней', 'У каких клиентов падают контакты за неделю?', 'Как по регламенту запускать нового клиента?'].map((x) => `<button class="chip" data-aiexample="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
   const send = $('aiSend');
   if (send) { send.disabled = Boolean(p) || AI.sending; send.title = p ? 'Claude ещё отвечает — дождитесь ответа или откройте другой диалог' : 'Отправить (Enter)'; }
-  if (toBottom) requestAnimationFrame(() => { const c = $('aiMsgs'); if (c && c.lastElementChild) c.lastElementChild.scrollIntoView({ block: 'end' }); window.scrollTo(0, document.documentElement.scrollHeight); });
+  if (toBottom && S.view === 'ai') requestAnimationFrame(() => { if (S.view !== 'ai') return; const c = $('aiMsgs'); if (c && c.lastElementChild) c.lastElementChild.scrollIntoView({ block: 'end' }); window.scrollTo(0, document.documentElement.scrollHeight); });
 }
 function aiAutosize() {
   const t = $('aiText');
