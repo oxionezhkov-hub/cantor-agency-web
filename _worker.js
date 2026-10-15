@@ -3397,6 +3397,54 @@ async function fetchAvitoDaySummary(env, account, date) {
   return { ...out, sources, errors, accountName: account.name };
 }
 
+// The cabinet's money right now: the CPA advance («аванс», kopecks in Avito's answer) and the wallet
+// («кошелёк» — real + bonus). For the «Обновить с Авито» button on the tracker's Clients tab.
+async function fetchAvitoMoney(env, account) {
+  const out = { advance: null, wallet: null, errors: [] };
+  const token = await avitoGetToken(env, account);
+  for (const version of ['v3', 'v2']) {
+    try {
+      const data = await avitoJson(token, `/cpa/${version}/balanceInfo`, { method: 'POST', body: '{}', headers: { 'X-Source': 'cantor-dashboard' } });
+      const n = collectAvitoNumbers(data, ['advance', 'balance']);
+      const kopecks = n.advance ?? n.balance;
+      if (kopecks != null) { out.advance = Math.round(kopecks / 100); break; }
+    } catch (e) {
+      if (version === 'v2') out.errors.push(`Аванс: ${String(e.message).slice(0, 120)}`);
+    }
+  }
+  try {
+    const bal = await fetchAvitoBalance(token, account.userId);
+    out.wallet = Math.round(Number(bal.real || 0) + Number(bal.bonus || 0));
+  } catch (e) {
+    out.errors.push(`Кошелёк: ${String(e.message).slice(0, 120)}`);
+  }
+  return out;
+}
+// Every linked active client's money, fetched now (4 cabinets at a time), kept in at:avitoMoney.
+async function atRefreshAvitoMoney(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const projects = (await listByPrefix(kv, 'project:')).filter((p) => p.avitoAccountId && !p.inactive);
+  const rows = {};
+  const queue = [...projects];
+  const worker = async () => {
+    while (queue.length) {
+      const p = queue.shift();
+      const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
+      if (!account) { rows[p.id] = { advance: null, wallet: null, error: 'кабинет не найден' }; continue; }
+      try {
+        const m = await fetchAvitoMoney(env, account);
+        rows[p.id] = { advance: m.advance, wallet: m.wallet, error: m.advance == null && m.wallet == null ? m.errors[0] || 'нет данных' : null };
+      } catch (e) {
+        rows[p.id] = { advance: null, wallet: null, error: String(e && e.message).slice(0, 160) };
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: 4 }, worker));
+  const rec = { at: new Date().toISOString(), rows };
+  await kv.put('at:avitoMoney', JSON.stringify(rec));
+  return rec;
+}
+
 /* ── Background Avito pull (one KV record per day, results for every linked cabinet) ── */
 
 const AVITO_PULL_TTL = 7 * 24 * 3600;
@@ -6934,17 +6982,21 @@ async function atLatestPull(kv) {
 }
 async function atClientsMetrics(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const [projects, rows, pull] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv)]);
+  const [projects, rows, pull, live] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv), kv.get('at:avitoMoney', 'json')]);
+  const pullAt = pull ? Date.parse(pull.finishedAt || pull.startedAt || 0) || 0 : 0;
+  const liveAt = live ? Date.parse(live.at) || 0 : 0;
   const y = mskYesterday();
   const monthKey = y.slice(0, 7);
   const weekFrom = avitoAddDays(y, -6);
   const out = {};
   for (const p of projects) {
     if (p.inactive) continue;
-    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null };
+    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null, wallet: null, moneyAt: null };
+    // Advance and wallet: from the «Обновить с Авито» button if it is newer than the morning pull.
+    const lr = live && live.rows && live.rows[p.id];
     const r = pull && pull.results && pull.results[p.id];
-    if (r && r.advance != null) out[p.id].advance = r.advance;
-    else if (r && r.wallet != null) out[p.id].advance = r.wallet;
+    if (lr && liveAt >= pullAt) Object.assign(out[p.id], { advance: lr.advance, wallet: lr.wallet, moneyAt: live.at, moneyError: lr.error || null });
+    else if (r) Object.assign(out[p.id], { advance: r.advance != null ? r.advance : null, wallet: r.wallet != null ? r.wallet : null, moneyAt: pull.finishedAt || pull.startedAt || null });
   }
   for (const r of rows) {
     const m = out[r.projectId];
@@ -7262,6 +7314,12 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (!seesClients) return json({ error: 'forbidden' }, 403);
     return json({ clients: await atClientsMetrics(env) });
   }
+  // «Обновить с Авито»: аванс и кошелёк по всем клиентам — прямо сейчас.
+  if (action === 'clients-refresh') {
+    if (!seesClients) return json({ error: 'forbidden' }, 403);
+    const rec = await atRefreshAvitoMoney(env);
+    return json({ clients: await atClientsMetrics(env), at: rec.at });
+  }
 
   // ── «Аналитика» (бывший дашборд): данные грузятся только при открытой вкладке ──
   if (action.startsWith('an-')) {
@@ -7442,7 +7500,35 @@ async function kbPutJob(kv, job) {
   index.unshift({ id: job.id, status: job.status, byId: job.byId, createdAt: job.createdAt, updatedAt: job.updatedAt });
   await kv.put('kb:index', JSON.stringify(index.slice(0, 60)));
 }
+const kbDm = (ymd) => `${String(ymd).slice(8, 10)}.${String(ymd).slice(5, 7)}`;
+function kbMeetingTitle(job) {
+  return `${job.meeting.clientName} — решения ${kbDm(job.meeting.date)}`;
+}
+// The decisions as the editor shows them: the title line, then «• …» items.
+function kbMeetingText(job) {
+  const m = job.meeting || {};
+  if (m.text) return m.text;
+  return [kbMeetingTitle(job), '', ...(m.items || []).map((x) => `• ${x}`)].join('\n');
+}
+// For Telegram: the first line bold, every item «• …» on its own with an empty line between.
+function kbMeetingHtml(text) {
+  const lines = String(text || '').replace(/\r/g, '').split('\n').map((l) => l.trim());
+  const firstIdx = lines.findIndex(Boolean);
+  if (firstIdx < 0) return '';
+  const title = lines[firstIdx].replace(/^\*+|\*+$/g, '').trim();
+  const out = [`<b>${escapeHtml(title)}</b>`];
+  let para = [];
+  const flush = () => { if (para.length) { out.push('', para.join('\n')); para = []; } };
+  for (const l of lines.slice(firstIdx + 1)) {
+    if (!l) { flush(); continue; }
+    const item = l.match(/^(?:[•\-*–—]|\d+[.)])\s*(.+)$/);
+    if (item) { flush(); para.push(`• ${escapeHtml(item[1])}`); flush(); } else para.push(escapeHtml(l));
+  }
+  flush();
+  return out.join('\n');
+}
 function kbTargetLabel(job) {
+  if (job.mode === 'meeting' && job.meeting) return `Итоги встречи: ${job.meeting.clientName}, ${kbDm(job.meeting.date)}`;
   if (job.mode === 'reglament' && job.target) return job.target.title;
   if (job.mode === 'new') return `Новый регламент: ${job.newTitle}`;
   return 'Общее — Claude разберёт сам';
@@ -7464,6 +7550,7 @@ function kbPublicJob(job) {
     progress: job.progress || null,
     result: job.result || null,
     error: job.error || null,
+    meeting: job.meeting ? { ...job.meeting, title: kbMeetingTitle(job), text: job.status === 'done' ? kbMeetingText(job) : null } : null,
     createdAt: job.createdAt,
     sentAt: job.sentAt || null,
     finishedAt: job.finishedAt || null,
@@ -7482,7 +7569,7 @@ async function atKbApi(env, me, action, body) {
   }
 
   if (action === 'kb-create') {
-    const mode = ['reglament', 'general', 'new'].includes(body.mode) ? body.mode : null;
+    const mode = ['reglament', 'general', 'new', 'meeting'].includes(body.mode) ? body.mode : null;
     if (!mode) return json({ error: 'bad_mode' }, 400);
     const text = String(body.text == null ? '' : body.text).replace(/\r/g, '').trim().slice(0, KB_MAX_TEXT);
     const filesIn = Array.isArray(body.files) ? body.files.slice(0, KB_MAX_FILES + 1) : [];
@@ -7493,6 +7580,15 @@ async function atKbApi(env, me, action, body) {
       const slug = kbSlug(body.slug);
       if (!slug) return json({ error: 'bad_target' }, 400);
       target = { slug, title: atClean(body.title, 200) || slug };
+    }
+    let meeting = null;
+    if (mode === 'meeting') {
+      const projectId = atClean(body.projectId, 80);
+      const project = projectId ? await kv.get(`project:${projectId}`, 'json') : null;
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || '')) ? body.date : null;
+      if (!project) return json({ error: 'bad_client' }, 400);
+      if (!date) return json({ error: 'bad_date' }, 400);
+      meeting = { projectId, clientName: project.name, date, items: [], text: null, sentAt: null, sentTo: [] };
     }
     const newTitle = mode === 'new' ? atClean(body.newTitle, 200).replace(/\s+/g, ' ') : '';
     if (mode === 'new' && newTitle.length < 3) return json({ error: 'bad_title' }, 400);
@@ -7519,6 +7615,7 @@ async function atKbApi(env, me, action, body) {
       target,
       newTitle: newTitle || null,
       newSection: mode === 'new' ? atClean(body.newSection, 120) || null : null,
+      meeting,
       text,
       files,
       byId: me.id,
@@ -7552,6 +7649,38 @@ async function atKbApi(env, me, action, body) {
     if (bytes.length !== expected) return json({ error: 'bad_size', expected, got: bytes.length }, 400);
     await kv.put(`kb:file:${job.id}:${file.id}:${part}`, bytes, { expirationTtl: KB_FILE_TTL });
     return json({ ok: true });
+  }
+
+  // «Итоги встречи»: правка текста и «Готово» — в чат клиента и в его топик рабочего чата.
+  if (action === 'kb-meeting-save' || action === 'kb-meeting-send') {
+    if (job.mode !== 'meeting' || job.status !== 'done') return json({ error: 'not_ready' }, 409);
+    const text = String(body.text == null ? kbMeetingText(job) : body.text).replace(/\r/g, '').trim().slice(0, 8000);
+    if (!text) return json({ error: 'empty' }, 400);
+    job.meeting.text = text;
+    if (action === 'kb-meeting-send') {
+      const html = kbMeetingHtml(text);
+      const chats = await listByPrefix(kv, 'bot:chat:');
+      const targets = [];
+      for (const c of chats.filter((x) => !x.isForum && x.kind === 'client' && x.projectId === job.meeting.projectId)) targets.push({ chatId: c.id, label: c.title || 'чат клиента' });
+      for (const c of chats.filter((x) => x.isForum)) {
+        for (const k of (await kv.list({ prefix: `bot:topic:${c.id}:` })).keys) {
+          const t = await kv.get(k.name, 'json');
+          if (t && t.projectId === job.meeting.projectId) targets.push({ chatId: c.id, threadId: Number(k.name.split(':').pop()), label: `${c.title || 'рабочий чат'} → ${t.name || 'топик клиента'}` });
+        }
+      }
+      if (!targets.length) return json({ error: 'no_chats', message: 'Бот не знает ни чата этого клиента, ни его топика в рабочем чате.' }, 409);
+      const sent = [];
+      for (const t of targets) {
+        const res = await botApi(env, 'sendMessage', { chat_id: t.chatId, text: html, parse_mode: 'HTML', disable_web_page_preview: true, ...(t.threadId ? { message_thread_id: t.threadId } : {}) });
+        if (res && res.ok) sent.push(t.label);
+      }
+      if (!sent.length) return json({ error: 'send_failed', message: 'Telegram не принял сообщение — попробуйте ещё раз.' }, 502);
+      job.meeting.sentAt = nowIso;
+      job.meeting.sentTo = sent;
+      job.meeting.sentBy = me.name;
+    }
+    await kbPutJob(kv, job);
+    return json({ job: kbPublicJob(job) });
   }
 
   if (action === 'kb-send') {
@@ -7593,7 +7722,9 @@ async function kbFireRoutine(env, job) {
     return;
   }
   const text = [
-    'Запрос из Avito Tasks: обновить базу знаний Cantor Agency (папка base/ репозитория, сайт cantor.agency/base).',
+    job.mode === 'meeting'
+      ? 'Запрос из Avito Tasks: составить итоги встречи с клиентом по транскрибации (репозиторий не менять — только прочитать материал и отправить результат).'
+      : 'Запрос из Avito Tasks: обновить базу знаний Cantor Agency (папка base/ репозитория, сайт cantor.agency/base).',
     `JOB_ID: ${job.id}`,
     `FROM: ${job.byName}`,
     `WHERE: ${kbTargetLabel(job)}`,
@@ -7621,7 +7752,19 @@ async function kbFireRoutine(env, job) {
   await kbPutJob(kv, job);
 }
 
+function kbMeetingInstructions(job) {
+  const first = String(job.meeting.clientName).trim().split(/\s+/)[0];
+  return [
+    `Задача: по транскрибации встречи с клиентом «${job.meeting.clientName}» (встреча ${kbDm(job.meeting.date)}) составить список принятых решений. Репозиторий НЕ трогай: ничего не меняй, не коммить, не открывай PR.`,
+    'Материал — поле text и файлы из files[] (скачай каждый по url: curl -sS -o <файл> "<url>"; если ответ 503 not_ready — подожди минуту и повтори). Это расшифровка Zoom (TXT, VTT, DOCX и т.п.) — прочитай её целиком.',
+    'Что нужно: только решения и договорённости встречи — что меняем, что тестируем, что продолжаем, что кто должен сделать и к какому сроку, ключевые цифры, на которые опирались. Без пересказа разговора, без воды.',
+    `Формулировки: если что-то нужно от клиента или это сказал клиент — пиши его имя без фамилии: «${first} пришлёт фото…», «${first} хочет…». Если делает или решает агентство — пиши «Команда»: «Команда настроит…», «Команда протестирует…». Пиши по-русски, коротко, конкретно, в прошедшем или будущем времени, как деловые договорённости. Каждый пункт — одно-два предложения. Обычно 5–12 пунктов. Не выдумывай того, чего не было во встрече. Пароли и телефоны не включай.`,
+    'Пример пунктов: «Временно сузили число активных объявлений со 100 до 25 — часть запустили в городах поменьше для набора просмотров.», «Команда продолжит ручную корректировку ставок каждые несколько дней.», «Иван пришлёт фото преподавателя и отзывы для новых предметов.»',
+    'Перед началом отправь POST на callbacks.progress с {"note":"читаю транскрибацию"}. В конце — POST на callbacks.done с JSON: {"items":["<пункт 1>","<пункт 2>",…],"summary":"<одно предложение: сколько решений и о чём>"}. Заголовок добавит сервер сам — не включай его в items. Если файла нет или он нечитаем — POST на callbacks.fail с {"error":"<понятная причина>"}.',
+  ].join('\n');
+}
 function kbInstructions(job) {
+  if (job.mode === 'meeting') return kbMeetingInstructions(job);
   const where = {
     reglament: `Добавь знания в регламент «${job.target && job.target.title}» — файл base/${job.target && job.target.slug}. Если часть материала явно относится к другому регламенту — внеси её туда и упомяни это в отчёте.`,
     general: 'Место не выбрано: сам реши, к каким регламентам из base/ это относится (смотри base/index.html и содержимое регламентов). Можно распределить по нескольким. Новый регламент создавай, только если знания не подходят ни к одному существующему.',
@@ -7669,6 +7812,7 @@ async function handleKbJobCallback(request, env, url) {
         target: job.target,
         newTitle: job.newTitle,
         newSection: job.newSection,
+        meeting: job.meeting ? { client: job.meeting.clientName, date: job.meeting.date } : null,
         text: job.text,
         from: job.byName,
         createdAt: job.createdAt,
@@ -7715,7 +7859,20 @@ async function handleKbJobCallback(request, env, url) {
     return json({ ok: true });
   }
 
-  // done
+  // done — итоги встречи: список решений
+  if (job.mode === 'meeting') {
+    const items = (Array.isArray(body.items) ? body.items : []).map((x) => atClean(x, 600).replace(/^[•\-*–—]\s*/, '')).filter(Boolean).slice(0, 40);
+    if (!items.length) return json({ error: 'missing_result', message: 'Нужен items[] — список решений' }, 400);
+    job.meeting = { ...(job.meeting || {}), items, text: null };
+    job.result = { summary: atClean(body.summary, 600) || `Решений: ${items.length}`, changes: [], prUrl: null, published: true };
+    job.status = 'done';
+    job.error = null;
+    job.progress = null;
+    job.finishedAt = new Date().toISOString();
+    await kbPutJob(kv, job);
+    await kbNotify(env, job);
+    return json({ ok: true, items: items.length });
+  }
   const changes = (Array.isArray(body.changes) ? body.changes : []).slice(0, 20).map((c) => {
     const slug = kbSlug(c && c.slug);
     return {
@@ -7756,7 +7913,13 @@ async function kbNotify(env, job) {
   const kbPage = `${AT_PAGE_URL}#kb=${job.id}`;
   let inApp;
   let tg;
-  if (job.status === 'done') {
+  if (job.status === 'done' && job.mode === 'meeting') {
+    inApp = `Итоги встречи готовы: ${job.meeting.clientName}, ${kbDm(job.meeting.date)} — проверьте и отправьте клиенту.`;
+    tg = {
+      text: [`📝 <b>Итоги встречи готовы</b> — ${escapeHtml(job.meeting.clientName)}, ${kbDm(job.meeting.date)}`, `Решений: ${(job.meeting.items || []).length}. Проверьте текст и нажмите «Готово» — бот отправит его в чат клиента и в его топик в рабочем чате.`].join('\n'),
+      extra: { reply_markup: { inline_keyboard: [[{ text: 'Открыть и отправить', url: kbPage }]] } },
+    };
+  } else if (job.status === 'done') {
     const r = job.result;
     const names = r.changes.map((c) => `«${c.title}»`).join(', ');
     inApp = `${r.published ? 'База знаний обновлена' : 'Правки базы знаний готовы, ждут публикации'}${names ? `: ${names}` : ''}. ${r.summary}`.trim();
