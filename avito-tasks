@@ -955,14 +955,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .cc-adv em{flex-basis:100%;font-style:normal;font-size:12.5px;color:var(--muted);padding-left:24px}
 .cc-adv.low{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
 .cc-adv.low em{color:var(--amber);font-weight:500}
+.c-refresh .c-when{font-weight:500;color:var(--muted);padding-left:8px;margin-left:2px;border-left:1px solid var(--line)}
 .cc-adv.off em{flex-basis:auto;margin-left:auto;padding:0}
 .cc-adv:not(.off){display:grid;gap:4px}
 .cc-money{display:flex;align-items:center;gap:8px}
 .cc-money span{display:inline-flex;align-items:center;gap:8px}
 .cc-money b{margin-left:auto}
 .cc-adv:not(.off) em{padding-left:24px}
-.cc-when{font-style:normal;font-size:11.5px;color:var(--faint);padding-left:24px}
-.cc-adv.low .cc-when{color:var(--amber);opacity:.8}
 .c-refresh.busy .ic{animation:spin 1s linear infinite}
 @media (max-width:760px){.c-refresh span{display:none}.c-refresh{padding:0 10px}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -4373,9 +4372,20 @@ $('clientsRefresh').addEventListener('click', async () => {
     CM.data = res.data.clients; CM.loadedAt = Date.now();
     toast('Аванс и кошелёк обновлены по всем клиентам');
   } catch (e) { toast('Не получилось обновить — попробуйте ещё раз'); }
-  b.classList.remove('busy'); b.querySelector('span').textContent = 'Обновить с Авито';
+  b.classList.remove('busy');
+  clientsRefreshLabel();
   if (S.view === 'clients' && !isEditing()) renderClients();
 });
+// «Обновить · 14:20» — когда последний раз подтянули аванс и кошелёк (самое свежее по клиентам).
+function clientsRefreshLabel() {
+  const b = $('clientsRefresh');
+  if (!b || b.classList.contains('busy')) return;
+  const at = Math.max(0, ...Object.values(CM.data || {}).map((m) => Date.parse(m && m.moneyAt) || 0));
+  const now = Date.now();
+  const when = !at ? '' : fmtDay(at, now) === fmtDay(now, now) ? fmtTime(at) : `${pad(msk(at).d)}.${pad(msk(at).m + 1)}`;
+  b.querySelector('span').innerHTML = when ? `Обновить <span class="c-when">${esc(when)}</span>` : 'Обновить с Авито';
+  b.title = at ? `Аванс и кошелёк обновлены ${fmtDay(at, now)} в ${fmtTime(at)}. Нажмите, чтобы подтянуть сейчас по всем клиентам` : 'Подтянуть аванс и кошелёк по всем клиентам прямо сейчас';
+}
 function clientTodo(p, i, m, now) {
   const out = [];
   const pend = i.b.pending;
@@ -4412,16 +4422,15 @@ function clientAdvanceHtml(p, m) {
   const money = clientMoney(m);
   const days = m.perDay > 0 ? Math.floor(money / m.perDay) : null;
   const low = money < 1500; // предупреждаем, только когда в кабинете меньше 1 500 ₽
-  const at = m.moneyAt ? Date.parse(m.moneyAt) : 0;
   return `<div class="cc-adv ${low ? 'low' : ''}">
     <div class="cc-money"><span>${ico('wallet')}Аванс</span><b>${m.advance == null ? '—' : anMoney(m.advance)}</b></div>
     <div class="cc-money"><span>${ico('wallet')}Кошелёк</span><b>${m.wallet == null ? '—' : anMoney(m.wallet)}</b></div>
     ${low ? `<em>${days != null && days >= 1 ? `хватит на ~${days} ${plural(days, 'день', 'дня', 'дней')}` : 'хватит меньше чем на день'} — попросите пополнить</em>` : ''}
-    ${at ? `<i class="cc-when">обновлено ${esc(fmtDay(at, Date.now()))}${fmtDay(at, Date.now()).length < 12 ? ` в ${fmtTime(at)}` : ''}</i>` : ''}
   </div>`;
 }
 function renderClients() {
   if (!canSeeClients()) return;
+  clientsRefreshLabel();
   if (S.view === 'clients') loadClientMetrics(false);
   const now = Date.now();
   const all = S.projects.map((p) => { const i = clientInfo(p); const m = CM.data && CM.data[p.id]; return { p, i, m, todo: p.inactive ? [] : clientTodo(p, i, m, now) }; });
