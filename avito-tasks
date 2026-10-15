@@ -566,7 +566,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-step{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink);font-size:15px}
 .kb-num{width:24px;height:24px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none}
 .kb-modes{display:flex;width:100%}
-.kb-modes button{flex:1;padding:0 8px}
+.kb-modes button{flex:1;padding:0 6px;white-space:nowrap;min-width:0}
 .kb-hint{font-size:13px;color:var(--muted)}
 .kb-search{max-width:none;order:0!important}
 .kb-regs{display:grid;gap:3px;max-height:420px;overflow:auto;margin:0 -8px;padding:0 8px 2px;overscroll-behavior:contain}
@@ -593,8 +593,17 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .kb-file .sz{display:block;font-size:11.5px;color:var(--faint)}
 .kb-file .x{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
 .kb-file .x:hover{background:var(--red-bg);color:var(--red)}
-.kb-submit{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
-.kb-submit .hint{margin-right:auto;font-size:12.5px;color:var(--muted)}
+.kb-submit{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 12px 12px 16px}
+.kb-submit .hint{flex:1 1 220px;font-size:13px;color:var(--muted);line-height:1.4}
+.kb-submit .btn{flex:none}
+.kb-meet-text{font-size:14px;line-height:1.55;min-height:180px}
+.kb-meet-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.kb-meet-actions .kb-hint{flex:1 1 200px;font-size:12.5px}
+.kb-meet-sent{display:flex;gap:9px;align-items:flex-start;background:var(--green-bg);color:var(--green);border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600}
+.kb-meet-sent .kb-hint{font-weight:400;color:var(--muted);margin-top:2px}
+.kb-meet-view{font-size:13.5px;color:var(--text);line-height:1.5;border-left:3px solid var(--line);padding:2px 0 2px 12px}
+.kb-meet-view b{color:var(--ink)}
+.kb-meet-view p{margin-top:8px}
 .kb-done{justify-items:center;text-align:center;padding:30px 22px}
 .kb-done h2{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
 .kb-done p{max-width:460px;font-size:14px;color:var(--text)}
@@ -633,7 +642,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .tag-run::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1s ease-in-out infinite}
 @media (max-width:900px){.kb-grid{grid-template-columns:1fr}}
 @media (max-width:760px){
-  .kb-modes button{font-size:12.5px;padding:0 4px;white-space:normal;line-height:1.15}
+  .kb-modes button{font-size:12.5px;padding:0 4px;white-space:nowrap;line-height:1.15}
   .kb-regs{max-height:none;overflow:visible}
   .kb-open{padding:0 10px}
   .kb-file .nm{max-width:150px}
@@ -869,6 +878,16 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .cc-adv.low{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
 .cc-adv.low em{color:var(--amber);font-weight:500}
 .cc-adv.off em{flex-basis:auto;margin-left:auto;padding:0}
+.cc-adv:not(.off){display:grid;gap:4px}
+.cc-money{display:flex;align-items:center;gap:8px}
+.cc-money span{display:inline-flex;align-items:center;gap:8px}
+.cc-money b{margin-left:auto}
+.cc-adv:not(.off) em{padding-left:24px}
+.cc-when{font-style:normal;font-size:11.5px;color:var(--faint);padding-left:24px}
+.cc-adv.low .cc-when{color:var(--amber);opacity:.8}
+.c-refresh.busy .ic{animation:spin 1s linear infinite}
+@media (max-width:760px){.c-refresh span{display:none}.c-refresh{padding:0 10px}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .cc-check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;color:var(--ink)!important;font-size:13.5px!important;padding:4px 0}
 .cc-check input{width:18px;height:18px;accent-color:var(--accent);margin-top:1px;flex:none}
 .cc-check small{font-size:12px;color:var(--muted);font-weight:500}
@@ -957,6 +976,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <a class="icon-btn" id="kbLink" href="https://cantor.agency/base/" target="_blank" rel="noopener" title="База знаний" aria-label="База знаний"><svg class="ic"><use href="#i-book"/></svg></a>
         <a class="icon-btn" id="crmLink" href="/sales-crm" title="CRM продаж" aria-label="CRM продаж" hidden><svg class="ic"><use href="#i-crm"/></svg></a>
         <button class="me-btn" id="meBtn" aria-label="Профиль"><span class="avatar" id="meAvatar"></span></button>
       </div>
@@ -1019,6 +1039,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="c-tools c-row">
         <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="cq" type="search" placeholder="Поиск" autocomplete="off"></div>
         <div class="stats c-filt" id="clientStats"></div>
+        <button class="btn btn-ghost btn-sm c-refresh" id="clientsRefresh" title="Подтянуть аванс и кошелёк по всем клиентам прямо сейчас"><svg class="ic ic-sm"><use href="#i-refresh"/></svg><span>Обновить с Авито</span></button>
         <button class="btn btn-primary btn-sm c-new" id="newClient" hidden><svg class="ic ic-sm"><use href="#i-plus"/></svg><span>Клиент</span></button>
       </div>
       <div class="cards" id="clientCards"></div>
@@ -1104,10 +1125,9 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
     <section id="view-kb" hidden>
       <div class="hello">
         <div>
-          <h1>Обновить базу знаний</h1>
-          <div class="sub">Опишите новые знания — Claude сам внесёт их в регламенты и опубликует. Ждать не нужно: когда всё будет готово, придёт уведомление.</div>
+          <h1>База знаний</h1>
+          <div class="sub">Опишите новые знания — Claude сам внесёт их в регламенты и опубликует. Или пришлите транскрибацию встречи — Claude составит итоги для клиента. Ждать не нужно: когда всё будет готово, придёт уведомление.</div>
         </div>
-        <a class="btn btn-ghost btn-sm" href="https://cantor.agency/base/" target="_blank" rel="noopener"><svg class="ic ic-sm"><use href="#i-book"/></svg>Открыть базу знаний<svg class="ic ic-sm"><use href="#i-ext"/></svg></a>
       </div>
       <div class="kb-grid">
         <div class="kb-form" id="kbForm"></div>
@@ -3487,13 +3507,13 @@ const KB_STATUS = {
   draft: ['Не отправлено', 'tag-cancelled'],
 };
 const KB = Object.assign({
-  mode: 'reglament', slug: '', title: '', newTitle: '', newSection: '', text: '',
+  mode: 'reglament', slug: '', title: '', newTitle: '', newSection: '', text: '', mProject: '', mDate: '',
 }, store.json(K_KB_DRAFT) || {}, {
-  regs: null, q: '', files: [], sending: null, sent: null,
+  regs: null, q: '', files: [], sending: null, sent: null, meetDraft: {},
   jobs: null, configured: true, loadedAt: 0, focus: null, pollTimer: null, rendered: false,
 });
 function kbSaveDraft() {
-  store.set(K_KB_DRAFT, JSON.stringify({ mode: KB.mode, slug: KB.slug, title: KB.title, newTitle: KB.newTitle, newSection: KB.newSection, text: KB.text }));
+  store.set(K_KB_DRAFT, JSON.stringify({ mode: KB.mode, slug: KB.slug, title: KB.title, newTitle: KB.newTitle, newSection: KB.newSection, text: KB.text, mProject: KB.mProject, mDate: KB.mDate }));
 }
 const kbIsActive = (j) => j.status === 'sent' || j.status === 'running';
 function fmtSize(n) { return n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} КБ` : `${(n / 1048576).toFixed(n < 10 * 1048576 ? 1 : 0).replace('.', ',')} МБ`; }
@@ -3563,25 +3583,34 @@ function renderKbForm() {
     const wait = j.status === 'not_configured';
     el.innerHTML = `<div class="kb-card kb-done">
       <div class="kb-done-ic ${bad ? 'bad' : wait ? 'warn' : ''}">${ico(bad ? 'x' : wait ? 'clock' : 'check')}</div>
-      <h2>${bad ? 'Claude не запустился' : wait ? 'Запрос сохранён' : j.status === 'done' ? 'Готово — база знаний обновлена' : 'Принято! Claude уже взялся за работу'}</h2>
+      <h2>${bad ? 'Claude не запустился' : wait ? 'Запрос сохранён' : j.status === 'done' ? (j.mode === 'meeting' ? 'Итоги встречи готовы' : 'Готово — база знаний обновлена') : 'Принято! Claude уже взялся за работу'}</h2>
       <p class="kb-target">${esc(j.targetLabel)}</p>
       ${bad ? `<p class="kb-note bad">${esc(j.error || 'Неизвестная ошибка')}</p>`
         : wait ? `<p class="kb-note warn">Рутина Claude для базы знаний ещё не подключена — Олег получил уведомление. Запрос не потеряется: отправьте его снова, когда рутину подключат.</p>`
-        : j.status === 'done' ? '<p class="kb-hint">Что именно изменилось — в истории справа.</p>'
+        : j.status === 'done' ? `<p class="kb-hint">${j.mode === 'meeting' ? 'Проверьте и поправьте текст в истории справа, затем нажмите «Готово — отправить».' : 'Что именно изменилось — в истории справа.'}</p>`
+        : j.mode === 'meeting' ? `<p>Claude читает транскрибацию и составляет решения. Когда итоги будут готовы, придёт уведомление здесь${S.me.tg ? ' и в Telegram' : ''} — их можно будет поправить и отправить клиенту. Обычно 3–10 минут.</p>`
         : `<p>Можно заниматься другими делами. Когда база знаний обновится, придёт уведомление здесь${S.me.tg ? ' и в Telegram' : ''} — с тем, что именно и в каких регламентах изменилось. Обычно это занимает 5–15 минут.</p>`}
       <div class="kb-done-actions">
         ${bad || wait ? `<button class="btn btn-primary" data-kbretry="${esc(j.id)}">${ico('refresh')}Отправить снова</button>` : ''}
-        <button class="btn btn-ghost" data-kb="again">${ico('plus')}Добавить ещё знания</button>
+        <button class="btn btn-ghost" data-kb="again">${ico('plus')}${j.mode === 'meeting' ? 'Ещё одна встреча' : 'Добавить ещё знания'}</button>
       </div>
     </div>`;
     return;
   }
-  const modes = [['reglament', 'В регламент'], ['general', 'Пусть ИИ разберёт'], ['new', 'Новый регламент']];
+  const modes = [['reglament', 'Регламент'], ['general', 'ИИ разберёт'], ['new', 'Новый'], ['meeting', 'Встреча']];
   const sections = [...new Set((KB.regs || KB_FALLBACK).map((r) => r.section).filter(Boolean))];
   let where = '';
   if (KB.mode === 'reglament') {
     where = `<div class="search kb-search">${ico('search', 'ic-sm')}<input class="input" id="kbQ" type="search" placeholder="Найти регламент по названию" value="${esc(KB.q)}" autocomplete="off"></div>
       <div class="kb-regs" id="kbRegs"></div>`;
+  } else if (KB.mode === 'meeting') {
+    const clients = S.projects.filter((p) => !p.inactive).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    if (!KB.mDate) KB.mDate = todayYmd();
+    where = `<div class="grid2">
+        <div><label class="label" for="kbMProject">Клиент</label><select class="select" id="kbMProject"><option value="">Выберите клиента</option>${clients.map((p) => `<option value="${esc(p.id)}" ${p.id === KB.mProject ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
+        <div><label class="label" for="kbMDate">Дата встречи</label><input class="input" type="date" id="kbMDate" value="${esc(KB.mDate)}"></div>
+      </div>
+      <div class="kb-hint">Claude составит итоги: «Клиент — решения ${esc(KB.mDate ? `${KB.mDate.slice(8, 10)}.${KB.mDate.slice(5, 7)}` : 'дата')}» и список решений. Вы проверите текст, и по кнопке «Готово» бот отправит его в чат клиента и в его топик рабочего чата.</div>`;
   } else if (KB.mode === 'general') {
     where = `<div class="kb-note run">${ico('bot', 'ic-sm')} Claude сам прочитает базу знаний и решит, куда это относится: допишет нужные регламенты (можно сразу несколько) или предложит новый, если ничего не подходит.</div>`;
   } else {
@@ -3598,23 +3627,23 @@ function renderKbForm() {
     </div>`).join('');
   el.innerHTML = `
     <div class="kb-card">
-      <div class="kb-step"><span class="kb-num">1</span>Куда добавить</div>
+      <div class="kb-step"><span class="kb-num">1</span>${KB.mode === 'meeting' ? 'Какая встреча' : 'Куда добавить'}</div>
       <div class="seg kb-modes">${modes.map(([k, v]) => `<button data-kbmode="${k}" class="${KB.mode === k ? 'on' : ''}">${v}</button>`).join('')}</div>
       ${where}
     </div>
     <div class="kb-card">
-      <div class="kb-step"><span class="kb-num">2</span>Что добавить</div>
-      <textarea class="textarea" id="kbText" rows="7" maxlength="30000" placeholder="Новые правила, порядок действий, ответы на частые вопросы, договорённости с командой… Пишите как удобно — Claude оформит в стиле регламента.">${esc(KB.text)}</textarea>
+      <div class="kb-step"><span class="kb-num">2</span>${KB.mode === 'meeting' ? 'Транскрибация встречи' : 'Что добавить'}</div>
+      <textarea class="textarea" id="kbText" rows="7" maxlength="30000" placeholder="${KB.mode === 'meeting' ? 'Прикрепите файл транскрибации Zoom ниже — или вставьте текст сюда. Можно дописать, на что обратить внимание.' : 'Новые правила, порядок действий, ответы на частые вопросы, договорённости с командой… Пишите как удобно — Claude оформит в стиле регламента.'}">${esc(KB.text)}</textarea>
       <label class="kb-drop" id="kbDrop">
         <span class="kb-drop-ic">${ico('clip')}</span>
-        <span><b>Прикрепить файлы или фото</b><br><span class="kb-hint">или перетащите сюда · скриншот можно вставить через Ctrl+V</span></span>
+        <span><b>${KB.mode === 'meeting' ? 'Прикрепить транскрибацию' : 'Прикрепить файлы или фото'}</b><br><span class="kb-hint">${KB.mode === 'meeting' ? 'TXT, VTT, DOCX из Zoom — или перетащите сюда' : 'или перетащите сюда · скриншот можно вставить через Ctrl+V'}</span></span>
         <input type="file" id="kbFile" multiple hidden>
       </label>
       ${files ? `<div class="kb-files">${files}</div>` : ''}
     </div>
     <div class="kb-submit">
       <span class="hint">${KB.configured ? 'После отправки можно не ждать — придёт уведомление' : 'Рутина Claude ещё не подключена — запрос сохранится и уйдёт позже'}</span>
-      <button class="btn btn-primary" id="kbSend">${ico('send')}Отправить в базу знаний</button>
+      <button class="btn btn-primary" id="kbSend">${ico('send')}${KB.mode === 'meeting' ? 'Составить итоги' : 'Отправить в базу знаний'}</button>
     </div>`;
   if (KB.mode === 'reglament') renderKbRegs();
 }
@@ -3648,7 +3677,14 @@ function renderKbJobs() {
     const author = userById(j.byId) || { id: j.byId, name: j.byName };
     const r = j.result;
     let body = '';
-    if (j.status === 'done' && r) {
+    if (j.status === 'done' && j.mode === 'meeting' && j.meeting) {
+      const m = j.meeting;
+      body = m.sentAt
+        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>
+          <div class="kb-meet-view">${kbMeetPreview(m.text || '')}</div>`
+        : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
+          <div class="kb-meet-actions"><span class="kb-hint">Первая строка — заголовок (будет жирным), пункты — с «•». Уйдёт в чат клиента и в его топик рабочего чата.</span><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
+    } else if (j.status === 'done' && r) {
       body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(c.url)}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
         ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
         ${r.published ? '' : '<div class="kb-note warn">Правки готовы, но ещё не опубликованы — PR ждёт проверки Олега.</div>'}`;
@@ -3677,6 +3713,42 @@ function renderKbJobs() {
     KB.focus = null;
   }
 }
+
+// Итоги встречи: так текст будет выглядеть в Telegram — первая строка жирная, пункты с «•» и отступами.
+function kbMeetPreview(text) {
+  const lines = String(text).split('\n').map((l) => l.trim());
+  const i = lines.findIndex(Boolean);
+  if (i < 0) return '';
+  const items = lines.slice(i + 1).filter(Boolean).map((l) => l.replace(/^(?:[•\-*–—]|\d+[.)])\s*/, ''));
+  return `<b>${esc(lines[i].replace(/^\*+|\*+$/g, ''))}</b>${items.map((x) => `<p>• ${esc(x)}</p>`).join('')}`;
+}
+function todayYmd() { const p = msk(Date.now()); return `${p.y}-${pad(p.m + 1)}-${pad(p.d)}`; }
+let kbMeetTimer = null;
+$('kbJobs').addEventListener('input', (e) => {
+  const t = e.target.closest('[data-kbmeet]');
+  if (!t) return;
+  const id = t.dataset.kbmeet;
+  KB.meetDraft[id] = t.value;
+  clearTimeout(kbMeetTimer);
+  kbMeetTimer = setTimeout(() => { api('kb-meeting-save', { id, text: KB.meetDraft[id] }).catch(() => {}); }, 1200);
+});
+$('kbJobs').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-kbmeetsend]');
+  if (!b) return;
+  const id = b.dataset.kbmeetsend;
+  const ta = $('kbJobs').querySelector(`[data-kbmeet="${CSS.escape(id)}"]`);
+  const text = ta ? ta.value : KB.meetDraft[id];
+  if (!String(text || '').trim()) { toast('Текст пустой'); return; }
+  b.disabled = true; b.innerHTML = `${ico('send', 'ic-sm')}Отправляю…`;
+  try {
+    const res = await api('kb-meeting-send', { id, text });
+    if (!res.ok) throw new Error(res.data.message || 'Не получилось отправить');
+    delete KB.meetDraft[id];
+    KB.jobs = (KB.jobs || []).map((j) => (j.id === id ? res.data.job : j));
+    toast(`Отправлено: ${(res.data.job.meeting.sentTo || []).length} ${plural((res.data.job.meeting.sentTo || []).length, 'чат', 'чата', 'чатов')}`);
+  } catch (err) { toast(err && err.message && !/fetch|network/i.test(err.message) ? err.message : 'Нет связи — попробуйте ещё раз'); }
+  renderKbJobs();
+});
 
 // ── файлы ──
 let kbFileSeq = 0;
@@ -3726,6 +3798,8 @@ async function kbApiRetry(action, body) {
 async function kbSubmit() {
   KB.text = ($('kbText') || {}).value != null ? $('kbText').value : KB.text;
   if (KB.mode === 'reglament' && !KB.slug) { toast('Выберите регламент — или режим «Пусть ИИ разберёт»'); return; }
+  if (KB.mode === 'meeting' && !KB.mProject) { toast('Выберите клиента'); return; }
+  if (KB.mode === 'meeting' && !KB.mDate) { toast('Укажите дату встречи'); return; }
   if (KB.mode === 'new' && KB.newTitle.trim().length < 3) { $('kbNewTitle') && $('kbNewTitle').focus(); toast('Напишите название нового регламента'); return; }
   if (!KB.text.trim() && !KB.files.length) { $('kbText').focus(); toast('Напишите, что добавить, или прикрепите файл'); return; }
   KB.sending = { stage: 'Готовлю…', done: 0, total: 0, bytes: 0, bytesDone: 0 };
@@ -3733,10 +3807,10 @@ async function kbSubmit() {
   try {
     const prepared = await Promise.all(KB.files.map(kbPrepFile));
     const created = await kbApiRetry('kb-create', {
-      mode: KB.mode, slug: KB.slug, title: KB.title, newTitle: KB.newTitle.trim(), newSection: KB.newSection, text: KB.text,
+      mode: KB.mode, slug: KB.slug, title: KB.title, newTitle: KB.newTitle.trim(), newSection: KB.newSection, text: KB.text, projectId: KB.mProject, date: KB.mDate,
       files: prepared.map((p) => ({ name: p.name, type: p.type, size: p.blob.size })),
     });
-    if (!created || !created.ok) throw new Error({ file_too_big: 'Файл больше 25 МБ', files_too_big: 'Файлы вместе больше 80 МБ', too_many_files: 'Не больше 12 файлов' }[created && created.data.error] || 'Не получилось создать запрос');
+    if (!created || !created.ok) throw new Error({ file_too_big: 'Файл больше 25 МБ', files_too_big: 'Файлы вместе больше 80 МБ', too_many_files: 'Не больше 12 файлов', bad_client: 'Выберите клиента', bad_date: 'Укажите дату встречи' }[created && created.data.error] || 'Не получилось создать запрос');
     const { job, partBytes } = created.data;
     const parts = [];
     job.files.forEach((f, i) => { for (let p = 0; p < f.parts; p += 1) parts.push({ fileId: f.id, part: p, blob: prepared[i].blob.slice(p * partBytes, (p + 1) * partBytes) }); });
@@ -3812,6 +3886,8 @@ $('kbForm').addEventListener('input', (e) => {
 });
 $('kbForm').addEventListener('change', (e) => {
   if (e.target.id === 'kbNewSection') { KB.newSection = e.target.value; kbSaveDraft(); }
+  if (e.target.id === 'kbMProject') { KB.mProject = e.target.value; kbSaveDraft(); }
+  if (e.target.id === 'kbMDate') { KB.mDate = e.target.value; kbSaveDraft(); renderKbForm(); }
   if (e.target.id === 'kbFile') { kbAddFiles(e.target.files); }
 });
 $('kbForm').addEventListener('dragover', (e) => { const d = e.target.closest('#kbDrop'); if (!d) return; e.preventDefault(); d.classList.add('over'); });
@@ -4151,13 +4227,27 @@ async function loadClientMetrics(force) {
   CM.loading = false;
   if (S.view === 'clients' && !isEditing()) renderClients();
 }
+$('clientsRefresh').addEventListener('click', async () => {
+  const b = $('clientsRefresh');
+  if (b.classList.contains('busy')) return;
+  b.classList.add('busy'); b.querySelector('span').textContent = 'Обновляю…';
+  try {
+    const res = await api('clients-refresh');
+    if (!res.ok) throw new Error();
+    CM.data = res.data.clients; CM.loadedAt = Date.now();
+    toast('Аванс и кошелёк обновлены по всем клиентам');
+  } catch (e) { toast('Не получилось обновить — попробуйте ещё раз'); }
+  b.classList.remove('busy'); b.querySelector('span').textContent = 'Обновить с Авито';
+  if (S.view === 'clients' && !isEditing()) renderClients();
+});
 function clientTodo(p, i, m, now) {
   const out = [];
   const pend = i.b.pending;
   if (i.wd == null || i.wd >= 3) out.push({ kind: 'silent', tone: 'red', html: `${ico('send')}<div><b>Пора написать клиенту</b><div class="cc-sub2">${i.last ? `последний раз ${esc(fmtDay(i.last, now))}${i.lastWhat ? ` — ${esc(i.lastWhat)}` : ''}` : 'обновлений ещё не было'}</div></div>` });
   if (i.inform.length) out.push({ kind: 'inform', tone: 'amber', html: `${ico('check')}<div><b>Сделано — расскажите клиенту</b><div class="cc-tasks">${i.inform.slice(0, 3).map((t) => `<button data-open="${esc(t.id)}">${esc(t.text)}</button>`).join('')}${i.inform.length > 3 ? `<button data-filter>…и ещё ${i.inform.length - 3}</button>` : ''}</div></div>` });
-  const daysLeft = m && m.advance != null && m.perDay > 0 ? Math.floor(m.advance / m.perDay) : null;
-  if (m && m.advance != null && m.advance < 1500) out.push({ kind: 'money', tone: 'amber', html: `${ico('wallet')}<div><b>Заканчивается аванс: ${anMoney(m.advance)}</b><div class="cc-sub2">${daysLeft < 1 ? 'хватит меньше чем на день' : `хватит примерно на ${daysLeft} ${plural(daysLeft, 'день', 'дня', 'дней')}`} — попросите пополнить</div></div>` });
+  const money = clientMoney(m);
+  const daysLeft = money != null && m.perDay > 0 ? Math.floor(money / m.perDay) : null;
+  if (money != null && money < 1500) out.push({ kind: 'money', tone: 'amber', html: `${ico('wallet')}<div><b>Заканчиваются деньги в кабинете: ${anMoney(money)}</b><div class="cc-sub2">${daysLeft < 1 ? 'хватит меньше чем на день' : `хватит примерно на ${daysLeft} ${plural(daysLeft, 'день', 'дня', 'дней')}`} — попросите пополнить</div></div>` });
   return out;
 }
 function clientMetricsHtml(p, m) {
@@ -4177,13 +4267,22 @@ function clientMetricsHtml(p, m) {
     <span class="l">Бюджет</span><b>${anMoney(m.day.budget)}</b><b>${anMoney(m.month.budget)}</b>
   </div>`;
 }
-// Аванс — отдельным блоком: сумма в кабинете и на сколько дней её хватит при нынешних тратах.
+// Деньги в кабинете: аванс (CPA) и кошелёк — отдельными строками. Предупреждение — по авансу, а если
+// его нет (кабинет без CPA) — по кошельку.
+function clientMoney(m) { return !m ? null : m.advance != null ? m.advance : m.wallet; }
 function clientAdvanceHtml(p, m) {
   if (p.inactive || !CM.data || !m) return '';
-  if (m.advance == null) return `<div class="cc-adv off">${ico('wallet')}<span>Аванс</span><em>${m.linked ? 'нет данных' : 'кабинет не подключён'}</em></div>`;
-  const days = m.perDay > 0 ? Math.floor(m.advance / m.perDay) : null;
-  const low = m.advance < 1500; // предупреждаем, только когда в кабинете меньше 1 500 ₽
-  return `<div class="cc-adv ${low ? 'low' : ''}">${ico('wallet')}<span>Аванс сейчас</span><b>${anMoney(m.advance)}</b>${low ? `<em>${days != null && days >= 1 ? `хватит на ~${days} ${plural(days, 'день', 'дня', 'дней')}` : 'хватит меньше чем на день'} — попросите пополнить</em>` : ''}</div>`;
+  if (m.advance == null && m.wallet == null) return `<div class="cc-adv off">${ico('wallet')}<span>Аванс и кошелёк</span><em>${m.linked ? 'нет данных' : 'кабинет не подключён'}</em></div>`;
+  const money = clientMoney(m);
+  const days = m.perDay > 0 ? Math.floor(money / m.perDay) : null;
+  const low = money < 1500; // предупреждаем, только когда в кабинете меньше 1 500 ₽
+  const at = m.moneyAt ? Date.parse(m.moneyAt) : 0;
+  return `<div class="cc-adv ${low ? 'low' : ''}">
+    <div class="cc-money"><span>${ico('wallet')}Аванс</span><b>${m.advance == null ? '—' : anMoney(m.advance)}</b></div>
+    <div class="cc-money"><span>${ico('wallet')}Кошелёк</span><b>${m.wallet == null ? '—' : anMoney(m.wallet)}</b></div>
+    ${low ? `<em>${days != null && days >= 1 ? `хватит на ~${days} ${plural(days, 'день', 'дня', 'дней')}` : 'хватит меньше чем на день'} — попросите пополнить</em>` : ''}
+    ${at ? `<i class="cc-when">обновлено ${esc(fmtDay(at, Date.now()))}${fmtDay(at, Date.now()).length < 12 ? ` в ${fmtTime(at)}` : ''}</i>` : ''}
+  </div>`;
 }
 function renderClients() {
   if (!canSeeClients()) return;
