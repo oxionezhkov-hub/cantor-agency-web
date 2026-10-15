@@ -112,12 +112,14 @@ a{color:inherit}
 /* ── top bar ── */
 .top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
 .top-in{max-width:1120px;margin:0 auto;height:var(--top);display:flex;align-items:center;gap:14px;padding:0 20px}
-.brand{font-family:var(--display);font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;gap:8px;white-space:nowrap}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);transition:background .3s}
-.sync-dot.off{background:var(--faint);box-shadow:0 0 0 3px var(--sunken)}
-.sync-dot.busy{animation:pulse 1s ease-in-out infinite}
+/* Статус связи — кольцо вокруг аватарки: зелёное — всё обновляется, красное — нет связи. */
+.me-btn .avatar{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--green);transition:box-shadow .3s}
+.me-btn.off .avatar{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--red)}
+.me-btn.busy .avatar{animation:pulse 1s ease-in-out infinite}
+.conn-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);flex:none;margin:0 5px}
+.conn-dot.off{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
 @keyframes pulse{50%{opacity:.35}}
-.tabs{display:flex;gap:4px;margin-left:12px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:4px;margin-left:-6px;min-width:0;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
 .tab:hover{color:var(--ink);background:var(--sunken)}
@@ -966,7 +968,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 <div id="app" hidden>
   <header class="top">
     <div class="top-in">
-      <div class="brand"><span class="sync-dot" id="syncDot" title=""></span>Avito Tasks</div>
       <nav class="tabs" id="tabs"></nav>
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
@@ -1606,6 +1607,7 @@ function showApp() {
   document.title = 'Avito Tasks';
   if (S.justActivated) { toast(`Добро пожаловать, ${first(S.justActivated.name)}! Теперь трекер открывается на этом устройстве по обычной ссылке.`, null, null, 7000); S.justActivated = null; }
   startPolling();
+  if (!location.hash) restorePlace();
   openFromHash();
 }
 
@@ -1653,7 +1655,7 @@ function activitySent(sent) {
 async function sync(initial) {
   if (S.syncing) return;
   S.syncing = true;
-  $('syncDot').classList.add('busy');
+  $('meBtn').classList.add('busy');
   try {
     if (initial) markActive(true);
     const activity = activityPayload(initial);
@@ -1673,10 +1675,11 @@ async function sync(initial) {
   } finally {
     S.syncing = false;
     S.lastSync = Date.now();
-    const dot = $('syncDot');
-    dot.classList.remove('busy');
-    dot.classList.toggle('off', S.offline);
-    dot.title = S.offline ? 'Нет связи — повторю через минуту' : `Обновлено в ${fmtTime(Date.now())} · обновляется само каждую минуту`;
+    const me = $('meBtn');
+    me.classList.remove('busy');
+    me.classList.toggle('off', S.offline);
+    me.title = connText();
+    if (!$('meMenu').hidden && $('connRow')) $('connRow').outerHTML = connRow();
     renderBanners();
     if (S.view === 'team' && S.teamTab !== 'access' && !S.offline) loadActivity();
     if (!S.offline && (S.view === 'meet' || Date.now() - MT.loadedAt > 5 * 60000)) loadMeet(S.view === 'meet');
@@ -1801,6 +1804,36 @@ function setView(v) {
   if (v === 'analytics') loadAnalytics();
   if (v === 'kb') renderKb();
   window.scrollTo({ top: 0 });
+  savePlace();
+}
+
+// Обновление страницы оставляет тот же раздел и то же место (в пределах этой вкладки браузера).
+const K_PLACE = 'avitoTasks.place';
+try { history.scrollRestoration = 'manual'; } catch (e) { /* старый браузер */ }
+let placeTimer = null, placeRestoring = false;
+function savePlace() {
+  if (placeRestoring || !S.me || $('app').hidden) return;
+  try { sessionStorage.setItem(K_PLACE, JSON.stringify({ view: S.view, y: Math.round(window.scrollY), at: Date.now() })); } catch (e) { /* приватный режим */ }
+}
+window.addEventListener('scroll', () => { clearTimeout(placeTimer); placeTimer = setTimeout(savePlace, 250); }, { passive: true });
+window.addEventListener('pagehide', () => { clearTimeout(placeTimer); savePlace(); });
+function restorePlace() {
+  let p = null;
+  try { p = JSON.parse(sessionStorage.getItem(K_PLACE) || 'null'); } catch (e) { return; }
+  if (!p || Date.now() - p.at > 12 * 3600000) return;
+  if (p.view && p.view !== S.view && views().some((v) => v.id === p.view)) setView(p.view);
+  if (!(p.y > 0)) return;
+  // Раздел дорисовывается по мере загрузки (клиенты, аналитика, история базы) — докручиваем несколько
+  // раз, пока страница не станет достаточно длинной. Если человек сам прокрутил — не мешаем.
+  placeRestoring = true;
+  let tries = 0, lastY = window.scrollY;
+  const tick = () => {
+    if (Math.abs(window.scrollY - lastY) > 4) { placeRestoring = false; return; }
+    window.scrollTo(0, p.y); lastY = window.scrollY;
+    if (Math.abs(window.scrollY - p.y) > 4 && (tries += 1) < 24) setTimeout(tick, 250);
+    else { placeRestoring = false; savePlace(); }
+  };
+  requestAnimationFrame(tick);
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-view]');
@@ -1815,6 +1848,12 @@ document.addEventListener('click', (e) => {
 });
 
 // профиль
+function connText() {
+  return S.offline ? 'Нет связи — повторю через минуту' : S.lastSync ? `Связь есть · обновлено в ${fmtTime(S.lastSync)}` : 'Подключаюсь…';
+}
+function connRow() {
+  return `<button class="menu-item" id="connRow" data-act="refresh"><span class="conn-dot ${S.offline ? 'off' : ''}"></span><span>${esc(connText())}<br><span class="muted" style="font-size:12.5px">${S.offline ? 'нажмите, чтобы попробовать сейчас' : 'обновляется само каждую минуту · нажмите, чтобы сейчас'}</span></span></button>`;
+}
 $('meBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   const m = $('meMenu');
@@ -1824,8 +1863,8 @@ $('meBtn').addEventListener('click', (e) => {
     : tgConnectUrl() ? `<a class="menu-item tg" href="${esc(tgConnectUrl())}" data-tgconnect>${ico('tg')}<span>Подключить Telegram<br><span class="muted" style="font-size:12.5px">задачи и напоминания в личку</span></span></a>` : '';
   m.innerHTML = `
     <div class="menu-head">${avatar(S.me, 'lg')}<div><div style="font-weight:700;color:var(--ink)">${esc(S.me.name)}</div><div class="muted" style="font-size:13px">${esc(S.me.roleLabel || '')}</div></div></div>
+    ${connRow()}
     ${tgRow}
-    <button class="menu-item" data-act="refresh">${ico('refresh')}Обновить сейчас</button>
     <button class="menu-item" data-act="logout">${ico('out')}Выйти на этом устройстве</button>`;
   m.hidden = false;
 });
@@ -3680,7 +3719,7 @@ function renderKbJobs() {
     if (j.status === 'done' && j.mode === 'meeting' && j.meeting) {
       const m = j.meeting;
       body = m.sentAt
-        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}${m.sentBy ? ` · ${esc(first(m.sentBy))}` : ''}<div class="kb-hint">${esc((m.sentTo || []).join(' · '))}</div></div></div>`
+        ? `<div class="kb-meet-sent">${ico('check', 'ic-sm')}<div>Отправлено клиенту ${esc(fmtDay(Date.parse(m.sentAt), now))} в ${fmtTime(Date.parse(m.sentAt))}</div></div>`
         : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
           <div class="kb-meet-actions"><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
     } else if (j.status === 'done' && r) {
@@ -3693,15 +3732,16 @@ function renderKbJobs() {
       body = `<div class="kb-note ${j.status === 'not_configured' ? 'warn' : 'bad'}">${esc(j.error || 'Неизвестная ошибка')}</div>
         <div><button class="btn btn-ghost btn-sm" data-kbretry="${esc(j.id)}">${ico('refresh', 'ic-sm')}Отправить снова</button></div>`;
     }
-    const links = [
+    const sentMeet = Boolean(j.meeting && j.meeting.sentAt);
+    const links = sentMeet ? '' : [
       r && r.prUrl ? `<a href="${esc(r.prUrl)}" target="_blank" rel="noopener">PR на GitHub</a>` : '',
       j.sessionUrl ? `<a href="${esc(j.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a>` : '',
     ].filter(Boolean).join(' · ');
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
-      <div class="kb-job-head"><span class="tag ${cls}">${esc(r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
+      <div class="kb-job-head"><span class="tag ${cls}">${esc(sentMeet ? 'Отправлено' : r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
       <div class="kb-job-target">${esc(j.targetLabel)}</div>
-      ${j.text && !(j.meeting && j.meeting.sentAt) ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
-      ${j.files.length ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
+      ${j.text && !sentMeet ? `<div class="kb-job-text">${esc(j.text)}</div>` : ''}
+      ${j.files.length && !sentMeet ? `<div class="kb-job-meta">${ico('clip', 'ic-sm')}${j.files.length} ${plural(j.files.length, 'файл', 'файла', 'файлов')}: ${esc(j.files.map((f) => f.name).join(', '))}</div>` : ''}
       ${body}
       ${links ? `<div class="kb-job-links">${links}</div>` : ''}
     </div>`;
