@@ -8910,6 +8910,11 @@ async function handleApi(request, env, url, ctx) {
   }
 
   // Same for Avito Tasks: per-person invite links instead of the dashboard password.
+  // Under /api/dashboard/ so the Yandex Cloud proxy (yc-dashboard-api-proxy) lets it through.
+  if (pathname === '/api/dashboard/feeds' || pathname.startsWith('/api/dashboard/feeds/')) {
+    return handleFeedsApi(request, env, url);
+  }
+
   if (pathname.startsWith('/api/dashboard/avito-tasks/')) {
     return handleAvitoTasksApi(request, env, url, ctx);
   }
@@ -9093,6 +9098,581 @@ function withHtmlContentType(response) {
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
+/* ═══════════════ Avito feeds: Google Sheets → Avito autoload XML (like BananLab) ═══════════════
+ *
+ * Replaces BananLab's autoload for /avito-feeds. Each client ("feed") is a Google Sheet built on the
+ * BananLab template; existing client sheets work unchanged:
+ *   row 2 — the Avito tag of the column (Title, Price, Images, ServiceType…),
+ *   row 3 — «Грузим в xml» / «Не грузим» (only the former reach the XML),
+ *   row 4 — type hint; «Одно или несколько значений…» / «Много значений, Option» → <Option> list,
+ *   rows 5+ — ads, one per row, keyed by the `id` column.
+ * Several tabs of one sheet merge into one feed. Rows with «Товар доступен?» = «Нет» are skipped.
+ * Russian-named service columns (Папка на Яндекс Диск, Переразмещаем как новые?, …) never reach the XML.
+ *
+ * Photos: the Images cell holds one link per line. Links copied from the Yandex.Disk web app
+ * (disk.yandex.ru/client/disk/…, private) are fetched with the OAuth token the sheet already keeps in
+ * cell A2 of its «Яндекс.Диск.Доступ» tab; public links (disk.yandex.ru/i/…, yadi.sk) need no token;
+ * any other http(s) link goes into the XML as is. Yandex links become /feed/<slug>/img/<sig>/<src>.<ext>
+ * on this worker: <src> is the base64url of the Disk path, <sig> an HMAC with the feed's own secret, so
+ * nobody can use the endpoint to read other files from the client's Disk.
+ *
+ * Reading the sheet: with the GOOGLE_SERVICE_ACCOUNT_JSON secret (a Google service-account key, set in
+ * the Cloudflare dashboard → Variables and Secrets, "Encrypt") the sheet only has to be shared with that
+ * service account's e-mail; without it the sheet must be open to «anyone with the link» and is read as CSV.
+ *
+ * Avito fetches GET /feed/<slug>/avito.xml on its own schedule (hourly). feedsCron rebuilds every enabled
+ * feed about once an hour; «Обновить XML» rebuilds one now, «Обновить в Авито» asks Avito to fetch now
+ * (POST /autoload/v1/upload, Avito allows it once an hour), «Подключить на Авито» writes our feed URL into
+ * the linked Avito account's autoload profile (POST /autoload/v2/profile).
+ *
+ * KV keys (binding "AVITO_KV"):
+ *   feed:<slug>     -> { slug, name, sheetId, tabs, enabled, avitoAccountId, secret, createdAt, updatedAt }
+ *   feedxml:<slug>  -> the last built XML
+ *   feedstat:<slug> -> { builtAt, ms, ads, tabs: [{ name, ads, error }], problems: [{ tab, row, id, msg }], yandexToken }
+ *   feedytok:<slug> -> the Yandex.Disk OAuth token copied from the sheet (never sent to the page)
+ *
+ * Staff API (/api/dashboard/feeds/…, the /avito-feeds page) requires the x-dashboard-password header
+ * (FEEDS_PASSWORD secret, else the dashboard password). It sits under /api/dashboard/ so the page also
+ * works through the Yandex Cloud proxy from Russia without a VPN.
+ *
+ * *.workers.dev is throttled by some Russian ISPs. If Avito's autoload report says it can't download the
+ * feed or photos, set the FEEDS_PROXY_URL variable to the yc-dashboard-api-proxy function URL: every feed
+ * and photo link is then given as <proxy>?p=/feed/… (the proxy passes GET /feed/* through).
+ */
+
+const FEEDS_BASE_URL = 'https://mainweb.oxion-ezhkov.workers.dev';
+const FEEDS_YD_TAB = 'Яндекс.Диск.Доступ';
+const FEEDS_REBUILD_MS = 55 * 60 * 1000;
+const FEEDS_MAX_TABS = 10;
+// Columns marked «Грузим в xml» in the template that the service handles itself instead of copying.
+const FEEDS_SERVICE_COLS = new Set(['Товар доступен?', 'Переразмещаем как новые? (Да/Нет)', 'Папка на Яндекс Диск', 'Место, куда накладывается накладка']);
+
+// Public URL of a /feed/… path — straight on the worker, or through the Yandex Cloud proxy.
+function feedsPublicUrl(env, path) {
+  if (env.FEEDS_PROXY_URL) return `${String(env.FEEDS_PROXY_URL).replace(/\/+$/, '')}?p=${encodeURIComponent(path)}`;
+  return String(env.FEEDS_BASE_URL || FEEDS_BASE_URL).replace(/\/+$/, '') + path;
+}
+
+function feedsAuth(request, env) {
+  return request.headers.get('x-dashboard-password') === (env.FEEDS_PASSWORD || DASHBOARD_PASSWORD);
+}
+
+function feedsSheetId(input) {
+  const s = String(input || '').trim();
+  const m = s.match(/\/spreadsheets\/d\/([A-Za-z0-9_-]{20,})/);
+  if (m) return m[1];
+  return /^[A-Za-z0-9_-]{20,}$/.test(s) ? s : '';
+}
+
+function feedsSlug(name) {
+  const map = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ы: 'y', э: 'e', ю: 'yu', я: 'ya' };
+  const base = String(name || '').toLowerCase().split('').map((c) => (map[c] !== undefined ? map[c] : c)).join('')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'client';
+  return base + '-' + randomHex(3);
+}
+
+function randomHex(bytes) {
+  return [...crypto.getRandomValues(new Uint8Array(bytes))].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function feedsB64url(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function feedsB64urlDecode(s) {
+  const bin = atob(String(s).replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4));
+  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
+}
+
+async function feedsSign(secret, data) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)));
+  return [...sig.slice(0, 10)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ── Reading the sheet ── */
+
+let feedsGoogleTokenCache = null;
+
+async function feedsGoogleToken(env) {
+  if (!env.GOOGLE_SERVICE_ACCOUNT_JSON) return null;
+  if (feedsGoogleTokenCache && feedsGoogleTokenCache.exp > Date.now() + 60000) return feedsGoogleTokenCache.token;
+  const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  const now = Math.floor(Date.now() / 1000);
+  const enc = (obj) => feedsB64url(JSON.stringify(obj));
+  const unsigned = enc({ alg: 'RS256', typ: 'JWT' }) + '.' + enc({
+    iss: sa.client_email, scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+    aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600,
+  });
+  const der = Uint8Array.from(atob(String(sa.private_key).replace(/-----[^-]+-----/g, '').replace(/\s+/g, '')), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned)));
+  let bin = '';
+  for (const b of sig) bin += String.fromCharCode(b);
+  const jwt = unsigned + '.' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=' + encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer') + '&assertion=' + jwt,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) throw new Error('Google не выдал токен сервисного аккаунта: ' + (data.error_description || data.error || res.status));
+  feedsGoogleTokenCache = { token: data.access_token, exp: Date.now() + (data.expires_in || 3600) * 1000 };
+  return data.access_token;
+}
+
+function feedsServiceEmail(env) {
+  try { return env.GOOGLE_SERVICE_ACCOUNT_JSON ? JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON).client_email || '' : ''; } catch { return ''; }
+}
+
+// RFC 4180: quoted fields may hold commas, quotes ("") and line breaks.
+function feedsParseCsv(text) {
+  const rows = [];
+  let row = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+const FEEDS_CLOSED = 'Таблица закрыта. Откройте доступ «Все, у кого есть ссылка» (просмотр) или добавьте сервисный аккаунт.';
+
+// Names of all tabs: [{ name, gid }].
+async function feedsListTabs(env, sheetId) {
+  const token = await feedsGoogleToken(env);
+  if (token) {
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties(title,sheetId)`, { headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403 || res.status === 404) throw new Error(`Нет доступа к таблице. Добавьте ${feedsServiceEmail(env)} в «Настройки доступа» таблицы как читателя.`);
+    if (!res.ok) throw new Error('Google Sheets: ' + ((data.error && data.error.message) || res.status));
+    return (data.sheets || []).map((s) => ({ name: s.properties.title, gid: String(s.properties.sheetId) }));
+  }
+  const res = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/htmlview`, { redirect: 'manual' });
+  if (res.status !== 200) throw new Error(FEEDS_CLOSED);
+  const html = await res.text();
+  const tabs = [];
+  const re = /items\.push\(\{name: "((?:[^"\\]|\\.)*)", pageUrl: "[^"]*", gid: "(\d+)"/g;
+  let m;
+  // Names come as JS string literals: Google escapes & < > ' as \xHH, which JSON doesn't accept.
+  while ((m = re.exec(html))) tabs.push({ name: JSON.parse('"' + m[1].replace(/\\x([0-9a-fA-F]{2})/g, '\\u00$1') + '"'), gid: m[2] });
+  if (!tabs.length) throw new Error(FEEDS_CLOSED);
+  return tabs;
+}
+
+// { [tabName]: rows[][] } for the requested tabs; missing tabs come back in `missing`.
+async function feedsReadTabs(env, sheetId, names) {
+  const all = await feedsListTabs(env, sheetId);
+  const byName = new Map(all.map((t) => [t.name, t]));
+  const found = names.filter((n) => byName.has(n));
+  const missing = names.filter((n) => !byName.has(n));
+  const tabs = {};
+  const token = await feedsGoogleToken(env);
+  if (token && found.length) {
+    const qs = found.map((n) => 'ranges=' + encodeURIComponent("'" + n.replace(/'/g, "''") + "'")).join('&');
+    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchGet?${qs}&valueRenderOption=FORMATTED_VALUE&majorDimension=ROWS`, { headers: { Authorization: 'Bearer ' + token } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error('Google Sheets: ' + ((data.error && data.error.message) || res.status));
+    (data.valueRanges || []).forEach((vr, i) => { tabs[found[i]] = vr.values || []; });
+  } else {
+    for (const n of found) {
+      const res = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${byName.get(n).gid}`);
+      const type = res.headers.get('content-type') || '';
+      if (!res.ok || !/csv|text\/plain/.test(type)) throw new Error(FEEDS_CLOSED);
+      tabs[n] = feedsParseCsv(await res.text());
+    }
+  }
+  return { tabs, missing, allTabs: all.map((t) => t.name) };
+}
+
+/* ── Sheet rows → ads → XML ── */
+
+function feedsParseTab(rows) {
+  const tags = rows[1] || [], marks = rows[2] || [], types = rows[3] || [];
+  const cols = [];
+  let idCol = -1, availCol = -1;
+  for (let i = 0; i < tags.length; i++) {
+    const tag = String(tags[i] || '').trim();
+    if (/^id$/i.test(tag) && idCol < 0) idCol = i;
+    if (tag === 'Товар доступен?') availCol = i;
+    if (String(marks[i] || '').trim().toLowerCase() !== 'грузим в xml') continue;
+    if (FEEDS_SERVICE_COLS.has(tag) || !/^[A-Za-z][A-Za-z0-9]*$/.test(tag)) continue;
+    cols.push({ i, tag, multi: /нескольк|много значений|option/i.test(String(types[i] || '')) });
+  }
+  const ads = [], problems = [];
+  if (idCol < 0) {
+    problems.push({ row: 2, msg: 'Во второй строке нет колонки id — это не таблица по шаблону BananLab' });
+    return { ads, problems };
+  }
+  for (let r = 3; r < rows.length; r++) {
+    const row = rows[r] || [];
+    const id = String(row[idCol] == null ? '' : row[idCol]).trim();
+    if (!id || id.toLowerCase() === 'подробнее о параметре') continue;
+    if (availCol >= 0 && /^нет$/i.test(String(row[availCol] || '').trim())) continue;
+    const fields = [];
+    for (const c of cols) {
+      const raw = String(row[c.i] == null ? '' : row[c.i]);
+      if (raw.trim()) fields.push({ tag: c.tag, multi: c.multi, value: raw });
+    }
+    ads.push({ row: r + 1, id, fields });
+  }
+  return { ads, problems };
+}
+
+function feedsXmlText(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]))
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+}
+
+function feedsDate(v) {
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4}-\d\d-\d\d)[T ](\d\d:\d\d)(:\d\d)?$/);
+  if (m) return `${m[1]}T${m[2]}${m[3] || ':00'}+03:00`;
+  m = s.match(/^(\d\d)\.(\d\d)\.(\d{4})(?:[ T](\d\d?):(\d\d)(?::(\d\d))?)?$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}T${(m[4] || '00').padStart(2, '0')}:${m[5] || '00'}:${m[6] || '00'}+03:00`;
+  return s;
+}
+
+function feedsValue(tag, v) {
+  let s = String(v).trim();
+  if (tag === 'Price') s = s.replace(/[\s\u00a0]/g, '');
+  // BananLab writes Russian mobile numbers as 8XXXXXXXXXX; keep the feed identical to theirs.
+  if (tag === 'ContactPhone' && /^7\d{10}$/.test(s)) s = '8' + s.slice(1);
+  return s;
+}
+
+const feedsLines = (v) => String(v).split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+const feedsOptions = (v) => String(v).split(/\s*\|\s*|\r?\n/).map((s) => s.trim()).filter(Boolean);
+
+// imageUrl(src) → URL for the XML, or null when the link isn't understood.
+function feedsBuildXml(ads, imageUrl) {
+  const out = ['<?xml version="1.0" encoding="UTF-8"?>', '<Ads formatVersion="3" target="Avito.ru">'];
+  const problems = [];
+  for (const ad of ads) {
+    out.push('  <Ad>');
+    for (const f of ad.fields) {
+      const t = f.tag;
+      if (t === 'Images') {
+        const urls = [];
+        for (const src of feedsLines(f.value)) {
+          const u = imageUrl(src);
+          if (u) urls.push(u);
+          else problems.push({ tab: ad.tab, row: ad.row, id: ad.id, msg: 'Не понятна ссылка на фото: ' + src.slice(0, 120) });
+        }
+        if (!urls.length) continue;
+        out.push('    <Images>');
+        for (const u of urls.slice(0, 30)) out.push(`      <Image url="${feedsXmlText(u)}"/>`);
+        out.push('    </Images>');
+      } else if (t === 'Description') {
+        out.push(`    <Description><![CDATA[${String(f.value).replace(/]]>/g, ']]]]><![CDATA[>')}]]></Description>`);
+      } else if (f.multi) {
+        out.push(`    <${t}>`);
+        for (const o of feedsOptions(f.value)) out.push(`      <Option>${feedsXmlText(o)}</Option>`);
+        out.push(`    </${t}>`);
+      } else if (t === 'DateBegin' || t === 'DateEnd') {
+        out.push(`    <${t}>${feedsXmlText(feedsDate(f.value))}</${t}>`);
+      } else {
+        out.push(`    <${t}>${feedsXmlText(feedsValue(t, f.value))}</${t}>`);
+      }
+    }
+    out.push('  </Ad>');
+  }
+  out.push('</Ads>', '');
+  return { xml: out.join('\n'), problems };
+}
+
+// A Yandex.Disk link → { kind: 'p', path } (private, needs the token) or { kind: 'u', key } (public).
+function feedsYandexSource(src) {
+  let u;
+  try { u = new URL(src.trim()); } catch { return null; }
+  if (!/(^|\.)disk\.yandex\.(ru|com)$|^disk\.360\.yandex\.ru$|^yadi\.sk$/.test(u.hostname)) return null;
+  if (u.hostname === 'yadi.sk' || /^\/(i|d)\//.test(u.pathname)) return { kind: 'u', key: u.origin + u.pathname };
+  const dlg = u.searchParams.get('idDialog');
+  if (dlg && dlg.startsWith('/disk/')) return { kind: 'p', path: 'disk:' + dlg.slice(5) };
+  const m = decodeURIComponent(u.pathname).match(/^\/client\/disk(\/.+\.[A-Za-z0-9]{2,5})$/);
+  if (m) return { kind: 'p', path: 'disk:' + m[1] };
+  return null;
+}
+
+async function feedsBuild(env, feed) {
+  const t0 = Date.now();
+  const kv = env.AVITO_KV;
+  const stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], yandexToken: false };
+  let ads = [];
+  try {
+    const { tabs, missing, allTabs } = await feedsReadTabs(env, feed.sheetId, [...feed.tabs, FEEDS_YD_TAB]);
+    for (const name of feed.tabs) {
+      if (missing.includes(name)) {
+        stat.tabs.push({ name, ads: 0, error: 'Нет такой вкладки. В таблице есть: ' + allTabs.join(', ') });
+        continue;
+      }
+      const parsed = feedsParseTab(tabs[name]);
+      parsed.ads.forEach((a) => { a.tab = name; });
+      parsed.problems.forEach((p) => stat.problems.push({ tab: name, ...p }));
+      stat.tabs.push({ name, ads: parsed.ads.length });
+      ads = ads.concat(parsed.ads);
+    }
+    const ydRows = tabs[FEEDS_YD_TAB];
+    const ytok = ydRows && ydRows[1] && String(ydRows[1][0] || '').trim();
+    if (ytok && /^[A-Za-z0-9_.-]{20,}$/.test(ytok)) {
+      stat.yandexToken = true;
+      if ((await kv.get('feedytok:' + feed.slug)) !== ytok) await kv.put('feedytok:' + feed.slug, ytok);
+    }
+  } catch (err) {
+    stat.error = String(err && err.message || err);
+    stat.ms = Date.now() - t0;
+    await kv.put('feedstat:' + feed.slug, JSON.stringify(stat));
+    return stat;
+  }
+
+  const seen = new Map();
+  ads = ads.filter((a) => {
+    if (seen.has(a.id)) {
+      const first = seen.get(a.id);
+      stat.problems.push({ tab: a.tab, row: a.row, id: a.id, msg: `Повтор id — уже есть на вкладке «${first.tab}», строка ${first.row}. Строка пропущена.` });
+      return false;
+    }
+    seen.set(a.id, a);
+    return true;
+  });
+
+  // Sign every Yandex link up front (crypto is async), then build the XML synchronously.
+  const signed = new Map();
+  for (const a of ads) for (const f of a.fields) if (f.tag === 'Images') {
+    for (const src of feedsLines(f.value)) {
+      if (signed.has(src)) continue;
+      const y = feedsYandexSource(src);
+      if (!y) { signed.set(src, /^https?:\/\//i.test(src) ? src : null); continue; }
+      if (y.kind === 'p' && !stat.yandexToken) { signed.set(src, null); continue; }
+      const enc = feedsB64url(y.kind === 'p' ? 'p:' + y.path : 'u:' + y.key);
+      const name = (y.path || y.key).split('/').pop();
+      const ext = ((name.match(/\.(jpe?g|png|webp|heic)$/i) || [])[1] || 'jpg').toLowerCase();
+      signed.set(src, feedsPublicUrl(env, `/feed/${feed.slug}/img/${await feedsSign(feed.secret, enc)}/${enc}.${ext}`));
+    }
+  }
+  const { xml, problems } = feedsBuildXml(ads, (src) => signed.get(src) || null);
+  if (!stat.yandexToken && [...signed.entries()].some(([src, u]) => !u && feedsYandexSource(src))) {
+    stat.problems.unshift({ msg: `Ссылки на закрытые файлы Яндекс.Диска есть, а токена нет: вставьте его в ячейку A2 вкладки «${FEEDS_YD_TAB}».` });
+  }
+  stat.problems = stat.problems.concat(problems).slice(0, 300);
+  stat.ads = ads.length;
+  stat.ms = Date.now() - t0;
+  await kv.put('feedxml:' + feed.slug, xml);
+  await kv.put('feedstat:' + feed.slug, JSON.stringify(stat));
+  return stat;
+}
+
+/* ── Public endpoints: the feed and its photos ── */
+
+async function handleFeedPublic(request, env, url) {
+  const m = url.pathname.match(/^\/feed\/([a-z0-9-]{4,60})\/(?:avito\.xml|img\/([0-9a-f]{20})\/([A-Za-z0-9_-]+)\.[a-z]{3,4})$/);
+  if (!m || (request.method !== 'GET' && request.method !== 'HEAD')) return new Response('Not found', { status: 404 });
+  const [, slug, sig, enc] = m;
+  const feed = await env.AVITO_KV.get('feed:' + slug, 'json');
+  if (!feed) return new Response('Not found', { status: 404 });
+
+  if (!sig) {
+    let xml = await env.AVITO_KV.get('feedxml:' + slug);
+    if (xml == null) {
+      await feedsBuild(env, feed);
+      xml = await env.AVITO_KV.get('feedxml:' + slug);
+    }
+    if (xml == null) return new Response('Feed is not built yet', { status: 503 });
+    return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
+  }
+
+  if ((await feedsSign(feed.secret, enc)) !== sig) return new Response('Not found', { status: 404 });
+  const src = feedsB64urlDecode(enc);
+  let api;
+  const headers = {};
+  if (src.startsWith('p:')) {
+    const tok = await env.AVITO_KV.get('feedytok:' + slug);
+    if (!tok) return new Response('No Yandex.Disk token', { status: 404 });
+    headers.Authorization = 'OAuth ' + tok;
+    api = 'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(src.slice(2));
+  } else {
+    api = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(src.slice(2));
+  }
+  const link = await fetch(api, { headers });
+  const data = await link.json().catch(() => ({}));
+  if (!link.ok || !data.href) return new Response('Photo not found on Yandex.Disk', { status: 404 });
+  const file = await fetch(data.href);
+  if (!file.ok) return new Response('Photo not available', { status: 502 });
+  return new Response(file.body, {
+    headers: { 'Content-Type': file.headers.get('content-type') || 'image/jpeg', 'Cache-Control': 'public, max-age=2592000', 'X-Robots-Tag': 'noindex' },
+  });
+}
+
+/* ── Staff API ── */
+
+function feedsPublicView(env, feed, stat) {
+  const { secret, ...rest } = feed;
+  return { ...rest, feedUrl: feedsPublicUrl(env, `/feed/${feed.slug}/avito.xml`), sheetUrl: `https://docs.google.com/spreadsheets/d/${feed.sheetId}/edit`, stat: stat || null };
+}
+
+function feedsCleanTabs(tabs) {
+  const list = (Array.isArray(tabs) ? tabs : String(tabs || '').split(/\r?\n|,/)).map((t) => String(t).trim()).filter(Boolean);
+  return [...new Set(list)].slice(0, FEEDS_MAX_TABS);
+}
+
+async function feedsAvitoAccount(env, feed) {
+  if (!feed.avitoAccountId) throw new Error('К клиенту не привязан аккаунт Авито. Выберите его в «Редактировать».');
+  const account = await env.AVITO_KV.get('account:' + feed.avitoAccountId, 'json');
+  if (!account) throw new Error('Привязанный аккаунт Авито удалён. Выберите другой.');
+  return { account, token: await avitoGetToken(env, account) };
+}
+
+async function handleFeedsApi(request, env, url) {
+  if (!feedsAuth(request, env)) return json({ error: 'unauthorized' }, 401);
+  const kv = env.AVITO_KV;
+  const parts = url.pathname.replace(/^\/api\/dashboard\/feeds\/?/, '').split('/').filter(Boolean);
+
+  if (!parts.length && request.method === 'GET') {
+    const feeds = [];
+    let cursor;
+    do {
+      const page = await kv.list({ prefix: 'feed:', cursor });
+      for (const k of page.keys) {
+        const feed = await kv.get(k.name, 'json');
+        if (feed) feeds.push(feedsPublicView(env, feed, await kv.get('feedstat:' + feed.slug, 'json')));
+      }
+      cursor = page.list_complete ? null : page.cursor;
+    } while (cursor);
+    feeds.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+    const accounts = [];
+    const acc = await kv.list({ prefix: 'account:' });
+    for (const k of acc.keys) {
+      const a = await kv.get(k.name, 'json');
+      if (a) accounts.push({ id: a.id, name: a.name });
+    }
+    return json({ feeds, accounts, serviceAccount: feedsServiceEmail(env) || null });
+  }
+
+  if (parts[0] === 'tabs' && request.method === 'GET') {
+    const sheetId = feedsSheetId(url.searchParams.get('sheet'));
+    if (!sheetId) return json({ error: 'Это не ссылка на Google Таблицу' }, 400);
+    try {
+      return json({ tabs: (await feedsListTabs(env, sheetId)).map((t) => t.name) });
+    } catch (err) {
+      return json({ error: String(err.message || err) }, 400);
+    }
+  }
+
+  if (!parts.length && request.method === 'POST') {
+    const body = (await readJson(request)) || {};
+    const name = String(body.name || '').trim().slice(0, 60);
+    const sheetId = feedsSheetId(body.sheetUrl);
+    const tabs = feedsCleanTabs(body.tabs);
+    if (!name) return json({ error: 'Укажите имя клиента' }, 400);
+    if (!sheetId) return json({ error: 'Вставьте ссылку на Google Таблицу из адресной строки' }, 400);
+    if (!tabs.length) return json({ error: 'Укажите хотя бы одну вкладку с объявлениями' }, 400);
+    const now = new Date().toISOString();
+    const feed = { slug: feedsSlug(name), name, sheetId, tabs, enabled: true, avitoAccountId: String(body.avitoAccountId || '') || null, secret: randomHex(16), createdAt: now, updatedAt: now };
+    await kv.put('feed:' + feed.slug, JSON.stringify(feed));
+    const stat = await feedsBuild(env, feed);
+    return json({ feed: feedsPublicView(env, feed, stat) });
+  }
+
+  const slug = parts[0];
+  const feed = slug && (await kv.get('feed:' + slug, 'json'));
+  if (!feed) return json({ error: 'not_found' }, 404);
+
+  if (parts.length === 1 && request.method === 'PUT') {
+    const body = (await readJson(request)) || {};
+    if (body.name !== undefined) feed.name = String(body.name).trim().slice(0, 60) || feed.name;
+    if (body.sheetUrl !== undefined) {
+      const id = feedsSheetId(body.sheetUrl);
+      if (!id) return json({ error: 'Вставьте ссылку на Google Таблицу из адресной строки' }, 400);
+      feed.sheetId = id;
+    }
+    if (body.tabs !== undefined) {
+      const tabs = feedsCleanTabs(body.tabs);
+      if (!tabs.length) return json({ error: 'Укажите хотя бы одну вкладку с объявлениями' }, 400);
+      feed.tabs = tabs;
+    }
+    if (body.enabled !== undefined) feed.enabled = !!body.enabled;
+    if (body.avitoAccountId !== undefined) feed.avitoAccountId = String(body.avitoAccountId || '') || null;
+    feed.updatedAt = new Date().toISOString();
+    await kv.put('feed:' + slug, JSON.stringify(feed));
+    return json({ feed: feedsPublicView(env, feed, await kv.get('feedstat:' + slug, 'json')) });
+  }
+
+  if (parts.length === 1 && request.method === 'DELETE') {
+    await Promise.all(['feed:', 'feedxml:', 'feedstat:', 'feedytok:'].map((p) => kv.delete(p + slug)));
+    return json({ ok: true });
+  }
+
+  if (parts[1] === 'build' && request.method === 'POST') {
+    const stat = await feedsBuild(env, feed);
+    return json({ feed: feedsPublicView(env, feed, stat) });
+  }
+
+  if (parts[1] === 'avito-upload' && request.method === 'POST') {
+    try {
+      const { token } = await feedsAvitoAccount(env, feed);
+      const res = await avitoRequest(token, '/autoload/v1/upload', { method: 'POST' });
+      const text = await res.text();
+      if (!res.ok) return json({ error: `Авито не запустил загрузку (${res.status}). Обновлять можно не чаще раза в час. ${text.slice(0, 200)}` }, 400);
+      return json({ ok: true });
+    } catch (err) {
+      return json({ error: String(err.message || err) }, 400);
+    }
+  }
+
+  if (parts[1] === 'avito-connect' && request.method === 'POST') {
+    try {
+      const { token } = await feedsAvitoAccount(env, feed);
+      const input = (await readJson(request)) || {};
+      const before = await avitoJson(token, '/autoload/v2/profile').catch(() => null);
+      const reportEmail = String(input.reportEmail || (before && before.report_email) || '').trim();
+      if (!isValidEmail(reportEmail)) return json({ error: 'Укажите почту, на которую Авито будет присылать отчёты автозагрузки' }, 400);
+      const feedUrl = feedsPublicUrl(env, `/feed/${feed.slug}/avito.xml`);
+      const body = {
+        autoload_enabled: true,
+        report_email: reportEmail,
+        feeds_data: [{ feed_name: 'Cantor', feed_url: feedUrl }],
+        schedule: (before && Array.isArray(before.schedule) && before.schedule.length)
+          ? before.schedule
+          : [{ rate: 20000, weekdays: [0, 1, 2, 3, 4, 5, 6], time_slots: [...Array(24).keys()] }],
+      };
+      const res = await avitoRequest(token, '/autoload/v2/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const text = await res.text();
+      if (!res.ok) return json({ error: `Авито не сохранил настройки автозагрузки (${res.status}): ${text.slice(0, 300)}` }, 400);
+      return json({ ok: true, feedUrl, previousFeeds: (before && before.feeds_data) || (before && before.upload_url ? [{ feed_url: before.upload_url }] : []) });
+    } catch (err) {
+      return json({ error: String(err.message || err) }, 400);
+    }
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
+// Rebuilds enabled feeds older than ~an hour, a few per tick so one run stays well inside the limits.
+async function feedsCron(env) {
+  const kv = env.AVITO_KV;
+  const page = await kv.list({ prefix: 'feed:' });
+  let done = 0;
+  for (const k of page.keys) {
+    if (done >= 5) break;
+    const feed = await kv.get(k.name, 'json');
+    if (!feed || !feed.enabled) continue;
+    const stat = await kv.get('feedstat:' + feed.slug, 'json');
+    if (stat && Date.now() - Date.parse(stat.builtAt) < FEEDS_REBUILD_MS) continue;
+    await feedsBuild(env, feed).catch((err) => console.error('feed build failed', feed.slug, err && err.stack));
+    done++;
+  }
+}
+
 function withNoIndexHeader(response) {
   const headers = new Headers(response.headers);
   headers.set('X-Robots-Tag', 'noindex, nofollow');
@@ -9136,6 +9716,15 @@ export default {
       return withNoIndexHeader(withHtmlContentType(await env.ASSETS.fetch(new Request(assetUrl, request))));
     }
 
+    // Avito autoload feeds and their photos (see "Avito feeds"): Avito fetches these itself.
+    if (url.pathname.startsWith('/feed/')) {
+      try {
+        return await handleFeedPublic(request, env, url);
+      } catch (err) {
+        return new Response(`Server error: ${String(err && err.message)}`, { status: 500 });
+      }
+    }
+
     if (!url.pathname.startsWith('/api/')) {
       const response = withHtmlContentType(await env.ASSETS.fetch(request));
       return NOINDEX_ALLOWED_PATHS.has(url.pathname) ? response : withNoIndexHeader(response);
@@ -9159,5 +9748,6 @@ export default {
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
     ctx.waitUntil(avitoNotifyCron(env).catch((err) => console.error('avito notify cron failed', err && err.stack)));
     ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
+    ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
   },
 };
