@@ -3827,7 +3827,6 @@ function renderKbJobs() {
     const sentMeet = Boolean(j.meeting && j.meeting.sentAt);
     const links = sentMeet ? '' : [
       r && r.prUrl ? `<a href="${esc(r.prUrl)}" target="_blank" rel="noopener">PR на GitHub</a>` : '',
-      j.sessionUrl ? `<a href="${esc(j.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a>` : '',
     ].filter(Boolean).join(' · ');
     return `<div class="kb-job ${KB.focus === j.id ? 'flash' : ''}" data-kbjob="${esc(j.id)}">
       <div class="kb-job-head"><span class="tag ${cls}">${esc(sentMeet ? 'Отправлено' : r && !r.published && j.status === 'done' ? 'Готово, ждёт публикации' : label)}</span><span class="kb-job-meta">${avatar(author, 'xs')}${esc(first(j.byName))} · ${esc(ago(Date.parse(j.createdAt), now))}</span></div>
@@ -4685,7 +4684,7 @@ function renderAiMessages(toBottom) {
   }
   const mem = d.memory ? `<details class="ai-memory"><summary>${ico('spark', 'ic-sm')}Что Claude помнит из этого диалога</summary><div>${esc(d.memory)}</div></details>` : '';
   el.innerHTML = d.messages.length || p
-    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `Claude: ${esc(p.progress)}` : p.status === 'sent' ? 'Claude запускается…' : 'Claude разбирается…'}</div>${isOwner() && p.sessionUrl ? `<div class="ai-meta"><a href="${esc(p.sessionUrl)}" target="_blank" rel="noopener">Сессия Claude</a></div>` : ''}</div>` : ''}`
+    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `Claude: ${esc(p.progress)}` : p.status === 'sent' ? 'Claude запускается…' : 'Claude разбирается…'}</div></div>` : ''}`
     : `<div class="ai-hello">${ico('spark')}<b>Спросите Claude о чём угодно по работе</b><span>Он сам посмотрит данные клиентов и цифры дашборда, задачи, переписку в чатах, кабинеты Авито и базу знаний. Может сделать выгрузку файлом.</span>
       <div class="ai-examples">${['Что сейчас с клиентом Шевчук? Коротко: цифры, задачи, что ждёт ответа', 'Выгрузи статистику объявлений Ивана Кариентиди за последние 7 дней', 'У каких клиентов падают контакты за неделю?', 'Как по регламенту запускать нового клиента?'].map((x) => `<button class="chip" data-aiexample="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
   const send = $('aiSend');
