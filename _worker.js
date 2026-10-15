@@ -6579,6 +6579,11 @@ async function atSaveTask(env, team, user, input) {
     const s = input.status === 'done' && !inform ? 'closed' : input.status;
     const cur = task.status === 'open' ? (task.takenAt ? 'progress' : 'new') : task.status;
     if (s !== cur && ['new', 'progress', 'done', 'closed', 'cancelled'].includes(s)) {
+      // The reflection task closes itself once every client is rated — by hand only the owner or assistant.
+      if (existing && String(task.id).startsWith('trrefl') && ['done', 'closed'].includes(s) && !['owner', 'assistant'].includes(user.role)) {
+        const rec = await kv.get(`refl:${reflWeek(nowMs)}:${atAssigneeId(task, team.users)}`, 'json');
+        if (rec && rec.taskId === task.id && !rec.doneAt) return { error: 'refl_not_done', status: 409 };
+      }
       statusChange = s;
       if (s === 'new') Object.assign(task, { status: 'open', takenAt: null });
       if (s === 'progress') Object.assign(task, { status: 'open', takenAt: task.takenAt || now });
@@ -6935,6 +6940,23 @@ async function atReflectionCron(env, team, nowMs) {
   for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
     const key = `refl:${week}:${u.id}`;
     const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
+    // Closed by hand without rating anyone — open it again, once a week.
+    if (rec.taskId && !rec.doneAt && reflDone(rec, clients) < clients.length) {
+      const t = await kv.get(`task:${rec.taskId}`, 'json');
+      const last = t && Array.isArray(t.activity) ? t.activity[t.activity.length - 1] : null;
+      if (t && ['done', 'closed'].includes(t.status) && last && last.by === u.name && await botOnce(kv, `reflreopen:${week}:${u.id}`, 60 * 60 * 24 * 9)) {
+        Object.assign(t, { status: 'open', doneAt: null, informedAt: null, updatedAt: new Date(nowMs).toISOString(), updatedBy: 'Бот' });
+        t.activity = [...t.activity, { t: nowMs, by: 'Бот', what: `открыл снова: рефлексия не заполнена (${reflDone(rec, clients)} из ${clients.length}) — задача закроется сама, когда все клиенты будут оценены` }].slice(-20);
+        await kv.put(`task:${t.id}`, JSON.stringify(t));
+        if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(t.id, t);
+        await atTouch(kv, [t.id]);
+        await atNotify(env, team, [u.id], { kind: 'assigned', taskId: t.id, text: 'Рефлексия ещё не заполнена — задача снова открыта', by: 'Бот' }, {
+          text: `🪞 <b>Рефлексия ещё не заполнена</b>\nЗадачу закрыли, но клиенты не оценены (${reflDone(rec, clients)} из ${clients.length}). Она закроется сама, когда оцените всех.`,
+          extra: { reply_markup: { inline_keyboard: [[{ text: 'Заполнить рефлексию', url: `${AT_PAGE_URL}#reflection` }]] }, disable_notification: true },
+        });
+      }
+      continue;
+    }
     if (rec.taskId || rec.doneAt) continue;
     if (!(await botOnce(kv, `refltask:${week}:${u.id}`, 60 * 60 * 24 * 9))) continue;
     // Due at the end of the working day it is set (or the next one, if set after 18:00).

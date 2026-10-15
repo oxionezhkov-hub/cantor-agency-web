@@ -399,11 +399,8 @@ a{color:inherit}
 :root[data-theme="dark"]{--rc-1:#3987e5;--rc-2:#d95926;--rc-3:#199e70;--rc-4:#c98500;--rc-5:#d55181;--rc-6:#008300;--rc-7:#9085e9;--rc-8:#e66767}
 .rc-modal{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,calc(100% - 24px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
 .rc-body{overflow:auto;padding:14px 18px 18px;display:grid;gap:14px}
-.rc-legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--text)}
-.rc-key{display:inline-flex;align-items:center;gap:6px}
-.rc-key i,.rc-chip i,.rc-tip i{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
-.rc-key i.all{background:var(--ink)}
-.rc-chart{width:100%}
+.rc-chart{width:100%;position:relative}
+.rc-sw{width:18px;height:8px;flex:none}
 .rc-svg{width:100%;height:auto;display:block;touch-action:pan-y}
 .rc-grid{stroke:var(--line-2);stroke-width:1}
 .rc-ax{fill:var(--faint);font-size:11px}
@@ -412,7 +409,7 @@ a{color:inherit}
 .rc-line{fill:none;stroke:var(--c);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .rc-line-dot{fill:var(--c);stroke:var(--surface);stroke-width:2}
 .rc-cross{stroke:var(--line);stroke-width:1;stroke-dasharray:3 3}
-.rc-tip{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.1);display:grid;gap:3px}
+.rc-tip{position:absolute;top:6px;width:230px;max-height:calc(100% - 12px);overflow:hidden;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.1);display:grid;gap:3px}
 .rc-tip>b{color:var(--ink);font-size:12px;margin-bottom:2px}
 .rc-tip div{display:flex;align-items:center;gap:6px;min-width:0}
 .rc-tip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -424,6 +421,7 @@ a{color:inherit}
 .rc-chips{display:flex;flex-wrap:wrap;gap:6px}
 .rc-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--text)}
 .rc-chip.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+.rc-chip.avg{font-weight:600}
 .rc-chip:disabled{opacity:.45}
 @media (max-width:760px){.rc-modal{top:auto;bottom:0;transform:translateX(-50%);border-radius:20px 20px 0 0;width:100%;max-height:92vh}.rc-pick-head .search{margin-left:0;width:100%}}
 .rf-person.legacy{padding-left:12px}
@@ -2492,7 +2490,7 @@ async function saveTask(id, patch, opts) {
   } catch (e) {
     Object.assign(t, prev);
     rerenderCard(id);
-    toast('Не сохранилось — нет связи. Попробуйте ещё раз.');
+    toast(e && e.message === 'refl_not_done' ? 'Эта задача закроется сама, когда оцените всех клиентов во вкладке «Рефлексия».' : 'Не сохранилось — нет связи. Попробуйте ещё раз.');
   }
 }
 function openTask(id) {
@@ -3106,10 +3104,15 @@ async function renderReflectionResults() {
 }
 
 // ── «Динамика оценок»: средняя оценка клиентов по неделям, за всё время ──
-// Чёрная линия — среднее по всем клиентам; можно добавить до 8 клиентов — у каждого свой цвет,
-// который держится за клиентом, пока он выбран. Наведение — значения недели.
-const RC = { data: null, sel: [], q: '', hover: null };
-const RC_SLOTS = 8;
+// Сразу показаны все клиенты и среднее по всем (чёрная линия); снизу можно отключать по одному
+// или сбросить и выбрать нужных. Цвет закреплён за клиентом: 8 цветов, дальше — те же цвета
+// пунктиром и точками. Наведение — значения недели.
+const RC = { data: null, sel: null, q: '', hover: null, avg: true };
+const RC_DASH = ['', '7 5', '2 4'];
+function rcStyle(pid) {
+  const i = RC.data.clients.findIndex((c) => c.id === pid);
+  return { color: `var(--rc-${(i % 8) + 1})`, dash: RC_DASH[Math.floor(i / 8) % RC_DASH.length] };
+}
 async function openReflChart() {
   $('drawerRoot').innerHTML = `<div class="scrim" data-close></div><div class="rc-modal" role="dialog" aria-label="Динамика оценок"><div class="drawer-head"><h2>Динамика оценок клиентов</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div><div class="rc-body" id="rcBody"><div class="empty">Загружаю…</div></div></div>`;
   if (!RC.data) {
@@ -3119,9 +3122,12 @@ async function openReflChart() {
       RC.data = res.data.history;
     } catch (e) { if ($('rcBody')) $('rcBody').innerHTML = '<div class="empty">Не получилось загрузить — нет связи.</div>'; return; }
   }
+  if (!RC.sel) RC.sel = new Set(RC.data.clients.map((c) => c.id));
   renderReflChart();
 }
-function rcSlot(pid) { return RC.sel.findIndex((x) => x.id === pid); }
+function rcSwatch(st) {
+  return `<svg class="rc-sw" viewBox="0 0 18 8" aria-hidden="true"><line x1="1" y1="4" x2="17" y2="4" stroke="${st.color}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${st.dash}"/></svg>`;
+}
 function renderReflChart() {
   const el = $('rcBody');
   if (!el || !RC.data) return;
@@ -3129,15 +3135,17 @@ function renderReflChart() {
   if (!D.weeks.length) { el.innerHTML = '<div class="empty">Оценок пока нет.</div>'; return; }
   const q = RC.q.trim().toLowerCase();
   const chips = D.clients.filter((c) => !q || c.name.toLowerCase().includes(q)).map((c) => {
-    const slot = rcSlot(c.id);
-    return `<button class="rc-chip ${slot >= 0 ? 'on' : ''}" data-rc="${esc(c.id)}" ${slot < 0 && RC.sel.length >= RC_SLOTS ? 'disabled title="Не больше 8 клиентов сразу"' : ''}>${slot >= 0 ? `<i style="background:var(--rc-${slot + 1})"></i>` : ''}${esc(c.name)}${c.inactive ? ' <span class="muted">· неакт.</span>' : ''}</button>`;
+    const on = RC.sel.has(c.id);
+    return `<button class="rc-chip ${on ? 'on' : ''}" data-rc="${esc(c.id)}" aria-pressed="${on}">${on ? rcSwatch(rcStyle(c.id)) : ''}${esc(c.name)}${c.inactive ? ' <span class="muted">· неакт.</span>' : ''}</button>`;
   }).join('');
+  const all = RC.sel.size === D.clients.length;
   el.innerHTML = `
-    <div class="rc-legend"><span class="rc-key"><i class="all"></i>Все клиенты, в среднем</span>${RC.sel.map((s, i) => `<span class="rc-key"><i style="background:var(--rc-${i + 1})"></i>${esc(s.name)}</span>`).join('')}${RC.sel.length ? '<button class="btn btn-quiet btn-sm" data-rc-clear>Сбросить</button>' : ''}</div>
     <div class="rc-chart" id="rcChart">${rcSvg()}</div>
     <div class="rc-pick">
-      <div class="rc-pick-head"><b>Клиенты</b><span class="muted">${RC.sel.length ? `выбрано ${RC.sel.length} из ${RC_SLOTS}` : 'нажмите, чтобы добавить на график'}</span><div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="rcQ" type="search" placeholder="Найти клиента" value="${esc(RC.q)}" autocomplete="off"></div></div>
-      <div class="rc-chips">${chips || '<span class="muted">Никого не нашли</span>'}</div>
+      <div class="rc-pick-head"><b>Клиенты</b><span class="muted">на графике ${RC.sel.size} из ${D.clients.length}</span>
+        <button class="btn btn-quiet btn-sm" data-rc-all>${all ? 'Сбросить всех' : 'Выбрать всех'}</button>
+        <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="rcQ" type="search" placeholder="Найти клиента" value="${esc(RC.q)}" autocomplete="off"></div></div>
+      <div class="rc-chips"><button class="rc-chip avg ${RC.avg ? 'on' : ''}" data-rc-avg aria-pressed="${RC.avg}">${RC.avg ? rcSwatch({ color: 'var(--ink)', dash: '' }) : ''}Среднее по всем клиентам</button>${chips || '<span class="muted">Никого не нашли</span>'}</div>
     </div>`;
 }
 // Плавная линия через точки (Catmull-Rom → кривые Безье); неделю без оценок линия перешагивает.
@@ -3172,28 +3180,25 @@ function rcSvg() {
     const pts = D.weeks.map((w, i) => (vals[w] != null ? [x(i), RC_Y(vals[w])] : null));
     return `<path d="${rcPath(pts)}" class="${cls}" style="${style || ''}"/>${pts.map((p) => (p ? `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" class="${cls}-dot" style="${style || ''}"/>` : '')).join('')}`;
   };
-  const series = RC.sel.map((s, i) => line((D.clients.find((c) => c.id === s.id) || {}).points || {}, 'rc-line', `--c:var(--rc-${i + 1})`)).join('');
+  const series = D.clients.filter((c) => RC.sel.has(c.id)).map((c) => { const st = rcStyle(c.id); return line(c.points || {}, 'rc-line', `--c:${st.color};stroke-dasharray:${st.dash || 'none'}`); }).join('');
   const h = RC.hover;
-  const tip = h != null ? (() => {
-    const w = D.weeks[h];
-    const rows = [[`Все клиенты`, D.overall[w], 'var(--ink)'], ...RC.sel.map((s, i) => [s.name, ((D.clients.find((c) => c.id === s.id) || {}).points || {})[w], `var(--rc-${i + 1})`])];
-    return `<line x1="${x(h)}" x2="${x(h)}" y1="${RC_PAD.t}" y2="${RC_H - RC_PAD.b}" class="rc-cross"/>
-      <foreignObject x="${x(h) > RC_W / 2 ? x(h) - 236 : x(h) + 12}" y="${RC_PAD.t}" width="224" height="${40 + rows.length * 24}"><div xmlns="http://www.w3.org/1999/xhtml" class="rc-tip"><b>Неделя с ${dm(w)}</b>${rows.map(([name, v, c]) => `<div><i style="background:${c}"></i><span>${esc(name)}</span><b>${v == null ? '—' : String(v).replace('.', ',')}</b></div>`).join('')}</div></foreignObject>`;
-  })() : '';
+  const cross = h != null ? `<line x1="${x(h)}" x2="${x(h)}" y1="${RC_PAD.t}" y2="${RC_H - RC_PAD.b}" class="rc-cross"/>` : '';
   const hits = D.weeks.map((w, i) => `<rect x="${x(i) - (RC_W / n) / 2}" y="0" width="${RC_W / n}" height="${RC_H}" fill="transparent" data-rch="${i}"/>`).join('');
-  return `<svg viewBox="0 0 ${RC_W} ${RC_H}" class="rc-svg" role="img" aria-label="Средняя оценка клиентов по неделям">${grid}${xl}${line(D.overall, 'rc-all')}${series}${tip}${hits}</svg>`;
+  let tip = '';
+  if (h != null) {
+    const w = D.weeks[h];
+    const rows = D.clients.filter((c) => RC.sel.has(c.id)).map((c) => [c.name, (c.points || {})[w], rcStyle(c.id)]).filter((r) => r[1] != null).sort((a, b) => b[1] - a[1]);
+    if (RC.avg) rows.unshift(['Среднее по всем', D.overall[w], { color: 'var(--ink)', dash: '' }]);
+    const left = x(h) / RC_W * 100;
+    tip = `<div class="rc-tip" style="${left > 55 ? `right:${100 - left + 2}%` : `left:${left + 2}%`}"><b>Неделя с ${dm(w)}</b>${rows.length ? rows.map(([name, v, st]) => `<div>${rcSwatch(st)}<span>${esc(name)}</span><b>${v == null ? '—' : String(v).replace('.', ',')}</b></div>`).join('') : '<div><span class="muted">оценок нет</span></div>'}</div>`;
+  }
+  return `<svg viewBox="0 0 ${RC_W} ${RC_H}" class="rc-svg" role="img" aria-label="Средняя оценка клиентов по неделям">${grid}${xl}${series}${RC.avg ? line(D.overall, 'rc-all') : ''}${cross}${hits}</svg>${tip}`;
 }
 $('drawerRoot').addEventListener('click', (e) => {
   const c = e.target.closest('[data-rc]');
-  if (c) {
-    const pid = c.dataset.rc;
-    const slot = rcSlot(pid);
-    if (slot >= 0) RC.sel.splice(slot, 1);
-    else if (RC.sel.length < RC_SLOTS) { const cl = RC.data.clients.find((x) => x.id === pid); if (cl) RC.sel.push({ id: pid, name: cl.name }); }
-    renderReflChart();
-    return;
-  }
-  if (e.target.closest('[data-rc-clear]')) { RC.sel = []; renderReflChart(); }
+  if (c) { const pid = c.dataset.rc; if (RC.sel.has(pid)) RC.sel.delete(pid); else RC.sel.add(pid); renderReflChart(); return; }
+  if (e.target.closest('[data-rc-avg]')) { RC.avg = !RC.avg; renderReflChart(); return; }
+  if (e.target.closest('[data-rc-all]')) { RC.sel = RC.sel.size === RC.data.clients.length ? new Set() : new Set(RC.data.clients.map((x) => x.id)); renderReflChart(); }
 });
 $('drawerRoot').addEventListener('input', (e) => {
   if (e.target.id !== 'rcQ') return;
