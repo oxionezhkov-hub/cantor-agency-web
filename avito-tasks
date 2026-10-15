@@ -976,7 +976,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="top-right">
         <button class="icon-btn" id="bellBtn" aria-label="Уведомления"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" id="bellBadge" hidden></span></button>
         <button class="icon-btn" id="themeBtn" aria-label="Тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
-        <a class="icon-btn" id="kbLink" href="https://cantor.agency/base/" target="_blank" rel="noopener" title="База знаний" aria-label="База знаний"><svg class="ic"><use href="#i-book"/></svg></a>
+        <a class="icon-btn" id="kbLink" href="/base/" target="_blank" rel="noopener" title="База знаний" aria-label="База знаний"><svg class="ic"><use href="#i-book"/></svg></a>
         <a class="icon-btn" id="crmLink" href="/sales-crm" title="CRM продаж" aria-label="CRM продаж" hidden><svg class="ic"><use href="#i-crm"/></svg></a>
         <button class="me-btn" id="meBtn" aria-label="Профиль"><span class="avatar" id="meAvatar"></span></button>
       </div>
@@ -3432,7 +3432,7 @@ function renderActivity() {
         ${p.inTeam ? lane(p.key, first(p.name), 'Задачи', sum(r.a) ? `${sum(r.a)} действ.` : '—', r.a, 'a') : ''}
       </div>
       ${where.length ? `<div class="p-where">Где писал(а): ${where.map(([w, n]) => `<b>${esc(w)}</b> ${n}`).join(' · ')}</div>` : ''}
-      ${(r.sp || []).length ? `<div class="p-where">Что открывал(а) на сайте: ${r.sp.slice(0, 12).map((pg) => `<a href="https://cantor.agency${esc(pg.path)}" target="_blank" rel="noopener"><b>${esc(pg.t || pg.path)}</b></a>${pg.n > 1 ? ` ×${pg.n}` : ''}`).join(' · ')}${r.sp.length > 12 ? ` · и ещё ${r.sp.length - 12}` : ''}</div>` : ''}
+      ${(r.sp || []).length ? `<div class="p-where">Что открывал(а) на сайте: ${r.sp.slice(0, 12).map((pg) => `<a href="${esc(location.origin + pg.path)}" target="_blank" rel="noopener"><b>${esc(pg.t || pg.path)}</b></a>${pg.n > 1 ? ` ×${pg.n}` : ''}`).join(' · ')}${r.sp.length > 12 ? ` · и ещё ${r.sp.length - 12}` : ''}</div>` : ''}
     </div>`;
   }).join('');
   $('actBody').innerHTML = `<div class="legend"><span>Меньше</span>${[1, 2, 3, 4, 5].map((l) => `<span class="sw" style="background:var(--h${l})"></span>`).join('')}<span>Больше</span><span class="gap"></span><span class="sw" style="background:var(--h0)"></span><span>нет активности</span>${isToday ? '<span class="gap"></span><span class="sw" style="box-shadow:inset 0 0 0 2px var(--accent)"></span><span>сейчас</span>' : ''}</div>`
@@ -3482,7 +3482,10 @@ window.addEventListener('scroll', () => { if (tipEl) tipEl.hidden = true; }, { p
 // Новые знания уходят рутине Claude Code: она сама вносит их в регламенты cantor.agency/base и
 // публикует сайт. Отправил — и свободен: о готовности придёт уведомление здесь и в Telegram.
 // Список регламентов берётся из каталога /base/, поэтому новый регламент появится в нём сам.
-const KB_SITE = 'https://cantor.agency/base';
+// База знаний открывается на том же домене, что и трекер (cantor.agency или домен воркера) — без
+// перескока с одного на другой.
+const KB_SITE = `${location.origin}/base`;
+const siteUrl = (url) => String(url || '').replace(/^https:\/\/cantor\.agency(?=\/)/, location.origin);
 const K_KB_DRAFT = 'avitoTasks.kbDraft';
 const KB_FALLBACK = [
   ['Начало работы', 'zapusk-novogo-klienta', 'Регламент работы с новыми клиентами Авито'],
@@ -3685,7 +3688,7 @@ function renderKbJobs() {
         : `<textarea class="textarea kb-meet-text" data-kbmeet="${esc(j.id)}" rows="${Math.min(22, Math.max(10, Math.ceil((m.text || '').length / 48) + (m.text || '').split('\n').length))}">${esc(KB.meetDraft[j.id] != null ? KB.meetDraft[j.id] : m.text || '')}</textarea>
           <div class="kb-meet-actions"><span class="kb-hint">Первая строка — заголовок (будет жирным), пункты — с «•». Уйдёт в чат клиента и в его топик рабочего чата.</span><button class="btn btn-primary btn-sm" data-kbmeetsend="${esc(j.id)}">${ico('send', 'ic-sm')}Готово — отправить</button></div>`;
     } else if (j.status === 'done' && r) {
-      body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(c.url)}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
+      body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(siteUrl(c.url))}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
         ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
         ${r.published ? '' : '<div class="kb-note warn">Правки готовы, но ещё не опубликованы — PR ждёт проверки Олега.</div>'}`;
     } else if (kbIsActive(j)) {
