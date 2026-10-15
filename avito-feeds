@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Автозагрузка Авито — Cantor Agency</title>
+<link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<style>
+:root{
+  --accent:#E8391D;--accent-600:#C42D13;--accent-bg:#FFF0EB;--accent-ring:rgba(232,57,29,.16);
+  --bg:#F4F3F0;--surface:#fff;--surface-2:#FAF9F7;--sunken:#EFEDE9;--line:#E5E2DD;--line-2:#EEECE8;
+  --ink:#151515;--text:#2A2927;--muted:#76716A;--faint:#A7A29B;
+  --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--red:#D5311A;--red-bg:#FDEBE7;
+  --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);--shadow-lg:0 18px 48px rgba(22,20,18,.16);--scrim:rgba(18,16,14,.38);
+  --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--display:'Unbounded','Geologica',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+  --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;--line:#2E2C2A;--line-2:#282624;
+  --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--red:#FF6F57;--red-bg:#3D1812;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);--scrim:rgba(0,0,0,.55);color-scheme:dark;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 20px 60px;display:grid;gap:16px}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar h1{font:700 20px var(--display);color:var(--ink);margin:0;letter-spacing:-.01em}
+.bar .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 13px;cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--faint)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent-600)}
+.btn.danger{color:var(--red)}
+.btn[disabled]{opacity:.55;cursor:wait}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:11px 12px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.name{font-weight:600;color:var(--ink)}
+.sub{font-size:12px;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+.lnk{color:var(--accent);text-decoration:none;font-weight:500}
+.lnk:hover{text-decoration:underline}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;border:0;cursor:default}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+button.pill{cursor:pointer}
+.p-ok{color:var(--green);background:var(--green-bg)}.p-warn{color:var(--amber);background:var(--amber-bg)}.p-err{color:var(--red);background:var(--red-bg)}.p-off{color:var(--muted);background:var(--sunken)}
+.ico-row{display:flex;gap:4px}
+.ico{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted);padding:0}
+.ico:hover{color:var(--ink);border-color:var(--faint)}
+.ico[disabled]{opacity:.45;cursor:wait}
+.empty{padding:36px;text-align:center;color:var(--muted)}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:41;width:min(620px,calc(100% - 32px));max-height:min(88vh,820px);display:flex;flex-direction:column;background:var(--bg);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden}
+.modal.wide{width:min(900px,calc(100% - 32px))}
+.m-h{padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.m-h h2{font-size:16px;font-weight:600;color:var(--ink);margin:0;flex:1}
+.m-b{padding:16px 18px;overflow:auto;display:grid;gap:12px}
+.m-f{padding:12px 18px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.m-f .sp{flex:1}
+.f label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
+.f input,.f select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px;font-size:13.5px}
+.f input:focus,.f select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.row{display:flex;gap:8px}.row input{flex:1;min-width:0}
+.tabs-list{display:flex;flex-wrap:wrap;gap:6px}
+.tabs-list label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:12.5px;color:var(--text);cursor:pointer;margin:0}
+.tabs-list input{width:auto;accent-color:var(--accent)}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;color:var(--text)}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+.note{font-size:12.5px;color:var(--muted)}
+.note code,.mono{font-family:var(--mono);font-size:12px;background:var(--sunken);padding:1px 5px;border-radius:5px;color:var(--ink);overflow-wrap:anywhere}
+.prob{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.prob:last-child{border-bottom:0}
+.prob .w{font-size:12px;color:var(--muted)}
+.err-box{background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:13px}
+.gate{min-height:100vh;display:grid;place-items:center;padding:16px}
+.gate .card{padding:22px;width:min(360px,100%);display:grid;gap:12px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13px;box-shadow:var(--shadow-lg);z-index:60;max-width:min(560px,calc(100% - 32px))}
+@media (max-width:640px){.wrap{padding:14px 16px 50px}.prob{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <form class="card" id="gateForm">
+    <div class="f"><label for="gatePw">Пароль дашборда</label><input id="gatePw" type="password" autocomplete="current-password"></div>
+    <div class="note" id="gateErr"></div>
+    <button class="btn pri" type="submit">Войти</button>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <div class="bar">
+    <h1>Автозагрузка Авито</h1>
+    <span class="sp"></span>
+    <button class="btn" id="reloadAll" type="button">Обновить список</button>
+    <button class="btn pri" id="addBtn" type="button">+ Клиент</button>
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Клиент</th><th>Таблица</th><th>Вкладки</th><th>Объявлений</th><th>Ошибки</th><th>XML обновлён</th><th>Фид</th><th></th></tr></thead>
+        <tbody id="rows"><tr><td colspan="8" class="empty">Загрузка…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- клиент: добавить / изменить -->
+<div class="modal" id="edit" role="dialog" aria-modal="true" aria-labelledby="eTitle" hidden>
+  <div class="m-h"><h2 id="eTitle">Новый клиент</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <form class="m-b" id="eForm" novalidate>
+    <div class="f"><label for="eName">Имя клиента</label><input id="eName" maxlength="60" required></div>
+    <div class="f">
+      <label for="eSheet">Ссылка на Google Таблицу</label>
+      <div class="row"><input id="eSheet" inputmode="url" required><button class="btn" type="button" id="eLoadTabs">Загрузить вкладки</button></div>
+      <div class="note" id="eAccess" style="margin-top:6px"></div>
+    </div>
+    <div class="f"><label>Вкладки с объявлениями</label><div class="tabs-list" id="eTabs"><span class="note">Загрузите вкладки из таблицы</span></div></div>
+    <div class="f"><label for="eAccount">Аккаунт Авито</label><select id="eAccount"></select></div>
+    <label class="check"><input type="checkbox" id="eEnabled" checked> Пересобирать XML каждый час</label>
+    <div class="err-box" id="eErr" hidden></div>
+  </form>
+  <div class="m-f">
+    <button class="btn danger" type="button" id="eDelete" hidden>Удалить клиента</button>
+    <span class="sp"></span>
+    <button class="btn" type="button" data-close>Отмена</button>
+    <button class="btn pri" type="submit" form="eForm" id="eSave">Сохранить</button>
+  </div>
+</div>
+
+<!-- ошибки сборки -->
+<div class="modal wide" id="probs" role="dialog" aria-modal="true" aria-labelledby="pTitle" hidden>
+  <div class="m-h"><h2 id="pTitle"></h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <div class="m-b" id="pBody"></div>
+</div>
+
+<!-- подключить на Авито -->
+<div class="modal" id="connect" role="dialog" aria-modal="true" aria-labelledby="cTitle" hidden>
+  <div class="m-h"><h2 id="cTitle">Подключить на Авито</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <form class="m-b" id="cForm" novalidate>
+    <div class="note" id="cInfo"></div>
+    <div class="f"><label for="cEmail">Почта для отчётов автозагрузки Авито</label><input id="cEmail" type="email" placeholder="если пусто — оставим ту, что уже в Авито"></div>
+    <div class="err-box" id="cErr" hidden></div>
+    <div id="cDone" hidden></div>
+  </form>
+  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="submit" form="cForm" id="cSave">Подключить</button></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// cantor.agency — статичный nginx, API живёт в воркере. Из РФ без VPN workers.dev часто не открывается,
+// поэтому, как и дашборд, ходим через Яндекс-функцию (yc-dashboard-api-proxy) с запасным прямым адресом.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const API_PROXY_URL = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch';
+const ROUTES = location.hostname.endsWith('workers.dev')
+  ? [(p) => location.origin + p, (p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`]
+  : [(p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`, (p) => API_BASE + p];
+let route = 0;
+const PW_KEY = 'agency_dashboard_pw';
+const getPw = () => { try { return localStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } };
+
+async function api(path, opts = {}, pw) {
+  let lastErr;
+  for (let i = 0; i < ROUTES.length; i++) {
+    const idx = (route + i) % ROUTES.length;
+    try {
+      const res = await fetch(ROUTES[idx](path), { ...opts, headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw || getPw() }, signal: AbortSignal.timeout(60000) });
+      route = idx;
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, ok: res.ok, data };
+    } catch (e) { lastErr = e; }
+  }
+  return { status: 0, ok: false, data: { error: 'Нет связи с сервером, попробуйте ещё раз' } };
+}
+
+let tt;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 4500); }
+
+let state = { feeds: [], accounts: [], serviceAccount: null };
+
+async function load() {
+  const r = await api('/api/dashboard/feeds');
+  if (r.status === 401) return showGate();
+  if (!r.ok) { $('#rows').innerHTML = `<tr><td colspan="8" class="empty">${esc(r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
+  state = r.data;
+  render();
+}
+
+function ago(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso), m = Math.round((Date.now() - d) / 60000);
+  if (m < 1) return 'только что';
+  if (m < 60) return m + ' мин назад';
+  return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
+}
+
+const ICO = {
+  link: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>',
+  build: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/></svg>',
+  avito: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>',
+  plug: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0V8zM12 18v4"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+};
+
+function render() {
+  const rows = state.feeds.map((f) => {
+    const s = f.stat;
+    const tabErr = s && s.tabs ? s.tabs.filter((t) => t.error).length : 0;
+    const n = s ? (s.error ? 1 : 0) + tabErr + (s.problems || []).length : 0;
+    const pill = !s ? '<span class="pill p-off">не собран</span>'
+      : s.error ? `<button class="pill p-err" data-probs="${f.slug}" type="button">не собран</button>`
+      : n ? `<button class="pill p-warn" data-probs="${f.slug}" type="button">${n}</button>`
+      : '<span class="pill p-ok">нет</span>';
+    return `<tr>
+      <td><div class="name">${esc(f.name)}</div><div class="sub">${f.enabled ? '' : 'автообновление выключено'}</div></td>
+      <td><a class="lnk" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть ↗</a></td>
+      <td class="sub">${f.tabs.map(esc).join('<br>')}</td>
+      <td class="num">${s && !s.error ? s.ads : '—'}</td>
+      <td>${pill}</td>
+      <td class="num sub" title="${esc(s && s.builtAt || '')}">${ago(s && s.builtAt)}</td>
+      <td><div class="ico-row"><button class="ico" type="button" data-copy="${f.slug}" title="Скопировать ссылку на XML для Авито" aria-label="Скопировать ссылку на XML">${ICO.link}</button></div></td>
+      <td><div class="ico-row">
+        <button class="ico" type="button" data-build="${f.slug}" title="Обновить XML сейчас" aria-label="Обновить XML">${ICO.build}</button>
+        <button class="ico" type="button" data-upload="${f.slug}" title="Обновить в Авито сейчас (раз в час)" aria-label="Обновить в Авито">${ICO.avito}</button>
+        <button class="ico" type="button" data-connect="${f.slug}" title="Подключить на Авито" aria-label="Подключить на Авито">${ICO.plug}</button>
+        <button class="ico" type="button" data-edit="${f.slug}" title="Редактировать" aria-label="Редактировать">${ICO.edit}</button>
+      </div></td>
+    </tr>`;
+  });
+  $('#rows').innerHTML = rows.join('') || '<tr><td colspan="8" class="empty">Клиентов пока нет. Нажмите «+ Клиент».</td></tr>';
+}
+
+const feedBy = (slug) => state.feeds.find((f) => f.slug === slug);
+function replaceFeed(f) { const i = state.feeds.findIndex((x) => x.slug === f.slug); if (i >= 0) state.feeds[i] = f; else state.feeds.push(f); render(); }
+
+$('#rows').addEventListener('click', async (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.copy) {
+    const url = feedBy(b.dataset.copy).feedUrl;
+    try { await navigator.clipboard.writeText(url); toast('Ссылка на XML скопирована'); } catch (err) { toast(url); }
+  } else if (b.dataset.build) {
+    b.disabled = true;
+    const r = await api(`/api/dashboard/feeds/${b.dataset.build}/build`, { method: 'POST' });
+    b.disabled = false;
+    if (!r.ok) return toast(r.data.error || 'Не удалось собрать XML');
+    replaceFeed(r.data.feed);
+    const s = r.data.feed.stat;
+    toast(s.error ? 'XML не собран: ' + s.error : `XML собран: ${s.ads} объявлений`);
+  } else if (b.dataset.upload) {
+    b.disabled = true;
+    const r = await api(`/api/dashboard/feeds/${b.dataset.upload}/avito-upload`, { method: 'POST' });
+    b.disabled = false;
+    toast(r.ok ? 'Авито начал загрузку. Результат появится в отчёте автозагрузки через 10–30 минут.' : (r.data.error || 'Авито не принял запрос'));
+  } else if (b.dataset.connect) openConnect(b.dataset.connect);
+  else if (b.dataset.edit) openEdit(b.dataset.edit);
+  else if (b.dataset.probs) openProbs(b.dataset.probs);
+});
+
+/* ── модалки ── */
+let openModal = null;
+function show(id) { openModal = $(id); openModal.hidden = false; $('#scrim').hidden = false; const f = openModal.querySelector('input,select,button'); if (f) setTimeout(() => f.focus(), 30); }
+function hide() { if (openModal) openModal.hidden = true; $('#scrim').hidden = true; openModal = null; }
+document.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target.id === 'scrim') hide(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && openModal) hide(); });
+
+let editing = null;
+function openEdit(slug) {
+  editing = slug ? feedBy(slug) : null;
+  $('#eTitle').textContent = editing ? editing.name : 'Новый клиент';
+  $('#eName').value = editing ? editing.name : '';
+  $('#eSheet').value = editing ? editing.sheetUrl : '';
+  $('#eEnabled').checked = editing ? editing.enabled : true;
+  $('#eAccount').innerHTML = '<option value="">— не привязан —</option>' + state.accounts.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+  $('#eAccount').value = editing && editing.avitoAccountId || '';
+  $('#eDelete').hidden = !editing;
+  $('#eDelete').dataset.sure = ''; $('#eDelete').textContent = 'Удалить клиента';
+  $('#eErr').hidden = true;
+  $('#eAccess').innerHTML = state.serviceAccount
+    ? `Дайте доступ к таблице на чтение адресу <span class="mono">${esc(state.serviceAccount)}</span>`
+    : 'В таблице: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».';
+  renderTabs(editing ? editing.tabs : [], editing ? editing.tabs : []);
+  show('#edit');
+}
+function renderTabs(all, checked) {
+  $('#eTabs').innerHTML = all.length
+    ? all.map((t) => `<label><input type="checkbox" value="${esc(t)}" ${checked.includes(t) ? 'checked' : ''}>${esc(t)}</label>`).join('')
+    : '<span class="note">Загрузите вкладки из таблицы</span>';
+}
+const SKIP_TABS = /справк|файл из авито|уникализац|дубли|сюда выгрузка|яндекс\.диск|тексты|позиции/i;
+$('#eLoadTabs').addEventListener('click', async () => {
+  const sheet = $('#eSheet').value.trim();
+  if (!sheet) return $('#eSheet').focus();
+  const b = $('#eLoadTabs'); b.disabled = true;
+  const r = await api('/api/dashboard/feeds/tabs?sheet=' + encodeURIComponent(sheet));
+  b.disabled = false;
+  if (!r.ok) { $('#eErr').textContent = r.data.error || 'Не удалось открыть таблицу'; $('#eErr').hidden = false; return; }
+  $('#eErr').hidden = true;
+  const current = [...document.querySelectorAll('#eTabs input:checked')].map((i) => i.value);
+  const pre = current.length ? current : r.data.tabs.filter((t) => !SKIP_TABS.test(t));
+  renderTabs(r.data.tabs, pre);
+});
+$('#eForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(),
+    tabs: [...document.querySelectorAll('#eTabs input:checked')].map((i) => i.value),
+    avitoAccountId: $('#eAccount').value, enabled: $('#eEnabled').checked,
+  };
+  const b = $('#eSave'); b.disabled = true; b.textContent = editing ? 'Сохраняю…' : 'Собираю XML…';
+  const r = editing
+    ? await api('/api/dashboard/feeds/' + editing.slug, { method: 'PUT', body: JSON.stringify(body) })
+    : await api('/api/dashboard/feeds', { method: 'POST', body: JSON.stringify(body) });
+  b.disabled = false; b.textContent = 'Сохранить';
+  if (!r.ok) { $('#eErr').textContent = r.data.error || 'Не удалось сохранить'; $('#eErr').hidden = false; return; }
+  replaceFeed(r.data.feed);
+  hide();
+  const s = r.data.feed.stat;
+  toast(editing ? 'Сохранено' : (s && s.error ? 'Клиент добавлен, но XML не собран: ' + s.error : `Клиент добавлен, в XML ${s ? s.ads : 0} объявлений`));
+});
+$('#eDelete').addEventListener('click', async () => {
+  if ($('#eDelete').dataset.sure !== editing.slug) { $('#eDelete').dataset.sure = editing.slug; $('#eDelete').textContent = 'Точно удалить? Ссылка на XML перестанет работать'; return; }
+  const r = await api('/api/dashboard/feeds/' + editing.slug, { method: 'DELETE' });
+  $('#eDelete').dataset.sure = ''; $('#eDelete').textContent = 'Удалить клиента';
+  if (!r.ok) return toast(r.data.error || 'Не удалось удалить');
+  state.feeds = state.feeds.filter((f) => f.slug !== editing.slug);
+  render(); hide(); toast('Клиент удалён');
+});
+
+function openProbs(slug) {
+  const f = feedBy(slug), s = f.stat || {};
+  $('#pTitle').textContent = 'Ошибки — ' + f.name;
+  const items = [];
+  if (s.error) items.push(['Таблица', s.error]);
+  (s.tabs || []).filter((t) => t.error).forEach((t) => items.push(['Вкладка «' + t.name + '»', t.error]));
+  (s.problems || []).forEach((p) => items.push([[p.tab && '«' + p.tab + '»', p.row && 'строка ' + p.row, p.id && 'id ' + p.id].filter(Boolean).join(', ') || 'Таблица', p.msg]));
+  $('#pBody').innerHTML = items.map(([w, m]) => `<div class="prob"><div class="w">${esc(w)}</div><div>${esc(m)}</div></div>`).join('') || '<div class="note">Ошибок нет</div>';
+  show('#probs');
+}
+
+let connecting = null;
+function openConnect(slug) {
+  connecting = feedBy(slug);
+  const acc = state.accounts.find((a) => a.id === connecting.avitoAccountId);
+  $('#cInfo').innerHTML = acc
+    ? `В настройки автозагрузки аккаунта Авито «${esc(acc.name)}» запишется ссылка на наш XML вместо текущей (например, BananLab). Объявления не удалятся: у них те же id.`
+    : 'Сначала привяжите аккаунт Авито в «Редактировать».';
+  $('#cSave').disabled = !acc;
+  $('#cEmail').value = ''; $('#cErr').hidden = true; $('#cDone').hidden = true;
+  show('#connect');
+}
+$('#cForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const b = $('#cSave'); b.disabled = true;
+  const r = await api(`/api/dashboard/feeds/${connecting.slug}/avito-connect`, { method: 'POST', body: JSON.stringify({ reportEmail: $('#cEmail').value.trim() }) });
+  b.disabled = false;
+  if (!r.ok) { $('#cErr').textContent = r.data.error || 'Авито не принял настройки'; $('#cErr').hidden = false; return; }
+  const prev = (r.data.previousFeeds || []).map((p) => p.feed_url).filter(Boolean);
+  $('#cDone').innerHTML = `<div class="note">Готово. Авито заберёт наш XML при следующей загрузке.${prev.length ? ' Раньше стояло: ' + prev.map((u) => '<span class="mono">' + esc(u) + '</span>').join(', ') + ' — сохраните, если понадобится вернуть.' : ''}</div>`;
+  $('#cDone').hidden = false; $('#cErr').hidden = true;
+});
+
+$('#addBtn').addEventListener('click', () => openEdit(null));
+$('#reloadAll').addEventListener('click', load);
+
+/* ── вход ── */
+function showGate() { $('#app').hidden = true; $('#gate').hidden = false; setTimeout(() => $('#gatePw').focus(), 30); }
+$('#gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = $('#gatePw').value;
+  const r = await api('/api/dashboard/feeds', {}, pw);
+  if (r.status === 401) { $('#gateErr').textContent = 'Неверный пароль'; return; }
+  try { localStorage.setItem(PW_KEY, pw); } catch (err) {}
+  $('#gate').hidden = true; $('#app').hidden = false;
+  if (r.ok) { state = r.data; render(); } else load();
+});
+
+if (getPw()) { $('#app').hidden = false; load(); } else showGate();
+})();
+</script>
+</body>
+</html>

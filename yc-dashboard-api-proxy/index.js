@@ -8,6 +8,8 @@
 // Дашборд зовёт: <адрес функции>?p=<путь воркера с query>, например
 //   ?p=%2Fapi%2Fdashboard%2Fbootstrap
 // Пропускаются только пути /api/dashboard/* — это не открытый прокси.
+// И ещё GET /feed/<клиент>/… — XML-фиды автозагрузки и их фото: Авито забирает
+// их по ссылке, а workers.dev из РФ открывается не всегда (FEEDS_PROXY_URL в воркере).
 // Сюда же входит API стажировки (cantor.agency/academy → /api/dashboard/academy/*).
 
 const TARGET_ORIGIN = process.env.TARGET_ORIGIN || 'https://mainweb.oxion-ezhkov.workers.dev';
@@ -30,7 +32,8 @@ module.exports.handler = async function (event) {
   if (method === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
 
   const path = (event.queryStringParameters || {}).p || '';
-  if (!/^\/api\/dashboard\/[A-Za-z0-9/_-]*(\?.*)?$/.test(path)) {
+  const isFeed = (method === 'GET' || method === 'HEAD') && /^\/feed\/[a-z0-9-]{4,60}\/(avito\.xml|img\/[0-9a-f]{20}\/[A-Za-z0-9_-]+\.[a-z]{3,4})$/.test(path);
+  if (!isFeed && !/^\/api\/dashboard\/[A-Za-z0-9/_-]*(\?.*)?$/.test(path)) {
     return { statusCode: 400, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'bad_path' }) };
   }
 
@@ -48,7 +51,7 @@ module.exports.handler = async function (event) {
     const res = await fetch(TARGET_ORIGIN + path, { method, headers, body, signal: AbortSignal.timeout(28000) });
     const buf = Buffer.from(await res.arrayBuffer());
     const contentType = res.headers.get('content-type') || 'application/octet-stream';
-    const isText = /json|text/.test(contentType);
+    const isText = /json|text|xml/.test(contentType);
     const out = { ...CORS, 'Content-Type': contentType };
     const disposition = res.headers.get('content-disposition');
     if (disposition) out['Content-Disposition'] = disposition;
