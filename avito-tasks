@@ -3665,6 +3665,9 @@ function renderKbRegs() {
 
 function renderKbJobs() {
   const el = $('kbJobs');
+  // Перерисовка (опрос раз в 20 с, уведомления) не должна сбивать курсор в редактируемых итогах встречи.
+  const ae = document.activeElement;
+  const editing = ae && el.contains(ae) && ae.dataset.kbmeet ? { id: ae.dataset.kbmeet, a: ae.selectionStart, b: ae.selectionEnd, dir: ae.selectionDirection, top: ae.scrollTop } : null;
   if (!KB.jobs) { el.innerHTML = '<div class="empty">Загружаю…</div>'; return; }
   const jobs = KB.jobs.filter((j) => j.status !== 'draft');
   if (!jobs.length) { el.innerHTML = `<div class="empty">${ico('book')}<div style="margin-top:6px">Здесь будут ваши обновления базы знаний и что Claude по ним сделал.</div></div>`; return; }
@@ -3703,6 +3706,10 @@ function renderKbJobs() {
       ${links ? `<div class="kb-job-links">${links}</div>` : ''}
     </div>`;
   }).join('');
+  if (editing) {
+    const t = el.querySelector(`[data-kbmeet="${CSS.escape(editing.id)}"]`);
+    if (t) { t.focus({ preventScroll: true }); t.setSelectionRange(editing.a, editing.b, editing.dir); t.scrollTop = editing.top; }
+  }
   if (KB.focus) {
     const card = el.querySelector(`[data-kbjob="${CSS.escape(KB.focus)}"]`);
     if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
@@ -3828,13 +3835,20 @@ async function kbSubmit() {
     kbSaveDraft();
     KB.jobs = [sent.data.job, ...(KB.jobs || []).filter((j) => j.id !== sent.data.job.id)];
     renderKbForm(); renderKbJobs();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    loadKbJobs();
+    kbToTop();
+    loadKbJobs().then(kbToTop);
   } catch (e) {
     KB.sending = null;
     renderKbForm();
     toast(e && e.message && !/fetch|network|abort/i.test(e.message) ? e.message : 'Нет связи — ничего не потерялось, попробуйте ещё раз', null, null, 7000);
   }
+}
+
+// После отправки Claude — наверх, к карточке «Отправлено». Без плавной прокрутки: её обрывает следующая перерисовка.
+function kbToTop() {
+  if (S.view !== 'kb') return;
+  window.scrollTo(0, 0);
+  requestAnimationFrame(() => window.scrollTo(0, 0));
 }
 
 async function kbRetry(id, btn) {
@@ -3844,8 +3858,9 @@ async function kbRetry(id, btn) {
     if (!res || !res.ok) throw new Error();
     const job = res.data.job;
     KB.jobs = (KB.jobs || []).map((j) => (j.id === job.id ? job : j));
-    if (KB.sent && KB.sent.id === job.id) KB.sent = job;
+    KB.sent = job;
     renderKbForm(); renderKbJobs();
+    kbToTop();
     toast(job.status === 'sent' ? 'Отправлено — Claude взялся за работу' : job.status === 'not_configured' ? 'Рутина всё ещё не подключена' : 'Снова не получилось — подробности в карточке');
     loadKbJobs();
   } catch (e) { if (btn) btn.disabled = false; toast('Не получилось — проверьте интернет'); }
