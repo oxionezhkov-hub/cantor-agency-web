@@ -392,6 +392,42 @@ a{color:inherit}
 .rf-row .nm{font-weight:600;color:var(--ink);font-size:14px}
 .rf-row .cm{font-size:13px;color:var(--muted)}
 .rf-row button{margin-left:auto;flex:none}
+.rf-row.skip .sc{background:var(--line);color:var(--muted)}
+/* Динамика оценок: категориальная палитра (8 цветов, проверена на различимость), своя для тёмной темы */
+:root{--rc-1:#2a78d6;--rc-2:#eb6834;--rc-3:#1baf7a;--rc-4:#eda100;--rc-5:#e87ba4;--rc-6:#008300;--rc-7:#6250d6;--rc-8:#e34948}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rc-1:#3987e5;--rc-2:#d95926;--rc-3:#199e70;--rc-4:#c98500;--rc-5:#d55181;--rc-6:#008300;--rc-7:#9085e9;--rc-8:#e66767}}
+:root[data-theme="dark"]{--rc-1:#3987e5;--rc-2:#d95926;--rc-3:#199e70;--rc-4:#c98500;--rc-5:#d55181;--rc-6:#008300;--rc-7:#9085e9;--rc-8:#e66767}
+.rc-modal{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,calc(100% - 24px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
+.rc-body{overflow:auto;padding:14px 18px 18px;display:grid;gap:14px}
+.rc-legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--text)}
+.rc-key{display:inline-flex;align-items:center;gap:6px}
+.rc-key i,.rc-chip i,.rc-tip i{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.rc-key i.all{background:var(--ink)}
+.rc-chart{width:100%}
+.rc-svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.rc-grid{stroke:var(--line-2);stroke-width:1}
+.rc-ax{fill:var(--faint);font-size:11px}
+.rc-all{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.rc-all-dot{fill:var(--ink);stroke:var(--surface);stroke-width:2}
+.rc-line{fill:none;stroke:var(--c);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rc-line-dot{fill:var(--c);stroke:var(--surface);stroke-width:2}
+.rc-cross{stroke:var(--line);stroke-width:1;stroke-dasharray:3 3}
+.rc-tip{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12px;color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.1);display:grid;gap:3px}
+.rc-tip>b{color:var(--ink);font-size:12px;margin-bottom:2px}
+.rc-tip div{display:flex;align-items:center;gap:6px;min-width:0}
+.rc-tip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-tip div b{color:var(--ink)}
+.rc-pick{display:grid;gap:10px;border-top:1px solid var(--line-2);padding-top:12px}
+.rc-pick-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rc-pick-head .muted{font-size:13px}
+.rc-pick-head .search{margin-left:auto;width:min(240px,100%)}
+.rc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.rc-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--text)}
+.rc-chip.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+.rc-chip:disabled{opacity:.45}
+@media (max-width:760px){.rc-modal{top:auto;bottom:0;transform:translateX(-50%);border-radius:20px 20px 0 0;width:100%;max-height:92vh}.rc-pick-head .search{margin-left:0;width:100%}}
+.rf-person.legacy{padding-left:12px}
+.rf-spacer{width:1px}
 .rf-res{display:grid;gap:12px}
 .rf-people{display:flex;flex-wrap:wrap;gap:8px}
 .rf-person{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600}
@@ -2877,7 +2913,7 @@ function reflClientsList() {
   if (!r) return [];
   return r.clients.map((id) => projectById(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
-function reflAnswered(p) { const a = S.reflection && S.reflection.answers[p.id]; return !!(a && a.score > 0); }
+function reflAnswered(p) { const a = S.reflection && S.reflection.answers[p.id]; return !!(a && (a.score > 0 || a.skip)); }
 function reflLeft() { const r = S.reflection; if (!r) return 0; return reflClientsList().filter((p) => !reflAnswered(p)).length; }
 function rfDraft(pid) {
   const d = (RF.local.drafts || {})[pid];
@@ -2907,7 +2943,9 @@ function renderReflection() {
       <div class="big">${ico('check')}</div>
       <h2>Готово — спасибо!</h2>
       <div class="muted">Все ${list.length} ${plural(list.length, 'клиент оценён', 'клиента оценены', 'клиентов оценены')}. До следующей среды здесь ничего не нужно.</div>
-      <div class="rf-list">${list.map((p) => { const a = r.answers[p.id]; return `<div class="rf-row" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cm">${esc(a.comment || '—')}</div></div><button class="btn btn-quiet btn-sm" data-rf-edit="${esc(p.id)}">${ico('edit', 'ic-sm')}</button></div>`; }).join('')}</div>
+      <div class="rf-list">${list.map((p) => { const a = r.answers[p.id]; return a.skip
+        ? `<div class="rf-row skip"><span class="sc">—</span><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cm">не веду этот кабинет</div></div><button class="btn btn-quiet btn-sm" data-rf-edit="${esc(p.id)}">${ico('edit', 'ic-sm')}</button></div>`
+        : `<div class="rf-row" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cm">${esc(a.comment || '—')}</div></div><button class="btn btn-quiet btn-sm" data-rf-edit="${esc(p.id)}">${ico('edit', 'ic-sm')}</button></div>`; }).join('')}</div>
     </div></div></div>`;
     return;
   }
@@ -2937,6 +2975,7 @@ function renderReflection() {
     <div class="rf-actions">
       <button class="btn btn-ghost btn-sm" data-rf-prev ${RF.idx === 0 ? 'disabled' : ''}>← Назад</button>
       <span class="grow"></span>
+      <button class="btn btn-ghost btn-sm" data-rf-skip ${RF.saving ? 'disabled' : ''} title="Кабинет ведёт кто-то другой — пропустить, в среднюю оценку не попадёт">Не веду этот кабинет</button>
       <button class="btn btn-primary" data-rf-next ${!d.score || d.comment.trim().length < 3 || RF.saving ? 'disabled' : ''}>${RF.editing != null ? 'Сохранить' : left <= 1 && !reflAnswered(p) ? 'Завершить' : 'Дальше →'}</button>
     </div>
   </div></div>`;
@@ -2949,12 +2988,12 @@ function rfRefreshNext() {
   if (b) b.disabled = !d.score || d.comment.trim().length < 3 || RF.saving;
   const c = $('rfCount'); if (c) c.textContent = `${d.comment.length}/400`;
 }
-async function rfSave(pid) {
+async function rfSave(pid, skip) {
   const r = S.reflection;
   const d = rfDraft(pid);
   RF.saving = true; rfRefreshNext();
   // Отправляем все известные ответы недели — сервер объединит их со своими.
-  const answers = Object.assign({}, r.answers, { [pid]: { score: d.score, comment: d.comment.trim() } });
+  const answers = Object.assign({}, r.answers, { [pid]: skip ? { skip: true } : { score: d.score, comment: d.comment.trim() } });
   try {
     const res = await api('refl-save', { week: r.week, answers });
     if (res.status === 409) { toast('Неделя сменилась — открылась новая рефлексия'); await sync(false); return false; }
@@ -2973,6 +3012,7 @@ $('rfBody').addEventListener('click', async (e) => {
   const card = e.target.closest('[data-rf]');
   const edit = e.target.closest('[data-rf-edit]');
   if (edit) { RF.editing = edit.dataset.rfEdit; renderReflection(); return; }
+  if (e.target.closest('[data-rf-chart]')) { openReflChart(); return; }
   const prevR = e.target.closest('[data-rf-week]');
   if (prevR) { RF.resultsWeek = prevR.dataset.rfWeek; RF.results = null; renderReflectionResults(); return; }
   if (!card) return;
@@ -2980,9 +3020,10 @@ $('rfBody').addEventListener('click', async (e) => {
   const sc = e.target.closest('[data-score]');
   if (sc) { rfSetDraft(pid, { score: Number(sc.dataset.score) }); renderReflection(); const t = $('rfComment'); if (t && !t.value) t.focus({ preventScroll: true }); return; }
   if (e.target.closest('[data-rf-prev]')) { RF.editing = null; RF.idx = Math.max(0, RF.idx - 1); renderReflection(); return; }
-  if (e.target.closest('[data-rf-next]')) {
+  const skipBtn = e.target.closest('[data-rf-skip]');
+  if (e.target.closest('[data-rf-next]') || skipBtn) {
     const wasEditing = RF.editing != null;
-    if (!(await rfSave(pid))) return;
+    if (!(await rfSave(pid, Boolean(skipBtn)))) return;
     RF.editing = null;
     const list = reflClientsList();
     if (!wasEditing) {
@@ -3023,20 +3064,131 @@ async function renderReflectionResults() {
   const week = R.week;
   const prevWeek = new Date(Date.parse(week + 'T12:00:00Z') - 7 * 86400000).toISOString().slice(0, 10);
   const nextWeek = new Date(Date.parse(week + 'T12:00:00Z') + 7 * 86400000).toISOString().slice(0, 10);
-  $('rfSub').textContent = `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки 1–10 от сотрудников, по одной на клиента. Задача «заполнить рефлексию» ставится каждую среду.`;
-  const person = (u) => `<span class="rf-person">${avatar(userById(u.id) || u, 'xs')}${esc(first(u.name))} <span class="st">${u.done >= clients.length && clients.length ? 'готово' : `${u.done}/${clients.length}`}</span></span>`;
+  $('rfSub').textContent = R.legacy
+    ? `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки из старого дашборда: от менеджера, специалиста и клиента.`
+    : `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки 1–10 от сотрудников, по одной на клиента. Задача «заполнить рефлексию» ставится каждую среду.`;
+  const who = (u) => (u.legacy ? u.name : first(u.name));
+  const person = (u) => (u.legacy
+    ? `<span class="rf-person legacy">${esc(u.name)} <span class="st">${u.done}</span></span>`
+    : `<span class="rf-person">${avatar(userById(u.id) || u, 'xs')}${esc(first(u.name))} <span class="st">${u.done >= clients.length && clients.length ? 'готово' : `${u.done}/${clients.length}`}</span></span>`);
   $('rfBody').innerHTML = `<div class="rf-res">
-    <div class="rf-actions"><button class="btn btn-ghost btn-sm" data-rf-week="${prevWeek}">← Прошлая неделя</button><span class="grow"></span>${week < RF.current ? `<button class="btn btn-ghost btn-sm" data-rf-week="${nextWeek}">Следующая →</button>` : ''}</div>
+    <div class="rf-actions"><button class="btn btn-ghost btn-sm" data-rf-week="${prevWeek}">← Прошлая неделя</button><span class="grow"></span><button class="btn btn-ghost btn-sm" data-rf-chart>${ico('chart', 'ic-sm')}Динамика оценок</button><span class="grow"></span>${week < RF.current ? `<button class="btn btn-ghost btn-sm" data-rf-week="${nextWeek}">Следующая →</button>` : '<span class="rf-spacer"></span>'}</div>
     <div class="rf-people">${R.people.map(person).join('') || '<span class="muted">Нет сотрудников, которые заполняют рефлексию</span>'}</div>
     ${clients.map((p) => {
-      const ans = R.people.map((u) => ({ u, a: u.answers[p.id] })).filter((x) => x.a && x.a.score);
+      const ans = R.people.map((u) => ({ u, a: u.answers[p.id] })).filter((x) => x.a && x.a.score && !x.a.skip);
       const avg = ans.length ? (ans.reduce((s, x) => s + x.a.score, 0) / ans.length) : null;
       return `<div class="rf-client"><h3>${esc(p.name)}<span class="avg">${avg == null ? 'нет оценок' : `в среднем ${Math.round(avg * 10) / 10}`}</span></h3>
-        ${R.people.map((u) => { const a = u.answers[p.id]; return a && a.score ? `<div class="rf-ans" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div><span class="who">${esc(first(u.name))}:</span> ${esc(a.comment || '')}</div></div>` : `<div class="rf-ans"><span class="none">${esc(first(u.name))} — ещё не оценил(а)</span></div>`; }).join('')}
+        ${R.people.map((u) => { const a = u.answers[p.id]; return a && a.skip ? `<div class="rf-ans"><span class="none">${esc(who(u))} — не ведёт этот кабинет</span></div>` : a && a.score ? `<div class="rf-ans" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div><span class="who">${esc(who(u))}:</span> ${esc(a.comment || '')}</div></div>` : R.legacy ? '' : `<div class="rf-ans"><span class="none">${esc(first(u.name))} — ещё не оценил(а)</span></div>`; }).join('')}
       </div>`;
     }).join('')}
   </div>`;
 }
+
+// ── «Динамика оценок»: средняя оценка клиентов по неделям, за всё время ──
+// Чёрная линия — среднее по всем клиентам; можно добавить до 8 клиентов — у каждого свой цвет,
+// который держится за клиентом, пока он выбран. Наведение — значения недели.
+const RC = { data: null, sel: [], q: '', hover: null };
+const RC_SLOTS = 8;
+async function openReflChart() {
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div><div class="rc-modal" role="dialog" aria-label="Динамика оценок"><div class="drawer-head"><h2>Динамика оценок клиентов</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div><div class="rc-body" id="rcBody"><div class="empty">Загружаю…</div></div></div>`;
+  if (!RC.data) {
+    try {
+      const res = await api('refl-history');
+      if (!res.ok) throw new Error();
+      RC.data = res.data.history;
+    } catch (e) { if ($('rcBody')) $('rcBody').innerHTML = '<div class="empty">Не получилось загрузить — нет связи.</div>'; return; }
+  }
+  renderReflChart();
+}
+function rcSlot(pid) { return RC.sel.findIndex((x) => x.id === pid); }
+function renderReflChart() {
+  const el = $('rcBody');
+  if (!el || !RC.data) return;
+  const D = RC.data;
+  if (!D.weeks.length) { el.innerHTML = '<div class="empty">Оценок пока нет.</div>'; return; }
+  const q = RC.q.trim().toLowerCase();
+  const chips = D.clients.filter((c) => !q || c.name.toLowerCase().includes(q)).map((c) => {
+    const slot = rcSlot(c.id);
+    return `<button class="rc-chip ${slot >= 0 ? 'on' : ''}" data-rc="${esc(c.id)}" ${slot < 0 && RC.sel.length >= RC_SLOTS ? 'disabled title="Не больше 8 клиентов сразу"' : ''}>${slot >= 0 ? `<i style="background:var(--rc-${slot + 1})"></i>` : ''}${esc(c.name)}${c.inactive ? ' <span class="muted">· неакт.</span>' : ''}</button>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="rc-legend"><span class="rc-key"><i class="all"></i>Все клиенты, в среднем</span>${RC.sel.map((s, i) => `<span class="rc-key"><i style="background:var(--rc-${i + 1})"></i>${esc(s.name)}</span>`).join('')}${RC.sel.length ? '<button class="btn btn-quiet btn-sm" data-rc-clear>Сбросить</button>' : ''}</div>
+    <div class="rc-chart" id="rcChart">${rcSvg()}</div>
+    <div class="rc-pick">
+      <div class="rc-pick-head"><b>Клиенты</b><span class="muted">${RC.sel.length ? `выбрано ${RC.sel.length} из ${RC_SLOTS}` : 'нажмите, чтобы добавить на график'}</span><div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="rcQ" type="search" placeholder="Найти клиента" value="${esc(RC.q)}" autocomplete="off"></div></div>
+      <div class="rc-chips">${chips || '<span class="muted">Никого не нашли</span>'}</div>
+    </div>`;
+}
+// Плавная линия через точки (Catmull-Rom → кривые Безье); неделю без оценок линия перешагивает.
+function rcPath(pts) {
+  const segs = [pts.filter(Boolean)].filter((x) => x.length);
+  return segs.map((s) => {
+    if (s.length === 1) return `M${s[0][0]},${s[0][1]}`;
+    let d = `M${s[0][0]},${s[0][1]}`;
+    for (let i = 0; i < s.length - 1; i += 1) {
+      const p0 = s[i - 1] || s[i]; const p1 = s[i]; const p2 = s[i + 1]; const p3 = s[i + 2] || p2;
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += ` C${c1[0].toFixed(1)},${Math.min(Math.max(c1[1], RC_Y(10)), RC_Y(1)).toFixed(1)} ${c2[0].toFixed(1)},${Math.min(Math.max(c2[1], RC_Y(10)), RC_Y(1)).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    }
+    return d;
+  }).join(' ');
+}
+let RC_W = 760; let RC_H = 300; const RC_PAD = { l: 34, r: 16, t: 14, b: 30 };
+const RC_Y = (v) => RC_PAD.t + (10 - v) / 9 * (RC_H - RC_PAD.t - RC_PAD.b);
+function rcSvg() {
+  // Рисуем в реальную ширину окна — подписи осей остаются читаемыми и на телефоне.
+  RC_W = Math.max(300, Math.min(844, window.innerWidth - 40));
+  RC_H = RC_W < 520 ? 240 : 300;
+  const D = RC.data;
+  const n = D.weeks.length;
+  const x = (i) => RC_PAD.l + (n === 1 ? (RC_W - RC_PAD.l - RC_PAD.r) / 2 : i / (n - 1) * (RC_W - RC_PAD.l - RC_PAD.r));
+  const dm = (w) => `${w.slice(8, 10)}.${w.slice(5, 7)}`;
+  const grid = [2, 4, 6, 8, 10].map((v) => `<line x1="${RC_PAD.l}" x2="${RC_W - RC_PAD.r}" y1="${RC_Y(v)}" y2="${RC_Y(v)}" class="rc-grid"/><text x="${RC_PAD.l - 8}" y="${RC_Y(v) + 4}" class="rc-ax" text-anchor="end">${v}</text>`).join('');
+  const every = Math.max(1, Math.ceil(n / 9));
+  const xl = D.weeks.map((w, i) => (i % every === 0 || i === n - 1 ? `<text x="${x(i)}" y="${RC_H - 8}" class="rc-ax" text-anchor="middle">${dm(w)}</text>` : '')).join('');
+  const line = (vals, cls, style) => {
+    const pts = D.weeks.map((w, i) => (vals[w] != null ? [x(i), RC_Y(vals[w])] : null));
+    return `<path d="${rcPath(pts)}" class="${cls}" style="${style || ''}"/>${pts.map((p) => (p ? `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" class="${cls}-dot" style="${style || ''}"/>` : '')).join('')}`;
+  };
+  const series = RC.sel.map((s, i) => line((D.clients.find((c) => c.id === s.id) || {}).points || {}, 'rc-line', `--c:var(--rc-${i + 1})`)).join('');
+  const h = RC.hover;
+  const tip = h != null ? (() => {
+    const w = D.weeks[h];
+    const rows = [[`Все клиенты`, D.overall[w], 'var(--ink)'], ...RC.sel.map((s, i) => [s.name, ((D.clients.find((c) => c.id === s.id) || {}).points || {})[w], `var(--rc-${i + 1})`])];
+    return `<line x1="${x(h)}" x2="${x(h)}" y1="${RC_PAD.t}" y2="${RC_H - RC_PAD.b}" class="rc-cross"/>
+      <foreignObject x="${x(h) > RC_W / 2 ? x(h) - 236 : x(h) + 12}" y="${RC_PAD.t}" width="224" height="${40 + rows.length * 24}"><div xmlns="http://www.w3.org/1999/xhtml" class="rc-tip"><b>Неделя с ${dm(w)}</b>${rows.map(([name, v, c]) => `<div><i style="background:${c}"></i><span>${esc(name)}</span><b>${v == null ? '—' : String(v).replace('.', ',')}</b></div>`).join('')}</div></foreignObject>`;
+  })() : '';
+  const hits = D.weeks.map((w, i) => `<rect x="${x(i) - (RC_W / n) / 2}" y="0" width="${RC_W / n}" height="${RC_H}" fill="transparent" data-rch="${i}"/>`).join('');
+  return `<svg viewBox="0 0 ${RC_W} ${RC_H}" class="rc-svg" role="img" aria-label="Средняя оценка клиентов по неделям">${grid}${xl}${line(D.overall, 'rc-all')}${series}${tip}${hits}</svg>`;
+}
+$('drawerRoot').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-rc]');
+  if (c) {
+    const pid = c.dataset.rc;
+    const slot = rcSlot(pid);
+    if (slot >= 0) RC.sel.splice(slot, 1);
+    else if (RC.sel.length < RC_SLOTS) { const cl = RC.data.clients.find((x) => x.id === pid); if (cl) RC.sel.push({ id: pid, name: cl.name }); }
+    renderReflChart();
+    return;
+  }
+  if (e.target.closest('[data-rc-clear]')) { RC.sel = []; renderReflChart(); }
+});
+$('drawerRoot').addEventListener('input', (e) => {
+  if (e.target.id !== 'rcQ') return;
+  RC.q = e.target.value;
+  const pos = e.target.selectionStart;
+  renderReflChart();
+  const q = $('rcQ'); if (q) { q.focus(); q.setSelectionRange(pos, pos); }
+});
+$('drawerRoot').addEventListener('pointermove', (e) => {
+  const r = e.target.closest('[data-rch]');
+  const i = r ? Number(r.dataset.rch) : null;
+  if (i === RC.hover) return;
+  RC.hover = i;
+  const ch = $('rcChart'); if (ch) ch.innerHTML = rcSvg();
+});
+$('drawerRoot').addEventListener('pointerleave', () => { if (RC.hover != null) { RC.hover = null; const ch = $('rcChart'); if (ch) ch.innerHTML = rcSvg(); } });
 
 // ── вкладка «Встречи»: окна для созвонов с клиентами ──
 // Руководитель выбирает дни и отмечает свободные окна по 30 минут (мышью можно вести по нескольким
