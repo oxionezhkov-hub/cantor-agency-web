@@ -898,6 +898,10 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .an-mini td .sk{width:100%}
 .an-sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px}
 .an-links{display:grid;gap:2px}
+.an-note{display:flex;gap:8px;align-items:flex-start;margin:12px 0 4px;padding:10px 12px;border-radius:12px;background:var(--sunken);font-size:13px;color:var(--muted);line-height:1.45}
+.an-note .ic{flex:none;margin-top:2px}
+.an-sent{font-style:normal;color:var(--green);font-size:12.5px}
+.an-unsent{font-style:normal;color:var(--red);font-size:12.5px}
 .an-link{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:10px;font-size:14px}
 .an-link:nth-child(odd){background:var(--surface-2)}
 .an-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -4402,7 +4406,8 @@ async function openAnReport() {
   const y = anYesterday();
   let from = anAdd(y, -6);
   const draw = () => anDrawer('Отчёт', `<div class="an-dates"><div><label class="label" for="anRepFrom">С</label><input class="input" type="date" id="anRepFrom" value="${from}" max="${y}"></div><div><label class="label" for="anRepTo">По</label><input class="input" type="date" id="anRepTo" value="${y}" max="${y}"></div></div>
-    <div class="an-links">${AN.jobs ? AN.jobs.map((j) => `<div class="an-link"><span>${esc(j.periodLabel || '')}</span>${AN_REP_STATUS[j.status] === 'готов' ? `<button class="btn btn-quiet btn-sm" data-an="rep-file" data-id="${esc(j.id)}" data-name="${esc(j.fileName || 'report.docx')}">${ico('download', 'ic-sm')}Скачать</button>` : '<span class="muted">собирается…</span>'}</div>`).join('') : '<i class="sk"></i>'}</div>`,
+    <div class="an-note">${ico('send', 'ic-sm')}<span>Когда отчёт будет готов, бот сам отправит файл в рабочий чат (General) и отметит клиентского менеджера — проверить и разослать клиентам.</span></div>
+    <div class="an-links">${AN.jobs ? AN.jobs.map((j) => `<div class="an-link"><span>${esc(j.periodLabel || '')}${j.postedAt ? ' <em class="an-sent">· в чате</em>' : j.postError ? ` <em class="an-unsent" title="${esc(j.postError)}">· в чат не ушёл</em>` : ''}</span>${AN_REP_STATUS[j.status] === 'готов' ? `<button class="btn btn-quiet btn-sm" data-an="rep-file" data-id="${esc(j.id)}" data-name="${esc(j.fileName || 'report.docx')}">${ico('download', 'ic-sm')}Скачать</button>` : '<span class="muted">собирается…</span>'}</div>`).join('') : '<i class="sk"></i>'}</div>`,
   `<button class="btn btn-primary btn-block" data-an="rep-go">Сформировать</button>`);
   draw();
   const load = async () => {

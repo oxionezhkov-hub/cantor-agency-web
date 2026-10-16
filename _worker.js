@@ -3127,6 +3127,7 @@ async function handleDashboardApi(request, env, url, ctx) {
     await putReportJob(kv, job);
     await kv.put('reportLastTo', dateTo);
     await fireReportRoutine(env, kv, job, url.origin);
+    if (job.status === 'not_configured' || job.status === 'failed') await reportPostToChat(env, job);
     return json({ job: publicReportJob(job) });
   }
 
@@ -3818,6 +3819,35 @@ async function fireReportRoutine(env, kv, job, origin) {
   await putReportJob(kv, job);
 }
 
+// A finished report goes to the work chat by itself — its main topic (General), as a .docx, with the
+// client manager tagged to check it and send it on to the clients. Once per report.
+async function reportPostToChat(env, job) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (job.postedAt || !env.CONTROL_BOT_TOKEN) return;
+  try {
+    const work = (await listByPrefix(kv, 'bot:chat:')).find((c) => c.kind === 'work');
+    if (!work) throw new Error('рабочий чат не найден — добавьте бота в рабочий чат');
+    const team = await atGetTeam(env);
+    const tags = team.users.filter((u) => u.active && u.role === 'manager').map((u) => (u.tgUsername
+      ? `@${escapeHtml(u.tgUsername)}`
+      : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(u.name)));
+    const caption = [
+      `📄 <b>Отчёт по клиентам Авито</b> — ${escapeHtml(job.report.periodLabel)}`,
+      `Клиентов: ${job.report.clients.length}${job.observations ? '' : ' · наблюдения автоматические (Claude не ответил)'}`,
+      tags.length ? `${tags.join(', ')}, проверьте и отправьте клиентам.` : '',
+    ].filter(Boolean).join('\n');
+    const res = await botSendDocument(env, work.id, reportFileName(job), buildDailyReportDocx(job.report, job.observations), caption, {
+      parseMode: 'HTML', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    if (!res || !res.ok) throw new Error((res && res.description) || 'Telegram не принял файл');
+    job.postedAt = new Date().toISOString();
+    job.postError = null;
+  } catch (e) {
+    job.postError = String(e && e.message).slice(0, 200);
+  }
+  await putReportJob(kv, job);
+}
+
 // Called by the routine's cloud session — authorised by the per-job random token that was
 // only ever sent inside the routine fire payload (not by the dashboard password).
 async function handleReportJobCallback(request, env, url) {
@@ -3856,6 +3886,7 @@ async function handleReportJobCallback(request, env, url) {
     job.error = null;
     job.updatedAt = new Date().toISOString();
     await putReportJob(kv, job);
+    await reportPostToChat(env, job);
     return json({ ok: true, accepted: Object.keys(clean).length, missing: [...known].filter((id) => !clean[id]) });
   }
 
@@ -4757,13 +4788,15 @@ function botTranslit(s) {
   return String(s || '').toLowerCase().split('').map((c) => (c in map ? map[c] : c)).join('').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
 
-async function botSendDocument(env, chatId, filename, content, caption) {
+async function botSendDocument(env, chatId, filename, content, caption, opts = {}) {
   const token = env.CONTROL_BOT_TOKEN;
   if (!token) return null;
   const form = new FormData();
   form.append('chat_id', String(chatId));
+  if (opts.threadId) form.append('message_thread_id', String(opts.threadId));
   if (caption) form.append('caption', caption);
-  form.append('document', new Blob([content], { type: 'text/csv' }), filename);
+  if (opts.parseMode) form.append('parse_mode', opts.parseMode);
+  form.append('document', new Blob([content], { type: opts.type || 'text/csv' }), filename);
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, { method: 'POST', body: form, signal: AbortSignal.timeout(20000) });
     const data = await res.json().catch(() => null);
