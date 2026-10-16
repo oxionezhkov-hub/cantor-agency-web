@@ -4931,6 +4931,12 @@ const BOT_EXTRACT_SYSTEM = [
   'клиента что-то сделать или вопрос, на который команда ещё не ответила в этих же сообщениях.',
   'Просьба команды КЛИЕНТУ (пополнить баланс, прислать скриншот или файл, выбрать время, ответить на вопрос, подтвердить) —',
   'это дело клиента, а НЕ задача команды: такие задачи не заводи.',
+  'Пополнение баланса/аванса на Авито — всегда дело клиента: задач на пополнение не заводи, кто бы о нём ни писал.',
+  'Вопрос руководителя или команды на обсуждение («есть смысл увеличить лимит?», «какие будут ближайшие действия?») — не задача:',
+  'задача только если кого-то прямо просят что-то сделать. Ответ команды «взяли в работу», напоминание клиенту о встрече — тоже не задачи.',
+  'Если КМ пересылает в рабочий чат ответ или правки клиента по работе, по которой уже есть открытая задача (тексты, фото, отзывы),',
+  '— это update к этой задаче, а не новые задачи; не дроби одно сообщение на несколько задач по одной работе. Упоминание уже',
+  'поставленной задачи («стоит задача у Кати на создание объявления») — тоже не новая задача.',
   'В рабочем чате задачу на КМ («Менеджер — Cantor Agency») ставь только если КМ прямо тегнули (@username) или назвали по имени.',
   'Реакции (👍 и т.п.) показаны в квадратных скобках после текста: реакция команды на просьбу = её приняли/взяли.',
   'Тебе дают новые сообщения из одного топика/чата, контекст до них и список открытых задач этого клиента.',
@@ -5082,14 +5088,14 @@ function botFindTwinTask(openTasks, text, projectId, chatId, threadId) {
   }) || null;
 }
 // Our message in the client's chat asking the CLIENT to do something ("Пополните, пожалуйста, аванс",
-// "Пришлите скриншот", "Подскажите удобное время") — the client's to-do, not a task for the team.
-// Our own commitments in it ("проверю и напишу") still are.
+// "Пришлите скриншот", "Подскажите удобное время", «просим пополнить аванс») — the client's to-do,
+// not a task for the team. Our own commitments in it ("проверю и напишу") still are.
 function botIsRequestToClient(chatRec, src) {
   if (!chatRec || chatRec.kind !== 'client' || !src || !src.team) return false;
   const text = String(src.text || '');
   if (BOT_SELF_COMMIT_RE.test(text)) return false;
   return /(^|[^а-яё])(пополн|пришл|отправ|выбер|подскаж|напиш|подтверд|оплат|скин|загруз|заполн|посмотр|проверь|дайте|сообщ)[а-яё]*(ите|йте)([^а-яё]|$)/i.test(text)
-    || /(^|[^а-яё])нужно пополн|необходимо пополн|пополните/i.test(text);
+    || /(^|[^а-яё])(просим|прошу|нужно|необходимо|надо|требуется)[^.!?\n]{0,40}(пополн|оплат|прислать|отправить|выбрать|подтвердить|заполнить|скинуть)/i.test(text);
 }
 // A client's own report of results («было назначено 3 диагностики, проведено две, одна продажа») —
 // news for the dashboard, not work for the team, unless it also asks for something.
@@ -5098,6 +5104,28 @@ function botIsClientReport(src) {
   const text = String(src.text || '');
   if (/\?|можно|нужно|надо|сделайте|подскажите|помогите|пожалуйста|прошу|почему|когда/i.test(text)) return false;
   return /диагностик|продаж|заявк|учени|записал|купил|оплатил/i.test(text) && /\d|одн[ауо]|две|два|три|четыре|пять/i.test(text);
+}
+// A request in a team message: someone is tagged, asked politely, or told to do something.
+const BOT_ASK_RE = /@\w|(^|[^а-яё])кто[^?]{0,30}(бер|возьм|займ|сдела)|(^|[^а-яё])(можешь|можете|сможешь|сможете|пожалуйста|прошу|просьба|нужно|надо|необходимо|давай|давайте|сделай|сделайте|проверь|проверьте|посмотри|посмотрите|глянь|гляньте|поставь|поставьте|добавь|добавьте|поправь|поправьте|исправь|исправьте|загрузи|загрузите|отправь|отправьте|напиши|напишите|подготовь|подготовьте|узнай|узнайте|уточни|уточните|возьми|возьмите|займись|займитесь)([^а-яё]|$)/i;
+// Why a message the AI read a task from is not work for the team — or null when it is. Shared by new
+// messages and by the one-time sweep of tasks made before these rules.
+function botNotTeamTaskReason(chatRec, src, taskText) {
+  if (!src) return null;
+  const text = String(src.text || '').trim();
+  // Topping up the Avito balance is always the client's job: whoever writes about it, there is
+  // nothing for the team to do.
+  if (/(^|[^а-яё])пополн/i.test(String(taskText || '')) && !/после пополн/i.test(String(taskText || ''))) return 'пополнение — дело клиента';
+  if (botIsRequestToClient(chatRec, src)) return 'просьба к клиенту — дело клиента';
+  if (botIsClientReport(src)) return 'новости клиента о результатах';
+  if (!src.team) return null;
+  // «Тексты взяли в работу, спасибо» — our answer to a request, not a new one.
+  if (text.length < 160 && !text.includes('?') && /(^|[^а-яё])(взял[аи]?|берём|берем|приняли|принято|получили) (в работу|тексты|фото|материалы|информацию)|(^|[^а-яё])(взял[аи]?|приняли) в работу/i.test(text)) return 'команда подтвердила, что взяла в работу';
+  // «Напоминаем о встрече сегодня в 9:30» — the reminder is the work, and it's done.
+  if (chatRec && chatRec.kind === 'client' && /(^|[^а-яё])напомина(ем|ю)/i.test(text)) return 'напоминание клиенту уже отправлено';
+  // «Дневной лимит есть смысл увеличить?», «Тут какие будут ближайшие действия?» — a question to
+  // talk over, not an assignment: it becomes a task only when it asks someone to do something.
+  if (/\?[\s)!.]*$/.test(text) && !BOT_ASK_RE.test(text)) return 'вопрос на обсуждение';
+  return null;
 }
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -5112,7 +5140,7 @@ async function botApplyEvents(env, events, ctx) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
     const dueMs = botParseMskDateTime(ev.due);
-    if (ev.type === 'new_task' && ev.text && (botIsRequestToClient(ctx.chatRec, src) || botIsClientReport(src))) continue;
+    if (ev.type === 'new_task' && ev.text && botNotTeamTaskReason(ctx.chatRec, src, ev.text)) continue;
     if (ev.type === 'new_task' && ev.text) {
       // The same request often comes twice: the client asks in their chat and the manager passes it
       // on in the work chat, or two messages in a row repeat it — the AI then proposes it again.
