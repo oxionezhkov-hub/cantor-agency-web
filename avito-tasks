@@ -382,6 +382,8 @@ a{color:inherit}
 .rf-hint{font-size:12px;color:var(--faint);display:flex;justify-content:space-between;margin-top:4px}
 .rf-actions{display:flex;gap:8px;align-items:center}
 .rf-actions .grow{flex:1}
+.rf-card .rf-actions{flex-wrap:wrap}
+@media (max-width:560px){.rf-card .rf-actions .grow{display:none}.rf-card .rf-actions [data-rf-next]{flex:1 1 100%;order:5}}
 .rf-done{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0 4px}
 .rf-done .big{width:64px;height:64px;border-radius:22px;background:var(--green-bg);color:var(--green);display:grid;place-items:center}
 .rf-done .big .ic{width:30px;height:30px}
@@ -2998,6 +3000,7 @@ function renderReflection() {
     <div class="rf-actions">
       <button class="btn btn-ghost btn-sm" data-rf-prev ${RF.idx === 0 ? 'disabled' : ''}>← Назад</button>
       <span class="grow"></span>
+      ${RF.editing == null && list.some((x, i) => i !== RF.idx && !reflAnswered(x)) ? '<button class="btn btn-quiet btn-sm" data-rf-later title="Пропустить пока — клиент останется в списке, вернётесь к нему позже">Пропустить</button>' : ''}
       <button class="btn btn-ghost btn-sm" data-rf-skip ${RF.saving ? 'disabled' : ''} title="Кабинет ведёт кто-то другой — пропустить, в среднюю оценку не попадёт">Не веду этот кабинет</button>
       <button class="btn btn-primary" data-rf-next ${!d.score || d.comment.trim().length < 3 || RF.saving ? 'disabled' : ''}>${RF.editing != null ? 'Сохранить' : left <= 1 && !reflAnswered(p) ? 'Завершить' : 'Дальше →'}</button>
     </div>
@@ -3043,6 +3046,14 @@ $('rfBody').addEventListener('click', async (e) => {
   const sc = e.target.closest('[data-score]');
   if (sc) { rfSetDraft(pid, { score: Number(sc.dataset.score) }); renderReflection(); const t = $('rfComment'); if (t && !t.value) t.focus({ preventScroll: true }); return; }
   if (e.target.closest('[data-rf-prev]')) { RF.editing = null; RF.idx = Math.max(0, RF.idx - 1); renderReflection(); return; }
+  // «Пропустить» — без сохранения к следующему неоценённому; этот клиент останется, к нему вернёт по кругу.
+  if (e.target.closest('[data-rf-later]')) {
+    const list = reflClientsList();
+    let next = list.findIndex((p, i) => i > RF.idx && !reflAnswered(p));
+    if (next < 0) next = list.findIndex((p, i) => i !== RF.idx && !reflAnswered(p));
+    if (next >= 0) { RF.idx = next; renderReflection(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    return;
+  }
   const skipBtn = e.target.closest('[data-rf-skip]');
   if (e.target.closest('[data-rf-next]') || skipBtn) {
     const wasEditing = RF.editing != null;
