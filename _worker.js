@@ -6905,7 +6905,26 @@ async function atReflectionSave(env, team, me, body, nowMs) {
   }
   return { state: await atReflectionState(kv, me, mem, nowMs) };
 }
-// Owner / assistant: everyone's answers for a week.
+// Wednesday–Friday is when the week gets rated: an employee sees the team's answers for it only once
+// they have given their own, so the others' scores don't steer theirs. From Saturday it's open to all.
+function reflLocked(nowMs, week, rec) {
+  if (week !== reflWeek(nowMs) || (rec && rec.doneAt)) return false;
+  return [3, 4, 5].includes(botMsk(nowMs).dow);
+}
+// A week's average per client (the old dashboard's ratings for a week before the tracker).
+async function reflWeekAverages(kv, people, week) {
+  const recs = await Promise.all(people.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
+  const xs = {};
+  const add = (pid, score) => (xs[pid] = xs[pid] || []).push(score);
+  recs.forEach((r) => { for (const [pid, a] of Object.entries((r && r.answers) || {})) if (a && a.score > 0 && !a.skip) add(pid, a.score); });
+  if (!Object.keys(xs).length) {
+    const monday = reflAddDays(week, -2);
+    const keys = (await kv.list({ prefix: 'projectRating:' })).keys.filter((k) => k.name.split(':')[2] === monday);
+    (await Promise.all(keys.map((k) => kv.get(k.name, 'json')))).forEach((r) => { if (r && r.score > 0) add(r.projectId, Number(r.score)); });
+  }
+  return Object.fromEntries(Object.entries(xs).map(([pid, v]) => [pid, Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10) / 10]));
+}
+// Everyone's answers for a week — the owner and the assistant always, the team per reflLocked.
 const REFL_LEGACY_ROLES = { manager: 'От менеджера', specialist: 'От специалиста', client: 'От клиента' };
 async function atReflectionResults(env, team, week) {
   const kv = env.AGENCY_DASHBOARD_KV;
@@ -6920,7 +6939,7 @@ async function atReflectionResults(env, team, week) {
     if (rows.length) {
       const clients = [...new Set(rows.map((r) => r.projectId))];
       return {
-        week, legacy: true, clients,
+        week, legacy: true, clients, prevAvg: await reflWeekAverages(kv, people, reflAddDays(week, -7)),
         people: Object.entries(REFL_LEGACY_ROLES).map(([role, name]) => {
           const answers = {};
           rows.filter((r) => r.role === role).forEach((r) => { answers[r.projectId] = { score: r.score, comment: r.comment || '', at: r.updatedAt || null }; });
@@ -6933,6 +6952,7 @@ async function atReflectionResults(env, team, week) {
   return {
     week,
     clients,
+    prevAvg: await reflWeekAverages(kv, people, reflAddDays(week, -7)),
     people: people.map((u, i) => ({ id: u.id, name: u.name, role: u.role, answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], clients), doneAt: (recs[i] && recs[i].doneAt) || null })),
   };
 }
@@ -7414,13 +7434,27 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ reflection: res.state });
   }
   if (action === 'refl-results') {
-    if (!isAdmin) return json({ error: 'forbidden' }, 403);
-    const week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : reflWeek(nowMs);
-    return json({ results: await atReflectionResults(env, team, week), current: reflWeek(nowMs) });
+    if (!isAdmin && !REFL_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
+    const current = reflWeek(nowMs);
+    let week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : current;
+    if (week > current) week = current;
+    if (!isAdmin && reflLocked(nowMs, week, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
+      return json({ locked: true, week, current, prev: reflAddDays(current, -7) });
+    }
+    return json({ results: await atReflectionResults(env, team, week), current });
   }
   if (action === 'refl-history') {
-    if (!isAdmin) return json({ error: 'forbidden' }, 403);
-    return json({ history: await atReflectionHistory(env) });
+    if (!isAdmin && !REFL_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
+    const history = await atReflectionHistory(env);
+    const current = reflWeek(nowMs);
+    // Until the employee has rated this week, its averages stay off their chart too.
+    if (!isAdmin && reflLocked(nowMs, current, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
+      history.weeks = history.weeks.filter((w) => w !== current);
+      delete history.overall[current];
+      history.clients.forEach((c) => { delete c.points[current]; });
+      history.clients = history.clients.filter((c) => Object.keys(c.points).length);
+    }
+    return json({ history });
   }
 
   // «ИИ-помощник» — у всех: свои диалоги, руководитель видит и чужие.
