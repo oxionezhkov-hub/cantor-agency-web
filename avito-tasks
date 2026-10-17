@@ -382,6 +382,8 @@ a{color:inherit}
 .rf-hint{font-size:12px;color:var(--faint);display:flex;justify-content:space-between;margin-top:4px}
 .rf-actions{display:flex;gap:8px;align-items:center}
 .rf-actions .grow{flex:1}
+.rf-card .rf-actions{flex-wrap:wrap}
+@media (max-width:560px){.rf-card .rf-actions .grow{display:none}.rf-card .rf-actions [data-rf-next]{flex:1 1 100%;order:5}}
 .rf-done{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0 4px}
 .rf-done .big{width:64px;height:64px;border-radius:22px;background:var(--green-bg);color:var(--green);display:grid;place-items:center}
 .rf-done .big .ic{width:30px;height:30px}
@@ -430,13 +432,33 @@ a{color:inherit}
 .rf-people{display:flex;flex-wrap:wrap;gap:8px}
 .rf-person{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600}
 .rf-person .st{font-weight:500;color:var(--muted)}
-.rf-client{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;gap:8px}
+.rf-client{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;gap:8px;scroll-margin-top:84px}
 .rf-client h3{font-size:15px;color:var(--ink);display:flex;align-items:center;gap:10px}
 .rf-client h3 .avg{margin-left:auto;font-size:13px;color:var(--muted);font-weight:600}
 .rf-ans{display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
 .rf-ans .sc{min-width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;background:var(--sc);flex:none}
 .rf-ans .who{font-weight:600;color:var(--ink)}
 .rf-ans .none{color:var(--faint)}
+.rf-ans.mine{background:var(--sunken);border-radius:10px;padding:4px 6px;margin:0 -6px}
+.rf-sum{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;gap:12px}
+.rf-sum h3{font-size:15px;color:var(--ink)}
+.rf-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.rf-kpi{background:var(--sunken);border-radius:14px;padding:10px 12px;display:grid;gap:2px}
+.rf-kpi .v{font-family:var(--display);font-size:22px;font-weight:700;color:var(--ink);line-height:1.2}
+.rf-kpi .v small{font-size:13px;font-weight:600;margin-left:6px}
+.rf-kpi .l{font-size:12px;color:var(--muted)}
+.rf-insights{display:grid;gap:10px}
+.rf-ins{display:grid;gap:4px}
+.rf-ins .t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.rf-ins .items{display:flex;flex-wrap:wrap;gap:6px}
+.rf-chipc{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--text)}
+.rf-chipc b{color:var(--sc,var(--ink))}
+.rf-res .up{color:var(--green)}.rf-res .down{color:var(--red)}
+.rf-lock{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0 4px}
+.rf-lock .big{width:64px;height:64px;border-radius:22px;background:var(--sunken);color:var(--muted);display:grid;place-items:center}
+.rf-lock .big .ic{width:28px;height:28px}
+.rf-lock h2{font-family:var(--display);font-size:20px;color:var(--ink)}
+.rf-lock .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
 @media (max-width:760px){
   .rf-card{padding:20px 16px 16px;border-radius:18px}
   .rf-name{font-size:20px}
@@ -990,6 +1012,8 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .hello h1{display:none}
 #view-clients>.hello,#view-analytics>.hello,#view-reflection>.hello{display:none}
 .hello{justify-content:flex-end}
+#view-reflection>.hello:has(#rfTabs:not([hidden])){display:flex;justify-content:center}
+@media (max-width:760px){#rfTabs{width:100%;display:flex}#rfTabs button{flex:1}}
 .cc-ico{width:32px;height:32px;border-radius:50%;display:inline-grid;place-items:center;color:var(--muted)}
 .cc-ico:hover{background:var(--sunken);color:var(--ink)}
 .cc-ico .ic{width:17px;height:17px}
@@ -1241,6 +1265,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
           <h1 id="rfTitle">Рефлексия</h1>
           <div class="sub" id="rfSub"></div>
         </div>
+        <div class="seg" id="rfTabs" hidden><button data-rf-tab="mine">Мои оценки</button><button data-rf-tab="team">Ответы команды</button></div>
       </div>
       <div id="rfBody"></div>
     </section>
@@ -2918,7 +2943,7 @@ $('clientCards').addEventListener('click', async (e) => {
 // комментарий и выбранная оценка держатся в памяти браузера, так что можно выйти в любой момент
 // и продолжить с того же места. Руководитель и ассистент видят здесь ответы команды.
 const K_REFL = 'avitoTasks.refl';
-const RF = { idx: null, local: store.json(K_REFL) || {}, saving: false, results: null, resultsWeek: null, editing: null };
+const RF = { idx: null, local: store.json(K_REFL) || {}, saving: false, results: null, resultsWeek: null, editing: null, tab: 'mine', locked: null };
 const RF_WORDS = [null, 'Всё плохо', 'Очень плохо', 'Плохо', 'Есть проблемы', 'Так себе', 'Нормально', 'Неплохо', 'Хорошо', 'Очень хорошо', 'Отлично'];
 function rfColor(n) {
   // красный → янтарный → зелёный; в обеих темах одни и те же насыщенные цвета для текста на кнопке
@@ -2952,9 +2977,23 @@ function fmtLongDate(ymd) {
   const d = new Date(ymd + 'T12:00:00Z');
   return `${['воскресенье', 'понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу'][d.getUTCDay()]}, ${d.getUTCDate()} ${['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'][d.getUTCMonth()]}`;
 }
+// Сотрудник: «Мои оценки» и «Ответы команды»; у руководителя и ассистента — только ответы команды.
+function rfTabsRender() {
+  const el = $('rfTabs');
+  el.hidden = !S.reflection;
+  el.querySelectorAll('[data-rf-tab]').forEach((b) => b.classList.toggle('on', b.dataset.rfTab === RF.tab));
+}
+function rfSetTab(tab) {
+  RF.tab = tab;
+  if (tab === 'team') { RF.results = null; RF.locked = null; RF.resultsWeek = null; }
+  renderReflection();
+  window.scrollTo({ top: 0 });
+}
+$('rfTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-rf-tab]'); if (b && b.dataset.rfTab !== RF.tab) rfSetTab(b.dataset.rfTab); });
 function renderReflection() {
   if (S.view !== 'reflection') return;
-  if (!S.reflection) return renderReflectionResults();
+  rfTabsRender();
+  if (!S.reflection || RF.tab === 'team') return renderReflectionResults();
   const r = S.reflection;
   const list = reflClientsList();
   const left = reflLeft();
@@ -2966,6 +3005,7 @@ function renderReflection() {
       <div class="big">${ico('check')}</div>
       <h2>Готово — спасибо!</h2>
       <div class="muted">Все ${list.length} ${plural(list.length, 'клиент оценён', 'клиента оценены', 'клиентов оценены')}. До следующей среды здесь ничего не нужно.</div>
+      <button class="btn btn-primary btn-sm" data-rf-tab="team">Ответы команды и сводка →</button>
       <div class="rf-list">${list.map((p) => { const a = r.answers[p.id]; return a.skip
         ? `<div class="rf-row skip"><span class="sc">—</span><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cm">не веду этот кабинет</div></div><button class="btn btn-quiet btn-sm" data-rf-edit="${esc(p.id)}">${ico('edit', 'ic-sm')}</button></div>`
         : `<div class="rf-row" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div style="min-width:0"><div class="nm">${esc(p.name)}</div><div class="cm">${esc(a.comment || '—')}</div></div><button class="btn btn-quiet btn-sm" data-rf-edit="${esc(p.id)}">${ico('edit', 'ic-sm')}</button></div>`; }).join('')}</div>
@@ -2998,6 +3038,7 @@ function renderReflection() {
     <div class="rf-actions">
       <button class="btn btn-ghost btn-sm" data-rf-prev ${RF.idx === 0 ? 'disabled' : ''}>← Назад</button>
       <span class="grow"></span>
+      ${RF.editing == null && list.some((x, i) => i !== RF.idx && !reflAnswered(x)) ? '<button class="btn btn-quiet btn-sm" data-rf-later title="Пропустить пока — клиент останется в списке, вернётесь к нему позже">Пропустить</button>' : ''}
       <button class="btn btn-ghost btn-sm" data-rf-skip ${RF.saving ? 'disabled' : ''} title="Кабинет ведёт кто-то другой — пропустить, в среднюю оценку не попадёт">Не веду этот кабинет</button>
       <button class="btn btn-primary" data-rf-next ${!d.score || d.comment.trim().length < 3 || RF.saving ? 'disabled' : ''}>${RF.editing != null ? 'Сохранить' : left <= 1 && !reflAnswered(p) ? 'Завершить' : 'Дальше →'}</button>
     </div>
@@ -3022,6 +3063,7 @@ async function rfSave(pid, skip) {
     if (res.status === 409) { toast('Неделя сменилась — открылась новая рефлексия'); await sync(false); return false; }
     if (!res.ok) throw new Error();
     S.reflection = res.data.reflection;
+    RF.results = null; RF.locked = null; RC.data = null;
     if (RF.local.drafts) delete RF.local.drafts[pid];
     store.set(K_REFL, JSON.stringify(RF.local));
     renderHeader();
@@ -3035,14 +3077,26 @@ $('rfBody').addEventListener('click', async (e) => {
   const card = e.target.closest('[data-rf]');
   const edit = e.target.closest('[data-rf-edit]');
   if (edit) { RF.editing = edit.dataset.rfEdit; renderReflection(); return; }
+  const tab = e.target.closest('[data-rf-tab]');
+  if (tab) { rfSetTab(tab.dataset.rfTab); return; }
+  const go = e.target.closest('[data-rf-goto]');
+  if (go) { const el = document.getElementById(`rfc-${go.dataset.rfGoto}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
   if (e.target.closest('[data-rf-chart]')) { openReflChart(); return; }
   const prevR = e.target.closest('[data-rf-week]');
-  if (prevR) { RF.resultsWeek = prevR.dataset.rfWeek; RF.results = null; renderReflectionResults(); return; }
+  if (prevR) { RF.resultsWeek = prevR.dataset.rfWeek; RF.results = null; RF.locked = null; renderReflectionResults(); window.scrollTo({ top: 0 }); return; }
   if (!card) return;
   const pid = card.dataset.rf;
   const sc = e.target.closest('[data-score]');
   if (sc) { rfSetDraft(pid, { score: Number(sc.dataset.score) }); renderReflection(); const t = $('rfComment'); if (t && !t.value) t.focus({ preventScroll: true }); return; }
   if (e.target.closest('[data-rf-prev]')) { RF.editing = null; RF.idx = Math.max(0, RF.idx - 1); renderReflection(); return; }
+  // «Пропустить» — без сохранения к следующему неоценённому; этот клиент останется, к нему вернёт по кругу.
+  if (e.target.closest('[data-rf-later]')) {
+    const list = reflClientsList();
+    let next = list.findIndex((p, i) => i > RF.idx && !reflAnswered(p));
+    if (next < 0) next = list.findIndex((p, i) => i !== RF.idx && !reflAnswered(p));
+    if (next >= 0) { RF.idx = next; renderReflection(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    return;
+  }
   const skipBtn = e.target.closest('[data-rf-skip]');
   if (e.target.closest('[data-rf-next]') || skipBtn) {
     const wasEditing = RF.editing != null;
@@ -3072,15 +3126,30 @@ document.addEventListener('keydown', (e) => {
   if (n >= 1 && n <= 10) { rfSetDraft(document.querySelector('[data-rf]').dataset.rf, { score: n }); renderReflection(); }
 });
 
-// Руководитель и ассистент: ответы команды за неделю.
+// Ответы команды за неделю: руководитель и ассистент — всегда; сотрудник — со вкладки «Ответы команды».
+// В среду–пятницу текущая неделя открывается сотруднику, когда он оценил всех сам; с субботы — всем.
 async function renderReflectionResults() {
   $('rfTitle').textContent = 'Рефлексия команды';
-  if (!RF.results) {
+  if (!RF.results && !RF.locked) {
     $('rfSub').textContent = '';
     $('rfBody').innerHTML = '<div class="empty">Загружаю ответы…</div>';
     const res = await api('refl-results', { week: RF.resultsWeek || undefined });
+    if (S.view !== 'reflection' || (S.reflection && RF.tab !== 'team')) return;
     if (!res.ok) { $('rfBody').innerHTML = '<div class="empty">Не получилось загрузить — нет связи.</div>'; return; }
-    RF.results = res.data.results; RF.current = res.data.current;
+    RF.current = res.data.current;
+    if (res.data.locked) RF.locked = res.data;
+    else RF.results = res.data.results;
+  }
+  if (RF.locked) {
+    const L = RF.locked;
+    $('rfSub').textContent = `Неделя с ${fmtDate(Date.parse(L.week + 'T09:00:00Z'))}`;
+    $('rfBody').innerHTML = `<div class="rf-wrap"><div class="rf-card"><div class="rf-lock">
+      <div class="big">${ico('lock')}</div>
+      <h2>Сначала — свои оценки</h2>
+      <div class="muted">Ответы команды за эту неделю откроются, как только вы оцените всех клиентов: так чужие оценки не влияют на ваши. С субботы они открыты всем.</div>
+      <div class="row"><button class="btn btn-primary btn-sm" data-rf-tab="mine">Заполнить рефлексию</button><button class="btn btn-ghost btn-sm" data-rf-week="${esc(L.prev)}">Прошлая неделя</button></div>
+    </div></div></div>`;
+    return;
   }
   const R = RF.results;
   const clients = R.clients.map((id) => projectById(id)).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
@@ -3089,19 +3158,61 @@ async function renderReflectionResults() {
   const nextWeek = new Date(Date.parse(week + 'T12:00:00Z') + 7 * 86400000).toISOString().slice(0, 10);
   $('rfSub').textContent = R.legacy
     ? `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки из старого дашборда: от менеджера, специалиста и клиента.`
-    : `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки 1–10 от сотрудников, по одной на клиента. Задача «заполнить рефлексию» ставится каждую среду.`;
-  const who = (u) => (u.legacy ? u.name : first(u.name));
+    : `Неделя с ${fmtDate(Date.parse(week + 'T09:00:00Z'))} · оценки 1–10 от сотрудников, по одной на клиента.${isAdmin() ? ' Задача «заполнить рефлексию» ставится каждую среду.' : ''}`;
+  const meId = S.me && S.me.id;
+  const who = (u) => (u.legacy ? u.name : u.id === meId ? 'Вы' : first(u.name));
   const person = (u) => (u.legacy
     ? `<span class="rf-person legacy">${esc(u.name)} <span class="st">${u.done}</span></span>`
-    : `<span class="rf-person">${avatar(userById(u.id) || u, 'xs')}${esc(first(u.name))} <span class="st">${u.done >= clients.length && clients.length ? 'готово' : `${u.done}/${clients.length}`}</span></span>`);
+    : `<span class="rf-person">${avatar(userById(u.id) || u, 'xs')}${esc(u.id === meId ? 'Вы' : first(u.name))} <span class="st">${u.done >= clients.length && clients.length ? 'готово' : `${u.done}/${clients.length}`}</span></span>`);
+  const r1 = (x) => Math.round(x * 10) / 10;
+  const stat = clients.map((p) => {
+    const sc = R.people.map((u) => u.answers[p.id]).filter((a) => a && a.score && !a.skip).map((a) => a.score);
+    const avg = sc.length ? r1(sc.reduce((s, x) => s + x, 0) / sc.length) : null;
+    const prev = R.prevAvg && R.prevAvg[p.id] != null ? R.prevAvg[p.id] : null;
+    const mine = R.people.find((u) => u.id === meId);
+    const my = mine && mine.answers[p.id] && mine.answers[p.id].score && !mine.answers[p.id].skip ? mine.answers[p.id].score : null;
+    const others = R.people.filter((u) => u.id !== meId).map((u) => u.answers[p.id]).filter((a) => a && a.score && !a.skip).map((a) => a.score);
+    return { p, avg, prev, delta: avg != null && prev != null ? r1(avg - prev) : null, spread: sc.length > 1 ? Math.max(...sc) - Math.min(...sc) : 0, my, othersAvg: others.length ? r1(others.reduce((s, x) => s + x, 0) / others.length) : null };
+  });
+  const dl = (d) => (d == null || d === 0 ? '' : `<span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? '↑' : '↓'}${Math.abs(d).toFixed(1).replace('.0', '')}</span>`);
+  const rated = stat.filter((x) => x.avg != null);
+  const avgOf = (xs) => (xs.length ? r1(xs.reduce((s, x) => s + x, 0) / xs.length) : null);
+  const overall = avgOf(rated.map((x) => x.avg));
+  const prevVals = Object.values(R.prevAvg || {});
+  const overallPrev = avgOf(clients.map((p) => (R.prevAvg || {})[p.id]).filter((v) => v != null)) ?? avgOf(prevVals);
+  const answers = R.people.reduce((n, u) => n + Object.values(u.answers).filter((a) => a && a.score && !a.skip).length, 0);
+  const chip = (x, tail) => `<button class="rf-chipc" data-rf-goto="${esc(x.p.id)}" style="--sc:${x.avg != null ? rfColor(Math.round(x.avg)) : 'var(--ink)'}">${esc(x.p.name)} <b>${x.avg ?? '—'}</b>${tail || ''}</button>`;
+  const ins = (t, list) => (list.length ? `<div class="rf-ins"><div class="t">${t}</div><div class="items">${list.join('')}</div></div>` : '');
+  const low = rated.filter((x) => x.avg <= 6).sort((a, b) => a.avg - b.avg).slice(0, 6);
+  const fell = rated.filter((x) => x.delta != null && x.delta <= -1).sort((a, b) => a.delta - b.delta).slice(0, 6);
+  const rose = rated.filter((x) => x.delta != null && x.delta >= 1).sort((a, b) => b.delta - a.delta).slice(0, 6);
+  const split = rated.filter((x) => x.spread >= 3).sort((a, b) => b.spread - a.spread).slice(0, 6);
+  const myDiff = meId ? stat.filter((x) => x.my != null && x.othersAvg != null && Math.abs(x.my - x.othersAvg) >= 2.5).slice(0, 6) : [];
+  const myAvg = avgOf(stat.filter((x) => x.my != null).map((x) => x.my));
+  const othersAll = avgOf(stat.filter((x) => x.my != null && x.othersAvg != null).map((x) => x.othersAvg));
+  const summary = rated.length ? `<div class="rf-sum">
+    <h3>Сводка недели</h3>
+    <div class="rf-kpis">
+      <div class="rf-kpi"><div class="v">${overall}${overallPrev != null ? `<small>${dl(r1(overall - overallPrev)) || '<span class="muted">без изменений</span>'}</small>` : ''}</div><div class="l">средняя по клиентам${overallPrev != null ? ` · неделей раньше ${overallPrev}` : ''}</div></div>
+      <div class="rf-kpi"><div class="v">${rated.length}<small class="muted">из ${clients.length}</small></div><div class="l">клиентов с оценками · ${answers} ${plural(answers, 'ответ', 'ответа', 'ответов')}</div></div>
+      ${myAvg != null ? `<div class="rf-kpi"><div class="v">${myAvg}${othersAll != null ? `<small class="muted">у других ${othersAll}</small>` : ''}</div><div class="l">ваша средняя оценка${othersAll != null ? ' · по тем же клиентам' : ''}</div></div>` : ''}
+    </div>
+    <div class="rf-insights">
+      ${ins('Требуют внимания — 6 и ниже', low.map((x) => chip(x)))}
+      ${ins('Просели к прошлой неделе', fell.map((x) => chip(x, ` ${dl(x.delta)}`)))}
+      ${ins('Выросли', rose.map((x) => chip(x, ` ${dl(x.delta)}`)))}
+      ${ins('Мнения расходятся — разброс 3+', split.map((x) => chip(x, ` <span class="muted">±${x.spread}</span>`)))}
+      ${ins('Ваша оценка заметно отличается от других', myDiff.map((x) => chip(x, ` <span class="muted">вы ${x.my} · другие ${x.othersAvg}</span>`)))}
+    </div>
+  </div>` : '';
   $('rfBody').innerHTML = `<div class="rf-res">
     <div class="rf-actions"><button class="btn btn-ghost btn-sm" data-rf-week="${prevWeek}">← Прошлая неделя</button><span class="grow"></span><button class="btn btn-ghost btn-sm" data-rf-chart>${ico('chart', 'ic-sm')}Динамика оценок</button><span class="grow"></span>${week < RF.current ? `<button class="btn btn-ghost btn-sm" data-rf-week="${nextWeek}">Следующая →</button>` : '<span class="rf-spacer"></span>'}</div>
     <div class="rf-people">${R.people.map(person).join('') || '<span class="muted">Нет сотрудников, которые заполняют рефлексию</span>'}</div>
-    ${clients.map((p) => {
-      const ans = R.people.map((u) => ({ u, a: u.answers[p.id] })).filter((x) => x.a && x.a.score && !x.a.skip);
-      const avg = ans.length ? (ans.reduce((s, x) => s + x.a.score, 0) / ans.length) : null;
-      return `<div class="rf-client"><h3>${esc(p.name)}<span class="avg">${avg == null ? 'нет оценок' : `в среднем ${Math.round(avg * 10) / 10}`}</span></h3>
-        ${R.people.map((u) => { const a = u.answers[p.id]; return a && a.skip ? `<div class="rf-ans"><span class="none">${esc(who(u))} — не ведёт этот кабинет</span></div>` : a && a.score ? `<div class="rf-ans" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div><span class="who">${esc(who(u))}:</span> ${esc(a.comment || '')}</div></div>` : R.legacy ? '' : `<div class="rf-ans"><span class="none">${esc(first(u.name))} — ещё не оценил(а)</span></div>`; }).join('')}
+    ${summary}
+    ${stat.map((x) => {
+      const p = x.p;
+      return `<div class="rf-client" id="rfc-${esc(p.id)}"><h3>${esc(p.name)}<span class="avg">${x.avg == null ? 'нет оценок' : `в среднем ${x.avg} ${dl(x.delta)}`}</span></h3>
+        ${R.people.map((u) => { const a = u.answers[p.id]; const mine = u.id === meId ? ' mine' : ''; return a && a.skip ? `<div class="rf-ans${mine}"><span class="none">${esc(who(u))} — не ведёт этот кабинет</span></div>` : a && a.score ? `<div class="rf-ans${mine}" style="--sc:${rfColor(a.score)}"><span class="sc">${a.score}</span><div><span class="who">${esc(who(u))}:</span> ${esc(a.comment || '')}</div></div>` : R.legacy ? '' : `<div class="rf-ans"><span class="none">${esc(u.id === meId ? 'Вы' : first(u.name))} — ещё не оценил(а)</span></div>`; }).join('')}
       </div>`;
     }).join('')}
   </div>`;
