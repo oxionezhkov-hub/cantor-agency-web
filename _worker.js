@@ -109,8 +109,8 @@
  *                                     "⚡ Авито: вчера" popup (bulk-linked via "🔑 Кабинеты Авито")
  *   reportJob:<id>                 -> { id, token, status, dateFrom, dateTo, report, observations,
  *                                        sessionUrl, error, createdAt, updatedAt } (14-day TTL) —
- *                                     one "📄 Ежедневный отчёт" request; the Claude Code routine
- *                                     (REPORT_ROUTINE_ID) reads/answers it via /api/report-jobs/<id>
+ *                                     one "📄 Ежедневный отчёт" request; Workers AI writes its
+ *                                     observations (see "Workers AI jobs")
  *   reportLastTo                   -> "YYYY-MM-DD", end date of the last requested report
  */
 
@@ -3101,7 +3101,7 @@ async function handleDashboardApi(request, env, url, ctx) {
     }
   }
 
-  // ── Daily report via the Claude Code routine ──
+  // ── Daily report: «Текущие наблюдения» written by Workers AI (see "Workers AI jobs") ──
   if (pathname === '/api/dashboard/report-job' && request.method === 'POST') {
     const body = await readJson(request);
     const dateTo = (body && body.dateTo) || mskYesterday();
@@ -3126,14 +3126,22 @@ async function handleDashboardApi(request, env, url, ctx) {
     };
     await putReportJob(kv, job);
     await kv.put('reportLastTo', dateTo);
-    await fireReportRoutine(env, kv, job, url.origin);
-    if (job.status === 'not_configured' || job.status === 'failed') await reportPostToChat(env, job);
+    if (!env.AI) {
+      job.status = 'not_configured';
+      job.error = 'ИИ не подключён (нет привязки Workers AI в настройках воркера) — можно скачать отчёт с автоматическими наблюдениями.';
+      await putReportJob(kv, job);
+      await reportPostToChat(env, job);
+    } else {
+      await waiEnqueue(kv, 'report', job.id);
+      await waiKick(env, ctx, 'report', job.id);
+    }
     return json({ job: publicReportJob(job) });
   }
 
   if (pathname === '/api/dashboard/report-job' && request.method === 'GET') {
     const job = await kv.get(`reportJob:${url.searchParams.get('id')}`, 'json');
     if (!job) return json({ error: 'not_found' }, 404);
+    if (WAI_ACTIVE.has(job.status)) await waiKick(env, ctx, 'report', job.id);
     return json({ job: publicReportJob(job) });
   }
 
@@ -3142,9 +3150,9 @@ async function handleDashboardApi(request, env, url, ctx) {
   if (pathname === '/api/dashboard/report-jobs' && request.method === 'GET') {
     const jobs = (await listByPrefix(kv, 'reportJob:'))
       .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
-      .slice(0, 10)
-      .map(publicReportJob);
-    return json({ jobs });
+      .slice(0, 10);
+    for (const j of jobs.filter((x) => WAI_ACTIVE.has(x.status)).slice(0, 2)) await waiKick(env, ctx, 'report', j.id);
+    return json({ jobs: jobs.map(publicReportJob) });
   }
 
   if (pathname === '/api/dashboard/report-last' && request.method === 'GET') {
@@ -3154,7 +3162,7 @@ async function handleDashboardApi(request, env, url, ctx) {
   if (pathname === '/api/dashboard/report-job/file' && request.method === 'GET') {
     const job = await kv.get(`reportJob:${url.searchParams.get('id')}`, 'json');
     if (!job) return json({ error: 'not_found' }, 404);
-    // Without the routine's observations (not configured / still running / failed) the
+    // Without the AI's observations (not configured / still running / failed) the
     // file falls back to the rule-based draft sentence computed for every client.
     const bytes = buildDailyReportDocx(job.report, job.observations || {});
     return new Response(bytes, {
@@ -3169,7 +3177,7 @@ async function handleDashboardApi(request, env, url, ctx) {
   return json({ error: 'not_found' }, 404);
 }
 
-/* ═══════════════ Dashboard: Avito auto-pull + daily report routine ═══════════════ */
+/* ═══════════════ Dashboard: Avito auto-pull + daily report ═══════════════ */
 
 // The agency works on Moscow time — "вчера" must not roll over at 03:00 MSK (UTC midnight).
 function mskToday() {
@@ -3565,8 +3573,8 @@ function fmtRuPct(n) {
   return (Math.round(n * 10) / 10).toString().replace('.', ',');
 }
 
-// Rule-based "Текущие наблюдения" — the routine rewrites it in natural wording, and this
-// is also what the file falls back to if the routine isn't configured or hasn't answered.
+// Rule-based "Текущие наблюдения" — Workers AI rewrites it in natural wording, and this
+// is also what the file falls back to if the AI isn't configured or hasn't answered.
 function draftObservation(month, last3) {
   const parts = [];
   if (month.contacts > 0 && month.views > 0) {
@@ -3758,7 +3766,7 @@ function reportFileName(job) {
   return job.dateFrom === job.dateTo ? `Otchet_${d(job.dateTo)}.docx` : `Otchet_${d(job.dateFrom)}-${d(job.dateTo)}.docx`;
 }
 
-/* ── Report jobs + the Claude Code routine callback ── */
+/* ── Report jobs ── */
 
 const REPORT_JOB_TTL = 14 * 24 * 3600;
 
@@ -3767,7 +3775,7 @@ async function putReportJob(kv, job) {
 }
 
 function publicReportJob(job) {
-  const { token, report, observations, ...rest } = job;
+  const { token, report, observations, wai, ...rest } = job;
   return {
     ...rest,
     periodLabel: report.periodLabel,
@@ -3776,47 +3784,6 @@ function publicReportJob(job) {
     hasObservations: Boolean(observations),
     fileName: reportFileName(job),
   };
-}
-
-// Fires the "Ежедневный отчёт" routine (see README note in wrangler.jsonc): its saved
-// prompt tells it to GET the job below, write "Текущие наблюдения" for each client and
-// POST them back. REPORT_ROUTINE_ID is a plain var, REPORT_ROUTINE_TOKEN an encrypted secret.
-async function fireReportRoutine(env, kv, job, origin) {
-  if (!env.REPORT_ROUTINE_ID || !env.REPORT_ROUTINE_TOKEN) {
-    job.status = 'not_configured';
-    job.error = 'Рутина Claude Code не подключена (нет REPORT_ROUTINE_ID / REPORT_ROUTINE_TOKEN) — можно скачать отчёт с автоматическими наблюдениями.';
-    job.updatedAt = new Date().toISOString();
-    await putReportJob(kv, job);
-    return;
-  }
-  const base = `${origin}/api/report-jobs/${job.id}`;
-  const text = [
-    'Запрос из дашборда Cantor Agency: ежедневный отчёт по клиентам Авито.',
-    `JOB_ID: ${job.id}`,
-    `PERIOD: ${job.dateFrom} — ${job.dateTo}`,
-    `DATA_URL: ${base}?token=${job.token}`,
-    `SUBMIT_URL: ${base}/observations?token=${job.token}`,
-  ].join('\n');
-  try {
-    const res = await fetch(`https://api.anthropic.com/v1/claude_code/routines/${env.REPORT_ROUTINE_ID}/fire`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.REPORT_ROUTINE_TOKEN}`,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(`routine_fire_${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
-    job.status = 'sent';
-    job.sessionUrl = (data && data.claude_code_session_url) || null;
-  } catch (e) {
-    job.status = 'failed';
-    job.error = `Не удалось запустить рутину: ${String(e && e.message)}`;
-  }
-  job.updatedAt = new Date().toISOString();
-  await putReportJob(kv, job);
 }
 
 // A finished report goes to the work chat by itself — its main topic (General), as a .docx, with the
@@ -3833,7 +3800,7 @@ async function reportPostToChat(env, job) {
       : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(u.name)));
     const caption = [
       `📄 <b>Отчёт по клиентам Авито</b> — ${escapeHtml(job.report.periodLabel)}`,
-      `Клиентов: ${job.report.clients.length}${job.observations ? '' : ' · наблюдения автоматические (Claude не ответил)'}`,
+      `Клиентов: ${job.report.clients.length}${job.observations ? '' : ' · наблюдения автоматические (ИИ не ответил)'}`,
       tags.length ? `${tags.join(', ')}, проверьте и отправьте клиентам.` : '',
     ].filter(Boolean).join('\n');
     const res = await botSendDocument(env, work.id, reportFileName(job), buildDailyReportDocx(job.report, job.observations), caption, {
@@ -3846,51 +3813,6 @@ async function reportPostToChat(env, job) {
     job.postError = String(e && e.message).slice(0, 200);
   }
   await putReportJob(kv, job);
-}
-
-// Called by the routine's cloud session — authorised by the per-job random token that was
-// only ever sent inside the routine fire payload (not by the dashboard password).
-async function handleReportJobCallback(request, env, url) {
-  const kv = env.AGENCY_DASHBOARD_KV;
-  const match = url.pathname.match(/^\/api\/report-jobs\/([a-f0-9]{12})(\/observations)?$/);
-  if (!match) return json({ error: 'not_found' }, 404);
-  const job = await kv.get(`reportJob:${match[1]}`, 'json');
-  if (!job || !url.searchParams.get('token') || url.searchParams.get('token') !== job.token) {
-    return json({ error: 'not_found' }, 404);
-  }
-
-  if (!match[2] && request.method === 'GET') {
-    if (job.status === 'sent') {
-      job.status = 'running';
-      job.updatedAt = new Date().toISOString();
-      await putReportJob(kv, job);
-    }
-    return json({
-      jobId: job.id,
-      instructions: 'Для каждого клиента из clients[] напиши одно предложение «Текущие наблюдения» по правилам из промпта рутины (опираясь на month.conversionPct, month.cpl и last3). draftObservation — механический черновик, его можно улучшить формулировкой, но не менять факты. Отправь POST на SUBMIT_URL: {"observations": {"<projectId>": "<текст>", ...}}.',
-      report: job.report,
-    });
-  }
-
-  if (match[2] && request.method === 'POST') {
-    const body = await readJson(request);
-    const obs = body && body.observations;
-    if (!obs || typeof obs !== 'object') return json({ error: 'missing_observations' }, 400);
-    const known = new Set(job.report.clients.map((c) => c.projectId));
-    const clean = {};
-    Object.entries(obs).forEach(([id, text]) => {
-      if (known.has(id) && typeof text === 'string' && text.trim()) clean[id] = text.trim().slice(0, 600);
-    });
-    job.observations = clean;
-    job.status = 'done';
-    job.error = null;
-    job.updatedAt = new Date().toISOString();
-    await putReportJob(kv, job);
-    await reportPostToChat(env, job);
-    return json({ ok: true, accepted: Object.keys(clean).length, missing: [...known].filter((id) => !clean[id]) });
-  }
-
-  return json({ error: 'not_found' }, 404);
 }
 
 // ── Control bot (Telegram): keeps agency tasks and deadlines from getting lost ──
@@ -4887,12 +4809,12 @@ function botIsLimitError(err) {
   const s = String((err && (err.message || err)) || '');
   return /neuron|allocation|quota|limit|exceeded|4006|capacity|429/i.test(s);
 }
-async function botAi(env, system, user, maxTokens) {
+async function botAi(env, system, user, maxTokens, opts = {}) {
   if (!env.AI) throw new Error('AI binding is not configured');
-  const res = await env.AI.run(env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT, {
+  const res = await env.AI.run(opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT, {
     messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
     max_tokens: maxTokens || 1500,
-    temperature: 0.1,
+    temperature: opts.temperature == null ? 0.1 : opts.temperature,
   });
   let out = '';
   if (typeof res === 'string') out = res;
@@ -7289,7 +7211,7 @@ async function atAnalyticsApi(env, ctx, url, action, body) {
       projects: projects.map((p) => ({ id: p.id, name: p.name, accountId: linkOf[p.id] || null })),
     });
   }
-  // «Отчёт»: тот же отчёт через рутину Claude Code, что и в дашборде.
+  // «Отчёт»: тот же отчёт (наблюдения пишет Workers AI), что и в дашборде.
   if (action === 'an-reports') {
     const [{ data: jobs }, { data: last }] = await Promise.all([dash('GET', '/api/dashboard/report-jobs'), dash('GET', '/api/dashboard/report-last')]);
     return json({ jobs: jobs.jobs || [], lastTo: last.lastTo || null, yesterday: last.yesterday || mskYesterday() });
@@ -7458,7 +7380,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   }
 
   // «ИИ-помощник» — у всех: свои диалоги, руководитель видит и чужие.
-  if (action.startsWith('ai-')) return atAiApi(env, team, me, action, body);
+  if (action.startsWith('ai-')) return atAiApi(env, team, me, action, body, ctx);
 
   if (action === 'meet' || action.startsWith('meet-')) {
     const res = await atMeetApi(env, team, me, action, body, nowMs);
@@ -7546,10 +7468,10 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   // ── Команда, Активность, База знаний ──
   if (!sections.includes('team') && !sections.includes('kb')) return json({ error: 'forbidden' }, 403);
 
-  // «База знаний»: updates to cantor.agency/base through the Claude Code routine.
+  // «База знаний»: updates to cantor.agency/base through Workers AI.
   if (action.startsWith('kb-')) {
     if (!sections.includes('kb')) return json({ error: 'forbidden' }, 403);
-    return atKbApi(env, me, action, body);
+    return atKbApi(env, me, action, body, ctx);
   }
   if (!sections.includes('team')) return json({ error: 'forbidden' }, 403);
 
@@ -7672,16 +7594,15 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   return json({ error: 'not_found' }, 404);
 }
 
-// ── Avito Tasks → «База знаний»: updates to cantor.agency/base via a Claude Code routine ──
+// ── Avito Tasks → «База знаний»: updates to cantor.agency/base via Workers AI ──
 // The owner and the assistant describe new knowledge on the tracker's «База знаний» tab: into a
-// chosen regulation, into «общее» (Claude decides where it belongs) or as a new regulation —
+// chosen regulation, into «общее» (the AI decides where it belongs) or as a new regulation —
 // text plus files and pictures. The page uploads files in ≤1.5 MB parts (the Yandex Cloud proxy
-// takes ≤3.5 MB per request), then «kb-send» fires the routine (KB_ROUTINE_ID var + KB_ROUTINE_TOKEN
-// secret, same mechanism as the daily report's) and answers at once — nobody waits on the page.
-// The routine's session reads the request from /api/kb-jobs/<id>?token=…, edits base/ in the repo,
-// merges it to main (the GitHub Action deploys cantor.agency) and posts the result back; the worker
-// then notifies the requester in the tracker and in Telegram, naming what changed where. The cron
-// marks requests the routine never answered as stuck and tells the requester and the owner.
+// takes ≤3.5 MB per request), then «kb-send» starts a Workers AI job (see "Workers AI jobs") and
+// answers at once — nobody waits on the page. The job reads the material, edits base/ and commits
+// it to main through the GitHub API (the GitHub Action deploys cantor.agency); the worker then
+// notifies the requester in the tracker and in Telegram, naming what changed where. The cron
+// finishes unfinished jobs and marks hopeless ones as stuck, telling the requester and the owner.
 //
 // KV keys (AGENCY_DASHBOARD_KV, "kb:" prefix):
 //   kb:job:<id>              -> { id, token, status, mode, target, newTitle, newSection, text, files,
@@ -7701,7 +7622,6 @@ const KB_MAX_TOTAL_BYTES = 80 * 1024 * 1024;
 const KB_MAX_TEXT = 30000;
 const KB_STUCK_MS = 150 * 60 * 1000;
 const KB_ACTIVE = new Set(['sent', 'running']);
-const KB_CALLBACK_PREFIX = `${BOT_WORKER_ORIGIN}/api/kb-jobs/`;
 const KB_BASE_URL = 'https://cantor.agency/base';
 
 function kbSlug(value) {
@@ -7747,7 +7667,7 @@ function kbTargetLabel(job) {
   if (job.mode === 'meeting' && job.meeting) return `Итоги встречи: ${job.meeting.clientName}, ${kbDm(job.meeting.date)}`;
   if (job.mode === 'reglament' && job.target) return job.target.title;
   if (job.mode === 'new') return `Новый регламент: ${job.newTitle}`;
-  return 'Общее — Claude разберёт сам';
+  return 'Общее — ИИ разберёт сам';
 }
 function kbPublicJob(job) {
   return {
@@ -7774,14 +7694,16 @@ function kbPublicJob(job) {
 }
 
 // Tracker API actions kb-* (owner and assistant only — called from handleAvitoTasksApi).
-async function atKbApi(env, me, action, body) {
+async function atKbApi(env, me, action, body, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const nowIso = new Date().toISOString();
 
   if (action === 'kb-list') {
     const index = (await kv.get('kb:index', 'json')) || [];
     const jobs = (await Promise.all(index.slice(0, 30).map((x) => kv.get(`kb:job:${x.id}`, 'json')))).filter(Boolean);
-    return json({ jobs: jobs.map(kbPublicJob), configured: Boolean(env.KB_ROUTINE_ID && env.KB_ROUTINE_TOKEN) });
+    // The page polls while something is in work — each poll pushes those jobs on a step.
+    for (const j of jobs.filter((x) => KB_ACTIVE.has(x.status)).slice(0, 3)) await waiKick(env, ctx, 'kb', j.id);
+    return json({ jobs: jobs.map(kbPublicJob), configured: Boolean(env.AI && env.GITHUB_TOKEN) });
   }
 
   if (action === 'kb-create') {
@@ -7914,225 +7836,11 @@ async function atKbApi(env, me, action, body) {
     } else if (KB_ACTIVE.has(job.status) || job.status === 'done') {
       return json({ job: kbPublicJob(job) });
     }
-    await kbFireRoutine(env, job);
+    await kbStart(env, ctx, job);
     return json({ job: kbPublicJob(job) });
   }
 
   return json({ error: 'not_found' }, 404);
-}
-
-// Fires the «База знаний» routine. Its saved prompt only accepts URLs under KB_CALLBACK_PREFIX;
-// everything else (what to do, how to report back) comes from the job's DATA_URL.
-async function kbFireRoutine(env, job) {
-  const kv = env.AGENCY_DASHBOARD_KV;
-  job.error = null;
-  job.result = null;
-  job.progress = null;
-  if (!env.KB_ROUTINE_ID || !env.KB_ROUTINE_TOKEN) {
-    job.status = 'not_configured';
-    job.error = 'Рутина Claude Code для базы знаний ещё не подключена (нет KB_ROUTINE_ID / KB_ROUTINE_TOKEN). Запрос сохранён — его можно отправить снова, когда рутину подключат.';
-    await kbPutJob(kv, job);
-    if (job.mode !== 'assistant' && await botOnce(kv, `kb-not-configured:${botMsk(Date.now()).date}`, 86400)) {
-      await botNotifyOwner(env, `📚 ${escapeHtml(job.byName)} отправил(а) обновление базы знаний, но рутина Claude Code для базы ещё не подключена (KB_ROUTINE_ID / KB_ROUTINE_TOKEN в Cloudflare). Запрос сохранён в трекере, вкладка «База знаний».`);
-    }
-    return;
-  }
-  const text = [
-    job.mode === 'assistant'
-      ? 'Запрос из Avito Tasks: ответить сотруднику агентства в разделе «ИИ-помощник» (репозиторий не менять — только прочитать данные и отправить ответ).'
-      : job.mode === 'meeting'
-      ? 'Запрос из Avito Tasks: составить итоги встречи с клиентом по транскрибации (репозиторий не менять — только прочитать материал и отправить результат).'
-      : 'Запрос из Avito Tasks: обновить базу знаний Cantor Agency (папка base/ репозитория, сайт cantor.agency/base).',
-    `JOB_ID: ${job.id}`,
-    `FROM: ${job.byName}`,
-    `WHERE: ${kbTargetLabel(job)}`,
-    `DATA_URL: ${KB_CALLBACK_PREFIX}${job.id}?token=${job.token}`,
-  ].join('\n');
-  try {
-    const res = await fetch(`https://api.anthropic.com/v1/claude_code/routines/${env.KB_ROUTINE_ID}/fire`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.KB_ROUTINE_TOKEN}`,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(`routine_fire_${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
-    job.status = 'sent';
-    job.sentAt = new Date().toISOString();
-    job.sessionUrl = (data && data.claude_code_session_url) || null;
-  } catch (e) {
-    job.status = 'failed';
-    job.error = `Не удалось запустить Claude: ${String(e && e.message)}`;
-  }
-  await kbPutJob(kv, job);
-}
-
-function kbMeetingInstructions(job) {
-  const first = String(job.meeting.clientName).trim().split(/\s+/)[0];
-  return [
-    `Задача: по транскрибации встречи с клиентом «${job.meeting.clientName}» (встреча ${kbDm(job.meeting.date)}) составить список принятых решений. Репозиторий НЕ трогай: ничего не меняй, не коммить, не открывай PR.`,
-    'Материал — поле text и файлы из files[] (скачай каждый по url: curl -sS -o <файл> "<url>"; если ответ 503 not_ready — подожди минуту и повтори). Это расшифровка Zoom (TXT, VTT, DOCX и т.п.) — прочитай её целиком.',
-    'Что нужно: только решения и договорённости встречи — что меняем, что тестируем, что продолжаем, что кто должен сделать и к какому сроку, ключевые цифры, на которые опирались. Без пересказа разговора, без воды.',
-    `Формулировки: что делает или решает агентство — пиши без подлежащего, во множественном числе, как общее решение: «Делаем упор на…», «Продолжим оптимизировать…», «Запустили рассылку…», «Лимит увеличили…». Слово «Команда» не используй. Что делает, должен или сказал клиент — с его именем без фамилии: «${first} будет писать…», «${first} подготовит…». Пиши по-русски, коротко, конкретно, как деловые договорённости; каждый пункт — одно-три предложения, ключевые цифры сохраняй. Обычно 5–12 пунктов. Не выдумывай того, чего не было во встрече. Пароли и телефоны не включай.`,
-    `Порядок: сначала все пункты про то, что делаем и решили мы (объявления, города, картинки, ставки, лимиты, рассылки, тесты, планы по бюджету). В самом конце — действия ${first} и рекомендации по диалогам и работе с контактами (как отвечать, сколько раз писать, звонить, видео, фото, отзывы). Близкие действия ${first} объединяй в один пункт.`,
-    `Пример хороших пунктов (другой клиент): «Делаем упор на объявления логопеда: объявления по русскому языку и математике пока не дают результата, их отключат или разместят иначе.», «Продолжим оптимизировать города и картинки в объявлениях; у лучших объявлений конверсия из просмотра в контакт 10–11%, в среднем пока около 5% (цель — поднять до 12%).», «Запустили рассылку с бесплатной консультацией; ожидается 5–10 контактов в ближайшие дни.», «Если контакты выйдут на стабильный уровень, дневной лимит поднимем с 1000 до 1500–2000 ₽.», «Ольга будет писать каждому контакту минимум 3–4 раза, в том числе тем, кто создал чат и ничего не написал: молчание — не отказ, чаще всего человек просто не увидел сообщение.», «Ольга подготовит видео: нарежет имеющуюся запись на короткие части и по возможности запишет простое видео о себе на 30–60 секунд без монтажа и сценария.»`,
-    'Перед началом отправь POST на callbacks.progress с {"note":"читаю транскрибацию"}. В конце — POST на callbacks.done с JSON: {"items":["<пункт 1>","<пункт 2>",…],"summary":"<одно предложение: сколько решений и о чём>"}. Заголовок добавит сервер сам — не включай его в items. Если файла нет или он нечитаем — POST на callbacks.fail с {"error":"<понятная причина>"}.',
-  ].join('\n');
-}
-function kbInstructions(job) {
-  if (job.mode === 'assistant') return aiInstructions(job);
-  if (job.mode === 'meeting') return kbMeetingInstructions(job);
-  const where = {
-    reglament: `Добавь знания в регламент «${job.target && job.target.title}» — файл base/${job.target && job.target.slug}. Если часть материала явно относится к другому регламенту — внеси её туда и упомяни это в отчёте.`,
-    general: 'Место не выбрано: сам реши, к каким регламентам из base/ это относится (смотри base/index.html и содержимое регламентов). Можно распределить по нескольким. Новый регламент создавай, только если знания не подходят ни к одному существующему. Отказываться нельзя: владелец хочет, чтобы любой присланный материал оказался в базе. Если это не правило, а рассказ, кейс, наблюдение, переписка или цифры клиента — вытащи из него практический вывод для команды (что это значит для работы с такими клиентами: продажи, запуск, тексты, ведение) и внеси в самый подходящий регламент — отдельным пунктом или плашкой «Пример из практики» в нужном шаге. Если подходящего места нет совсем — добавь шаг в регламент «Кейсы и наблюдения» (base/keisy-i-nablyudeniya; если его нет — создай). Вместо имени клиента пиши описание (например, «репетитор нидерландского с блогом в Instagram на 7,5 тыс. подписчиков»).',
-    new: `Создай новый регламент «${job.newTitle}»${job.newSection ? ` в разделе «${job.newSection}» каталога` : ''} и наполни его этими знаниями.`,
-  }[job.mode];
-  return [
-    `Задача: внести новые знания в базу знаний агентства. ${where}`,
-    'Материал — поле text и файлы из files[] (скачай каждый по url: curl -sS -o <файл> "<url>"; если ответ 503 not_ready — подожди минуту и повтори). Картинки посмотри, PDF/DOCX/таблицы прочитай. Скриншоты, которые помогают понять шаг, положи в images/base/<slug регламента>/ (латиница, без пробелов) и вставь в регламент тегом <img> с alt; остальные файлы используй только как источник текста.',
-    'Как вносить:',
-    '• Каждый регламент — HTML-файл без расширения в base/ (например base/reglament-4-vstrechi). Сохраняй его вёрстку и стиль: те же классы (.reg-card, .step, .step-title, .step-meta, списки, плашки), оглавление .toc со ссылками на #sN — новый шаг добавляй и в оглавление.',
-    '• Пиши как в остальных регламентах: по-русски, коротко, конкретно, в повелительном наклонении. Не дублируй то, что уже есть, — дополни или поправь существующий пункт. Если новое противоречит старому — новое главнее, старое убери.',
-    '• Не выдумывай факты сверх материала. Имена клиентов, телефоны, пароли и прочие личные данные в базу не переноси.',
-    '• Новый регламент: файл base/<slug> (латиница через дефис, без расширения) по образцу соседних регламентов (шапка, .doc-title, .doc-meta, .toc, .reg-card), плюс карточка a.cat-card в нужном .cat-section в base/index.html (новый раздел — только если ни один не подходит). В base/index.html правь только каталог.',
-    '• Меняй только base/ и images/base/. Больше ничего в репозитории не трогай.',
-    'Публикация: сделай один коммит, запушь ветку, открой PR в main (не черновик) и сразу смержи его (squash) через GitHub — автомерж этих правок заранее разрешён владельцем; после мержа GitHub Action сам выложит сайт. Если мерж не удался из-за конфликта — подтяни свежий main, разреши и повтори. Если GitHub-инструментов для PR нет — попробуй git push origin HEAD:main; если и это запрещено — запушь ветку и отправь done с published=false и ссылкой на ветку (https://github.com/oxionezhkov-hub/cantor-agency-web/tree/<ветка>) в prUrl. На события PR не подписывайся.',
-    `Перед началом отправь POST на callbacks.progress с {"note":"<что делаешь, коротко>"}. В конце — POST на callbacks.done с JSON: {"summary":"2–4 предложения для Софии простым языком: что именно добавлено","changes":[{"slug":"<slug>","title":"<название регламента>","what":"<что изменилось, конкретно: какой шаг/раздел добавлен или исправлен>","isNew":false}],"prUrl":"<ссылка на PR>","published":true}. published=false — если смержить не получилось и PR ждёт проверки. Если менять ничего не пришлось (знания уже есть) — changes: [] и published: true, в summary объясни, где это уже описано. callbacks.fail — только если материал физически не прочитать (файл битый, пустой текст) или не удалось сохранить правки в репозиторий: {"error":"<понятная причина>"}. «Не подходит ни к одному регламенту» — не причина для fail.`,
-    `Ссылка на страницу регламента: ${KB_BASE_URL}/<slug>.`,
-  ].join('\n');
-}
-
-// Called by the routine's cloud session — authorised by the per-job random token that was only
-// ever sent inside the routine fire payload (not by the tracker's tokens).
-async function handleKbJobCallback(request, env, url) {
-  const kv = env.AGENCY_DASHBOARD_KV;
-  const match = url.pathname.match(/^\/api\/kb-jobs\/([a-z0-9]{12})(?:\/(progress|done|fail|file\/([a-z0-9]{1,12})|ai\/([a-zA-Z-]{2,20})))?$/);
-  if (!match) return json({ error: 'not_found' }, 404);
-  const job = await kv.get(`kb:job:${match[1]}`, 'json');
-  if (!job || job.status === 'draft' || !url.searchParams.get('token') || url.searchParams.get('token') !== job.token) {
-    return json({ error: 'not_found' }, 404);
-  }
-  const base = `${KB_CALLBACK_PREFIX}${job.id}`;
-  const q = `?token=${job.token}`;
-  const action = match[2] ? match[2].split('/')[0] : null;
-
-  // ИИ-помощник: данные трекера, дашборда, чатов и Авито — только пока запрос в работе.
-  if (action === 'ai') {
-    if (job.mode !== 'assistant' || !KB_ACTIVE.has(job.status) || Date.now() - Date.parse(job.createdAt) > AI_TOOLS_MS) return json({ error: 'not_found' }, 404);
-    try {
-      return json(await aiTool(env, match[4], url.searchParams));
-    } catch (e) {
-      return json({ error: 'tool_failed', message: String(e && e.message).slice(0, 300) }, 502);
-    }
-  }
-
-  if (!action && request.method === 'GET') {
-    if (job.status === 'sent') {
-      job.status = 'running';
-      await kbPutJob(kv, job);
-    }
-    if (job.mode === 'assistant') return json(await aiJobPayload(env, job, base, q));
-    return json({
-      jobId: job.id,
-      instructions: kbInstructions(job),
-      request: {
-        mode: job.mode,
-        target: job.target,
-        newTitle: job.newTitle,
-        newSection: job.newSection,
-        meeting: job.meeting ? { client: job.meeting.clientName, date: job.meeting.date } : null,
-        text: job.text,
-        from: job.byName,
-        createdAt: job.createdAt,
-        files: job.files.map((f) => ({ name: f.name, type: f.type, size: f.size, url: `${base}/file/${f.id}${q}` })),
-      },
-      callbacks: { progress: `${base}/progress${q}`, done: `${base}/done${q}`, fail: `${base}/fail${q}` },
-    });
-  }
-
-  if (action === 'file' && request.method === 'GET') {
-    const file = job.files.find((f) => f.id === match[3]);
-    if (!file) return json({ error: 'not_found' }, 404);
-    const parts = await Promise.all(Array.from({ length: file.parts }, (_, p) => kv.get(`kb:file:${job.id}:${file.id}:${p}`, 'arrayBuffer')));
-    if (parts.some((p) => !p)) return json({ error: 'not_ready', message: 'Файл ещё не доступен (истёк срок хранения или KV не успел синхронизироваться) — повторите через минуту.' }, 503);
-    const bytes = new Uint8Array(file.size);
-    let off = 0;
-    for (const p of parts) { bytes.set(new Uint8Array(p), off); off += p.byteLength; }
-    return new Response(bytes, {
-      headers: {
-        'Content-Type': file.type || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="file"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
-        ...corsHeaders(),
-      },
-    });
-  }
-
-  if (request.method !== 'POST' || !action) return json({ error: 'not_found' }, 404);
-  const body = (await readJson(request)) || {};
-  if (job.status === 'done' && (action !== 'done' || job.mode === 'assistant')) return json({ error: 'already_done' }, 409);
-
-  if (action === 'progress') {
-    job.status = 'running';
-    job.progress = atClean(body.note, 300) || null;
-    await kbPutJob(kv, job);
-    return json({ ok: true });
-  }
-
-  if (action === 'fail') {
-    job.status = 'failed';
-    job.error = atClean(body.error, 600) || 'Claude не смог внести изменения.';
-    job.finishedAt = new Date().toISOString();
-    await kbPutJob(kv, job);
-    await kbNotify(env, job);
-    return json({ ok: true });
-  }
-
-  if (job.mode === 'assistant') return aiDone(env, job, body);
-
-  // done — итоги встречи: список решений
-  if (job.mode === 'meeting') {
-    const items = (Array.isArray(body.items) ? body.items : []).map((x) => atClean(x, 600).replace(/^[•\-*–—]\s*/, '')).filter(Boolean).slice(0, 40);
-    if (!items.length) return json({ error: 'missing_result', message: 'Нужен items[] — список решений' }, 400);
-    job.meeting = { ...(job.meeting || {}), items, text: null };
-    job.result = { summary: atClean(body.summary, 600) || `Решений: ${items.length}`, changes: [], prUrl: null, published: true };
-    job.status = 'done';
-    job.error = null;
-    job.progress = null;
-    job.finishedAt = new Date().toISOString();
-    await kbPutJob(kv, job);
-    await kbNotify(env, job);
-    return json({ ok: true, items: items.length });
-  }
-  const changes = (Array.isArray(body.changes) ? body.changes : []).slice(0, 20).map((c) => {
-    const slug = kbSlug(c && c.slug);
-    return {
-      slug: slug || null,
-      title: atClean(c && c.title, 200) || slug || 'Регламент',
-      what: atClean(c && c.what, 600),
-      isNew: Boolean(c && c.isNew),
-      url: slug ? `${KB_BASE_URL}/${slug}` : null,
-    };
-  }).filter((c) => c.slug || c.what);
-  const summary = atClean(body.summary, 1500);
-  if (!summary && !changes.length) return json({ error: 'missing_result', message: 'Нужны summary и changes[]' }, 400);
-  const prUrl = atClean(body.prUrl, 300);
-  job.result = {
-    summary,
-    changes,
-    prUrl: /^https:\/\/github\.com\//.test(prUrl) ? prUrl : null,
-    // Nothing changed (the knowledge was already there) — there is nothing to publish either.
-    published: !changes.length || body.published !== false,
-  };
-  job.status = 'done';
-  job.error = null;
-  job.progress = null;
-  job.finishedAt = new Date().toISOString();
-  await kbPutJob(kv, job);
-  await kbNotify(env, job);
-  return json({ ok: true, changes: changes.length });
 }
 
 // The requester hears about the outcome in the tracker and in Telegram; the owner gets a quiet copy
@@ -8168,22 +7876,22 @@ async function kbNotify(env, job) {
     rows.push([{ text: 'Открыть в трекере', url: kbPage }]);
     tg = { text: lines.join('\n'), extra: { reply_markup: { inline_keyboard: rows } } };
   } else {
-    const reason = job.status === 'stuck' ? 'Claude не ответил больше двух часов' : job.error || 'неизвестная ошибка';
+    const reason = job.status === 'stuck' ? 'ИИ не ответил больше двух часов' : job.error || 'неизвестная ошибка';
     inApp = `Не получилось обновить базу знаний (${kbTargetLabel(job)}): ${reason}. Можно отправить снова.`;
     tg = {
       text: ['⚠️ <b>Не получилось обновить базу знаний</b>', `<i>${about}</i>`, `Куда: ${escapeHtml(kbTargetLabel(job))}`, `Причина: ${escapeHtml(reason)}`, '', 'В трекере на вкладке «База знаний» можно отправить запрос снова.'].join('\n'),
       extra: { reply_markup: { inline_keyboard: [[{ text: 'Открыть в трекере', url: kbPage }]] } },
     };
   }
-  if (requester) await atNotify(env, team, [requester.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: inApp, by: 'Claude' }, tg);
+  if (requester) await atNotify(env, team, [requester.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: inApp, by: 'ИИ' }, tg);
   // The owner: only the bell in Avito Tasks — a Telegram message per request was too much (one
   // dictation makes a dozen requests). The morning summary has a line with the day's count.
   if (owner && owner.id !== job.byId) {
-    await atNotify(env, team, [owner.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: `${job.byName}: ${inApp}`, by: 'Claude' });
+    await atNotify(env, team, [owner.id], { kind: job.status === 'done' ? 'kb' : 'kbfail', ref: `kb:${job.id}`, text: `${job.byName}: ${inApp}`, by: 'ИИ' });
   }
 }
 
-// Cron: requests the routine took but never answered (session died, limits) don't hang forever.
+// Cron: requests that never finished (the AI kept failing, limits) don't hang forever.
 async function atKbCron(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const index = (await kv.get('kb:index', 'json')) || [];
@@ -8192,25 +7900,766 @@ async function atKbCron(env) {
     const job = await kv.get(`kb:job:${x.id}`, 'json');
     if (!job || !KB_ACTIVE.has(job.status) || now - Date.parse(job.updatedAt) <= KB_STUCK_MS) continue;
     job.status = 'stuck';
-    job.error = 'Claude не ответил больше двух часов.';
+    job.error = 'ИИ не ответил больше двух часов.';
     job.finishedAt = new Date().toISOString();
     await kbPutJob(kv, job);
     await kbNotify(env, job);
   }
 }
 
-// ── Avito Tasks → «ИИ-помощник»: a chat with Claude for everyone on the team ──
-// Every message goes to the same Claude Code routine as the knowledge base (a kb:job with mode
-// 'assistant' — callbacks, file storage and stuck handling are shared). The worker gathers the data
-// the question needs (all clients, the clients and people it names, tasks, chats, the Avito cabinet
-// and a CSV export when asked) and hands it over in DATA_URL's payload: the session's own fetches of
-// client data get stopped by its safety checks. A few token-scoped lookups
-// (/api/kb-jobs/<id>/ai/<tool>) remain for what the payload lacks. The session posts back the
-// answer, an updated short memory of the dialog and, rarely, files of its own.
-// A dialog keeps its last messages for display; Claude gets only the memory and the last few
+// ── Workers AI jobs: the daily report, «База знаний», «Итоги встречи» and «ИИ-помощник» ──
+// All four used to go to Claude Code routines; now the worker does them itself on the free Workers AI
+// allocation (the AI binding — the same one the control bot uses). A job runs in steps, each one model
+// call that fits in waitUntil's ~30 s after a response, and keeps its progress in job.wai, so a step cut
+// off midway is simply redone: the request that creates a job starts it, the pages that poll it (report
+// list, «База знаний», an open dialog) push it on, and the cron finishes whatever is left (wai:queue).
+// Knowledge-base edits are committed straight to main through the GitHub API — GITHUB_TOKEN secret, a
+// fine-grained token with Contents: read and write on this repository; the GitHub Action then deploys
+// cantor.agency, as it did for the routine's merges.
+//
+// KV keys (AGENCY_DASHBOARD_KV):
+//   wai:queue        -> [{ kind: 'report'|'kb', id, at }]  jobs not finished yet — the cron's list
+//   wai:text:<jobId> -> the material text extracted from a job's text and files (14-day TTL)
+const WAI_LEASE_MS = 50 * 1000;
+const WAI_MAX_TRIES = 3;
+const WAI_ACTIVE = new Set(['queued', 'sent', 'running']);
+const WAI_TEXT_TTL = 14 * 24 * 3600;
+const WAI_CHUNK_CHARS = 22000;
+const WAI_KB_MATERIAL_CHARS = 18000;
+const WAI_KB_DOC_CHARS = 14000;
+const WAI_REPORT_BATCH = 10;
+const WAI_GH_REPO = 'oxionezhkov-hub/cantor-agency-web';
+const WAI_GH_BRANCH = 'main';
+const WAI_LIMIT_TEXT = 'Дневной бесплатный лимит Workers AI исчерпан — он обновляется в 03:00 МСК. Отправьте запрос снова после этого.';
+
+function waiModel(env) {
+  return env.WORKERS_AI_MODEL || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT;
+}
+function waiAi(env, system, user, maxTokens) {
+  return botAi(env, system, user, maxTokens, { model: waiModel(env), temperature: 0.3 });
+}
+function waiClip(text, max) {
+  const s = String(text || '');
+  return s.length > max ? `${s.slice(0, max)}\n…(дальше обрезано)` : s;
+}
+function waiErrorText(e) {
+  if (botIsLimitError(e)) return WAI_LIMIT_TEXT;
+  return `ИИ не справился: ${String((e && e.message) || e).slice(0, 300)}`;
+}
+// JSON from a model: the object in the text, tolerating raw line breaks inside strings.
+function waiParseJson(text) {
+  const parsed = botParseJson(text);
+  if (parsed) return parsed;
+  return botParseJson(String(text || '').replace(/[\u0000-\u001f]+/g, ' '));
+}
+function waiHtmlText(html) {
+  return String(html || '')
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<br\s*\/?>|<\/(p|li|div|h\d|tr)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&laquo;/g, '«').replace(/&raquo;/g, '»').replace(/&mdash;/g, '—').replace(/&ndash;/g, '–')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
+}
+
+// ── queue, lease and the step loop ──
+async function waiEnqueue(kv, kind, id) {
+  const q = ((await kv.get('wai:queue', 'json')) || []).filter((x) => !(x.kind === kind && x.id === id));
+  q.push({ kind, id, at: Date.now() });
+  await kv.put('wai:queue', JSON.stringify(q.slice(-60)));
+}
+async function waiDequeue(kv, kind, id) {
+  const q = (await kv.get('wai:queue', 'json')) || [];
+  if (!q.some((x) => x.kind === kind && x.id === id)) return;
+  await kv.put('wai:queue', JSON.stringify(q.filter((x) => !(x.kind === kind && x.id === id))));
+}
+// Pushes a job on: in the background when there is a request context, inline otherwise.
+async function waiKick(env, ctx, kind, id) {
+  const short = Boolean(ctx && ctx.waitUntil);
+  const run = waiRun(env, kind, id, short ? 2 : 40, short).catch((e) => console.error('workers ai job failed', kind, id, e && e.stack));
+  if (ctx && ctx.waitUntil) ctx.waitUntil(run);
+  else await run;
+}
+// short: inside a request's waitUntil (~30 s). A step that was cut off there once (inflight still set
+// when its lease ran out) is left to the cron, which has minutes for it.
+async function waiRun(env, kind, id, maxSteps, short) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const key = kind === 'report' ? `reportJob:${id}` : `kb:job:${id}`;
+  const save = (job) => (kind === 'report' ? putReportJob(kv, job) : kbPutJob(kv, job));
+  for (let step = 0; step < maxSteps; step += 1) {
+    const job = await kv.get(key, 'json');
+    if (!job || !WAI_ACTIVE.has(job.status)) {
+      await waiDequeue(kv, kind, id);
+      return;
+    }
+    const w = job.wai || (job.wai = {});
+    if (w.lease && w.lease > Date.now()) return; // another request is on this step right now
+    if (short && w.inflight) return;
+    w.tries = (w.tries || 0) + 1;
+    w.inflight = true;
+    w.lease = Date.now() + WAI_LEASE_MS;
+    job.status = 'running';
+    await save(job);
+    let finished = false;
+    try {
+      if (w.tries > WAI_MAX_TRIES) throw new Error('шаг не удался несколько раз подряд');
+      finished = kind === 'report' ? await waiReportStep(env, job) : await waiKbStep(env, job);
+      if (!finished) w.tries = 0;
+    } catch (e) {
+      console.error('workers ai step failed', kind, id, e && e.stack);
+      // A spent allocation won't come back within this job's retries; anything else gets another go.
+      if (botIsLimitError(e) || w.tries >= WAI_MAX_TRIES) {
+        job.status = 'failed';
+        job.error = waiErrorText(e);
+        job.progress = null;
+        finished = true;
+      }
+    }
+    w.lease = 0;
+    w.inflight = false;
+    if (finished) job.finishedAt = new Date().toISOString();
+    await save(job);
+    if (!finished) continue;
+    await waiDequeue(kv, kind, id);
+    await kv.delete(`wai:text:${id}`);
+    if (kind === 'report') await reportPostToChat(env, job);
+    else await kbNotify(env, job);
+    return;
+  }
+}
+// Cron: everything still in the queue, oldest first, as far as the tick allows.
+async function waiCron(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const started = Date.now();
+  const q = (await kv.get('wai:queue', 'json')) || [];
+  const index = (await kv.get('kb:index', 'json')) || [];
+  const items = [...q];
+  index.filter((x) => WAI_ACTIVE.has(x.status) && !q.some((y) => y.kind === 'kb' && y.id === x.id)).forEach((x) => items.push({ kind: 'kb', id: x.id }));
+  for (const x of items) {
+    if (Date.now() - started > 8 * 60 * 1000) break;
+    await waiRun(env, x.kind, x.id, 40, false);
+  }
+}
+
+// ── reading the material: text plus files (TXT/VTT/SRT as is, the rest through AI.toMarkdown) ──
+function waiDecode(bytes) {
+  const utf = new TextDecoder('utf-8').decode(bytes);
+  if ((utf.match(/�/g) || []).length < 20) return utf.replace(/^﻿/, '');
+  try { return new TextDecoder('windows-1251').decode(bytes); } catch { return utf; }
+}
+// Zoom/Teams subtitles: drop the header, cue numbers and timings — only who said what stays.
+function waiCleanSubs(text) {
+  return String(text).split(/\r?\n/)
+    .filter((l) => l.trim() && !/^WEBVTT/.test(l) && !/^\d+$/.test(l.trim()) && !/-->/.test(l) && !/^(NOTE|STYLE|REGION)\b/.test(l))
+    .join('\n');
+}
+async function waiFileText(env, file, bytes) {
+  const name = String(file.name || '').toLowerCase();
+  const type = String(file.type || '');
+  if (/\.(vtt|srt)$/.test(name) || type === 'text/vtt') return waiCleanSubs(waiDecode(bytes));
+  if (/\.(txt|md|csv|tsv|json|log|text)$/.test(name) || /^text\/(plain|csv|markdown|tab)/.test(type)) return waiDecode(bytes);
+  if (/\.html?$/.test(name) || type === 'text/html') return waiHtmlText(waiDecode(bytes));
+  if (!env.AI || typeof env.AI.toMarkdown !== 'function') throw new Error('нет AI.toMarkdown');
+  const out = await env.AI.toMarkdown([{ name: file.name || 'file', blob: new Blob([bytes], { type: type || 'application/octet-stream' }) }]);
+  const r = Array.isArray(out) ? out[0] : out;
+  if (!r || r.format === 'error' || !r.data) throw new Error((r && r.error) || 'формат не поддерживается');
+  return String(r.data);
+}
+async function waiReadMaterial(env, job) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const parts = [];
+  const unread = [];
+  if (job.text && job.text.trim()) parts.push(job.text.trim());
+  for (const f of job.files || []) {
+    const chunks = await Promise.all(Array.from({ length: f.parts }, (_, p) => kv.get(`kb:file:${job.id}:${f.id}:${p}`, 'arrayBuffer')));
+    if (chunks.some((c) => !c)) { unread.push(`${f.name} (файл не найден — истёк срок хранения)`); continue; }
+    const bytes = new Uint8Array(f.size);
+    let off = 0;
+    for (const c of chunks) { bytes.set(new Uint8Array(c), off); off += c.byteLength; }
+    try {
+      const text = (await waiFileText(env, f, bytes)).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+      if (text) parts.push(`=== Файл «${f.name}» ===\n${text}`);
+      else unread.push(`${f.name} (пустой)`);
+    } catch (e) {
+      unread.push(`${f.name} (${String(e && e.message).slice(0, 80)})`);
+    }
+  }
+  const text = parts.join('\n\n');
+  await kv.put(`wai:text:${job.id}`, text || ' ', { expirationTtl: WAI_TEXT_TTL });
+  job.wai.unread = unread;
+  job.wai.chars = text.length;
+}
+async function waiMaterial(env, job) {
+  const text = await env.AGENCY_DASHBOARD_KV.get(`wai:text:${job.id}`);
+  return String(text == null ? job.text || '' : text).trim();
+}
+// Splits long text on line breaks into pieces of about max characters.
+function waiChunks(text, max) {
+  const out = [];
+  let cur = '';
+  for (const line of String(text).split('\n')) {
+    if (cur.length + line.length + 1 > max && cur) { out.push(cur); cur = ''; }
+    cur += (cur ? '\n' : '') + (line.length > max ? line.slice(0, max) : line);
+  }
+  if (cur.trim()) out.push(cur);
+  return out;
+}
+
+// ── the daily report: «Текущие наблюдения» for every client ──
+const WAI_REPORT_SYSTEM = [
+  'Ты аналитик агентства Cantor Agency (продвижение репетиторов и онлайн-школ на Авито). Пишешь блок «Текущие наблюдения» ежедневного отчёта, который менеджер перешлёт клиенту.',
+  'Для каждого клиента — одно-два предложения по-русски: конверсия из просмотра в контакт за месяц (month.conversionPct, цель 10–12%), стоимость контакта (month.cpl, цель 1000–1500 ₽) и динамика просмотров за последние 3 дня (last3).',
+  'draft — механический черновик с верными цифрами: перепиши его живым деловым языком, но цифры и выводы (выше/ниже цели, растут/снижаются) не меняй и ничего не добавляй от себя.',
+  'Тон спокойный и конкретный, без воды, обещаний, эмодзи и markdown. Если контактов за месяц нет — так и скажи, без конверсии и CPL.',
+  'Ответ — только JSON-объект {"<id клиента>": "<наблюдение>", …} для всех клиентов из запроса.',
+].join('\n');
+
+async function waiReportStep(env, job) {
+  const w = job.wai;
+  const clients = job.report.clients;
+  w.obs = w.obs || {};
+  const todo = clients.filter((c) => !w.obs[c.projectId]).slice(0, WAI_REPORT_BATCH);
+  if (todo.length) {
+    const rows = todo.map((c) => ({
+      id: c.projectId,
+      name: c.name,
+      month: { budget: c.month.budget, views: c.month.views, contacts: c.month.contacts, conversionPct: c.month.conversionPct, cpl: c.month.cpl },
+      last3: c.last3.map((d) => d.views),
+      draft: c.draftObservation,
+    }));
+    const out = await waiAi(env, WAI_REPORT_SYSTEM, `Период отчёта: ${job.report.periodLabel}.\nКлиенты:\n${JSON.stringify(rows)}`, 2500);
+    const parsed = waiParseJson(out);
+    if (!parsed) throw new Error('ответ не похож на JSON');
+    // A client the model skipped keeps the draft — the job always moves on.
+    for (const c of todo) {
+      const t = parsed[c.projectId];
+      w.obs[c.projectId] = typeof t === 'string' && t.trim() ? t.replace(/\s+/g, ' ').trim().slice(0, 600) : c.draftObservation;
+    }
+    if (clients.some((c) => !w.obs[c.projectId])) return false;
+  }
+  job.observations = w.obs;
+  job.status = 'done';
+  job.error = null;
+  return true;
+}
+
+// ── «База знаний», «Итоги встречи», «ИИ-помощник» ──
+async function kbStart(env, ctx, job) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  job.error = null;
+  job.result = null;
+  job.progress = null;
+  job.wai = null;
+  const missing = !env.AI ? 'привязки Workers AI (ai в wrangler.jsonc)'
+    : !['meeting', 'assistant'].includes(job.mode) && !env.GITHUB_TOKEN ? 'секрета GITHUB_TOKEN — правки базы знаний некуда сохранить' : null;
+  if (missing) {
+    job.status = 'not_configured';
+    job.error = `ИИ ещё не подключён: в настройках воркера нет ${missing}. Запрос сохранён — его можно отправить снова, когда подключат.`;
+    await kbPutJob(kv, job);
+    if (job.mode !== 'assistant' && await botOnce(kv, `kb-not-configured:${botMsk(Date.now()).date}`, 86400)) {
+      await botNotifyOwner(env, `📚 ${escapeHtml(job.byName)} отправил(а) запрос в «Базу знаний», но ИИ не подключён: нет ${escapeHtml(missing)} (Cloudflare → mainweb → Settings). Запрос сохранён в трекере.`);
+    }
+    return;
+  }
+  job.status = 'sent';
+  job.sentAt = new Date().toISOString();
+  await kbPutJob(kv, job);
+  await waiEnqueue(kv, 'kb', job.id);
+  await waiKick(env, ctx, 'kb', job.id);
+}
+
+async function waiKbStep(env, job) {
+  if (job.mode === 'assistant') return waiAssistantStep(env, job);
+  const w = job.wai;
+  if (!w.read) {
+    job.progress = job.mode === 'meeting' ? 'читаю транскрибацию' : 'читаю материалы';
+    await waiReadMaterial(env, job);
+    w.read = true;
+    return false;
+  }
+  return job.mode === 'meeting' ? waiMeetingStep(env, job) : waiKbEditStep(env, job);
+}
+
+// «Итоги встречи»: a long transcript is read in parts (notes per part), then the decisions are written.
+function waiMeetingRules(job) {
+  const first = String(job.meeting.clientName).trim().split(/\s+/)[0];
+  return [
+    `Ты составляешь итоги встречи агентства Cantor Agency (продвижение репетиторов на Авито) с клиентом «${job.meeting.clientName}» (встреча ${kbDm(job.meeting.date)}) — список принятых решений, который уйдёт клиенту.`,
+    'Что нужно: только решения и договорённости встречи — что меняем, что тестируем, что продолжаем, что кто должен сделать и к какому сроку, ключевые цифры, на которые опирались. Без пересказа разговора, без воды.',
+    `Формулировки: что делает или решает агентство — пиши без подлежащего, во множественном числе, как общее решение: «Делаем упор на…», «Продолжим оптимизировать…», «Запустили рассылку…», «Лимит увеличили…». Слово «Команда» не используй. Что делает, должен или сказал клиент — с его именем без фамилии: «${first} будет писать…», «${first} подготовит…». Пиши по-русски, коротко, конкретно, как деловые договорённости; каждый пункт — одно-три предложения, ключевые цифры сохраняй. Обычно 5–12 пунктов. Не выдумывай того, чего не было во встрече. Пароли и телефоны не включай.`,
+    `Порядок: сначала все пункты про то, что делаем и решили мы (объявления, города, картинки, ставки, лимиты, рассылки, тесты, планы по бюджету). В самом конце — действия ${first} и рекомендации по диалогам и работе с контактами (как отвечать, сколько раз писать, звонить, видео, фото, отзывы). Близкие действия ${first} объединяй в один пункт.`,
+    `Пример хороших пунктов (другой клиент): «Делаем упор на объявления логопеда: объявления по русскому языку и математике пока не дают результата, их отключат или разместят иначе.», «Продолжим оптимизировать города и картинки в объявлениях; у лучших объявлений конверсия из просмотра в контакт 10–11%, в среднем пока около 5% (цель — поднять до 12%).», «Запустили рассылку с бесплатной консультацией; ожидается 5–10 контактов в ближайшие дни.», «Если контакты выйдут на стабильный уровень, дневной лимит поднимем с 1000 до 1500–2000 ₽.», «Ольга будет писать каждому контакту минимум 3–4 раза, в том числе тем, кто создал чат и ничего не написал: молчание — не отказ, чаще всего человек просто не увидел сообщение.», «Ольга подготовит видео: нарежет имеющуюся запись на короткие части и по возможности запишет простое видео о себе на 30–60 секунд без монтажа и сценария.»`,
+    'Формат ответа: только пункты, каждый с новой строки и начинается с «• ». Без заголовка, вступления и заключения.',
+  ].join('\n');
+}
+const WAI_MEETING_PART_SYSTEM = [
+  'Ты читаешь часть расшифровки встречи агентства Cantor Agency (продвижение репетиторов на Авито) с клиентом.',
+  'Выпиши из этой части все решения, договорённости, планы, поручения (кто, что, к какому сроку) и ключевые цифры — коротко, по-русски, каждый пункт с новой строки с «• ».',
+  'Пересказ разговора, приветствия и посторонние темы не нужны. Ничего не выдумывай. Если решений в этой части нет — ответь одной строкой «• —».',
+].join('\n');
+function waiItems(text) {
+  return String(text || '').split('\n')
+    .map((l) => l.replace(/^\s*(?:[•\-*–—]|\d+[.)])\s*/, '').replace(/\*\*/g, '').trim())
+    .filter((l) => l.length > 3 && !/^(итоги|решения)\b.{0,60}:?$/i.test(l))
+    .map((l) => atClean(l, 600))
+    .slice(0, 40);
+}
+async function waiMeetingStep(env, job) {
+  const w = job.wai;
+  const text = await waiMaterial(env, job);
+  if (text.length < 200) throw new Error(`в транскрибации почти нет текста${w.unread && w.unread.length ? ` (не прочитались: ${w.unread.join(', ')})` : ''}`);
+  const chunks = waiChunks(text, WAI_CHUNK_CHARS);
+  w.notes = w.notes || [];
+  if (chunks.length > 1 && w.notes.length < chunks.length) {
+    const i = w.notes.length;
+    job.progress = `читаю транскрибацию: часть ${i + 1} из ${chunks.length}`;
+    const out = await waiAi(env, WAI_MEETING_PART_SYSTEM, `Часть ${i + 1} из ${chunks.length}:\n\n${chunks[i]}`, 1500);
+    w.notes.push(String(out).slice(0, 5000));
+    return false;
+  }
+  job.progress = 'составляю итоги';
+  const material = chunks.length > 1
+    ? `Встреча длинная, её прочитали по частям. Заметки по частям (по порядку):\n\n${w.notes.map((n, i) => `— Часть ${i + 1} —\n${n}`).join('\n\n')}`
+    : `Расшифровка встречи:\n\n${text}`;
+  const items = waiItems(await waiAi(env, waiMeetingRules(job), material, 2500));
+  if (!items.length) throw new Error('ИИ не вернул ни одного решения');
+  job.meeting = { ...(job.meeting || {}), items, text: null };
+  job.result = { summary: `Решений: ${items.length}`, changes: [], prUrl: null, published: true };
+  job.status = 'done';
+  job.error = null;
+  job.progress = null;
+  return true;
+}
+
+// ── GitHub: the knowledge base lives in base/ on main ──
+async function ghApi(env, path, method = 'GET', body) {
+  const res = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO || WAI_GH_REPO}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'cantor-agency-worker',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => null);
+  if (res.status === 404 && method === 'GET') return null;
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${String((data && data.message) || '').slice(0, 160)}`);
+  return data;
+}
+async function ghGetFile(env, path) {
+  const d = await ghApi(env, `/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${WAI_GH_BRANCH}`);
+  if (!d || typeof d.content !== 'string') return null;
+  return new TextDecoder('utf-8').decode(Uint8Array.from(atob(d.content.replace(/\s+/g, '')), (c) => c.charCodeAt(0)));
+}
+// One commit with every file, fast-forwarded onto main (a race with another push fails the step,
+// and its retry reads the files again).
+async function ghCommit(env, files, message) {
+  const ref = await ghApi(env, `/git/ref/heads/${WAI_GH_BRANCH}`);
+  const head = ref.object.sha;
+  const parent = await ghApi(env, `/git/commits/${head}`);
+  const tree = await ghApi(env, '/git/trees', 'POST', { base_tree: parent.tree.sha, tree: files.map((f) => ({ path: f.path, mode: '100644', type: 'blob', content: f.content })) });
+  const commit = await ghApi(env, '/git/commits', 'POST', { message, tree: tree.sha, parents: [head] });
+  await ghApi(env, `/git/refs/heads/${WAI_GH_BRANCH}`, 'PATCH', { sha: commit.sha, force: false });
+  return commit.html_url || `https://github.com/${env.GITHUB_REPO || WAI_GH_REPO}/commit/${commit.sha}`;
+}
+
+// ── regulation HTML: steps, table of contents, catalog ──
+// End of the <div> that opens at `start` (index just past its matching </div>), or -1.
+function kbDivEnd(html, start) {
+  const re = /<div\b|<\/div\s*>/gi;
+  re.lastIndex = start;
+  let depth = 0;
+  let m;
+  while ((m = re.exec(html))) {
+    if (m[0][1] === '/') {
+      depth -= 1;
+      if (depth === 0) return re.lastIndex;
+    } else depth += 1;
+  }
+  return -1;
+}
+function kbSteps(html) {
+  const out = [];
+  const re = /<div class="step"\s+id="([\w-]+)"[^>]*>/g;
+  let m;
+  while ((m = re.exec(html))) {
+    const end = kbDivEnd(html, m.index);
+    if (end < 0) continue;
+    const inner = html.slice(m.index, end);
+    const title = waiHtmlText((inner.match(/<div class="step-title">([\s\S]*?)<\/div>/) || [])[1] || '');
+    out.push({ id: m[1], start: m.index, end, title, text: waiHtmlText(inner) });
+  }
+  return out;
+}
+function kbDocTitle(html) {
+  return waiHtmlText((String(html).match(/<div class="doc-title">([\s\S]*?)<\/div>/) || [])[1] || '');
+}
+function kbCatalog(indexHtml) {
+  const out = [];
+  const re = /<a href="\/base\/([a-z0-9-]+)" class="(?:cat-card|featured-card)">([\s\S]*?)<\/a>/g;
+  let m;
+  while ((m = re.exec(indexHtml))) {
+    const title = waiHtmlText((m[2].match(/-title">([\s\S]*?)<\/div>/) || [])[1] || '');
+    const desc = waiHtmlText((m[2].match(/-desc">([\s\S]*?)<\/div>/) || [])[1] || '');
+    out.push({ slug: m[1], title, desc });
+  }
+  return out;
+}
+const KB_TAGS = new Set(['p', 'ul', 'ol', 'li', 'strong', 'b', 'em', 'i', 'br', 'a', 'code']);
+// Only plain content tags get into a regulation: a stray <div> would break the page's structure.
+function kbSafeHtml(html) {
+  let s = String(html || '').replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style|iframe|object|embed|svg)[\s\S]*?<\/\1>/gi, '');
+  if (!/<[a-z][\s\S]*>/i.test(s)) {
+    s = s.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean).map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('\n');
+  }
+  return s.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/g, (tag, name, attrs) => {
+    const t = name.toLowerCase();
+    if (!KB_TAGS.has(t)) return '';
+    if (tag[1] === '/') return t === 'br' ? '' : `</${t}>`;
+    if (t === 'a') {
+      const href = ((attrs.match(/href\s*=\s*"([^"]*)"/i) || [])[1] || '').trim();
+      return /^(https:\/\/|\/base\/|#)[^"<>\s]*$/.test(href) ? `<a href="${href}">` : '<a>';
+    }
+    return `<${t}>`;
+  }).trim();
+}
+// Inserts text as its own lines right before the closing tag at `at`, keeping that tag's indent.
+function kbInsertLines(html, at, text) {
+  const lineStart = html.lastIndexOf('\n', at - 1) + 1;
+  const pos = /^\s*$/.test(html.slice(lineStart, at)) ? lineStart : at;
+  return `${html.slice(0, pos)}${text}\n${html.slice(pos)}`;
+}
+function kbNewStepHtml(id, title, meta, body) {
+  return [
+    `    <div class="step" id="${id}">`,
+    `      <div class="step-title">${escapeHtml(title)}</div>`,
+    meta ? `      <div class="step-meta">${escapeHtml(meta)}</div>` : null,
+    `      ${body}`,
+    '    </div>',
+  ].filter((x) => x != null).join('\n');
+}
+// Applies the model's plan to a regulation: additions into existing steps, new steps at the end (and
+// in the table of contents). Returns the new HTML, or null when nothing applied.
+function kbApplyPlan(html, plan) {
+  let out = html;
+  let changed = false;
+  const usedIds = new Set(kbSteps(html).map((s) => s.id));
+  for (const op of (Array.isArray(plan.add) ? plan.add : []).slice(0, 4)) {
+    const body = kbSafeHtml(op && op.html);
+    if (!body) continue;
+    const step = kbSteps(out).find((s) => s.id === String(op.step || ''));
+    if (!step) continue;
+    out = kbInsertLines(out, out.lastIndexOf('</div>', step.end), `      ${body}`);
+    changed = true;
+  }
+  for (const st of (Array.isArray(plan.newSteps) ? plan.newSteps : []).slice(0, 3)) {
+    const body = kbSafeHtml(st && st.html);
+    const title = atClean(st && st.title, 120);
+    if (!body || !title) continue;
+    let id = `k${Date.now().toString(36).slice(-5)}`;
+    while (usedIds.has(id)) id = `k${atRandom(5)}`;
+    usedIds.add(id);
+    const steps = kbSteps(out);
+    const block = kbNewStepHtml(id, title, atClean(st.meta, 160), body);
+    if (steps.length) {
+      const last = steps[steps.length - 1];
+      out = `${out.slice(0, last.end)}\n\n${block}${out.slice(last.end)}`;
+    } else {
+      const card = out.indexOf('<div class="reg-card">');
+      const end = card >= 0 ? kbDivEnd(out, card) : -1;
+      if (end < 0) continue;
+      out = kbInsertLines(out, out.lastIndexOf('</div>', end), `\n${block}`);
+    }
+    const toc = out.indexOf('<div class="toc-links">');
+    const tocEnd = toc >= 0 ? kbDivEnd(out, toc) : -1;
+    if (tocEnd > 0) out = kbInsertLines(out, out.lastIndexOf('</div>', tocEnd), `        <a href="#${id}">${escapeHtml(title)}</a>`);
+    changed = true;
+  }
+  return changed ? out : null;
+}
+const KB_TRANSLIT = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
+function kbSlugFromTitle(title) {
+  const s = String(title || '').toLowerCase().replace(/^регламент\.?\s*/, '').split('').map((c) => (KB_TRANSLIT[c] != null ? KB_TRANSLIT[c] : c)).join('')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50).replace(/-+$/, '');
+  return s.length >= 3 ? `reglament-${s}` : `reglament-${atRandom(6)}`;
+}
+
+const WAI_KB_STYLE = [
+  'Ты редактор базы знаний агентства Cantor Agency (продвижение репетиторов и онлайн-школ на Авито). База — регламенты для команды: менеджеров (КМ), специалистов по Авито, ассистента.',
+  'Пиши как в регламентах: по-русски, коротко, конкретно, в повелительном наклонении или как правило работы. Не дублируй то, что уже есть в регламенте, — добавляй только новое.',
+  'Не выдумывай факты сверх материала. Имена клиентов, телефоны, пароли и прочие личные данные в базу не переноси: вместо имени клиента — описание («репетитор английского с блогом на 7 тыс. подписчиков»).',
+  'Если материал — не правило, а рассказ, кейс, переписка или цифры клиента, вытащи из него практический вывод для команды (что это значит для работы с такими клиентами) и оформи как правило или как «Пример из практики».',
+  'HTML — только теги <p>, <ul>, <ol>, <li>, <strong>, <em>, <a href="…">, без классов, стилей и <div>.',
+].join('\n');
+
+async function waiKbEditStep(env, job) {
+  const w = job.wai;
+  const material = waiClip(await waiMaterial(env, job), WAI_KB_MATERIAL_CHARS);
+  if (!material.trim()) throw new Error(`материал пустой${w.unread && w.unread.length ? ` — не прочитались файлы: ${w.unread.join(', ')}` : ''}`);
+  const unreadNote = w.unread && w.unread.length ? ` Не удалось прочитать: ${w.unread.join(', ')}.` : '';
+  if (job.mode === 'new') return waiKbNewStep(env, job, material, unreadNote);
+
+  if (!w.slug && job.mode === 'reglament') w.slug = kbSlug(job.target && job.target.slug);
+  if (!w.slug) {
+    job.progress = 'выбираю регламент';
+    const catalog = kbCatalog((await ghGetFile(env, 'base/index.html')) || '');
+    if (!catalog.length) throw new Error('не удалось прочитать каталог base/index.html');
+    const list = catalog.map((c) => `${c.slug} — ${c.title}: ${c.desc}`).join('\n');
+    const out = await waiAi(env, `${WAI_KB_STYLE}\nЗадача: выбрать один регламент, куда лучше всего внести присланный материал. Ответь только slug регламента из списка, без пояснений. Если материал — кейс или наблюдение, которому нет места в остальных, выбери keisy-i-nablyudeniya.`,
+      `Регламенты (slug — название: описание):\n${list}\n\nМатериал:\n${waiClip(material, 6000)}`, 60);
+    const picked = catalog.find((c) => String(out).includes(c.slug));
+    w.slug = picked ? picked.slug : (catalog.find((c) => c.slug === 'keisy-i-nablyudeniya') || catalog[0]).slug;
+    return false;
+  }
+
+  job.progress = 'вношу правки';
+  const path = `base/${w.slug}`;
+  const html = await ghGetFile(env, path);
+  if (!html) throw new Error(`регламент ${path} не найден в репозитории`);
+  const title = kbDocTitle(html) || (job.target && job.target.title) || w.slug;
+  const steps = kbSteps(html);
+  const per = Math.max(300, Math.floor(WAI_KB_DOC_CHARS / Math.max(1, steps.length)));
+  const outline = steps.length
+    ? steps.map((s) => `[${s.id}] ${s.title}\n${waiClip(s.text.slice(s.title.length).trim(), per)}`).join('\n\n')
+    : waiClip(waiHtmlText(html), WAI_KB_DOC_CHARS);
+  const system = [
+    WAI_KB_STYLE,
+    `Задача: внести новые знания в регламент «${title}». Тебе дан текущий регламент по шагам ([id] заголовок и текст) и новый материал.`,
+    'Реши, куда это добавить: дополнить существующие шаги (add) и/или завести новые шаги в конце (newSteps). Отказываться нельзя: любой присланный материал должен оказаться в регламенте, хотя бы как «Пример из практики». Если ровно это уже написано — ничего не добавляй и объясни в summary, где.',
+    'Ответ — только JSON: {"add":[{"step":"<id шага>","html":"<что дописать в конец шага>"}],"newSteps":[{"title":"<заголовок шага>","meta":"<подпись: когда/кто, можно пусто>","html":"<текст шага>"}],"what":"<что изменилось, конкретно: какой шаг дополнен или добавлен>","summary":"<2–4 предложения простым языком: что именно добавлено>"}',
+  ].join('\n');
+  const plan = waiParseJson(await waiAi(env, system, `Регламент «${title}»:\n\n${outline}\n\n=== Новый материал от ${job.byName} ===\n${material}`, 3000));
+  if (!plan) throw new Error('ответ не похож на JSON');
+  const next = kbApplyPlan(html, plan);
+  const summary = atClean(plan.summary, 1500);
+  if (!next) {
+    job.result = { summary: (summary || `Эти знания уже есть в регламенте «${title}».`) + unreadNote, changes: [], prUrl: null, published: true };
+  } else {
+    const what = atClean(plan.what, 600) || 'добавлены новые знания';
+    const commitUrl = await ghCommit(env, [{ path, content: next }], `База знаний: ${title} — ${what}`.slice(0, 200));
+    job.result = {
+      summary: (summary || what) + unreadNote,
+      changes: [{ slug: w.slug, title, what, isNew: false, url: `${KB_BASE_URL}/${w.slug}` }],
+      prUrl: commitUrl,
+      published: true,
+    };
+  }
+  job.status = 'done';
+  job.error = null;
+  job.progress = null;
+  return true;
+}
+
+// A new regulation: the page is built from an existing one (head, styles, feedback widget), its card
+// goes into the catalog section the model picked.
+async function waiKbNewStep(env, job, material, unreadNote) {
+  job.progress = 'пишу новый регламент';
+  const [indexHtml, template] = await Promise.all([ghGetFile(env, 'base/index.html'), ghGetFile(env, 'base/reglament-4-vstrechi')]);
+  if (!indexHtml || !template) throw new Error('не удалось прочитать каталог или образец регламента');
+  const sections = [...indexHtml.matchAll(/<div class="section-label">([\s\S]*?)<\/div>/g)].map((m) => waiHtmlText(m[1]));
+  const system = [
+    WAI_KB_STYLE,
+    `Задача: написать новый регламент «${job.newTitle}» по присланному материалу.`,
+    `Раздел каталога: ${job.newSection ? `«${job.newSection}»` : `выбери из списка: ${sections.map((s) => `«${s}»`).join(', ')}`}.`,
+    'Ответ — только JSON: {"meta":"<одна строка под заголовком: о чём регламент>","goal":"<Цель: …, одно предложение>","cardDesc":"<1–2 предложения для карточки в каталоге>","section":"<раздел каталога>","steps":[{"title":"<заголовок шага>","meta":"<когда/кто, можно пусто>","html":"<текст шага>"}],"summary":"<2–4 предложения: что вошло в регламент>"}. Шагов обычно 3–8.',
+  ].join('\n');
+  const plan = waiParseJson(await waiAi(env, system, `Материал от ${job.byName}:\n${material}`, 3500));
+  if (!plan || !Array.isArray(plan.steps)) throw new Error('ответ не похож на JSON');
+  const steps = plan.steps.slice(0, 12).map((s, i) => ({ id: `s${i + 1}`, title: atClean(s && s.title, 120), meta: atClean(s && s.meta, 160), body: kbSafeHtml(s && s.html) })).filter((s) => s.title && s.body);
+  if (!steps.length) throw new Error('в ответе нет ни одного шага');
+  const title = job.newTitle;
+  const existing = new Set(kbCatalog(indexHtml).map((c) => c.slug));
+  let slug = kbSlugFromTitle(title);
+  if (existing.has(slug) || (await ghGetFile(env, `base/${slug}`))) slug = `${slug}-${atRandom(4)}`;
+
+  let page = template.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeHtml(title)} — База знаний Cantor Agency</title>`)
+    .replace(/(<div class="doc-title">)[\s\S]*?(<\/div>)/, `$1${escapeHtml(title)}$2`)
+    .replace(/(<div class="doc-meta">)[\s\S]*?(<\/div>)/, `$1${escapeHtml(atClean(plan.meta, 300))}$2`)
+    .replace(/<meta name="description" content="[^"]*"/, `<meta name="description" content="${escapeHtml(atClean(plan.meta, 300))}"`);
+  const toc = page.indexOf('<div class="toc-links">');
+  const tocEnd = toc >= 0 ? kbDivEnd(page, toc) : -1;
+  if (tocEnd > 0) page = `${page.slice(0, toc)}<div class="toc-links">\n${steps.map((s) => `        <a href="#${s.id}">${escapeHtml(s.title)}</a>`).join('\n')}\n    </div>${page.slice(tocEnd)}`;
+  const card = page.indexOf('<div class="reg-card">');
+  const cardEnd = card >= 0 ? kbDivEnd(page, card) : -1;
+  if (cardEnd < 0) throw new Error('образец регламента не разобрался');
+  const goal = atClean(plan.goal, 400);
+  page = `${page.slice(0, card)}<div class="reg-card">\n    <div class="reg-title">${escapeHtml(title)}</div>\n${goal ? `    <div class="reg-goal">${escapeHtml(goal)}</div>\n` : ''}\n${steps.map((s) => kbNewStepHtml(s.id, s.title, s.meta, s.body)).join('\n\n')}\n  </div>${page.slice(cardEnd)}`;
+  // The sample's «← previous / next →» links belong to it; the link to the catalog stays.
+  page = page.replace(/\s*<div class="doc-nav">(?:(?!<\/div>)[\s\S])*?<\/div>/, (m) => (m.includes('to-catalog') ? m : ''));
+
+  const sectionName = atClean(job.newSection || plan.section, 120);
+  const cardHtml = [
+    `      <a href="/base/${slug}" class="cat-card">`,
+    `        <div class="cat-card-title">${escapeHtml(title)}</div>`,
+    `        <div class="cat-card-desc">${escapeHtml(atClean(plan.cardDesc || plan.meta, 300))}</div>`,
+    '        <div class="cat-card-link">Открыть →</div>',
+    '      </a>',
+  ].join('\n');
+  let index = indexHtml;
+  const labels = [...indexHtml.matchAll(/<div class="section-label">([\s\S]*?)<\/div>/g)];
+  const label = labels.find((m) => waiHtmlText(m[1]).toLowerCase() === sectionName.toLowerCase()) || labels[labels.length - 1];
+  const sectionStart = label ? index.lastIndexOf('<div class="cat-section">', label.index) : -1;
+  const sectionEnd = sectionStart >= 0 ? kbDivEnd(index, sectionStart) : -1;
+  if (sectionEnd < 0) throw new Error('не нашёлся раздел каталога');
+  const grid = index.slice(sectionStart, sectionEnd).lastIndexOf('<div class="cat-grid"');
+  if (grid >= 0) {
+    index = kbInsertLines(index, index.lastIndexOf('</div>', kbDivEnd(index, sectionStart + grid)), cardHtml);
+  } else {
+    index = kbInsertLines(index, index.lastIndexOf('</div>', sectionEnd), `    <div class="cat-grid" style="margin-top:16px">\n${cardHtml}\n    </div>`);
+  }
+  const commitUrl = await ghCommit(env, [{ path: `base/${slug}`, content: page }, { path: 'base/index.html', content: index }], `База знаний: новый регламент «${title}»`.slice(0, 200));
+  job.result = {
+    summary: (atClean(plan.summary, 1500) || `Создан регламент «${title}».`) + unreadNote,
+    changes: [{ slug, title, what: `новый регламент, шагов: ${steps.length}`, isNew: true, url: `${KB_BASE_URL}/${slug}` }],
+    prUrl: commitUrl,
+    published: true,
+  };
+  job.status = 'done';
+  job.error = null;
+  job.progress = null;
+  return true;
+}
+
+// ── «ИИ-помощник» ──
+// The knowledge base for the assistant: every step of every regulation as a block of text, read from
+// the deployed pages (ASSETS) and kept per isolate for half an hour.
+let WAI_KB_CACHE = null;
+async function waiKbBlocks(env) {
+  if (WAI_KB_CACHE && Date.now() - WAI_KB_CACHE.at < 30 * 60 * 1000) return WAI_KB_CACHE.blocks;
+  const get = async (path) => {
+    const res = await env.ASSETS.fetch(new Request(`https://cantor.agency${path}`));
+    return res.ok ? res.text() : '';
+  };
+  const catalog = kbCatalog(await get('/base/'));
+  const blocks = [];
+  await Promise.all(catalog.map(async (c) => {
+    const html = await get(`/base/${c.slug}`);
+    const steps = kbSteps(html);
+    if (!steps.length) blocks.push({ slug: c.slug, doc: c.title, step: '', text: waiHtmlText(html).slice(0, 4000) });
+    steps.forEach((s) => blocks.push({ slug: c.slug, id: s.id, doc: c.title, step: s.title, text: s.text }));
+  }));
+  WAI_KB_CACHE = { at: Date.now(), blocks };
+  return blocks;
+}
+// The regulation steps that share the most words with the question (crude stems: first 5 letters).
+async function waiKbExcerpts(env, query, budget) {
+  let blocks;
+  try { blocks = await waiKbBlocks(env); } catch (e) { return ''; }
+  const stems = [...new Set(String(query).toLowerCase().match(/[а-яёa-z0-9]{4,}/g) || [])].map((w) => w.slice(0, 5));
+  if (!stems.length) return '';
+  const scored = blocks.map((b) => {
+    const t = `${b.step} ${b.text}`.toLowerCase();
+    return { b, score: stems.reduce((n, s) => n + (t.includes(s) ? 1 : 0), 0) };
+  }).filter((x) => x.score >= Math.min(2, stems.length)).sort((x, y) => y.score - x.score);
+  const out = [];
+  let used = 0;
+  for (const { b } of scored) {
+    const piece = `[${b.doc}${b.step ? ` → ${b.step}` : ''}] ${KB_BASE_URL}/${b.slug}${b.id ? `#${b.id}` : ''}\n${b.text.slice(0, 2500)}`;
+    if (used + piece.length > budget) break;
+    out.push(piece);
+    used += piece.length;
+  }
+  return out.join('\n\n');
+}
+function waiAssistantSystem(job) {
+  const a = job.assistant || {};
+  return [
+    `Ты ИИ-помощник в трекере агентства Cantor Agency. Пишет: ${job.byName} (${a.role || 'сотрудник'}). Агентство продвигает репетиторов и онлайн-школ на Авито: ведёт кабинеты клиентов, объявления, ставки, рассылки и диалоги.`,
+    'Тебе даны: сжатая память диалога, последние сообщения, данные трекера (команда, клиенты с цифрами, деньги, задачи; по клиентам из вопроса — подробности, переписка, кабинет Авито) и выдержки из регламентов агентства.',
+    'Отвечай на новое сообщение, опираясь на эти данные: считай, сравнивай, делай выводы. Не выдумывай: если данных нет — скажи прямо, чего именно не хватает. Ссылаясь на регламент, давай его ссылку.',
+    'Ответ по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
+    job.prepFiles && job.prepFiles.length ? `Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')} — в тексте дай краткий итог по нему.` : 'Файлы ты приложить не можешь: если просят выгрузку, скажи, что её можно получить, указав клиента и период (например, «выгрузка по Авито клиента … за неделю»).',
+    'Формат ответа строго такой, три части с этими заголовками:',
+    '===ОТВЕТ===',
+    '<ответ человеку>',
+    '===ПАМЯТЬ===',
+    '<сжатая память диалога до 1200 символов: о чём просит человек, ключевые факты, цифры, выводы и договорённости, его предпочтения; старую память обнови, лишнее выкинь>',
+    '===ТЕМА===',
+    '<тема диалога, 2–5 слов>',
+  ].join('\n');
+}
+function waiAssistantParse(out) {
+  const s = String(out || '');
+  const part = (name) => {
+    const m = s.match(new RegExp(`===\\s*${name}\\s*===\\s*([\\s\\S]*?)(?====\\s*[А-ЯЁ]+\\s*===|$)`));
+    return m ? m[1].trim() : '';
+  };
+  const answer = part('ОТВЕТ') || s.replace(/===\s*[А-ЯЁ]+\s*===[\s\S]*$/, '').trim();
+  return { answer, memory: part('ПАМЯТЬ'), title: part('ТЕМА').split('\n')[0] };
+}
+async function waiAssistantStep(env, job) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const w = job.wai;
+  if (!w.data) {
+    job.progress = 'собираю данные';
+    if (job.dataText == null) {
+      try {
+        job.dataText = await aiBuildData(env, job, true);
+      } catch (e) {
+        console.error('assistant data failed', e && e.stack);
+        job.dataText = `Данные трекера собрать не получилось (${String(e && e.message).slice(0, 200)}).`;
+      }
+    }
+    if (!job.avitoDone) {
+      try {
+        const av = await aiBuildAvito(env, job);
+        job.prepFiles = [];
+        for (const f of av.prepFiles.slice(0, 3)) {
+          const meta = { id: `p${job.prepFiles.length + 1}${atRandom(5)}`, name: f.name.replace(/[\\/]/g, '_'), type: f.type, size: f.bytes.length, parts: Math.ceil(f.bytes.length / KB_PART_BYTES) };
+          for (let p = 0; p < meta.parts; p += 1) await kv.put(`kb:file:${job.id}:${meta.id}:${p}`, f.bytes.slice(p * KB_PART_BYTES, (p + 1) * KB_PART_BYTES), { expirationTtl: AI_JOB_TTL });
+          job.prepFiles.push(meta);
+        }
+        if (av.text) job.dataText += `\n\n${av.text}`;
+      } catch (e) {
+        console.error('assistant avito failed', e && e.stack);
+      }
+      job.avitoDone = true;
+    }
+    w.data = true;
+    return false;
+  }
+  job.progress = 'пишу ответ';
+  const a = job.assistant || {};
+  const recent = (a.recent || []).map((m) => `${m.role}: ${m.text}`).join('\n\n');
+  const kb = await waiKbExcerpts(env, `${job.text} ${(a.recent || []).slice(-2).map((m) => m.text).join(' ')}`, 6000);
+  const user = [
+    a.memory ? `ПАМЯТЬ ДИАЛОГА:\n${a.memory}` : 'ПАМЯТЬ ДИАЛОГА: пусто (новый диалог).',
+    recent ? `ПОСЛЕДНИЕ СООБЩЕНИЯ:\n${waiClip(recent, 5000)}` : '',
+    `ДАННЫЕ ТРЕКЕРА:\n${waiClip(job.dataText || '—', 22000)}`,
+    kb ? `ВЫДЕРЖКИ ИЗ РЕГЛАМЕНТОВ:\n${kb}` : '',
+    `НОВОЕ СООБЩЕНИЕ от ${job.byName}:\n${job.text}`,
+  ].filter(Boolean).join('\n\n');
+  const res = waiAssistantParse(await waiAi(env, waiAssistantSystem(job), user, 2500));
+  if (!res.answer) throw new Error('пустой ответ');
+  job.files = [...(job.prepFiles || [])];
+  job.result = {
+    answer: res.answer.slice(0, 30000),
+    memory: atClean(res.memory, 2000) || a.memory || null,
+    title: atClean(res.title, 60).replace(/[«»"*]/g, '') || null,
+  };
+  job.status = 'done';
+  job.error = null;
+  job.progress = null;
+  return true;
+}
+
+// ── Avito Tasks → «ИИ-помощник»: a chat with Workers AI for everyone on the team ──
+// Every message is a Workers AI job like the knowledge base's (a kb:job with mode 'assistant' — file
+// storage and stuck handling are shared). The worker gathers the data the question needs (all
+// clients, the clients and people it names, tasks, chats, the Avito cabinet and a CSV export when
+// asked) plus the regulation steps that match the question, and the model writes the answer and an
+// updated short memory of the dialog.
+// A dialog keeps its last messages for display; the model gets only the memory and the last few
 // messages, so the context stays small. The page folds a finished job into its dialog when it next
-// reads it, so only the tracker side ever writes a dialog (the routine's callbacks come in through
-// another Cloudflare location and would race it).
+// reads it, so only the tracker side ever writes a dialog (the job may finish in the cron, in
+// another Cloudflare location, and would race it).
 // Everyone sees their own dialogs; the owner also sees everyone else's (read only), deleted ones too.
 //
 // KV keys (AGENCY_DASHBOARD_KV):
@@ -8218,79 +8667,17 @@ async function atKbCron(env) {
 //   ai:dlg:<id>      -> { id, userId, userName, title, main, autoTitle, memory,
 //                         messages: [{ id, role: 'user'|'assistant', text, at, jobId, done, error, files }] }
 const AI_JOB_TTL = 14 * 24 * 3600;
-const AI_TOOLS_MS = 3 * 3600 * 1000;
 const AI_STUCK_MS = 45 * 60 * 1000;
 const AI_KEEP_MESSAGES = 80;
 const AI_CONTEXT_MESSAGES = 6;
 const AI_MAX_TEXT = 8000;
 const AI_MAX_DIALOGS = 40;
-const AI_MAX_OUT_BYTES = 10 * 1024 * 1024;
 
 const aiMainId = (userId) => `main-${userId}`;
 const aiIdOk = (id) => /^(main-[a-z0-9_-]{1,40}|[a-f0-9]{10})$/.test(String(id || ''));
 
-function aiInstructions(job) {
-  const a = job.assistant || {};
-  return [
-    `Задача: ответить на сообщение в разделе «ИИ-помощник» трекера Cantor Agency. Пишет: ${job.byName} (${a.role || 'сотрудник'}). Агентство продвигает репетиторов и онлайн-школы на Авито: ведёт кабинеты клиентов, объявления, ставки, рассылки и диалоги.`,
-    'Репозиторий НЕ меняй: ничего не коммить, не пушь, не открывай PR. Он нужен только чтобы читать базу знаний.',
-    'Новое сообщение — request.text. Контекст диалога — context.memory (сжатая память прошлых сообщений) и context.recent (последние сообщения): отвечай именно на новое сообщение, опираясь на них.',
-    'ДАННЫЕ УЖЕ СОБРАНЫ трекером — поле context.data: команда, все клиенты с цифрами за 7 дней, деньгами и задачами; по клиентам из вопроса — карточка, цифры по дням, задачи, рефлексия, итоги встреч, переписка, а если спрашивали про Авито — кабинет за период. Отвечай по ним. Если ответ этого запроса обрезан при выводе — сохрани его в файл (curl -sS "<DATA_URL>" -o job.json) и прочитай целиком.',
-    'Только если в context.data чего-то явно не хватает — дополнительные GET из tools (URL уже с токеном, параметры через &): tools.chats [&client=<id>&days=&q=], tools.daily &client=<id>&days=, tools.tasks [&client=&status=&days=], tools.avito / tools.avitoExport &client=&from=ГГГГ-ММ-ДД&to=, tools.avitoChats &client=, tools.avitoChat &client=&chat=. id клиентов — в context.data в квадратных скобках.',
-    'База знаний (регламенты агентства) — папка base/ репозитория: HTML-файлы без расширения, каталог в base/index.html. Ссылка на регламент: https://cantor.agency/base/<slug>.',
-    'Считай, сравнивай, делай выводы. Не выдумывай: если данных нет — скажи прямо, чего именно не хватает.',
-    'Перед началом — POST на callbacks.progress с {"note":"<что делаешь, 2–5 слов>"}.',
-    `Ответ: по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #.${job.prepFiles && job.prepFiles.length ? ` Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')} — в тексте дай краткий итог по нему.` : ' Если просят выгрузку, которой нет в context.data, — приложи файл сам (CSV с разделителем ; в UTF-8 с BOM).'}`,
-    'В конце — POST на callbacks.done с JSON: {"answer":"<ответ>","memory":"<сжатая память диалога до 1200 символов: о чём просит человек, ключевые факты, цифры, выводы и договорённости, его предпочтения — всё, что нужно, чтобы продолжить разговор без повторов; старую память обнови, лишнее выкинь>","title":"<тема диалога, 2–5 слов>"} (+ "files":[{"name","type","base64"}] — только если прикладываешь свой файл). Если ответить невозможно — POST на callbacks.fail с {"error":"<понятная причина>"}.',
-    'Токены, ключи и пароли в ответ не включай.',
-  ].join('\n');
-}
-
-async function aiJobPayload(env, job, base, q) {
-  const kv = env.AGENCY_DASHBOARD_KV;
-  let changed = false;
-  if (job.dataText == null) {
-    // Normally built when the message was sent (near the team, warm tracker snapshot); this is the fallback.
-    try {
-      job.dataText = await aiBuildData(env, job, true);
-    } catch (e) {
-      console.error('assistant data failed', e && e.stack);
-      job.dataText = `Данные трекера собрать не получилось (${String(e && e.message).slice(0, 200)}). Ответь по базе знаний или скажи, что данных нет.`;
-    }
-    changed = true;
-  }
-  if (!job.avitoDone) {
-    try {
-      const av = await aiBuildAvito(env, job);
-      job.prepFiles = [];
-      for (const f of av.prepFiles.slice(0, 3)) {
-        const meta = { id: `p${job.prepFiles.length + 1}${atRandom(5)}`, name: f.name.replace(/[\\/]/g, '_'), type: f.type, size: f.bytes.length, parts: Math.ceil(f.bytes.length / KB_PART_BYTES) };
-        for (let p = 0; p < meta.parts; p += 1) await kv.put(`kb:file:${job.id}:${meta.id}:${p}`, f.bytes.slice(p * KB_PART_BYTES, (p + 1) * KB_PART_BYTES), { expirationTtl: AI_JOB_TTL });
-        job.prepFiles.push(meta);
-      }
-      if (av.text) job.dataText += `\n\n${av.text}`;
-    } catch (e) {
-      console.error('assistant avito failed', e && e.stack);
-    }
-    job.avitoDone = true;
-    changed = true;
-  }
-  if (changed) await kbPutJob(kv, job);
-  const tool = (name) => `${base}/ai/${name}${q}`;
-  const a = job.assistant || {};
-  return {
-    jobId: job.id,
-    instructions: aiInstructions(job),
-    request: { mode: 'assistant', text: job.text, from: job.byName, role: a.role || null, createdAt: job.createdAt },
-    context: { dialog: a.title || null, memory: a.memory || '', recent: a.recent || [], data: job.dataText },
-    tools: { chats: tool('chats'), daily: tool('daily'), tasks: tool('tasks'), avito: tool('avito'), avitoExport: tool('avitoExport'), avitoChats: tool('avitoChats'), avitoChat: tool('avitoChat') },
-    callbacks: { progress: `${base}/progress${q}`, done: `${base}/done${q}`, fail: `${base}/fail${q}` },
-  };
-}
-
-// ── data for the routine's session ──
-// Everything a question needs is gathered here, by the worker, and handed over in the job payload
-// (context.data): the session's own fetches of client data get stopped by its safety checks, and one
+// ── data for the assistant ──
+// Everything a question needs is gathered here, by the worker, into job.dataText. One
 // request may not read more than ~1000 KV keys — so no full listings of daily metrics here: per-day
 // keys are read for just the clients and days in question, tasks come from the tracker's snapshot.
 const AI_DATA_BUDGET = 17000;
@@ -8500,98 +8887,6 @@ async function aiBuildAvito(env, job) {
   return { text: parts.join('\n\n'), prepFiles };
 }
 
-// Optional extra lookups (GET, job token, only while the job runs). Bounded the same way.
-async function aiTool(env, tool, sp) {
-  const kv = env.AGENCY_DASHBOARD_KV;
-  const now = Date.now();
-  const byId = await botProjectsById(kv);
-  const projects = Object.values(byId);
-  const team = await atGetTeam(env);
-  const findClient = (v) => {
-    const s = String(v || '').trim();
-    if (!s) return null;
-    return byId[s] || aiNamedClients(s, projects, [])[0] || null;
-  };
-  const num = (v, def, min, max) => { const x = Math.floor(Number(v)); return Number.isFinite(x) ? Math.max(min, Math.min(max, x)) : def; };
-  const ymdOk = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
-  const p = findClient(sp.get('client') || sp.get('id'));
-  if (tool === 'chats') {
-    const days = num(sp.get('days'), p ? 14 : 3, 1, p ? 60 : 7);
-    const q = botNorm(sp.get('q') || '');
-    const out = [];
-    for (const s of (await aiChatSources(kv, byId)).filter((x) => !p || x.projectId === p.id)) {
-      let logs = await botReadLogs(kv, s.chatId, s.threadId, now - days * 24 * 3600000, now);
-      if (q) logs = logs.filter((e) => botNorm(e.text).includes(q));
-      if (logs.length) out.push({ chat: s.name, messages: botFormatLogLines(logs) });
-    }
-    return { days, chats: out };
-  }
-  if (tool === 'daily') {
-    if (!p) throw new Error('Клиент не найден — нужен &client=<id из context.data>');
-    return { client: p.name, daily: await aiDaily(kv, p.id, num(sp.get('days'), 30, 1, 120)) };
-  }
-  if (tool === 'tasks') {
-    const mem = await atSnapshot(env);
-    const status = ['open', 'done', 'closed', 'cancelled', 'all'].includes(sp.get('status')) ? sp.get('status') : 'all';
-    const since = now - num(sp.get('days'), 60, 1, 365) * 24 * 3600000;
-    const list = [...mem.tasks.values()].filter((t) => (!p || t.projectId === p.id) && (status === 'all' || t.status === status) && Date.parse(t.updatedAt || t.createdAt || 0) > since);
-    return { total: list.length, tasks: list.slice(0, 300).map((t) => ({ client: (byId[t.projectId] || {}).name || t.topicName || null, text: t.text, status: t.status, assignee: (team.users.find((u) => u.id === atAssigneeId(t, team.users)) || {}).name || t.owner || null, createdAt: t.createdAt, doneAt: t.doneAt || null })) };
-  }
-  if (/^avito/.test(tool)) {
-    if (!p) throw new Error('Клиент не найден — нужен &client=<id из context.data>');
-    if (!p.avitoAccountId) throw new Error(`У клиента «${p.name}» не подключён кабинет Авито`);
-    const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
-    if (!account) throw new Error(`Кабинет Авито клиента «${p.name}» не найден`);
-    const to = ymdOk(sp.get('to')) ? sp.get('to') : mskYesterday();
-    let from = ymdOk(sp.get('from')) ? sp.get('from') : avitoAddDays(to, -6);
-    if (avitoAddDays(from, 30) < to) from = avitoAddDays(to, -30);
-    if (tool === 'avito') return runAvitoOverview(env, account, from, to);
-    if (tool === 'avitoExport') return runAvitoExport(env, account, from, to);
-    if (tool === 'avitoChats') return runAvitoChatList(env, account, num(sp.get('limit'), 50, 1, 100), num(sp.get('offset'), 0, 0, 5000));
-    if (tool === 'avitoChat') return runAvitoChatMessages(env, account, String(sp.get('chat') || ''));
-  }
-  throw new Error(`Нет такого инструмента: ${tool}`);
-}
-
-// ── callbacks ──
-async function aiDone(env, job, body) {
-  const kv = env.AGENCY_DASHBOARD_KV;
-  const answer = String(body.answer == null ? '' : body.answer).replace(/\r/g, '').trim().slice(0, 30000);
-  if (!answer) return json({ error: 'missing_result', message: 'Нужен answer — текст ответа' }, 400);
-  const files = [];
-  let total = 0;
-  for (const f of (Array.isArray(body.files) ? body.files : []).slice(0, 6)) {
-    let bytes;
-    try { bytes = Uint8Array.from(atob(String((f && f.base64) || '').replace(/\s+/g, '')), (c) => c.charCodeAt(0)); } catch (e) { continue; }
-    if (!bytes.length || total + bytes.length > AI_MAX_OUT_BYTES) continue;
-    total += bytes.length;
-    const file = {
-      id: `r${files.length + 1}${atRandom(5)}`,
-      name: atClean(f.name, 160).replace(/[\\/]/g, '_') || `file-${files.length + 1}`,
-      type: atClean(f.type, 100) || 'application/octet-stream',
-      size: bytes.length,
-      parts: Math.ceil(bytes.length / KB_PART_BYTES),
-    };
-    for (let p = 0; p < file.parts; p += 1) {
-      await kv.put(`kb:file:${job.id}:${file.id}:${p}`, bytes.slice(p * KB_PART_BYTES, (p + 1) * KB_PART_BYTES), { expirationTtl: AI_JOB_TTL });
-    }
-    files.push(file);
-  }
-  job.files = [...(job.prepFiles || []), ...files];
-  job.result = {
-    answer,
-    memory: atClean(body.memory, 2000) || null,
-    title: atClean(body.title, 60).replace(/[«»"]/g, '') || null,
-  };
-  job.status = 'done';
-  job.error = null;
-  job.progress = null;
-  job.finishedAt = new Date().toISOString();
-  await kbPutJob(kv, job);
-  await aiNotify(env, job);
-  return json({ ok: true, files: files.length });
-}
-
 // The person who asked gets the answer in the tracker's bell and in Telegram (it takes minutes —
 // nobody waits on the page). The owner looks into others' dialogs himself; no messages for that.
 async function aiNotify(env, job) {
@@ -8604,13 +8899,13 @@ async function aiNotify(env, job) {
   if (job.status === 'done') {
     const answer = job.result.answer;
     const tgText = escapeHtml(answer.length > 3300 ? `${answer.slice(0, 3300)}…` : answer).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-    await atNotify(env, team, [requester.id], { kind: 'ai', ref: `ai:${dialogId}`, text: `ИИ-помощник ответил: ${answer.replace(/\s+/g, ' ').slice(0, 160)}`, by: 'Claude' }, {
+    await atNotify(env, team, [requester.id], { kind: 'ai', ref: `ai:${dialogId}`, text: `ИИ-помощник ответил: ${answer.replace(/\s+/g, ' ').slice(0, 160)}`, by: 'ИИ' }, {
       text: [`🤖 <b>ИИ-помощник</b> · <i>«${escapeHtml(q)}${(job.text || '').length > 80 ? '…' : ''}»</i>`, '', tgText, job.files.length ? `\n📎 Файлы — в трекере: ${job.files.map((f) => escapeHtml(f.name)).join(', ')}` : ''].join('\n'),
       extra: { reply_markup: { inline_keyboard: [[{ text: 'Открыть диалог', url: page }]] } },
     });
   } else {
-    const reason = job.status === 'stuck' ? 'Claude не ответил' : job.error || 'неизвестная ошибка';
-    await atNotify(env, team, [requester.id], { kind: 'aifail', ref: `ai:${dialogId}`, text: `ИИ-помощник не смог ответить: ${reason}`, by: 'Claude' });
+    const reason = job.status === 'stuck' ? 'ИИ не ответил' : job.error || 'неизвестная ошибка';
+    await atNotify(env, team, [requester.id], { kind: 'aifail', ref: `ai:${dialogId}`, text: `ИИ-помощник не смог ответить: ${reason}`, by: 'ИИ' });
   }
 }
 
@@ -8640,7 +8935,7 @@ async function aiSaveDialog(kv, d) {
   const key = `ai:dlgs:${d.userId}`;
   const list = ((await kv.get(key, 'json')) || []).filter((x) => x.id !== d.id);
   const last = [...d.messages].reverse().find((m) => !m.error);
-  list.unshift({ id: d.id, title: d.title, main: Boolean(d.main), createdAt: d.createdAt, updatedAt: d.updatedAt, deletedAt: d.deletedAt || undefined, last: last ? `${last.role === 'assistant' ? 'Claude: ' : ''}${last.text.replace(/\s+/g, ' ').slice(0, 90)}` : '' });
+  list.unshift({ id: d.id, title: d.title, main: Boolean(d.main), createdAt: d.createdAt, updatedAt: d.updatedAt, deletedAt: d.deletedAt || undefined, last: last ? `${last.role === 'assistant' ? 'ИИ: ' : ''}${last.text.replace(/\s+/g, ' ').slice(0, 90)}` : '' });
   // Deleted dialogs stay for the owner (he reads everyone's) — up to 60 of them.
   const kept = [...list.filter((x) => !x.deletedAt).slice(0, AI_MAX_DIALOGS + 1), ...list.filter((x) => x.deletedAt).slice(0, 60)];
   await kv.put(key, JSON.stringify(kept));
@@ -8663,13 +8958,13 @@ async function aiFold(kv, d) {
       if (job.result.memory) d.memory = job.result.memory;
       if (job.result.title && d.autoTitle) { d.title = job.result.title; d.autoTitle = false; }
     } else if (['failed', 'stuck', 'not_configured'].includes(job.status)) {
-      reply = { error: true, text: job.status === 'not_configured' ? 'Claude не подключён: нет рутины в настройках воркера.' : `Не получилось ответить: ${job.error || 'Claude не ответил'}. Отправьте сообщение ещё раз.` };
+      reply = { error: true, text: job.status === 'not_configured' ? 'ИИ не подключён: нет привязки Workers AI в настройках воркера.' : `Не получилось ответить: ${job.error || 'ИИ не ответил'}. Отправьте сообщение ещё раз.` };
     } else if (now - Date.parse(job.sentAt || job.createdAt) > AI_STUCK_MS) {
       job.status = 'stuck';
-      job.error = 'Claude не ответил за 45 минут';
+      job.error = 'ИИ не ответил за 45 минут';
       job.finishedAt = new Date().toISOString();
       await kbPutJob(kv, job);
-      reply = { error: true, text: 'Claude не ответил за 45 минут — отправьте сообщение ещё раз.' };
+      reply = { error: true, text: 'ИИ не ответил за 45 минут — отправьте сообщение ещё раз.' };
     } else {
       d.pending = { jobId: job.id, status: job.status, progress: job.progress || null, sessionUrl: job.sessionUrl || null };
     }
@@ -8683,7 +8978,7 @@ async function aiFold(kv, d) {
   return changed;
 }
 
-async function atAiApi(env, team, me, action, body) {
+async function atAiApi(env, team, me, action, body, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const nowIso = new Date().toISOString();
 
@@ -8715,6 +9010,7 @@ async function atAiApi(env, team, me, action, body) {
 
   if (action === 'ai-dialog') {
     if (await aiFold(kv, d)) await aiSaveDialog(kv, d);
+    if (d.pending && d.pending.jobId) await waiKick(env, ctx, 'kb', d.pending.jobId);
     return json({ dialog: aiPublicDialog(d, me) });
   }
 
@@ -8737,7 +9033,7 @@ async function atAiApi(env, team, me, action, body) {
     const text = String(body.text == null ? '' : body.text).replace(/\r/g, '').trim().slice(0, AI_MAX_TEXT);
     if (!text) return json({ error: 'empty' }, 400);
     await aiFold(kv, d);
-    if (d.pending) return json({ error: 'busy', message: 'Claude ещё отвечает на прошлое сообщение — дождитесь ответа или откройте другой диалог.', dialog: aiPublicDialog(d, me) }, 409);
+    if (d.pending) return json({ error: 'busy', message: 'ИИ ещё отвечает на прошлое сообщение — дождитесь ответа или откройте другой диалог.', dialog: aiPublicDialog(d, me) }, 409);
     const recent = d.messages.filter((m) => !m.error).slice(-AI_CONTEXT_MESSAGES).map((m) => ({ role: m.role === 'user' ? me.name : 'ИИ-помощник', text: m.text.length > 1500 ? `${m.text.slice(0, 1500)}…` : m.text }));
     const job = {
       id: atRandom(12),
@@ -8757,13 +9053,9 @@ async function atAiApi(env, team, me, action, body) {
     };
     d.messages.push({ id: atRandom(8), role: 'user', text, at: nowIso, jobId: job.id });
     if (d.autoTitle && d.messages.filter((m) => m.role === 'user').length === 1) d.title = text.replace(/\s+/g, ' ').slice(0, 40) + (text.length > 40 ? '…' : '');
-    // The data is gathered here, near the team, where the tracker snapshot is warm (the routine's
-    // request comes in through another Cloudflare location); the Avito part waits for that request.
+    // The data is gathered here, where the tracker snapshot is warm; the Avito part is the job's first step.
     try { job.dataText = await aiBuildData(env, job, false); } catch (e) { console.error('assistant data failed', e && e.stack); }
-    // The job is stored before the fire: the session may ask for it within seconds.
-    job.status = 'sent';
-    await kbPutJob(kv, job);
-    await kbFireRoutine(env, job);
+    await kbStart(env, ctx, job);
     await aiFold(kv, d);
     await aiSaveDialog(kv, d);
     await aiFold(kv, d); // pending after save (aiSaveDialog drops it)
@@ -8795,7 +9087,7 @@ async function atAiApi(env, team, me, action, body) {
   if (action === 'ai-clear' || action === 'ai-delete') {
     if (d.messages.length) {
       await aiFold(kv, d);
-      if (d.pending) return json({ error: 'busy', message: 'Claude ещё отвечает — очистить можно после ответа.' }, 409);
+      if (d.pending) return json({ error: 'busy', message: 'ИИ ещё отвечает — очистить можно после ответа.' }, 409);
       await aiSaveDialog(kv, { ...d, id: atRandom(10), main: false, autoTitle: false, title: `${d.title} до ${botFmtDate(Date.now()).split(' ')[0]}`, deletedAt: nowIso });
     }
     d.messages = [];
@@ -8984,7 +9276,7 @@ async function atBuildActivity(env, team, days, nowMs) {
   const byName = new Map(users.map((u) => [u.name, u]));
   for (const t of mem.tasks.values()) {
     for (const a of Array.isArray(t.activity) ? t.activity : []) {
-      if (!a || !a.t || a.by === 'Бот' || a.by === 'Claude') continue;
+      if (!a || !a.t || a.by === 'Бот' || a.by === 'Claude' || a.by === 'ИИ') continue;
       const date = atMskDate(a.t);
       if (!data[date]) continue;
       const u = byName.get(a.by) || atMatchUser(a.by, users);
@@ -9903,14 +10195,6 @@ async function handleApi(request, env, url, ctx) {
     return handleSalesCrmApi(request, env, url);
   }
 
-  if (pathname.startsWith('/api/report-jobs/')) {
-    return handleReportJobCallback(request, env, url);
-  }
-
-  if (pathname.startsWith('/api/kb-jobs/')) {
-    return handleKbJobCallback(request, env, url);
-  }
-
   // Before the dashboard's own routes: the academy has its own sign-in (see handleAcademyApi).
   if (pathname.startsWith('/api/dashboard/academy/')) {
     return handleAcademyApi(request, env, url);
@@ -10755,6 +11039,7 @@ export default {
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
     ctx.waitUntil(avitoNotifyCron(env).catch((err) => console.error('avito notify cron failed', err && err.stack)));
     ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
+    ctx.waitUntil(waiCron(env).catch((err) => console.error('workers ai jobs cron failed', err && err.stack)));
     ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
   },
 };

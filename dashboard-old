@@ -1463,9 +1463,9 @@ function renderAvitoLinksList() {
   }));
 }
 
-// ══════════════════════ ВЫГРУЗКА ОТЧЁТА (через рутину Claude Code) ══════════════════════
-// The worker snapshots the Analytics table for the period, fires the Claude Code routine,
-// and the routine posts back "Текущие наблюдения" per client; the .docx is then assembled
+// ══════════════════════ ВЫГРУЗКА ОТЧЁТА (наблюдения пишет Workers AI) ══════════════════════
+// The worker snapshots the Analytics table for the period, Workers AI writes
+// "Текущие наблюдения" per client in the background; the .docx is then assembled
 // by the worker in the agency's usual format. The modal closes right after "Сформировать";
 // progress and the download button live in a notice, so every tab stays usable meanwhile.
 let reportPollTimer = null;
@@ -1550,7 +1550,7 @@ function trackReportJob(id) {
     const period = `${job.periodLabel}, клиентов: ${job.clientsCount}`;
     const warnings = job.warnings && job.warnings.length ? `\n${job.warnings.join('\n')}` : '';
     const download = { label: 'Скачать', run: () => downloadReport(job) };
-    const session = job.sessionUrl ? [{ label: 'Сессия Claude', secondary: true, run: () => window.open(job.sessionUrl, '_blank', 'noopener') }] : [];
+    const session = job.sessionUrl ? [{ label: 'Сессия', secondary: true, run: () => window.open(job.sessionUrl, '_blank', 'noopener') }] : [];
     if (job.status === 'done') {
       // Kept in localStorage until this notice is closed, so a reload shows it again.
       notice('report', { title: 'Отчёт готов', kind: 'ok', text: period + warnings, actions: [download] });
@@ -1559,7 +1559,7 @@ function trackReportJob(id) {
     const timedOut = Date.now() - started > REPORT_TIMEOUT_MS;
     if (job.status === 'not_configured' || job.status === 'failed' || timedOut) {
       notice('report', {
-        title: timedOut ? 'Claude не ответил за 15 минут' : job.status === 'not_configured' ? 'Рутина Claude не подключена' : 'Рутина Claude не запустилась',
+        title: timedOut ? 'ИИ не ответил за 15 минут' : job.status === 'not_configured' ? 'ИИ не подключён' : 'ИИ не справился',
         kind: 'bad',
         text: `${period}\nМожно скачать отчёт с автоматическими наблюдениями.${warnings}`,
         actions: [{ ...download, label: 'Скачать с авто-наблюдениями' }, ...session],
@@ -1567,7 +1567,7 @@ function trackReportJob(id) {
       return;
     }
     notice('report', {
-      title: job.status === 'running' ? 'Claude пишет наблюдения…' : 'Отчёт готовится…',
+      title: job.status === 'running' ? 'ИИ пишет наблюдения…' : 'Отчёт готовится…',
       text: `${period}. Можно работать в других разделах — здесь появится кнопка «Скачать».`,
       busy: true,
       actions: [{ label: 'Скачать черновик сейчас', secondary: true, run: () => downloadReport(job) }, ...session],

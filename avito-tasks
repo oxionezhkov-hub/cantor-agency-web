@@ -1274,7 +1274,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       <div class="hello">
         <div>
           <h1>База знаний</h1>
-          <div class="sub">Опишите новые знания — Claude сам внесёт их в регламенты и опубликует. Или пришлите транскрибацию встречи — Claude составит итоги для клиента. Ждать не нужно: когда всё будет готово, придёт уведомление.</div>
+          <div class="sub">Опишите новые знания — ИИ сам внесёт их в регламенты и опубликует. Или пришлите транскрибацию встречи — ИИ составит итоги для клиента. Ждать не нужно: когда всё будет готово, придёт уведомление.</div>
         </div>
       </div>
       <div class="kb-grid">
@@ -3905,7 +3905,7 @@ $('actBody').addEventListener('pointerout', (e) => { if (e.target.closest('.cell
 window.addEventListener('scroll', () => { if (tipEl) tipEl.hidden = true; }, { passive: true });
 
 // ── вкладка «База знаний» (руководитель и ассистент) ──
-// Новые знания уходят рутине Claude Code: она сама вносит их в регламенты cantor.agency/base и
+// Новые знания разбирает ИИ (Workers AI в воркере): сам вносит их в регламенты cantor.agency/base и
 // публикует сайт. Отправил — и свободен: о готовности придёт уведомление здесь и в Telegram.
 // Список регламентов берётся из каталога /base/, поэтому новый регламент появится в нём сам.
 // База знаний открывается на том же домене, что и трекер (cantor.agency или домен воркера) — без
@@ -3927,12 +3927,12 @@ const KB_FALLBACK = [
   ['Эдвайзеры', 'reglament-5-advaizery', 'Сбор опыта авито-экспертов (эдвайзеров)'],
 ].map(([section, slug, title]) => ({ section, slug, title, desc: '' }));
 const KB_STATUS = {
-  sent: ['Отправлено Claude', 'tag-progress tag-run'],
-  running: ['Claude вносит правки', 'tag-progress tag-run'],
+  sent: ['Отправлено ИИ', 'tag-progress tag-run'],
+  running: ['ИИ вносит правки', 'tag-progress tag-run'],
   done: ['Готово', 'tag-closed'],
   failed: ['Не получилось', 'tag-urgent'],
-  stuck: ['Нет ответа от Claude', 'tag-urgent'],
-  not_configured: ['Ждёт подключения рутины', 'tag-done'],
+  stuck: ['Нет ответа от ИИ', 'tag-urgent'],
+  not_configured: ['Ждёт подключения ИИ', 'tag-done'],
   draft: ['Не отправлено', 'tag-cancelled'],
 };
 const KB = Object.assign({
@@ -4012,12 +4012,12 @@ function renderKbForm() {
     const wait = j.status === 'not_configured';
     el.innerHTML = `<div class="kb-card kb-done">
       <div class="kb-done-ic ${bad ? 'bad' : wait ? 'warn' : ''}">${ico(bad ? 'x' : wait ? 'clock' : 'check')}</div>
-      <h2>${bad ? 'Claude не запустился' : wait ? 'Запрос сохранён' : j.status === 'done' ? (j.mode === 'meeting' ? 'Итоги встречи готовы' : 'Готово — база знаний обновлена') : 'Принято! Claude уже взялся за работу'}</h2>
+      <h2>${bad ? 'ИИ не запустился' : wait ? 'Запрос сохранён' : j.status === 'done' ? (j.mode === 'meeting' ? 'Итоги встречи готовы' : 'Готово — база знаний обновлена') : 'Принято! ИИ уже взялся за работу'}</h2>
       <p class="kb-target">${esc(j.targetLabel)}</p>
       ${bad ? `<p class="kb-note bad">${esc(j.error || 'Неизвестная ошибка')}</p>`
-        : wait ? `<p class="kb-note warn">Рутина Claude для базы знаний ещё не подключена — Олег получил уведомление. Запрос не потеряется: отправьте его снова, когда рутину подключат.</p>`
+        : wait ? `<p class="kb-note warn">ИИ для базы знаний ещё не подключён — Олег получил уведомление. Запрос не потеряется: отправьте его снова, когда ИИ подключат.</p>`
         : j.status === 'done' ? `<p class="kb-hint">${j.mode === 'meeting' ? 'Проверьте и поправьте текст в истории справа, затем нажмите «Готово — отправить».' : 'Что именно изменилось — в истории справа.'}</p>`
-        : j.mode === 'meeting' ? `<p>Claude читает транскрибацию и составляет решения. Когда итоги будут готовы, придёт уведомление здесь${S.me.tg ? ' и в Telegram' : ''} — их можно будет поправить и отправить клиенту. Обычно 3–10 минут.</p>`
+        : j.mode === 'meeting' ? `<p>ИИ читает транскрибацию и составляет решения. Когда итоги будут готовы, придёт уведомление здесь${S.me.tg ? ' и в Telegram' : ''} — их можно будет поправить и отправить клиенту. Обычно 1–10 минут.</p>`
         : `<p>Можно заниматься другими делами. Когда база знаний обновится, придёт уведомление здесь${S.me.tg ? ' и в Telegram' : ''} — с тем, что именно и в каких регламентах изменилось. Обычно это занимает 5–15 минут.</p>`}
       <div class="kb-done-actions">
         ${bad || wait ? `<button class="btn btn-primary" data-kbretry="${esc(j.id)}">${ico('refresh')}Отправить снова</button>` : ''}
@@ -4039,15 +4039,15 @@ function renderKbForm() {
         <div><label class="label" for="kbMProject">Клиент</label><select class="select" id="kbMProject"><option value="">Выберите клиента</option>${clients.map((p) => `<option value="${esc(p.id)}" ${p.id === KB.mProject ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></div>
         <div><label class="label" for="kbMDate">Дата встречи</label><input class="input" type="date" id="kbMDate" value="${esc(KB.mDate)}"></div>
       </div>
-      <div class="kb-hint">Claude составит итоги: «Клиент — решения ${esc(KB.mDate ? `${KB.mDate.slice(8, 10)}.${KB.mDate.slice(5, 7)}` : 'дата')}» и список решений. Вы проверите текст, и по кнопке «Готово» бот отправит его в чат клиента и в его топик рабочего чата.</div>`;
+      <div class="kb-hint">ИИ составит итоги: «Клиент — решения ${esc(KB.mDate ? `${KB.mDate.slice(8, 10)}.${KB.mDate.slice(5, 7)}` : 'дата')}» и список решений. Вы проверите текст, и по кнопке «Готово» бот отправит его в чат клиента и в его топик рабочего чата.</div>`;
   } else if (KB.mode === 'general') {
-    where = `<div class="kb-note run">${ico('bot', 'ic-sm')} Claude сам прочитает базу знаний и решит, куда это относится: допишет нужные регламенты (можно сразу несколько) или предложит новый, если ничего не подходит.</div>`;
+    where = `<div class="kb-note run">${ico('bot', 'ic-sm')} ИИ сам прочитает каталог базы знаний и решит, в какой регламент это внести; кейсы без своего места попадут в «Кейсы и наблюдения».</div>`;
   } else {
     where = `<div class="grid2">
         <div><label class="label" for="kbNewTitle">Название регламента</label><input class="input" id="kbNewTitle" value="${esc(KB.newTitle)}" maxlength="200" placeholder="Например: Работа с отзывами на Авито" autocomplete="off"></div>
-        <div><label class="label" for="kbNewSection">Раздел каталога</label><select class="select" id="kbNewSection"><option value="">Пусть решит Claude</option>${sections.map((s) => `<option ${s === KB.newSection ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+        <div><label class="label" for="kbNewSection">Раздел каталога</label><select class="select" id="kbNewSection"><option value="">Пусть решит ИИ</option>${sections.map((s) => `<option ${s === KB.newSection ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
       </div>
-      <div class="kb-hint">Claude создаст страницу регламента в общем стиле базы и добавит её в каталог.</div>`;
+      <div class="kb-hint">ИИ создаст страницу регламента в общем стиле базы и добавит её в каталог.</div>`;
   }
   const files = KB.files.map((f) => `<div class="kb-file" data-kbfile="${f.key}">
       ${f.thumb ? `<img src="${f.thumb}" alt="">` : `<span class="kb-fic">${ico('clip', 'ic-sm')}</span>`}
@@ -4062,7 +4062,7 @@ function renderKbForm() {
     </div>
     <div class="kb-card">
       <div class="kb-step"><span class="kb-num">2</span>${KB.mode === 'meeting' ? 'Транскрибация встречи' : 'Что добавить'}</div>
-      <textarea class="textarea" id="kbText" rows="7" maxlength="30000" placeholder="${KB.mode === 'meeting' ? 'Прикрепите файл транскрибации Zoom ниже — или вставьте текст сюда. Можно дописать, на что обратить внимание.' : 'Новые правила, порядок действий, ответы на частые вопросы, договорённости с командой… Пишите как удобно — Claude оформит в стиле регламента.'}">${esc(KB.text)}</textarea>
+      <textarea class="textarea" id="kbText" rows="7" maxlength="30000" placeholder="${KB.mode === 'meeting' ? 'Прикрепите файл транскрибации Zoom ниже — или вставьте текст сюда. Можно дописать, на что обратить внимание.' : 'Новые правила, порядок действий, ответы на частые вопросы, договорённости с командой… Пишите как удобно — ИИ оформит в стиле регламента.'}">${esc(KB.text)}</textarea>
       <label class="kb-drop" id="kbDrop">
         <span class="kb-drop-ic">${ico('clip')}</span>
         <span><b>${KB.mode === 'meeting' ? 'Прикрепить транскрибацию' : 'Прикрепить файлы или фото'}</b><br><span class="kb-hint">${KB.mode === 'meeting' ? 'TXT, VTT, DOCX из Zoom — или перетащите сюда' : 'или перетащите сюда · скриншот можно вставить через Ctrl+V'}</span></span>
@@ -4071,7 +4071,7 @@ function renderKbForm() {
       ${files ? `<div class="kb-files">${files}</div>` : ''}
     </div>
     <div class="kb-submit">
-      <span class="hint">${KB.configured ? 'После отправки можно не ждать — придёт уведомление' : 'Рутина Claude ещё не подключена — запрос сохранится и уйдёт позже'}</span>
+      <span class="hint">${KB.configured ? 'После отправки можно не ждать — придёт уведомление' : 'ИИ ещё не подключён — запрос сохранится, его можно будет отправить позже'}</span>
       <button class="btn btn-primary" id="kbSend">${ico('send')}${KB.mode === 'meeting' ? 'Составить итоги' : 'Отправить в базу знаний'}</button>
     </div>`;
   if (KB.mode === 'reglament') renderKbRegs();
@@ -4103,7 +4103,7 @@ function renderKbJobs() {
   if (!KB.jobs) { el.innerHTML = '<div class="empty">Загружаю…</div>'; return; }
   // Открыли из уведомления — эта запись первой в истории и подсвечена; страницу не прокручиваем.
   const jobs = KB.jobs.filter((j) => j.status !== 'draft').sort((a, b) => Number(b.id === KB.pin) - Number(a.id === KB.pin));
-  if (!jobs.length) { el.innerHTML = `<div class="empty">${ico('book')}<div style="margin-top:6px">Здесь будут ваши обновления базы знаний и что Claude по ним сделал.</div></div>`; return; }
+  if (!jobs.length) { el.innerHTML = `<div class="empty">${ico('book')}<div style="margin-top:6px">Здесь будут ваши обновления базы знаний и что ИИ по ним сделал.</div></div>`; return; }
   const now = Date.now();
   el.innerHTML = jobs.map((j) => {
     const [label, cls] = KB_STATUS[j.status] || [j.status, 'tag-cancelled'];
@@ -4119,9 +4119,9 @@ function renderKbJobs() {
     } else if (j.status === 'done' && r) {
       body = `${r.changes.length ? `<div class="kb-changes">${r.changes.map((c) => `<div class="kb-change">${ico('check', 'ic-sm')}<div class="w"><b>${esc(c.title)}</b>${c.isNew ? ' <span class="tag tag-progress">новый</span>' : ''}${c.what ? `<div>${esc(c.what)}</div>` : ''}</div>${c.url ? `<a class="btn btn-ghost btn-sm" href="${esc(siteUrl(c.url))}" target="_blank" rel="noopener">Открыть${ico('ext', 'ic-sm')}</a>` : ''}</div>`).join('')}</div>` : ''}
         ${r.summary ? `<div class="kb-sum">${esc(r.summary)}</div>` : ''}
-        ${r.published || !r.changes.length ? '' : `<div class="kb-note warn">Правки готовы, но ещё не опубликованы — ${r.prUrl ? 'PR ждёт проверки Олега' : 'ссылку на правки Claude не прислал'}.</div>`}`;
+        ${r.published || !r.changes.length ? '' : `<div class="kb-note warn">Правки готовы, но ещё не опубликованы — ${r.prUrl ? 'PR ждёт проверки Олега' : 'ссылку на правки ИИ не прислал'}.</div>`}`;
     } else if (kbIsActive(j)) {
-      body = `<div class="kb-note run">${j.progress ? `Claude: ${esc(j.progress)}` : j.status === 'sent' ? 'Claude запускается…' : 'Claude читает материалы и вносит правки…'}</div>`;
+      body = `<div class="kb-note run">${j.progress ? `ИИ: ${esc(j.progress)}` : j.status === 'sent' ? 'ИИ запускается…' : 'ИИ читает материалы и вносит правки…'}</div>`;
     } else if (j.status === 'failed' || j.status === 'stuck' || j.status === 'not_configured') {
       body = `<div class="kb-note ${j.status === 'not_configured' ? 'warn' : 'bad'}">${esc(j.error || 'Неизвестная ошибка')}</div>
         <div><button class="btn btn-ghost btn-sm" data-kbretry="${esc(j.id)}">${ico('refresh', 'ic-sm')}Отправить снова</button></div>`;
@@ -4251,7 +4251,7 @@ async function kbSubmit() {
       renderKbForm();
       await upload(parts);
     }
-    KB.sending.stage = 'Отправляю Claude…'; KB.sending.total = 0;
+    KB.sending.stage = 'Отправляю ИИ…'; KB.sending.total = 0;
     renderKbForm();
     let sent = await kbApiRetry('kb-send', { id: job.id });
     if (sent && sent.status === 409 && sent.data.error === 'files_incomplete') {
@@ -4273,7 +4273,7 @@ async function kbSubmit() {
   }
 }
 
-// После отправки Claude — наверх, к карточке «Отправлено». Без плавной прокрутки: её обрывает следующая перерисовка.
+// После отправки ИИ — наверх, к карточке «Отправлено». Без плавной прокрутки: её обрывает следующая перерисовка.
 function kbToTop() {
   if (S.view !== 'kb') return;
   window.scrollTo(0, 0);
@@ -4290,7 +4290,7 @@ async function kbRetry(id, btn) {
     KB.sent = job;
     renderKbForm(); renderKbJobs();
     kbToTop();
-    toast(job.status === 'sent' ? 'Отправлено — Claude взялся за работу' : job.status === 'not_configured' ? 'Рутина всё ещё не подключена' : 'Снова не получилось — подробности в карточке');
+    toast(job.status === 'sent' ? 'Отправлено — ИИ взялся за работу' : job.status === 'not_configured' ? 'ИИ всё ещё не подключён' : 'Снова не получилось — подробности в карточке');
     loadKbJobs();
   } catch (e) { if (btn) btn.disabled = false; toast('Не получилось — проверьте интернет'); }
 }
@@ -4509,7 +4509,7 @@ async function openAnKeys(data) {
   draw();
   if (!AN.cab) { const res = await api('an-cabinets'); if (res.ok) { AN.cab = res.data; draw(); } }
 }
-// «Отчёт»: отчёт по клиентам за период (собирает рутина Claude Code), потом скачать .docx.
+// «Отчёт»: отчёт по клиентам за период (наблюдения пишет ИИ), потом скачать .docx.
 const AN_REP_STATUS = { done: 'готов', not_configured: 'готов', failed: 'готов', queued: 'собирается…', sent: 'собирается…', running: 'собирается…' };
 let anReportTimer = null;
 async function openAnReport() {
@@ -4854,10 +4854,10 @@ $('drawerRoot').addEventListener('submit', async (e) => {
   } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
 });
 
-// ── ИИ-помощник: диалоги с Claude ──
-// Сообщение уходит в Claude (рутина Claude Code): он сам берёт нужное по клиентам, задачам, чатам,
-// кабинетам Авито и базе знаний. Ответ приходит за 1–5 минут — сюда, в колокольчик и в Telegram.
-// Claude помнит диалог сжато: короткую память и несколько последних сообщений.
+// ── ИИ-помощник: диалоги с ИИ (Workers AI в воркере) ──
+// Воркер сам собирает нужное по клиентам, задачам, чатам, кабинетам Авито и базе знаний, ИИ отвечает.
+// Ответ приходит обычно за минуту (если не уложился — его досчитает крон) — сюда, в колокольчик и в Telegram.
+// ИИ помнит диалог сжато: короткую память и несколько последних сообщений.
 const AI = { list: null, others: [], cur: prefs.aiCur || '', dlg: null, rendered: false, pollTimer: null, showList: false, sending: false, drafts: {}, openGroups: {} };
 function aiMainId() { return `main-${S.me.id}`; }
 function renderAi() {
@@ -4946,16 +4946,16 @@ function renderAiMain() {
       ${own ? `<button class="icon-btn" data-airename title="Переименовать" aria-label="Переименовать">${ico('edit')}</button>
       <button class="icon-btn" data-aiclear title="${AI.cur === aiMainId() ? 'Очистить диалог' : 'Удалить диалог'}" aria-label="Удалить">${ico('trash')}</button>` : ''}
     </div>
-    <div class="ai-confirm" id="aiConfirm" hidden><span>Очистить основной диалог? Сообщения и память Claude сотрутся.</span><button class="btn btn-sm btn-danger" data-aiclearyes>Очистить</button><button class="btn btn-sm btn-ghost" data-aiclearno>Отмена</button></div>
+    <div class="ai-confirm" id="aiConfirm" hidden><span>Очистить основной диалог? Сообщения и память ИИ сотрутся.</span><button class="btn btn-sm btn-danger" data-aiclearyes>Очистить</button><button class="btn btn-sm btn-ghost" data-aiclearno>Отмена</button></div>
     <div class="ai-msgs" id="aiMsgs"><div class="empty">Загружаю…</div></div>
     ${own ? `<div class="ai-compose">
-      <textarea class="textarea" id="aiText" rows="1" placeholder="Напишите Claude…">${esc(AI.drafts[AI.cur] || '')}</textarea>
+      <textarea class="textarea" id="aiText" rows="1" placeholder="Напишите ИИ…">${esc(AI.drafts[AI.cur] || '')}</textarea>
       <button class="btn btn-primary ai-send" id="aiSend" aria-label="Отправить">${ico('send')}</button>
     </div>` : ''}`;
   if (d) renderAiMessages(true);
   aiAutosize();
 }
-// Ответ Claude: **жирный**, списки «• », абзацы, ссылки.
+// Ответ ИИ: **жирный**, списки «• », абзацы, ссылки.
 function aiMd(text) {
   const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)»])/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   return String(text || '').replace(/\r/g, '').split(/\n{2,}/).map((block) => {
@@ -4969,7 +4969,7 @@ function aiMsgHtml(m) {
   const t = fmtTime(Date.parse(m.at));
   if (m.role === 'user') return `<div class="ai-msg me"><div class="ai-bubble">${esc(m.text).replace(/\n/g, '<br>')}</div><div class="ai-meta">${t}</div></div>`;
   const files = (m.files || []).map((f) => `<button class="ai-file" data-aifile="${esc(m.jobId)}|${esc(f.id)}">${ico('clip', 'ic-sm')}<span>${esc(f.name)}</span><span class="muted">${fmtSize(f.size)}</span></button>`).join('');
-  return `<div class="ai-msg ${m.error ? 'err' : ''}"><div class="ai-bubble">${m.error ? esc(m.text) : aiMd(m.text)}${files ? `<div class="ai-files">${files}</div>` : ''}</div><div class="ai-meta">${m.error ? '' : 'Claude · '}${t}</div></div>`;
+  return `<div class="ai-msg ${m.error ? 'err' : ''}"><div class="ai-bubble">${m.error ? esc(m.text) : aiMd(m.text)}${files ? `<div class="ai-files">${files}</div>` : ''}</div><div class="ai-meta">${m.error ? '' : 'ИИ · '}${t}</div></div>`;
 }
 function renderAiMessages(toBottom) {
   const el = $('aiMsgs');
@@ -4983,13 +4983,13 @@ function renderAiMessages(toBottom) {
     if (day !== lastDay) { days.push(`<div class="ai-day">${esc(day)}</div>`); lastDay = day; }
     days.push(aiMsgHtml(m));
   }
-  const mem = d.memory ? `<details class="ai-memory"><summary>${ico('spark', 'ic-sm')}Что Claude помнит из этого диалога</summary><div>${esc(d.memory)}</div></details>` : '';
+  const mem = d.memory ? `<details class="ai-memory"><summary>${ico('spark', 'ic-sm')}Что ИИ помнит из этого диалога</summary><div>${esc(d.memory)}</div></details>` : '';
   el.innerHTML = d.messages.length || p
-    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `Claude: ${esc(p.progress)}` : p.status === 'sent' ? 'Claude запускается…' : 'Claude разбирается…'}</div></div>` : ''}`
-    : `<div class="ai-hello">${ico('spark')}<b>Спросите Claude о чём угодно по работе</b><span>Он сам посмотрит данные клиентов и цифры дашборда, задачи, переписку в чатах, кабинеты Авито и базу знаний. Может сделать выгрузку файлом.</span>
+    ? `${mem}${days.join('')}${p ? `<div class="ai-msg"><div class="ai-bubble ai-wait"><span class="ai-dots"><i></i><i></i><i></i></span>${p.progress ? `ИИ: ${esc(p.progress)}` : p.status === 'sent' ? 'ИИ запускается…' : 'ИИ разбирается…'}</div></div>` : ''}`
+    : `<div class="ai-hello">${ico('spark')}<b>Спросите ИИ о чём угодно по работе</b><span>Он сам посмотрит данные клиентов и цифры дашборда, задачи, переписку в чатах, кабинеты Авито и базу знаний. Может сделать выгрузку файлом.</span>
       <div class="ai-examples">${['Что сейчас с клиентом Шевчук? Коротко: цифры, задачи, что ждёт ответа', 'Выгрузи статистику объявлений Ивана Кариентиди за последние 7 дней', 'У каких клиентов падают контакты за неделю?', 'Как по регламенту запускать нового клиента?'].map((x) => `<button class="chip" data-aiexample="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
   const send = $('aiSend');
-  if (send) { send.disabled = Boolean(p) || AI.sending; send.title = p ? 'Claude ещё отвечает — дождитесь ответа или откройте другой диалог' : 'Отправить (Enter)'; }
+  if (send) { send.disabled = Boolean(p) || AI.sending; send.title = p ? 'ИИ ещё отвечает — дождитесь ответа или откройте другой диалог' : 'Отправить (Enter)'; }
   if (toBottom && S.view === 'ai') requestAnimationFrame(() => { if (S.view !== 'ai') return; const c = $('aiMsgs'); if (c && c.lastElementChild) c.lastElementChild.scrollIntoView({ block: 'end' }); window.scrollTo(0, document.documentElement.scrollHeight); });
 }
 function aiAutosize() {
@@ -5002,7 +5002,7 @@ async function aiSend() {
   const t = $('aiText');
   const text = t ? t.value.trim() : '';
   if (!text || AI.sending) return;
-  if (AI.dlg && AI.dlg.pending) { toast('Claude ещё отвечает — дождитесь ответа или откройте другой диалог'); return; }
+  if (AI.dlg && AI.dlg.pending) { toast('ИИ ещё отвечает — дождитесь ответа или откройте другой диалог'); return; }
   AI.sending = true;
   const id = AI.cur;
   const before = AI.dlg;
