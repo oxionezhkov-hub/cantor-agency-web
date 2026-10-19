@@ -29,14 +29,11 @@
     "ADMIN_EMAIL": "oxion.ezhkov@gmail.com,yuliayanson-27@yandex.ru",
     "OPS_ALERT_EMAIL": "oxion.ezhkov@gmail.com",
     "TELEGRAM_CHAT_IDS_KARLOVA": "6295628819,1326867567",
-    // Claude Code routine behind the dashboard's "📄 Ежедневный отчёт" button. Its id is not
-    // secret; the matching API token (claude.ai/code/routines -> this routine -> Edit ->
-    // Add another trigger -> API -> Generate token, "sk-ant-oat01-...") IS, and goes in as
-    // the encrypted secret REPORT_ROUTINE_TOKEN via the Cloudflare dashboard, same as above.
-    "REPORT_ROUTINE_ID": "trig_01T7Ua8weKggatH72JZD5G2c",
-    // Claude Code routine behind Avito Tasks' «База знаний» tab (atKbApi in _worker.js): edits base/
-    // and merges to main. Same as above: its API token goes in the encrypted secret KB_ROUTINE_TOKEN.
-    "KB_ROUTINE_ID": "trig_01MK6Y1Kf6UzcboVCBJEDv68",
+    // «Отчёт», «База знаний», «Итоги встречи» and «ИИ-помощник» run on Workers AI (the "ai" binding
+    // below, see "Workers AI jobs" in _worker.js). Knowledge-base edits are committed to main through
+    // the GitHub API: a fine-grained token (github.com/settings/personal-access-tokens -> this repo
+    // only -> Contents: Read and write) goes in as the encrypted secret GITHUB_TOKEN, same as above.
+    // Optional plain var WORKERS_AI_MODEL overrides the model (default: the control bot's).
     // Control bot (see "Control bot" in _worker.js): who gets its messages. Its token lives in
     // the CONTROL_BOT_TOKEN secret (dashboard -> Variables and Secrets, "Encrypt"), never here.
     "CONTROL_BOT_OWNER_IDS": "1326867567"
@@ -45,7 +42,8 @@
     // /sales-crm ⇄ owner's personal Telegram (handleSalesCrmTgSync in _worker.js): secret
     // SALESCRM_SYNC_SECRET, the same value as CRM_SYNC_SECRET on the MyBrand "tasktracker" worker.
   },
-  // Workers AI (free daily allocation) — the control bot's task extraction and Q&A.
+  // Workers AI (free daily allocation) — the control bot's task extraction and Q&A, the daily report's
+  // observations, knowledge-base updates, meeting summaries and the tracker's «ИИ-помощник».
   "ai": {
     "binding": "AI"
   },
