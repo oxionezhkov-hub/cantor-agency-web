@@ -3322,7 +3322,8 @@ function collectAvitoNumbers(node, wanted, acc = {}) {
 
 // One cabinet, one day: views, contacts, spend and the cabinet's current advance/balance.
 // Every piece degrades independently (errors[] explains what's missing) so one Avito
-// endpoint being unavailable on a cabinet doesn't blank out the rest of the row.
+// endpoint being unavailable on a cabinet doesn't blank out the rest of the row — but a missing
+// number stays missing (null), never a guess.
 // Flat daily tariff every client cabinet pays (agency's own numbers: the table's daily budget
 // is exactly stats v2 allSpending + 100 руб for every client).
 const AVITO_DAILY_TARIFF_RUB = 100;
@@ -3364,23 +3365,12 @@ async function fetchAvitoDaySummary(env, account, date) {
     }
   }
 
-  // 3) Spend fallback: the wallet's operations history for that day (everything that isn't
-  // a top-up / refund is money written off for placement or promotion).
-  if (out.spend == null) {
-    try {
-      const data = await avitoJson(token, '/core/v1/accounts/operations_history/', {
-        method: 'POST',
-        body: JSON.stringify({ dateTimeFrom: `${date}T00:00:00`, dateTimeTo: `${date}T23:59:59` }),
-      });
-      const ops = (data.result && data.result.operations) || data.operations || [];
-      const spent = ops
-        .filter((op) => !/пополн|возврат|зачисл|refund|deposit/i.test(`${op.operationType || ''} ${op.operationName || ''}`))
-        .reduce((sum, op) => sum + Math.abs(Number(op.amountTotal ?? (Number(op.amountRub || 0) + Number(op.amountBonus || 0))) || 0), 0);
-      out.spend = Math.round(spent);
-      sources.spend = 'operations_history';
-    } catch (e) {
-      errors.push(`История операций: ${String(e.message).slice(0, 160)}`);
-    }
+  // 3) No spend fallback on purpose. The wallet's operations history used to stand in here, but it
+  // can't tell spend from money moved inside the cabinet: on a day stats v2 was down it put
+  // transfers to the advance (10 000, 1 000) and empty days (0) into the budget. No stats v2 spend
+  // means no budget — the row shows the error and «Внести в таблицу» leaves that day's budget alone.
+  if (out.spend == null && !errors.some((e) => e.startsWith('Статистика v2'))) {
+    errors.push('Статистика v2: Авито не вернул расход за день');
   }
 
   // 4) Advance ("аванс") — lives in the CPA balance; amounts there are in kopecks.
@@ -7134,7 +7124,8 @@ async function atAvitoDay(env, pull) {
     const r = pull && pull.results && pull.results[p.id];
     if (!r) return { projectId: p.id, off: pending.has(p.id) ? 'загружается…' : '—' };
     if (r.views == null && r.contacts == null && r.spend == null) return { projectId: p.id, off: r.errors && r.errors.length ? 'ошибка Авито' : 'нет данных' };
-    return { projectId: p.id, views: r.views, contacts: r.contacts, spend: r.spend, advance: r.advance != null ? r.advance : r.wallet != null ? r.wallet : null, error: r.errors && r.errors.length ? r.errors[0] : null };
+    const spendError = r.spend == null ? ((r.errors || []).find((e) => e.startsWith('Статистика v2')) || 'Авито не вернул расход') : null;
+    return { projectId: p.id, views: r.views, contacts: r.contacts, spend: r.spend, spendError, advance: r.advance != null ? r.advance : r.wallet != null ? r.wallet : null, error: r.errors && r.errors.length ? r.errors[0] : null };
   });
   return { date: pull ? pull.date : null, status: pull ? pull.status : 'none', finishedAt: pull ? pull.finishedAt : null, rows };
 }
