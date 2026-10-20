@@ -915,7 +915,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .an-mini td{padding:8px 10px;text-align:right;border-top:1px solid var(--line-2);white-space:nowrap}
 .an-mini th:first-child,.an-mini td:first-child{text-align:left}
 .an-mini td.nil{color:var(--faint);text-align:left}
-.an-mini td.low{color:var(--red);font-weight:600}
+.an-mini td.low,.an-mini td.err{color:var(--red);font-weight:600}
 .an-mini tr.tot td{font-weight:700;color:var(--ink);background:var(--surface-2)}
 .an-mini td .sk{width:100%}
 .an-sec{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px}
@@ -4468,19 +4468,20 @@ async function openAnAvito(date, force) {
   AN.avRows = null;
   const body = () => {
     const pr = AN.avRows;
-    const tot = { views: 0, contacts: 0, spend: 0 };
+    const tot = { views: 0, contacts: 0, spend: 0, noSpend: 0 };
     const rows = S.projects.filter((p) => !p.inactive).sort((a, b) => a.name.localeCompare(b.name, 'ru')).map((p) => {
       const r = pr && pr.rows.find((x) => x.projectId === p.id);
       if (!pr) return `<tr><td>${esc(p.name)}</td><td colspan="4"><i class="sk"></i></td></tr>`;
       if (!r || r.off) return `<tr><td>${esc(p.name)}</td><td colspan="4" class="nil">${esc(r ? r.off : '—')}</td></tr>`;
-      tot.views += r.views || 0; tot.contacts += r.contacts || 0; tot.spend += r.spend || 0;
+      tot.views += r.views || 0; tot.contacts += r.contacts || 0; tot.spend += r.spend || 0; if (r.spend == null) tot.noSpend += 1;
       const low = r.advance != null && r.advance < 1500;
       const n = (v) => (v == null ? '—' : anNum(v));
-      return `<tr><td>${esc(p.name)}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td><td>${r.spend == null ? '—' : anMoney(r.spend)}</td><td class="${low ? 'low' : ''}">${anMoney(r.advance)}</td></tr>`;
+      return `<tr><td>${esc(p.name)}</td><td>${n(r.views)}</td><td>${n(r.contacts)}</td>${r.spend == null ? `<td class="err" title="${esc(r.spendError || '')}">ошибка</td>` : `<td>${anMoney(r.spend)}</td>`}<td class="${low ? 'low' : ''}">${anMoney(r.advance)}</td></tr>`;
     }).join('');
     const sub = !pr ? 'Загружаю…' : pr.status === 'running' ? 'Собираю данные из кабинетов…' : pr.finishedAt ? `Собрано в ${fmtTime(Date.parse(pr.finishedAt))}` : '';
     return `<div class="an-av-top"><label class="label" for="anAvDate">За дату</label><input class="input" type="date" id="anAvDate" value="${AN.avDate}" max="${anYesterday()}"><div class="an-av-sub">${esc(sub)}</div></div>
-      <div class="an-mini-wrap"><table class="an-mini"><thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th>Аванс сейчас</th></tr></thead><tbody>${rows}${pr ? `<tr class="tot"><td>Итого</td><td>${anNum(tot.views)}</td><td>${anNum(tot.contacts)}</td><td>${anMoney(tot.spend)}</td><td></td></tr>` : ''}</tbody></table></div>`;
+      <div class="an-mini-wrap"><table class="an-mini"><thead><tr><th>Клиент</th><th>Просмотры</th><th>Контакты</th><th>Бюджет</th><th>Аванс сейчас</th></tr></thead><tbody>${rows}${pr ? `<tr class="tot"><td>Итого</td><td>${anNum(tot.views)}</td><td>${anNum(tot.contacts)}</td><td>${anMoney(tot.spend)}</td><td></td></tr>` : ''}</tbody></table></div>
+      ${pr && tot.noSpend ? `<div class="an-note">${ico('flag', 'ic-sm')}<span>Авито не отдал расход по ${tot.noSpend} ${tot.noSpend === 1 ? 'клиенту' : 'клиентам'} — у них бюджет не внесётся (останется прежним). Нажмите «Загрузить заново» позже.</span></div>` : ''}`;
   };
   const ready = () => AN.avRows && AN.avRows.status === 'done';
   const draw = () => anDrawer('Подтянуть', body(), `<button class="btn btn-ghost" data-an="av-reload" ${AN.avRows && !ready() ? 'disabled' : ''}>${ico('refresh', 'ic-sm')}Загрузить заново</button><button class="btn btn-primary" data-an="av-apply" ${ready() ? '' : 'disabled'}>Внести в таблицу</button>`,
