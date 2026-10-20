@@ -7390,6 +7390,89 @@ async function handleFinanceApi(request, env, url) {
   return json({ error: 'not_found' }, 404);
 }
 
+// Reminders to the owner from the control bot (cron, once a day after 10:00 MSK):
+//  - a client's next payment is 5 days away or closer — with everything the dashboard knows about them;
+//  - a staff payout is tomorrow or today.
+// The dates follow the page's own rules (nextPay / empNext in /finance): a client pays monthly on the
+// day they started unless a date was set by hand; a person is paid 14 days after their last payout
+// unless set by hand. Each reminder goes out once per date (fin:sent).
+//   fin:sent -> { "<kind>|<name>|<date>": "<sent on>" }   (entries older than 60 days are dropped)
+//   fin:remind:<date> -> '1' once that day's check has run
+function finDays(from, to) {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5);
+}
+function finClientNext(c, today) {
+  if (!c || c.noNext || c.status !== 'Активен') return null;
+  if (c.next && c.next >= today) return c.next;
+  const day = Number(String(c.start || '').slice(8, 10));
+  if (!day) return null;
+  let [y, m] = today.split('-').map(Number);
+  const mk = (yy, mm) => `${yy}-${String(mm).padStart(2, '0')}-${String(Math.min(day, new Date(Date.UTC(yy, mm, 0)).getUTCDate())).padStart(2, '0')}`;
+  let d = mk(y, m);
+  if (d <= today) { m += 1; if (m > 12) { m = 1; y += 1; } d = mk(y, m); }
+  return d;
+}
+function finStaffNext(s, ops, today) {
+  if (!s || s.noNext) return null;
+  if (s.next && s.next >= today) return s.next;
+  const last = ops.filter((o) => o.sal && o.emp === s.n).map((o) => o.d).sort().pop();
+  if (!last || finDays(last, today) > 35) return null;
+  return avitoAddDays(last, 14);
+}
+const finRub = (v) => `${Math.round(Number(v) || 0).toLocaleString('ru-RU').replace(/ /g, ' ')} ₽`;
+const finDt = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}`;
+const finWhen = (n) => (n === 0 ? 'сегодня' : n === 1 ? 'завтра' : `через ${n} ${n < 5 ? 'дня' : 'дней'}`);
+async function finRemindCron(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv || !botOwnerIds(env).length) return;
+  const nowMsk = new Date(Date.now() + 3 * 3600e3);
+  if (nowMsk.getUTCHours() < 10) return;
+  const today = mskToday();
+  if (await kv.get(`fin:remind:${today}`)) return;
+  await kv.put(`fin:remind:${today}`, '1', { expirationTtl: 3 * 86400 });
+  const data = await kv.get(FIN_KEY, 'json');
+  if (!data) return;
+  const sent = (await kv.get('fin:sent', 'json')) || {};
+  const ops = Array.isArray(data.ops) ? data.ops : [];
+  const msgs = [];
+  for (const c of data.clients || []) {
+    const next = finClientNext(c, today);
+    if (!next) continue;
+    const n = finDays(today, next);
+    const key = `client|${c.name}|${next}`;
+    if (n < 0 || n > 5 || sent[key]) continue;
+    const paid = Object.values(c.pays || {}).reduce((a, v) => a + (Number(v) || 0), 0);
+    const months = c.start ? Math.max(1, Math.round(finDays(c.start, today) / 30.4)) : null;
+    msgs.push([
+      `💳 <b>${escapeHtml(c.name)}</b> — оплата ${finWhen(n)}, ${finDt(next)}`,
+      `Сумма продления: ${finRub(c.renew == null ? 25000 : c.renew)}`,
+      c.tg ? `Контакт: ${escapeHtml(c.tg)}` : '',
+      c.start ? `С нами с ${finDt(c.start)}.${c.start.slice(0, 4)}${months ? ` (${months} мес)` : ''}, оплачено всего ${finRub(paid)}` : '',
+      c.note ? `Примечание: ${escapeHtml(c.note)}` : '',
+    ].filter(Boolean).join('\n'));
+    sent[key] = today;
+  }
+  for (const s of data.staff || []) {
+    const next = finStaffNext(s, ops, today);
+    if (!next) continue;
+    const n = finDays(today, next);
+    const key = `staff|${s.n}|${next}`;
+    if (n < 0 || n > 1 || sent[key]) continue;
+    const last = ops.filter((o) => o.sal && o.emp === s.n).sort((a, b) => (a.d < b.d ? 1 : -1))[0];
+    msgs.push([
+      `👤 <b>${escapeHtml(s.n)}</b>${s.role ? ` (${escapeHtml(s.role)})` : ''} — выплата ${finWhen(n)}, ${finDt(next)}`,
+      s.rate ? `Ставка: ${escapeHtml(s.rate)}` : '',
+      s.pay || s.req ? `Платим с: ${escapeHtml([s.pay, s.req].filter(Boolean).join(' · '))}` : '',
+      last ? `Последняя выплата: ${finDt(last.d)} — ${finRub(-last.amt)}` : '',
+    ].filter(Boolean).join('\n'));
+    sent[key] = today;
+  }
+  if (!msgs.length) return;
+  for (const k of Object.keys(sent)) if (finDays(sent[k], today) > 60) delete sent[k];
+  await kv.put('fin:sent', JSON.stringify(sent));
+  await botNotifyOwner(env, `${msgs.join('\n\n')}\n\n<a href="https://cantor.agency/finance">Открыть финансы</a>`);
+}
+
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
 // ── «Аналитика» и цифры клиентов в Avito Tasks ──
 // The tracker reuses the dashboard's own handlers (daily metrics, Avito pull, cabinets, report):
@@ -11504,5 +11587,6 @@ export default {
     ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
     ctx.waitUntil(waiCron(env).catch((err) => console.error('workers ai jobs cron failed', err && err.stack)));
     ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
+    ctx.waitUntil(finRemindCron(env).catch((err) => console.error('finance reminders cron failed', err && err.stack)));
   },
 };
