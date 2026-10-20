@@ -7053,6 +7053,58 @@ async function atLoginApi(env, team, action, body, nowMs) {
   return null;
 }
 
+// ── /finance: the owner's finance dashboard (P&L, CF, operations, staff payouts, clients) ──
+// Page: /finance, API under /api/dashboard/finance/* (so the Yandex Cloud proxy lets it through).
+// Only the tracker's owner gets in: the same signed token as /avito-tasks (the page reuses it from
+// localStorage when the owner is already signed in there), or a 6-digit code the control bot sends
+// to the owner's Telegram (the tracker's own login-code / login-verify, limited to the owner).
+// The whole dashboard is one JSON document — operations, plans, balances, staff, clients, labels —
+// written back on every edit. `rev` guards against two open tabs overwriting each other: a save
+// with a stale rev gets 409 and the current document back.
+//
+// KV keys (AGENCY_DASHBOARD_KV):
+//   fin:data -> { rev, savedAt, ops, plan, cfp, snaps, staff, clients, months, lbl, extra, cfg }
+const FIN_KEY = 'fin:data';
+const FIN_MAX_BYTES = 5 * 1024 * 1024;
+async function handleFinanceApi(request, env, url) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv) return json({ error: 'kv_not_configured' }, 500);
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const body = (await readJson(request)) || {};
+  const action = url.pathname.slice('/api/dashboard/finance/'.length);
+  const team = await atGetTeam(env);
+  const owner = team.users.find((u) => u.role === 'owner' && u.active);
+
+  if (action === 'login-code' || action === 'login-verify') {
+    if (!owner) return json({ error: 'no_owner' }, 404);
+    if (action === 'login-code') return atLoginApi(env, team, 'login-code', { userId: owner.id }, Date.now());
+    const ch = await atCheckChallenge(team, body.challenge, Date.now());
+    if (ch && !ch.expired && ch.user.id !== owner.id) return json({ error: 'forbidden' }, 403);
+    return atLoginApi(env, team, 'login-verify', body, Date.now());
+  }
+
+  const auth = await atAuth(team, body.token);
+  if (auth.error) return json({ error: auth.error }, auth.error === 'blocked' ? 403 : 401);
+  if (auth.user.role !== 'owner') return json({ error: 'forbidden' }, 403);
+
+  if (action === 'load') {
+    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, me: atPublicUser(auth.user) });
+  }
+  if (action === 'save') {
+    const data = body.data;
+    if (!data || typeof data !== 'object' || !Array.isArray(data.ops)) return json({ error: 'bad_data' }, 400);
+    const cur = await kv.get(FIN_KEY, 'json');
+    const curRev = (cur && cur.rev) || 0;
+    if (!body.force && Number(body.rev || 0) !== curRev) return json({ error: 'conflict', data: cur }, 409);
+    const next = Object.assign({}, data, { rev: curRev + 1, savedAt: new Date().toISOString() });
+    const raw = JSON.stringify(next);
+    if (raw.length > FIN_MAX_BYTES) return json({ error: 'too_big' }, 413);
+    await kv.put(FIN_KEY, raw);
+    return json({ ok: true, rev: next.rev, savedAt: next.savedAt });
+  }
+  return json({ error: 'not_found' }, 404);
+}
+
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
 // ── «Аналитика» и цифры клиентов в Avito Tasks ──
 // The tracker reuses the dashboard's own handlers (daily metrics, Avito pull, cabinets, report):
@@ -10199,6 +10251,10 @@ async function handleApi(request, env, url, ctx) {
 
   if (pathname.startsWith('/api/dashboard/avito-tasks/')) {
     return handleAvitoTasksApi(request, env, url, ctx);
+  }
+
+  if (pathname.startsWith('/api/dashboard/finance/')) {
+    return handleFinanceApi(request, env, url);
   }
 
   if (pathname.startsWith('/api/dashboard/')) {
