@@ -1758,7 +1758,8 @@ async function boot() {
   if (!S.token) return showGate('none');
   // Мгновенный старт из кэша, затем свежие данные.
   const cached = store.json(K_CACHE);
-  if (cached && cached.token === S.token && cached.data) { applySync(cached.data, true); showApp(); }
+  // Кэш без me — оборванный ответ, сохранённый старой версией страницы: с ним всё падает, пропускаем.
+  if (cached && cached.token === S.token && cached.data && cached.data.me) { applySync(cached.data, true); showApp(); }
   await sync(true);
 }
 
@@ -1826,6 +1827,8 @@ async function sync(initial) {
     if (res.status === 401) return signOut(S.me ? 'reset' : 'none');
     if (res.status === 403) return signOut('blocked');
     if (!res.ok) throw new Error(res.data.error || 'error');
+    // 200, но без me — ответ оборвался или пришёл не JSON: считаем, что связи нет, и не кэшируем.
+    if (!res.data.me) throw new Error('bad_sync');
     S.offline = false;
     applySync(res.data, false);
     if (!res.data.unchanged) store.set(K_CACHE, JSON.stringify({ token: S.token, data: res.data }));

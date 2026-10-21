@@ -931,6 +931,9 @@ async function handleCrmApi(request, env, url) {
 /* ════════════════════════════ Avito export ════════════════════════════ */
 
 const AVITO_API_BASE = 'https://api.avito.ru';
+// When Avito's API hangs (it did on 19–21.10) a request without a limit holds its caller until the
+// runtime kills it — and a background Avito pull with it, before it saved anything.
+const AVITO_FETCH_TIMEOUT_MS = 15000;
 // Avito has renamed Messenger API path versions before without redirects — if exports
 // start failing with avito_404, check developers.avito.ru → "Messenger API" and adjust here.
 const AVITO_CHATS_VERSION = 'v2';
@@ -956,6 +959,7 @@ async function avitoGetToken(env, account) {
 
   const res = await fetch(`${AVITO_API_BASE}/token`, {
     method: 'POST',
+    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'client_credentials',
@@ -981,6 +985,7 @@ async function avitoGetToken(env, account) {
 async function avitoLookupUserId(clientId, clientSecret) {
   const res = await fetch(`${AVITO_API_BASE}/token`, {
     method: 'POST',
+    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
   });
@@ -997,6 +1002,7 @@ async function avitoLookupUserId(clientId, clientSecret) {
 
 async function avitoRequest(token, path, options = {}, attempt = 0) {
   const res = await fetch(`${AVITO_API_BASE}${path}`, {
+    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     ...options,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
@@ -3449,6 +3455,7 @@ async function atRefreshAvitoMoney(env) {
 const AVITO_PULL_TTL = 7 * 24 * 3600;
 const AVITO_PULL_BUDGET_MS = 25000; // stay inside waitUntil's ~30s; the cron finishes the rest
 const AVITO_PULL_CONCURRENCY = 4; // different cabinets — Avito's 1/min stats limit is per cabinet
+const AVITO_PULL_MAX_TRIES = 3; // runs a cabinet may be cut off in before it's marked as an error
 const AVITO_PULL_AUTOSTART_HOUR_MSK = 7; // cron prepares yesterday's numbers every morning
 
 async function startAvitoPull(env, date, force) {
@@ -3477,6 +3484,13 @@ async function processAvitoPull(env, date) {
   const deadline = Date.now() + AVITO_PULL_BUDGET_MS;
   const queue = [...pull.pending];
   let profilesFound = false;
+  // Progress is saved after every cabinet, and the cabinets this run starts with are counted first:
+  // one that keeps getting the run killed (Avito hanging) ends up as an error instead of holding the
+  // whole pull in «загружается…» forever.
+  const save = () => kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
+  pull.tries = pull.tries || {};
+  queue.slice(0, AVITO_PULL_CONCURRENCY).forEach((id) => { pull.tries[id] = (pull.tries[id] || 0) + 1; });
+  await save();
   const worker = async () => {
     while (queue.length && Date.now() < deadline) {
       const projectId = queue.shift();
@@ -3484,6 +3498,7 @@ async function processAvitoPull(env, date) {
       const account = project && project.avitoAccountId && (await env.AVITO_KV.get(`account:${project.avitoAccountId}`, 'json'));
       let result;
       if (!account) result = { linked: false };
+      else if ((pull.tries[projectId] || 0) > AVITO_PULL_MAX_TRIES) result = { linked: true, errors: ['Авито не ответил за несколько попыток — нажмите «Загрузить заново» позже'] };
       else {
         try { result = { linked: true, ...(await fetchAvitoDaySummary(env, account, date)) }; }
         catch (e) { result = { linked: true, errors: [String(e && e.message)] }; }
@@ -3501,12 +3516,12 @@ async function processAvitoPull(env, date) {
       }
       pull.results[projectId] = result;
       pull.pending = pull.pending.filter((id) => id !== projectId);
+      if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = new Date().toISOString(); }
+      await save();
     }
   };
   await Promise.all(Array.from({ length: AVITO_PULL_CONCURRENCY }, worker));
   if (profilesFound) await atTouch(kv, ['#projects']);
-  if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = new Date().toISOString(); }
-  await kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
 }
 
 async function avitoPullCron(env) {
