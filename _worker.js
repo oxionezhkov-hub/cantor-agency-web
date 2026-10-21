@@ -3468,13 +3468,21 @@ async function startAvitoPull(env, date, force) {
   const fresh = existing && Date.now() - Date.parse(existing.startedAt) < 10 * 60 * 1000;
   if (existing && (!force || (existing.status === 'running' && fresh))) return existing;
   const projects = await listByPrefix(kv, 'project:');
+  // «Загрузить заново» re-asks Avito only for the cabinets that came back incomplete: with Avito
+  // failing for some cabinets, reloading all of them would throw away the ones that did load.
+  const kept = {};
+  if (existing && existing.results) {
+    Object.entries(existing.results).forEach(([id, r]) => {
+      if (r && r.linked && r.views != null && r.contacts != null && r.spend != null) kept[id] = r;
+    });
+  }
   const pull = {
     date,
     status: 'running',
     startedAt: new Date().toISOString(),
     finishedAt: null,
-    pending: projects.filter((p) => p.avitoAccountId && !p.inactive).map((p) => p.id),
-    results: {},
+    pending: projects.filter((p) => p.avitoAccountId && !p.inactive && !kept[p.id]).map((p) => p.id),
+    results: kept,
   };
   if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = pull.startedAt; }
   await kv.put(`avitoPull:${date}`, JSON.stringify(pull), { expirationTtl: AVITO_PULL_TTL });
@@ -8668,9 +8676,11 @@ function waiAssistantSystem(job) {
   return [
     `Ты ИИ-помощник в трекере агентства Cantor Agency. Пишет: ${job.byName} (${a.role || 'сотрудник'}). Агентство продвигает репетиторов и онлайн-школ на Авито: ведёт кабинеты клиентов, объявления, ставки, рассылки и диалоги.`,
     'Тебе даны: сжатая память диалога, последние сообщения, данные трекера (команда, клиенты с цифрами, деньги, задачи; по клиентам из вопроса — подробности, переписка, кабинет Авито) и выдержки из регламентов агентства.',
-    'Отвечай на новое сообщение, опираясь на эти данные: считай, сравнивай, делай выводы. Не выдумывай: если данных нет — скажи прямо, чего именно не хватает. Ссылаясь на регламент, давай его ссылку.',
+    'Отвечай на новое сообщение, опираясь на эти данные: считай, сравнивай, делай выводы. Ссылаясь на регламент, давай его ссылку.',
+    'Не переспрашивай: если чего-то не уточнили, бери по умолчанию последние 7 дней по вчера, все показатели и все объявления — и сразу отвечай по данным. Уточняющий вопрос — только если ответить нельзя совсем (например, непонятно, о каком клиенте речь), и никогда не задавай тот же вопрос второй раз.',
+    'Не выдумывай. Если в данных нет того, о чём спрашивают (рассылка, даты публикации объявлений, переписка и т. п.), прямо напиши, чего именно нет. Ты не можешь менять файлы и выгрузки и ничего не делаешь в кабинете Авито: никогда не пиши «добавил», «изменил», «обновил», если этого не было. Не предлагай лишнего, о чём не спрашивали.',
     'Ответ по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
-    job.prepFiles && job.prepFiles.length ? `Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')} — в тексте дай краткий итог по нему.` : 'Файлы ты приложить не можешь: если просят выгрузку, скажи, что её можно получить, указав клиента и период (например, «выгрузка по Авито клиента … за неделю»).',
+    job.prepFiles && job.prepFiles.length ? `Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')}. Его колонки: ID, название, статус, цена, категория, адрес, просмотры, контакты, в избранное, ссылка — других (например, даты публикации) в нём нет. В тексте дай краткий итог по нему: сколько объявлений, сколько просмотров и контактов, какие объявления лучшие.` : 'Файлы ты приложить не можешь: если просят выгрузку, скажи, что её можно получить, указав клиента и период (например, «выгрузка по Авито клиента … за неделю»).',
     'Формат ответа строго такой, три части с этими заголовками:',
     '===ОТВЕТ===',
     '<ответ человеку>',
@@ -8778,6 +8788,13 @@ const aiIdOk = (id) => /^(main-[a-z0-9_-]{1,40}|[a-f0-9]{10})$/.test(String(id |
 const AI_DATA_BUDGET = 17000;
 const AI_AVITO_RE = /авито|объявлен|статистик|выгруз|просмотр|избранн|отзыв|рейтинг|кабинет|позици|ставк/i;
 const AI_EXPORT_RE = /выгруз|файл|таблиц|csv|excel|xlsx|эксел/i;
+const AI_DIALOG_RE = /диалог|переписк|чат(?!ь)|рассылк|сообщени|лид|заявк/i;
+// What the Avito part looks at: the question and, for a follow-up («за 7 дней»), the person's previous message.
+function aiAvitoText(job) {
+  const a = job.assistant || {};
+  const prev = [...(a.recent || [])].reverse().find((m) => m.role !== 'ИИ-помощник');
+  return `${job.text}\n${prev ? prev.text : ''}`;
+}
 
 async function aiChatSources(kv, byId) {
   const chats = await listByPrefix(kv, 'bot:chat:');
@@ -8828,11 +8845,20 @@ function aiNamedClients(text, projects, people) {
   const q = ` ${botNorm(text)} `;
   const hit = (w) => w.length > 3 && q.includes(` ${w.slice(0, Math.max(4, w.length - 2))}`);
   const teamFirst = new Set(people.flatMap((u) => [atFirstName(u.name), ...(u.aliases || [])]).map((x) => botNorm(x)));
-  return projects.filter((p) => {
-    const [firstName, ...rest] = botNorm(p.name).split(' ');
-    if (rest.some(hit)) return true;
-    return firstName && !teamFirst.has(firstName) && hit(firstName) && projects.filter((x) => botNorm(x.name).split(' ')[0] === firstName).length === 1;
-  });
+  const bySurname = projects.filter((p) => botNorm(p.name).split(' ').slice(1).some(hit));
+  // A surname in the text settles it: «натали… сасс» is Наталина Сасс, not also Наталия and Наталья.
+  if (bySurname.length) return bySurname;
+  // First names are close to each other (Наталина / Наталия / Наталья): only the last letter may
+  // change, and the longest match wins («наталиной» is Наталина, not also Наталия).
+  const byFirst = projects.map((p) => {
+    const firstName = botNorm(p.name).split(' ')[0];
+    const stem = firstName.slice(0, firstName.length - 1);
+    const ok = firstName.length > 3 && !teamFirst.has(firstName) && q.includes(` ${stem}`)
+      && projects.filter((x) => botNorm(x.name).split(' ')[0] === firstName).length === 1;
+    return ok ? { p, len: stem.length } : null;
+  }).filter(Boolean);
+  const best = Math.max(0, ...byFirst.map((x) => x.len));
+  return byFirst.filter((x) => x.len === best).map((x) => x.p);
 }
 
 async function aiBuildData(env, job, light) {
@@ -8934,7 +8960,7 @@ async function aiBuildData(env, job, light) {
     }
     chatBlock = bits.length ? `ПЕРЕПИСКА во всех чатах за 2 дня ([id] дата автор: текст):\n${bits.join('\n\n')}` : '';
   }
-  if (AI_AVITO_RE.test(job.text) && !named.length) parts.push('АВИТО: клиент в вопросе не распознан — данные кабинета не загружались. Если нужен кабинет, попроси назвать клиента.');
+  if ((AI_AVITO_RE.test(job.text) || AI_DIALOG_RE.test(job.text)) && !named.length) parts.push('АВИТО: клиент в вопросе не распознан — данные кабинета не загружались. Если нужен кабинет, попроси назвать клиента.');
 
   let text = parts.join('\n\n');
   if (text.length > AI_DATA_BUDGET) text = `${text.slice(0, AI_DATA_BUDGET)}\n…(обрезано)`;
@@ -8945,10 +8971,13 @@ async function aiBuildData(env, job, light) {
 
 // The Avito cabinet of the clients in question (Avito API calls, few KV reads) — when it is asked about.
 async function aiBuildAvito(env, job) {
-  if (!AI_AVITO_RE.test(job.text) || !(job.assistant && job.assistant.named && job.assistant.named.length)) return { text: '', prepFiles: [] };
+  const ask = aiAvitoText(job);
+  const wantsStats = AI_AVITO_RE.test(ask);
+  const wantsChats = AI_DIALOG_RE.test(ask);
+  if ((!wantsStats && !wantsChats) || !(job.assistant && job.assistant.named && job.assistant.named.length)) return { text: '', prepFiles: [] };
   const kv = env.AGENCY_DASHBOARD_KV;
   const wantsFile = AI_EXPORT_RE.test(job.text);
-  const period = aiPeriod(job.text);
+  const period = aiPeriod(ask);
   const parts = [];
   const prepFiles = [];
   for (const pid of job.assistant.named) {
@@ -8958,6 +8987,8 @@ async function aiBuildAvito(env, job) {
     try {
       const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
       if (!account) throw new Error('кабинет не найден');
+      if (wantsChats) parts.push(await aiAvitoChats(env, account, p, period));
+      if (!wantsStats) continue;
       const ov = await runAvitoOverview(env, account, period.from, period.to);
       const items = [...(ov.items || [])].sort((x, y) => (y.contacts || 0) - (x.contacts || 0));
       const tot = items.reduce((acc, it) => ({ views: acc.views + (it.views || 0), contacts: acc.contacts + (it.contacts || 0), favorites: acc.favorites + (it.favorites || 0) }), { views: 0, contacts: 0, favorites: 0 });
@@ -8980,6 +9011,36 @@ async function aiBuildAvito(env, job) {
     }
   }
   return { text: parts.join('\n\n'), prepFiles };
+}
+
+// Avito dialogs of a client for the period: the latest chats with their last messages (a mailing shows
+// up here too — as the cabinet's outgoing messages).
+async function aiAvitoChats(env, account, p, period) {
+  try {
+    const { chats } = await runAvitoChatList(env, account, 50, 0);
+    const from = Date.parse(`${period.from}T00:00:00+03:00`);
+    const recent = chats.filter((c) => c.updated && Date.parse(c.updated) >= from);
+    const lines = [];
+    let used = 0;
+    for (const c of recent.slice(0, 8)) {
+      let msgs = [];
+      try { msgs = await runAvitoChatMessages(env, account, c.chat_id); } catch (e) { msgs = []; }
+      const body = (Array.isArray(msgs) ? msgs : msgs.messages || [])
+        .filter((m) => Date.parse(m.datetime) >= from)
+        .sort((x, y) => Date.parse(x.datetime) - Date.parse(y.datetime))
+        .slice(-10)
+        .map((m) => `  ${m.datetime.slice(5, 16).replace('T', ' ')} ${m.author === 'manager' ? 'кабинет' : 'клиент'}: ${String(m.text || `[${m.type}]`).replace(/\s+/g, ' ').slice(0, 220)}`)
+        .join('\n');
+      const block = `- «${String(c.item_title || 'без объявления').slice(0, 70)}»\n${body || `  последнее: ${String(c.last_message_text || '').slice(0, 220)}`}`;
+      if (used + block.length > 6000) break;
+      lines.push(block);
+      used += block.length;
+    }
+    const rest = recent.length - lines.length;
+    return [`АВИТО, ДИАЛОГИ: ${p.name}, ${period.from} — ${period.to}: чатов с активностью ${recent.length}${recent.length >= 50 ? '+' : ''}`, lines.join('\n') || '  за период переписки нет', rest > 0 ? `(ещё ${rest} чатов не показаны)` : ''].filter(Boolean).join('\n');
+  } catch (e) {
+    return `АВИТО, ДИАЛОГИ: ${p.name} — Авито не отдал переписку (${String(e && e.message).slice(0, 160)})`;
+  }
 }
 
 // The person who asked gets the answer in the tracker's bell and in Telegram (it takes minutes —
