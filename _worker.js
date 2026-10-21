@@ -934,6 +934,40 @@ const AVITO_API_BASE = 'https://api.avito.ru';
 // When Avito's API hangs (it did on 19–21.10) a request without a limit holds its caller until the
 // runtime kills it — and a background Avito pull with it, before it saved anything.
 const AVITO_FETCH_TIMEOUT_MS = 15000;
+// Since 19.10.2026 api.avito.ru barely answers Cloudflare's servers (timeouts, 522 — Cloudflare's own
+// "couldn't reach the origin"), while from Russia it works as before. So every Avito call goes
+// through the yc-dashboard-api-proxy function in Yandex Cloud (?p=/avito-api/<path>, see its
+// README): AVITO_PROXY_URL var (default: that function; "off" — straight to Avito), AVITO_PROXY_KEY
+// secret = the function's PROXY_KEY when one is set there. A function version that doesn't know
+// /avito-api/ yet answers bad_path — then this isolate goes straight to Avito for 10 minutes.
+const AVITO_PROXY_DEFAULT = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch';
+const AVITO_PROXY_TIMEOUT_MS = 30000;
+let AVITO_PROXY = { url: AVITO_PROXY_DEFAULT, key: null };
+let AVITO_PROXY_OFF_UNTIL = 0;
+function avitoProxySetup(env) {
+  const url = env && env.AVITO_PROXY_URL;
+  AVITO_PROXY = { url: url === 'off' ? null : url || AVITO_PROXY_DEFAULT, key: (env && env.AVITO_PROXY_KEY) || null };
+}
+async function avitoFetch(path, init = {}) {
+  if (AVITO_PROXY.url && Date.now() > AVITO_PROXY_OFF_UNTIL) {
+    try {
+      const res = await fetch(`${AVITO_PROXY.url}?p=${encodeURIComponent(`/avito-api${path}`)}`, {
+        method: init.method || 'GET',
+        headers: { ...(init.headers || {}), ...(AVITO_PROXY.key ? { 'x-proxy-key': AVITO_PROXY.key } : {}) },
+        body: init.body,
+        signal: AbortSignal.timeout(AVITO_PROXY_TIMEOUT_MS),
+      });
+      if (res.status !== 400) return res;
+      const data = await res.clone().json().catch(() => null);
+      if (!data || data.error !== 'bad_path') return res;
+      console.error('avito proxy: the function has no /avito-api/ yet — going straight to Avito');
+    } catch (e) {
+      console.error('avito proxy failed, going straight to Avito', e && e.message);
+    }
+    AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
+  }
+  return fetch(`${AVITO_API_BASE}${path}`, { ...init, signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS) });
+}
 // Avito has renamed Messenger API path versions before without redirects — if exports
 // start failing with avito_404, check developers.avito.ru → "Messenger API" and adjust here.
 const AVITO_CHATS_VERSION = 'v2';
@@ -957,9 +991,8 @@ async function avitoGetToken(env, account) {
   const now = Date.now();
   if (cached && cached.expiresAt > now + 60_000) return cached.accessToken;
 
-  const res = await fetch(`${AVITO_API_BASE}/token`, {
+  const res = await avitoFetch('/token', {
     method: 'POST',
-    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'client_credentials',
@@ -983,9 +1016,8 @@ async function avitoGetToken(env, account) {
 // /core/v1/accounts/self, the same id Avito otherwise only surfaces inside the developer
 // portal's app settings.
 async function avitoLookupUserId(clientId, clientSecret) {
-  const res = await fetch(`${AVITO_API_BASE}/token`, {
+  const res = await avitoFetch('/token', {
     method: 'POST',
-    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
   });
@@ -1001,12 +1033,12 @@ async function avitoLookupUserId(clientId, clientSecret) {
 }
 
 async function avitoRequest(token, path, options = {}, attempt = 0) {
-  const res = await fetch(`${AVITO_API_BASE}${path}`, {
-    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
+  const res = await avitoFetch(path, {
     ...options,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
-  if ((res.status === 429 || res.status >= 500) && attempt < 3) {
+  // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
+  if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
     return avitoRequest(token, path, options, attempt + 1);
   }
@@ -4898,11 +4930,12 @@ const BOT_EXTRACT_SYSTEM = [
   'Тебе дают новые сообщения из одного топика/чата, контекст до них и список открытых задач этого клиента.',
   'Верни ТОЛЬКО JSON без пояснений:',
   '{"events":[',
-  ' {"type":"new_task","msg":<id сообщения>,"text":"<суть задачи до 15 слов>","assignee":"<имя исполнителя или null>","due":"<YYYY-MM-DD HH:MM или null>"},',
+  ' {"type":"new_task","msg":<id сообщения>,"text":"<суть задачи до 15 слов>","assignee":"<имя исполнителя или null>","due":"<YYYY-MM-DD HH:MM или null>","priority":"urgent|high|normal|low"},',
   ' {"type":"update","task":"<id открытой задачи>","msg":<id сообщения>,"status":"taken|done|informed|cancelled","assignee":"<имя или null>","due":"<YYYY-MM-DD HH:MM или null>"}',
   ']}',
-  'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя, @username) или сам пишет, что сделает. Не угадывай по роли',
-  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок, иначе null.',
+  'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя или @username — см. Telegram в списке команды) или сам пишет, что сделает. Не угадывай по роли',
+  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок («крайний срок 21.10.2026 18:00», «до пятницы»), иначе null.',
+  'priority: urgent — «срочно», «горит», «ASAP», «прямо сейчас» или срок в ближайшие 3 часа; high — срок сегодня или завтра, «важно», «в приоритете»; low — «когда будет время», «не срочно»; иначе normal.',
   'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
@@ -5083,6 +5116,21 @@ function botNotTeamTaskReason(chatRec, src, taskText) {
   if (/\?[\s)!.]*$/.test(text) && !BOT_ASK_RE.test(text)) return 'вопрос на обсуждение';
   return null;
 }
+// The model's priority, checked against the message: «срочно» or a deadline within 3 hours is urgent,
+// a deadline today or tomorrow at least high.
+function botTaskPriority(fromAi, src, dueMs) {
+  const order = ['low', 'normal', 'high', 'urgent'];
+  let p = order.includes(fromAi) ? fromAi : 'normal';
+  const raise = (to) => { if (order.indexOf(to) > order.indexOf(p)) p = to; };
+  const text = String((src && src.text) || '');
+  if (/(^|[^а-яё])(срочн|горит|asap)/i.test(text)) raise('urgent');
+  if (dueMs) {
+    const left = dueMs - Date.now();
+    if (left < 3 * 3600000) raise('urgent');
+    else if (dueMs < botMskStartOfDay(Date.now()) + 2 * 24 * 3600000) raise('high');
+  }
+  return p;
+}
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -5120,10 +5168,9 @@ async function botApplyEvents(env, events, ctx) {
         status: 'open',
         owner: null,
         assigneeId: null,
-        priority: 'normal',
-        // No deadline from the bot: whoever takes the task sets it. A date the message names is kept
-        // as a hint for the «Взять задачу» form.
-        due: null,
+        priority: botTaskPriority(ev.priority, src, dueMs),
+        // A deadline the message names is the task's deadline («крайний срок 21.10 18:00»).
+        due: dueMs ? botIsoMsk(dueMs) : null,
         suggestedDue: dueMs ? botIsoMsk(dueMs) : null,
         projectId: ctx.topic.projectId || null,
         topicName: ctx.topic.name,
@@ -5141,10 +5188,7 @@ async function botApplyEvents(env, events, ctx) {
         updatedAt: nowIso,
       };
       const who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
-      if (who && botNamedIn(src, who)) {
-        Object.assign(task, { assigneeId: who.id, owner: who.name });
-        if (dueMs) task.due = task.suggestedDue; // the person was asked directly, with a date
-      }
+      if (who && botNamedIn(src, who)) Object.assign(task, { assigneeId: who.id, owner: who.name });
       await kv.put(`task:${id}`, JSON.stringify(task));
       openById.set(id, task);
       ctx.openTasks.push(task);
@@ -6291,6 +6335,9 @@ function atMatchUserBy(name, users, norm) {
     let score = 0;
     const full = norm(u.name);
     if (full && n.includes(` ${full} `)) score = 3;
+    // «@SEEREKAG» in a message is that person's Telegram username.
+    const tg = u.tgUsername ? norm(u.tgUsername) : '';
+    if (tg && n.includes(` ${tg} `)) score = 3;
     for (const a of u.aliases || []) {
       const an = norm(a);
       if (an && n.includes(` ${an} `)) score = Math.max(score, an.includes(' ') ? 3 : 2);
@@ -6335,7 +6382,7 @@ function atNeedsInform(task, users) {
 function atTeamPromptLine(team) {
   return team.users.filter((u) => u.active).map((u) => {
     const aka = (u.aliases || []).filter((a) => botNorm(a) !== botNorm(atFirstName(u.name)));
-    return `${u.name} — ${u.roleLabel}${aka.length ? ` (может подписываться: ${aka.join(', ')})` : ''}`;
+    return `${u.name} — ${u.roleLabel}${u.tgUsername ? `, Telegram @${u.tgUsername}` : ''}${aka.length ? ` (может подписываться: ${aka.join(', ')})` : ''}`;
   }).join('; ');
 }
 
@@ -11133,6 +11180,7 @@ function withNoIndexHeader(response) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    avitoProxySetup(env);
 
     const redirectMatch = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)$/);
     if (redirectMatch) {
@@ -11194,6 +11242,7 @@ export default {
 
   // Cron trigger (wrangler.jsonc "triggers") — drives the control bot: AI queue, deadline checks, summaries.
   async scheduled(event, env, ctx) {
+    avitoProxySetup(env);
     if (!(await cronClaimTick(env, event && event.scheduledTime))) return;
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
