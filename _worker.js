@@ -4940,13 +4940,18 @@ function botIsLimitError(err) {
 }
 async function botAi(env, system, user, maxTokens, opts = {}) {
   if (!env.AI) throw new Error('AI binding is not configured');
-  const res = await env.AI.run(opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT, {
-    messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
-    max_tokens: maxTokens || 1500,
-    temperature: opts.temperature == null ? 0.1 : opts.temperature,
-  });
+  const model = opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT;
+  // OpenAI's gpt-oss models on Workers AI take the Responses API shape (instructions + input).
+  const res = /gpt-oss/.test(model)
+    ? await env.AI.run(model, { instructions: system, input: user, reasoning: { effort: 'low' } })
+    : await env.AI.run(model, {
+      messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
+      max_tokens: maxTokens || 1500,
+      temperature: opts.temperature == null ? 0.1 : opts.temperature,
+    });
   let out = '';
-  if (typeof res === 'string') out = res;
+  if (res && Array.isArray(res.output)) out = res.output.filter((x) => x && x.type === 'message').flatMap((x) => x.content || []).map((c) => c.text || '').join('');
+  else if (typeof res === 'string') out = res;
   else if (res && typeof res.response === 'string') out = res.response;
   else if (res && res.response && typeof res.response === 'object') out = JSON.stringify(res.response);
   else if (res && res.choices && res.choices[0]) out = (res.choices[0].message && res.choices[0].message.content) || res.choices[0].text || '';
@@ -8789,7 +8794,10 @@ function waiAssistantSystem(job) {
     'Отвечай на новое сообщение, опираясь на эти данные: считай, сравнивай, делай выводы. Ссылаясь на регламент, давай его ссылку.',
     'Не переспрашивай: если чего-то не уточнили, бери по умолчанию последние 7 дней по вчера, все показатели и все объявления — и сразу отвечай по данным. Уточняющий вопрос — только если ответить нельзя совсем (например, непонятно, о каком клиенте речь), и никогда не задавай тот же вопрос второй раз.',
     'Не выдумывай. Если в данных нет того, о чём спрашивают (рассылка, даты публикации объявлений, переписка и т. п.), прямо напиши, чего именно нет. Ты не можешь менять файлы и выгрузки и ничего не делаешь в кабинете Авито: никогда не пиши «добавил», «изменил», «обновил», если этого не было. Не предлагай лишнего, о чём не спрашивали.',
-    'Ответ по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
+    'Если в сообщении несколько вопросов — ответь на каждый отдельным блоком с жирным заголовком (например, **Цифры**, **Чат с клиентом**, **Диалоги на Авито**). Каждый блок подробно: 3–6 пунктов с конкретными цифрами, датами и выводом.',
+    'Вопрос про чат или настроение клиента («всё норм?», «как общение?») — разбери ПЕРЕПИСКУ: что клиент писал в последние дни, доволен ли, есть ли претензии, вопросы без ответа, что обещали и сделали ли. Приведи 1–2 короткие цитаты с датами и дай свою оценку. Если переписки по клиенту в данных нет — так и скажи.',
+    'Цифры бери ровно из данных и не смешивай периоды: итоги за 7 дней отдельно, события по дням — с датами. Не противоречь сам себе. Если в данных написано, что Авито что-то не отдал (ошибка), — прямо скажи это, без догадок о диалогах и объявлениях.',
+    'Пиши по-русски, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
     job.prepFiles && job.prepFiles.length ? `Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')}. Его колонки: ID, название, статус, цена, категория, адрес, просмотры, контакты, в избранное, ссылка — других (например, даты публикации) в нём нет. В тексте дай краткий итог по нему: сколько объявлений, сколько просмотров и контактов, какие объявления лучшие.` : 'Файлы ты приложить не можешь: если просят выгрузку, скажи, что её можно получить, указав клиента и период (например, «выгрузка по Авито клиента … за неделю»).',
     'Формат ответа строго такой, три части с этими заголовками:',
     '===ОТВЕТ===',
@@ -8851,7 +8859,7 @@ async function waiAssistantStep(env, job) {
     kb ? `ВЫДЕРЖКИ ИЗ РЕГЛАМЕНТОВ:\n${kb}` : '',
     `НОВОЕ СООБЩЕНИЕ от ${job.byName}:\n${job.text}`,
   ].filter(Boolean).join('\n\n');
-  const res = waiAssistantParse(await waiAi(env, waiAssistantSystem(job), user, 2500));
+  const res = waiAssistantParse(await botAi(env, waiAssistantSystem(job), user, 3500, { model: env.ASSISTANT_AI_MODEL || waiModel(env), temperature: 0.3 }));
   if (!res.answer) throw new Error('пустой ответ');
   job.files = [...(job.prepFiles || [])];
   job.result = {
@@ -9073,7 +9081,11 @@ async function aiBuildData(env, job, light) {
   if ((AI_AVITO_RE.test(job.text) || AI_DIALOG_RE.test(job.text)) && !named.length) parts.push('АВИТО: клиент в вопросе не распознан — данные кабинета не загружались. Если нужен кабинет, попроси назвать клиента.');
 
   let text = parts.join('\n\n');
-  if (text.length > AI_DATA_BUDGET) text = `${text.slice(0, AI_DATA_BUDGET)}\n…(обрезано)`;
+  // A question about the chat itself («в чате всё норм?», «как общение?») gets the chat a big share,
+  // not whatever is left after the numbers and tasks.
+  const aboutChat = /чат|переписк|общени|ощущени|настроени|доволь|недоволь|диалог/i.test(job.text);
+  const budget = aboutChat && chatBlock ? AI_DATA_BUDGET - 7000 : AI_DATA_BUDGET;
+  if (text.length > budget) text = `${text.slice(0, budget)}\n…(обрезано)`;
   const room = AI_DATA_BUDGET + 3000 - text.length;
   if (chatBlock && room > 500) text += `\n\n${chatBlock.length > room ? `…${chatBlock.slice(-room)}` : chatBlock}`;
   return text;
