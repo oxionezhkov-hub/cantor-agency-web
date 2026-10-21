@@ -3796,6 +3796,7 @@ function reportFileName(job) {
 const REPORT_JOB_TTL = 14 * 24 * 3600;
 
 async function putReportJob(kv, job) {
+  job.updatedAt = new Date().toISOString();
   await kv.put(`reportJob:${job.id}`, JSON.stringify(job), { expirationTtl: REPORT_JOB_TTL });
 }
 
@@ -7999,6 +8000,7 @@ async function atKbCron(env) {
 //   wai:queue        -> [{ kind: 'report'|'kb', id, at }]  jobs not finished yet — the cron's list
 //   wai:text:<jobId> -> the material text extracted from a job's text and files (14-day TTL)
 const WAI_LEASE_MS = 50 * 1000;
+const WAI_CRON_QUIET_MS = 3 * 60 * 1000;
 const WAI_MAX_TRIES = 3;
 const WAI_ACTIVE = new Set(['queued', 'sent', 'running']);
 const WAI_TEXT_TTL = 14 * 24 * 3600;
@@ -8077,6 +8079,9 @@ async function waiRun(env, kind, id, maxSteps, short) {
     const w = job.wai || (job.wai = {});
     if (w.lease && w.lease > Date.now()) return; // another request is on this step right now
     if (short && w.inflight) return;
+    // The cron runs in another Cloudflare location, where KV can still show this job as it was a
+    // minute ago — without its lease. A job someone touched lately is left to them.
+    if (!short && step === 0 && Date.now() - Date.parse(job.updatedAt || job.createdAt || 0) < WAI_CRON_QUIET_MS) return;
     w.tries = (w.tries || 0) + 1;
     w.inflight = true;
     w.lease = Date.now() + WAI_LEASE_MS;
@@ -8104,10 +8109,22 @@ async function waiRun(env, kind, id, maxSteps, short) {
     if (!finished) continue;
     await waiDequeue(kv, kind, id);
     await kv.delete(`wai:text:${id}`);
+    // Two passes that both finished the job (the race above) must not both post or notify.
+    if (!(await waiClaimOnce(kv, `wai:done:${kind}:${id}:${job.sentAt || job.createdAt}`))) return; // a re-sent job notifies again
     if (kind === 'report') await reportPostToChat(env, job);
     else await kbNotify(env, job);
     return;
   }
+}
+// Claims a one-off action (cronClaimTick's way: write, wait, read back — the last writer wins),
+// so two passes racing to the same finish post and notify once.
+async function waiClaimOnce(kv, key) {
+  if (await kv.get(key)) return false;
+  const me = crypto.randomUUID();
+  await kv.put(key, me, { expirationTtl: 14 * 24 * 3600 });
+  await new Promise((r) => setTimeout(r, 1500));
+  const owner = await kv.get(key);
+  return !owner || owner === me;
 }
 // Cron: everything still in the queue, oldest first, as far as the tick allows.
 async function waiCron(env) {
