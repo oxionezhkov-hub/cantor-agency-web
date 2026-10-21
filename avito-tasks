@@ -519,11 +519,11 @@ a{color:inherit}
 .mt-c .cl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left}
 .mt-c .mt-av .avatar{box-shadow:0 0 0 2px var(--accent-bg)}
 .mt-days{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}
-.mt-day{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.mt-day{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
 .mt-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px;color:var(--ink)}
 .mt-day-head span{font-size:12.5px;color:var(--muted)}
-.mt-slots{display:grid;gap:6px}
-.mt-slot{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 6px 0 12px;border-radius:12px;border:1px dashed var(--line);background:var(--surface-2);text-align:left;width:100%}
+.mt-slots{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.mt-slot{display:flex;align-items:center;gap:10px;min-width:0;min-height:42px;padding:0 6px 0 12px;border-radius:12px;border:1px dashed var(--line);background:var(--surface-2);text-align:left;width:100%}
 button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .mt-slot .tm{font-family:var(--display);font-weight:700;font-size:14px;color:var(--ink);min-width:44px}
 .mt-slot .free{color:var(--green);font-size:13.5px;font-weight:600}
@@ -3700,7 +3700,9 @@ function renderMembers() {
     const me = u.id === S.me.id;
     // Ассистент видит руководителя в списке, но не его ссылку и не может его менять.
     const locked = u.role === 'owner' && !isOwner();
-    const shareText = `${first(u.name)}, это ваша личная ссылка в Avito Tasks — трекер задач команды. Откройте её один раз, дальше трекер будет открываться сам. Потом нажмите «Подключить Telegram», чтобы получать задачи и напоминания.`;
+    // Та же ссылка на домене воркера — открывается с VPN, когда cantor.agency недоступен.
+    const vpnInvite = String(u.invite || '').replace(/^https?:\/\/[^/]+/, API_BASE);
+    const shareText = `${first(u.name)}, это ваша личная ссылка в Avito Tasks — трекер задач команды. Откройте её один раз, дальше трекер будет открываться сам. Потом нажмите «Подключить Telegram», чтобы получать задачи и напоминания. Если ссылка не открывается — вот она же для входа с VPN: ${vpnInvite}`;
     const share = `https://t.me/share/url?url=${encodeURIComponent(u.invite)}&text=${encodeURIComponent(shareText)}`;
     const flags = [
       u.active ? (u.activatedAt ? `<span class="tag tag-closed">вошёл(а) ${esc(fmtDate(Date.parse(u.activatedAt)))}</span>` : '<span class="tag tag-done">ещё не входил(а)</span>') : '<span class="tag tag-cancelled">доступ отключён</span>',
@@ -3715,6 +3717,10 @@ function renderMembers() {
         <input class="input" value="${esc(u.invite)}" readonly aria-label="Пригласительная ссылка" onclick="this.select()">
         <button class="btn btn-ghost btn-sm" data-m="copy">${ico('copy', 'ic-sm')}Скопировать</button>
         <a class="btn btn-ghost btn-sm tg" href="${esc(share)}">${ico('tg', 'ic-sm')}Отправить в Telegram</a>
+      </div>
+      <div class="m-link">
+        <input class="input" value="${esc(vpnInvite)}" readonly aria-label="Пригласительная ссылка для входа с VPN" onclick="this.select()">
+        <button class="btn btn-ghost btn-sm" data-m="copy-vpn">${ico('copy', 'ic-sm')}Скопировать с VPN</button>
       </div>
       <details><summary class="btn btn-quiet btn-sm" style="list-style:none;display:inline-flex">Изменить</summary>
         <div style="display:grid;gap:12px;margin-top:10px">
@@ -3772,6 +3778,10 @@ $('members').addEventListener('click', async (e) => {
   const act = b.dataset.m;
   if (act === 'copy') {
     try { await navigator.clipboard.writeText(u.invite); toast('Ссылка скопирована'); } catch (err) { m.querySelector('.m-link .input').select(); document.execCommand('copy'); toast('Ссылка скопирована'); }
+  }
+  if (act === 'copy-vpn') {
+    const inp = m.querySelectorAll('.m-link .input')[1];
+    try { await navigator.clipboard.writeText(inp.value); toast('Ссылка для VPN скопирована'); } catch (err) { inp.select(); document.execCommand('copy'); toast('Ссылка для VPN скопирована'); }
   }
   if (act === 'toggle') teamAction('user-access', { id, active: !u.active }, u.active ? `${first(u.name)}: доступ отключён` : `${first(u.name)}: доступ включён`);
   if (act === 'reset' && confirm(`Выдать ${u.name} новую ссылку? Старая перестанет работать, все устройства ${id === S.me.id ? 'кроме этого ' : ''}выйдут из трекера.`)) {
