@@ -934,6 +934,40 @@ const AVITO_API_BASE = 'https://api.avito.ru';
 // When Avito's API hangs (it did on 19–21.10) a request without a limit holds its caller until the
 // runtime kills it — and a background Avito pull with it, before it saved anything.
 const AVITO_FETCH_TIMEOUT_MS = 15000;
+// Since 19.10.2026 api.avito.ru barely answers Cloudflare's servers (timeouts, 522 — Cloudflare's own
+// "couldn't reach the origin"), while from Russia it works as before. So every Avito call goes
+// through the yc-dashboard-api-proxy function in Yandex Cloud (?p=/avito-api/<path>, see its
+// README): AVITO_PROXY_URL var (default: that function; "off" — straight to Avito), AVITO_PROXY_KEY
+// secret = the function's PROXY_KEY when one is set there. A function version that doesn't know
+// /avito-api/ yet answers bad_path — then this isolate goes straight to Avito for 10 minutes.
+const AVITO_PROXY_DEFAULT = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch';
+const AVITO_PROXY_TIMEOUT_MS = 30000;
+let AVITO_PROXY = { url: AVITO_PROXY_DEFAULT, key: null };
+let AVITO_PROXY_OFF_UNTIL = 0;
+function avitoProxySetup(env) {
+  const url = env && env.AVITO_PROXY_URL;
+  AVITO_PROXY = { url: url === 'off' ? null : url || AVITO_PROXY_DEFAULT, key: (env && env.AVITO_PROXY_KEY) || null };
+}
+async function avitoFetch(path, init = {}) {
+  if (AVITO_PROXY.url && Date.now() > AVITO_PROXY_OFF_UNTIL) {
+    try {
+      const res = await fetch(`${AVITO_PROXY.url}?p=${encodeURIComponent(`/avito-api${path}`)}`, {
+        method: init.method || 'GET',
+        headers: { ...(init.headers || {}), ...(AVITO_PROXY.key ? { 'x-proxy-key': AVITO_PROXY.key } : {}) },
+        body: init.body,
+        signal: AbortSignal.timeout(AVITO_PROXY_TIMEOUT_MS),
+      });
+      if (res.status !== 400) return res;
+      const data = await res.clone().json().catch(() => null);
+      if (!data || data.error !== 'bad_path') return res;
+      console.error('avito proxy: the function has no /avito-api/ yet — going straight to Avito');
+    } catch (e) {
+      console.error('avito proxy failed, going straight to Avito', e && e.message);
+    }
+    AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
+  }
+  return fetch(`${AVITO_API_BASE}${path}`, { ...init, signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS) });
+}
 // Avito has renamed Messenger API path versions before without redirects — if exports
 // start failing with avito_404, check developers.avito.ru → "Messenger API" and adjust here.
 const AVITO_CHATS_VERSION = 'v2';
@@ -957,9 +991,8 @@ async function avitoGetToken(env, account) {
   const now = Date.now();
   if (cached && cached.expiresAt > now + 60_000) return cached.accessToken;
 
-  const res = await fetch(`${AVITO_API_BASE}/token`, {
+  const res = await avitoFetch('/token', {
     method: 'POST',
-    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'client_credentials',
@@ -983,9 +1016,8 @@ async function avitoGetToken(env, account) {
 // /core/v1/accounts/self, the same id Avito otherwise only surfaces inside the developer
 // portal's app settings.
 async function avitoLookupUserId(clientId, clientSecret) {
-  const res = await fetch(`${AVITO_API_BASE}/token`, {
+  const res = await avitoFetch('/token', {
     method: 'POST',
-    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
   });
@@ -1001,12 +1033,12 @@ async function avitoLookupUserId(clientId, clientSecret) {
 }
 
 async function avitoRequest(token, path, options = {}, attempt = 0) {
-  const res = await fetch(`${AVITO_API_BASE}${path}`, {
-    signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
+  const res = await avitoFetch(path, {
     ...options,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
-  if ((res.status === 429 || res.status >= 500) && attempt < 3) {
+  // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
+  if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
     return avitoRequest(token, path, options, attempt + 1);
   }
@@ -11133,6 +11165,7 @@ function withNoIndexHeader(response) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    avitoProxySetup(env);
 
     const redirectMatch = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)$/);
     if (redirectMatch) {
@@ -11194,6 +11227,7 @@ export default {
 
   // Cron trigger (wrangler.jsonc "triggers") — drives the control bot: AI queue, deadline checks, summaries.
   async scheduled(event, env, ctx) {
+    avitoProxySetup(env);
     if (!(await cronClaimTick(env, event && event.scheduledTime))) return;
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
