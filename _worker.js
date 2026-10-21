@@ -3076,7 +3076,11 @@ async function handleDashboardApi(request, env, url, ctx) {
   // whatever didn't fit), so the page can be closed and reopened to the finished result.
   if (pathname === '/api/dashboard/avito-pull' && request.method === 'GET') {
     const date = url.searchParams.get('date') || mskYesterday();
-    return json({ pull: await kv.get(`avitoPull:${date}`, 'json') });
+    const pull = await kv.get(`avitoPull:${date}`, 'json');
+    // The open «Подтянуть» window polls this: each poll moves an idle pull on another ~25 s instead
+    // of leaving it to the cron (every 10 min) — with Avito slow, one pass gets only a few cabinets.
+    if (avitoPullIdle(pull) && ctx) ctx.waitUntil(processAvitoPull(env, date));
+    return json({ pull });
   }
 
   if (pathname === '/api/dashboard/avito-pull' && request.method === 'POST') {
@@ -3084,9 +3088,9 @@ async function handleDashboardApi(request, env, url, ctx) {
     const date = (body && body.date) || mskYesterday();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: 'bad_date' }, 400);
     const pull = await startAvitoPull(env, date, Boolean(body && body.force));
-    // Only the request that created this pull processes it — a repeat click on a running
-    // pull must not start a second parallel pass (Avito allows 1 stats call/min per cabinet).
-    if (pull.created && pull.pending.length && ctx) ctx.waitUntil(processAvitoPull(env, date));
+    // A repeat click on a running pull doesn't start a second parallel pass (Avito allows 1 stats
+    // call/min per cabinet): processAvitoPull holds a lease while a pass is on it.
+    if ((pull.created || avitoPullIdle(pull)) && pull.pending.length && ctx) ctx.waitUntil(processAvitoPull(env, date));
     delete pull.created;
     return json({ pull });
   }
@@ -3477,11 +3481,19 @@ async function startAvitoPull(env, date, force) {
   return { ...pull, created: true };
 }
 
-async function processAvitoPull(env, date) {
+// A running pull nobody is working on right now (no pass holds its lease).
+function avitoPullIdle(pull) {
+  return Boolean(pull && pull.status === 'running' && pull.pending && pull.pending.length && !(pull.leaseUntil > Date.now()));
+}
+
+async function processAvitoPull(env, date, budgetMs = AVITO_PULL_BUDGET_MS) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const pull = await kv.get(`avitoPull:${date}`, 'json');
-  if (!pull || pull.status !== 'running' || !pull.pending.length) return;
-  const deadline = Date.now() + AVITO_PULL_BUDGET_MS;
+  if (!avitoPullIdle(pull)) return;
+  const deadline = Date.now() + budgetMs;
+  // Released at the end of the pass; a pass the runtime kills lets it lapse (+20 s for the
+  // cabinets still in flight when the budget runs out).
+  pull.leaseUntil = deadline + 20000;
   const queue = [...pull.pending];
   let profilesFound = false;
   // Progress is saved after every cabinet, and the cabinets this run starts with are counted first:
@@ -3521,6 +3533,8 @@ async function processAvitoPull(env, date) {
     }
   };
   await Promise.all(Array.from({ length: AVITO_PULL_CONCURRENCY }, worker));
+  pull.leaseUntil = 0;
+  await save();
   if (profilesFound) await atTouch(kv, ['#projects']);
 }
 
@@ -3534,7 +3548,13 @@ async function avitoPullCron(env) {
   // Finish any day's pull that didn't fit in its request's waitUntil — yesterday's or one
   // the owner started for an earlier date from the panel (pull records expire after 7 days).
   const { keys } = await kv.list({ prefix: 'avitoPull:' });
-  for (const k of keys) await processAvitoPull(env, k.name.slice('avitoPull:'.length));
+  // The cron has minutes, not waitUntil's ~30 s: up to 4 min per pull, 10 min in all.
+  const started = Date.now();
+  for (const k of keys) {
+    const left = 10 * 60 * 1000 - (Date.now() - started);
+    if (left < 60 * 1000) break;
+    await processAvitoPull(env, k.name.slice('avitoPull:'.length), Math.min(4 * 60 * 1000, left - 30 * 1000));
+  }
 }
 
 /* ── Daily report data (same rules as the manual "ежедневный отчёт" methodology) ── */
