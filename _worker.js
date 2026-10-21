@@ -8795,6 +8795,7 @@ function waiAssistantSystem(job) {
     'Не переспрашивай: если чего-то не уточнили, бери по умолчанию последние 7 дней по вчера, все показатели и все объявления — и сразу отвечай по данным. Уточняющий вопрос — только если ответить нельзя совсем (например, непонятно, о каком клиенте речь), и никогда не задавай тот же вопрос второй раз.',
     'Не выдумывай. Если в данных нет того, о чём спрашивают (рассылка, даты публикации объявлений, переписка и т. п.), прямо напиши, чего именно нет. Ты не можешь менять файлы и выгрузки и ничего не делаешь в кабинете Авито: никогда не пиши «добавил», «изменил», «обновил», если этого не было. Не предлагай лишнего, о чём не спрашивали.',
     'Если в сообщении несколько вопросов — ответь на каждый отдельным блоком с жирным заголовком (например, **Цифры**, **Чат с клиентом**, **Диалоги на Авито**). Каждый блок подробно: 3–6 пунктов с конкретными цифрами, датами и выводом.',
+    'Роли не путай: клиент агентства — репетитор или школа (например, Наталия Попова). «Чат с клиентом» — переписка агентства с ним в Telegram (ПЕРЕПИСКА). «Диалоги на Авито» — переписка кабинета клиента с покупателями (родителями, учениками). Рассылку бери из блока РАССЫЛКА — цифры там уже посчитаны, не пересчитывай их.',
     'Вопрос про чат или настроение клиента («всё норм?», «как общение?») — разбери ПЕРЕПИСКУ: что клиент писал в последние дни, доволен ли, есть ли претензии, вопросы без ответа, что обещали и сделали ли. Приведи 1–2 короткие цитаты с датами и дай свою оценку. Если переписки по клиенту в данных нет — так и скажи.',
     'Цифры бери ровно из данных и не смешивай периоды: итоги за 7 дней отдельно, события по дням — с датами. Не противоречь сам себе. Если в данных написано, что Авито что-то не отдал (ошибка), — прямо скажи это, без догадок о диалогах и объявлениях.',
     'Пиши по-русски, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
@@ -9135,31 +9136,79 @@ async function aiBuildAvito(env, job) {
   return { text: parts.join('\n\n'), prepFiles };
 }
 
-// Avito dialogs of a client for the period: the latest chats with their last messages (a mailing shows
-// up here too — as the cabinet's outgoing messages).
+// Avito dialogs of a client for the period. Roles: «кабинет» is our client (the tutor's cabinet, run by
+// the agency), «покупатель» — a parent or student writing to it. The mailing (Avito «предложение» —
+// a free consultation offer) leaves system messages in a chat: «Пользователь ознакомился с вашим
+// предложением…» when someone opened it, «Покупателя заинтересовало ваше предложение» when they
+// clicked interested. The mailing figures are counted here, per day — the model can't count reliably.
+const AI_OFFER_OPENED_RE = /ознакомился\s+с\s+вашим\s+предложением/i; // Avito puts non-breaking spaces there
+const AI_OFFER_INTEREST_RE = /заинтересовало\s+ваше\s+предложение/i;
+const AI_DECLINE_RE = /не актуальн|уже нет|не нужно|нашли|неактуальн|не интересн|передумал/i;
+const AI_BOOKED_RE = /договорились|до встречи|ссылк[ау] на встречу|приглашение на встречу/i;
 async function aiAvitoChats(env, account, p, period) {
   try {
-    const { chats } = await runAvitoChatList(env, account, 50, 0);
     const from = Date.parse(`${period.from}T00:00:00+03:00`);
-    const recent = chats.filter((c) => c.updated && Date.parse(c.updated) >= from);
+    const list = [];
+    for (let offset = 0; offset < 200; offset += 100) {
+      const { chats, hasMore } = await runAvitoChatList(env, account, 100, offset);
+      list.push(...chats);
+      if (!hasMore || chats.some((c) => c.updated && Date.parse(c.updated) < from)) break;
+    }
+    const recent = list.filter((c) => c.updated && Date.parse(c.updated) >= from).slice(0, 40);
+    const withMsgs = [];
+    for (let i = 0; i < recent.length; i += 5) {
+      const batch = await Promise.all(recent.slice(i, i + 5).map(async (c) => {
+        try {
+          const r = await runAvitoChatMessages(env, account, c.chat_id);
+          return { c, msgs: (Array.isArray(r) ? r : r.messages || []).filter((m) => m && m.datetime).sort((x, y) => Date.parse(x.datetime) - Date.parse(y.datetime)) };
+        } catch (e) {
+          return { c, msgs: [] };
+        }
+      }));
+      withMsgs.push(...batch);
+    }
+    const day = (iso) => botMsk(Date.parse(iso)).date;
+    const hm = (iso) => botFmtDate(Date.parse(iso));
+    const human = (m) => m.author !== 'manager' && m.type !== 'system' && !/Системное\s+сообщение/i.test(String(m.text || '')) && String(m.text || '').trim() && String(m.text) !== '{}';
+    // Mailing: per day of the «opened the offer» message — how many opened, replied, declined, got interested, booked.
+    const offer = {};
+    for (const { c, msgs } of withMsgs) {
+      const opened = msgs.find((m) => AI_OFFER_OPENED_RE.test(String(m.text || '')) && Date.parse(m.datetime) >= from);
+      if (!opened) continue;
+      const after = msgs.filter((m) => Date.parse(m.datetime) >= Date.parse(opened.datetime));
+      const replies = after.filter(human);
+      const d = day(opened.datetime);
+      const o = offer[d] || (offer[d] = { opened: 0, replied: 0, declined: 0, interested: 0, booked: 0, notes: [] });
+      o.opened += 1;
+      const interested = after.some((m) => AI_OFFER_INTEREST_RE.test(String(m.text || '')));
+      const declined = replies.some((m) => AI_DECLINE_RE.test(String(m.text || '')));
+      const booked = after.some((m) => m.author === 'manager' && AI_BOOKED_RE.test(String(m.text || '')));
+      if (replies.length) o.replied += 1;
+      if (declined) o.declined += 1;
+      if (interested) o.interested += 1;
+      if (booked) o.booked += 1;
+      if (replies.length) o.notes.push(`«${String(c.item_title || '').slice(0, 50)}»: ${replies.slice(0, 3).map((m) => `${hm(m.datetime)} «${String(m.text).replace(/\s+/g, ' ').slice(0, 90)}»`).join('; ')}${booked ? ' → договорились о пробном' : ''}`);
+    }
+    const offerLines = Object.keys(offer).sort().map((d) => {
+      const o = offer[d];
+      return `- ${d.slice(8, 10)}.${d.slice(5, 7)}: открыли предложение ${o.opened}, ответили ${o.replied} (отказались ${o.declined}, заинтересовались ${o.interested}), договорились о пробном ${o.booked}${o.notes.length ? `\n${o.notes.map((n) => `    ${n}`).join('\n')}` : ''}`;
+    });
     const lines = [];
     let used = 0;
-    for (const c of recent.slice(0, 8)) {
-      let msgs = [];
-      try { msgs = await runAvitoChatMessages(env, account, c.chat_id); } catch (e) { msgs = []; }
-      const body = (Array.isArray(msgs) ? msgs : msgs.messages || [])
-        .filter((m) => Date.parse(m.datetime) >= from)
-        .sort((x, y) => Date.parse(x.datetime) - Date.parse(y.datetime))
-        .slice(-10)
-        .map((m) => `  ${m.datetime.slice(5, 16).replace('T', ' ')} ${m.author === 'manager' ? 'кабинет' : 'клиент'}: ${String(m.text || `[${m.type}]`).replace(/\s+/g, ' ').slice(0, 220)}`)
-        .join('\n');
-      const block = `- «${String(c.item_title || 'без объявления').slice(0, 70)}»\n${body || `  последнее: ${String(c.last_message_text || '').slice(0, 220)}`}`;
+    for (const { c, msgs } of withMsgs) {
+      const body = msgs.filter((m) => Date.parse(m.datetime) >= from).slice(-10)
+        .map((m) => `  ${hm(m.datetime)} ${m.author === 'manager' ? 'кабинет' : 'покупатель'}: ${String(m.text || `[${m.type}]`).replace(/\s+/g, ' ').slice(0, 200)}`).join('\n');
+      const block = `- «${String(c.item_title || 'без объявления').slice(0, 70)}»\n${body || `  последнее: ${String(c.last_message_text || '').slice(0, 200)}`}`;
       if (used + block.length > 6000) break;
       lines.push(block);
       used += block.length;
     }
-    const rest = recent.length - lines.length;
-    return [`АВИТО, ДИАЛОГИ: ${p.name}, ${period.from} — ${period.to}: чатов с активностью ${recent.length}${recent.length >= 50 ? '+' : ''}`, lines.join('\n') || '  за период переписки нет', rest > 0 ? `(ещё ${rest} чатов не показаны)` : ''].filter(Boolean).join('\n');
+    return [
+      `АВИТО, ДИАЛОГИ кабинета ${p.name} (кабинет — это ${p.name}, покупатель — родитель или ученик, который пишет в кабинет) с ${period.from} по сегодня: чатов с активностью ${recent.length}${recent.length >= 40 ? '+' : ''}`,
+      `РАССЫЛКА (предложение «бесплатная консультация»; посчитано по чатам — видны только те, кто открыл предложение, сколько всего отправлено, в API не видно):\n${offerLines.join('\n') || '- за период никто не открывал предложение'}`,
+      `ПЕРЕПИСКА по чатам:\n${lines.join('\n') || '  за период переписки нет'}`,
+      withMsgs.length > lines.length ? `(ещё ${withMsgs.length - lines.length} чатов не показаны)` : '',
+    ].filter(Boolean).join('\n');
   } catch (e) {
     return `АВИТО, ДИАЛОГИ: ${p.name} — Авито не отдал переписку (${String(e && e.message).slice(0, 160)})`;
   }
