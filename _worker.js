@@ -4930,11 +4930,12 @@ const BOT_EXTRACT_SYSTEM = [
   'Тебе дают новые сообщения из одного топика/чата, контекст до них и список открытых задач этого клиента.',
   'Верни ТОЛЬКО JSON без пояснений:',
   '{"events":[',
-  ' {"type":"new_task","msg":<id сообщения>,"text":"<суть задачи до 15 слов>","assignee":"<имя исполнителя или null>","due":"<YYYY-MM-DD HH:MM или null>"},',
+  ' {"type":"new_task","msg":<id сообщения>,"text":"<суть задачи до 15 слов>","assignee":"<имя исполнителя или null>","due":"<YYYY-MM-DD HH:MM или null>","priority":"urgent|high|normal|low"},',
   ' {"type":"update","task":"<id открытой задачи>","msg":<id сообщения>,"status":"taken|done|informed|cancelled","assignee":"<имя или null>","due":"<YYYY-MM-DD HH:MM или null>"}',
   ']}',
-  'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя, @username) или сам пишет, что сделает. Не угадывай по роли',
-  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок, иначе null.',
+  'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя или @username — см. Telegram в списке команды) или сам пишет, что сделает. Не угадывай по роли',
+  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок («крайний срок 21.10.2026 18:00», «до пятницы»), иначе null.',
+  'priority: urgent — «срочно», «горит», «ASAP», «прямо сейчас» или срок в ближайшие 3 часа; high — срок сегодня или завтра, «важно», «в приоритете»; low — «когда будет время», «не срочно»; иначе normal.',
   'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
@@ -5115,6 +5116,21 @@ function botNotTeamTaskReason(chatRec, src, taskText) {
   if (/\?[\s)!.]*$/.test(text) && !BOT_ASK_RE.test(text)) return 'вопрос на обсуждение';
   return null;
 }
+// The model's priority, checked against the message: «срочно» or a deadline within 3 hours is urgent,
+// a deadline today or tomorrow at least high.
+function botTaskPriority(fromAi, src, dueMs) {
+  const order = ['low', 'normal', 'high', 'urgent'];
+  let p = order.includes(fromAi) ? fromAi : 'normal';
+  const raise = (to) => { if (order.indexOf(to) > order.indexOf(p)) p = to; };
+  const text = String((src && src.text) || '');
+  if (/(^|[^а-яё])(срочн|горит|asap)/i.test(text)) raise('urgent');
+  if (dueMs) {
+    const left = dueMs - Date.now();
+    if (left < 3 * 3600000) raise('urgent');
+    else if (dueMs < botMskStartOfDay(Date.now()) + 2 * 24 * 3600000) raise('high');
+  }
+  return p;
+}
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -5152,10 +5168,9 @@ async function botApplyEvents(env, events, ctx) {
         status: 'open',
         owner: null,
         assigneeId: null,
-        priority: 'normal',
-        // No deadline from the bot: whoever takes the task sets it. A date the message names is kept
-        // as a hint for the «Взять задачу» form.
-        due: null,
+        priority: botTaskPriority(ev.priority, src, dueMs),
+        // A deadline the message names is the task's deadline («крайний срок 21.10 18:00»).
+        due: dueMs ? botIsoMsk(dueMs) : null,
         suggestedDue: dueMs ? botIsoMsk(dueMs) : null,
         projectId: ctx.topic.projectId || null,
         topicName: ctx.topic.name,
@@ -5173,10 +5188,7 @@ async function botApplyEvents(env, events, ctx) {
         updatedAt: nowIso,
       };
       const who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
-      if (who && botNamedIn(src, who)) {
-        Object.assign(task, { assigneeId: who.id, owner: who.name });
-        if (dueMs) task.due = task.suggestedDue; // the person was asked directly, with a date
-      }
+      if (who && botNamedIn(src, who)) Object.assign(task, { assigneeId: who.id, owner: who.name });
       await kv.put(`task:${id}`, JSON.stringify(task));
       openById.set(id, task);
       ctx.openTasks.push(task);
@@ -6323,6 +6335,9 @@ function atMatchUserBy(name, users, norm) {
     let score = 0;
     const full = norm(u.name);
     if (full && n.includes(` ${full} `)) score = 3;
+    // «@SEEREKAG» in a message is that person's Telegram username.
+    const tg = u.tgUsername ? norm(u.tgUsername) : '';
+    if (tg && n.includes(` ${tg} `)) score = 3;
     for (const a of u.aliases || []) {
       const an = norm(a);
       if (an && n.includes(` ${an} `)) score = Math.max(score, an.includes(' ') ? 3 : 2);
@@ -6367,7 +6382,7 @@ function atNeedsInform(task, users) {
 function atTeamPromptLine(team) {
   return team.users.filter((u) => u.active).map((u) => {
     const aka = (u.aliases || []).filter((a) => botNorm(a) !== botNorm(atFirstName(u.name)));
-    return `${u.name} — ${u.roleLabel}${aka.length ? ` (может подписываться: ${aka.join(', ')})` : ''}`;
+    return `${u.name} — ${u.roleLabel}${u.tgUsername ? `, Telegram @${u.tgUsername}` : ''}${aka.length ? ` (может подписываться: ${aka.join(', ')})` : ''}`;
   }).join('; ');
 }
 
