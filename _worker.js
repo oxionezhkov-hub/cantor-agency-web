@@ -984,12 +984,20 @@ function maskAvitoAccount(account) {
   return { ...rest, hasSecret: Boolean(clientSecret) };
 }
 
-async function avitoGetToken(env, account) {
+// A cached token Avito no longer accepts (403 «Not authorized» — e.g. one taken before the switch to the
+// Yandex Cloud proxy, or replaced by a token request that timed out on our side but went through at
+// Avito) is swapped for a fresh one once: avitoRequest asks for it and keeps using it for that token.
+const AVITO_TOKEN_OWNER = new Map(); // token -> { env, account }
+const AVITO_TOKEN_SWAP = new Map(); // stale token -> fresh token
+async function avitoGetToken(env, account, fresh = false) {
   const kv = env.AVITO_KV;
   const tokenKey = `token:${account.id}`;
-  const cached = await kv.get(tokenKey, 'json');
+  const cached = fresh ? null : await kv.get(tokenKey, 'json');
   const now = Date.now();
-  if (cached && cached.expiresAt > now + 60_000) return cached.accessToken;
+  if (cached && cached.expiresAt > now + 60_000) {
+    AVITO_TOKEN_OWNER.set(cached.accessToken, { env, account });
+    return AVITO_TOKEN_SWAP.get(cached.accessToken) || cached.accessToken;
+  }
 
   const res = await avitoFetch('/token', {
     method: 'POST',
@@ -1008,6 +1016,7 @@ async function avitoGetToken(env, account) {
   if (!data.access_token) throw new Error('auth_no_token_in_response');
   const expiresAt = now + Number(data.expires_in || 86400) * 1000;
   await kv.put(tokenKey, JSON.stringify({ accessToken: data.access_token, expiresAt }));
+  AVITO_TOKEN_OWNER.set(data.access_token, { env, account });
   return data.access_token;
 }
 
@@ -1032,15 +1041,25 @@ async function avitoLookupUserId(clientId, clientSecret) {
   return String(self.id);
 }
 
-async function avitoRequest(token, path, options = {}, attempt = 0) {
+async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = false) {
+  token = AVITO_TOKEN_SWAP.get(token) || token;
   const res = await avitoFetch(path, {
     ...options,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
   });
+  if ((res.status === 401 || res.status === 403) && !refreshed && AVITO_TOKEN_OWNER.has(token)) {
+    const text = await res.clone().text().catch(() => '');
+    if (res.status === 401 || /not authorized|bad bearer|token/i.test(text)) {
+      const { env, account } = AVITO_TOKEN_OWNER.get(token);
+      const freshToken = await avitoGetToken(env, account, true);
+      AVITO_TOKEN_SWAP.set(token, freshToken);
+      return avitoRequest(freshToken, path, options, attempt, true);
+    }
+  }
   // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
   if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
-    return avitoRequest(token, path, options, attempt + 1);
+    return avitoRequest(token, path, options, attempt + 1, refreshed);
   }
   return res;
 }
