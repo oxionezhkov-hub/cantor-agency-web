@@ -1041,12 +1041,56 @@ async function avitoLookupUserId(clientId, clientSecret) {
   return String(self.id);
 }
 
+// A cabinet's call made whole inside the Yandex Cloud function (?p=/avito-call/…): it takes the token
+// and makes the request in the same invocation. A token taken by one invocation is refused («Not
+// authorized») in another — the function's calls leave from different addresses — so /avito-api/
+// with our own token doesn't work for cabinet data. null: the function can't do it (an older version,
+// unreachable) — the caller goes the other way.
+async function avitoCallViaProxy(account, path, options) {
+  try {
+    const res = await fetch(`${AVITO_PROXY.url}?p=${encodeURIComponent(`/avito-call${path}`)}`, {
+      method: options.method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+        'x-avito-client-id': account.clientId,
+        'x-avito-client-secret': account.clientSecret,
+        ...(AVITO_PROXY.key ? { 'x-proxy-key': AVITO_PROXY.key } : {}),
+      },
+      body: options.body,
+      signal: AbortSignal.timeout(AVITO_PROXY_TIMEOUT_MS),
+    });
+    if (res.status === 400) {
+      const data = await res.clone().json().catch(() => null);
+      if (data && (data.error === 'bad_path' || data.error === 'no_credentials')) throw new Error(`proxy: ${data.error}`);
+    }
+    return res;
+  } catch (e) {
+    console.error('avito-call via proxy failed, going straight to Avito', e && e.message);
+    AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
+    return null;
+  }
+}
+
 async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = false) {
   token = AVITO_TOKEN_SWAP.get(token) || token;
-  const res = await avitoFetch(path, {
-    ...options,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
-  });
+  const owner = AVITO_TOKEN_OWNER.get(token);
+  let res = null;
+  if (owner && AVITO_PROXY.url && Date.now() > AVITO_PROXY_OFF_UNTIL) {
+    res = await avitoCallViaProxy(owner.account, path, options);
+    if (res && (res.status === 401 || res.status === 403) && /not authorized|bad bearer/i.test(await res.clone().text().catch(() => ''))) {
+      // Avito refuses even the function's own fresh token: back to going straight, as before the proxy.
+      console.error('avito: not authorized even via the proxy — going straight to Avito for 10 minutes');
+      AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
+      res = null;
+    }
+  }
+  if (!res) {
+    res = await avitoFetch(path, {
+      ...options,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
+    });
+  }
   if ((res.status === 401 || res.status === 403) && !refreshed && AVITO_TOKEN_OWNER.has(token)) {
     const text = await res.clone().text().catch(() => '');
     if (res.status === 401 || /not authorized|bad bearer|token/i.test(text)) {
