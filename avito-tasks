@@ -3700,7 +3700,9 @@ function renderMembers() {
     const me = u.id === S.me.id;
     // Ассистент видит руководителя в списке, но не его ссылку и не может его менять.
     const locked = u.role === 'owner' && !isOwner();
-    const shareText = `${first(u.name)}, это ваша личная ссылка в Avito Tasks — трекер задач команды. Откройте её один раз, дальше трекер будет открываться сам. Потом нажмите «Подключить Telegram», чтобы получать задачи и напоминания.`;
+    // Та же ссылка на домене воркера — открывается с VPN, когда cantor.agency недоступен.
+    const vpnInvite = String(u.invite || '').replace(/^https?:\/\/[^/]+/, API_BASE);
+    const shareText = `${first(u.name)}, это ваша личная ссылка в Avito Tasks — трекер задач команды. Откройте её один раз, дальше трекер будет открываться сам. Потом нажмите «Подключить Telegram», чтобы получать задачи и напоминания. Если ссылка не открывается — вот она же для входа с VPN: ${vpnInvite}`;
     const share = `https://t.me/share/url?url=${encodeURIComponent(u.invite)}&text=${encodeURIComponent(shareText)}`;
     const flags = [
       u.active ? (u.activatedAt ? `<span class="tag tag-closed">вошёл(а) ${esc(fmtDate(Date.parse(u.activatedAt)))}</span>` : '<span class="tag tag-done">ещё не входил(а)</span>') : '<span class="tag tag-cancelled">доступ отключён</span>',
@@ -3715,6 +3717,10 @@ function renderMembers() {
         <input class="input" value="${esc(u.invite)}" readonly aria-label="Пригласительная ссылка" onclick="this.select()">
         <button class="btn btn-ghost btn-sm" data-m="copy">${ico('copy', 'ic-sm')}Скопировать</button>
         <a class="btn btn-ghost btn-sm tg" href="${esc(share)}">${ico('tg', 'ic-sm')}Отправить в Telegram</a>
+      </div>
+      <div class="m-link">
+        <input class="input" value="${esc(vpnInvite)}" readonly aria-label="Пригласительная ссылка для входа с VPN" onclick="this.select()">
+        <button class="btn btn-ghost btn-sm" data-m="copy-vpn">${ico('copy', 'ic-sm')}Скопировать с VPN</button>
       </div>
       <details><summary class="btn btn-quiet btn-sm" style="list-style:none;display:inline-flex">Изменить</summary>
         <div style="display:grid;gap:12px;margin-top:10px">
@@ -3772,6 +3778,10 @@ $('members').addEventListener('click', async (e) => {
   const act = b.dataset.m;
   if (act === 'copy') {
     try { await navigator.clipboard.writeText(u.invite); toast('Ссылка скопирована'); } catch (err) { m.querySelector('.m-link .input').select(); document.execCommand('copy'); toast('Ссылка скопирована'); }
+  }
+  if (act === 'copy-vpn') {
+    const inp = m.querySelectorAll('.m-link .input')[1];
+    try { await navigator.clipboard.writeText(inp.value); toast('Ссылка для VPN скопирована'); } catch (err) { inp.select(); document.execCommand('copy'); toast('Ссылка для VPN скопирована'); }
   }
   if (act === 'toggle') teamAction('user-access', { id, active: !u.active }, u.active ? `${first(u.name)}: доступ отключён` : `${first(u.name)}: доступ включён`);
   if (act === 'reset' && confirm(`Выдать ${u.name} новую ссылку? Старая перестанет работать, все устройства ${id === S.me.id ? 'кроме этого ' : ''}выйдут из трекера.`)) {
