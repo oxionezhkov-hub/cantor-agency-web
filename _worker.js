@@ -5099,13 +5099,38 @@ async function botProcessQueue(env) {
     // Imported history is context only: its tasks came in with the import, and its ids aren't the bot's.
     const unseen = logs.filter((e) => !e.imported && e.id > cursor);
     if (!unseen.length) continue;
-    const fresh = unseen.slice(0, BOT_AI_BATCH_MESSAGES);
-    if (unseen.length > fresh.length) await kv.put(k.name, '1'); // the rest goes next run
+    const batch = unseen.slice(0, BOT_AI_BATCH_MESSAGES);
+    if (unseen.length > batch.length) await kv.put(k.name, '1'); // the rest goes next run
     const context = logs.filter((e) => e.imported || e.id <= cursor).slice(-15);
 
     if (!allTasks) allTasks = await botAllTasks(kv);
-    const openTasks = allTasks.filter((t) => (t.status === 'open' || t.status === 'done')
-      && ((topic.projectId && t.projectId === topic.projectId) || (String(t.chatId) === String(chatId) && String(t.threadId) === String(threadId))));
+    const sameTopic = (t) => (topic.projectId && t.projectId === topic.projectId) || (String(t.chatId) === String(chatId) && String(t.threadId) === String(threadId));
+    const openTasks = allTasks.filter((t) => (t.status === 'open' || t.status === 'done') && sameTopic(t));
+    const recentClosed = allTasks.filter((t) => (t.status === 'closed' || t.status === 'cancelled') && sameTopic(t) && now - Date.parse(t.updatedAt || t.createdAt || 0) < 4 * 24 * 3600000);
+    // A team list «@tag / • item / • item» is read here, item by item, without the model: each item is a
+    // task on the tagged person. A team report «Сделали …» closes the open task it is about. Neither
+    // goes to the model.
+    const listCtx = { chatRec, topic, threadId, fresh: batch, openTasks, recentClosed, team, projectsById };
+    const handled = new Set();
+    for (const e of batch) {
+      if (!e.team || chatRec.kind !== 'work') continue;
+      const items = botParseTaskList(e.text);
+      if (items) {
+        await botApplyEvents(env, items.map((it) => ({
+          type: 'new_task', msg: e.id, fromList: true, text: botShortTask(it.text), detail: it.text, priorityText: it.text,
+          assignee: it.tags.length === 1 ? `@${it.tags[0]}` : null, due: botExplicitDue(it.text) || botExplicitDue(e.text),
+        })), listCtx);
+        handled.add(e.id);
+      } else if (BOT_DONE_REPORT_RE.test(String(e.text || '').trim()) && !/\?/.test(e.text)) {
+        await botCloseByReport(env, listCtx, e);
+      }
+    }
+    const fresh = batch.filter((e) => !handled.has(e.id));
+    if (!fresh.length) {
+      await kv.put(cursorKey, String(batch[batch.length - 1].id));
+      processed += batch.length;
+      continue;
+    }
     const projectName = topic.projectId && projectsById[topic.projectId] ? projectsById[topic.projectId].name : topic.name;
     const user = [
       `Сейчас: ${botFmtDate(now)}.${botMsk(now).date.slice(0, 4)} (МСК). Сегодня ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][botMsk(now).dow]}.`,
@@ -5132,7 +5157,7 @@ async function botProcessQueue(env) {
       // Failed/unparseable: retry next run; after a few tries skip this batch so it can't block the topic.
       const attempts = (Number(await kv.get(attemptsKey)) || 0) + 1;
       if (attempts >= BOT_AI_MAX_ATTEMPTS) {
-        await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
+        await kv.put(cursorKey, String(batch[batch.length - 1].id));
         await kv.delete(attemptsKey);
       } else {
         await kv.put(attemptsKey, String(attempts), { expirationTtl: 60 * 60 * 24 * 3 });
@@ -5144,11 +5169,58 @@ async function botProcessQueue(env) {
       await botSetAiLimited(env, false, { backlog: listing.keys.length });
       state.limited = false;
     }
-    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks, team, projectsById });
-    await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
-    processed += fresh.length;
+    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks, recentClosed, team, projectsById });
+    await kv.put(cursorKey, String(batch[batch.length - 1].id));
+    processed += batch.length;
   }
   return { processed };
+}
+
+// «@SEEREKAG / • Проверить публикацию… / • Заменить… / @GSDorr / • Проверить…» → [{ tags, text }], one per item
+// under the tag line above it. null when the message isn't such a list (fewer than two items).
+function botParseTaskList(text) {
+  const items = [];
+  let tags = [];
+  for (const raw of String(text || '').split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const tagLine = line.match(/^((?:@[A-Za-z0-9_]{4,}[\s,;:]*)+)$/);
+    if (tagLine) { tags = [...tagLine[1].matchAll(/@([A-Za-z0-9_]{4,})/g)].map((m) => m[1].toLowerCase()); continue; }
+    const item = line.match(/^(?:[•\-–—*▪●·]|\d{1,2}[.)])\s*(.{6,})$/);
+    if (item && tags.length) items.push({ tags: [...tags], text: item[1].trim() });
+  }
+  return items.length >= 2 ? items : null;
+}
+// A card title from a list item: up to the first bracket / colon / semicolon, at most 14 words.
+function botShortTask(text) {
+  let s = String(text || '').replace(/\s+/g, ' ').trim();
+  const cut = s.search(/\s\(|;|:\s/);
+  if (cut >= 15) s = s.slice(0, cut);
+  const words = s.split(' ');
+  if (words.length > 14) s = `${words.slice(0, 14).join(' ')}…`;
+  return s.replace(/[.,;]+$/, '');
+}
+// «крайний срок 21.10.2026 18:00», «до 23.10», «срок: 24.10 12:00» → «YYYY-MM-DD HH:MM» (no time — 18:00).
+function botExplicitDue(text) {
+  const m = String(text || '').match(/(?:срок|до|к)\s*:?\s*(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?:[,\s]+(?:в\s*)?(\d{1,2})[:.](\d{2}))?/i);
+  if (!m) return null;
+  const year = m[3] ? (m[3].length === 2 ? `20${m[3]}` : m[3]) : botMsk(Date.now()).date.slice(0, 4);
+  const pad = (x) => String(x).padStart(2, '0');
+  return `${year}-${pad(m[2])}-${pad(m[1])} ${m[4] ? pad(m[4]) : '18'}:${m[5] || '00'}`;
+}
+// «Сделали днем рассылку на 2000 руб…» closes the open task «Запустить рассылку на 2000 руб»: the task's
+// words other than its first (the action) are in the report — at least two and most of them.
+async function botCloseByReport(env, ctx, e) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const msg = botTaskStems(e.text);
+  const hits = ctx.openTasks.filter((t) => {
+    if (t.status !== 'open') return false;
+    const stems = [...botTaskStems(t.text)].slice(1);
+    const common = stems.filter((x) => msg.has(x)).length;
+    return common >= 2 && common / stems.length >= 0.6;
+  });
+  if (hits.length !== 1) return; // none, or not sure which one
+  await botApplyEvents(env, [{ type: 'update', task: hits[0].id, msg: e.id, status: 'done' }], ctx);
 }
 
 // The bot only puts a task on someone the message itself names — by name, alias or @username — or
@@ -5213,6 +5285,8 @@ function botIsClientReport(src) {
 }
 // A request in a team message: someone is tagged, asked politely, or told to do something.
 const BOT_ASK_RE = /@\w|(^|[^а-яё])кто[^?]{0,30}(бер|возьм|займ|сдела)|(^|[^а-яё])(можешь|можете|сможешь|сможете|пожалуйста|прошу|просьба|нужно|надо|необходимо|давай|давайте|сделай|сделайте|проверь|проверьте|посмотри|посмотрите|глянь|гляньте|поставь|поставьте|добавь|добавьте|поправь|поправьте|исправь|исправьте|загрузи|загрузите|отправь|отправьте|напиши|напишите|подготовь|подготовьте|узнай|узнайте|уточни|уточните|возьми|возьмите|займись|займитесь)([^а-яё]|$)/i;
+// «Сделали…», «Запустили…», «Готово…» at the start of a team message: a report that something is done.
+const BOT_DONE_REPORT_RE = /^(?:@\w+[\s,]*)*(?:[а-яё]+[\s,]+)?(сделали|сделал[а]?|сделано|запустили|запустил[а]?|разместили|разместил[а]?|поправили|поправил[а]?|исправили|исправил[а]?|загрузили|загрузил[а]?|выложили|отправили|отправил[а]?|обновили|обновил[а]?|подключили|настроили|заменили|удалили|отключили|подняли|снизили|готово|выполнено)([^а-яё]|$)/i;
 // The same, without «@someone»: what turns a question into a request («можешь поправить фото?»).
 const BOT_REQUEST_RE = new RegExp(BOT_ASK_RE.source.replace(/^@\\w\|/, ''), 'i');
 // Why a message the AI read a task from is not work for the team — or null when it is. Shared by new
@@ -5226,6 +5300,9 @@ function botNotTeamTaskReason(chatRec, src, taskText) {
   if (botIsRequestToClient(chatRec, src)) return 'просьба к клиенту — дело клиента';
   if (botIsClientReport(src)) return 'новости клиента о результатах';
   if (!src.team) return null;
+  // «Сделали днем рассылку на 2000 руб, рассчитываем на 8-10 контактов» — a report of done work
+  // (botCloseByReport closes the task it reports), not a new task.
+  if (BOT_DONE_REPORT_RE.test(text) && !/\?/.test(text) && !BOT_REQUEST_RE.test(text)) return 'отчёт о сделанном';
   // «Тексты взяли в работу, спасибо» — our answer to a request, not a new one.
   if (text.length < 160 && !text.includes('?') && /(^|[^а-яё])(взял[аи]?|берём|берем|приняли|принято|получили) (в работу|тексты|фото|материалы|информацию)|(^|[^а-яё])(взял[аи]?|приняли) в работу/i.test(text)) return 'команда подтвердила, что взяла в работу';
   // «Напоминаем о встрече сегодня в 9:30» — the reminder is the work, and it's done.
@@ -5239,12 +5316,16 @@ function botNotTeamTaskReason(chatRec, src, taskText) {
 }
 // The model's priority, checked against the message: «срочно» or a deadline within 3 hours is urgent,
 // a deadline today or tomorrow at least high.
-function botTaskPriority(fromAi, src, dueMs) {
+function botTaskPriority(fromAi, text, dueMs) {
   const order = ['low', 'normal', 'high', 'urgent'];
-  let p = order.includes(fromAi) ? fromAi : 'normal';
+  // The model marks almost everything urgent — only «low» is taken from it; the rest comes from the
+  // task's own words and its deadline (for a list, the item's words — not the whole message's).
+  let p = fromAi === 'low' ? 'low' : 'normal';
   const raise = (to) => { if (order.indexOf(to) > order.indexOf(p)) p = to; };
-  const text = String((src && src.text) || '');
-  if (/(^|[^а-яё])(срочн|горит|asap)/i.test(text)) raise('urgent');
+  text = String(text || '');
+  // «срочно», «в срочном порядке» — not «проверить выполнение срочных правок».
+  if (/(^|[^а-яё])(срочно|в срочном порядке|горит|asap)([^а-яё]|$)/i.test(text)) raise('urgent');
+  if (/(^|[^а-яё])(важн|в приоритете|первым делом|в первую очередь)/i.test(text)) raise('high');
   if (dueMs) {
     const left = dueMs - Date.now();
     if (left < 3 * 3600000) raise('urgent');
@@ -5267,14 +5348,16 @@ async function botApplyEvents(env, events, ctx) {
     const src = byMsg.get(Number(ev.msg));
     // A deadline only when the message names one: the model sometimes puts the message's own time there,
     // which then reads as «due in a minute» and makes the task urgent.
-    const dueMs = src && BOT_DUE_HINT_RE.test(String(src.text || '')) ? botParseMskDateTime(ev.due) : null;
-    if (ev.type === 'new_task' && ev.text && botNotTeamTaskReason(ctx.chatRec, src, ev.text)) continue;
+    const dueMs = ev.fromList ? botParseMskDateTime(ev.due) : src && BOT_DUE_HINT_RE.test(String(src.text || '')) ? botParseMskDateTime(ev.due) : null;
+    if (ev.type === 'new_task' && ev.text && !ev.fromList && botNotTeamTaskReason(ctx.chatRec, src, ev.text)) continue;
     if (ev.type === 'new_task' && ev.text) {
       // The same request often comes twice: the client asks in their chat and the manager passes it
       // on in the work chat, or two messages in a row repeat it — the AI then proposes it again.
       // A task of the same client with (nearly) the same words, still open, is the same task: the
       // new message is noted on it instead of a second card.
       const twin = botFindTwinTask(ctx.openTasks, String(ev.text), ctx.topic.projectId, ctx.chatRec.id, ctx.threadId);
+      // Done and closed in the last days: the chat talking about it again doesn't make it a new task.
+      if (!twin && botFindTwinTask((ctx.recentClosed || []).map((t) => ({ ...t, status: 'open' })), String(ev.text), ctx.topic.projectId, ctx.chatRec.id, ctx.threadId)) continue;
       if (twin) {
         twin.activity = [...(Array.isArray(twin.activity) ? twin.activity : []), { t: Date.now(), by: 'Бот', what: `снова в ${ctx.chatRec.kind === 'client' ? 'чате клиента' : 'рабочем чате'}${src ? ` (${src.from}): «${String(src.text).slice(0, 160)}»` : ''}` }].slice(-20);
         twin.updatedAt = nowIso;
@@ -5288,11 +5371,11 @@ async function botApplyEvents(env, events, ctx) {
         id,
         text: String(ev.text).slice(0, 300),
         // The message the task came from, as the description: who asked and in what words.
-        note: src && src.text ? `${src.from}: «${String(src.text).slice(0, 1500)}»` : '',
+        note: src && src.text ? `${src.from}: «${String(ev.detail || src.text).slice(0, 1500)}»` : '',
         status: 'open',
         owner: null,
         assigneeId: null,
-        priority: botTaskPriority(ev.priority, src, dueMs),
+        priority: botTaskPriority(ev.priority, ev.priorityText || (src && src.text), dueMs),
         // A deadline the message names is the task's deadline («крайний срок 21.10 18:00»).
         due: dueMs ? botIsoMsk(dueMs) : null,
         suggestedDue: dueMs ? botIsoMsk(dueMs) : null,
