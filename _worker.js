@@ -4545,6 +4545,9 @@ async function botOnMessage(env, msg, edited) {
   const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
   if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
   if (isTeam) await botSaveStaffLink(env, chatRec, threadId, text);
+  if (chatRec.kind === 'work' && !edited) {
+    try { await botTrackQuestions(env, chatRec, threadId, msg, text, t, replyTo); } catch (err) { console.error('question tracking failed', err && err.message); }
+  }
 
   if (chatRec.kind === 'client' && !edited) {
     const pendingKey = `bot:pending:${chat.id}`;
@@ -4574,6 +4577,52 @@ async function botOnMessage(env, msg, edited) {
       signalChanged = true;
     }
     if (signalChanged) await atTouch(kv, ['#clients']);
+  }
+}
+
+// ── Questions in the work chat nobody answered ──
+// A question in the work chat («@oleg рассылку согласовываем с клиентом? или сами решаем?») is not a task:
+// it waits in bot:questions until someone answers — a reply to it, a message from the person it tags,
+// or, when nobody is tagged, anyone else's message in that topic. After 3 working hours without an
+// answer the person asked (the tagged ones; nobody tagged — the owner) gets one message with a link
+// straight to it in the chat. A question that asks someone to do something («можешь поправить фото?»)
+// is a task instead (BOT_REQUEST_RE) and isn't tracked here.
+//   bot:questions -> [{ chatId, threadId, msgId, t, from, fromId, text, tags: [tg usernames] }]  (3 days at most)
+const BOT_QUESTION_WMIN = 180;
+async function botTrackQuestions(env, chatRec, threadId, msg, text, t, replyTo) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const fromId = String(msg.from.id);
+  const fromTag = msg.from.username ? String(msg.from.username).toLowerCase() : null;
+  const tags = [...String(text).matchAll(/@([A-Za-z0-9_]{4,})/g)].map((m) => m[1].toLowerCase());
+  const isQuestion = /\?/.test(text) && String(text).replace(/@\w+/g, '').trim().length >= 8 && !botIsAckText(text) && !BOT_REQUEST_RE.test(text);
+  const list = (await kv.get('bot:questions', 'json')) || [];
+  const left = list.filter((q) => {
+    if (t - q.t > 3 * 24 * 3600000) return false;
+    if (String(q.chatId) !== String(chatRec.id) || Number(q.threadId) !== Number(threadId) || String(q.fromId) === fromId) return true;
+    if (replyTo && Number(replyTo) === Number(q.msgId)) return false;
+    return q.tags.length ? !(fromTag && q.tags.includes(fromTag)) : false;
+  });
+  if (isQuestion) left.push({ chatId: chatRec.id, threadId: Number(threadId), msgId: msg.message_id, t, from: botUserName(msg.from), fromId, text: String(text).slice(0, 300), tags });
+  if (left.length !== list.length || isQuestion) await kv.put('bot:questions', JSON.stringify(left.slice(-100)));
+}
+async function botQuestionsCron(env, team, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const list = (await kv.get('bot:questions', 'json')) || [];
+  const due = list.filter((q) => botWorkingMinutes(q.t, nowMs) >= BOT_QUESTION_WMIN);
+  if (!due.length) return;
+  await kv.put('bot:questions', JSON.stringify(list.filter((q) => !due.includes(q))));
+  for (const q of due) {
+    const chat = await kv.get(`bot:chat:${q.chatId}`, 'json');
+    const topic = q.threadId ? await kv.get(`bot:topic:${q.chatId}:${q.threadId}`, 'json') : null;
+    const link = botMessageLink(q.chatId, chat && chat.isForum ? q.threadId : null, q.msgId);
+    const asked = team.users.filter((u) => u.active && u.tgId && u.tgUsername && q.tags.includes(String(u.tgUsername).toLowerCase()) && String(u.tgId) !== String(q.fromId));
+    const text = [
+      `❓ <b>Вопрос без ответа 3 рабочих часа</b>${topic && topic.name ? ` · ${escapeHtml(topic.name)}` : chat && chat.title ? ` · ${escapeHtml(chat.title)}` : ''}`,
+      `${escapeHtml(q.from)}, ${botFmtDate(q.t)}: «${escapeHtml(q.text)}»`,
+    ].join('\n');
+    const extra = link ? { reply_markup: { inline_keyboard: [[{ text: 'Открыть сообщение', url: link }]] } } : {};
+    if (asked.length) for (const u of asked) await botSend(env, u.tgId, text, extra);
+    else await botNotifyOwner(env, text, extra);
   }
 }
 
@@ -4988,7 +5037,7 @@ const BOT_EXTRACT_SYSTEM = [
   'Просьба команды КЛИЕНТУ (пополнить баланс, прислать скриншот или файл, выбрать время, ответить на вопрос, подтвердить) —',
   'это дело клиента, а НЕ задача команды: такие задачи не заводи.',
   'Пополнение баланса/аванса на Авито — всегда дело клиента: задач на пополнение не заводи, кто бы о нём ни писал.',
-  'Вопрос руководителя или команды на обсуждение («есть смысл увеличить лимит?», «какие будут ближайшие действия?») — не задача:',
+  'Вопрос руководителя или команды на обсуждение или уточнение («есть смысл увеличить лимит?», «какие будут ближайшие действия?», «@oleg рассылку согласовываем с клиентом или сами решаем?») — не задача, даже если кого-то тегнули:',
   'задача только если кого-то прямо просят что-то сделать. Ответ команды «взяли в работу», напоминание клиенту о встрече — тоже не задачи.',
   'Если КМ пересылает в рабочий чат ответ или правки клиента по работе, по которой уже есть открытая задача (тексты, фото, отзывы),',
   '— это update к этой задаче, а не новые задачи; не дроби одно сообщение на несколько задач по одной работе. Упоминание уже',
@@ -5002,9 +5051,9 @@ const BOT_EXTRACT_SYSTEM = [
   ' {"type":"update","task":"<id открытой задачи>","msg":<id сообщения>,"status":"taken|done|informed|cancelled","assignee":"<имя или null>","due":"<YYYY-MM-DD HH:MM или null>"}',
   ']}',
   'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя или @username — см. Telegram в списке команды) или сам пишет, что сделает. Не угадывай по роли',
-  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок («крайний срок 21.10.2026 18:00», «до пятницы»), иначе null.',
+  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок («крайний срок 21.10.2026 18:00», «до пятницы»), иначе null; время самого сообщения сроком не считается.',
   'priority: urgent — «срочно», «горит», «ASAP», «прямо сейчас» или срок в ближайшие 3 часа; high — срок сегодня или завтра, «важно», «в приоритете»; low — «когда будет время», «не срочно»; иначе normal.',
-  'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
+  'taken — кто-то взял задачу или назвал срок; done — из сообщений команды ясно, что работа сделана («готово», «поправила», «загрузили», «запустили», «сделано», скрин результата); informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
   'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если КМ или Олег уже ответили клиенту',
@@ -5164,6 +5213,8 @@ function botIsClientReport(src) {
 }
 // A request in a team message: someone is tagged, asked politely, or told to do something.
 const BOT_ASK_RE = /@\w|(^|[^а-яё])кто[^?]{0,30}(бер|возьм|займ|сдела)|(^|[^а-яё])(можешь|можете|сможешь|сможете|пожалуйста|прошу|просьба|нужно|надо|необходимо|давай|давайте|сделай|сделайте|проверь|проверьте|посмотри|посмотрите|глянь|гляньте|поставь|поставьте|добавь|добавьте|поправь|поправьте|исправь|исправьте|загрузи|загрузите|отправь|отправьте|напиши|напишите|подготовь|подготовьте|узнай|узнайте|уточни|уточните|возьми|возьмите|займись|займитесь)([^а-яё]|$)/i;
+// The same, without «@someone»: what turns a question into a request («можешь поправить фото?»).
+const BOT_REQUEST_RE = new RegExp(BOT_ASK_RE.source.replace(/^@\\w\|/, ''), 'i');
 // Why a message the AI read a task from is not work for the team — or null when it is. Shared by new
 // messages and by the one-time sweep of tasks made before these rules.
 function botNotTeamTaskReason(chatRec, src, taskText) {
@@ -5181,7 +5232,9 @@ function botNotTeamTaskReason(chatRec, src, taskText) {
   if (chatRec && chatRec.kind === 'client' && /(^|[^а-яё])напомина(ем|ю)/i.test(text)) return 'напоминание клиенту уже отправлено';
   // «Дневной лимит есть смысл увеличить?», «Тут какие будут ближайшие действия?» — a question to
   // talk over, not an assignment: it becomes a task only when it asks someone to do something.
-  if (/\?[\s)!.]*$/.test(text) && !BOT_ASK_RE.test(text)) return 'вопрос на обсуждение';
+  // A tag alone doesn't make it a request: «@oleg рассылку согласовываем с клиентом? или сами решаем?»
+  // is a question — it waits for an answer (botQuestionsCron reminds after 3 working hours), not a card.
+  if (/\?/.test(text) && !BOT_REQUEST_RE.test(text)) return 'вопрос на обсуждение';
   return null;
 }
 // The model's priority, checked against the message: «срочно» or a deadline within 3 hours is urgent,
@@ -5199,6 +5252,7 @@ function botTaskPriority(fromAi, src, dueMs) {
   }
   return p;
 }
+const BOT_DUE_HINT_RE = /\d{1,2}[.:/]\d{2}|\d{1,2}\s*(час|ч\b)|сегодня|завтра|послезавтра|понедельник|вторник|сред[ау]|четверг|пятниц|суббот|воскресен|до\s+(конца|вечера|утра|обеда|ночи)|через\s+\d|через\s+(час|день|неделю)|срок|дедлайн|к\s+\d|утром|вечером|asap|срочно|сейчас/i;
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -5207,11 +5261,13 @@ async function botApplyEvents(env, events, ctx) {
   const users = ctx.team ? ctx.team.users : [];
   const touched = [];
   const assigned = []; // [task, source message] — the person gets a (quiet) heads-up in Avito Tasks / Telegram
-  const hinted = []; // tasks the chat suggests are done / reported / cancelled — a person confirms
+  const autoClosed = []; // [task, status, message] — set from the chat; the person is told
   for (const ev of Array.isArray(events) ? events : []) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
-    const dueMs = botParseMskDateTime(ev.due);
+    // A deadline only when the message names one: the model sometimes puts the message's own time there,
+    // which then reads as «due in a minute» and makes the task urgent.
+    const dueMs = src && BOT_DUE_HINT_RE.test(String(src.text || '')) ? botParseMskDateTime(ev.due) : null;
     if (ev.type === 'new_task' && ev.text && botNotTeamTaskReason(ctx.chatRec, src, ev.text)) continue;
     if (ev.type === 'new_task' && ev.text) {
       // The same request often comes twice: the client asks in their chat and the manager passes it
@@ -5274,8 +5330,8 @@ async function botApplyEvents(env, events, ctx) {
       }
       if (dueMs) task.due = botIsoMsk(dueMs);
       if (ev.status === 'taken' && !task.takenAt) task.takenAt = src ? new Date(src.t).toISOString() : nowIso;
-      // The bot never closes a task itself: "done" / "клиенту сообщили" / "отменена" read from the chat
-      // only mark it (task.hint) and ask the person to confirm with a button.
+      // «Готово» / «клиенту сообщили» / «не нужно» from our own message in the chat sets the status by itself
+      // (the person is told, quietly, and can put it back in the tracker); a question or a bare «ок» doesn't.
       const closes = (ev.status === 'done' || ev.status === 'cancelled') ? task.status === 'open'
         : ev.status === 'informed' ? task.status === 'open' || task.status === 'done' : false;
       // A question ("а это сделали?") is not an answer; and a task already asked about with the same
@@ -5284,14 +5340,18 @@ async function botApplyEvents(env, events, ctx) {
       // Only our own messages say that something is done or was told to the client — not the
       // client's, and not a bare «хорошо» / «окей».
       const weak = !src || src.team === false || botIsAckText(src.text) || String(src.text || '').trim().length < 12;
-      const lastAsked = task.hintSeen && task.hintSeen[ev.status] ? Date.parse(task.hintSeen[ev.status]) : 0;
-      if (closes && !asking && !weak && (!task.hint || task.hint.status !== ev.status) && !(lastAsked && Date.now() - lastAsked < 24 * 3600000)) {
-        task.hint = { status: ev.status, at: src ? new Date(src.t).toISOString() : nowIso, msgId: src ? src.id : null, from: src ? src.from : null, text: src ? String(src.text).slice(0, 200) : null };
-        task.hintSeen = { ...(task.hintSeen || {}), [ev.status]: nowIso };
-        hinted.push(task);
+      let label = ev.status === 'taken' ? 'взяли в работу' : null;
+      if (closes && !asking && !weak) {
+        const at = src ? new Date(src.t).toISOString() : nowIso;
+        if (ev.status === 'done') Object.assign(task, { status: 'done', doneAt: task.doneAt || at });
+        if (ev.status === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || at, informedAt: at });
+        if (ev.status === 'cancelled') task.status = 'cancelled';
+        task.updatedBy = 'Бот';
+        delete task.hint;
+        label = `${{ done: 'сделано', informed: 'закрыл — клиенту сообщили', cancelled: 'отменил — не нужна' }[ev.status]}${src ? ` (${src.from}: «${String(src.text).replace(/\s+/g, ' ').slice(0, 120)}»)` : ''}`;
+        autoClosed.push([task, ev.status, src]);
       }
       task.updatedAt = nowIso;
-      const label = { taken: 'взяли в работу', done: 'похоже, сделано — ждёт подтверждения', informed: 'похоже, клиенту сообщили — ждёт подтверждения', cancelled: 'похоже, не нужна — ждёт подтверждения' }[ev.status];
       task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: 'Бот', what: `по переписке${label ? `: ${label}` : ''}` }].slice(-20);
       await kv.put(`task:${task.id}`, JSON.stringify(task));
       touched.push(task.id);
@@ -5308,42 +5368,20 @@ async function botApplyEvents(env, events, ctx) {
       extra: { ...atTgButtons(task, true), disable_notification: true },
     });
   }
-  // "Похоже, сделано": the assignee (for «клиенту сообщили» — the client manager) confirms with a button.
-  // One chat message that seems to settle several tasks makes ONE Telegram message per person, with
-  // a button per task — not a message per task.
-  const groups = new Map();
-  for (const task of hinted) {
-    const h = task.hint;
-    const to = h.status === 'informed'
+  // Statuses set from the chat: the assignee (for «клиенту сообщили» — the client managers) gets a quiet
+  // note with the message it was read from; a wrong guess is put back in the tracker.
+  for (const [task, status, src] of autoClosed) {
+    const to = status === 'informed'
       ? users.filter((u) => u.role === 'manager' && u.active).map((u) => u.id)
       : [atAssigneeId(task, users)].filter(Boolean);
-    const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
-    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' });
-    for (const uid of to) {
-      const key = `${uid}|${h.status}|${h.msgId || task.id}`;
-      if (!groups.has(key)) groups.set(key, { uid, h, tasks: [] });
-      groups.get(key).tasks.push(task);
-    }
-  }
-  for (const { uid, h, tasks: list } of groups.values()) {
-    const user = users.find((u) => u.id === uid && u.active);
-    if (!user || !user.tgId) continue;
-    const action = { done: ['✅ Да, готово', 'done'], informed: ['✅ Да, закрыть', 'close'], cancelled: ['✖️ Да, отменить', 'cancel'] }[h.status];
-    const quote = h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : '';
-    const projectOf = (task) => (task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName);
-    if (list.length === 1) {
-      const task = list[0];
-      const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
-      await botSend(env, user.tgId, `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectOf(task))}${quote}`,
-        { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], atOpenTaskRow(task.id)] }, disable_notification: true });
-      continue;
-    }
-    const what = { done: 'сделаны', informed: 'уже сообщили клиенту', cancelled: 'больше не нужны' }[h.status];
-    const client = projectOf(list[0]);
-    const lines = [`🤖 <b>Похоже, задачи ${what}: ${list.length}</b>${client ? ` · ${escapeHtml(client)}` : ''} — подтвердите те, что так (сам бот статус не меняет)`, quote.trim(), ''];
-    list.forEach((task, i) => lines.push(`${i + 1}. <a href="${escapeHtml(atTaskUrl(task.id))}">${escapeHtml(task.text)}</a>`));
-    const buttons = list.map((task, i) => [{ text: `${action[0].split(',')[0].replace('Да', '')} ${i + 1}. ${String(task.text).slice(0, 40)}`.replace(/\s+/g, ' ').trim(), callback_data: `at:${action[1]}:${task.id}` }]);
-    await botSend(env, user.tgId, lines.filter((l, i) => l || i === 2).join('\n'), { reply_markup: { inline_keyboard: buttons }, disable_notification: true });
+    if (!to.length) continue;
+    const what = { done: 'сделана', informed: 'закрыта — клиенту сообщили', cancelled: 'отменена — больше не нужна' }[status];
+    const projectName = task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName;
+    const quote = src ? `\n<i>${escapeHtml(src.from || '')}: «${escapeHtml(String(src.text).slice(0, 200))}»</i>` : '';
+    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот по переписке: задача ${what} — ${task.text}`, by: 'Бот' }, {
+      text: `🤖 <b>Задача ${what}</b> — бот понял это из чата. Если ошибся, верните статус в трекере.\n${atTgTaskBlock(task, projectName)}${quote}`,
+      extra: { reply_markup: { inline_keyboard: [atOpenTaskRow(task.id)] }, disable_notification: true },
+    });
   }
 }
 
@@ -5594,6 +5632,11 @@ async function botRunChecks(env, nowMs) {
     if (waiting.length) {
       const note = [`💬 <b>Клиенты ждут ответа больше 30 рабочих минут: ${waiting.length}</b>`, ...waiting].join('\n');
       for (const m of team.users.filter((u) => u.role === 'manager' && u.active && u.tgId)) await botSend(env, m.tgId, note);
+    }
+    try {
+      await botQuestionsCron(env, team, nowMs);
+    } catch (err) {
+      console.error('unanswered questions failed', err && err.stack);
     }
     try {
       await botCheckHandoffs(env, nowMs, allTasks, byId);
