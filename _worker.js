@@ -10514,7 +10514,11 @@ async function handleApi(request, env, url, ctx) {
     return handleMbaReportApi(request, env);
   }
 
+  // /avito-export's API reads every cabinet's Avito chats (parents' emails, children's names) and adds or
+  // deletes cabinets — it was open to anyone who knew the URL. Now it takes the password the page's gate
+  // asks for: the AVITO_API_PASSWORD secret, or, until that is set, the dashboard password.
   if (pathname.startsWith('/api/avito/')) {
+    if (request.headers.get('x-dashboard-password') !== (env.AVITO_API_PASSWORD || DASHBOARD_PASSWORD)) return json({ error: 'unauthorized' }, 401);
     return handleAvitoApi(request, env, url);
   }
 
