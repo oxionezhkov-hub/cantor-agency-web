@@ -7373,7 +7373,11 @@ async function handleFinanceApi(request, env, url) {
   if (auth.user.role !== 'owner') return json({ error: 'forbidden' }, 403);
 
   if (action === 'load') {
-    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, me: atPublicUser(auth.user) });
+    // Клиенты в финансах дополняются проектами из дашборда / Avito Tasks (новые появляются сами).
+    const projects = (await listByPrefix(kv, 'project:')).map((p) => ({
+      id: p.id, name: p.name, service: p.service || '', inactive: Boolean(p.inactive), createdAt: p.createdAt || null,
+    }));
+    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, projects, me: atPublicUser(auth.user) });
   }
   if (action === 'save') {
     const data = body.data;
@@ -7398,6 +7402,9 @@ async function handleFinanceApi(request, env, url) {
 // unless set by hand. Each reminder goes out once per date (fin:sent).
 //   fin:sent -> { "<kind>|<name>|<date>": "<sent on>" }   (entries older than 60 days are dropped)
 //   fin:remind:<date> -> '1' once that day's check has run
+function finHandles(tg) {
+  return String(tg || '').split(/[\s,;]+/).map((h) => h.trim().toLowerCase()).filter((h) => h.startsWith('@'));
+}
 function finDays(from, to) {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5);
 }
@@ -7441,7 +7448,11 @@ async function finRemindCron(env) {
     const n = finDays(today, next);
     const key = `client|${c.name}|${next}`;
     if (n < 0 || n > 5 || sent[key]) continue;
-    const paid = Object.values(c.pays || {}).reduce((a, v) => a + (Number(v) || 0), 0);
+    // Оплаты — из операций по контакту клиента (@telegram), иначе из старого реестра.
+    const handles = finHandles(c.tg);
+    const paid = handles.length
+      ? ops.filter((o) => o.kind === 'rev' && o.client && handles.includes(String(o.client).toLowerCase())).reduce((a, o) => a + (Number(o.amt) || 0), 0)
+      : Object.values(c.pays || {}).reduce((a, v) => a + (Number(v) || 0), 0);
     const months = c.start ? Math.max(1, Math.round(finDays(c.start, today) / 30.4)) : null;
     msgs.push([
       `💳 <b>${escapeHtml(c.name)}</b> — оплата ${finWhen(n)}, ${finDt(next)}`,

@@ -186,6 +186,8 @@ input.bal::placeholder{color:var(--faint);font-size:14px;font-family:var(--font)
 .btn-sm{min-height:30px;padding:0 10px;font-size:12.5px}
 [hidden]{display:none!important}
 tr.clk{cursor:pointer}
+tr[data-cl] td:first-child::after,tr[data-emp] td:first-child::after{content:"✎";margin-left:8px;color:var(--faint);opacity:0;transition:opacity .15s}
+tr[data-cl]:hover td:first-child::after,tr[data-emp]:hover td:first-child::after{opacity:1}
 tr.edit td{background:var(--surface-2);border-bottom-color:transparent}
 tr.edit .input,tr.edit .select{min-height:34px}
 .btn-danger{color:var(--red)}.btn-danger:hover{background:var(--red-bg)}
@@ -712,13 +714,38 @@ function nextPay(c){if(c.noNext||c.status!=='Активен')return null;if(c.ne
   const mk=(y,m)=>{const last=new Date(y,m,0).getDate();return `${y}-${String(m).padStart(2,'0')}-${String(Math.min(day,last)).padStart(2,'0')}`};
   let d=mk(y,m);if(d<=NOW){m++;if(m>12){m=1;y++}d=mk(y,m)}return d}
 function empNext(r){const s=STAFF[r.i];if(s.noNext)return null;if(s.next)return s.next;if(!r.last)return NOW;const d=new Date(r.last);d.setDate(d.getDate()+14);return d.toISOString().slice(0,10)}
+// ── клиенты ↔ операции и проекты трекера ──
+// Оплаты клиента берутся из операций по его Telegram (@ник в назначении платежа: «Авито - @ник СБП»).
+// Пока ник не указан — из старого реестра (c.pays).
+const handlesOf=c=>String(c.tg||'').split(/[\s,;]+/).map(h=>h.trim().toLowerCase()).filter(h=>h.startsWith('@'));
+const clientOps=c=>{const hs=handlesOf(c);return hs.length?OPS.filter(o=>o.kind==='rev'&&o.client&&hs.includes(o.client.toLowerCase())):[]};
+function clientPays(c){const ops=clientOps(c);if(!handlesOf(c).length)return c.pays||{};const p={};ops.forEach(o=>{const m=mOf(o);p[m]=(p[m]||0)+o.amt});return p}
+// Ник в платеже похож на фамилию: «@OkunevaElena10» ↔ «Елена Окунева».
+const TR={а:'a',б:'b',в:'(v|w)',г:'g',д:'d',е:'e',ё:'(e|yo)',ж:'(zh|j)',з:'z',и:'(i|y)',й:'(y|i|j)',к:'(k|c)',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'(u|ou)',ф:'f',х:'(h|kh)',ц:'(ts|c)',ч:'ch',ш:'sh',щ:'(sch|shch)',ъ:'',ы:'(y|i)',ь:'',э:'e',ю:'(yu|iu|u)',я:'(ya|ia|a)'};
+const nameRe=w=>new RegExp([...w.toLowerCase()].map(ch=>TR[ch]!=null?TR[ch]:ch.replace(/[^a-z0-9]/g,'')).join(''));
+function guessHandle(c,free){const words=String(c.name).split(/\s+/).filter(w=>w.length>=4);if(!words.length)return null;
+  const sur=nameRe(words[words.length-1]);return free.find(h=>sur.test(h.slice(1)))||null}
+function syncClients(projects){
+  let changed=false;
+  (projects||[]).forEach(p=>{let c=CLIENTS.find(x=>x.pid===p.id)||CLIENTS.find(x=>!x.pid&&x.name.trim().toLowerCase()===p.name.trim().toLowerCase());
+    if(c){if(!c.pid){c.pid=p.id;changed=true}
+      if(p.inactive&&c.status==='Активен'&&!c.manualStatus){c.status='Ушёл';c.left=c.left||NOW;c.reason=c.reason||'Отключён в трекере';changed=true}
+      return}
+    CLIENTS.push({pid:p.id,name:p.name,tg:'',start:(p.createdAt||NOW).slice(0,10),status:p.inactive?'Ушёл':'Активен',left:p.inactive?NOW:'',reason:'',note:'',first:50000,renew:25000,pays:{}});changed=true});
+  // Ники из операций, которые ещё ни к кому не привязаны, — к клиенту с похожей фамилией.
+  const taken=new Set(CLIENTS.flatMap(handlesOf));
+  const free=[...new Set(OPS.filter(o=>o.kind==='rev'&&o.client&&o.client.startsWith('@')).map(o=>o.client.toLowerCase()))].filter(h=>!taken.has(h));
+  CLIENTS.forEach(c=>{if(c.tg)return;const h=guessHandle(c,free);if(h){c.tg=h;free.splice(free.indexOf(h),1);changed=true;
+    const first=clientOps(c).map(o=>o.d).sort()[0];if(first&&(c.pid&&!c.startSet)&&first<c.start)c.start=first}});
+  return changed
+}
 function clCard(c,ci,ncol){
   const f=(k,l,v,ph='')=>`<label>${l}<input class="input" data-cf="${k}" data-ci="${ci}" value="${esc(v==null?'':v)}" placeholder="${ph}"></label>`;
   const dbtn=(k,v)=>`<button type="button" class="cal nx${v?'':' empty'}" data-cal="${k}" data-ci="${ci}"><span>${v?dt(v)+'.'+v.slice(0,4):'—'}</span></button>`;
   const left=c.status!=='Активен';
   return `<tr class="edit"><td colspan="${ncol}"><div class="emp"><div class="emp-f">
     ${f('name','Имя',c.name)}
-    ${f('tg','Контакт',c.tg,'@telegram или телефон')}
+    ${f('tg','Telegram',c.tg,'@ник — по нему подтягиваются оплаты')}
     <label>Старт${dbtn('clstart',c.start)}</label>
     <label>Статус<span class="seg"><button type="button" data-cst="Активен" data-ci="${ci}" class="${left?'':'on'}">Активен</button><button type="button" data-cst="Ушёл" data-ci="${ci}" class="${left?'on':''}">Ушёл</button></span></label>
     ${left?`<label>Дата ухода${dbtn('clleft',c.left)}</label>${f('reason','Причина ухода',c.reason)}`:''}
@@ -726,7 +753,7 @@ function clCard(c,ci,ncol){
     ${f('renew','Продление',c.renew==null?'25 000':nf.format(c.renew))}
     <label class="ta">Примечание<textarea class="input" rows="3" data-cf="note" data-ci="${ci}">${esc(c.note||'')}</textarea></label>
     <div class="toolbar" style="margin-top:6px"><button class="btn btn-ghost btn-sm" data-clclose>Готово</button><button class="btn btn-danger btn-sm" data-cldel="${ci}">Удалить клиента</button></div>
-  </div><div></div></div></td></tr>`
+  </div><div class="emp-p">${(()=>{const ops=clientOps(c).sort((a,b)=>a.d<b.d?1:-1);return ops.length?`<div class="pays">${ops.map(o=>`<div class="pay"><span class="num">${dt(o.d)}.${o.d.slice(0,4)}</span><span>${esc(o.cat)}</span><b class="num">${rub(o.amt)}</b><span>${o.act?'<span class="pill g">акт</span>':''}</span></div>`).join('')}</div>`:`<p class="muted" style="font-size:13px;padding:6px 8px">${handlesOf(c).length?'Оплат с этим ником в операциях нет':'Укажите Telegram клиента — здесь появятся его оплаты из операций'}</p>`})()}</div></div></td></tr>`
 }
 function bindClients(){
   document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('change',()=>{const c=CLIENTS[+el.dataset.ci],k=el.dataset.cf;let v=el.value.trim();
@@ -743,15 +770,16 @@ function bindStaff(){
 V.clients=()=>{
   const cm=FACT_MONTHS;
   const act=CLIENTS.filter(c=>c.status==='Активен'),gone=CLIENTS.filter(c=>c.status!=='Активен');
-  const tot=sum(CLIENTS,c=>sum(Object.values(c.pays)));
+  const PAYS=CLIENTS.map(clientPays);
+  const tot=sum(PAYS,p=>sum(Object.values(p)));
   const life=c=>{const end=c.left||NOW;return Math.max(1,(new Date(end)-new Date(c.start))/864e5/30.4)};
   const byDir=DIRS.map(d=>({d,v:sum(OPS.filter(o=>o.cat===d&&o.kind==='rev'),o=>o.amt),n:new Set(OPS.filter(o=>o.cat===d&&o.kind==='rev').map(o=>o.client)).size})).filter(x=>x.v);
   return `
   <section class="panel"><div class="panel-b tw" style="padding-top:12px"><table data-tk="clients">
     <thead><tr><th>Клиент</th><th>Старт</th><th>Статус</th><th>След. оплата</th>${cm.map(m=>`<th class="n">${MN[m]}</th>`).join('')}<th class="n">Всего</th></tr></thead><tbody>
-    ${CLIENTS.map((c,ci)=>`<tr class="clk${openCl===ci?' sel':''}" data-cl="${ci}"><td><b style="color:var(--ink)">${esc(c.name)}</b>${c.note?`<i class="info" data-tipcell="${esc(c.note)}" tabindex="0" aria-label="Примечание">i</i>`:''}</td><td class="num">${dt(c.start)}</td><td>${c.status==='Активен'?'<span class="st on">Активен</span>':`<span class="st off">Ушёл ${dt(c.left)}<i class="info" data-tipcell="${esc(c.reason)} · ${life(c).toFixed(1).replace('.',',')} мес с нами" tabindex="0" aria-label="Причина ухода">i</i></span>`}</td><td>${(()=>{const n=nextPay(c),soon=n&&(new Date(n)-new Date(NOW))/864e5<=7;return `<button type="button" class="cal nx${n?(soon?' soon':''):' empty'}" data-cal="cl" data-ci="${ci}" title="Изменить дату"><span>${n?dt(n):'—'}</span></button>`})()}</td>${cm.map(m=>cell(c.pays[m]||0)).join('')}<td class="n"><b>${rub(sum(Object.values(c.pays)))}</b></td></tr>${openCl===ci?clCard(c,ci,cm.length+5):''}`).join('')}
+    ${CLIENTS.map((c,ci)=>`<tr class="clk${openCl===ci?' sel':''}" data-cl="${ci}"><td><b style="color:var(--ink)">${esc(c.name)}</b>${c.note?`<i class="info" data-tipcell="${esc(c.note)}" tabindex="0" aria-label="Примечание">i</i>`:''}</td><td class="num">${dt(c.start)}</td><td>${c.status==='Активен'?'<span class="st on">Активен</span>':`<span class="st off">Ушёл ${dt(c.left)}<i class="info" data-tipcell="${esc(c.reason)} · ${life(c).toFixed(1).replace('.',',')} мес с нами" tabindex="0" aria-label="Причина ухода">i</i></span>`}</td><td>${(()=>{const n=nextPay(c),soon=n&&(new Date(n)-new Date(NOW))/864e5<=7;return `<button type="button" class="cal nx${n?(soon?' soon':''):' empty'}" data-cal="cl" data-ci="${ci}" title="Изменить дату"><span>${n?dt(n):'—'}</span></button>`})()}</td>${cm.map(m=>cell(PAYS[ci][m]||0)).join('')}<td class="n"><b>${rub(sum(Object.values(PAYS[ci])))}</b></td></tr>${openCl===ci?clCard(c,ci,cm.length+5):''}`).join('')}
     <tr class="newrow" data-clnew title="Добавить клиента"><td colspan="${cm.length+5}"><span>+</span></td></tr>
-    <tr class="tot"><td colspan="4">Итого</td>${cm.map(m=>cell(sum(CLIENTS,c=>c.pays[m]||0))).join('')}${cell(tot)}</tr>
+    <tr class="tot"><td colspan="4">Итого</td>${cm.map(m=>cell(sum(PAYS,p=>p[m]||0))).join('')}${cell(tot)}</tr>
   </tbody></table></div></section>
 `
 };
@@ -962,7 +990,7 @@ document.addEventListener('click',e=>{
     if(cb.dataset.cal==='op')openCal(cb,opDate,v=>{opDate=v;document.getElementById('op-d').value=v});
     else if(cb.dataset.cal==='emp'){const s=STAFF[+cb.dataset.si];openCal(cb,s.next||NOW,v=>{s.next=v;s.noNext=false;render()},()=>{s.next=null;s.noNext=true;render()})}
     else if(cb.dataset.cal==='act'){const o=OPS.find(x=>x.id===+cb.dataset.oid);openCal(cb,o.act||o.d,v=>{o.act=v;recalc();render()},o.act?()=>{delete o.act;recalc();render()}:null)}
-    else if(cb.dataset.cal==='clstart'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,c.start||NOW,v=>{c.start=v;delete c.next;render()})}
+    else if(cb.dataset.cal==='clstart'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,c.start||NOW,v=>{c.start=v;c.startSet=true;delete c.next;render()})}
     else if(cb.dataset.cal==='clleft'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,c.left||NOW,v=>{c.left=v;render()})}
     else if(cb.dataset.cal==='cl'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,nextPay(c)||NOW,v=>{c.next=v;c.noNext=false;render()},()=>{c.next=null;c.noNext=true;render()})}
     else openCal(cb,payDate,v=>{payDate=v})}return}
@@ -977,7 +1005,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-empclose]')){openEmp=null;render();return}
   if(e.target.closest('[data-empnew]')){STAFF.push({n:'Новый сотрудник',role:'',rate:'',line:'Авито',pay:'Альфа',isNew:true});openEmp=STAFF.length-1;render();const i=document.querySelector('[data-sf="n"]');if(i){i.focus();i.select()}return}
   const er=e.target.closest('tr[data-emp]');if(er){const i=+er.dataset.emp;openEmp=openEmp===i?null:i;payDate=NOW;render();return}
-  const cst=e.target.closest('[data-cst]');if(cst){const c=CLIENTS[+cst.dataset.ci];c.status=cst.dataset.cst;if(c.status!=='Активен'&&!c.left)c.left=NOW;if(c.status==='Активен'){c.left='';c.reason=''}render();return}
+  const cst=e.target.closest('[data-cst]');if(cst){const c=CLIENTS[+cst.dataset.ci];c.status=cst.dataset.cst;c.manualStatus=true;if(c.status!=='Активен'&&!c.left)c.left=NOW;if(c.status==='Активен'){c.left='';c.reason=''}render();return}
   const cld=e.target.closest('[data-cldel]');if(cld){CLIENTS.splice(+cld.dataset.cldel,1);openCl=null;render();return}
   if(e.target.closest('[data-clclose]')){openCl=null;render();return}
   if(e.target.closest('[data-clnew]')){CLIENTS.push({name:'Новый клиент',tg:'',start:NOW,status:'Активен',left:'',reason:'',note:'',first:50000,renew:25000,pays:{}});openCl=CLIENTS.length-1;render();const i=document.querySelector('[data-cf="name"]');if(i){i.focus();i.select()}return}
@@ -1070,7 +1098,7 @@ async function load(){
       return showGate(r.data.error==='forbidden'?'Этот раздел только для руководителя':'')}
     if(!r.ok)return showGate('Сервер не ответил, попробуйте ещё раз');
     if(!r.data.data)return showImport();
-    applyData(r.data.data);loaded=true;document.getElementById('exportBtn').hidden=false;
+    applyData(r.data.data);const synced=syncClients(r.data.projects);loaded=true;if(synced)lastSaved='';document.getElementById('exportBtn').hidden=false;
     const t=lsGet('fin.tab');if(t&&TABS.some(x=>x[0]===t))tab=t;
     render()
   }catch(e){showGate('Нет связи с сервером')}
