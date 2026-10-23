@@ -2903,6 +2903,8 @@ async function handleDashboardApi(request, env, url, ctx) {
       briefUrl: existing.briefUrl || null,
       staffUrl: existing.staffUrl || null, // ссылка Авито «доступ для сотрудников» — вход команды в кабинет клиента
       avitoProfileUrl: existing.avitoProfileUrl || null,
+      // Linked, but kept out of «Подтянуть» for now (the tracker's «Кабинеты Авито» checkbox).
+      ...(existing.avitoPullOff ? { avitoPullOff: true } : {}),
       // Inactive clients sink to the bottom of the Projects/Analytics lists and are left out of
       // the daily report and the Avito pull — history stays, nothing is deleted. The dashboard
       // marks a client inactive by colouring it grey, so a colour change sets the flag.
@@ -3576,7 +3578,8 @@ async function startAvitoPull(env, date, force) {
     status: 'running',
     startedAt: new Date().toISOString(),
     finishedAt: null,
-    pending: projects.filter((p) => p.avitoAccountId && !p.inactive && !kept[p.id]).map((p) => p.id),
+    // project.avitoPullOff: the cabinet is linked (API keys in), but its numbers aren't pulled yet.
+    pending: projects.filter((p) => p.avitoAccountId && !p.inactive && !p.avitoPullOff && !kept[p.id]).map((p) => p.id),
     results: kept,
   };
   if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = pull.startedAt; }
@@ -7552,6 +7555,7 @@ async function atAvitoDay(env, pull) {
   const pending = new Set((pull && pull.pending) || []);
   const rows = projects.map((p) => {
     if (!p.avitoAccountId) return { projectId: p.id, off: 'кабинет не подключен' };
+    if (p.avitoPullOff) return { projectId: p.id, off: 'не подтягивается — включите в «Кабинеты Авито»' };
     const r = pull && pull.results && pull.results[p.id];
     if (!r) return { projectId: p.id, off: pending.has(p.id) ? 'загружается…' : '—' };
     if (r.views == null && r.contacts == null && r.spend == null) return { projectId: p.id, off: r.errors && r.errors.length ? 'ошибка Авито' : 'нет данных' };
@@ -7616,6 +7620,16 @@ async function atAnalyticsApi(env, ctx, url, action, body) {
     return json({ saved });
   }
   // «Кабинеты Авито» (шестерёнка): ключи и какой кабинет у какого клиента.
+  // «Подтягивать»: a new client's cabinet can be linked before its numbers are wanted in «Подтянуть».
+  if (action === 'an-cabinet-pull') {
+    const project = await kv.get(`project:${String(body.projectId || '')}`, 'json');
+    if (!project) return json({ error: 'not_found' }, 404);
+    if (body.on) delete project.avitoPullOff; else project.avitoPullOff = true;
+    project.updatedAt = new Date().toISOString();
+    await kv.put(`project:${project.id}`, JSON.stringify(project));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, pull: !project.avitoPullOff });
+  }
   if (action === 'an-cabinets' || action === 'an-cabinet-link' || action === 'an-cabinet-import') {
     let out;
     if (action === 'an-cabinets') out = (await dash('GET', '/api/dashboard/avito-links')).data;
@@ -7630,7 +7644,7 @@ async function atAnalyticsApi(env, ctx, url, action, body) {
     return json({
       results: out.results || null,
       accounts: out.accounts || [],
-      projects: projects.map((p) => ({ id: p.id, name: p.name, accountId: linkOf[p.id] || null })),
+      projects: projects.map((p) => ({ id: p.id, name: p.name, accountId: linkOf[p.id] || null, pull: !p.avitoPullOff })),
     });
   }
   // «Отчёт»: тот же отчёт (наблюдения пишет Workers AI), что и в дашборде.

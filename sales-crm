@@ -830,7 +830,8 @@ function renderTable() {
   // in-place edit only updates that row's own cells, so the table doesn't jump around under
   // the pointer mid-interaction. Reload the page (or re-open the tool) to re-sort by the
   // latest updatedAt.
-  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  // «@alja_ska» or a pasted t.me link finds the client too: Telegram is stored without the @.
+  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase().replace(/^(?:https?:\/\/)?t\.me\//, '').replace(/^@/, '');
   const rows = clients.filter((c) => {
     if (filterValues.group.size && !filterValues.group.has(c.group)) return false;
     if (filterValues.priority.size && !filterValues.priority.has(c.priority)) return false;

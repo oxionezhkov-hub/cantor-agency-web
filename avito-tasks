@@ -925,6 +925,8 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .an-sent{font-style:normal;color:var(--green);font-size:12.5px}
 .an-unsent{font-style:normal;color:var(--red);font-size:12.5px}
 .an-link{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:10px;font-size:14px}
+.an-cab-row{display:flex;align-items:center;gap:8px}
+.an-pull{width:18px;height:18px;flex:none;accent-color:var(--accent)}
 .an-link:nth-child(odd){background:var(--surface-2)}
 .an-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:760px){
@@ -4404,7 +4406,14 @@ async function loadAnalytics() {
     if (key === anKey()) { AN.rows = res.data.rows; AN.loading = false; renderAnalytics(); }
   } catch (e) { AN.loading = false; if (key === anKey()) { $('anBody').innerHTML = '<div class="empty">Не получилось загрузить цифры — нет связи. Попробую снова, когда откроете вкладку.</div>'; } }
 }
-function anProjects() { return S.projects.filter((p) => AN.showInactive || !p.inactive).sort((a, b) => (a.inactive - b.inactive) || a.name.localeCompare(b.name, 'ru')); }
+// «Аналитика» lists clients by surname: «Алексей Шевчук» goes under «Ш». A name without one («Агешина»,
+// «Английский язык» — second word in lower case) sorts as written.
+function anSurnameKey(name) {
+  const w = String(name || '').trim().split(/\s+/);
+  return w.length > 1 && /^[А-ЯЁA-Z]/.test(w[w.length - 1]) ? `${w[w.length - 1]} ${w.slice(0, -1).join(' ')}` : w.join(' ');
+}
+const anBySurname = (a, b) => anSurnameKey(a.name).localeCompare(anSurnameKey(b.name), 'ru');
+function anProjects() { return S.projects.filter((p) => AN.showInactive || !p.inactive).sort((a, b) => (a.inactive - b.inactive) || anBySurname(a, b)); }
 function anRow(pid) { return (AN.rows || []).find((r) => r.projectId === pid) || { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 }; }
 function anTotals() {
   const ids = new Set(anProjects().map((p) => p.id));
@@ -4485,7 +4494,7 @@ async function openAnAvito(date, force) {
   const body = () => {
     const pr = AN.avRows;
     const tot = { views: 0, contacts: 0, spend: 0, noSpend: 0 };
-    const rows = S.projects.filter((p) => !p.inactive).sort((a, b) => a.name.localeCompare(b.name, 'ru')).map((p) => {
+    const rows = S.projects.filter((p) => !p.inactive).sort(anBySurname).map((p) => {
       const r = pr && pr.rows.find((x) => x.projectId === p.id);
       if (!pr) return `<tr><td>${esc(p.name)}</td><td colspan="4"><i class="sk"></i></td></tr>`;
       if (!r || r.off) return `<tr><td>${esc(p.name)}</td><td colspan="4" class="nil">${esc(r ? r.off : '—')}</td></tr>`;
@@ -4520,7 +4529,8 @@ async function openAnKeys(data) {
   const accOpts = (sel) => `<option value="">— не подключен —</option>${(AN.cab ? AN.cab.accounts : []).map((a) => `<option value="${esc(a.id)}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)}${a.userId ? ` (${esc(a.userId)})` : ''}</option>`).join('')}`;
   const results = data && data.results ? `<div class="an-res">${data.results.map((r) => `<div class="${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓' : '✕'} ${esc(r.project || r.name || `строка ${r.line}`)} — ${esc(r.message || '')}</div>`).join('')}</div>` : '';
   const draw = () => anDrawer('Кабинеты Авито', `<textarea class="textarea" id="anKeys" rows="4" placeholder="Алексей Шевчук	client_id	client_secret"></textarea>${results}
-    <div class="an-links">${AN.cab ? AN.cab.projects.map((p) => `<label class="an-link"><span>${esc(p.name)}</span><select class="select an-cab" data-pid="${esc(p.id)}" aria-label="Кабинет: ${esc(p.name)}">${accOpts(p.accountId)}</select></label>`).join('') : '<i class="sk"></i>'}</div>`,
+    <div class="an-links">${AN.cab ? [...AN.cab.projects].sort(anBySurname).map((p) => `<label class="an-link"><span>${esc(p.name)}</span><span class="an-cab-row"><select class="select an-cab" data-pid="${esc(p.id)}" aria-label="Кабинет: ${esc(p.name)}">${accOpts(p.accountId)}</select><input type="checkbox" class="an-pull" data-pid="${esc(p.id)}" ${p.pull === false ? '' : 'checked'} ${p.accountId ? '' : 'disabled'} title="Подтягивать цифры в «Подтянуть». Снимите, если кабинет подключили заранее, а аналитика пока не нужна." aria-label="Подтягивать цифры: ${esc(p.name)}"></span></label>`).join('') : '<i class="sk"></i>'}</div>
+    <div class="an-note"><span>Галочка справа — подтягивать цифры кабинета в «Подтянуть». Снимите у нового клиента, если ключи API уже внесли, а аналитика пока не нужна.</span></div>`,
   `<button class="btn btn-ghost" data-an="avito">Назад</button><button class="btn btn-primary" data-an="keys-import">Подключить</button>`);
   if (data) AN.cab = data;
   draw();
@@ -4656,6 +4666,16 @@ $('drawerRoot').addEventListener('click', async (e) => {
 $('drawerRoot').addEventListener('change', async (e) => {
   if (e.target.id === 'anAvDate' && e.target.value) openAnAvito(e.target.value);
   if (e.target.id === 'anRepFrom' || e.target.id === 'anRepTo') AN.repTouched = true;
+  const pull = e.target.closest('.an-pull');
+  if (pull) {
+    try {
+      const res = await api('an-cabinet-pull', { projectId: pull.dataset.pid, on: pull.checked });
+      if (!res.ok) throw new Error();
+      const p = AN.cab && AN.cab.projects.find((x) => x.id === pull.dataset.pid);
+      if (p) p.pull = pull.checked;
+      toast(pull.checked ? 'Будет подтягиваться' : 'Не подтягивается — кабинет остаётся подключённым');
+    } catch (err) { pull.checked = !pull.checked; toast('Не сохранилось — нет связи'); }
+  }
   const cab = e.target.closest('.an-cab');
   if (cab) {
     try {
