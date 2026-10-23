@@ -4475,14 +4475,39 @@ function anDrawer(title, body, foot, extra) {
       <div class="drawer-body">${body}</div>${foot ? `<div class="drawer-foot">${foot}</div>` : ''}
     </aside>`;
 }
-function anSummaryLines() {
-  const t = anTotals();
+// «Итого» opens the way it is copied every time — all time, active clients only — whatever the table
+// shows; «Настроить иначе» switches it to the table's period and clients. AN.sum is what's on screen
+// (the copy button copies exactly that).
+function anSumTotals(rows, ids) {
+  return (rows || []).filter((r) => ids.has(r.projectId)).reduce((a, r) => { AN_RAW.forEach((k) => { a[k] += r[k] || 0; }); return a; }, { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 });
+}
+function anSummaryLines(t = anTotals()) {
   return AN_RAW.map((k) => (k === 'budget' ? { label: 'Бюджет', value: `${anNum(t.budget)} руб` } : { label: AN_RAW_L[k], value: anNum(t[k]), sub: `${AN_RATE[k]} ${anNum(t[k] ? t.budget / t[k] : 0)} руб` }));
 }
 function anPeriodText() { return AN.mode === 'day' ? anDayLabel(AN.day) : AN.month ? anMonths().find((m) => m.key === AN.month).label : 'За всё время'; }
-function openAnSummary() {
-  anDrawer('Итого', `<div class="an-sum-p">${esc(anPeriodText())} · все активные клиенты</div><div class="an-sum">${anSummaryLines().map((r) => `<div class="an-sum-r"><span>${r.label}</span><b>${r.value}</b>${r.sub ? `<em>${r.sub}</em>` : '<em></em>'}</div>`).join('')}</div>`,
-    `<button class="btn btn-primary" data-an="copy">${ico('copy', 'ic-sm')}Скопировать</button>`);
+async function openAnSummary(custom) {
+  let label;
+  let lines;
+  if (custom) {
+    label = `${anPeriodText()} · ${AN.showInactive ? 'все клиенты' : 'все активные клиенты'}`;
+    lines = anSummaryLines();
+  } else {
+    let rows = AN.cache['t:all'];
+    if (!rows) {
+      anDrawer('Итого', '<div class="an-sum-p">За всё время · все активные клиенты</div><i class="sk"></i>');
+      try {
+        const res = await api('an-table', { mode: 'total', month: null });
+        if (!res.ok) throw new Error();
+        rows = AN.cache['t:all'] = res.data.rows;
+      } catch (e) { toast('Не получилось загрузить итоги — нет связи'); $('drawerRoot').innerHTML = ''; return; }
+    }
+    label = 'За всё время · все активные клиенты';
+    lines = anSummaryLines(anSumTotals(rows, new Set(S.projects.filter((p) => !p.inactive).map((p) => p.id))));
+  }
+  AN.sum = { period: custom ? anPeriodText() : 'За всё время', lines };
+  anDrawer('Итого', `<div class="an-sum-p">${esc(label)}</div><div class="an-sum">${lines.map((r) => `<div class="an-sum-r"><span>${r.label}</span><b>${r.value}</b>${r.sub ? `<em>${r.sub}</em>` : '<em></em>'}</div>`).join('')}</div>
+    <div style="margin-top:10px">${custom ? '<button class="btn btn-quiet btn-sm" data-an="sum-default">← За всё время, активные клиенты</button>' : '<button class="btn btn-quiet btn-sm" data-an="sum-custom">Настроить иначе — как в таблице</button>'}</div>`,
+  `<button class="btn btn-primary" data-an="copy">${ico('copy', 'ic-sm')}Скопировать</button>`);
 }
 // «Подтянуть»: цифры из кабинетов Авито за день. Если за этот день ещё не собирали — сервер начинает
 // сбор, а окно само обновляется, пока он идёт.
@@ -4592,7 +4617,7 @@ $('view-analytics').addEventListener('click', (e) => {
   if (a === 'yesterday') { AN.day = anYesterday(); loadAnalytics(); }
   if (a === 'month') { AN.month = b.dataset.m || null; loadAnalytics(); }
   if (a === 'client') { CF.q = ''; CF.show = ''; CF.focus = b.dataset.pid; setView('clients'); }
-  if (a === 'summary') { if (!AN.rows) { toast('Цифры ещё загружаются…'); return; } openAnSummary(); }
+  if (a === 'summary') openAnSummary(false);
   if (a === 'avito') openAnAvito();
   if (a === 'report') openAnReport();
 });
@@ -4617,8 +4642,11 @@ $('drawerRoot').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-an]');
   if (!b) return;
   const a = b.dataset.an;
+  if (a === 'sum-default') openAnSummary(false);
+  if (a === 'sum-custom') { if (!AN.rows) { toast('Цифры таблицы ещё загружаются…'); return; } openAnSummary(true); }
   if (a === 'copy') {
-    const text = `${anPeriodText()}\n` + anSummaryLines().map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
+    const sum = AN.sum || { period: anPeriodText(), lines: anSummaryLines() };
+    const text = `${sum.period}\n` + sum.lines.map((r) => (r.sub ? `${r.label}: ${r.value} (${r.sub})` : `${r.label}: ${r.value}`)).join('\n');
     try { await navigator.clipboard.writeText(text); toast('Скопировано'); } catch (err) { toast('Не получилось скопировать — выделите текст вручную'); }
   }
   if (a === 'avito') openAnAvito();
