@@ -7377,7 +7377,11 @@ async function handleFinanceApi(request, env, url) {
     const projects = (await listByPrefix(kv, 'project:')).map((p) => ({
       id: p.id, name: p.name, service: p.service || '', inactive: Boolean(p.inactive), createdAt: p.createdAt || null,
     }));
-    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, projects, me: atPublicUser(auth.user) });
+    // Ники клиентов: из CRM продаж (имя + Telegram) — по ним страница находит оплаты в операциях.
+    const crm = env.AVITO_KV ? (await listByPrefix(env.AVITO_KV, 'salescrm:client:'))
+      .filter((c) => c && c.name && c.telegram)
+      .map((c) => ({ name: c.name, telegram: salesCrmNormalizeTg(c.telegram), status: c.status || '' })) : [];
+    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, projects, crm, me: atPublicUser(auth.user) });
   }
   if (action === 'save') {
     const data = body.data;
