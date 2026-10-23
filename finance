@@ -725,7 +725,18 @@ const TR={а:'a',б:'b',в:'(v|w)',г:'g',д:'d',е:'e',ё:'(e|yo)',ж:'(zh|j)',
 const nameRe=w=>new RegExp([...w.toLowerCase()].map(ch=>TR[ch]!=null?TR[ch]:ch.replace(/[^a-z0-9]/g,'')).join(''));
 function guessHandle(c,free){const words=String(c.name).split(/\s+/).filter(w=>w.length>=4);if(!words.length)return null;
   const sur=nameRe(words[words.length-1]);return free.find(h=>sur.test(h.slice(1)))||null}
-function syncClients(projects){
+const normName=s=>String(s||'').toLowerCase().replace(/ё/g,'е').replace(/\(.*?\)|\|.*$/g,' ').replace(/[^a-zа-я ]+/g,' ').split(/\s+/).filter(Boolean);
+// Ник из CRM продаж: строка, где есть все слова имени клиента (сначала со статусом «Продажа»),
+// или «Продажа» с одним именем, совпавшим с именем клиента, если такая одна.
+function crmHandle(c,crm,taken){
+  const words=normName(c.name);if(!words.length)return null;
+  const free=crm.filter(r=>r.telegram&&!taken.has('@'+r.telegram));
+  const full=free.filter(r=>{const rw=normName(r.name);return words.every(w=>rw.includes(w))});
+  const pick=full.find(r=>r.status==='Продажа')||full[0];if(pick)return '@'+pick.telegram;
+  const first=free.filter(r=>r.status==='Продажа'&&normName(r.name).length===1&&normName(r.name)[0]===words[0]);
+  return first.length===1?'@'+first[0].telegram:null
+}
+function syncClients(projects,crm){
   let changed=false;
   (projects||[]).forEach(p=>{let c=CLIENTS.find(x=>x.pid===p.id)||CLIENTS.find(x=>!x.pid&&x.name.trim().toLowerCase()===p.name.trim().toLowerCase());
     if(c){if(!c.pid){c.pid=p.id;changed=true}
@@ -735,6 +746,7 @@ function syncClients(projects){
   // Ники из операций, которые ещё ни к кому не привязаны, — к клиенту с похожей фамилией.
   const taken=new Set(CLIENTS.flatMap(handlesOf));
   const free=[...new Set(OPS.filter(o=>o.kind==='rev'&&o.client&&o.client.startsWith('@')).map(o=>o.client.toLowerCase()))].filter(h=>!taken.has(h));
+  CLIENTS.forEach(c=>{if(c.tg)return;const h=crmHandle(c,crm||[],taken);if(h){c.tg=h;taken.add(h);const i=free.indexOf(h);if(i>=0)free.splice(i,1);changed=true}});
   CLIENTS.forEach(c=>{if(c.tg)return;const h=guessHandle(c,free);if(h){c.tg=h;free.splice(free.indexOf(h),1);changed=true;
     const first=clientOps(c).map(o=>o.d).sort()[0];if(first&&(c.pid&&!c.startSet)&&first<c.start)c.start=first}});
   return changed
@@ -1098,7 +1110,7 @@ async function load(){
       return showGate(r.data.error==='forbidden'?'Этот раздел только для руководителя':'')}
     if(!r.ok)return showGate('Сервер не ответил, попробуйте ещё раз');
     if(!r.data.data)return showImport();
-    applyData(r.data.data);const synced=syncClients(r.data.projects);loaded=true;if(synced)lastSaved='';document.getElementById('exportBtn').hidden=false;
+    applyData(r.data.data);const synced=syncClients(r.data.projects,r.data.crm);loaded=true;if(synced)lastSaved='';document.getElementById('exportBtn').hidden=false;
     const t=lsGet('fin.tab');if(t&&TABS.some(x=>x[0]===t))tab=t;
     render()
   }catch(e){showGate('Нет связи с сервером')}
