@@ -186,6 +186,8 @@ input.bal::placeholder{color:var(--faint);font-size:14px;font-family:var(--font)
 .btn-sm{min-height:30px;padding:0 10px;font-size:12.5px}
 [hidden]{display:none!important}
 tr.clk{cursor:pointer}
+tr[data-cl] td:first-child::after,tr[data-emp] td:first-child::after{content:"✎";margin-left:8px;color:var(--faint);opacity:0;transition:opacity .15s}
+tr[data-cl]:hover td:first-child::after,tr[data-emp]:hover td:first-child::after{opacity:1}
 tr.edit td{background:var(--surface-2);border-bottom-color:transparent}
 tr.edit .input,tr.edit .select{min-height:34px}
 .btn-danger{color:var(--red)}.btn-danger:hover{background:var(--red-bg)}
@@ -247,6 +249,12 @@ tr.addrow td{background:var(--surface-2)}
 .emp-f{display:grid;grid-template-columns:1fr;gap:8px;align-content:start}
 .emp-f label{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;gap:10px;font-size:12.5px;font-weight:600;color:var(--muted)}
 .emp-f .dd-btn{width:100%}
+.emp-f .ta{align-items:start}
+.emp-f .input{color:var(--ink);font-weight:500}
+.emp-f textarea{resize:vertical;min-height:70px;font:inherit;font-weight:400}
+.emp-f .seg{justify-self:start}
+.emp-f .cal.nx{justify-self:start;height:36px}
+td .info{margin-left:6px}
 .pays{display:grid;gap:2px}
 .pay{display:grid;grid-template-columns:100px 1fr auto 28px;gap:10px;align-items:center;padding:6px 8px;border-radius:9px;font-size:13.5px}
 .pay:hover{background:var(--surface)}
@@ -271,7 +279,7 @@ tr.newrow:hover td{color:var(--accent);background:var(--surface-2)}
 .be-n{display:flex;align-items:baseline;gap:8px}.be-n .big{font-size:40px;line-height:1}
 .be-of{font-family:var(--display);font-size:18px;font-weight:700;color:var(--faint)}
 .be-r{display:grid;justify-items:end;gap:4px;font-size:12.5px}
-.be-in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.be-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .be-in label{display:grid;gap:2px;padding:8px 10px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--line-2);cursor:text}
 .be-in label:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
 .be-in span{font-size:11.5px;font-weight:600;color:var(--muted)}
@@ -299,6 +307,13 @@ tr.newrow:hover td{color:var(--accent);background:var(--surface-2)}
 .spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13.5px;z-index:70;box-shadow:var(--shadow-lg);max-width:calc(100vw - 32px)}
+.act{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 8px;border-radius:999px;border:1px dashed var(--line);font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap}
+.act i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--faint);display:inline-block;flex:none}
+.act:hover{color:var(--ink);border-color:var(--faint)}
+.act.on{border-style:solid;border-color:transparent;background:var(--green-bg);color:var(--green)}
+.act.on i{border-color:var(--green);background:var(--green);-webkit-mask:none;position:relative}
+.act.on i::after{content:"";position:absolute;left:3.5px;top:0.5px;width:4px;height:8px;border:solid var(--surface);border-width:0 2px 2px 0;transform:rotate(45deg)}
+tr.noact td{font-style:italic}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:640px){.brand b{display:none}.hello h1{font-size:19px}.kpi .v{font-size:18px}}
 </style>
@@ -409,13 +424,18 @@ const OPEX_BASE=['Руководитель','Клиентские менедже
 const REV_KEYS=()=>['Авито первичные','Авито продления',...DIRS.filter(d=>d!=='Авито'),...EXTRA.rev], COGS_KEYS=()=>[...DIRS,'ТБ Авито','ТБ Профи',...EXTRA.cogs], OPEX_KEYS=()=>[...OPEX_BASE,...EXTRA.opex];
 const kindForCat=c=>(EXTRA.rev.includes(c)||c==='Авито первичные'||c==='Авито продления')?'rev':EXTRA.cogs.includes(c)?'cogs':EXTRA.opex.includes(c)?'opex':null;
 const lblOf=(kind,cat,def)=>LBL[kind+':'+cat]||def||cat;
+// Выручка в P&L — только подтверждённая: оплата с подписанным актом, в месяце акта.
+// Расходы, возвраты и всё в CF — по дате денег.
+const actM=o=>o.act?o.act.slice(0,7):null;
 function pnl(m){
   const ops=OPS.filter(o=>mOf(o)===m), by=(kind,cat)=>sum(ops.filter(o=>o.kind===kind&&(!cat||o.cat===cat)),o=>Math.abs(o.amt));
-  const rev={};REV_KEYS().forEach(d=>rev[d]=by('rev',d));
+  const acted=OPS.filter(o=>o.kind==='rev'&&actM(o)===m);
+  const rev={};REV_KEYS().forEach(d=>rev[d]=sum(acted.filter(o=>o.cat===d),o=>o.amt));
+  const noAct=sum(ops.filter(o=>o.kind==='rev'&&!o.act),o=>o.amt);
   const refunds=by('refund');
   const cogs={};COGS_KEYS().forEach(c=>cogs[c]=by('cogs',c));
   const opex={};OPEX_KEYS().forEach(c=>opex[c]=by('opex',c));
-  return finish({rev,refunds,cogs,opex,div:by('div')})
+  return Object.assign(finish({rev,refunds,cogs,opex,div:by('div')}),{noAct})
 }
 function planPnl(m){
   const p=PLAN[m];if(!p)return null;
@@ -437,7 +457,7 @@ function cfAll(){let bal=0;return MONTHS.map(m=>{const c=cf(m);c.m=m;c.start=bal
 
 // ── состояние ──
 const TABS=[['overview','Обзор'],['pnl','P&L'],['cf','CF'],['ops','Операции'],['staff','Сотрудники'],['clients','Клиенты']];
-let editId=null;
+let editId=null, openCl=null;
 let opDate=NOW, opType='out', calMonth=null, payDate=NOW, openEmp=null;
 let CFG={accs:{off:[],extra:[]},cats:{off:[],extra:[]}};
 const saveCFG=()=>persist();
@@ -483,13 +503,17 @@ const legend=items=>`<div class="legend">${items.map(([c,t,line])=>`<span>${line
 // ── вкладки ──
 const V={};
 function beBlock(){let cum=0;const curve=FACT_MONTHS.map(m=>{const c=cf(m);cum+=c.inc-c.fin-c.out;return{m,v:cum,flow:c.inc-c.fin-c.out}});const fixed=sum(FACT_MONTHS.slice(-3),m=>P[m].opexT)/Math.max(1,FACT_MONTHS.slice(-3).length);
+  const act=CLIENTS.filter(c=>c.status==='Активен'), m3=FACT_MONTHS.slice(-3);
+  // В среднем на одного активного клиента: зарплаты специалистов Авито и тестовые балансы за последние 3 месяца
+  const renewAvg=act.length?sum(act,c=>c.renew==null?25000:c.renew)/act.length:25000;
+  const directPer=act.length?sum(m3,m=>P[m].cogs['Авито']+P[m].cogs['ТБ Авито'])/Math.max(1,m3.length)/act.length:0;
   return `  <div class="grid g2">
   <section class="panel"><div class="panel-h"><h2>Точка безубыточности</h2></div><div class="panel-b" style="display:grid;gap:16px">
     <div id="be-out"></div>
     <div class="be-in">
-      <label><span>Расходы / мес</span><input id="be-f" inputmode="numeric" value="${nf.format(Math.round(fixed))}"></label>
-      <label><span>Продление</span><input id="be-p" inputmode="numeric" value="${nf.format(25000)}"></label>
-      <label><span>Специалист</span><input id="be-c" inputmode="numeric" value="${nf.format(5000)}"></label>
+      <label><span>Постоянные расходы в месяц</span><input id="be-f" inputmode="numeric" value="${nf.format(Math.round(fixed))}"></label>
+      <label><span>Продление клиента в месяц</span><input id="be-p" inputmode="numeric" value="${nf.format(Math.round(renewAvg))}"></label>
+      <label><span>Прямые расходы на клиента в месяц</span><input id="be-c" inputmode="numeric" value="${nf.format(Math.round(directPer))}"></label>
     </div>
   </div></section>
   <section class="panel"><div class="panel-h"><h2>Накопленный денежный поток</h2></div><div class="panel-b">
@@ -547,7 +571,7 @@ V.pnl=()=>{
   const FC=agg(MONTHS.filter(m=>m<=CUR).map(m=>P[m])), PT=agg(MONTHS.map(m=>m<CUR?P[m]:(PP[m]||P[m])));
   const fm=(x,isPct)=>x==null||!isFinite(x)?'—':isPct?pct(x):rub(x);
   const td=(m,f,isPct,ed)=>{const a=m<=CUR?f(P[m]):null,p=PP[m]?f(PP[m]):null;
-    const fa=ed&&a!=null?` data-fm="${m}" data-fc="${esc(ed.k)}"`:'', pa=ed?` data-pm="${m}" data-pg="${ed.g}" data-pk="${esc(ed.k)}"`:'';
+    const fa=ed&&a!=null?` data-fm="${m}" data-fc="${esc(ed.k)}"${ed.g==='rev'?' data-fact="1"':''}`:'', pa=ed?` data-pm="${m}" data-pg="${ed.g}" data-pk="${esc(ed.k)}"`:'';
     return `<td class="n${m===CUR?' cur':''}"><div class="pf"><span class="${a!=null&&!isPct&&Math.round(a)===0?'zero ':''}${fa?'fe':''}"${fa}>${fm(a,isPct)}</span><span class="p${pa?' pe':''}"${pa}>${fm(p,isPct)}</span></div></td>`};
   const row=(label,f,cls='',isPct,ed)=>`<tr class="${cls}"><td>${label}</td>${cols.map(m=>td(m,f,isPct,ed)).join('')}<td class="n"><div class="pf"><span>${fm(f(FC),isPct)}</span><span class="p">${fm(f(PT),isPct)}</span></div></td></tr>`;
   const grp=(t,g)=>`<tr class="grp"><td colspan="${cols.length+2}"><div class="grp-in"><span>${t}</span>${g?`<button class="grp-add" data-addcat="${g}" title="Добавить статью" aria-label="Добавить статью">+ Статья</button>`:''}</div></td></tr>`;
@@ -561,6 +585,7 @@ V.pnl=()=>{
     ${REV_KEYS().map(d=>row(`<span class="dot" style="background:${DCOL[d]||'var(--faint)'};margin-right:8px"></span>${nm('rev',d,d)}`,p=>p.rev[d],'',0,{g:'rev',k:d})).join('')}
     ${row('Возвраты клиентам',p=>-p.refunds,'sub')}
     ${row('Чистая выручка',p=>p.net,'tot')}
+    ${row('Оплачено без акта (не в прибыли)',p=>p.noAct,'sub noact')}
     ${grp('Прямые расходы','cogs')}
     ${usedC.map(c=>row(nm('cogs',c,cn[c]||(EXTRA.cogs.includes(c)?c:'Специалисты '+c)),p=>-p.cogs[c],'',0,{g:'cogs',k:c})).join('')}
     ${row('Итого прямые',p=>-p.cogsT,'tot')}
@@ -577,7 +602,7 @@ V.pnl=()=>{
   </tbody></table></div></section>`
 };
 function agg(list){const add=k=>{const o={};list.forEach(p=>Object.entries(p[k]).forEach(([c,v])=>o[c]=(o[c]||0)+v));return o};
-  return finish({rev:add('rev'),refunds:sum(list,p=>p.refunds),cogs:add('cogs'),opex:add('opex'),div:sum(list,p=>p.div)})}
+  return Object.assign(finish({rev:add('rev'),refunds:sum(list,p=>p.refunds),cogs:add('cogs'),opex:add('opex'),div:sum(list,p=>p.div)}),{noAct:sum(list,p=>p.noAct||0)})}
 
 V.cf=()=>{
   const cols=MONTHS.slice();
@@ -615,7 +640,7 @@ V.cf=()=>{
 };
 
 V.ops=()=>{
-  const f=opsFilter, list=OPS.filter(o=>(!f.cat||o.cat===f.cat)&&(!f.q||o.n.toLowerCase().includes(f.q.toLowerCase()))&&(!f.kind||(f.kind==='in'?o.amt>0:f.kind==='sal'?o.sal:o.amt<0))&&(!f.acc||o.acc===f.acc)&&(!f.m||mOf(o)===f.m)).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.id-a.id);
+  const f=opsFilter, list=OPS.filter(o=>(!f.cat||o.cat===f.cat)&&(!f.am||actM(o)===f.am)&&(f.kind!=='noact'||(o.kind==='rev'&&!o.act))&&(f.kind!=='act'||o.act)&&(!f.q||o.n.toLowerCase().includes(f.q.toLowerCase()))&&(!f.kind||f.kind==='noact'||f.kind==='act'||(f.kind==='in'?o.amt>0:f.kind==='sal'?o.sal:o.amt<0))&&(!f.acc||o.acc===f.acc)&&(!f.m||mOf(o)===f.m)).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.id-a.id);
   const cats=allCats();
   return `
   <section class="panel"><div class="panel-b" style="padding-top:16px">
@@ -631,13 +656,13 @@ V.ops=()=>{
     </form>
     <div class="toolbar" style="margin-bottom:8px">
       <input class="input" id="f-q" placeholder="Поиск по назначению" value="${esc(f.q)}" style="flex:1;min-width:160px">
-      <select class="select" id="f-k"><option value="">Все</option><option value="in"${f.kind==='in'?' selected':''}>Приходы</option><option value="out"${f.kind==='out'?' selected':''}>Расходы</option><option value="sal"${f.kind==='sal'?' selected':''}>Зарплаты</option></select>
+      <select class="select" id="f-k"><option value="">Все</option><option value="in"${f.kind==='in'?' selected':''}>Приходы</option><option value="out"${f.kind==='out'?' selected':''}>Расходы</option><option value="sal"${f.kind==='sal'?' selected':''}>Зарплаты</option><option value="noact"${f.kind==='noact'?' selected':''}>Приходы без акта</option><option value="act"${f.kind==='act'?' selected':''}>С актом</option></select>
       <select class="select" id="f-a"><option value="">Все счета</option>${ACCS.map(a=>`<option${f.acc===a.id?' selected':''}>${a.id}</option>`).join('')}</select>
-      ${f.cat?`<button class="chip" data-clearcat title="Сбросить">${esc(f.cat)} ×</button>`:''}<select class="select" id="f-m"><option value="">Все месяцы</option>${FACT_MONTHS.map(m=>`<option value="${m}"${f.m===m?' selected':''}>${MN[m]}</option>`).join('')}</select>
+      ${f.cat||f.am?`<button class="chip" data-clearcat title="Сбросить">${esc([f.cat,f.am?'акт: '+MN[f.am]:''].filter(Boolean).join(', '))} ×</button>`:''}<select class="select" id="f-m"><option value="">Все месяцы</option>${FACT_MONTHS.map(m=>`<option value="${m}"${f.m===m?' selected':''}>${MN[m]}</option>`).join('')}</select>
     </div>
-    <div class="tw"><table><thead><tr><th>Дата</th><th>Назначение</th><th>Статья</th><th>Счёт</th><th class="n">Сумма</th></tr></thead><tbody>
-    ${list.map(o=>o.id===editId?editRow(o,cats):`<tr class="clk" data-op="${o.id}"><td class="num">${dt(o.d)}</td><td class="wrap">${esc(o.n)}</td><td><span class="pill ${o.amt>0?'g':o.sal?'b':'n'}">${esc(o.cat)}</span></td><td>${o.acc?esc(o.acc):'<span class="pill r">не указан</span>'}</td><td class="n ${o.amt>0?'amt-in':''}">${o.amt>0?'+':''}${rub(o.amt)}</td></tr>`).join('')}
-    </tbody></table></div><div class="muted" style="font-size:12.5px;padding:10px 0 0">${list.length} операций · приход <b class="up">${rub(sum(list.filter(o=>o.amt>0),o=>o.amt))}</b> · расход <b>${rub(sum(list.filter(o=>o.amt<0),o=>-o.amt))}</b></div></div></section>`
+    <div class="tw"><table><thead><tr><th>Дата</th><th>Назначение</th><th>Статья</th><th>Счёт</th><th class="n">Сумма</th><th>Акт</th></tr></thead><tbody>
+    ${list.map(o=>o.id===editId?editRow(o,cats):`<tr class="clk" data-op="${o.id}"><td class="num">${dt(o.d)}</td><td class="wrap">${esc(o.n)}</td><td><span class="pill ${o.amt>0?'g':o.sal?'b':'n'}">${esc(o.cat)}</span></td><td>${o.acc?esc(o.acc):'<span class="pill r">не указан</span>'}</td><td class="n ${o.amt>0?'amt-in':''}">${o.amt>0?'+':''}${rub(o.amt)}</td><td>${o.kind==='rev'?`<button type="button" class="act${o.act?' on':''}" data-cal="act" data-oid="${o.id}" title="${o.act?'Акт подписан — изменить дату':'Отметить подписанный акт'}"><i></i><span>${o.act?dt(o.act):'Акт'}</span></button>`:''}</td></tr>`).join('')}
+    </tbody></table></div>${f.kind==='noact'&&list.length?(window._noActList=list,`<div class="toolbar" style="padding-top:10px"><button class="btn btn-ghost btn-sm" data-actall>Подписать все ${list.length} — датой оплаты</button></div>`):''}<div class="muted" style="font-size:12.5px;padding:10px 0 0">${list.length} операций · приход <b class="up">${rub(sum(list.filter(o=>o.amt>0),o=>o.amt))}</b> · расход <b>${rub(sum(list.filter(o=>o.amt<0),o=>-o.amt))}</b></div></div></section>`
 };
 
 V.accs=()=>`
@@ -685,10 +710,56 @@ V.staff=()=>{
     <tr class="tot"><td colspan="5">Фонд оплаты труда</td>${FACT_MONTHS.map(m=>cell(fot(m),m===CUR?'cur':'')).join('')}${cell(sum(FACT_MONTHS,fot))}</tr>
   </tbody></table></div></section>`
 };
-function nextPay(c){if(c.noNext)return null;if(c.next)return c.next;const day=+c.start.slice(8,10);let [y,m]=NOW.split('-').map(Number);
+function nextPay(c){if(c.noNext||c.status!=='Активен')return null;if(c.next&&c.next>=NOW)return c.next;const day=+c.start.slice(8,10);let [y,m]=NOW.split('-').map(Number);
   const mk=(y,m)=>{const last=new Date(y,m,0).getDate();return `${y}-${String(m).padStart(2,'0')}-${String(Math.min(day,last)).padStart(2,'0')}`};
   let d=mk(y,m);if(d<=NOW){m++;if(m>12){m=1;y++}d=mk(y,m)}return d}
 function empNext(r){const s=STAFF[r.i];if(s.noNext)return null;if(s.next)return s.next;if(!r.last)return NOW;const d=new Date(r.last);d.setDate(d.getDate()+14);return d.toISOString().slice(0,10)}
+// ── клиенты ↔ операции и проекты трекера ──
+// Оплаты клиента берутся из операций по его Telegram (@ник в назначении платежа: «Авито - @ник СБП»).
+// Пока ник не указан — из старого реестра (c.pays).
+const handlesOf=c=>String(c.tg||'').split(/[\s,;]+/).map(h=>h.trim().toLowerCase()).filter(h=>h.startsWith('@'));
+const clientOps=c=>{const hs=handlesOf(c);return hs.length?OPS.filter(o=>o.kind==='rev'&&o.client&&hs.includes(o.client.toLowerCase())):[]};
+function clientPays(c){const ops=clientOps(c);if(!handlesOf(c).length)return c.pays||{};const p={};ops.forEach(o=>{const m=mOf(o);p[m]=(p[m]||0)+o.amt});return p}
+// Ник в платеже похож на фамилию: «@OkunevaElena10» ↔ «Елена Окунева».
+const TR={а:'a',б:'b',в:'(v|w)',г:'g',д:'d',е:'e',ё:'(e|yo)',ж:'(zh|j)',з:'z',и:'(i|y)',й:'(y|i|j)',к:'(k|c)',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'(u|ou)',ф:'f',х:'(h|kh)',ц:'(ts|c)',ч:'ch',ш:'sh',щ:'(sch|shch)',ъ:'',ы:'(y|i)',ь:'',э:'e',ю:'(yu|iu|u)',я:'(ya|ia|a)'};
+const nameRe=w=>new RegExp([...w.toLowerCase()].map(ch=>TR[ch]!=null?TR[ch]:ch.replace(/[^a-z0-9]/g,'')).join(''));
+function guessHandle(c,free){const words=String(c.name).split(/\s+/).filter(w=>w.length>=4);if(!words.length)return null;
+  const sur=nameRe(words[words.length-1]);return free.find(h=>sur.test(h.slice(1)))||null}
+function syncClients(projects){
+  let changed=false;
+  (projects||[]).forEach(p=>{let c=CLIENTS.find(x=>x.pid===p.id)||CLIENTS.find(x=>!x.pid&&x.name.trim().toLowerCase()===p.name.trim().toLowerCase());
+    if(c){if(!c.pid){c.pid=p.id;changed=true}
+      if(p.inactive&&c.status==='Активен'&&!c.manualStatus){c.status='Ушёл';c.left=c.left||NOW;c.reason=c.reason||'Отключён в трекере';changed=true}
+      return}
+    CLIENTS.push({pid:p.id,name:p.name,tg:'',start:(p.createdAt||NOW).slice(0,10),status:p.inactive?'Ушёл':'Активен',left:p.inactive?NOW:'',reason:'',note:'',first:50000,renew:25000,pays:{}});changed=true});
+  // Ники из операций, которые ещё ни к кому не привязаны, — к клиенту с похожей фамилией.
+  const taken=new Set(CLIENTS.flatMap(handlesOf));
+  const free=[...new Set(OPS.filter(o=>o.kind==='rev'&&o.client&&o.client.startsWith('@')).map(o=>o.client.toLowerCase()))].filter(h=>!taken.has(h));
+  CLIENTS.forEach(c=>{if(c.tg)return;const h=guessHandle(c,free);if(h){c.tg=h;free.splice(free.indexOf(h),1);changed=true;
+    const first=clientOps(c).map(o=>o.d).sort()[0];if(first&&(c.pid&&!c.startSet)&&first<c.start)c.start=first}});
+  return changed
+}
+function clCard(c,ci,ncol){
+  const f=(k,l,v,ph='')=>`<label>${l}<input class="input" data-cf="${k}" data-ci="${ci}" value="${esc(v==null?'':v)}" placeholder="${ph}"></label>`;
+  const dbtn=(k,v)=>`<button type="button" class="cal nx${v?'':' empty'}" data-cal="${k}" data-ci="${ci}"><span>${v?dt(v)+'.'+v.slice(0,4):'—'}</span></button>`;
+  const left=c.status!=='Активен';
+  return `<tr class="edit"><td colspan="${ncol}"><div class="emp"><div class="emp-f">
+    ${f('name','Имя',c.name)}
+    ${f('tg','Telegram',c.tg,'@ник — по нему подтягиваются оплаты')}
+    <label>Старт${dbtn('clstart',c.start)}</label>
+    <label>Статус<span class="seg"><button type="button" data-cst="Активен" data-ci="${ci}" class="${left?'':'on'}">Активен</button><button type="button" data-cst="Ушёл" data-ci="${ci}" class="${left?'on':''}">Ушёл</button></span></label>
+    ${left?`<label>Дата ухода${dbtn('clleft',c.left)}</label>${f('reason','Причина ухода',c.reason)}`:''}
+    ${f('first','Первая оплата',c.first==null?'50 000':nf.format(c.first))}
+    ${f('renew','Продление',c.renew==null?'25 000':nf.format(c.renew))}
+    <label class="ta">Примечание<textarea class="input" rows="3" data-cf="note" data-ci="${ci}">${esc(c.note||'')}</textarea></label>
+    <div class="toolbar" style="margin-top:6px"><button class="btn btn-ghost btn-sm" data-clclose>Готово</button><button class="btn btn-danger btn-sm" data-cldel="${ci}">Удалить клиента</button></div>
+  </div><div class="emp-p">${(()=>{const ops=clientOps(c).sort((a,b)=>a.d<b.d?1:-1);return ops.length?`<div class="pays">${ops.map(o=>`<div class="pay"><span class="num">${dt(o.d)}.${o.d.slice(0,4)}</span><span>${esc(o.cat)}</span><b class="num">${rub(o.amt)}</b><span>${o.act?'<span class="pill g">акт</span>':''}</span></div>`).join('')}</div>`:`<p class="muted" style="font-size:13px;padding:6px 8px">${handlesOf(c).length?'Оплат с этим ником в операциях нет':'Укажите Telegram клиента — здесь появятся его оплаты из операций'}</p>`})()}</div></div></td></tr>`
+}
+function bindClients(){
+  document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('change',()=>{const c=CLIENTS[+el.dataset.ci],k=el.dataset.cf;let v=el.value.trim();
+    if(k==='first'||k==='renew')v=+v.replace(/[^\d]/g,'')||0;
+    c[k]=v;render()}));
+}
 function bindStaff(){
   document.querySelectorAll('[data-sf]').forEach(el=>el.addEventListener('change',()=>{const s=STAFF[+el.dataset.si],f=el.dataset.sf,v=el.value.trim();
     if(f==='n'&&v&&v!==s.n){OPS.forEach(o=>{if(o.emp===s.n)o.emp=v})}
@@ -699,14 +770,16 @@ function bindStaff(){
 V.clients=()=>{
   const cm=FACT_MONTHS;
   const act=CLIENTS.filter(c=>c.status==='Активен'),gone=CLIENTS.filter(c=>c.status!=='Активен');
-  const tot=sum(CLIENTS,c=>sum(Object.values(c.pays)));
+  const PAYS=CLIENTS.map(clientPays);
+  const tot=sum(PAYS,p=>sum(Object.values(p)));
   const life=c=>{const end=c.left||NOW;return Math.max(1,(new Date(end)-new Date(c.start))/864e5/30.4)};
   const byDir=DIRS.map(d=>({d,v:sum(OPS.filter(o=>o.cat===d&&o.kind==='rev'),o=>o.amt),n:new Set(OPS.filter(o=>o.cat===d&&o.kind==='rev').map(o=>o.client)).size})).filter(x=>x.v);
   return `
   <section class="panel"><div class="panel-b tw" style="padding-top:12px"><table data-tk="clients">
     <thead><tr><th>Клиент</th><th>Старт</th><th>Статус</th><th>След. оплата</th>${cm.map(m=>`<th class="n">${MN[m]}</th>`).join('')}<th class="n">Всего</th></tr></thead><tbody>
-    ${CLIENTS.map((c,ci)=>`<tr><td><b style="color:var(--ink)">${c.name}</b></td><td class="num">${dt(c.start)}</td><td>${c.status==='Активен'?'<span class="st on">Активен</span>':`<span class="st off">Ушёл ${dt(c.left)}<i class="info" data-tipcell="${esc(c.reason)} · ${life(c).toFixed(1).replace('.',',')} мес с нами" tabindex="0" aria-label="Причина ухода">i</i></span>`}</td><td>${(()=>{const n=(c.status==='Активен'||c.next)?nextPay(c):null,soon=n&&(new Date(n)-new Date(NOW))/864e5<=7;return `<button type="button" class="cal nx${n?(soon?' soon':''):' empty'}" data-cal="cl" data-ci="${ci}" title="Изменить дату"><span>${n?dt(n):'—'}</span></button>`})()}</td>${cm.map(m=>cell(c.pays[m]||0)).join('')}<td class="n"><b>${rub(sum(Object.values(c.pays)))}</b></td></tr>`).join('')}
-    <tr class="tot"><td colspan="4">Итого</td>${cm.map(m=>cell(sum(CLIENTS,c=>c.pays[m]||0))).join('')}${cell(tot)}</tr>
+    ${CLIENTS.map((c,ci)=>`<tr class="clk${openCl===ci?' sel':''}" data-cl="${ci}"><td><b style="color:var(--ink)">${esc(c.name)}</b>${c.note?`<i class="info" data-tipcell="${esc(c.note)}" tabindex="0" aria-label="Примечание">i</i>`:''}</td><td class="num">${dt(c.start)}</td><td>${c.status==='Активен'?'<span class="st on">Активен</span>':`<span class="st off">Ушёл ${dt(c.left)}<i class="info" data-tipcell="${esc(c.reason)} · ${life(c).toFixed(1).replace('.',',')} мес с нами" tabindex="0" aria-label="Причина ухода">i</i></span>`}</td><td>${(()=>{const n=nextPay(c),soon=n&&(new Date(n)-new Date(NOW))/864e5<=7;return `<button type="button" class="cal nx${n?(soon?' soon':''):' empty'}" data-cal="cl" data-ci="${ci}" title="Изменить дату"><span>${n?dt(n):'—'}</span></button>`})()}</td>${cm.map(m=>cell(PAYS[ci][m]||0)).join('')}<td class="n"><b>${rub(sum(Object.values(PAYS[ci])))}</b></td></tr>${openCl===ci?clCard(c,ci,cm.length+5):''}`).join('')}
+    <tr class="newrow" data-clnew title="Добавить клиента"><td colspan="${cm.length+5}"><span>+</span></td></tr>
+    <tr class="tot"><td colspan="4">Итого</td>${cm.map(m=>cell(sum(PAYS,p=>p[m]||0))).join('')}${cell(tot)}</tr>
   </tbody></table></div></section>
 `
 };
@@ -771,8 +844,8 @@ function editRow(o,cats){
     <td><input class="input" id="e-n" value="${esc(o.n)}" style="width:100%;min-width:220px"></td>
     <td><select class="select" id="e-c">${cs.map(c=>`<option${c===o.cat?' selected':''}>${esc(c)}</option>`).join('')}</select></td>
     <td><select class="select" id="e-a"><option value="">не указан</option>${ACCS.map(a=>`<option${a.id===o.acc?' selected':''}>${a.id}</option>`).join('')}</select></td>
-    <td class="n"><input class="input" type="text" inputmode="numeric" id="e-v" value="${o.amt}" style="width:130px;text-align:right" title="Минус — расход, плюс — приход"></td></tr>
-    <tr class="edit"><td colspan="5"><div class="toolbar" style="justify-content:flex-end">
+    <td class="n"><input class="input" type="text" inputmode="numeric" id="e-v" value="${o.amt}" style="width:130px;text-align:right" title="Минус — расход, плюс — приход"></td><td></td></tr>
+    <tr class="edit"><td colspan="6"><div class="toolbar" style="justify-content:flex-end">
       <button class="btn btn-danger btn-sm" data-ed="del">Удалить</button><button class="btn btn-ghost btn-sm" data-ed="cancel">Отмена</button><button class="btn btn-primary btn-sm" data-ed="save">Сохранить</button></div></td></tr>`
 }
 function saveEdit(){
@@ -780,6 +853,7 @@ function saveEdit(){
   const v=+String($('e-v').value).replace(/[^\d.-]/g,'')||0, cat=$('e-c').value;
   const o=classify({id:editId,d:$('e-d').value,n:$('e-n').value.trim(),acc:$('e-a').value,out:v<0?-v:0,inc:v>0?v:0});
   if(cat&&cat!==o.cat){const ref=OPS.find(x=>x.cat===cat&&x.id!==editId);o.cat=cat;const k=kindForCat(cat);if(k)o.kind=k;else if(ref){o.kind=ref.kind;o.sal=ref.sal}}
+  if(OPS[i].act&&o.kind==='rev')o.act=OPS[i].act;
   OPS[i]=o;editId=null;recalc();render()
 }
 
@@ -887,7 +961,7 @@ function render(){
   document.getElementById('tabs').innerHTML=TABS.map(([id,t])=>`<button class="tab${tab===id?' on':''}" data-tab="${id}">${t}</button>`).join('');
   document.getElementById('app').innerHTML=V[tab]();
   if(document.getElementById('be-f')){beCalc();['be-f','be-p','be-c'].forEach(id=>document.getElementById(id).addEventListener('input',beCalc))}
-  enhanceTables();bind();if(tab==='staff')bindStaff();enhanceSelects();markCur();persist();
+  enhanceTables();bind();if(tab==='staff')bindStaff();if(tab==='clients')bindClients();enhanceSelects();markCur();persist();
   document.querySelectorAll('tr.edit input,tr.edit select').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveEdit()}if(e.key==='Escape'){editId=null;render()}}))
 }
 function bind(){
@@ -898,7 +972,7 @@ function bind(){
     $('op-v').addEventListener('input',()=>{if($('op-v').value)closeDD()});$('op-v').addEventListener('blur',()=>setTimeout(()=>{const p=document.querySelector('.amtp');if(p&&!p.matches(':hover'))p.remove()},150))}
   if($('addOp'))$('addOp').addEventListener('submit',e=>{e.preventDefault();const v=+String($('op-v').value).replace(/[^\d.]/g,''),inc=$('op-t').value==='in';
     const o=classify({id:nextId(),d:$('op-d').value,n:$('op-n').value.trim(),acc:$('op-a').value,out:inc?0:v,inc:inc?v:0});if($('op-c').value){o.cat=$('op-c').value;const k=kindForCat(o.cat);if(k)o.kind=k}OPS.push(o);recalc();render()});
-  ['f-q','f-k','f-a','f-m'].forEach(id=>{if($(id))$(id).addEventListener(id==='f-q'?'input':'change',()=>{opsFilter={q:$('f-q').value,kind:$('f-k').value,acc:$('f-a').value,m:$('f-m').value,cat:opsFilter.cat};const pos=$('f-q').selectionStart;render();if(id==='f-q'){$('f-q').focus();$('f-q').setSelectionRange(pos,pos)}})});
+  ['f-q','f-k','f-a','f-m'].forEach(id=>{if($(id))$(id).addEventListener(id==='f-q'?'input':'change',()=>{opsFilter={q:$('f-q').value,kind:$('f-k').value,acc:$('f-a').value,m:$('f-m').value,cat:opsFilter.cat,am:opsFilter.am};const pos=$('f-q').selectionStart;render();if(id==='f-q'){$('f-q').focus();$('f-q').setSelectionRange(pos,pos)}})});
   document.querySelectorAll('input.bal').forEach(el=>{
     const save=()=>{const v=el.value.replace(/[^\d-]/g,'');if(v==='')return;const acc=el.dataset.acc;
       SNAPS=SNAPS.filter(s=>!(s.acc===acc&&s.d===NOW));SNAPS.push({acc,d:NOW,v:+v});render()};
@@ -915,6 +989,9 @@ document.addEventListener('click',e=>{
   const cb=e.target.closest('[data-cal]');if(cb){const was=cb.classList.contains('on');closeDD();if(!was){
     if(cb.dataset.cal==='op')openCal(cb,opDate,v=>{opDate=v;document.getElementById('op-d').value=v});
     else if(cb.dataset.cal==='emp'){const s=STAFF[+cb.dataset.si];openCal(cb,s.next||NOW,v=>{s.next=v;s.noNext=false;render()},()=>{s.next=null;s.noNext=true;render()})}
+    else if(cb.dataset.cal==='act'){const o=OPS.find(x=>x.id===+cb.dataset.oid);openCal(cb,o.act||o.d,v=>{o.act=v;recalc();render()},o.act?()=>{delete o.act;recalc();render()}:null)}
+    else if(cb.dataset.cal==='clstart'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,c.start||NOW,v=>{c.start=v;c.startSet=true;delete c.next;render()})}
+    else if(cb.dataset.cal==='clleft'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,c.left||NOW,v=>{c.left=v;render()})}
     else if(cb.dataset.cal==='cl'){const c=CLIENTS[+cb.dataset.ci];openCal(cb,nextPay(c)||NOW,v=>{c.next=v;c.noNext=false;render()},()=>{c.next=null;c.noNext=true;render()})}
     else openCal(cb,payDate,v=>{payDate=v})}return}
   if(!e.target.closest('.ddm,.dd-btn,#op-v'))closeDD();
@@ -928,9 +1005,15 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-empclose]')){openEmp=null;render();return}
   if(e.target.closest('[data-empnew]')){STAFF.push({n:'Новый сотрудник',role:'',rate:'',line:'Авито',pay:'Альфа',isNew:true});openEmp=STAFF.length-1;render();const i=document.querySelector('[data-sf="n"]');if(i){i.focus();i.select()}return}
   const er=e.target.closest('tr[data-emp]');if(er){const i=+er.dataset.emp;openEmp=openEmp===i?null:i;payDate=NOW;render();return}
+  const cst=e.target.closest('[data-cst]');if(cst){const c=CLIENTS[+cst.dataset.ci];c.status=cst.dataset.cst;c.manualStatus=true;if(c.status!=='Активен'&&!c.left)c.left=NOW;if(c.status==='Активен'){c.left='';c.reason=''}render();return}
+  const cld=e.target.closest('[data-cldel]');if(cld){CLIENTS.splice(+cld.dataset.cldel,1);openCl=null;render();return}
+  if(e.target.closest('[data-clclose]')){openCl=null;render();return}
+  if(e.target.closest('[data-clnew]')){CLIENTS.push({name:'Новый клиент',tg:'',start:NOW,status:'Активен',left:'',reason:'',note:'',first:50000,renew:25000,pays:{}});openCl=CLIENTS.length-1;render();const i=document.querySelector('[data-cf="name"]');if(i){i.focus();i.select()}return}
+  const clr=e.target.closest('tr[data-cl]');if(clr&&!e.target.closest('[data-cal],.info')){const i=+clr.dataset.cl;openCl=openCl===i?null:i;render();return}
   if(e.target.closest('[data-addmonth]')){addMonth();return}
-  if(e.target.closest('[data-clearcat]')){opsFilter.cat='';render();return}
-  const fe=e.target.closest('.fe');if(fe){opsFilter={q:'',kind:'',acc:'',m:fe.dataset.fm,cat:fe.dataset.fc};tab='ops';render();window.scrollTo(0,0);return}
+  if(e.target.closest('[data-clearcat]')){opsFilter.cat='';opsFilter.am='';render();return}
+  if(e.target.closest('[data-actall]')){const l=window._noActList||[];l.forEach(o=>{o.act=o.d});recalc();render();return}
+  const fe=e.target.closest('.fe');if(fe){opsFilter=fe.dataset.fact?{q:'',kind:'',acc:'',m:'',am:fe.dataset.fm,cat:fe.dataset.fc}:{q:'',kind:'',acc:'',m:fe.dataset.fm,cat:fe.dataset.fc};tab='ops';render();window.scrollTo(0,0);return}
   const pe=e.target.closest('.pe');if(pe){const num=v=>Math.abs(+String(v).replace(/[^\d-]/g,'')||0),cur=pe.textContent==='—'?'':String(num(pe.textContent));
     if(pe.dataset.pm){const {pm:m,pg:g,pk:k}=pe.dataset;inlineInput(pe,cur,v=>{PLAN[m]=PLAN[m]||{rev:{},cogs:{},opex:{}};PLAN[m][g]=PLAN[m][g]||{};PLAN[m][g][k]=num(v);PP[m]=planPnl(m);render()})}
     else{const {cpm:m,cs:s,ck:k}=pe.dataset;inlineInput(pe,cur,v=>{CFP[m]=CFP[m]||{in:{},out:{}};CFP[m][s][k]=num(v);render()})}
@@ -1015,7 +1098,7 @@ async function load(){
       return showGate(r.data.error==='forbidden'?'Этот раздел только для руководителя':'')}
     if(!r.ok)return showGate('Сервер не ответил, попробуйте ещё раз');
     if(!r.data.data)return showImport();
-    applyData(r.data.data);loaded=true;document.getElementById('exportBtn').hidden=false;
+    applyData(r.data.data);const synced=syncClients(r.data.projects);loaded=true;if(synced)lastSaved='';document.getElementById('exportBtn').hidden=false;
     const t=lsGet('fin.tab');if(t&&TABS.some(x=>x[0]===t))tab=t;
     render()
   }catch(e){showGate('Нет связи с сервером')}
