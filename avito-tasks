@@ -4404,7 +4404,14 @@ async function loadAnalytics() {
     if (key === anKey()) { AN.rows = res.data.rows; AN.loading = false; renderAnalytics(); }
   } catch (e) { AN.loading = false; if (key === anKey()) { $('anBody').innerHTML = '<div class="empty">Не получилось загрузить цифры — нет связи. Попробую снова, когда откроете вкладку.</div>'; } }
 }
-function anProjects() { return S.projects.filter((p) => AN.showInactive || !p.inactive).sort((a, b) => (a.inactive - b.inactive) || a.name.localeCompare(b.name, 'ru')); }
+// «Аналитика» lists clients by surname: «Алексей Шевчук» goes under «Ш». A name without one («Агешина»,
+// «Английский язык» — second word in lower case) sorts as written.
+function anSurnameKey(name) {
+  const w = String(name || '').trim().split(/\s+/);
+  return w.length > 1 && /^[А-ЯЁA-Z]/.test(w[w.length - 1]) ? `${w[w.length - 1]} ${w.slice(0, -1).join(' ')}` : w.join(' ');
+}
+const anBySurname = (a, b) => anSurnameKey(a.name).localeCompare(anSurnameKey(b.name), 'ru');
+function anProjects() { return S.projects.filter((p) => AN.showInactive || !p.inactive).sort((a, b) => (a.inactive - b.inactive) || anBySurname(a, b)); }
 function anRow(pid) { return (AN.rows || []).find((r) => r.projectId === pid) || { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 }; }
 function anTotals() {
   const ids = new Set(anProjects().map((p) => p.id));
@@ -4485,7 +4492,7 @@ async function openAnAvito(date, force) {
   const body = () => {
     const pr = AN.avRows;
     const tot = { views: 0, contacts: 0, spend: 0, noSpend: 0 };
-    const rows = S.projects.filter((p) => !p.inactive).sort((a, b) => a.name.localeCompare(b.name, 'ru')).map((p) => {
+    const rows = S.projects.filter((p) => !p.inactive).sort(anBySurname).map((p) => {
       const r = pr && pr.rows.find((x) => x.projectId === p.id);
       if (!pr) return `<tr><td>${esc(p.name)}</td><td colspan="4"><i class="sk"></i></td></tr>`;
       if (!r || r.off) return `<tr><td>${esc(p.name)}</td><td colspan="4" class="nil">${esc(r ? r.off : '—')}</td></tr>`;
@@ -4520,7 +4527,7 @@ async function openAnKeys(data) {
   const accOpts = (sel) => `<option value="">— не подключен —</option>${(AN.cab ? AN.cab.accounts : []).map((a) => `<option value="${esc(a.id)}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)}${a.userId ? ` (${esc(a.userId)})` : ''}</option>`).join('')}`;
   const results = data && data.results ? `<div class="an-res">${data.results.map((r) => `<div class="${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓' : '✕'} ${esc(r.project || r.name || `строка ${r.line}`)} — ${esc(r.message || '')}</div>`).join('')}</div>` : '';
   const draw = () => anDrawer('Кабинеты Авито', `<textarea class="textarea" id="anKeys" rows="4" placeholder="Алексей Шевчук	client_id	client_secret"></textarea>${results}
-    <div class="an-links">${AN.cab ? AN.cab.projects.map((p) => `<label class="an-link"><span>${esc(p.name)}</span><select class="select an-cab" data-pid="${esc(p.id)}" aria-label="Кабинет: ${esc(p.name)}">${accOpts(p.accountId)}</select></label>`).join('') : '<i class="sk"></i>'}</div>`,
+    <div class="an-links">${AN.cab ? [...AN.cab.projects].sort(anBySurname).map((p) => `<label class="an-link"><span>${esc(p.name)}</span><select class="select an-cab" data-pid="${esc(p.id)}" aria-label="Кабинет: ${esc(p.name)}">${accOpts(p.accountId)}</select></label>`).join('') : '<i class="sk"></i>'}</div>`,
   `<button class="btn btn-ghost" data-an="avito">Назад</button><button class="btn btn-primary" data-an="keys-import">Подключить</button>`);
   if (data) AN.cab = data;
   draw();
