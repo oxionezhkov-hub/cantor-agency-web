@@ -6285,6 +6285,7 @@ async function handleBotApi(request, env, url) {
 //   bot:qrun           -> last time a page visit kicked the AI queue
 //   kb:*               -> «База знаний» update requests — see "Avito Tasks → «База знаний»" below
 //   refl:<wed>:<userId> -> «Рефлексия» for the week starting on that Wednesday — see below
+//   mail:<YYYY-MM>     -> «Рассылки» for that month — see atMailApi
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -6297,7 +6298,7 @@ const AT_ROLES = {
 };
 // Tracker sections («Задачи» is always on). By default they follow the role; the owner can turn
 // any section on or off for a person in Команда → Доступы (user.sections), the owner always has all.
-const AT_SECTIONS = ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'];
+const AT_SECTIONS = ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'];
 const AT_ROLE_SECTIONS = {
   owner: AT_SECTIONS,
   assistant: AT_SECTIONS,
@@ -7164,6 +7165,70 @@ async function reflWeekAverages(kv, people, week) {
 }
 // Everyone's answers for a week — the owner and the assistant always, the team per reflLocked.
 const REFL_LEGACY_ROLES = { manager: 'От менеджера', specialist: 'От специалиста', client: 'От клиента' };
+// ── Avito Tasks → «Рассылки» ──
+// One KV record per month: mail:<YYYY-MM> -> { items: [{ id, date, projectId, budget, contacts, result,
+// comment, by, at, updatedBy, updatedAt }] }. budget/contacts are whole numbers or null (contacts stay
+// null until the outcome is entered); result is 'good' | 'ok' | 'bad' | null.
+//   mail       { month }                 -> { month, items }
+//   mail-save  { item: { id?, from?, … } } -> { month, items, item }  (from — the date it had, to move it)
+//   mail-del   { id, date }               -> { month, items }
+const MAIL_RESULTS = ['good', 'ok', 'bad'];
+async function atMailApi(env, me, action, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const isDay = (v) => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(String(v || ''));
+  const read = async (month) => ((await kv.get(`mail:${month}`, 'json')) || {}).items || [];
+  const write = (month, items) => kv.put(`mail:${month}`, JSON.stringify({ items }));
+  const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+
+  if (action === 'mail') {
+    const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(body.month || '')) ? body.month : botMsk(nowMs).date.slice(0, 7);
+    return { month, items: await read(month) };
+  }
+
+  if (action === 'mail-save') {
+    const it = body.item || {};
+    if (!isDay(it.date)) return { error: 'bad_date', status: 400 };
+    const projectId = atClean(it.projectId, 80);
+    if (!projectId) return { error: 'no_client', status: 400 };
+    const num = (v) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Math.min(1e9, Math.max(0, Math.round(Number(v)))));
+    const month = it.date.slice(0, 7);
+    const iso = new Date(nowMs).toISOString();
+    let items = await read(month);
+    let old = it.id ? items.find((x) => x.id === it.id) : null;
+    // The date moved to another month: take it out of the old month's record.
+    const fromMonth = isDay(it.from) ? it.from.slice(0, 7) : month;
+    if (it.id && !old && fromMonth !== month) {
+      const prev = await read(fromMonth);
+      old = prev.find((x) => x.id === it.id) || null;
+      if (old) await write(fromMonth, prev.filter((x) => x.id !== it.id));
+    }
+    const rec = {
+      ...(old || { id: atClean(it.id, 40) || `ml${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`, by: me.name, at: iso }),
+      date: it.date,
+      projectId,
+      budget: num(it.budget),
+      contacts: num(it.contacts),
+      result: MAIL_RESULTS.includes(it.result) ? it.result : null,
+      comment: String(it.comment || '').trim().slice(0, 2000),
+      updatedBy: me.name,
+      updatedAt: iso,
+    };
+    items = items.filter((x) => x.id !== rec.id).concat(rec).sort(byDate);
+    await write(month, items);
+    return { month, items, item: rec };
+  }
+
+  if (action === 'mail-del') {
+    if (!isDay(body.date)) return { error: 'bad_date', status: 400 };
+    const month = body.date.slice(0, 7);
+    const items = (await read(month)).filter((x) => x.id !== body.id);
+    await write(month, items);
+    return { month, items };
+  }
+
+  return { error: 'not_found', status: 404 };
+}
+
 async function atReflectionResults(env, team, week) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const people = team.users.filter((u) => u.active && REFL_ROLES.has(u.role));
@@ -7855,6 +7920,13 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
       history.clients = history.clients.filter((c) => Object.keys(c.points).length);
     }
     return json({ history });
+  }
+
+  // «Рассылки» — календарь: когда, какому кабинету, на какой бюджет и что вышло.
+  if (action === 'mail' || action.startsWith('mail-')) {
+    if (!sections.includes('mail')) return json({ error: 'forbidden' }, 403);
+    const res = await atMailApi(env, me, action, body, nowMs);
+    return json(res.error ? { error: res.error } : res, res.status || 200);
   }
 
   // «ИИ-помощник» — у всех: свои диалоги, руководитель видит и чужие.
