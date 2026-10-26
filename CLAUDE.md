@@ -44,6 +44,11 @@ Dashboard (projects = the agency's clients):
   from Avito (views, contacts, spend, advance, errors[]).
 - `GET /api/dashboard/avito-pull?date=YYYY-MM-DD` — the «Подтянуть» pull for a day, per client.
 - `GET /api/dashboard/avito-links` — which Avito cabinet belongs to which client.
+- `GET /api/dashboard/chat-log` — Telegram chats the control bot logs (work-chat topics, client
+  chats): `sources` with chatId, threadId, label, projectId. With `?projectId=<id>&from=YYYY-MM-DD&to=YYYY-MM-DD`
+  (or `?chatId=…&threadId=…`) — also `messages` (t, at, source, from, team, text), oldest first; MSK
+  days, last 30 days by default, at most 120. Use it for what was agreed with a teacher: mailings and
+  their budgets, personal targets, recommendations, launch dates.
 
 Avito cabinets (ids from `/api/avito/accounts`, the same as `project.avitoAccountId`):
 - `GET /api/avito/accounts` — cabinets: id, name, userId (secrets never come back).
