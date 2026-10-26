@@ -6286,6 +6286,7 @@ async function handleBotApi(request, env, url) {
 //   kb:*               -> «База знаний» update requests — see "Avito Tasks → «База знаний»" below
 //   refl:<wed>:<userId> -> «Рефлексия» for the week starting on that Wednesday — see below
 //   mail:<YYYY-MM>     -> «Рассылки» for that month — see atMailApi
+//   at:owners          -> who leads which client and its priority — see atLoadOwners
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -6632,14 +6633,39 @@ async function atTouch(kv, ids) {
   return rec.v;
 }
 async function atLoadProjects(kv) {
-  return (await listByPrefix(kv, 'project:')).map((p) => ({
+  const [list, owners] = await Promise.all([listByPrefix(kv, 'project:'), atLoadOwners(kv)]);
+  return list.map((p) => ({
     id: p.id,
     name: p.name,
     inactive: !!p.inactive,
     profileUrl: p.profileUrl || p.avitoProfileUrl || null,
     briefUrl: p.briefUrl || null,
     staffUrl: p.staffUrl || null,
+    ownerId: (owners[p.id] && owners[p.id].userId) || null,
+    priority: (owners[p.id] && owners[p.id].priority) || null,
   })).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+
+// ── Who leads which client: «Клиенты → Настройки» (the owner and the assistant) ──
+//   at:owners -> { <projectId>: { userId, priority: 1 | 2 | 3 } }
+// Until the first save it starts from the split the owner posted in the work chat on 20.10.2026
+// (matched by surname; new clients go to Альбина).
+const AT_OWNERS_SEED = {
+  ekaterina: { 1: ['шевчук', 'армбристер'], 2: ['верхотурова', 'сасс', 'попова'], 3: ['алексеева', 'симагина', 'соболева', 'добрынина'] },
+  albina: { 1: ['кариентиди', 'лютова', 'валиуллова'], 2: ['окунева', 'климович', 'шахин', 'лазарева', 'чакова', 'бусленко'], 3: ['ромашова', 'губкина'] },
+};
+async function atLoadOwners(kv) {
+  const saved = await kv.get('at:owners', 'json');
+  if (saved) return saved;
+  const out = {};
+  for (const p of await listByPrefix(kv, 'project:')) {
+    if (p.inactive) continue;
+    const last = String(p.name || '').trim().split(/\s+/).pop().toLowerCase();
+    for (const [userId, byPrio] of Object.entries(AT_OWNERS_SEED)) {
+      for (const [prio, names] of Object.entries(byPrio)) if (names.includes(last)) out[p.id] = { userId, priority: Number(prio) };
+    }
+  }
+  return out;
 }
 async function atLoadClientSignals(kv) {
   const [chats, pendingList, clients] = await Promise.all([
@@ -7995,6 +8021,23 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (!res.ok) return json(data, res.status);
     const p = data.project;
     return json({ ok: true, project: { id: p.id, name: p.name, inactive: false, profileUrl: null, briefUrl: null, staffUrl: null } });
+  }
+
+  // «Клиенты → Настройки»: кто ведёт клиента и его приоритет. body.owners — { <projectId>: { userId, priority } }.
+  if (action === 'client-owners') {
+    if (!seesClients || !isAdmin) return json({ error: 'forbidden' }, 403);
+    const ids = new Set((await atLoadProjects(kv)).map((p) => p.id));
+    const people = new Set(team.users.filter((u) => u.active).map((u) => u.id));
+    const next = {};
+    for (const [pid, o] of Object.entries((body && body.owners) || {})) {
+      if (!ids.has(pid) || !o) continue;
+      const userId = people.has(o.userId) ? o.userId : null;
+      const priority = [1, 2, 3].includes(Number(o.priority)) ? Number(o.priority) : null;
+      if (userId || priority) next[pid] = { userId, priority };
+    }
+    await kv.put('at:owners', JSON.stringify(next));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, projects: await atLoadProjects(kv) });
   }
 
   // Цифры по клиентам для вкладки «Клиенты»: вчера, текущий месяц, траты за неделю и аванс.

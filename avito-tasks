@@ -578,6 +578,15 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .ml-form{padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto}
 .ml-form .ml-item{margin:0}
 .ml-outcome{display:flex;flex-direction:column;gap:14px}
+.co-modal{width:min(560px,calc(100% - 24px))}
+.co-list{gap:6px}
+.co-sum{font-size:13px;color:var(--muted);margin-bottom:6px}
+.co-row{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-2)}
+.co-row:last-child{border-bottom:0}
+.co-row .nm{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.co-row .select{min-height:36px;padding:6px 10px}
+.co-prio button{width:34px;padding:0}
+@media (max-width:520px){.co-row{grid-template-columns:minmax(0,1fr) auto}.co-row .nm{grid-column:1/-1}}
 .ml-outcome[hidden]{display:none}
 
 .ml-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -1245,6 +1254,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
         <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="cq" type="search" placeholder="Поиск" autocomplete="off"></div>
         <div class="stats c-filt" id="clientStats"></div>
         <button class="btn btn-ghost btn-sm c-refresh" id="clientsRefresh" title="Подтянуть аванс и кошелёк по всем клиентам прямо сейчас"><svg class="ic ic-sm"><use href="#i-refresh"/></svg><span>Обновить с Авито</span></button>
+        <button class="btn btn-ghost btn-sm" id="clientOwners" hidden><svg class="ic ic-sm"><use href="#i-settings"/></svg><span>Настройки</span></button>
         <button class="btn btn-primary btn-sm c-new" id="newClient" hidden><svg class="ic ic-sm"><use href="#i-plus"/></svg><span>Клиент</span></button>
       </div>
       <div class="cards" id="clientCards"></div>
@@ -4900,7 +4910,7 @@ function renderClients() {
       const level = p.inactive ? 'off' : todo.some((t) => t.tone === 'red') ? 'red' : todo.length ? 'amber' : 'green';
       const link = (url, label, icon) => (url ? `<a class="cc-ico" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}</a>` : '');
       return `<div class="ccard lv-${level} ${p.inactive ? 'off' : ''} ${CF.focus === p.id ? 'focus' : ''}" data-client="${esc(p.id)}">
-        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div></div>
+        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${ownerLine(p) ? `<div class="cc-sub">${esc(ownerLine(p))}</div>` : ''}</div>
           ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
         ${clientMetricsHtml(p, m)}
         ${clientAdvanceHtml(p, m)}
@@ -4914,6 +4924,7 @@ function renderClients() {
       </div>`;
     }).join('');
   $('newClient').hidden = !isAdmin();
+  $('clientOwners').hidden = !isAdmin();
   const inactive = S.projects.filter((p) => p.inactive).length;
   $('toggleInactive').hidden = !inactive || filtering;
   $('toggleInactive').textContent = prefs.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
@@ -4964,6 +4975,67 @@ $('members').addEventListener('click', async (e) => {
     toast(`${first(u.name)}: доступ к разделам обновлён`);
   } catch (err) { u.sections = before; renderMembers(); toast('Не сохранилось — нет связи'); }
 });
+
+// ── «Клиенты → Настройки»: кто ведёт клиента и его приоритет (руководитель и ассистент) ──
+const CO_ROLES = ['specialist', 'trainee'];
+function ownerLine(p) {
+  const u = p.ownerId && userById(p.ownerId);
+  return [u ? first(u.name) : '', p.priority ? `${p.priority} приоритет` : ''].filter(Boolean).join(' · ');
+}
+function coPeople(extra) { return S.users.filter((u) => (u.active !== false && CO_ROLES.includes(u.role)) || extra.has(u.id)); }
+function coSummary() {
+  const box = $('coSum');
+  if (!box) return;
+  const cnt = {};
+  let none = 0;
+  document.querySelectorAll('[data-co-pid]').forEach((row) => { const v = row.querySelector('select').value; if (v) cnt[v] = (cnt[v] || 0) + 1; else none += 1; });
+  box.textContent = [...Object.entries(cnt).map(([id, n]) => `${first((userById(id) || { name: '?' }).name)} ${n}`), none ? `без ответственного ${none}` : ''].filter(Boolean).join(' · ');
+}
+$('clientOwners').addEventListener('click', () => {
+  const list = S.projects.filter((p) => !p.inactive).sort(anBySurname);
+  const people = coPeople(new Set(list.map((p) => p.ownerId).filter(Boolean)));
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <div class="ml-modal co-modal" role="dialog" aria-label="Закрепление клиентов">
+      <div class="drawer-head"><h2>Кто ведёт клиентов</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
+      <div class="ml-form co-list" id="coList">
+        <div class="co-sum" id="coSum"></div>
+        ${list.map((p) => `<div class="co-row" data-co-pid="${esc(p.id)}" data-prio="${p.priority || ''}">
+          <span class="nm">${esc(anSurnameKey(p.name))}</span>
+          <select class="select"><option value="">—</option>${people.map((u) => `<option value="${esc(u.id)}" ${u.id === p.ownerId ? 'selected' : ''}>${esc(first(u.name))}</option>`).join('')}</select>
+          <div class="seg co-prio">${[1, 2, 3].map((n) => `<button type="button" data-co-prio="${n}" class="${p.priority === n ? 'on' : ''}" title="${n} приоритет">${n}</button>`).join('')}</div>
+        </div>`).join('')}
+      </div>
+      <div class="drawer-foot"><button class="btn btn-primary" type="button" id="coSave">Сохранить</button></div>
+    </div>`;
+  coSummary();
+});
+$('drawerRoot').addEventListener('click', async (e) => {
+  const pr = e.target.closest('[data-co-prio]');
+  if (pr) {
+    const row = pr.closest('[data-co-pid]');
+    row.dataset.prio = row.dataset.prio === pr.dataset.coPrio ? '' : pr.dataset.coPrio;
+    row.querySelectorAll('[data-co-prio]').forEach((b) => b.classList.toggle('on', b.dataset.coPrio === row.dataset.prio));
+    return;
+  }
+  const btn = e.target.closest('#coSave');
+  if (!btn) return;
+  const owners = {};
+  document.querySelectorAll('[data-co-pid]').forEach((row) => {
+    const userId = row.querySelector('select').value || null;
+    const priority = Number(row.dataset.prio) || null;
+    if (userId || priority) owners[row.dataset.coPid] = { userId, priority };
+  });
+  btn.disabled = true;
+  try {
+    const r = await api('client-owners', { owners });
+    if (!r.ok) throw new Error();
+    S.projects = r.data.projects || S.projects;
+    $('drawerRoot').innerHTML = '';
+    render();
+    toast('Закрепление сохранено');
+  } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
+});
+$('drawerRoot').addEventListener('change', (e) => { if (e.target.closest('[data-co-pid]')) coSummary(); });
 
 // Новый клиент (раньше — «Новый проект» в дашборде).
 $('newClient').addEventListener('click', () => {
@@ -5048,7 +5120,13 @@ function mlTitle(it) {
 function mlRow(it) {
   return `<button class="ml-item" data-ml-item="${esc(it.id)}"><span class="ml-dot ${mlState(it)}"></span><span class="nm">${esc(anSurnameKey((projectById(it.projectId) || { name: '—' }).name))}${it.comment ? `<small>${esc(it.comment)}</small>` : ''}</span><span class="num">${[it.budget != null ? mlMoney(it.budget) : '', it.contacts != null ? `${anNum(it.contacts)} конт.` : ''].filter(Boolean).join(' · ')}</span></button>`;
 }
-function mlDaySorted(d) { return ML.items.filter((it) => it.date === d).sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' })); }
+function mlOwner(it) { const p = projectById(it.projectId); return (p && p.ownerId) || ''; }
+function mlGroups(list) {
+  const g = new Map();
+  list.forEach((it) => { const k = mlOwner(it); if (!g.has(k)) g.set(k, []); g.get(k).push(it); });
+  return [...g.entries()].sort((a, b) => (!a[0]) - (!b[0]) || b[1].length - a[1].length);
+}
+function mlDaySorted(d, owner) { return ML.items.filter((it) => it.date === d && (owner == null || mlOwner(it) === owner)).sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' })); }
 // Окно по центру экрана (на телефоне — снизу): список дня или карточка рассылки.
 function mlModal(title, body, foot) {
   $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
@@ -5058,8 +5136,9 @@ function mlModal(title, body, foot) {
     </div>`;
 }
 function mlDayTitle(d) { const x = mtDay(d); return `${x.day} ${MT_MONTHS[x.month]}, ${x.dow}`; }
-function mlOpenDay(d) {
-  mlModal(mlDayTitle(d), `<div class="ml-form">${mlDaySorted(d).map(mlRow).join('')}</div>`,
+function mlOpenDay(d, owner) {
+  const who = owner == null ? '' : owner ? first((userById(owner) || { name: '' }).name) : 'без ответственного';
+  mlModal(`${mlDayTitle(d)}${who ? ` · ${who}` : ''}`, `<div class="ml-form">${mlDaySorted(d, owner).map(mlRow).join('')}</div>`,
     `<button class="btn btn-primary" type="button" data-ml-new="${d}">${ico('plus', 'ic-sm')}Рассылка</button>`);
 }
 function renderMail() {
@@ -5068,8 +5147,7 @@ function renderMail() {
   $('mlMonth').textContent = `${AN_MONTHS[m - 1]} ${y}`;
   const items = ML.loadedFor === ML.month ? ML.items : [];
   const today = mtToday();
-  const first = `${ML.month}-01`;
-  const lead = (new Date(first + 'T12:00:00Z').getUTCDay() + 6) % 7;
+  const lead = (new Date(`${ML.month}-01T12:00:00Z`).getUTCDay() + 6) % 7;
   const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const total = Math.ceil((lead + days) / 7) * 7;
   const byDay = {};
@@ -5080,9 +5158,9 @@ function renderMail() {
     if (n < 1 || n > days) { cells += '<div class="ml-day out"></div>'; continue; }
     const d = `${ML.month}-${pad(n)}`;
     const list = (byDay[d] || []).slice().sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' }));
-    // Больше трёх рассылок в день — одна плашка «N рассылок», по нажатию — список дня.
+    // Больше трёх рассылок в день — по плашке на специалиста («Альбина 5»), по нажатию — его список.
     const chips = list.length > ML_MAX_CHIPS && !mlNarrow()
-      ? `<button class="ml-chip ml-many ${list.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}"><b>${list.length} ${plural(list.length, 'рассылка', 'рассылки', 'рассылок')}</b></button>`
+      ? mlGroups(list).map(([oid, its]) => `<button class="ml-chip ml-many ${its.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}" data-ml-owner="${esc(oid)}"><b>${esc(oid ? first((userById(oid) || { name: '?' }).name) : 'Без ответственного')}</b><span>${its.length}</span></button>`).join('')
       : list.map((it) => `<button class="ml-chip ${mlState(it)}" data-ml-item="${esc(it.id)}" title="${esc(mlTitle(it))}"><b>${esc(mlSurname(it.projectId))}</b><span>${mlChipNum(it)}</span></button>`).join('');
     cells += `<div class="ml-day ${d === today ? 'today' : ''} ${i % 7 > 4 ? 'wknd' : ''} ${ML.day === d && mlNarrow() ? 'sel' : ''}" data-ml-day="${d}"><span class="d">${n}</span>${chips}</div>`;
   }
@@ -5142,7 +5220,7 @@ $('view-mail').addEventListener('click', (e) => {
   const nw = e.target.closest('[data-ml-new]');
   if (nw) { mlOpen(null, nw.dataset.mlNew || (ML.month === mtToday().slice(0, 7) ? mtToday() : `${ML.month}-01`)); return; }
   const many = e.target.closest('[data-ml-list]');
-  if (many) { mlOpenDay(many.dataset.mlList); return; }
+  if (many) { mlOpenDay(many.dataset.mlList, many.dataset.mlOwner); return; }
   const chip = e.target.closest('[data-ml-item]');
   if (chip && !(mlNarrow() && chip.classList.contains('ml-chip'))) { const it = ML.items.find((x) => x.id === chip.dataset.mlItem); if (it) mlOpen(it); return; }
   const day = e.target.closest('[data-ml-day]');
