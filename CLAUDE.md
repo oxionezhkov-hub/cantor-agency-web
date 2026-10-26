@@ -44,6 +44,8 @@ Dashboard (projects = the agency's clients):
   from Avito (views, contacts, spend, advance, errors[]).
 - `GET /api/dashboard/avito-pull?date=YYYY-MM-DD` — the «Подтянуть» pull for a day, per client.
 - `GET /api/dashboard/avito-links` — which Avito cabinet belongs to which client.
+- `GET /api/dashboard/reflection?week=YYYY-MM-DD` — the weekly «Рефлексия» (week starts on a
+  Wednesday; default — the current one): each employee's score 1–10 and comment per client, plus history.
 - `GET /api/dashboard/chat-log` — Telegram chats the control bot logs (work-chat topics, client
   chats): `sources` with chatId, threadId, label, projectId. With `?projectId=<id>&from=YYYY-MM-DD&to=YYYY-MM-DD`
   (or `?chatId=…&threadId=…`) — also `messages` (t, at, source, from, team, text), oldest first; MSK

@@ -3169,6 +3169,18 @@ async function handleDashboardApi(request, env, url, ctx) {
     return json({ sources: picked, messages });
   }
 
+  // ── Reflection (read-only): the weekly «Рефлексия» — each employee's 1–10 score and comment per client ──
+  // GET /api/dashboard/reflection                    -> { current, results, history } for the current week
+  // GET /api/dashboard/reflection?week=YYYY-MM-DD    -> the same for the week starting on that Wednesday
+  if (pathname === '/api/dashboard/reflection' && request.method === 'GET') {
+    const current = reflWeek(Date.now());
+    const asked = url.searchParams.get('week');
+    const week = /^\d{4}-\d{2}-\d{2}$/.test(asked || '') && asked <= current ? asked : current;
+    const team = await atGetTeam(env);
+    const [results, history] = await Promise.all([atReflectionResults(env, team, week), atReflectionHistory(env)]);
+    return json({ current, results, history });
+  }
+
   // ── Avito cabinets linked to projects (for the "Авито: вчера" popup) ──
   if (pathname === '/api/dashboard/avito-links' && request.method === 'GET') {
     return json(await dashboardAvitoLinks(env, kv));
