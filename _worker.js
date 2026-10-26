@@ -3143,6 +3143,32 @@ async function handleDashboardApi(request, env, url, ctx) {
   }
 
 
+  // ── Chat log (read-only): what the control bot logged in the work-chat topics and client chats ──
+  // GET /api/dashboard/chat-log                         -> { sources: [{ chatId, threadId, label, kind, projectId }] }
+  // GET /api/dashboard/chat-log?projectId=<id>&from=YYYY-MM-DD&to=YYYY-MM-DD
+  //     (or &chatId=<id>&threadId=<id> for one source)  -> { sources, messages: [{ t, at, source, from, team, text, reply }] }
+  // Days are MSK; default — the last 30 days, at most 120 days per request.
+  if (pathname === '/api/dashboard/chat-log' && request.method === 'GET') {
+    const sources = await chatLogSources(kv);
+    const projectId = url.searchParams.get('projectId');
+    const chatId = url.searchParams.get('chatId');
+    const threadId = url.searchParams.get('threadId') || '0';
+    const picked = projectId ? sources.filter((s) => s.projectId === projectId)
+      : chatId ? sources.filter((s) => String(s.chatId) === chatId && String(s.threadId) === threadId) : null;
+    if (!picked) return json({ sources });
+    const day = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? Date.parse(`${s}T00:00:00+03:00`) : NaN);
+    const toMs = Number.isFinite(day(url.searchParams.get('to'))) ? day(url.searchParams.get('to')) + 24 * 3600000 - 1 : Date.now();
+    let fromMs = Number.isFinite(day(url.searchParams.get('from'))) ? day(url.searchParams.get('from')) : toMs - 30 * 24 * 3600000;
+    fromMs = Math.max(fromMs, toMs - 120 * 24 * 3600000);
+    const lists = await Promise.all(picked.map((s) => botReadLogs(kv, s.chatId, s.threadId, fromMs, toMs)));
+    const messages = [];
+    lists.forEach((list, i) => {
+      for (const e of list) messages.push({ t: e.t, at: new Date(e.t).toISOString(), source: picked[i].label, from: e.from, team: e.team, text: e.text, reply: e.reply || null });
+    });
+    messages.sort((a, b) => a.t - b.t);
+    return json({ sources: picked, messages });
+  }
+
   // ── Avito cabinets linked to projects (for the "Авито: вчера" popup) ──
   if (pathname === '/api/dashboard/avito-links' && request.method === 'GET') {
     return json(await dashboardAvitoLinks(env, kv));
@@ -9745,6 +9771,27 @@ async function atChatSources(kv) {
       for (const t of threads) out.push({ chatId: c.id, threadId: t, label: names[t] || (t === '0' ? 'Общий' : `Топик ${t}`) });
     } else {
       out.push({ chatId: c.id, threadId: '0', label: `чат: ${(c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title}` });
+    }
+  }
+  return out;
+}
+// Same places as atChatSources, plus which client each belongs to — for GET /api/dashboard/chat-log.
+async function chatLogSources(kv) {
+  const byId = await botProjectsById(kv);
+  const name = (id) => (id && byId[id] && byId[id].name) || null;
+  const out = [];
+  for (const c of await listByPrefix(kv, 'bot:chat:')) {
+    if (c.isForum) {
+      const keys = (await kv.list({ prefix: `bot:topic:${c.id}:` })).keys;
+      const recs = await Promise.all(keys.map((k) => kv.get(k.name, 'json')));
+      const topics = { 0: null };
+      keys.forEach((k, i) => { topics[k.name.split(':').pop()] = recs[i] || {}; });
+      for (const [t, r] of Object.entries(topics)) {
+        out.push({ chatId: c.id, threadId: t, kind: c.kind, projectId: (r && r.projectId) || null,
+          label: `${c.kind === 'work' ? 'рабочий чат' : c.title}: ${(r && (name(r.projectId) || r.name)) || (t === '0' ? 'Общий' : `Топик ${t}`)}` });
+      }
+    } else {
+      out.push({ chatId: c.id, threadId: '0', kind: c.kind, projectId: c.projectId || null, label: `чат: ${name(c.projectId) || c.title}` });
     }
   }
   return out;
