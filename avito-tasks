@@ -567,14 +567,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .ml-chip.ok,.ml-chip.done{background:var(--blue-bg);border-color:transparent}.ml-chip.ok span,.ml-chip.done span{color:var(--blue);font-weight:700}
 .ml-chip.bad{background:var(--red-bg);border-color:transparent}.ml-chip.bad span{color:var(--red);font-weight:700}
 .ml-chip.sent span{color:var(--green);font-weight:700}
-.ml-chip.miss{background:var(--sunken);border-color:transparent}.ml-chip.miss b{color:var(--muted);text-decoration:line-through}
 .ml-list{margin-top:14px}
 .ml-item{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:6px;text-align:left}
 .ml-item .nm{flex:1;min-width:0;font-weight:600;color:var(--ink)}
 .ml-item .nm small{display:block;font-weight:400;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ml-item .num{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ml-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
-.ml-dot.wait{background:var(--amber)}.ml-dot.sent{background:var(--green);opacity:.5}.ml-dot.miss{background:var(--faint)}.ml-dot.good{background:var(--green)}.ml-dot.ok,.ml-dot.done{background:var(--blue)}.ml-dot.bad{background:var(--red)}
+.ml-dot.wait{background:var(--amber)}.ml-dot.sent{background:var(--green);opacity:.5}.ml-dot.good{background:var(--green)}.ml-dot.ok,.ml-dot.done{background:var(--blue)}.ml-dot.bad{background:var(--red)}
 .ml-modal{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 24px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden;animation:fade .15s}
 @media (max-width:720px){.ml-modal{top:auto;bottom:0;transform:translateX(-50%);border-radius:20px 20px 0 0;width:100%;max-height:92vh}}
 .ml-form{padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto}
@@ -595,8 +594,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .ml-sep{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);border-top:1px solid var(--line-2);padding-top:14px}
 .ml-res{display:flex;width:100%}
 .ml-res button{flex:1}
-.ml-res button.on[data-ml-res="good"],.ml-sent button.on[data-ml-sent="yes"]{color:var(--green)}
-.ml-sent button.on[data-ml-sent="no"]{color:var(--red)}
+.ml-res button.on[data-ml-res="good"],.ml-sent button.on{color:var(--green)}
 .ml-res button.on[data-ml-res="ok"]{color:var(--blue)}
 .ml-res button.on[data-ml-res="bad"]{color:var(--red)}
 .ml-cpl{font-size:12.5px;color:var(--muted);margin-top:6px}
@@ -605,7 +603,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
   .ml-day .d{display:table;padding:1px 4px;margin-bottom:3px}
   .ml-chip{display:inline-block;vertical-align:top;width:8px;height:8px;margin:0 3px 3px 0;padding:0;border-radius:50%;border:0;background:var(--faint)}
   .ml-chip b,.ml-chip span{display:none}
-  .ml-chip.wait{background:var(--amber)}.ml-chip.sent{background:var(--green);opacity:.5}.ml-chip.miss{background:var(--line)}.ml-chip.good{background:var(--green)}.ml-chip.ok,.ml-chip.done{background:var(--blue)}.ml-chip.bad{background:var(--red)}
+  .ml-chip.wait{background:var(--amber)}.ml-chip.sent{background:var(--green);opacity:.5}.ml-chip.good{background:var(--green)}.ml-chip.ok,.ml-chip.done{background:var(--blue)}.ml-chip.bad{background:var(--red)}
 }
 @media (max-width:760px){.mt-grid{grid-template-columns:46px repeat(var(--cols),minmax(92px,1fr))}.mt-item{gap:8px 10px}.mt-item .cl{min-width:0;flex-basis:calc(100% - 70px)}}
 
@@ -5104,19 +5102,20 @@ function mlSurname(pid) {
   const w = p.name.trim().split(/\s+/);
   return w.length > 1 && /^[А-ЯЁA-Z]/.test(w[w.length - 1]) ? w[w.length - 1] : w[0];
 }
-// Состояние рассылки: результат → сделана с контактами → сделана без итога → не сделана → день прошёл, а
-// отметки нет → запланирована.
+// Статус рассылки: запланирована → «Запущено» → «Получены результаты» (контакты и результат).
+const mlStatus = (it) => (it.contacts != null || it.result ? 'results' : it.status || null);
+// Состояние для цвета: результат → результаты без оценки → запущена → день прошёл без статуса → запланирована.
 function mlState(it) {
   if (it.result) return it.result;
-  if (it.sent === false) return 'miss';
-  if (it.contacts != null) return 'done';
-  if (it.sent) return 'sent';
+  const st = mlStatus(it);
+  if (st === 'results') return 'done';
+  if (st === 'launched') return 'sent';
   return it.date < mtToday() ? 'wait' : 'plan';
 }
-// Кружок на вкладке: прошедшие рассылки, где не отметили «сделали» или не внесли итог.
+// Кружок на вкладке: прошедшие рассылки без статуса или без результатов.
 function mlWaitCount() { return ML.loadedFor ? ML.items.filter((it) => ['wait', 'sent'].includes(mlState(it)) && it.date < mtToday()).length : 0; }
 const mlMoney = (v) => `${anNum(v)} ₽`;
-function mlChipNum(it) { return it.contacts != null ? anNum(it.contacts) : it.sent ? '✓' : it.budget != null ? anNum(it.budget) : ''; }
+function mlChipNum(it) { return it.contacts != null ? anNum(it.contacts) : mlStatus(it) === 'launched' ? '✓' : it.budget != null ? anNum(it.budget) : ''; }
 function mlTitle(it) {
   const p = projectById(it.projectId);
   const parts = [p ? p.name : ''];
@@ -5188,7 +5187,7 @@ function mlOpen(it, date) {
   const p = it && projectById(it.projectId);
   ML.delArm = false;
   mlModal(it ? (p ? p.name : 'Рассылка') : 'Новая рассылка', `
-      <form class="ml-form" id="mlForm" data-id="${esc(it ? it.id : '')}" data-from="${esc(it ? it.date : '')}" data-res="${esc(d.result || '')}" data-sent="${d.sent === false ? 'no' : d.sent || d.contacts != null || d.result ? 'yes' : ''}">
+      <form class="ml-form" id="mlForm" data-id="${esc(it ? it.id : '')}" data-from="${esc(it ? it.date : '')}" data-res="${esc(d.result || '')}" data-sent="${mlStatus(d) || ''}">
         <div><label class="label" for="mlClient">Клиент</label><select class="select" id="mlClient" required><option value=""></option>${projects.map((x) => `<option value="${esc(x.id)}" ${x.id === d.projectId ? 'selected' : ''}>${esc(anSurnameKey(x.name))}</option>`).join('')}</select></div>
         <div class="row2">
           <div><label class="label" for="mlDate">Дата</label><input class="input" type="date" id="mlDate" value="${esc(d.date)}" required></div>
@@ -5196,7 +5195,7 @@ function mlOpen(it, date) {
         </div>
         <div class="ml-outcome" id="mlOutcome">
           <div class="ml-sep">Итог</div>
-          <div><span class="label">Статус</span><div class="seg ml-res ml-sent">${[['yes', 'Сделали'], ['no', 'Не сделали']].map(([k, l]) => `<button type="button" data-ml-sent="${k}" class="${(k === 'yes' ? d.sent === true || d.contacts != null || !!d.result : d.sent === false) ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+          <div><span class="label">Статус</span><div class="seg ml-res ml-sent">${[['launched', 'Запущено'], ['results', 'Получены результаты']].map(([k, l]) => `<button type="button" data-ml-sent="${k}" class="${mlStatus(d) === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
           <div class="ml-outcome" id="mlDone">
           <div><label class="label" for="mlContacts">Контакты</label><input class="input" type="number" inputmode="numeric" min="0" id="mlContacts" value="${d.contacts != null ? d.contacts : ''}"><div class="ml-cpl" id="mlCpl"></div></div>
           <div><span class="label">Результат</span><div class="seg ml-res">${ML_RES.map(([k, l]) => `<button type="button" data-ml-res="${k}" class="${d.result === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
@@ -5210,12 +5209,12 @@ function mlOpen(it, date) {
   if (!it) setTimeout(() => $('mlClient') && $('mlClient').focus(), 30);
 }
 // Итог рассылки (контакты, результат, комментарий) — только с дня рассылки, не заранее.
-// Контакты и результат — когда отметили «Сделали».
+// Контакты и результат — когда отметили «Получены результаты».
 function mlOutcome() {
   const box = $('mlOutcome');
   if (!box) return;
   box.hidden = !$('mlDate').value || $('mlDate').value > mtToday();
-  $('mlDone').hidden = $('mlForm').dataset.sent !== 'yes';
+  $('mlDone').hidden = $('mlForm').dataset.sent !== 'results';
 }
 function mlCpl() {
   const el = $('mlCpl');
@@ -5289,9 +5288,9 @@ $('drawerRoot').addEventListener('submit', async (e) => {
     result: form.dataset.res || null,
     comment: $('mlComment').value,
   };
-  item.sent = form.dataset.sent === 'yes' ? true : form.dataset.sent === 'no' ? false : null;
+  item.status = form.dataset.sent || null;
   if ($('mlDone').hidden) Object.assign(item, { contacts: null, result: null });
-  if ($('mlOutcome').hidden) Object.assign(item, { sent: null, comment: '' });
+  if ($('mlOutcome').hidden) Object.assign(item, { status: null, comment: '' });
   if (!item.projectId || !item.date) return;
   const btn = $('drawerRoot').querySelector('[form="mlForm"]');
   btn.disabled = true;

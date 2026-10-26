@@ -7192,14 +7192,15 @@ async function reflWeekAverages(kv, people, week) {
 // Everyone's answers for a week — the owner and the assistant always, the team per reflLocked.
 const REFL_LEGACY_ROLES = { manager: 'От менеджера', specialist: 'От специалиста', client: 'От клиента' };
 // ── Avito Tasks → «Рассылки» ──
-// One KV record per month: mail:<YYYY-MM> -> { items: [{ id, date, projectId, budget, sent, contacts, result,
+// One KV record per month: mail:<YYYY-MM> -> { items: [{ id, date, projectId, budget, status, contacts, result,
 // comment, by, at, updatedBy, updatedAt }] }. budget/contacts are whole numbers or null (contacts stay
-// null until the outcome is entered); sent — true (done) / false (not done) / null (not marked yet);
-// result is 'good' | 'ok' | 'bad' | null. Contacts or a result mean it was done.
+// null until the outcome is entered); status — 'launched' (запущено) / 'results' (получены результаты) /
+// null (запланирована); result is 'good' | 'ok' | 'bad' | null. Contacts or a result mean 'results'.
 //   mail       { month }                 -> { month, items }
 //   mail-save  { item: { id?, from?, … } } -> { month, items, item }  (from — the date it had, to move it)
 //   mail-del   { id, date }               -> { month, items }
 const MAIL_RESULTS = ['good', 'ok', 'bad'];
+const MAIL_STATUSES = ['launched', 'results'];
 async function atMailApi(env, me, action, body, nowMs) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const isDay = (v) => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(String(v || ''));
@@ -7236,13 +7237,13 @@ async function atMailApi(env, me, action, body, nowMs) {
       budget: num(it.budget),
       contacts: num(it.contacts),
       result: MAIL_RESULTS.includes(it.result) ? it.result : null,
-      sent: it.sent === true || it.sent === false ? it.sent : null,
+      status: MAIL_STATUSES.includes(it.status) ? it.status : null,
       comment: String(it.comment || '').trim().slice(0, 2000),
       updatedBy: me.name,
       updatedAt: iso,
     };
-    if (rec.contacts != null || rec.result) rec.sent = true;
-    if (rec.sent === false) Object.assign(rec, { contacts: null, result: null });
+    if (rec.contacts != null || rec.result) rec.status = 'results';
+    delete rec.sent;
     items = items.filter((x) => x.id !== rec.id).concat(rec).sort(byDate);
     await write(month, items);
     return { month, items, item: rec };
