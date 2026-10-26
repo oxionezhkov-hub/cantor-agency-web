@@ -541,6 +541,70 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .mt-wrap{max-width:760px}
 .team-seg{align-self:center}
 @media (max-width:900px){.mt-top{grid-template-columns:1fr}.mt-cal{max-width:420px}}
+
+/* ── Рассылки ── */
+.ml-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:720px){.ml-top{width:100%;justify-content:space-between}}
+.ml-nav{display:flex;align-items:center;gap:2px;font-size:14px;color:var(--ink)}
+.ml-nav b{min-width:116px;text-align:center}
+.ml-nav .icon-btn{width:34px;height:34px}
+.ml-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.ml-cal .w{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--faint);text-align:center;padding:9px 0 7px;border-bottom:1px solid var(--line-2)}
+.ml-day{min-height:104px;padding:6px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);display:flex;flex-direction:column;gap:3px;cursor:pointer;min-width:0;transition:background .12s}
+.ml-day:nth-child(7n){border-right:0}
+.ml-day:hover{background:var(--surface-2)}
+.ml-day.out{background:var(--sunken);opacity:.5;cursor:default}
+.ml-day .d{font-size:12.5px;font-weight:700;color:var(--muted);padding:1px 4px 2px;align-self:flex-start;border-radius:8px}
+.ml-day.today .d{background:var(--accent);color:#fff}
+.ml-day.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+.ml-day.wknd .d{color:var(--faint)}
+.ml-chip{display:flex;align-items:center;gap:6px;width:100%;min-width:0;padding:3px 7px;border-radius:8px;font-size:12px;text-align:left;background:var(--surface-2);border:1px solid var(--line);color:var(--text)}
+.ml-chip b{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.ml-chip span{flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
+.ml-chip:hover{border-color:var(--faint)}
+.ml-chip.wait{background:var(--amber-bg);border-color:transparent}.ml-chip.wait span{color:var(--amber)}
+.ml-chip.good{background:var(--green-bg);border-color:transparent}.ml-chip.good span{color:var(--green);font-weight:700}
+.ml-chip.ok,.ml-chip.done{background:var(--blue-bg);border-color:transparent}.ml-chip.ok span,.ml-chip.done span{color:var(--blue);font-weight:700}
+.ml-chip.bad{background:var(--red-bg);border-color:transparent}.ml-chip.bad span{color:var(--red);font-weight:700}
+.ml-chip.sent span{color:var(--green);font-weight:700}
+.ml-list{margin-top:14px}
+.ml-item{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:6px;text-align:left}
+.ml-item .nm{flex:1;min-width:0;font-weight:600;color:var(--ink)}
+.ml-item .nm small{display:block;font-weight:400;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-item .num{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ml-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
+.ml-dot.wait{background:var(--amber)}.ml-dot.sent{background:var(--green);opacity:.5}.ml-dot.good{background:var(--green)}.ml-dot.ok,.ml-dot.done{background:var(--blue)}.ml-dot.bad{background:var(--red)}
+.ml-modal{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 24px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden;animation:fade .15s}
+@media (max-width:720px){.ml-modal{top:auto;bottom:0;transform:translateX(-50%);border-radius:20px 20px 0 0;width:100%;max-height:92vh}}
+.ml-form{padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.ml-form .ml-item{margin:0}
+.ml-outcome{display:flex;flex-direction:column;gap:14px}
+.co-modal{width:min(560px,calc(100% - 24px))}
+.co-list{gap:6px}
+.co-sum{font-size:13px;color:var(--muted);margin-bottom:6px}
+.co-row{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-2)}
+.co-row:last-child{border-bottom:0}
+.co-row .nm{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.co-row .select{min-height:36px;padding:6px 10px}
+.co-prio button{width:34px;padding:0}
+@media (max-width:520px){.co-row{grid-template-columns:minmax(0,1fr) auto}.co-row .nm{grid-column:1/-1}}
+.ml-outcome[hidden]{display:none}
+
+.ml-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ml-sep{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);border-top:1px solid var(--line-2);padding-top:14px}
+.ml-res{display:flex;width:100%}
+.ml-res button{flex:1}
+.ml-res button.on[data-ml-res="good"],.ml-sent button.on{color:var(--green)}
+.ml-res button.on[data-ml-res="ok"]{color:var(--blue)}
+.ml-res button.on[data-ml-res="bad"]{color:var(--red)}
+.ml-cpl{font-size:12.5px;color:var(--muted);margin-top:6px}
+@media (max-width:720px){
+  .ml-day{min-height:58px;padding:4px;display:block}
+  .ml-day .d{display:table;padding:1px 4px;margin-bottom:3px}
+  .ml-chip{display:inline-block;vertical-align:top;width:8px;height:8px;margin:0 3px 3px 0;padding:0;border-radius:50%;border:0;background:var(--faint)}
+  .ml-chip b,.ml-chip span{display:none}
+  .ml-chip.wait{background:var(--amber)}.ml-chip.sent{background:var(--green);opacity:.5}.ml-chip.good{background:var(--green)}.ml-chip.ok,.ml-chip.done{background:var(--blue)}.ml-chip.bad{background:var(--red)}
+}
 @media (max-width:760px){.mt-grid{grid-template-columns:46px repeat(var(--cols),minmax(92px,1fr))}.mt-item{gap:8px 10px}.mt-item .cl{min-width:0;flex-basis:calc(100% - 70px)}}
 
 /* team */
@@ -1191,6 +1255,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
         <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="cq" type="search" placeholder="Поиск" autocomplete="off"></div>
         <div class="stats c-filt" id="clientStats"></div>
         <button class="btn btn-ghost btn-sm c-refresh" id="clientsRefresh" title="Подтянуть аванс и кошелёк по всем клиентам прямо сейчас"><svg class="ic ic-sm"><use href="#i-refresh"/></svg><span>Обновить с Авито</span></button>
+        <button class="btn btn-ghost btn-sm" id="clientOwners" hidden><svg class="ic ic-sm"><use href="#i-settings"/></svg><span>Настройки</span></button>
         <button class="btn btn-primary btn-sm c-new" id="newClient" hidden><svg class="ic ic-sm"><use href="#i-plus"/></svg><span>Клиент</span></button>
       </div>
       <div class="cards" id="clientCards"></div>
@@ -1259,6 +1324,20 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
         <span class="mt-save" id="mtSave"></span>
       </div>
       <div id="mtBody"><div class="empty">Загружаю…</div></div>
+    </section>
+
+    <!-- Рассылки -->
+    <section id="view-mail" hidden>
+      <div class="hello">
+        <div>
+          <h1>Рассылки</h1>
+        </div>
+        <div class="ml-top">
+          <div class="ml-nav"><button class="icon-btn" data-ml-step="-1" aria-label="Раньше"><svg class="ic ic-sm rot-l"><use href="#i-chev"/></svg></button><b id="mlMonth"></b><button class="icon-btn" data-ml-step="1" aria-label="Позже"><svg class="ic ic-sm rot-r"><use href="#i-chev"/></svg></button></div>
+          <button class="btn btn-primary btn-sm" data-ml-new><svg class="ic ic-sm"><use href="#i-plus"/></svg>Рассылка</button>
+        </div>
+      </div>
+      <div id="mlBody"></div>
     </section>
 
     <!-- База знаний (руководитель и ассистент) -->
@@ -1557,7 +1636,7 @@ const isOwner = () => S.me && S.me.role === 'owner';
 const isAdmin = () => S.me && (S.me.role === 'owner' || S.me.role === 'assistant');
 // Разделы трекера: какие видит человек, решает сервер (по роли или как настроил руководитель).
 const SEC_BY_ROLE = {
-  owner: ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'], assistant: ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'],
+  owner: ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'], assistant: ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'],
   manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'], specialist: ['tasks', 'meet', 'reflection'], trainee: ['tasks', 'meet', 'reflection'],
 };
 const hasSec = (k) => !!S.me && (S.me.sections || SEC_BY_ROLE[S.me.role] || ['tasks']).includes(k);
@@ -1849,6 +1928,7 @@ async function sync(initial) {
     renderBanners();
     if (S.view === 'team' && S.teamTab !== 'access' && !S.offline) loadActivity();
     if (!S.offline && (S.view === 'meet' || Date.now() - MT.loadedAt > 5 * 60000)) loadMeet(S.view === 'meet');
+    if (!S.offline && S.view === 'mail' && !$('mlForm')) loadMail();
   }
 }
 
@@ -1901,7 +1981,7 @@ function applySync(d, fromCache) {
 function isEditing() {
   const a = document.activeElement;
   if (DD.open) return true; // открыто выпадающее меню — не перерисовываем под ним
-  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-analytics, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet, #view-ai') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  return a && a.closest && a.closest('#view-tasks, #view-clients, #view-analytics, #view-reflection, #view-team, #view-activity, #view-kb, #view-meet, #view-mail, #view-ai') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
 }
 function render() {
   if (isEditing()) { S.pendingRender = true; renderHeader(); return; }
@@ -1912,6 +1992,7 @@ function render() {
   if (S.view === 'analytics') renderAnalytics();
   if (S.view === 'team') { if (S.teamTab === 'access') renderTeamStatic(); else loadActivity(); }
   if (S.view === 'meet') renderMeet();
+  if (S.view === 'mail') renderMail();
   if (S.view === 'kb' && !KB.rendered) renderKb();
   if (S.view === 'ai' && !AI.rendered) renderAi();
   if (S.view === 'reflection') renderReflection();
@@ -1924,6 +2005,7 @@ function views() {
   if (hasSec('clients')) v.push({ id: 'clients', label: 'Клиенты', icon: 'client' });
   if (hasSec('analytics')) v.push({ id: 'analytics', label: 'Аналитика', icon: 'chart' });
   if (hasSec('meet')) v.push({ id: 'meet', label: 'Встречи', icon: 'cal' });
+  if (hasSec('mail')) v.push({ id: 'mail', label: 'Рассылки', icon: 'send' });
   if (hasSec('reflection') && (S.reflection || isAdmin())) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
   if (hasSec('team')) v.push({ id: 'team', label: 'Команда', icon: 'users' });
   if (hasSec('kb')) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
@@ -1942,14 +2024,16 @@ function renderHeader() {
   const left = reflLeft();
   // …у «Встреч» — сколько встреч сегодня.
   const meetToday = mtTodayCount();
-  const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : v.id === 'meet' && meetToday ? meetToday : 0);
+  // …у «Рассылок» — сколько прошедших рассылок ждут итога.
+  const mailWait = mlWaitCount();
+  const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : v.id === 'meet' && meetToday ? meetToday : v.id === 'mail' && mailWait ? mailWait : 0);
   const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
   $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.short || v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`).join('');
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
-  ['tasks', 'ai', 'clients', 'analytics', 'reflection', 'kb', 'meet'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
+  ['tasks', 'ai', 'clients', 'analytics', 'reflection', 'kb', 'meet', 'mail'].forEach((v) => { $('view-' + v).hidden = S.view !== v; });
   // «Команда» — одна вкладка из двух половин: активность и доступы.
   $('view-team').hidden = !(S.view === 'team' && S.teamTab === 'access');
   $('view-activity').hidden = !(S.view === 'team' && S.teamTab !== 'access');
@@ -1969,6 +2053,7 @@ function setView(v) {
   render();
   if (v === 'team' && S.teamTab === 'access') loadTeam();
   if (v === 'meet') loadMeet(true);
+  if (v === 'mail') { renderMail(); loadMail(); }
   if (v === 'analytics') loadAnalytics();
   if (v === 'kb') renderKb();
   if (v === 'ai') renderAi();
@@ -4826,7 +4911,7 @@ function renderClients() {
       const level = p.inactive ? 'off' : todo.some((t) => t.tone === 'red') ? 'red' : todo.length ? 'amber' : 'green';
       const link = (url, label, icon) => (url ? `<a class="cc-ico" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}</a>` : '');
       return `<div class="ccard lv-${level} ${p.inactive ? 'off' : ''} ${CF.focus === p.id ? 'focus' : ''}" data-client="${esc(p.id)}">
-        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div></div>
+        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${ownerLine(p) ? `<div class="cc-sub">${esc(ownerLine(p))}</div>` : ''}</div>
           ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
         ${clientMetricsHtml(p, m)}
         ${clientAdvanceHtml(p, m)}
@@ -4840,6 +4925,7 @@ function renderClients() {
       </div>`;
     }).join('');
   $('newClient').hidden = !isAdmin();
+  $('clientOwners').hidden = !isAdmin();
   const inactive = S.projects.filter((p) => p.inactive).length;
   $('toggleInactive').hidden = !inactive || filtering;
   $('toggleInactive').textContent = prefs.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
@@ -4851,7 +4937,7 @@ function renderClients() {
 }
 
 // ── доступ к разделам: по умолчанию от роли, руководитель может включить или выключить любой раздел человеку ──
-const SEC_ALL = [['tasks', 'Задачи'], ['clients', 'Клиенты'], ['analytics', 'Аналитика'], ['meet', 'Встречи'], ['reflection', 'Рефлексия'], ['team', 'Команда'], ['kb', 'База знаний']];
+const SEC_ALL = [['tasks', 'Задачи'], ['clients', 'Клиенты'], ['analytics', 'Аналитика'], ['meet', 'Встречи'], ['mail', 'Рассылки'], ['reflection', 'Рефлексия'], ['team', 'Команда'], ['kb', 'База знаний']];
 const roleSections = (role) => ((S.team && S.team.roleSections) || SEC_BY_ROLE)[role] || ['tasks'];
 function memberSections(u) { return u.role === 'owner' ? SEC_ALL.map(([k]) => k) : u.sections || roleSections(u.role); }
 function memberSectionsHtml(u, locked) {
@@ -4891,6 +4977,67 @@ $('members').addEventListener('click', async (e) => {
   } catch (err) { u.sections = before; renderMembers(); toast('Не сохранилось — нет связи'); }
 });
 
+// ── «Клиенты → Настройки»: кто ведёт клиента и его приоритет (руководитель и ассистент) ──
+const CO_ROLES = ['specialist', 'trainee'];
+function ownerLine(p) {
+  const u = p.ownerId && userById(p.ownerId);
+  return [u ? first(u.name) : '', p.priority ? `${p.priority} приоритет` : ''].filter(Boolean).join(' · ');
+}
+function coPeople(extra) { return S.users.filter((u) => (u.active !== false && CO_ROLES.includes(u.role)) || extra.has(u.id)); }
+function coSummary() {
+  const box = $('coSum');
+  if (!box) return;
+  const cnt = {};
+  let none = 0;
+  document.querySelectorAll('[data-co-pid]').forEach((row) => { const v = row.querySelector('select').value; if (v) cnt[v] = (cnt[v] || 0) + 1; else none += 1; });
+  box.textContent = [...Object.entries(cnt).map(([id, n]) => `${first((userById(id) || { name: '?' }).name)} ${n}`), none ? `без ответственного ${none}` : ''].filter(Boolean).join(' · ');
+}
+$('clientOwners').addEventListener('click', () => {
+  const list = S.projects.filter((p) => !p.inactive).sort(anBySurname);
+  const people = coPeople(new Set(list.map((p) => p.ownerId).filter(Boolean)));
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <div class="ml-modal co-modal" role="dialog" aria-label="Закрепление клиентов">
+      <div class="drawer-head"><h2>Кто ведёт клиентов</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
+      <div class="ml-form co-list" id="coList">
+        <div class="co-sum" id="coSum"></div>
+        ${list.map((p) => `<div class="co-row" data-co-pid="${esc(p.id)}" data-prio="${p.priority || ''}">
+          <span class="nm">${esc(anSurnameKey(p.name))}</span>
+          <select class="select"><option value="">—</option>${people.map((u) => `<option value="${esc(u.id)}" ${u.id === p.ownerId ? 'selected' : ''}>${esc(first(u.name))}</option>`).join('')}</select>
+          <div class="seg co-prio">${[1, 2, 3].map((n) => `<button type="button" data-co-prio="${n}" class="${p.priority === n ? 'on' : ''}" title="${n} приоритет">${n}</button>`).join('')}</div>
+        </div>`).join('')}
+      </div>
+      <div class="drawer-foot"><button class="btn btn-primary" type="button" id="coSave">Сохранить</button></div>
+    </div>`;
+  coSummary();
+});
+$('drawerRoot').addEventListener('click', async (e) => {
+  const pr = e.target.closest('[data-co-prio]');
+  if (pr) {
+    const row = pr.closest('[data-co-pid]');
+    row.dataset.prio = row.dataset.prio === pr.dataset.coPrio ? '' : pr.dataset.coPrio;
+    row.querySelectorAll('[data-co-prio]').forEach((b) => b.classList.toggle('on', b.dataset.coPrio === row.dataset.prio));
+    return;
+  }
+  const btn = e.target.closest('#coSave');
+  if (!btn) return;
+  const owners = {};
+  document.querySelectorAll('[data-co-pid]').forEach((row) => {
+    const userId = row.querySelector('select').value || null;
+    const priority = Number(row.dataset.prio) || null;
+    if (userId || priority) owners[row.dataset.coPid] = { userId, priority };
+  });
+  btn.disabled = true;
+  try {
+    const r = await api('client-owners', { owners });
+    if (!r.ok) throw new Error();
+    S.projects = r.data.projects || S.projects;
+    $('drawerRoot').innerHTML = '';
+    render();
+    toast('Закрепление сохранено');
+  } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
+});
+$('drawerRoot').addEventListener('change', (e) => { if (e.target.closest('[data-co-pid]')) coSummary(); });
+
 // Новый клиент (раньше — «Новый проект» в дашборде).
 $('newClient').addEventListener('click', () => {
   $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
@@ -4916,6 +5063,243 @@ $('drawerRoot').addEventListener('submit', async (e) => {
     CM.data = null;
     renderClients();
     toast(`Клиент «${name}» добавлен`);
+  } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
+});
+
+// ── «Рассылки»: календарь рассылок по кабинетам ──
+// Клетка — день месяца с его рассылками. Нажали на пустое место дня — новая рассылка на эту дату, на
+// рассылку — её карточка: клиент, дата, бюджет, а после рассылки — контакты, результат и комментарий.
+// Цвет: обычная — запланирована, жёлтая — день прошёл, а итога нет, дальше — по результату.
+// На телефоне рассылки — точки, а список выбранного дня — под календарём.
+const ML = { month: null, items: [], loadedFor: null, loading: false, day: null, delArm: false };
+const ML_RES = [['good', 'Хорошо'], ['ok', 'Средне'], ['bad', 'Плохо']];
+const ML_MAX_CHIPS = 3;
+const mlNarrow = () => window.matchMedia('(max-width:720px)').matches;
+function mlShift(month, n) {
+  let [y, m] = month.split('-').map(Number);
+  m += n;
+  while (m < 1) { m += 12; y -= 1; }
+  while (m > 12) { m -= 12; y += 1; }
+  return `${y}-${pad(m)}`;
+}
+async function loadMail() {
+  if (!ML.month) ML.month = mtToday().slice(0, 7);
+  if (ML.loading) return;
+  const month = ML.month;
+  ML.loading = true;
+  try {
+    const res = await api('mail', { month });
+    if (res.ok && month === ML.month) { ML.items = res.data.items || []; ML.loadedFor = month; }
+  } catch (e) { /* нет связи — остаётся то, что было */ }
+  ML.loading = false;
+  if (month !== ML.month) { loadMail(); return; }
+  if (S.view === 'mail' && !isEditing()) renderMail();
+  renderHeader();
+}
+function mlSurname(pid) {
+  const p = projectById(pid);
+  if (!p) return '—';
+  const w = p.name.trim().split(/\s+/);
+  return w.length > 1 && /^[А-ЯЁA-Z]/.test(w[w.length - 1]) ? w[w.length - 1] : w[0];
+}
+// Статус рассылки: запланирована → «Запущено» → «Получены результаты» (контакты и результат).
+const mlStatus = (it) => (it.contacts != null || it.result ? 'results' : it.status || null);
+// Состояние для цвета: результат → результаты без оценки → запущена → день прошёл без статуса → запланирована.
+function mlState(it) {
+  if (it.result) return it.result;
+  const st = mlStatus(it);
+  if (st === 'results') return 'done';
+  if (st === 'launched') return 'sent';
+  return it.date < mtToday() ? 'wait' : 'plan';
+}
+// Кружок на вкладке: прошедшие рассылки без статуса или без результатов.
+function mlWaitCount() { return ML.loadedFor ? ML.items.filter((it) => ['wait', 'sent'].includes(mlState(it)) && it.date < mtToday()).length : 0; }
+const mlMoney = (v) => `${anNum(v)} ₽`;
+function mlChipNum(it) { return it.contacts != null ? anNum(it.contacts) : mlStatus(it) === 'launched' ? '✓' : it.budget != null ? anNum(it.budget) : ''; }
+function mlTitle(it) {
+  const p = projectById(it.projectId);
+  const parts = [p ? p.name : ''];
+  if (it.budget != null) parts.push(`бюджет ${mlMoney(it.budget)}`);
+  if (it.contacts != null) parts.push(`контактов ${it.contacts}`);
+  if (it.comment) parts.push(it.comment);
+  return parts.filter(Boolean).join(' · ');
+}
+function mlRow(it) {
+  return `<button class="ml-item" data-ml-item="${esc(it.id)}"><span class="ml-dot ${mlState(it)}"></span><span class="nm">${esc(anSurnameKey((projectById(it.projectId) || { name: '—' }).name))}${it.comment ? `<small>${esc(it.comment)}</small>` : ''}</span><span class="num">${[it.budget != null ? mlMoney(it.budget) : '', it.contacts != null ? `${anNum(it.contacts)} конт.` : ''].filter(Boolean).join(' · ')}</span></button>`;
+}
+function mlOwner(it) { const p = projectById(it.projectId); return (p && p.ownerId) || ''; }
+function mlGroups(list) {
+  const g = new Map();
+  list.forEach((it) => { const k = mlOwner(it); if (!g.has(k)) g.set(k, []); g.get(k).push(it); });
+  return [...g.entries()].sort((a, b) => (!a[0]) - (!b[0]) || b[1].length - a[1].length);
+}
+function mlDaySorted(d, owner) { return ML.items.filter((it) => it.date === d && (owner == null || mlOwner(it) === owner)).sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' })); }
+// Окно по центру экрана (на телефоне — снизу): список дня или карточка рассылки.
+function mlModal(title, body, foot) {
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <div class="ml-modal" role="dialog" aria-label="${esc(title)}">
+      <div class="drawer-head"><h2>${esc(title)}</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
+      ${body}${foot ? `<div class="drawer-foot">${foot}</div>` : ''}
+    </div>`;
+}
+function mlDayTitle(d) { const x = mtDay(d); return `${x.day} ${MT_MONTHS[x.month]}, ${x.dow}`; }
+function mlOpenDay(d, owner) {
+  const who = owner == null ? '' : owner ? first((userById(owner) || { name: '' }).name) : 'без ответственного';
+  mlModal(`${mlDayTitle(d)}${who ? ` · ${who}` : ''}`, `<div class="ml-form">${mlDaySorted(d, owner).map(mlRow).join('')}</div>`,
+    `<button class="btn btn-primary" type="button" data-ml-new="${d}">${ico('plus', 'ic-sm')}Рассылка</button>`);
+}
+function renderMail() {
+  if (!ML.month) ML.month = mtToday().slice(0, 7);
+  const [y, m] = ML.month.split('-').map(Number);
+  $('mlMonth').textContent = `${AN_MONTHS[m - 1]} ${y}`;
+  const items = ML.loadedFor === ML.month ? ML.items : [];
+  const today = mtToday();
+  const lead = (new Date(`${ML.month}-01T12:00:00Z`).getUTCDay() + 6) % 7;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const total = Math.ceil((lead + days) / 7) * 7;
+  const byDay = {};
+  items.forEach((it) => { (byDay[it.date] = byDay[it.date] || []).push(it); });
+  let cells = '';
+  for (let i = 0; i < total; i += 1) {
+    const n = i - lead + 1;
+    if (n < 1 || n > days) { cells += '<div class="ml-day out"></div>'; continue; }
+    const d = `${ML.month}-${pad(n)}`;
+    const list = (byDay[d] || []).slice().sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' }));
+    // Больше трёх рассылок в день — по плашке на специалиста («Альбина 5»), по нажатию — его список.
+    const chips = list.length > ML_MAX_CHIPS && !mlNarrow()
+      ? mlGroups(list).map(([oid, its]) => `<button class="ml-chip ml-many ${its.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}" data-ml-owner="${esc(oid)}"><b>${esc(oid ? first((userById(oid) || { name: '?' }).name) : 'Без ответственного')}</b><span>${its.length}</span></button>`).join('')
+      : list.map((it) => `<button class="ml-chip ${mlState(it)}" data-ml-item="${esc(it.id)}" title="${esc(mlTitle(it))}"><b>${esc(mlSurname(it.projectId))}</b><span>${mlChipNum(it)}</span></button>`).join('');
+    cells += `<div class="ml-day ${d === today ? 'today' : ''} ${i % 7 > 4 ? 'wknd' : ''} ${ML.day === d && mlNarrow() ? 'sel' : ''}" data-ml-day="${d}"><span class="d">${n}</span>${chips}</div>`;
+  }
+  let list = '';
+  if (mlNarrow() && ML.day && ML.day.startsWith(ML.month)) {
+    const dayItems = byDay[ML.day] || [];
+    const x = mtDay(ML.day);
+    list = `<div class="ml-list"><div class="mt-dlabel">${x.day} ${MT_MONTHS[x.month]}, ${x.dow}</div>
+      ${dayItems.map(mlRow).join('')}
+      <button class="btn btn-ghost btn-sm" data-ml-new="${ML.day}">${ico('plus', 'ic-sm')}Рассылка</button></div>`;
+  }
+  $('mlBody').innerHTML = `<div class="ml-cal">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}${cells}</div>${list}`;
+}
+function mlOpen(it, date) {
+  const d = it || { date: date || mtToday(), projectId: '', budget: null, contacts: null, result: null, comment: '' };
+  const projects = S.projects.filter((p) => !p.inactive || p.id === d.projectId).sort(anBySurname);
+  const p = it && projectById(it.projectId);
+  ML.delArm = false;
+  mlModal(it ? (p ? p.name : 'Рассылка') : 'Новая рассылка', `
+      <form class="ml-form" id="mlForm" data-id="${esc(it ? it.id : '')}" data-from="${esc(it ? it.date : '')}" data-res="${esc(d.result || '')}" data-sent="${mlStatus(d) || ''}">
+        <div><label class="label" for="mlClient">Клиент</label><select class="select" id="mlClient" required><option value=""></option>${projects.map((x) => `<option value="${esc(x.id)}" ${x.id === d.projectId ? 'selected' : ''}>${esc(anSurnameKey(x.name))}</option>`).join('')}</select></div>
+        <div class="row2">
+          <div><label class="label" for="mlDate">Дата</label><input class="input" type="date" id="mlDate" value="${esc(d.date)}" required></div>
+          <div><label class="label" for="mlBudget">Бюджет, ₽</label><input class="input" type="number" inputmode="numeric" min="0" step="100" id="mlBudget" value="${d.budget != null ? d.budget : ''}"></div>
+        </div>
+        <div class="ml-outcome" id="mlOutcome">
+          <div class="ml-sep">Итог</div>
+          <div><span class="label">Статус</span><div class="seg ml-res ml-sent">${[['launched', 'Запущено'], ['results', 'Получены результаты']].map(([k, l]) => `<button type="button" data-ml-sent="${k}" class="${mlStatus(d) === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+          <div class="ml-outcome" id="mlDone">
+          <div><label class="label" for="mlContacts">Контакты</label><input class="input" type="number" inputmode="numeric" min="0" id="mlContacts" value="${d.contacts != null ? d.contacts : ''}"><div class="ml-cpl" id="mlCpl"></div></div>
+          <div><span class="label">Результат</span><div class="seg ml-res">${ML_RES.map(([k, l]) => `<button type="button" data-ml-res="${k}" class="${d.result === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+          </div>
+          <div><label class="label" for="mlComment">Комментарий</label><textarea class="textarea" id="mlComment" rows="3" maxlength="2000">${esc(d.comment || '')}</textarea></div>
+        </div>
+      </form>`,
+    `${it ? `<button class="btn btn-ghost btn-danger" type="button" data-ml-del>${ico('trash', 'ic-sm')}<span>Удалить</span></button><span style="flex:1"></span>` : ''}<button class="btn btn-primary" type="submit" form="mlForm">Сохранить</button>`);
+  mlOutcome();
+  mlCpl();
+  if (!it) setTimeout(() => $('mlClient') && $('mlClient').focus(), 30);
+}
+// Итог рассылки (контакты, результат, комментарий) — только с дня рассылки, не заранее.
+// Контакты и результат — когда отметили «Получены результаты».
+function mlOutcome() {
+  const box = $('mlOutcome');
+  if (!box) return;
+  box.hidden = !$('mlDate').value || $('mlDate').value > mtToday();
+  $('mlDone').hidden = $('mlForm').dataset.sent !== 'results';
+}
+function mlCpl() {
+  const el = $('mlCpl');
+  if (!el) return;
+  const b = Number($('mlBudget').value), c = Number($('mlContacts').value);
+  el.textContent = b > 0 && c > 0 ? `${mlMoney(b / c)} за контакт` : '';
+}
+function mlApply(data) {
+  if (data.month === ML.month) { ML.items = data.items || []; ML.loadedFor = ML.month; } else loadMail();
+  renderMail();
+  renderHeader();
+}
+$('view-mail').addEventListener('click', (e) => {
+  const step = e.target.closest('[data-ml-step]');
+  if (step) { ML.month = mlShift(ML.month || mtToday().slice(0, 7), +step.dataset.mlStep); ML.day = null; renderMail(); loadMail(); return; }
+  const nw = e.target.closest('[data-ml-new]');
+  if (nw) { mlOpen(null, nw.dataset.mlNew || (ML.month === mtToday().slice(0, 7) ? mtToday() : `${ML.month}-01`)); return; }
+  const many = e.target.closest('[data-ml-list]');
+  if (many) { mlOpenDay(many.dataset.mlList, many.dataset.mlOwner); return; }
+  const chip = e.target.closest('[data-ml-item]');
+  if (chip && !(mlNarrow() && chip.classList.contains('ml-chip'))) { const it = ML.items.find((x) => x.id === chip.dataset.mlItem); if (it) mlOpen(it); return; }
+  const day = e.target.closest('[data-ml-day]');
+  if (!day) return;
+  if (mlNarrow()) { ML.day = day.dataset.mlDay; renderMail(); return; }
+  mlOpen(null, day.dataset.mlDay);
+});
+$('drawerRoot').addEventListener('click', async (e) => {
+  if (!e.target.closest('.ml-modal')) return;
+  const row = e.target.closest('[data-ml-item]');
+  if (row) { const it = ML.items.find((x) => x.id === row.dataset.mlItem); if (it) mlOpen(it); return; }
+  const nw = e.target.closest('[data-ml-new]');
+  if (nw) { mlOpen(null, nw.dataset.mlNew); return; }
+  const form = $('mlForm');
+  if (!form) return;
+  const sent = e.target.closest('[data-ml-sent]');
+  if (sent) {
+    form.dataset.sent = form.dataset.sent === sent.dataset.mlSent ? '' : sent.dataset.mlSent;
+    form.querySelectorAll('[data-ml-sent]').forEach((b) => b.classList.toggle('on', b.dataset.mlSent === form.dataset.sent));
+    mlOutcome();
+    return;
+  }
+  const res = e.target.closest('[data-ml-res]');
+  if (res) {
+    form.dataset.res = form.dataset.res === res.dataset.mlRes ? '' : res.dataset.mlRes;
+    form.querySelectorAll('[data-ml-res]').forEach((b) => b.classList.toggle('on', b.dataset.mlRes === form.dataset.res));
+    return;
+  }
+  const del = e.target.closest('[data-ml-del]');
+  if (!del) return;
+  if (!ML.delArm) { ML.delArm = true; del.querySelector('span').textContent = 'Точно удалить?'; return; }
+  del.disabled = true;
+  try {
+    const r = await api('mail-del', { id: form.dataset.id, date: form.dataset.from });
+    if (!r.ok) throw new Error();
+    $('drawerRoot').innerHTML = '';
+    mlApply(r.data);
+  } catch (err) { del.disabled = false; toast('Не удалилось — нет связи'); }
+});
+$('drawerRoot').addEventListener('input', (e) => { if (e.target.id === 'mlBudget' || e.target.id === 'mlContacts') mlCpl(); if (e.target.id === 'mlDate') mlOutcome(); });
+$('drawerRoot').addEventListener('submit', async (e) => {
+  if (e.target.id !== 'mlForm') return;
+  e.preventDefault();
+  const form = e.target;
+  const item = {
+    id: form.dataset.id || undefined,
+    from: form.dataset.from || undefined,
+    projectId: $('mlClient').value,
+    date: $('mlDate').value,
+    budget: $('mlBudget').value,
+    contacts: $('mlContacts').value,
+    result: form.dataset.res || null,
+    comment: $('mlComment').value,
+  };
+  item.status = form.dataset.sent || null;
+  if ($('mlDone').hidden) Object.assign(item, { contacts: null, result: null });
+  if ($('mlOutcome').hidden) Object.assign(item, { status: null, comment: '' });
+  if (!item.projectId || !item.date) return;
+  const btn = $('drawerRoot').querySelector('[form="mlForm"]');
+  btn.disabled = true;
+  try {
+    const r = await api('mail-save', { item });
+    if (!r.ok) throw new Error();
+    $('drawerRoot').innerHTML = '';
+    if (r.data.month !== ML.month) { ML.month = r.data.month; ML.day = null; }
+    mlApply(r.data);
   } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
 });
 
