@@ -736,9 +736,31 @@ function crmHandle(c,crm,taken){
   const first=free.filter(r=>r.status==='Продажа'&&normName(r.name).length===1&&normName(r.name)[0]===words[0]);
   return first.length===1?'@'+first[0].telegram:null
 }
+// Одно имя с точностью до опечатки: слова совпадают попарно (в любом порядке), расстояние Левенштейна ≤ 2 на всё имя.
+function lev(a,b){const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return d[b.length]}
+function similarName(x,y){const a=normName(x),b=normName(y);if(!a.length||a.length!==b.length)return false;
+  const rest=[...b];let dist=0;
+  for(const w of a){let bi=-1,bd=99;rest.forEach((v,k)=>{const dd=lev(w,v);if(dd<bd){bd=dd;bi=k}});if(bd>Math.min(2,Math.floor(w.length/4)))return false;dist+=bd;rest.splice(bi,1)}
+  return dist<=2}
+function sameClient(a,b){if(a.pid&&b.pid)return a.pid===b.pid;
+  if(a.tg&&b.tg&&a.tg.toLowerCase()!==b.tg.toLowerCase())return false;
+  return similarName(a.name,b.name)}
 function syncClients(projects,crm){
   let changed=false;
-  (projects||[]).forEach(p=>{let c=CLIENTS.find(x=>x.pid===p.id)||CLIENTS.find(x=>!x.pid&&x.name.trim().toLowerCase()===p.name.trim().toLowerCase());
+  // Склеиваем дубли: клиент, заведённый вручную, и тот же проект из трекера с опечаткой в имени.
+  for(let i=CLIENTS.length-1;i>=0;i--){const b=CLIENTS[i];
+    const a=CLIENTS.find((x,j)=>j!==i&&sameClient(x,b));if(!a)continue;
+    const keep=CLIENTS.indexOf(a)<i?a:b,drop=keep===a?b:a;
+    keep.pid=keep.pid||drop.pid;keep.tg=keep.tg||drop.tg;
+    if(drop.note&&drop.note!==keep.note)keep.note=[keep.note,drop.note].filter(Boolean).join('\n');
+    if(drop.start&&(!keep.start||drop.start<keep.start))keep.start=drop.start;
+    keep.pays=Object.assign({},drop.pays||{},keep.pays||{});
+    ['next','first','renew','reason'].forEach(k=>{if(keep[k]==null||keep[k]==='')keep[k]=drop[k]});
+    if(drop.status==='Активен'&&!keep.manualStatus){keep.status='Активен';keep.left=''}
+    CLIENTS.splice(CLIENTS.indexOf(drop),1);changed=true;i=CLIENTS.length}
+  const hidden=new Set(CFG.hiddenPids||[]);
+  (projects||[]).forEach(p=>{if(hidden.has(p.id))return;
+    let c=CLIENTS.find(x=>x.pid===p.id)||CLIENTS.find(x=>!x.pid&&similarName(x.name,p.name));
     if(c){if(!c.pid){c.pid=p.id;changed=true}
       if(p.inactive&&c.status==='Активен'&&!c.manualStatus){c.status='Ушёл';c.left=c.left||NOW;c.reason=c.reason||'Отключён в трекере';changed=true}
       return}
@@ -783,13 +805,16 @@ V.clients=()=>{
   const cm=FACT_MONTHS;
   const act=CLIENTS.filter(c=>c.status==='Активен'),gone=CLIENTS.filter(c=>c.status!=='Активен');
   const PAYS=CLIENTS.map(clientPays);
+  // Активные сверху, внутри — по фамилии (последнее слово имени).
+  const surname=c=>{const w=normName(c.name);return (w[w.length-1]||'')+' '+w.join(' ')};
+  const ORDER=CLIENTS.map((c,i)=>i).sort((i,j)=>(CLIENTS[i].status!=='Активен')-(CLIENTS[j].status!=='Активен')||surname(CLIENTS[i]).localeCompare(surname(CLIENTS[j]),'ru'));
   const tot=sum(PAYS,p=>sum(Object.values(p)));
   const life=c=>{const end=c.left||NOW;return Math.max(1,(new Date(end)-new Date(c.start))/864e5/30.4)};
   const byDir=DIRS.map(d=>({d,v:sum(OPS.filter(o=>o.cat===d&&o.kind==='rev'),o=>o.amt),n:new Set(OPS.filter(o=>o.cat===d&&o.kind==='rev').map(o=>o.client)).size})).filter(x=>x.v);
   return `
   <section class="panel"><div class="panel-b tw" style="padding-top:12px"><table data-tk="clients">
     <thead><tr><th>Клиент</th><th>Старт</th><th>Статус</th><th>След. оплата</th>${cm.map(m=>`<th class="n">${MN[m]}</th>`).join('')}<th class="n">Всего</th></tr></thead><tbody>
-    ${CLIENTS.map((c,ci)=>`<tr class="clk${openCl===ci?' sel':''}" data-cl="${ci}"><td><b style="color:var(--ink)">${esc(c.name)}</b>${c.note?`<i class="info" data-tipcell="${esc(c.note)}" tabindex="0" aria-label="Примечание">i</i>`:''}</td><td class="num">${dt(c.start)}</td><td>${c.status==='Активен'?'<span class="st on">Активен</span>':`<span class="st off">Ушёл ${dt(c.left)}<i class="info" data-tipcell="${esc(c.reason)} · ${life(c).toFixed(1).replace('.',',')} мес с нами" tabindex="0" aria-label="Причина ухода">i</i></span>`}</td><td>${(()=>{const n=nextPay(c),soon=n&&(new Date(n)-new Date(NOW))/864e5<=7;return `<button type="button" class="cal nx${n?(soon?' soon':''):' empty'}" data-cal="cl" data-ci="${ci}" title="Изменить дату"><span>${n?dt(n):'—'}</span></button>`})()}</td>${cm.map(m=>cell(PAYS[ci][m]||0)).join('')}<td class="n"><b>${rub(sum(Object.values(PAYS[ci])))}</b></td></tr>${openCl===ci?clCard(c,ci,cm.length+5):''}`).join('')}
+    ${ORDER.map(ci=>{const c=CLIENTS[ci];return `<tr class="clk${openCl===ci?' sel':''}" data-cl="${ci}"><td><b style="color:var(--ink)">${esc(c.name)}</b>${c.note?`<i class="info" data-tipcell="${esc(c.note)}" tabindex="0" aria-label="Примечание">i</i>`:''}</td><td class="num">${dt(c.start)}</td><td>${c.status==='Активен'?'<span class="st on">Активен</span>':`<span class="st off">Ушёл ${dt(c.left)}<i class="info" data-tipcell="${esc(c.reason)} · ${life(c).toFixed(1).replace('.',',')} мес с нами" tabindex="0" aria-label="Причина ухода">i</i></span>`}</td><td>${(()=>{const n=nextPay(c),soon=n&&(new Date(n)-new Date(NOW))/864e5<=7;return `<button type="button" class="cal nx${n?(soon?' soon':''):' empty'}" data-cal="cl" data-ci="${ci}" title="Изменить дату"><span>${n?dt(n):'—'}</span></button>`})()}</td>${cm.map(m=>cell(PAYS[ci][m]||0)).join('')}<td class="n"><b>${rub(sum(Object.values(PAYS[ci])))}</b></td></tr>${openCl===ci?clCard(c,ci,cm.length+5):''}`}).join('')}
     <tr class="newrow" data-clnew title="Добавить клиента"><td colspan="${cm.length+5}"><span>+</span></td></tr>
     <tr class="tot"><td colspan="4">Итого</td>${cm.map(m=>cell(sum(PAYS,p=>p[m]||0))).join('')}${cell(tot)}</tr>
   </tbody></table></div></section>
@@ -1018,7 +1043,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-empnew]')){STAFF.push({n:'Новый сотрудник',role:'',rate:'',line:'Авито',pay:'Альфа',isNew:true});openEmp=STAFF.length-1;render();const i=document.querySelector('[data-sf="n"]');if(i){i.focus();i.select()}return}
   const er=e.target.closest('tr[data-emp]');if(er){const i=+er.dataset.emp;openEmp=openEmp===i?null:i;payDate=NOW;render();return}
   const cst=e.target.closest('[data-cst]');if(cst){const c=CLIENTS[+cst.dataset.ci];c.status=cst.dataset.cst;c.manualStatus=true;if(c.status!=='Активен'&&!c.left)c.left=NOW;if(c.status==='Активен'){c.left='';c.reason=''}render();return}
-  const cld=e.target.closest('[data-cldel]');if(cld){CLIENTS.splice(+cld.dataset.cldel,1);openCl=null;render();return}
+  const cld=e.target.closest('[data-cldel]');if(cld){const gone=CLIENTS[+cld.dataset.cldel];if(gone&&gone.pid)CFG.hiddenPids=[...new Set([...(CFG.hiddenPids||[]),gone.pid])];CLIENTS.splice(+cld.dataset.cldel,1);openCl=null;render();return}
   if(e.target.closest('[data-clclose]')){openCl=null;render();return}
   if(e.target.closest('[data-clnew]')){CLIENTS.push({name:'Новый клиент',tg:'',start:NOW,status:'Активен',left:'',reason:'',note:'',first:50000,renew:25000,pays:{}});openCl=CLIENTS.length-1;render();const i=document.querySelector('[data-cf="name"]');if(i){i.focus();i.select()}return}
   const clr=e.target.closest('tr[data-cl]');if(clr&&!e.target.closest('[data-cal],.info')){const i=+clr.dataset.cl;openCl=openCl===i?null:i;render();return}
