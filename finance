@@ -742,15 +742,25 @@ function similarName(x,y){const a=normName(x),b=normName(y);if(!a.length||a.leng
   const rest=[...b];let dist=0;
   for(const w of a){let bi=-1,bd=99;rest.forEach((v,k)=>{const dd=lev(w,v);if(dd<bd){bd=dd;bi=k}});if(bd>Math.min(2,Math.floor(w.length/4)))return false;dist+=bd;rest.splice(bi,1)}
   return dist<=2}
-function sameClient(a,b){if(a.pid&&b.pid)return a.pid===b.pid;
+// Два проекта трекера с одинаковым именем — это осознанно разные проекты; с опечаткой в имени — дубль.
+function sameClient(a,b){if(a.pid&&b.pid&&(a.pid===b.pid||(a.alias||[]).includes(b.pid)||(b.alias||[]).includes(a.pid)))return true;
+  if(a.pid&&b.pid&&normName(a.name).join(' ')===normName(b.name).join(' '))return false;
   if(a.tg&&b.tg&&a.tg.toLowerCase()!==b.tg.toLowerCase())return false;
   return similarName(a.name,b.name)}
 function syncClients(projects,crm){
   let changed=false;
+  const hidden=new Set(CFG.hiddenPids||[]);
+  (projects||[]).forEach(p=>{if(hidden.has(p.id))return;
+    let c=CLIENTS.find(x=>x.pid===p.id||(x.alias||[]).includes(p.id))||CLIENTS.find(x=>!x.pid&&similarName(x.name,p.name));
+    if(c){if(!c.pid){c.pid=p.id;changed=true}
+      if(p.inactive&&c.status==='Активен'&&!c.manualStatus){c.status='Ушёл';c.left=c.left||NOW;c.reason=c.reason||'Отключён в трекере';changed=true}
+      return}
+    CLIENTS.push({pid:p.id,name:p.name,tg:'',start:(p.createdAt||NOW).slice(0,10),status:p.inactive?'Ушёл':'Активен',left:p.inactive?NOW:'',reason:'',note:'',first:50000,renew:25000,pays:{}});changed=true});
   // Склеиваем дубли: клиент, заведённый вручную, и тот же проект из трекера с опечаткой в имени.
   for(let i=CLIENTS.length-1;i>=0;i--){const b=CLIENTS[i];
     const a=CLIENTS.find((x,j)=>j!==i&&sameClient(x,b));if(!a)continue;
     const keep=CLIENTS.indexOf(a)<i?a:b,drop=keep===a?b:a;
+    const al=[...(keep.alias||[]),...(drop.alias||[])];if(keep.pid&&drop.pid&&drop.pid!==keep.pid)al.push(drop.pid);if(al.length)keep.alias=[...new Set(al)];
     keep.pid=keep.pid||drop.pid;keep.tg=keep.tg||drop.tg;
     if(drop.note&&drop.note!==keep.note)keep.note=[keep.note,drop.note].filter(Boolean).join('\n');
     if(drop.start&&(!keep.start||drop.start<keep.start))keep.start=drop.start;
@@ -758,13 +768,6 @@ function syncClients(projects,crm){
     ['next','first','renew','reason'].forEach(k=>{if(keep[k]==null||keep[k]==='')keep[k]=drop[k]});
     if(drop.status==='Активен'&&!keep.manualStatus){keep.status='Активен';keep.left=''}
     CLIENTS.splice(CLIENTS.indexOf(drop),1);changed=true;i=CLIENTS.length}
-  const hidden=new Set(CFG.hiddenPids||[]);
-  (projects||[]).forEach(p=>{if(hidden.has(p.id))return;
-    let c=CLIENTS.find(x=>x.pid===p.id)||CLIENTS.find(x=>!x.pid&&similarName(x.name,p.name));
-    if(c){if(!c.pid){c.pid=p.id;changed=true}
-      if(p.inactive&&c.status==='Активен'&&!c.manualStatus){c.status='Ушёл';c.left=c.left||NOW;c.reason=c.reason||'Отключён в трекере';changed=true}
-      return}
-    CLIENTS.push({pid:p.id,name:p.name,tg:'',start:(p.createdAt||NOW).slice(0,10),status:p.inactive?'Ушёл':'Активен',left:p.inactive?NOW:'',reason:'',note:'',first:50000,renew:25000,pays:{}});changed=true});
   // Ники из операций, которые ещё ни к кому не привязаны, — к клиенту с похожей фамилией.
   const taken=new Set(CLIENTS.flatMap(handlesOf));
   const free=[...new Set(OPS.filter(o=>o.kind==='rev'&&o.client&&o.client.startsWith('@')).map(o=>o.client.toLowerCase()))].filter(h=>!taken.has(h));
@@ -1043,7 +1046,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-empnew]')){STAFF.push({n:'Новый сотрудник',role:'',rate:'',line:'Авито',pay:'Альфа',isNew:true});openEmp=STAFF.length-1;render();const i=document.querySelector('[data-sf="n"]');if(i){i.focus();i.select()}return}
   const er=e.target.closest('tr[data-emp]');if(er){const i=+er.dataset.emp;openEmp=openEmp===i?null:i;payDate=NOW;render();return}
   const cst=e.target.closest('[data-cst]');if(cst){const c=CLIENTS[+cst.dataset.ci];c.status=cst.dataset.cst;c.manualStatus=true;if(c.status!=='Активен'&&!c.left)c.left=NOW;if(c.status==='Активен'){c.left='';c.reason=''}render();return}
-  const cld=e.target.closest('[data-cldel]');if(cld){const gone=CLIENTS[+cld.dataset.cldel];if(gone&&gone.pid)CFG.hiddenPids=[...new Set([...(CFG.hiddenPids||[]),gone.pid])];CLIENTS.splice(+cld.dataset.cldel,1);openCl=null;render();return}
+  const cld=e.target.closest('[data-cldel]');if(cld){const gone=CLIENTS[+cld.dataset.cldel];if(gone&&gone.pid)CFG.hiddenPids=[...new Set([...(CFG.hiddenPids||[]),gone.pid,...(gone.alias||[])])];CLIENTS.splice(+cld.dataset.cldel,1);openCl=null;render();return}
   if(e.target.closest('[data-clclose]')){openCl=null;render();return}
   if(e.target.closest('[data-clnew]')){CLIENTS.push({name:'Новый клиент',tg:'',start:NOW,status:'Активен',left:'',reason:'',note:'',first:50000,renew:25000,pays:{}});openCl=CLIENTS.length-1;render();const i=document.querySelector('[data-cf="name"]');if(i){i.focus();i.select()}return}
   const clr=e.target.closest('tr[data-cl]');if(clr&&!e.target.closest('[data-cal],.info')){const i=+clr.dataset.cl;openCl=openCl===i?null:i;render();return}
