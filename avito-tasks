@@ -544,9 +544,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 
 /* ── Рассылки ── */
 .ml-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-@media (max-width:720px){.ml-top{width:100%;justify-content:space-between}.ml-sum{order:3;width:100%}}
-.ml-sum{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.ml-sum:empty{display:none}
+@media (max-width:720px){.ml-top{width:100%;justify-content:space-between}}
 .ml-nav{display:flex;align-items:center;gap:2px;font-size:14px;color:var(--ink)}
 .ml-nav b{min-width:116px;text-align:center}
 .ml-nav .icon-btn{width:34px;height:34px}
@@ -575,7 +573,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .ml-item .num{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ml-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
 .ml-dot.wait{background:var(--amber)}.ml-dot.good{background:var(--green)}.ml-dot.ok,.ml-dot.done{background:var(--blue)}.ml-dot.bad{background:var(--red)}
-.ml-form{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.ml-modal{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 24px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden;animation:fade .15s}
+@media (max-width:720px){.ml-modal{top:auto;bottom:0;transform:translateX(-50%);border-radius:20px 20px 0 0;width:100%;max-height:92vh}}
+.ml-form{padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.ml-form .ml-item{margin:0}
+.ml-outcome{display:flex;flex-direction:column;gap:14px}
+.ml-outcome[hidden]{display:none}
+
 .ml-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ml-sep{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);border-top:1px solid var(--line-2);padding-top:14px}
 .ml-res{display:flex;width:100%}
@@ -1318,7 +1322,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
           <h1>Рассылки</h1>
         </div>
         <div class="ml-top">
-          <span class="ml-sum" id="mlSub"></span>
           <div class="ml-nav"><button class="icon-btn" data-ml-step="-1" aria-label="Раньше"><svg class="ic ic-sm rot-l"><use href="#i-chev"/></svg></button><b id="mlMonth"></b><button class="icon-btn" data-ml-step="1" aria-label="Позже"><svg class="ic ic-sm rot-r"><use href="#i-chev"/></svg></button></div>
           <button class="btn btn-primary btn-sm" data-ml-new><svg class="ic ic-sm"><use href="#i-plus"/></svg>Рассылка</button>
         </div>
@@ -4997,6 +5000,7 @@ $('drawerRoot').addEventListener('submit', async (e) => {
 // На телефоне рассылки — точки, а список выбранного дня — под календарём.
 const ML = { month: null, items: [], loadedFor: null, loading: false, day: null, delArm: false };
 const ML_RES = [['good', 'Хорошо'], ['ok', 'Средне'], ['bad', 'Плохо']];
+const ML_MAX_CHIPS = 3;
 const mlNarrow = () => window.matchMedia('(max-width:720px)').matches;
 function mlShift(month, n) {
   let [y, m] = month.split('-').map(Number);
@@ -5041,20 +5045,28 @@ function mlTitle(it) {
   if (it.comment) parts.push(it.comment);
   return parts.filter(Boolean).join(' · ');
 }
+function mlRow(it) {
+  return `<button class="ml-item" data-ml-item="${esc(it.id)}"><span class="ml-dot ${mlState(it)}"></span><span class="nm">${esc(anSurnameKey((projectById(it.projectId) || { name: '—' }).name))}${it.comment ? `<small>${esc(it.comment)}</small>` : ''}</span><span class="num">${[it.budget != null ? mlMoney(it.budget) : '', it.contacts != null ? `${anNum(it.contacts)} конт.` : ''].filter(Boolean).join(' · ')}</span></button>`;
+}
+function mlDaySorted(d) { return ML.items.filter((it) => it.date === d).sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' })); }
+// Окно по центру экрана (на телефоне — снизу): список дня или карточка рассылки.
+function mlModal(title, body, foot) {
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <div class="ml-modal" role="dialog" aria-label="${esc(title)}">
+      <div class="drawer-head"><h2>${esc(title)}</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
+      ${body}${foot ? `<div class="drawer-foot">${foot}</div>` : ''}
+    </div>`;
+}
+function mlDayTitle(d) { const x = mtDay(d); return `${x.day} ${MT_MONTHS[x.month]}, ${x.dow}`; }
+function mlOpenDay(d) {
+  mlModal(mlDayTitle(d), `<div class="ml-form">${mlDaySorted(d).map(mlRow).join('')}</div>`,
+    `<button class="btn btn-primary" type="button" data-ml-new="${d}">${ico('plus', 'ic-sm')}Рассылка</button>`);
+}
 function renderMail() {
   if (!ML.month) ML.month = mtToday().slice(0, 7);
   const [y, m] = ML.month.split('-').map(Number);
   $('mlMonth').textContent = `${AN_MONTHS[m - 1]} ${y}`;
   const items = ML.loadedFor === ML.month ? ML.items : [];
-  // Итоги месяца: стоимость контакта — только по рассылкам, где контакты уже внесены.
-  const withRes = items.filter((it) => it.contacts != null);
-  const budget = items.reduce((a, it) => a + (it.budget || 0), 0);
-  const contacts = withRes.reduce((a, it) => a + it.contacts, 0);
-  const spent = withRes.reduce((a, it) => a + (it.budget || 0), 0);
-  $('mlSub').textContent = ML.loadedFor !== ML.month || !items.length ? ''
-    : [`${items.length} ${plural(items.length, 'рассылка', 'рассылки', 'рассылок')}`, budget ? mlMoney(budget) : '',
-      withRes.length ? `${anNum(contacts)} ${plural(contacts, 'контакт', 'контакта', 'контактов')}` : '',
-      contacts && spent ? `${mlMoney(spent / contacts)} за контакт` : ''].filter(Boolean).join(' · ');
   const today = mtToday();
   const first = `${ML.month}-01`;
   const lead = (new Date(first + 'T12:00:00Z').getUTCDay() + 6) % 7;
@@ -5068,14 +5080,18 @@ function renderMail() {
     if (n < 1 || n > days) { cells += '<div class="ml-day out"></div>'; continue; }
     const d = `${ML.month}-${pad(n)}`;
     const list = (byDay[d] || []).slice().sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' }));
-    cells += `<div class="ml-day ${d === today ? 'today' : ''} ${i % 7 > 4 ? 'wknd' : ''} ${ML.day === d && mlNarrow() ? 'sel' : ''}" data-ml-day="${d}"><span class="d">${n}</span>${list.map((it) => `<button class="ml-chip ${mlState(it)}" data-ml-item="${esc(it.id)}" title="${esc(mlTitle(it))}"><b>${esc(mlSurname(it.projectId))}</b><span>${mlChipNum(it)}</span></button>`).join('')}</div>`;
+    // Больше трёх рассылок в день — одна плашка «N рассылок», по нажатию — список дня.
+    const chips = list.length > ML_MAX_CHIPS && !mlNarrow()
+      ? `<button class="ml-chip ml-many ${list.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}"><b>${list.length} ${plural(list.length, 'рассылка', 'рассылки', 'рассылок')}</b></button>`
+      : list.map((it) => `<button class="ml-chip ${mlState(it)}" data-ml-item="${esc(it.id)}" title="${esc(mlTitle(it))}"><b>${esc(mlSurname(it.projectId))}</b><span>${mlChipNum(it)}</span></button>`).join('');
+    cells += `<div class="ml-day ${d === today ? 'today' : ''} ${i % 7 > 4 ? 'wknd' : ''} ${ML.day === d && mlNarrow() ? 'sel' : ''}" data-ml-day="${d}"><span class="d">${n}</span>${chips}</div>`;
   }
   let list = '';
   if (mlNarrow() && ML.day && ML.day.startsWith(ML.month)) {
     const dayItems = byDay[ML.day] || [];
     const x = mtDay(ML.day);
     list = `<div class="ml-list"><div class="mt-dlabel">${x.day} ${MT_MONTHS[x.month]}, ${x.dow}</div>
-      ${dayItems.map((it) => `<button class="ml-item" data-ml-item="${esc(it.id)}"><span class="ml-dot ${mlState(it)}"></span><span class="nm">${esc(anSurnameKey((projectById(it.projectId) || { name: '—' }).name))}${it.comment ? `<small>${esc(it.comment)}</small>` : ''}</span><span class="num">${[it.budget != null ? mlMoney(it.budget) : '', it.contacts != null ? `${anNum(it.contacts)} конт.` : ''].filter(Boolean).join(' · ')}</span></button>`).join('')}
+      ${dayItems.map(mlRow).join('')}
       <button class="btn btn-ghost btn-sm" data-ml-new="${ML.day}">${ico('plus', 'ic-sm')}Рассылка</button></div>`;
   }
   $('mlBody').innerHTML = `<div class="ml-cal">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}${cells}</div>${list}`;
@@ -5085,24 +5101,29 @@ function mlOpen(it, date) {
   const projects = S.projects.filter((p) => !p.inactive || p.id === d.projectId).sort(anBySurname);
   const p = it && projectById(it.projectId);
   ML.delArm = false;
-  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
-    <aside class="drawer an-drawer" role="dialog" aria-label="Рассылка">
-      <div class="drawer-head"><h2>${it ? esc(p ? p.name : 'Рассылка') : 'Новая рассылка'}</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
-      <form class="drawer-body ml-form" id="mlForm" data-id="${esc(it ? it.id : '')}" data-from="${esc(it ? it.date : '')}" data-res="${esc(d.result || '')}">
+  mlModal(it ? (p ? p.name : 'Рассылка') : 'Новая рассылка', `
+      <form class="ml-form" id="mlForm" data-id="${esc(it ? it.id : '')}" data-from="${esc(it ? it.date : '')}" data-res="${esc(d.result || '')}">
         <div><label class="label" for="mlClient">Клиент</label><select class="select" id="mlClient" required><option value=""></option>${projects.map((x) => `<option value="${esc(x.id)}" ${x.id === d.projectId ? 'selected' : ''}>${esc(anSurnameKey(x.name))}</option>`).join('')}</select></div>
         <div class="row2">
           <div><label class="label" for="mlDate">Дата</label><input class="input" type="date" id="mlDate" value="${esc(d.date)}" required></div>
           <div><label class="label" for="mlBudget">Бюджет, ₽</label><input class="input" type="number" inputmode="numeric" min="0" step="100" id="mlBudget" value="${d.budget != null ? d.budget : ''}"></div>
         </div>
-        <div class="ml-sep">Итог</div>
-        <div><label class="label" for="mlContacts">Контакты</label><input class="input" type="number" inputmode="numeric" min="0" id="mlContacts" value="${d.contacts != null ? d.contacts : ''}"><div class="ml-cpl" id="mlCpl"></div></div>
-        <div><span class="label">Результат</span><div class="seg ml-res">${ML_RES.map(([k, l]) => `<button type="button" data-ml-res="${k}" class="${d.result === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
-        <div><label class="label" for="mlComment">Комментарий</label><textarea class="textarea" id="mlComment" rows="4" maxlength="2000">${esc(d.comment || '')}</textarea></div>
-      </form>
-      <div class="drawer-foot">${it ? `<button class="btn btn-ghost btn-danger" type="button" data-ml-del>${ico('trash', 'ic-sm')}<span>Удалить</span></button><span style="flex:1"></span>` : ''}<button class="btn btn-primary" type="submit" form="mlForm">Сохранить</button></div>
-    </aside>`;
+        <div class="ml-outcome" id="mlOutcome">
+          <div class="ml-sep">Итог</div>
+          <div><label class="label" for="mlContacts">Контакты</label><input class="input" type="number" inputmode="numeric" min="0" id="mlContacts" value="${d.contacts != null ? d.contacts : ''}"><div class="ml-cpl" id="mlCpl"></div></div>
+          <div><span class="label">Результат</span><div class="seg ml-res">${ML_RES.map(([k, l]) => `<button type="button" data-ml-res="${k}" class="${d.result === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+          <div><label class="label" for="mlComment">Комментарий</label><textarea class="textarea" id="mlComment" rows="3" maxlength="2000">${esc(d.comment || '')}</textarea></div>
+        </div>
+      </form>`,
+    `${it ? `<button class="btn btn-ghost btn-danger" type="button" data-ml-del>${ico('trash', 'ic-sm')}<span>Удалить</span></button><span style="flex:1"></span>` : ''}<button class="btn btn-primary" type="submit" form="mlForm">Сохранить</button>`);
+  mlOutcome();
   mlCpl();
   if (!it) setTimeout(() => $('mlClient') && $('mlClient').focus(), 30);
+}
+// Итог рассылки (контакты, результат, комментарий) — только с дня рассылки, не заранее.
+function mlOutcome() {
+  const box = $('mlOutcome');
+  if (box) box.hidden = !$('mlDate').value || $('mlDate').value > mtToday();
 }
 function mlCpl() {
   const el = $('mlCpl');
@@ -5120,6 +5141,8 @@ $('view-mail').addEventListener('click', (e) => {
   if (step) { ML.month = mlShift(ML.month || mtToday().slice(0, 7), +step.dataset.mlStep); ML.day = null; renderMail(); loadMail(); return; }
   const nw = e.target.closest('[data-ml-new]');
   if (nw) { mlOpen(null, nw.dataset.mlNew || (ML.month === mtToday().slice(0, 7) ? mtToday() : `${ML.month}-01`)); return; }
+  const many = e.target.closest('[data-ml-list]');
+  if (many) { mlOpenDay(many.dataset.mlList); return; }
   const chip = e.target.closest('[data-ml-item]');
   if (chip && !(mlNarrow() && chip.classList.contains('ml-chip'))) { const it = ML.items.find((x) => x.id === chip.dataset.mlItem); if (it) mlOpen(it); return; }
   const day = e.target.closest('[data-ml-day]');
@@ -5128,6 +5151,11 @@ $('view-mail').addEventListener('click', (e) => {
   mlOpen(null, day.dataset.mlDay);
 });
 $('drawerRoot').addEventListener('click', async (e) => {
+  if (!e.target.closest('.ml-modal')) return;
+  const row = e.target.closest('[data-ml-item]');
+  if (row) { const it = ML.items.find((x) => x.id === row.dataset.mlItem); if (it) mlOpen(it); return; }
+  const nw = e.target.closest('[data-ml-new]');
+  if (nw) { mlOpen(null, nw.dataset.mlNew); return; }
   const form = $('mlForm');
   if (!form) return;
   const res = e.target.closest('[data-ml-res]');
@@ -5147,7 +5175,7 @@ $('drawerRoot').addEventListener('click', async (e) => {
     mlApply(r.data);
   } catch (err) { del.disabled = false; toast('Не удалилось — нет связи'); }
 });
-$('drawerRoot').addEventListener('input', (e) => { if (e.target.id === 'mlBudget' || e.target.id === 'mlContacts') mlCpl(); });
+$('drawerRoot').addEventListener('input', (e) => { if (e.target.id === 'mlBudget' || e.target.id === 'mlContacts') mlCpl(); if (e.target.id === 'mlDate') mlOutcome(); });
 $('drawerRoot').addEventListener('submit', async (e) => {
   if (e.target.id !== 'mlForm') return;
   e.preventDefault();
@@ -5162,6 +5190,7 @@ $('drawerRoot').addEventListener('submit', async (e) => {
     result: form.dataset.res || null,
     comment: $('mlComment').value,
   };
+  if ($('mlOutcome').hidden) Object.assign(item, { contacts: null, result: null, comment: '' });
   if (!item.projectId || !item.date) return;
   const btn = $('drawerRoot').querySelector('[form="mlForm"]');
   btn.disabled = true;
