@@ -6012,7 +6012,7 @@ async function botAnswerQuestion(env, question) {
   let reflLines = [];
   try {
     const week = reflWeek(now);
-    const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
+    const recs = await Promise.all(people.filter((u) => REFL_READ_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
     reflLines = recs.flatMap(([u, r]) => Object.entries((r && r.answers) || {}).filter(([pid]) => about(pid))
       .map(([pid, a]) => `- ${(byId[pid] || {}).name || pid}: ${u.name} — ${a.score}/10, «${String(a.comment || '').slice(0, 200)}»`));
   } catch (err) { /* reflection is optional context */ }
@@ -7089,7 +7089,12 @@ function atMeetHuman(date, time) {
 // (Monday-based, roles manager / specialist / client); results and the history chart read them too.
 // One record per person and week, written only by that person; the page always sends every answer
 // it knows, so a save from one Cloudflare location can't drop one made a moment ago from another.
-const REFL_ROLES = new Set(['manager', 'specialist', 'trainee']);
+// Who rates clients every week (the specialists — the «trainee» role). The client manager and the
+// specialists' lead («specialist» role) don't rate any more, but see the results like the owner does.
+// Their earlier answers stay in the results and the history (REFL_READ_ROLES).
+const REFL_ROLES = new Set(['trainee']);
+const REFL_VIEW_ROLES = new Set(['manager', 'specialist']);
+const REFL_READ_ROLES = new Set([...REFL_ROLES, ...REFL_VIEW_ROLES]);
 const REFL_TTL = 60 * 60 * 24 * 400;
 const REFL_COMMENT_MAX = 400;
 
@@ -7262,8 +7267,12 @@ async function atMailApi(env, me, action, body, nowMs) {
 
 async function atReflectionResults(env, team, week) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const people = team.users.filter((u) => u.active && REFL_ROLES.has(u.role));
-  const recs = await Promise.all(people.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
+  // The raters, plus anyone who rated this week before they stopped rating (or left).
+  const all = team.users.filter((u) => REFL_READ_ROLES.has(u.role));
+  const allRecs = await Promise.all(all.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
+  const keep = all.map((u, i) => (u.active && REFL_ROLES.has(u.role)) || !!allRecs[i]);
+  const people = all.filter((u, i) => keep[i]);
+  const recs = allRecs.filter((r, i) => keep[i]);
   const mem = await atSnapshot(env);
   if (!recs.some(Boolean)) {
     // A week from before the tracker: the old dashboard's ratings for its Monday.
@@ -7287,7 +7296,8 @@ async function atReflectionResults(env, team, week) {
     week,
     clients,
     prevAvg: await reflWeekAverages(kv, people, reflAddDays(week, -7)),
-    people: people.map((u, i) => ({ id: u.id, name: u.name, role: u.role, answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], clients), doneAt: (recs[i] && recs[i].doneAt) || null })),
+    // rates: false — no longer rates (only the answers given are shown, no «not rated yet»).
+    people: people.map((u, i) => ({ id: u.id, name: u.name, role: u.role, rates: u.active && REFL_ROLES.has(u.role), answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], clients), doneAt: (recs[i] && recs[i].doneAt) || null })),
   };
 }
 // Every week's average per client — the tracker's weeks and the old dashboard's before them.
@@ -7352,6 +7362,17 @@ async function atReflectionCron(env, team, nowMs) {
   const mem = await atSnapshot(env);
   const clients = reflClients(mem.projects);
   if (!clients.length) return;
+  // Those who no longer rate: an open «Заполнить рефлексию» task of theirs is cancelled.
+  for (const u of team.users.filter((x) => REFL_VIEW_ROLES.has(x.role))) {
+    const rec = await kv.get(`refl:${week}:${u.id}`, 'json');
+    const t = rec && rec.taskId && !rec.doneAt && (await kv.get(`task:${rec.taskId}`, 'json'));
+    if (!t || t.status !== 'open') continue;
+    Object.assign(t, { status: 'cancelled', updatedAt: new Date(nowMs).toISOString(), updatedBy: 'Бот' });
+    t.activity = [...(t.activity || []), { t: nowMs, by: 'Бот', what: 'отменил: рефлексию теперь заполняют только специалисты' }].slice(-20);
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(t.id, t);
+    await atTouch(kv, [t.id]);
+  }
   for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
     const key = `refl:${week}:${u.id}`;
     const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
@@ -7930,21 +7951,21 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ reflection: res.state });
   }
   if (action === 'refl-results') {
-    if (!isAdmin && !REFL_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
+    if (!isAdmin && !REFL_READ_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
     const current = reflWeek(nowMs);
     let week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : current;
     if (week > current) week = current;
-    if (!isAdmin && reflLocked(nowMs, week, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
+    if (!isAdmin && REFL_ROLES.has(me.role) && reflLocked(nowMs, week, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
       return json({ locked: true, week, current, prev: reflAddDays(current, -7) });
     }
     return json({ results: await atReflectionResults(env, team, week), current });
   }
   if (action === 'refl-history') {
-    if (!isAdmin && !REFL_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
+    if (!isAdmin && !REFL_READ_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
     const history = await atReflectionHistory(env);
     const current = reflWeek(nowMs);
     // Until the employee has rated this week, its averages stay off their chart too.
-    if (!isAdmin && reflLocked(nowMs, current, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
+    if (!isAdmin && REFL_ROLES.has(me.role) && reflLocked(nowMs, current, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
       history.weeks = history.weeks.filter((w) => w !== current);
       delete history.overall[current];
       history.clients.forEach((c) => { delete c.points[current]; });
@@ -9436,7 +9457,7 @@ async function aiBuildData(env, job, light) {
         .sort((x, y) => Number(live(y)) - Number(live(x)) || Date.parse(y.updatedAt || y.createdAt || 0) - Date.parse(x.updatedAt || x.createdAt || 0));
       const refl = [];
       for (const wk of [reflWeek(now), reflAddDays(reflWeek(now), -7)]) {
-        const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${wk}:${u.id}`, 'json')]));
+        const recs = await Promise.all(people.filter((u) => REFL_READ_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${wk}:${u.id}`, 'json')]));
         for (const [u, r] of recs) { const x = r && r.answers && r.answers[p.id]; if (x && x.score) refl.push(`- неделя ${wk}: ${u.name} — ${x.score}/10${x.comment ? `, «${String(x.comment).slice(0, 200)}»` : ''}`); }
       }
       if (!meetingJobs) meetingJobs = (await Promise.all(((await kv.get('kb:index', 'json')) || []).slice(0, light ? 15 : 40).map((x) => kv.get(`kb:job:${x.id}`, 'json')))).filter((j) => j && j.mode === 'meeting' && j.status === 'done' && j.meeting);
