@@ -891,7 +891,13 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
   .team-add{grid-template-columns:1fr}
   .menu{right:8px;left:8px;width:auto}
   .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
-  .bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--faint);padding:6px 0;border-radius:12px;position:relative}
+  .bottom-nav button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--faint);padding:6px 2px;border-radius:12px;position:relative}
+  .bottom-nav .lb{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--line);box-shadow:var(--shadow-lg);padding:10px 10px calc(12px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;animation:fade .15s}
+  .nav-sheet button{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 4px;border-radius:14px;font-size:12.5px;font-weight:600;color:var(--text);background:var(--surface-2)}
+  .nav-sheet button.on{color:var(--accent);background:var(--accent-bg)}
+  .nav-sheet .ic{width:22px;height:22px}
+  .nav-sheet .count{position:absolute;top:6px;right:10px;font-size:10px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:0 5px;line-height:16px}
   .bottom-nav button.on{color:var(--accent)}
   .bottom-nav .ic{width:22px;height:22px}
   .bottom-nav .count{position:absolute;top:2px;left:calc(50% + 6px);font-size:10px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:0 5px;line-height:16px}
@@ -913,6 +919,19 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 
 /* ── аналитика ── */
 .an-actions{display:flex;gap:6px;flex-wrap:wrap}
+.an-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.an-top .an-actions{flex-wrap:nowrap;gap:6px}
+.an-ic{width:38px;height:38px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.an-ic .ic{width:18px;height:18px}
+.an-sw{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--faint);padding:6px 2px;flex:none}
+.an-sw i{position:relative;width:40px;height:24px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);flex:none}
+.an-sw i::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--accent);transition:transform .16s}
+.an-sw[aria-checked="true"] i::after{transform:translateX(16px)}
+.an-sw .l,.an-sw[aria-checked="true"] .r{color:var(--ink)}
+.an-sw[aria-checked="true"] .l{color:var(--faint)}
+.an-sticky{position:sticky;top:var(--top);z-index:6;background:var(--bg);padding:8px 0;margin-bottom:6px;box-shadow:-24px 0 0 var(--bg),24px 0 0 var(--bg)}
+.an-sticky .an-nav{min-height:38px}
+#anBody.an-stale{opacity:.45;pointer-events:none;transition:opacity .12s}
 .an-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .an-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .an-day{display:inline-flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
@@ -1003,8 +1022,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
   .an-day{flex:1;justify-content:space-between}
   .an-table-wrap{display:none}
   .an-cards{display:grid;gap:10px}
-  .bottom-nav{overflow-x:auto;scrollbar-width:none}
-  .bottom-nav button{min-width:58px}
 }
 
 /* ── клиенты (переработано) ── */
@@ -1069,10 +1086,6 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .an-table tbody tr:hover td.bad{background:var(--red-bg)}
 .an-f.bad{background:var(--red-bg);border-radius:8px;padding:4px 6px;margin:-4px -6px}
 .an-f.bad b,.an-f.bad span{color:var(--red)}
-.an-row2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.an-row2 .an-bar{margin:0;justify-content:flex-end;min-width:0}
-.an-row2 .an-actions{flex-wrap:nowrap}
-@media (max-width:760px){.an-row2{flex-direction:column;align-items:stretch}.an-row2 .an-bar{justify-content:flex-start}}
 #view-tasks>.hello{display:none}
 .toolbar.t-row{padding-left:0;padding-right:0}
 .hello h1{display:none}
@@ -1270,13 +1283,11 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
           <div class="sub" id="anSub"></div>
         </div>
       </div>
-      <div class="an-row2">
+      <div class="an-top">
         <div class="an-actions" id="anActions"></div>
-        <div class="an-bar">
-          <div class="seg"><button data-anmode="day">По дням</button><button data-anmode="total">За всё время</button></div>
-          <div class="an-nav" id="anNav"></div>
-        </div>
+        <button class="an-sw" id="anSw" role="switch" aria-checked="false" aria-label="Один день или за всё время" title="Один день / за всё время"><span class="l">День</span><i></i><span class="r">Всё</span></button>
       </div>
+      <div class="an-sticky"><div class="an-nav" id="anNav"></div></div>
       <div id="anBody"></div>
       <div class="an-foot"><button class="btn btn-quiet btn-sm" id="anInactive" hidden></button></div>
     </section>
@@ -2030,7 +2041,15 @@ function renderHeader() {
   const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : v.id === 'meet' && meetToday ? meetToday : v.id === 'mail' && mailWait ? mailWait : 0);
   const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
-  $('bottomNav').innerHTML = vs.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}${esc(v.short || v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`).join('');
+  // Внизу — не больше пяти кнопок: четыре раздела и «Ещё» со всеми остальными (если разделов больше пяти).
+  // Открытый раздел из «Ещё» подсвечивает саму кнопку «Ещё» и показывает её подпись.
+  const navBtn = (v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${ico(v.icon)}<span class="lb">${esc(v.short || v.label)}</span>${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
+  const main = vs.length > 5 ? vs.slice(0, 4) : vs;
+  const more = vs.length > 5 ? vs.slice(4) : [];
+  const cur = more.find((v) => v.id === S.view);
+  const moreBadge = more.reduce((n, v) => n + (badge(v) || 0), 0);
+  $('bottomNav').innerHTML = main.map(navBtn).join('') + (more.length ? `<button class="${cur ? 'on' : ''}" data-navmore aria-label="Ещё разделы">${ico(cur ? cur.icon : 'menu')}<span class="lb">${esc(cur ? cur.short || cur.label : 'Ещё')}</span>${moreBadge ? `<span class="count">${moreBadge}</span>` : ''}</button>` : '');
+  NAV_MORE = more.map((v) => ({ ...v, n: badge(v) }));
   document.body.classList.toggle('solo', vs.length < 2);
   $('bottomNav').hidden = vs.length < 2;
   $('fab').hidden = S.view !== 'tasks';
@@ -2090,7 +2109,14 @@ function restorePlace() {
   };
   requestAnimationFrame(tick);
 }
+// «Ещё» в нижней панели: остальные разделы листом снизу.
+let NAV_MORE = [];
+function openNavMore() {
+  $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
+    <div class="nav-sheet" role="dialog" aria-label="Разделы">${NAV_MORE.map((v) => `<button class="${S.view === v.id ? 'on' : ''}" data-view="${v.id}" data-close>${ico(v.icon)}<span>${esc(v.label)}</span>${v.n ? `<span class="count">${v.n}</span>` : ''}</button>`).join('')}</div>`;
+}
 document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-navmore]')) { openNavMore(); return; }
   const b = e.target.closest('[data-view]');
   if (b) setView(b.dataset.view);
   const t = e.target.closest('[data-teamtab]');
@@ -4482,15 +4508,27 @@ const anKey = () => (AN.mode === 'day' ? `d:${AN.day}` : `t:${AN.month || 'all'}
 async function loadAnalytics() {
   if (!AN.day) AN.day = anYesterday();
   const key = anKey();
-  if (AN.cache[key]) { AN.rows = AN.cache[key]; AN.loading = false; return renderAnalytics(); }
-  AN.loading = true; AN.rows = null;
+  if (AN.cache[key]) { AN.rows = AN.cache[key]; AN.loading = false; AN.stale = false; renderAnalytics(); anPrefetch(); return; }
+  // Пока грузится следующий день — на экране остаются прежние строки (приглушённо), а не заглушка:
+  // высота страницы не меняется, и экран не прыгает, когда листаешь дни по одному клиенту.
+  const sameMode = AN.rows && AN.rowsMode === AN.mode;
+  AN.loading = true;
+  if (sameMode) AN.stale = true; else AN.rows = null;
   renderAnalytics();
   try {
     const res = await api('an-table', AN.mode === 'day' ? { mode: 'day', date: AN.day } : { mode: 'total', month: AN.month });
     if (!res.ok) throw new Error();
     AN.cache[key] = res.data.rows;
-    if (key === anKey()) { AN.rows = res.data.rows; AN.loading = false; renderAnalytics(); }
-  } catch (e) { AN.loading = false; if (key === anKey()) { $('anBody').innerHTML = '<div class="empty">Не получилось загрузить цифры — нет связи. Попробую снова, когда откроете вкладку.</div>'; } }
+    if (key === anKey()) { AN.rows = res.data.rows; AN.rowsMode = AN.mode; AN.loading = false; AN.stale = false; renderAnalytics(); anPrefetch(); }
+  } catch (e) { AN.loading = false; AN.stale = false; if (key === anKey()) { $('anBody').innerHTML = '<div class="empty">Не получилось загрузить цифры — нет связи. Попробую снова, когда откроете вкладку.</div>'; } }
+}
+// Соседние дни подгружаются заранее — следующее нажатие «‹ ›» открывает их сразу.
+async function anPrefetch() {
+  if (AN.mode !== 'day') return;
+  for (const d of [anAdd(AN.day, -1), anAdd(AN.day, 1)]) {
+    if (d > anYesterday() || AN.cache[`d:${d}`]) continue;
+    try { const res = await api('an-table', { mode: 'day', date: d }); if (res.ok && !AN.cache[`d:${d}`]) AN.cache[`d:${d}`] = res.data.rows; } catch (e) { /* не страшно */ }
+  }
 }
 // «Аналитика» lists clients by surname: «Алексей Шевчук» goes under «Ш». A name without one («Агешина»,
 // «Английский язык» — second word in lower case) sorts as written.
@@ -4510,12 +4548,13 @@ function renderAnalytics() {
   const day = AN.mode === 'day';
   const per = day ? anDayLabel(AN.day || anYesterday()) : AN.month ? anMonths().find((m) => m.key === AN.month).label : 'всё время';
   $('anSub').textContent = day ? 'Бюджет, просмотры и контакты — из кабинетов Авито, диагностики и продажи вносит менеджер. Ячейки сохраняются сами.' : 'Итоги и конверсии считаются по всем дням периода.';
-  document.querySelectorAll('[data-anmode]').forEach((b) => b.classList.toggle('on', b.dataset.anmode === AN.mode));
+  $('anSw').setAttribute('aria-checked', String(!day));
   $('anNav').innerHTML = day
     ? `<div class="an-day"><button class="icon-btn" data-an="prev" aria-label="Предыдущий день">${ico('chev', 'rot90')}</button><span class="an-date">${esc(per)}</span><button class="icon-btn" data-an="next" aria-label="Следующий день" ${AN.day >= anYesterday() ? 'disabled' : ''}>${ico('chev', 'rot-90')}</button></div>${AN.day !== anYesterday() ? '<button class="btn btn-ghost btn-sm" data-an="yesterday">Вчера</button>' : ''}`
     : `<div class="an-months"><button class="chip ${AN.month ? '' : 'on'}" data-an="month" data-m="">Всё время</button>${anMonths().map((m) => `<button class="chip ${AN.month === m.key ? 'on' : ''}" data-an="month" data-m="${m.key}">${m.label}</button>`).join('')}</div>`;
   const ps = anProjects();
   if (!AN.rows) {
+    $('anBody').classList.remove('an-stale');
     $('anBody').innerHTML = `<div class="an-table-wrap"><div class="an-skel">${ps.map(() => '<i class="sk"></i>').join('')}</div></div>`;
   } else {
     const cell = (p, k) => {
@@ -4542,13 +4581,14 @@ function renderAnalytics() {
       ${keys.length ? `<div class="an-fields der">${keys.map((k) => `${dcell(k, d[k], 'div')}<span>${AN_DER_L[k]}</span><b>${AN_FMT[k](d[k])}</b></div>`).join('')}</div>` : ''}
     </div>`; }).join('')}</div>`;
     $('anBody').innerHTML = table + cards;
+    $('anBody').classList.toggle('an-stale', !!AN.stale);
   }
   const inactive = S.projects.filter((p) => p.inactive).length;
   $('anInactive').hidden = !inactive;
   $('anInactive').textContent = AN.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
 }
 function anRenderActions() {
-  const a = (id, icon, label) => `<button class="btn btn-ghost btn-sm" data-an="${id}">${ico(icon, 'ic-sm')}<span>${label}</span></button>`;
+  const a = (id, icon, label) => `<button class="icon-btn an-ic" data-an="${id}" title="${label}" aria-label="${label}">${ico(icon)}</button>`;
   $('anActions').innerHTML = a('summary', 'sum', 'Итого') + a('avito', 'refresh', 'Подтянуть') + a('report', 'report', 'Отчёт');
 }
 anRenderActions();
@@ -4693,8 +4733,7 @@ async function anDownloadReport(id, name) {
 }
 
 $('view-analytics').addEventListener('click', (e) => {
-  const m = e.target.closest('[data-anmode]');
-  if (m && AN.mode !== m.dataset.anmode) { AN.mode = m.dataset.anmode; loadAnalytics(); return; }
+  if (e.target.closest('#anSw')) { AN.mode = AN.mode === 'day' ? 'total' : 'day'; loadAnalytics(); return; }
   if (e.target.closest('#anInactive')) { AN.showInactive = !AN.showInactive; renderAnalytics(); return; }
   const b = e.target.closest('[data-an]');
   if (!b) return;
