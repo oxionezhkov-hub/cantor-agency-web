@@ -10346,40 +10346,70 @@ async function atRunChecks(env, nowMs, tasks, byId) {
   }
 }
 
-// ── Avito → Telegram: per-client notifier bots ──
-// One Telegram bot per client cabinet (token in a Worker secret, never in wrangler.jsonc). Every
-// new client message in the cabinet's Avito Messenger lands in the bot as 🔴 <name linked to the
-// Avito chat> + text, with a «Ответить» button: the reply typed in Telegram goes to the client
-// through the Avito API, from the cabinet itself. Once the chat is answered — from the bot or
-// straight on Avito — every notification of that chat turns 🟢.
-// Delivery: Avito's messenger webhook (subscribed by the setup below) plus a cron poll of the
-// latest chats as a safety net; messages are de-duplicated by id.
-// Access: open — anyone who writes to the bot is subscribed; every subscriber sees the same
-// notifications and the same 🔴/🟢 state. The owner (ANB_OWNER_ID) is told about each new user.
+// ── Avito → Telegram: notifier bots ──
+// A Telegram bot (token in a Worker secret, never in wrangler.jsonc) serving one or more client
+// cabinets. Every new client message in a cabinet's Avito Messenger lands with the people connected
+// to that cabinet as 🔴 <name linked to the Avito chat> + text, with a «Ответить» button: the reply
+// typed in Telegram goes to the client through the Avito API, from the cabinet itself. Once the
+// chat is answered — from the bot or straight on Avito — every notification of that chat turns 🟢.
+// Delivery: each cabinet's Avito messenger webhook (subscribed by the setup below) plus a cron poll
+// of the latest chats as a safety net; messages are de-duplicated by id.
+// Access: by Telegram id. Someone listed in a cabinet's `allow` is connected to it on /start; anyone
+// else is told to ask the owner (ANB_OWNER_ID), who gets the request with one button per cabinet.
+// Subscribers from before cabinets existed (no `cabinets` field) belong to the bot's defaultCabinet.
+// The owner may connect to every cabinet himself and gets /users (who is connected where).
 //
 // KV keys (binding "AGENCY_DASHBOARD_KV", "avitobot:<bot>:" prefix):
-//   setup                    -> ANB_SETUP_VERSION once both webhooks are set
-//   subs                     -> [{ id, name, addedAt }]  (Telegram users who get notifications)
-//   chat:<avitoChatId>       -> { name, item, open: [{ c, m, body }] }  (open = 🔴 notifications)
+//   setup                    -> ANB_SETUP_VERSION once the Telegram webhook is set
+//   setup:<cabinet>          -> ANB_SETUP_VERSION once that cabinet's Avito webhook is set
+//   subs                     -> [{ id, name, username, cabinets, off, addedAt }]
+//   ask:<tgUserId>           -> { name, username }  (a stranger waiting for the owner's decision)
+//   chat:<avitoChatId>       -> { cab, name, item, open: [{ c, m, body }] }  (open = 🔴 notifications)
 //   msg:<tgChatId>:<msgId>   -> avitoChatId  (notification / reply prompt → chat, for replies)
 //   await:<tgChatId>         -> avitoChatId  (the chat whose «Ответить» was pressed last)
 //   seen:<avitoMessageId>    -> "1"  (de-dup between webhook and poll)
-//   poll                     -> unix seconds of the newest message the poll has handled
+//   poll / poll:<cabinet>    -> unix seconds of the newest message the poll has handled
+//                               (the default cabinet keeps the old unsuffixed keys)
 
 const AVITO_NOTIFY_BOTS = {
+  // The key stays "romashova": it is the KV prefix and part of the webhook URLs already set.
   romashova: {
-    accountId: 'e54ce32a0dd0', // AVITO_KV account:<id> — Лариса Ромашова
     tokenEnv: 'AVITO_BOT_TOKEN_ROMASHOVA',
-    name: 'Авито · Лариса Ромашова',
-    owner: 'Ларисы',
+    name: 'Авито · сообщения клиентов',
+    defaultCabinet: 'romashova',
+    cabinets: {
+      romashova: {
+        accountId: 'e54ce32a0dd0', // AVITO_KV account:<id>
+        name: 'Лариса Ромашова',
+        owner: 'Ларисы', // «от имени …»
+        allow: ['349677180'], // Telegram ids connected on /start (@LariRoma7); her people from before are in subs
+      },
+      okuneva: {
+        accountId: '4784fc8f45b0',
+        name: 'Елена Окунева',
+        owner: 'Елены',
+        allow: ['5420238976'], // @OkunevaElena10
+      },
+      valiullova: {
+        accountId: '19486c6a0713',
+        name: 'Наталья Валиуллова',
+        owner: 'Натальи',
+        allow: ['1179375006'], // @valiullova
+      },
+    },
   },
 };
-const ANB_SETUP_VERSION = '2';
+const ANB_SETUP_VERSION = '3';
 const ANB_OWNER_ID = '1326867567';
+const ANB_OWNER_LINK = `<a href="tg://user?id=${ANB_OWNER_ID}">Олегу Ежкову</a>`;
 const ANB_TTL_DAY = 60 * 60 * 24;
 
 function anbKey(bot, rest) {
   return `avitobot:${bot}:${rest}`;
+}
+// The default cabinet keeps the keys it had before cabinets existed.
+function anbCabKey(bot, cfg, cab, rest) {
+  return anbKey(bot, cab === cfg.defaultCabinet ? rest : `${rest}:${cab}`);
 }
 async function anbHash(text, len) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -10390,6 +10420,9 @@ function anbSecrets(token) {
     anbHash(`cantor-avito-bot:tg:${token}`, 48),
     anbHash(`cantor-avito-bot:avito:${token}`, 32),
   ]).then(([tg, avito]) => ({ tg, avito }));
+}
+function anbAvitoHookUrl(bot, cfg, cab, secret) {
+  return `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secret}${cab === cfg.defaultCabinet ? '' : `/${cab}`}`;
 }
 
 async function anbApi(token, method, body) {
@@ -10406,8 +10439,8 @@ async function anbApi(token, method, body) {
   }
 }
 
-async function anbAccount(env, cfg) {
-  const account = await env.AVITO_KV.get(`account:${cfg.accountId}`, 'json');
+async function anbAccount(env, cabinet) {
+  const account = await env.AVITO_KV.get(`account:${cabinet.accountId}`, 'json');
   if (!account || !account.userId) throw new Error('avito_account_not_found');
   return account;
 }
@@ -10423,16 +10456,18 @@ function anbMessageText(m) {
   if (m.type === 'voice') return '🎤 Голосовое сообщение (откройте чат в Авито)';
   if (m.type === 'system') {
     const t = String(content.text || '');
-    if (/создал чат/i.test(t)) return '✏️ Создал чат, но пока ничего не написал — напишите первыми';
-    if (/ознакомился с вашим предложением/i.test(t)) return '📨 Открыл(а) предложение из рассылки';
+    if (/создал\s+чат/i.test(t)) return '✏️ Создал чат, но пока ничего не написал — напишите первыми';
+    if (/заинтересовало\s+ваше\s+предложение/i.test(t)) return '💚 Заинтересовался предложением из рассылки — напишите первыми';
+    if (/ознакомился\s+с\s+вашим\s+предложением/i.test(t)) return '📨 Открыл(а) предложение из рассылки';
     return '';
   }
   return avitoMessageText(m);
 }
-// System messages worth a notification: an empty chat and an opened promo offer are leads too.
+// System messages worth a notification: an empty chat, an opened promo offer and an interested
+// buyer (the green chat) are leads too. Avito puts non-breaking spaces in them — hence \s.
 function anbIsLeadSystem(m) {
   const t = String((m.content && m.content.text) || '');
-  return /создал чат|ознакомился с вашим предложением/i.test(t);
+  return /создал\s+чат|ознакомился\s+с\s+вашим\s+предложением|заинтересовало\s+ваше\s+предложение/i.test(t);
 }
 
 function anbTrim(text, max) {
@@ -10447,10 +10482,39 @@ function anbButtons(chatId, again) {
 async function anbSubs(env, bot) {
   return (await env.AGENCY_DASHBOARD_KV.get(anbKey(bot, 'subs'), 'json')) || [];
 }
+function anbSaveSubs(env, bot, subs) {
+  return env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'subs'), JSON.stringify(subs));
+}
+function anbSubCabinets(cfg, sub) {
+  return (sub.cabinets || [cfg.defaultCabinet]).filter((cab) => cfg.cabinets[cab]);
+}
+function anbUserName(from) {
+  return [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
+}
+function anbCabinetNames(cfg, cabs) {
+  return cabs.map((cab) => cfg.cabinets[cab].name).join(', ');
+}
 
-async function anbChatState(env, bot, cfg, token, account, chatId) {
+function anbInstruction(cfg, cabs) {
+  const many = cabs.length > 1;
+  return `👋 Здравствуйте! Это бот уведомлений с Авито.\n${many ? 'Ваши кабинеты' : 'Ваш кабинет'}: <b>${escapeHtml(anbCabinetNames(cfg, cabs))}</b>.\n\n`
+    + '<b>Как это работает</b>\n'
+    + '• Клиент пишет в Авито — сообщение сразу приходит сюда: имя клиента (ссылка на чат в Авито), объявление и текст.\n'
+    + '• Ещё приходят: 📞 звонки через Авито, ✏️ «создал чат, но ничего не написал», 📨 «открыл предложение из рассылки» и 💚 «заинтересовало предложение из рассылки» — в этих случаях напишите клиенту первыми.\n'
+    + '• 🔴 — клиенту ещё не ответили, 🟢 — уже ответили (здесь или в приложении Авито). Значок меняется сам.\n\n'
+    + '<b>Как ответить клиенту</b>\n'
+    + '• Нажмите «✍️ Ответить» под сообщением и напишите текст — он уйдёт клиенту в Авито от имени кабинета.\n'
+    + '• Отправить можно только текст. Фото, голосовые и файлы — в приложении Авито (ссылка на чат — в имени клиента).\n\n'
+    + '<b>Команды</b>\n'
+    + '/help — эта инструкция\n'
+    + '/stop — отключить уведомления (/start — включить снова)';
+}
+
+// ── incoming Avito message (from the webhook or the poll) ──
+async function anbChatState(env, bot, cab, token, account, chatId) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || { open: [] };
+  state.cab = cab;
   if (!state.name) {
     try {
       const info = await avitoJson(token, `/messenger/v2/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}`);
@@ -10467,8 +10531,7 @@ async function anbChatState(env, bot, cfg, token, account, chatId) {
   return state;
 }
 
-// ── incoming Avito message (from the webhook or the poll) ──
-async function anbHandleAvitoMessage(env, bot, cfg, token, account, v) {
+async function anbHandleAvitoMessage(env, bot, cfg, cab, token, account, v) {
   const kv = env.AGENCY_DASHBOARD_KV;
   if (!v || !v.chat_id || !v.id) return;
   const seenKey = anbKey(bot, `seen:${v.id}`);
@@ -10485,22 +10548,24 @@ async function anbHandleAvitoMessage(env, bot, cfg, token, account, v) {
   const text = anbMessageText(v);
   if (!text) return;
 
-  const subs = await anbSubs(env, bot);
+  const subs = (await anbSubs(env, bot)).filter((s) => !s.off && anbSubCabinets(cfg, s).includes(cab));
   if (!subs.length) return;
-  const state = await anbChatState(env, bot, cfg, avitoToken, account, v.chat_id);
+  const state = await anbChatState(env, bot, cab, avitoToken, account, v.chat_id);
   const body = `<a href="${anbChatLink(v.chat_id)}">${escapeHtml(state.name)}</a>`
     + (state.item ? `\n<i>${escapeHtml(anbTrim(state.item, 150))}</i>` : '')
     + `\n\n${escapeHtml(anbTrim(text, 3000))}`;
   for (const sub of subs) {
+    // Someone connected to several cabinets needs to see which one the client wrote to.
+    const subBody = anbSubCabinets(cfg, sub).length > 1 ? `[${escapeHtml(cfg.cabinets[cab].name)}] ${body}` : body;
     const res = await anbApi(token, 'sendMessage', {
       chat_id: sub.id,
-      text: `🔴 ${body}`,
+      text: `🔴 ${subBody}`,
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
       reply_markup: anbButtons(v.chat_id, false),
     });
     if (res.ok && res.result) {
-      state.open.push({ c: sub.id, m: res.result.message_id, body });
+      state.open.push({ c: sub.id, m: res.result.message_id, body: subBody });
       await kv.put(anbKey(bot, `msg:${sub.id}:${res.result.message_id}`), v.chat_id, { expirationTtl: ANB_TTL_DAY * 30 });
     }
   }
@@ -10530,35 +10595,74 @@ async function anbMarkAnswered(env, bot, token, chatId, { via, by, text }) {
 }
 
 // ── Telegram side ──
-async function anbAddSub(env, bot, cfg, token, subs, from) {
-  const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
-  subs.push({ id: from.id, name, username: from.username || null, addedAt: new Date().toISOString() });
-  await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'subs'), JSON.stringify(subs));
-  if (String(from.id) === ANB_OWNER_ID) return;
-  const note = `👤 Новый пользователь бота «${escapeHtml(cfg.name)}»: <b>${escapeHtml(name)}</b>`
-    + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code>. Всего пользователей: ${subs.length}.`;
-  // Through this bot if the owner has started it, otherwise through the control bot.
-  const sent = await anbApi(token, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
-  if (!sent.ok && env.CONTROL_BOT_TOKEN) await anbApi(env.CONTROL_BOT_TOKEN, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
+// To the owner through this bot if he has started it, otherwise through the control bot.
+async function anbNotifyOwner(env, token, text, extra) {
+  const body = { chat_id: ANB_OWNER_ID, text, parse_mode: 'HTML', ...(extra || {}) };
+  const sent = await anbApi(token, 'sendMessage', body);
+  if (!sent.ok && env.CONTROL_BOT_TOKEN) {
+    // The buttons only work in this bot — through the control bot just say how to get them.
+    const hint = body.reply_markup ? '\n\nЧтобы выдать доступ кнопками, запустите этого бота и попросите человека написать ему ещё раз.' : '';
+    await anbApi(env.CONTROL_BOT_TOKEN, 'sendMessage', { chat_id: ANB_OWNER_ID, text: text + hint, parse_mode: 'HTML' });
+  }
+  return sent;
+}
+
+// Connects a Telegram user to cabinets (keeping the ones they already have) and turns them back on.
+async function anbConnect(env, bot, cfg, subs, user, cabs) {
+  let sub = subs.find((s) => String(s.id) === String(user.id));
+  if (!sub) {
+    sub = { id: user.id, name: user.name, username: user.username || null, cabinets: [], addedAt: new Date().toISOString() };
+    subs.push(sub);
+  }
+  sub.cabinets = [...new Set([...anbSubCabinets(cfg, sub), ...cabs])];
+  delete sub.off;
+  await anbSaveSubs(env, bot, subs);
+  return sub;
 }
 
 async function anbOnTelegram(env, bot, cfg, token, update) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const subs = await anbSubs(env, bot);
-  const isSub = (id) => subs.some((s) => String(s.id) === String(id));
+  const findSub = (id) => subs.find((s) => String(s.id) === String(id));
+  const isOwner = (id) => String(id) === ANB_OWNER_ID;
 
   if (update.callback_query) {
     const q = update.callback_query;
     const data = String(q.data || '');
-    if (q.from && !isSub(q.from.id)) await anbAddSub(env, bot, cfg, token, subs, q.from);
+    const sub = q.from && findSub(q.from.id);
+
+    // Owner's decision on an access request: g:<tgUserId>:<cabinet> / x:<tgUserId>
+    if ((data.startsWith('g:') || data.startsWith('x:')) && isOwner(q.from.id)) {
+      const [kind, userId, cab] = data.split(':');
+      const ask = (await kv.get(anbKey(bot, `ask:${userId}`), 'json')) || {};
+      const who = `<b>${escapeHtml(ask.name || userId)}</b>${ask.username ? ` (@${escapeHtml(ask.username)})` : ''}, id <code>${escapeHtml(userId)}</code>`;
+      let result;
+      if (kind === 'g' && cfg.cabinets[cab]) {
+        const added = await anbConnect(env, bot, cfg, subs, { id: Number(userId), name: ask.name || userId, username: ask.username }, [cab]);
+        await anbApi(token, 'sendMessage', { chat_id: added.id, text: anbInstruction(cfg, anbSubCabinets(cfg, added)), parse_mode: 'HTML' });
+        result = `✅ ${who} подключён(а) к кабинету «${escapeHtml(cfg.cabinets[cab].name)}».`;
+      } else {
+        result = `🚫 ${who} — доступ не выдан.`;
+      }
+      await kv.delete(anbKey(bot, `ask:${userId}`));
+      await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
+      if (q.message) await anbApi(token, 'editMessageText', { chat_id: q.message.chat.id, message_id: q.message.message_id, text: result, parse_mode: 'HTML' });
+      return;
+    }
+
     if (data.startsWith('r:')) {
       const chatId = data.slice(2);
       const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
+      const cab = state.cab || cfg.defaultCabinet;
+      if (!sub || sub.off || !anbSubCabinets(cfg, sub).includes(cab)) {
+        await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id, text: 'Нет доступа к этому кабинету', show_alert: true });
+        return;
+      }
       await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
       const tgChat = q.message ? q.message.chat.id : q.from.id;
       const prompt = await anbApi(token, 'sendMessage', {
         chat_id: tgChat,
-        text: `✍️ Ответ для <b>${escapeHtml(state.name || 'клиента')}</b>\nНапишите текст — он уйдёт клиенту в Авито от имени ${escapeHtml(cfg.owner)}.`,
+        text: `✍️ Ответ для <b>${escapeHtml(state.name || 'клиента')}</b>\nНапишите текст — он уйдёт клиенту в Авито от имени ${escapeHtml(cfg.cabinets[cab].owner)}.`,
         parse_mode: 'HTML',
         reply_markup: { force_reply: true, input_field_placeholder: 'Ответ клиенту' },
       });
@@ -10566,7 +10670,9 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
         await kv.put(anbKey(bot, `msg:${tgChat}:${prompt.result.message_id}`), chatId, { expirationTtl: ANB_TTL_DAY * 30 });
       }
       await kv.put(anbKey(bot, `await:${tgChat}`), chatId, { expirationTtl: 60 * 60 });
+      return;
     }
+    await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
     return;
   }
 
@@ -10574,17 +10680,49 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   if (!msg || !msg.chat || msg.chat.type !== 'private') return;
   const from = msg.from || {};
   const text = String(msg.text || '').trim();
-  const reply = (t) => anbApi(token, 'sendMessage', { chat_id: msg.chat.id, text: t, parse_mode: 'HTML' });
+  const reply = (t) => anbApi(token, 'sendMessage', { chat_id: msg.chat.id, text: t, parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
+  let sub = findSub(from.id);
+  const user = { id: from.id, name: anbUserName(from), username: from.username };
 
-  if (!isSub(from.id)) {
-    await anbAddSub(env, bot, cfg, token, subs, from);
-    return reply(`Готово! Сюда будут приходить новые сообщения клиентов из Авито (${escapeHtml(cfg.name)}).\n\n`
-      + '🔴 — ещё не ответили, 🟢 — ответили (здесь или на Авито).\n'
-      + 'Нажмите «Ответить» под сообщением, напишите текст — он уйдёт клиенту в Авито.');
+  if (isOwner(from.id) && text === '/users') {
+    const lines = subs.map((s) => `• ${escapeHtml(s.name)}${s.username ? ` (@${escapeHtml(s.username)})` : ''}, <code>${s.id}</code> — `
+      + `${escapeHtml(anbCabinetNames(cfg, anbSubCabinets(cfg, s)) || '—')}${s.off ? ' (отключил уведомления)' : ''}`);
+    return reply(lines.length ? `👥 <b>Пользователи бота</b>\n${lines.join('\n')}` : 'Пока никто не подключён.');
   }
-  if (text.startsWith('/start')) return reply('Вы уже подключены. Новые сообщения клиентов из Авито будут приходить сюда.');
+
+  // Cabinets this person may have: listed in `allow`, or all of them for the owner.
+  const allowed = Object.keys(cfg.cabinets).filter((cab) => isOwner(from.id) || (cfg.cabinets[cab].allow || []).map(String).includes(String(from.id)));
+  const missing = allowed.filter((cab) => !sub || !anbSubCabinets(cfg, sub).includes(cab));
+
+  // A cabinet added to `allow` later joins quietly, so the message itself (maybe a reply) still goes through.
+  if (sub && missing.length && !text.startsWith('/start')) sub = await anbConnect(env, bot, cfg, subs, user, allowed);
+  if (!sub || (text.startsWith('/start') && (sub.off || missing.length))) {
+    if (!sub && !allowed.length) {
+      // A stranger: point them to the owner, and ask the owner once per person.
+      const askKey = anbKey(bot, `ask:${from.id}`);
+      if (!(await kv.get(askKey))) {
+        await kv.put(askKey, JSON.stringify({ name: user.name, username: user.username || null }), { expirationTtl: ANB_TTL_DAY * 30 });
+        const buttons = Object.entries(cfg.cabinets).map(([cab, c]) => [{ text: `➕ ${c.name}`, callback_data: `g:${from.id}:${cab}` }]);
+        buttons.push([{ text: '🚫 Не давать доступ', callback_data: `x:${from.id}` }]);
+        await anbNotifyOwner(env, token, `🔐 Просит доступ к боту «${escapeHtml(cfg.name)}»: <b>${escapeHtml(user.name)}</b>`
+          + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code>.\nК какому кабинету подключить?`,
+        { reply_markup: { inline_keyboard: buttons } });
+      }
+      return reply('Здравствуйте! Этот бот присылает уведомления о новых сообщениях клиентов с Авито.\n\n'
+        + `Чтобы получить доступ к уведомлениям, напишите ${ANB_OWNER_LINK} — он подключит вас к вашему кабинету, и сообщения начнут приходить сюда.`);
+    }
+    const isNew = !sub;
+    sub = await anbConnect(env, bot, cfg, subs, user, allowed);
+    if (isNew && !isOwner(from.id)) {
+      await anbNotifyOwner(env, token, `👤 Новый пользователь бота «${escapeHtml(cfg.name)}»: <b>${escapeHtml(user.name)}</b>`
+        + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code> — ${escapeHtml(anbCabinetNames(cfg, anbSubCabinets(cfg, sub)))}.`);
+    }
+    return reply(anbInstruction(cfg, anbSubCabinets(cfg, sub)));
+  }
+  if (text.startsWith('/start') || text === '/help') return reply(anbInstruction(cfg, anbSubCabinets(cfg, sub)));
   if (text === '/stop') {
-    await kv.put(anbKey(bot, 'subs'), JSON.stringify(subs.filter((s) => String(s.id) !== String(from.id))));
+    sub.off = true;
+    await anbSaveSubs(env, bot, subs);
     return reply('Уведомления отключены. Чтобы вернуть — напишите боту /start.');
   }
   if (!text) return reply('Пока можно отправлять клиенту только текст. Фото и файлы — в приложении Авито.');
@@ -10592,9 +10730,12 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   let chatId = null;
   if (msg.reply_to_message) chatId = await kv.get(anbKey(bot, `msg:${msg.chat.id}:${msg.reply_to_message.message_id}`));
   if (!chatId) chatId = await kv.get(anbKey(bot, `await:${msg.chat.id}`));
-  if (!chatId) return reply('Чтобы ответить клиенту, нажмите «✍️ Ответить» под его сообщением.');
+  if (!chatId) return reply('Чтобы ответить клиенту, нажмите «✍️ Ответить» под его сообщением. Как работает бот — /help.');
 
-  const account = await anbAccount(env, cfg);
+  const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
+  const cab = state.cab || cfg.defaultCabinet;
+  if (!anbSubCabinets(cfg, sub).includes(cab)) return reply('Нет доступа к кабинету этого чата.');
+  const account = await anbAccount(env, cfg.cabinets[cab]);
   const avitoToken = await avitoGetToken(env, account);
   const res = await avitoRequest(avitoToken, `/messenger/v1/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}/messages`, {
     method: 'POST',
@@ -10608,49 +10749,63 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   if (sent && sent.id) await kv.put(anbKey(bot, `seen:${sent.id}`), '1', { expirationTtl: ANB_TTL_DAY * 7 });
   await avitoRequest(avitoToken, `/messenger/v1/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}/read`, { method: 'POST' }).catch(() => null);
   await kv.delete(anbKey(bot, `await:${msg.chat.id}`));
-  const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
   await anbMarkAnswered(env, bot, token, chatId, { via: 'tg', by: from.first_name || from.username, text });
   return reply(`✅ Отправлено: <a href="${anbChatLink(chatId)}">${escapeHtml(state.name || 'клиент')}</a>`);
 }
 
-// ── setup: Telegram webhook, bot profile, Avito messenger webhook ──
-async function anbSetup(env, bot, cfg, token) {
+// ── setup: Telegram webhook and bot profile, then each cabinet's Avito messenger webhook ──
+async function anbSetup(env, bot, cfg, token, force) {
+  const kv = env.AGENCY_DASHBOARD_KV;
   const secrets = await anbSecrets(token);
-  const results = {};
-  results.telegram = await anbApi(token, 'setWebhook', {
-    url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/tg`,
-    secret_token: secrets.tg,
-    allowed_updates: ['message', 'callback_query'],
-  });
-  results.name = await anbApi(token, 'setMyName', { name: cfg.name });
-  results.description = await anbApi(token, 'setMyDescription', {
-    description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
-  });
-  results.commands = await anbApi(token, 'setMyCommands', { commands: [{ command: 'stop', description: 'Отключить уведомления' }] });
-  const me = await anbApi(token, 'getMe', {});
-  try {
-    const account = await anbAccount(env, cfg);
-    const avitoToken = await avitoGetToken(env, account);
-    const res = await avitoRequest(avitoToken, '/messenger/v3/webhook', {
-      method: 'POST',
-      body: JSON.stringify({ url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secrets.avito}` }),
+  const results = { avito: {} };
+  if (force || (await kv.get(anbKey(bot, 'setup'))) !== ANB_SETUP_VERSION) {
+    results.telegram = await anbApi(token, 'setWebhook', {
+      url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/tg`,
+      secret_token: secrets.tg,
+      allowed_updates: ['message', 'callback_query'],
     });
-    results.avito = { status: res.status, body: (await res.text().catch(() => '')).slice(0, 300) };
-  } catch (err) {
-    results.avito = { error: String(err && err.message) };
+    results.name = await anbApi(token, 'setMyName', { name: cfg.name });
+    results.description = await anbApi(token, 'setMyDescription', {
+      description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
+    });
+    results.commands = await anbApi(token, 'setMyCommands', {
+      commands: [
+        { command: 'help', description: 'Как работает бот' },
+        { command: 'stop', description: 'Отключить уведомления' },
+      ],
+    });
+    if (results.telegram && results.telegram.ok) await kv.put(anbKey(bot, 'setup'), ANB_SETUP_VERSION);
   }
-  const ok = !!(results.telegram && results.telegram.ok) && !!(results.avito && results.avito.status === 200);
-  if (ok) await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'setup'), ANB_SETUP_VERSION);
+  let ok = !results.telegram || !!results.telegram.ok;
+  for (const [cab, cabinet] of Object.entries(cfg.cabinets)) {
+    const setupKey = anbCabKey(bot, cfg, cab, 'setup');
+    if (!force && (await kv.get(setupKey)) === ANB_SETUP_VERSION) continue;
+    try {
+      const account = await anbAccount(env, cabinet);
+      const avitoToken = await avitoGetToken(env, account);
+      const res = await avitoRequest(avitoToken, '/messenger/v3/webhook', {
+        method: 'POST',
+        body: JSON.stringify({ url: anbAvitoHookUrl(bot, cfg, cab, secrets.avito) }),
+      });
+      results.avito[cab] = { status: res.status, body: (await res.text().catch(() => '')).slice(0, 300) };
+      if (res.status === 200) await kv.put(setupKey, ANB_SETUP_VERSION);
+      else ok = false;
+    } catch (err) {
+      results.avito[cab] = { error: String(err && err.message) };
+      ok = false;
+    }
+  }
+  const me = await anbApi(token, 'getMe', {});
   const username = me.ok && me.result && me.result.username;
   return { ok, link: username ? `https://t.me/${username}` : null, results };
 }
 
 // ── poll: safety net for missed webhooks ──
-async function anbPoll(env, bot, cfg, token) {
+async function anbPoll(env, bot, cfg, cab, token) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const account = await anbAccount(env, cfg);
+  const account = await anbAccount(env, cfg.cabinets[cab]);
   const avitoToken = await avitoGetToken(env, account);
-  const pollKey = anbKey(bot, 'poll');
+  const pollKey = anbCabKey(bot, cfg, cab, 'poll');
   const since = Number(await kv.get(pollKey)) || 0;
   const data = await avitoJson(avitoToken, `/messenger/${AVITO_CHATS_VERSION}/accounts/${account.userId}/chats?chat_types=u2i&limit=20`);
   const chats = data.chats || [];
@@ -10663,7 +10818,7 @@ async function anbPoll(env, bot, cfg, token) {
     const res = await avitoJson(avitoToken, `/messenger/${AVITO_MESSAGES_VERSION}/accounts/${account.userId}/chats/${encodeURIComponent(c.id)}/messages?limit=20&offset=0`);
     const msgs = (Array.isArray(res) ? res : res.messages || []).filter((m) => Number(m.created) > since);
     msgs.sort((a, b) => Number(a.created) - Number(b.created));
-    for (const m of msgs) await anbHandleAvitoMessage(env, bot, cfg, token, account, { ...m, chat_id: c.id });
+    for (const m of msgs) await anbHandleAvitoMessage(env, bot, cfg, cab, token, account, { ...m, chat_id: c.id });
   }
   if (newest > since) await kv.put(pollKey, String(newest));
 }
@@ -10673,16 +10828,22 @@ async function avitoNotifyCron(env) {
     const token = env[cfg.tokenEnv];
     if (!token) continue;
     try {
-      if ((await env.AGENCY_DASHBOARD_KV.get(anbKey(bot, 'setup'))) !== ANB_SETUP_VERSION) await anbSetup(env, bot, cfg, token);
-      await anbPoll(env, bot, cfg, token);
+      await anbSetup(env, bot, cfg, token, false);
     } catch (err) {
-      console.error(`avito notify bot ${bot} cron failed`, err && err.stack);
+      console.error(`avito notify bot ${bot} setup failed`, err && err.stack);
+    }
+    for (const cab of Object.keys(cfg.cabinets)) {
+      try {
+        await anbPoll(env, bot, cfg, cab, token);
+      } catch (err) {
+        console.error(`avito notify bot ${bot}/${cab} poll failed`, err && err.stack);
+      }
     }
   }
 }
 
 async function handleAvitoBotApi(request, env, url, ctx) {
-  const m = url.pathname.match(/^\/api\/avitobot\/([a-z0-9-]+)\/(tg|avito|setup)(?:\/([a-f0-9]+))?$/);
+  const m = url.pathname.match(/^\/api\/avitobot\/([a-z0-9-]+)\/(tg|avito|setup)(?:\/([a-f0-9]+))?(?:\/([a-z0-9-]+))?$/);
   const bot = m && m[1];
   const cfg = bot && AVITO_NOTIFY_BOTS[bot];
   if (!cfg) return json({ error: 'not_found' }, 404);
@@ -10692,8 +10853,8 @@ async function handleAvitoBotApi(request, env, url, ctx) {
 
   if (m[2] === 'setup') {
     if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
-    const result = await anbSetup(env, bot, cfg, token);
-    result.subscribers = (await anbSubs(env, bot)).map((s) => s.name);
+    const result = await anbSetup(env, bot, cfg, token, true);
+    result.subscribers = (await anbSubs(env, bot)).map((s) => `${s.name}: ${anbCabinetNames(cfg, anbSubCabinets(cfg, s))}${s.off ? ' (off)' : ''}`);
     return json(result);
   }
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
@@ -10710,13 +10871,14 @@ async function handleAvitoBotApi(request, env, url, ctx) {
   }
 
   // Avito messenger webhook: {payload: {type: 'message', value: {id, chat_id, author_id, type, content, …}}}
-  if (m[3] !== secrets.avito) return json({ ok: false }, 403);
+  const cab = m[4] || cfg.defaultCabinet;
+  if (m[3] !== secrets.avito || !cfg.cabinets[cab]) return json({ ok: false }, 403);
   const event = await readJson(request);
   const value = event && event.payload && event.payload.type === 'message' ? event.payload.value : null;
   if (value) {
-    const work = anbAccount(env, cfg)
-      .then((account) => anbHandleAvitoMessage(env, bot, cfg, token, account, value))
-      .catch((err) => console.error(`avito notify bot ${bot} avito event failed`, err && err.stack));
+    const work = anbAccount(env, cfg.cabinets[cab])
+      .then((account) => anbHandleAvitoMessage(env, bot, cfg, cab, token, account, value))
+      .catch((err) => console.error(`avito notify bot ${bot}/${cab} avito event failed`, err && err.stack));
     if (ctx && ctx.waitUntil) ctx.waitUntil(work); else await work;
   }
   return json({ ok: true });
