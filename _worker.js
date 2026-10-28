@@ -10356,7 +10356,8 @@ async function atRunChecks(env, nowMs, tasks, byId) {
 // of the latest chats as a safety net; messages are de-duplicated by id.
 // Access: by Telegram id. Someone listed in a cabinet's `allow` is connected to it on /start; anyone
 // else is told to ask the owner (ANB_OWNER_ID), who gets the request with one button per cabinet.
-// Subscribers from before cabinets existed (no `cabinets` field) belong to the bot's defaultCabinet.
+// Subscribers from before cabinets existed (no `cabinets` field) belong to the bot's defaultCabinet;
+// a cabinet's allowSubsOf also admits the subscribers of a retired bot (AVITO_RETIRED_BOTS).
 // The owner may connect to every cabinet himself and gets /users (who is connected where).
 //
 // KV keys (binding "AGENCY_DASHBOARD_KV", "avitobot:<bot>:" prefix):
@@ -10372,17 +10373,18 @@ async function atRunChecks(env, nowMs, tasks, byId) {
 //                               (the default cabinet keeps the old unsuffixed keys)
 
 const AVITO_NOTIFY_BOTS = {
-  // The key stays "romashova": it is the KV prefix and part of the webhook URLs already set.
-  romashova: {
-    tokenEnv: 'AVITO_BOT_TOKEN_ROMASHOVA',
+  cantor: {
+    tokenEnv: 'AVITO_BOT_TOKEN_CANTOR', // @cantor_agency_avito_message_bot
     name: 'Авито · сообщения клиентов',
-    defaultCabinet: 'romashova',
+    defaultCabinet: null, // every cabinet has its own suffixed keys and webhook URL
     cabinets: {
       romashova: {
         accountId: 'e54ce32a0dd0', // AVITO_KV account:<id>
         name: 'Лариса Ромашова',
         owner: 'Ларисы', // «от имени …»
-        allow: ['349677180'], // Telegram ids connected on /start (@LariRoma7); her people from before are in subs
+        allow: ['349677180'], // Telegram ids connected on /start (@LariRoma7)
+        // her people from the old single-cabinet bot: its subscribers are connected here on /start
+        allowSubsOf: 'romashova',
       },
       okuneva: {
         accountId: '4784fc8f45b0',
@@ -10397,6 +10399,17 @@ const AVITO_NOTIFY_BOTS = {
         allow: ['1179375006'], // @valiullova
       },
     },
+  },
+};
+// Bots taken out of service: once the new bot is set up, every subscriber gets one «we moved»
+// message, the cabinet's Avito webhook to the old bot is dropped, and whatever is written to the
+// old bot is answered with a link to the new one. Its KV (subs) stays — allowSubsOf reads it.
+const AVITO_RETIRED_BOTS = {
+  romashova: {
+    tokenEnv: 'AVITO_BOT_TOKEN_ROMASHOVA',
+    movedTo: 'cantor',
+    link: 'https://t.me/cantor_agency_avito_message_bot',
+    avito: [{ accountId: 'e54ce32a0dd0' }], // webhook URL of the old bot: …/avito/<secret> (no suffix)
   },
 };
 const ANB_SETUP_VERSION = '3';
@@ -10690,8 +10703,13 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
     return reply(lines.length ? `👥 <b>Пользователи бота</b>\n${lines.join('\n')}` : 'Пока никто не подключён.');
   }
 
-  // Cabinets this person may have: listed in `allow`, or all of them for the owner.
-  const allowed = Object.keys(cfg.cabinets).filter((cab) => isOwner(from.id) || (cfg.cabinets[cab].allow || []).map(String).includes(String(from.id)));
+  // Cabinets this person may have: listed in `allow` (or among a retired bot's subscribers), or
+  // all of them for the owner.
+  const allowed = [];
+  for (const [cab, c] of Object.entries(cfg.cabinets)) {
+    if (isOwner(from.id) || (c.allow || []).map(String).includes(String(from.id))) allowed.push(cab);
+    else if (!sub && c.allowSubsOf && (await anbSubs(env, c.allowSubsOf)).some((s) => String(s.id) === String(from.id))) allowed.push(cab);
+  }
   const missing = allowed.filter((cab) => !sub || !anbSubCabinets(cfg, sub).includes(cab));
 
   // A cabinet added to `allow` later joins quietly, so the message itself (maybe a reply) still goes through.
@@ -10764,7 +10782,6 @@ async function anbSetup(env, bot, cfg, token, force) {
       secret_token: secrets.tg,
       allowed_updates: ['message', 'callback_query'],
     });
-    results.name = await anbApi(token, 'setMyName', { name: cfg.name });
     results.description = await anbApi(token, 'setMyDescription', {
       description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
     });
@@ -10795,8 +10812,8 @@ async function anbSetup(env, bot, cfg, token, force) {
       ok = false;
     }
   }
-  const me = await anbApi(token, 'getMe', {});
-  const username = me.ok && me.result && me.result.username;
+  const me = force ? await anbApi(token, 'getMe', {}) : null;
+  const username = me && me.ok && me.result && me.result.username;
   return { ok, link: username ? `https://t.me/${username}` : null, results };
 }
 
@@ -10823,6 +10840,44 @@ async function anbPoll(env, bot, cfg, cab, token) {
   if (newest > since) await kv.put(pollKey, String(newest));
 }
 
+// ── retired bots ──
+function anbMovedText(retired) {
+  return '📦 <b>Бот уведомлений Авито переехал.</b>\n\n'
+    + `Новые сообщения клиентов теперь приходят в новый бот: ${retired.link}\n`
+    + 'Откройте его и нажмите «Старт» — подключение произойдёт автоматически. Сюда уведомления больше не придут.';
+}
+
+async function anbRetire(env, bot, retired, token) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const doneKey = anbKey(bot, 'retired');
+  if (await kv.get(doneKey)) return { already: true };
+  // Not before the new bot is live — otherwise people would be sent to a bot that doesn't answer yet.
+  if ((await kv.get(anbKey(retired.movedTo, 'setup'))) !== ANB_SETUP_VERSION) return { waiting: retired.movedTo };
+  await kv.put(doneKey, new Date().toISOString());
+  const results = { notified: [], avito: [] };
+  for (const sub of (await anbSubs(env, bot)).filter((s) => !s.off)) {
+    const res = await anbApi(token, 'sendMessage', { chat_id: sub.id, text: anbMovedText(retired), parse_mode: 'HTML' });
+    results.notified.push(`${sub.name}: ${res.ok ? 'ok' : res.description}`);
+  }
+  const secrets = await anbSecrets(token);
+  for (const cabinet of retired.avito) {
+    try {
+      const account = await anbAccount(env, cabinet);
+      const avitoToken = await avitoGetToken(env, account);
+      const res = await avitoRequest(avitoToken, '/messenger/v1/webhook/unsubscribe', {
+        method: 'POST',
+        body: JSON.stringify({ url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secrets.avito}` }),
+      });
+      results.avito.push({ status: res.status });
+    } catch (err) {
+      results.avito.push({ error: String(err && err.message) });
+    }
+  }
+  await anbApi(token, 'setMyDescription', { description: `Бот переехал: ${retired.link}` });
+  await anbApi(token, 'setMyCommands', { commands: [] });
+  return results;
+}
+
 async function avitoNotifyCron(env) {
   for (const [bot, cfg] of Object.entries(AVITO_NOTIFY_BOTS)) {
     const token = env[cfg.tokenEnv];
@@ -10840,12 +10895,24 @@ async function avitoNotifyCron(env) {
       }
     }
   }
+  // After the live bots: a retired bot waits for its replacement's setup.
+  for (const [bot, retired] of Object.entries(AVITO_RETIRED_BOTS)) {
+    const token = env[retired.tokenEnv];
+    if (!token) continue;
+    try {
+      await anbRetire(env, bot, retired, token);
+    } catch (err) {
+      console.error(`avito notify bot ${bot} retirement failed`, err && err.stack);
+    }
+  }
 }
 
 async function handleAvitoBotApi(request, env, url, ctx) {
   const m = url.pathname.match(/^\/api\/avitobot\/([a-z0-9-]+)\/(tg|avito|setup)(?:\/([a-f0-9]+))?(?:\/([a-z0-9-]+))?$/);
   const bot = m && m[1];
   const cfg = bot && AVITO_NOTIFY_BOTS[bot];
+  const retired = !cfg && bot && AVITO_RETIRED_BOTS[bot];
+  if (retired) return handleRetiredAvitoBot(request, env, url, m, bot, retired);
   if (!cfg) return json({ error: 'not_found' }, 404);
   const token = env[cfg.tokenEnv];
   if (!token) return json({ error: `${cfg.tokenEnv} is not set` }, 503);
@@ -10882,6 +10949,27 @@ async function handleAvitoBotApi(request, env, url, ctx) {
     if (ctx && ctx.waitUntil) ctx.waitUntil(work); else await work;
   }
   return json({ ok: true });
+}
+
+async function handleRetiredAvitoBot(request, env, url, m, bot, retired) {
+  const token = env[retired.tokenEnv];
+  if (!token) return json({ error: `${retired.tokenEnv} is not set` }, 503);
+  if (m[2] === 'setup') {
+    if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
+    return json(await anbRetire(env, bot, retired, token));
+  }
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const secrets = await anbSecrets(token);
+  if (m[2] === 'tg') {
+    if (request.headers.get('X-Telegram-Bot-Api-Secret-Token') !== secrets.tg) return json({ ok: false }, 403);
+    const update = await readJson(request);
+    const q = update && update.callback_query;
+    const chatId = q ? q.from.id : update && update.message && update.message.chat.type === 'private' && update.message.chat.id;
+    if (q) await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
+    if (chatId) await anbApi(token, 'sendMessage', { chat_id: chatId, text: anbMovedText(retired), parse_mode: 'HTML' });
+    return json({ ok: true });
+  }
+  return json({ ok: true }); // Avito events that still arrive before the unsubscribe — dropped
 }
 
 // ── /academy: 14-day training course for Avito trainees ──
