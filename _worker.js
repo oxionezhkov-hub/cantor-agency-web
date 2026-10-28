@@ -10401,7 +10401,7 @@ const AVITO_NOTIFY_BOTS = {
 };
 const ANB_SETUP_VERSION = '3';
 const ANB_OWNER_ID = '1326867567';
-const ANB_OWNER_LINK = `<a href="tg://user?id=${ANB_OWNER_ID}">Олегу Ежкову</a>`;
+const ANB_OWNER_LINK = '<a href="https://t.me/oleg_ezhkov">Олегу Ежкову (@oleg_ezhkov)</a>';
 const ANB_TTL_DAY = 60 * 60 * 24;
 
 function anbKey(bot, rest) {
