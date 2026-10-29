@@ -293,6 +293,11 @@ a{color:inherit}
 
 /* inline editor */
 .claim-sec .sec-sub{font-size:13px;color:var(--muted);margin:-6px 2px 10px}
+.claim-head{width:100%;text-align:left;border-radius:10px;padding:6px 4px;margin-left:-4px}
+.claim-head:hover{background:var(--sunken)}
+.claim-tg{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.claim-tg .ic{transition:transform .15s;transform:rotate(180deg)}
+.claim-sec.shut .claim-tg .ic{transform:none}
 .task.unclaimed{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:0 0 0 3px var(--accent-ring)}
 .claim-btn{min-height:30px;padding:0 12px;font-size:12.5px}
 .tag-hint{background:var(--green-bg);color:var(--green)}
@@ -2412,9 +2417,11 @@ function renderLists() {
   const focus = new Set(mine.filter((t) => isOpen(t) && urgency(t, now) >= 150).slice(0, 3).map((t) => t.id));
   let html = '';
   if (unclaimed.length) {
-    html += `<div class="section claim-sec"><div class="sec-head"><h2>Ничьи задачи — кто возьмёт?</h2><span class="n">${unclaimed.length}</span></div>`
-      + '<div class="sec-sub">Бот нашёл их в чатах, но исполнитель не назван. Нажмите «Взять задачу» — выберите, кто делает, срок и приоритет.</div>'
-      + unclaimed.map((t) => card(t, now)).join('') + '</div>';
+    // Свёрнут, пока не развернут кнопкой; выбор запоминается на устройстве.
+    const open = !!prefs.claimOpen;
+    html += `<div class="section claim-sec ${open ? '' : 'shut'}"><button class="sec-head claim-head" data-act="toggle-claim" aria-expanded="${open}"><h2>Ничьи задачи — кто возьмёт?</h2><span class="n">${unclaimed.length}</span><span class="claim-tg">${open ? 'Свернуть' : 'Показать'}${ico('chev', 'ic-sm')}</span></button>`
+      + (open ? '<div class="sec-sub">Бот нашёл их в чатах, но исполнитель не назван. Нажмите «Взять задачу» — выберите, кто делает, срок и приоритет.</div>'
+      + unclaimed.map((t) => card(t, now)).join('') : '') + '</div>';
   }
   if (S.f.scope !== 'byme' || mine.length) {
     html += `<div class="section"><div class="sec-head"><h2>Мои задачи</h2><span class="n">${mine.length}</span></div>`;
@@ -2703,6 +2710,12 @@ $('lists').addEventListener('click', (e) => {
   const act = e.target.closest('[data-act]');
   const cardEl = e.target.closest('.task');
   const groupEl = e.target.closest('.group');
+  if (act && act.dataset.act === 'toggle-claim') {
+    prefs.claimOpen = !prefs.claimOpen;
+    store.set(K_PREFS, JSON.stringify(prefs));
+    renderTasks();
+    return;
+  }
   if (act && act.dataset.act === 'toggle-group' && groupEl) {
     const k = groupEl.dataset.group;
     if (prefs.collapsed[k]) delete prefs.collapsed[k]; else prefs.collapsed[k] = 1;
