@@ -10525,7 +10525,7 @@ const AVITO_NOTIFY_BOTS = {
         accountId: 'f2ca9c67750c',
         name: 'Иван Кариентиди',
         owner: 'Ивана',
-        allow: ['8145598581'],
+        allow: ['8145598581', '5993133996'],
       },
     },
   },
