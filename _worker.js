@@ -4234,7 +4234,24 @@ function botMatchProject(title, projects) {
     const surname = words[words.length - 1] || '';
     return surname.length > 3 && t.includes(` ${surname.slice(0, surname.length - 1)}`);
   });
-  return bySurname.length === 1 ? bySurname[0] : null;
+  if (bySurname.length === 1) return bySurname[0];
+  // A one-letter typo in the surname («Кисилева» / «Киселева») is the same client, not a new one —
+  // as long as exactly one client fits.
+  const titleWords = t.trim().split(' ').filter((w) => w.length >= 6);
+  const typo = projects.filter((p) => {
+    const words = botNorm(p.name).split(' ');
+    const surname = words[words.length - 1] || '';
+    return surname.length >= 6 && titleWords.some((w) => botEditDistance1(w, surname));
+  });
+  return typo.length === 1 ? typo[0] : null;
+}
+// True when a and b differ by exactly one letter replaced, added or removed.
+function botEditDistance1(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
+  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
+  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
 }
 async function botProjects(kv) {
   return listByPrefix(kv, 'project:');
@@ -4377,6 +4394,107 @@ async function botRelinkClients(env, { create } = {}) {
   if (touched.length) await atTouch(kv, touched);
   return { created, tasks: touched.length };
 }
+// ── A client created twice (a typo in a chat title) → one client ──
+// Moves everything of `fromId` to `toId` — tasks, work-chat topics and client chats (locked to it), who
+// leads it («Клиенты → Настройки»), the client board note, mailings, reflection answers, daily and monthly
+// metrics, the Avito cabinet and the finance dashboard's client — then reactivates `toId` and deletes
+// `fromId`. What `toId` already has wins.
+async function atMergeProjects(env, fromId, toId) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const [from, to] = await Promise.all([kv.get(`project:${fromId}`, 'json'), kv.get(`project:${toId}`, 'json')]);
+  if (!from || !to) return { skipped: true };
+  const done = { tasks: 0, links: 0 };
+  const touched = [];
+  for (const t of await listByPrefix(kv, 'task:')) {
+    if (t.projectId !== fromId) continue;
+    t.projectId = toId;
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks && AT_MEM.tasks.has(t.id)) AT_MEM.tasks.set(t.id, t);
+    touched.push(t.id);
+  }
+  done.tasks = touched.length;
+  for (const prefix of ['bot:topic:', 'bot:chat:']) {
+    for (const k of (await kv.list({ prefix })).keys) {
+      const rec = await kv.get(k.name, 'json');
+      if (!rec || rec.projectId !== fromId) continue;
+      await kv.put(k.name, JSON.stringify({ ...rec, projectId: toId, projectLocked: true }));
+      done.links += 1;
+    }
+  }
+  const owners = await kv.get('at:owners', 'json');
+  if (owners && owners[fromId]) {
+    if (!owners[toId]) owners[toId] = owners[fromId];
+    delete owners[fromId];
+    await kv.put('at:owners', JSON.stringify(owners));
+  }
+  const board = await kv.get('at:clients', 'json');
+  if (board && board[fromId]) {
+    if (!board[toId] || String(board[fromId].lastUpdateAt || '') > String(board[toId].lastUpdateAt || '')) board[toId] = { ...board[toId], ...board[fromId] };
+    delete board[fromId];
+    await kv.put('at:clients', JSON.stringify(board));
+  }
+  for (const k of (await kv.list({ prefix: 'mail:' })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    if (!rec || !(rec.items || []).some((x) => x.projectId === fromId)) continue;
+    rec.items = rec.items.map((x) => (x.projectId === fromId ? { ...x, projectId: toId } : x));
+    await kv.put(k.name, JSON.stringify(rec));
+  }
+  for (const k of (await kv.list({ prefix: 'refl:' })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    if (!rec || !rec.answers || !rec.answers[fromId]) continue;
+    if (!rec.answers[toId]) rec.answers[toId] = rec.answers[fromId];
+    delete rec.answers[fromId];
+    await kv.put(k.name, JSON.stringify(rec), { expirationTtl: REFL_TTL });
+  }
+  for (const prefix of ['dailyMetrics', 'analytics']) {
+    for (const k of (await kv.list({ prefix: `${prefix}:${fromId}:` })).keys) {
+      const dest = `${prefix}:${toId}:${k.name.slice(`${prefix}:${fromId}:`.length)}`;
+      if (!(await kv.get(dest))) {
+        const rec = await kv.get(k.name, 'json');
+        if (rec) await kv.put(dest, JSON.stringify({ ...rec, projectId: toId }));
+      }
+      await kv.delete(k.name);
+    }
+  }
+  const fin = await kv.get('fin:data', 'json');
+  if (fin && Array.isArray(fin.clients) && fin.clients.some((c) => c.pid === fromId)) {
+    const keep = fin.clients.find((c) => c.pid === toId);
+    fin.clients = fin.clients.filter((c) => {
+      if (c.pid !== fromId) return true;
+      if (!keep) { c.pid = toId; return true; }
+      keep.alias = [...new Set([...(keep.alias || []), fromId, ...(c.alias || [])])];
+      if (c.pays && Object.keys(c.pays).length) keep.pays = { ...c.pays, ...(keep.pays || {}) };
+      return false;
+    });
+    fin.rev = Number(fin.rev || 0) + 1;
+    fin.savedAt = new Date().toISOString();
+    await kv.put('fin:data', JSON.stringify(fin));
+  }
+  const now = new Date().toISOString();
+  await kv.put(`project:${toId}`, JSON.stringify({
+    ...to, inactive: false, rowColor: to.rowColor === 'gray' ? '' : to.rowColor || '',
+    avitoAccountId: to.avitoAccountId || from.avitoAccountId || null,
+    profileUrl: to.profileUrl || from.profileUrl || null, briefUrl: to.briefUrl || from.briefUrl || null, staffUrl: to.staffUrl || from.staffUrl || null,
+    updatedAt: now,
+  }));
+  await kv.delete(`project:${fromId}`);
+  await atTouch(kv, ['#projects', '#clients', ...touched]);
+  return done;
+}
+// One-time merges of clients created twice: [the duplicate, the client to keep].
+const PROJECT_MERGES = [
+  ['elena-kisileva', 'elena-kiseleva'], // 26.10.2026: the work-chat topic «Кисилева Елена» had a typo
+];
+async function atRunProjectMerges(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  for (const [fromId, toId] of PROJECT_MERGES) {
+    const flag = `projmerge:${fromId}`;
+    if (await kv.get(flag)) continue;
+    const res = await atMergeProjects(env, fromId, toId);
+    await kv.put(flag, JSON.stringify({ at: new Date().toISOString(), toId, ...res }));
+  }
+}
+
 // One-time (2026-09-30): the clients whose topics were already in the work chat but not in the dashboard.
 const CLIENTS_SEED_V2 = [
   ['natalina-sass', 'Наталина Сасс'], ['elena-okuneva', 'Елена Окунева'], ['natalya-valiullova', 'Наталья Валиуллова'],
@@ -5929,6 +6047,11 @@ async function botScheduled(env) {
     await ensureClientsSeedV2(env);
   } catch (err) {
     console.error('clients seed failed', err && err.stack);
+  }
+  try {
+    await atRunProjectMerges(env);
+  } catch (err) {
+    console.error('project merge failed', err && err.stack);
   }
   try {
     await atEnsureNewMembers(env);
