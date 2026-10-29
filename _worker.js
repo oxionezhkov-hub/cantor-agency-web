@@ -10521,6 +10521,12 @@ const AVITO_NOTIFY_BOTS = {
         owner: 'Натальи',
         allow: ['1179375006'], // @valiullova
       },
+      karientidi: {
+        accountId: 'f2ca9c67750c',
+        name: 'Иван Кариентиди',
+        owner: 'Ивана',
+        allow: ['8145598581', '5993133996'],
+      },
     },
   },
 };
