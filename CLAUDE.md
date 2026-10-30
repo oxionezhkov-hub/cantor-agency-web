@@ -1,5 +1,12 @@
 # Repository notes for Claude
 
+## Pull requests: always open one
+
+After committing and pushing work to the session branch, **always open a pull request into `main`
+yourself** — don't wait to be asked and don't stop at "pushed to the branch". The site deploys to
+cantor.agency only from `main` (`.github/workflows/deploy.yml`), so without a PR the change never
+goes live. Give the PR link in the final reply.
+
 ## PR monitoring: no timer-based polling
 
 When watching a PR in this repo (via `subscribe_pr_activity` or similar), do
