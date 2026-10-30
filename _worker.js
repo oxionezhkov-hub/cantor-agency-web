@@ -8241,9 +8241,9 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ ok: true, projects: await atLoadProjects(kv) });
   }
 
-  // Цель и текущая стратегия кабинета («Клиенты»): пишут руководитель, ассистент и старший специалист.
+  // Цель и текущая стратегия кабинета («Клиенты»): пишут руководитель и старший специалист.
   if (action === 'client-goal') {
-    if (!seesClients || !(isAdmin || me.role === 'specialist')) return json({ error: 'forbidden' }, 403);
+    if (!seesClients || !(isOwner || me.role === 'specialist')) return json({ error: 'forbidden' }, 403);
     const pid = atClean(body.projectId, 80);
     if (!(await kv.get(`project:${pid}`))) return json({ error: 'not_found' }, 404);
     const goals = (await kv.get('at:goals', 'json')) || {};

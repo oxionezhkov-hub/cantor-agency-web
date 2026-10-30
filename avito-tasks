@@ -292,21 +292,23 @@ a{color:inherit}
 .task.expanded .t-chev{transform:rotate(180deg)}
 
 /* inline editor */
-.cc-goal{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:8px 10px;display:grid;gap:4px;font-size:13px}
-.cc-goal .row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;align-items:baseline}
-.cc-goal .row span,.cc-goal label span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint)}
-.cc-goal .row p{margin:0;color:var(--ink);line-height:1.4;overflow-wrap:anywhere}
-.cc-goal .meta{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:11.5px;color:var(--faint);margin-top:-2px}
-.cc-goal .meta.stale{color:var(--amber);font-weight:600}
-.cc-goal .meta .icon-btn{width:26px;height:26px}
-.cc-goal.edit{gap:8px}
-.cc-goal.edit label{display:grid;gap:3px}
+.cc-goal{display:grid;gap:2px;width:100%;text-align:left;font-size:13px;line-height:1.4;padding:2px 0 2px 10px;border-left:2px solid var(--line)}
+button.cc-goal{cursor:pointer;border-radius:0 8px 8px 0}
+button.cc-goal:hover{background:var(--surface-2)}
+.cc-goal.stale{border-left-color:var(--amber)}
+.cc-goal p{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-goal.open p{white-space:normal;overflow-wrap:anywhere}
+div.cc-goal{cursor:pointer}
+.cc-goal .g{color:var(--ink);font-weight:500}
+.cc-goal .n{color:var(--muted)}
+.cc-goal.edit{gap:6px;border-left:0;padding:0}
 .cc-goal.edit .textarea{min-height:0;font-size:13px;padding:7px 9px;resize:vertical}
 .cc-goal-act{display:flex;justify-content:flex-end;gap:6px}
-.cc-goal-add{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-size:12.5px;font-weight:600;color:var(--muted);padding:4px 2px}
-.cc-goal-add:hover{color:var(--accent)}
+.cc-head .cc-goal-add{margin-left:auto;width:30px;height:30px;flex:none;color:var(--faint)}
+.cc-head .cc-goal-add:hover{color:var(--accent)}
+.cc-owner{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);min-width:0;white-space:nowrap}
 .g-goal{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted);margin:-2px 4px 8px 30px;line-height:1.4}
-.g-goal b{color:var(--text);font-weight:600}
+.g-goal .g{color:var(--text)}
 .group.collapsed .g-goal{display:none}
 .claim-sec .sec-sub{font-size:13px;color:var(--muted);margin:-6px 2px 10px}
 .claim-head{width:100%;text-align:left;border-radius:10px;padding:6px 4px;margin-left:-4px}
@@ -603,12 +605,11 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .co-modal{width:min(560px,calc(100% - 24px))}
 .co-list{gap:6px}
 .co-sum{font-size:13px;color:var(--muted);margin-bottom:6px}
-.co-row{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-2)}
+.co-row{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-2)}
 .co-row:last-child{border-bottom:0}
 .co-row .nm{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .co-row .select{min-height:36px;padding:6px 10px}
-.co-prio button{width:34px;padding:0}
-@media (max-width:520px){.co-row{grid-template-columns:minmax(0,1fr) auto}.co-row .nm{grid-column:1/-1}}
+@media (max-width:520px){.co-row{grid-template-columns:minmax(0,1fr) 140px}}
 .ml-outcome[hidden]{display:none}
 
 .ml-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -2496,7 +2497,7 @@ function groupGoal(g) {
   const p = projectById(g.key.slice(2));
   const x = p && p.goal;
   if (!x || !(x.goal || x.now)) return '';
-  return `<div class="g-goal">${x.goal ? `<span><b>Цель:</b> ${esc(x.goal)}</span>` : ''}${x.now ? `<span><b>Сейчас:</b> ${esc(x.now)}</span>` : ''}</div>`;
+  return `<div class="g-goal">${x.goal ? `<span class="g">${esc(x.goal)}</span>` : ''}${x.now ? `<span>${esc(x.now)}</span>` : ''}</div>`;
 }
 
 function dueHtml(t, now) {
@@ -3097,27 +3098,27 @@ $('clientCards').addEventListener('click', async (e) => {
 });
 
 // ── Цель и текущая стратегия кабинета: «К чему стремимся» / «Что делаем сейчас» ──
-// Пишут руководитель, ассистент и старший специалист (понедельник, среда, пятница); видно на карточке
-// клиента и строкой над его задачами. Запись старше 3 дней подсвечивается — пора обновить.
+// Пишут руководитель и старший специалист (понедельник, среда, пятница): «+» в углу карточки, дальше —
+// нажатием на сами строки. Внизу карточки — строка цели и строка «сейчас» (серее); то же — над задачами
+// клиента. Запись старше 3 дней отмечена жёлтой чертой слева — пора обновить.
 let goalOpen = null;
-const canEditGoal = () => isAdmin() || (S.me && S.me.role === 'specialist');
+const canEditGoal = () => isOwner() || (S.me && S.me.role === 'specialist');
 const goalStale = (g) => !g || !g.at || Date.now() - Date.parse(g.at) > 3 * 86400000;
 function goalHtml(p) {
   const g = p.goal;
   if (goalOpen === p.id) {
     return `<form class="cc-goal edit" data-goalform>
-      <label><span>Цель</span><textarea class="textarea" data-goal="goal" rows="2" maxlength="300" placeholder="К чему стремимся: 3 контакта в день, набор в группы ЕГЭ…">${esc(g ? g.goal : '')}</textarea></label>
-      <label><span>Сейчас</span><textarea class="textarea" data-goal="now" rows="2" maxlength="300" placeholder="Что тестируем и следующий шаг: меняем первое фото на 10 объявлениях, сравним через 5 дней">${esc(g ? g.now : '')}</textarea></label>
+      <textarea class="textarea" data-goal="goal" rows="2" maxlength="300" placeholder="К чему стремимся: 3 контакта в день, набор в группы ЕГЭ…">${esc(g ? g.goal : '')}</textarea>
+      <textarea class="textarea" data-goal="now" rows="2" maxlength="300" placeholder="Что делаем сейчас: меняем первое фото на 10 объявлениях, сравним через 5 дней">${esc(g ? g.now : '')}</textarea>
       <div class="cc-goal-act"><button type="button" class="btn btn-quiet btn-sm" data-goal-cancel>Отмена</button><button class="btn btn-primary btn-sm">Сохранить</button></div>
     </form>`;
   }
-  if (!g) return canEditGoal() ? `<button class="cc-goal-add" data-goal-edit>${ico('plus', 'ic-sm')}Цель и стратегия</button>` : '';
-  const d = Date.parse(g.at);
-  return `<div class="cc-goal">
-    ${g.goal ? `<div class="row"><span>Цель</span><p>${esc(g.goal)}</p></div>` : ''}
-    ${g.now ? `<div class="row"><span>Сейчас</span><p>${esc(g.now)}</p></div>` : ''}
-    <div class="meta ${goalStale(g) ? 'stale' : ''}">${esc(fmtDay(d, Date.now()))}${g.by ? ` · ${esc(first(g.by))}` : ''}${canEditGoal() ? `<button class="icon-btn" data-goal-edit title="Изменить" aria-label="Изменить цель и стратегию">${ico('edit', 'ic-sm')}</button>` : ''}</div>
-  </div>`;
+  if (!g) return '';
+  const when = `${fmtDay(Date.parse(g.at), Date.now())}${g.by ? `, ${first(g.by)}` : ''}`;
+  const tag = canEditGoal() ? 'button' : 'div';
+  return `<${tag} class="cc-goal ${goalStale(g) ? 'stale' : ''}" ${canEditGoal() ? 'data-goal-edit type="button"' : ''} title="${esc([g.goal, g.now, `Обновлено ${when}`].filter(Boolean).join('\n'))}">
+    ${g.goal ? `<p class="g">${esc(g.goal)}</p>` : ''}${g.now ? `<p class="n">${esc(g.now)}</p>` : ''}
+  </${tag}>`;
 }
 $('clientCards').addEventListener('click', (e) => {
   const cardEl = e.target.closest('[data-client]');
@@ -3128,6 +3129,8 @@ $('clientCards').addEventListener('click', (e) => {
     if (f) f.focus();
   }
   if (e.target.closest('[data-goal-cancel]')) { goalOpen = null; renderClients(); }
+  const view = e.target.closest('div.cc-goal');
+  if (view) view.classList.toggle('open');
 });
 $('clientCards').addEventListener('submit', async (e) => {
   const form = e.target.closest('[data-goalform]');
@@ -5043,16 +5046,16 @@ function renderClients() {
       const level = p.inactive ? 'off' : todo.some((t) => t.tone === 'red') ? 'red' : todo.length ? 'amber' : 'green';
       const link = (url, label, icon) => (url ? `<a class="cc-ico" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}</a>` : '');
       return `<div class="ccard lv-${level} ${p.inactive ? 'off' : ''} ${CF.focus === p.id ? 'focus' : ''}" data-client="${esc(p.id)}">
-        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${ownerLine(p) ? `<div class="cc-sub">${esc(ownerLine(p))}</div>` : ''}</div>
-          ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
-        ${p.inactive ? '' : goalHtml(p)}
+        <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div></div>
+          ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : !p.goal && goalOpen !== p.id && canEditGoal() ? `<button class="icon-btn cc-goal-add" data-goal-edit title="Цель и что делаем сейчас" aria-label="Добавить цель и стратегию">${ico('plus', 'ic-sm')}</button>` : ''}</div>
         ${clientMetricsHtml(p, m)}
         ${clientAdvanceHtml(p, m)}
         ${p.inactive ? '' : todo.some((t) => t.kind !== 'money') ? `<div class="cc-todo">${todo.filter((t) => t.kind !== 'money').map((t) => `<div class="cc-do ${t.tone}">${t.html}</div>`).join('')}</div>` : ''}
+        ${p.inactive ? '' : goalHtml(p)}
         ${linksOpen === p.id ? linksHtml(p) : ''}
         <div class="cc-foot">
           <button class="btn btn-ghost btn-sm" data-newtask>${ico('plus', 'ic-sm')}Задача</button>
-          <button class="cc-mini" data-filter>Задачи: ${i.open.length}${ico('chev', 'rot-90')}</button>
+          ${ownerLine(p) ? `<span class="cc-owner" title="Ответственный">${avatar(userById(p.ownerId), 'xs')}${esc(ownerLine(p))}</span>` : ''}
           <span class="cc-links2">${link(p.staffUrl, 'Подключиться к кабинету Авито (ссылка для сотрудников)', 'key')}${link(p.profileUrl, 'Профиль на Авито', 'tag')}${link(p.briefUrl, 'Бриф', 'report')}<button class="cc-ico" data-links-edit title="Изменить клиента: ссылки, вход в кабинет, активность" aria-label="Изменить клиента">${ico('edit')}</button></span>
         </div>
       </div>`;
@@ -5114,7 +5117,7 @@ $('members').addEventListener('click', async (e) => {
 const CO_ROLES = ['specialist', 'trainee'];
 function ownerLine(p) {
   const u = p.ownerId && userById(p.ownerId);
-  return [u ? first(u.name) : '', p.priority ? `${p.priority} приоритет` : ''].filter(Boolean).join(' · ');
+  return u ? first(u.name) : '';
 }
 function coPeople(extra) { return S.users.filter((u) => (u.active !== false && CO_ROLES.includes(u.role)) || extra.has(u.id)); }
 function coSummary() {
@@ -5133,10 +5136,9 @@ $('clientOwners').addEventListener('click', () => {
       <div class="drawer-head"><h2>Кто ведёт клиентов</h2><button class="icon-btn" data-close aria-label="Закрыть">${ico('x')}</button></div>
       <div class="ml-form co-list" id="coList">
         <div class="co-sum" id="coSum"></div>
-        ${list.map((p) => `<div class="co-row" data-co-pid="${esc(p.id)}" data-prio="${p.priority || ''}">
+        ${list.map((p) => `<div class="co-row" data-co-pid="${esc(p.id)}">
           <span class="nm">${esc(anSurnameKey(p.name))}</span>
           <select class="select"><option value="">—</option>${people.map((u) => `<option value="${esc(u.id)}" ${u.id === p.ownerId ? 'selected' : ''}>${esc(first(u.name))}</option>`).join('')}</select>
-          <div class="seg co-prio">${[1, 2, 3].map((n) => `<button type="button" data-co-prio="${n}" class="${p.priority === n ? 'on' : ''}" title="${n} приоритет">${n}</button>`).join('')}</div>
         </div>`).join('')}
       </div>
       <div class="drawer-foot"><button class="btn btn-primary" type="button" id="coSave">Сохранить</button></div>
@@ -5144,20 +5146,12 @@ $('clientOwners').addEventListener('click', () => {
   coSummary();
 });
 $('drawerRoot').addEventListener('click', async (e) => {
-  const pr = e.target.closest('[data-co-prio]');
-  if (pr) {
-    const row = pr.closest('[data-co-pid]');
-    row.dataset.prio = row.dataset.prio === pr.dataset.coPrio ? '' : pr.dataset.coPrio;
-    row.querySelectorAll('[data-co-prio]').forEach((b) => b.classList.toggle('on', b.dataset.coPrio === row.dataset.prio));
-    return;
-  }
   const btn = e.target.closest('#coSave');
   if (!btn) return;
   const owners = {};
   document.querySelectorAll('[data-co-pid]').forEach((row) => {
     const userId = row.querySelector('select').value || null;
-    const priority = Number(row.dataset.prio) || null;
-    if (userId || priority) owners[row.dataset.coPid] = { userId, priority };
+    if (userId) owners[row.dataset.coPid] = { userId, priority: null };
   });
   btn.disabled = true;
   try {
