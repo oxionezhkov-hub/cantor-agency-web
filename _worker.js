@@ -7232,6 +7232,12 @@ function reflAddDays(ymd, n) {
 function reflClients(projects) {
   return projects.filter((p) => !p.inactive).map((p) => p.id);
 }
+// The clients a specialist rates: the active ones they lead («Клиенты → Настройки»). Someone who leads
+// nobody yet rates every active client, so the form is never empty.
+function reflClientsFor(projects, userId) {
+  const mine = projects.filter((p) => !p.inactive && p.ownerId === userId).map((p) => p.id);
+  return mine.length ? mine : reflClients(projects);
+}
 function reflDone(rec, clientIds) {
   const a = (rec && rec.answers) || {};
   return clientIds.filter((id) => a[id] && (a[id].score > 0 || a[id].skip)).length;
@@ -7241,7 +7247,7 @@ async function atReflectionState(kv, me, mem, nowMs) {
   if (!REFL_ROLES.has(me.role)) return null;
   const week = reflWeek(nowMs);
   const rec = (await kv.get(`refl:${week}:${me.id}`, 'json')) || { answers: {} };
-  const clients = reflClients(mem.projects);
+  const clients = reflClientsFor(mem.projects, me.id);
   return { week, next: reflAddDays(week, 7), clients, answers: rec.answers || {}, done: reflDone(rec, clients), total: clients.length, doneAt: rec.doneAt || null };
 }
 async function atReflectionSave(env, team, me, body, nowMs) {
@@ -7270,7 +7276,7 @@ async function atReflectionSave(env, team, me, body, nowMs) {
     rec.answers[pid] = { score, comment, at: new Date(nowMs).toISOString() };
     changed.push(pid);
   }
-  const active = reflClients(mem.projects);
+  const active = reflClientsFor(mem.projects, me.id);
   const doneNow = reflDone(rec, active) >= active.length && active.length > 0;
   if (!changed.length && (!doneNow || rec.doneAt)) return { state: await atReflectionState(kv, me, mem, nowMs) };
   if (doneNow && !rec.doneAt) rec.doneAt = new Date(nowMs).toISOString();
@@ -7420,7 +7426,11 @@ async function atReflectionResults(env, team, week) {
     clients,
     prevAvg: await reflWeekAverages(kv, people, reflAddDays(week, -7)),
     // rates: false — no longer rates (only the answers given are shown, no «not rated yet»).
-    people: people.map((u, i) => ({ id: u.id, name: u.name, role: u.role, rates: u.active && REFL_ROLES.has(u.role), answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], clients), doneAt: (recs[i] && recs[i].doneAt) || null })),
+    // mine — the clients this person rates (theirs); done / total count only those.
+    people: people.map((u, i) => {
+      const mine = reflClientsFor(mem.projects, u.id);
+      return { id: u.id, name: u.name, role: u.role, rates: u.active && REFL_ROLES.has(u.role), mine, total: mine.length, answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], mine), doneAt: (recs[i] && recs[i].doneAt) || null };
+    }),
   };
 }
 // Every week's average per client — the tracker's weeks and the old dashboard's before them.
@@ -7497,6 +7507,7 @@ async function atReflectionCron(env, team, nowMs) {
     await atTouch(kv, [t.id]);
   }
   for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
+    const clients = reflClientsFor(mem.projects, u.id);
     const key = `refl:${week}:${u.id}`;
     const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
     // Closed by hand without rating anyone — open it again, once a week.
@@ -7524,7 +7535,7 @@ async function atReflectionCron(env, team, nowMs) {
     const now = new Date(nowMs).toISOString();
     const task = {
       id, text: `Заполнить рефлексию по клиентам (неделя с ${week.slice(8, 10)}.${week.slice(5, 7)})`,
-      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому активному клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
+      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому своему клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
       status: 'open', priority: 'normal', source: 'tracker', origin: 'tracker', author: 'Бот', createdById: null,
       assigneeId: u.id, owner: u.name, due: botIsoMsk(due), link: `${AT_PAGE_URL}#reflection`, startedAt: now,
       notified: {}, activity: [{ t: nowMs, by: 'Бот', what: 'поставил задачу на рефлексию' }], createdAt: now, updatedAt: now,
@@ -7534,7 +7545,7 @@ async function atReflectionCron(env, team, nowMs) {
     await kv.put(key, JSON.stringify(rec), { expirationTtl: REFL_TTL });
     await atTouch(kv, [id]);
     await atNotify(env, team, [u.id], { kind: 'assigned', taskId: id, text: `Рефлексия за неделю: оцените клиентов (${clients.length})`, by: 'Бот' }, {
-      text: `🪞 <b>Рефлексия за неделю</b>\nОцените каждого активного клиента по шкале 1–10 и коротко объясните почему — ${clients.length} ${clients.length % 10 === 1 && clients.length % 100 !== 11 ? 'клиент' : 'клиентов'}. Можно прерваться и продолжить потом.`,
+      text: `🪞 <b>Рефлексия за неделю</b>\nОцените каждого своего клиента по шкале 1–10 и коротко объясните почему — ${clients.length} ${clients.length % 10 === 1 && clients.length % 100 !== 11 ? 'клиент' : 'клиентов'}. Можно прерваться и продолжить потом.`,
       extra: { reply_markup: { inline_keyboard: [[{ text: 'Заполнить рефлексию', url: `${AT_PAGE_URL}#reflection` }]] }, disable_notification: true },
     });
   }
