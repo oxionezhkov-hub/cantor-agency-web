@@ -3965,9 +3965,7 @@ async function reportPostToChat(env, job) {
     const work = (await listByPrefix(kv, 'bot:chat:')).find((c) => c.kind === 'work');
     if (!work) throw new Error('рабочий чат не найден — добавьте бота в рабочий чат');
     const team = await atGetTeam(env);
-    const tags = team.users.filter((u) => u.active && u.role === 'manager').map((u) => (u.tgUsername
-      ? `@${escapeHtml(u.tgUsername)}`
-      : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(u.name)));
+    const tags = team.users.filter((u) => u.active && u.role === 'manager').map(reportTag);
     const caption = [
       `📄 <b>Отчёт по клиентам Авито</b> — ${escapeHtml(job.report.periodLabel)}`,
       `Клиентов: ${job.report.clients.length}${job.observations ? '' : ' · наблюдения автоматические (ИИ не ответил)'}`,
@@ -3979,10 +3977,51 @@ async function reportPostToChat(env, job) {
     if (!res || !res.ok) throw new Error((res && res.description) || 'Telegram не принял файл');
     job.postedAt = new Date().toISOString();
     job.postError = null;
+    try {
+      await reportNoContactsAlert(env, job, work, team);
+    } catch (e) {
+      console.error('no-contacts alert failed', e && e.stack);
+    }
   } catch (e) {
     job.postError = String(e && e.message).slice(0, 200);
   }
   await putReportJob(kv, job);
+}
+function reportTag(u) {
+  return u.tgUsername ? `@${escapeHtml(u.tgUsername)}`
+    : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(atFirstName(u.name));
+}
+// On weekdays, right after the report is posted (so the day's numbers have been checked and entered):
+// every client of the report with no contacts over its period gets a message in its own work-chat
+// topic, tagging whoever leads it («Клиенты → Настройки»). Clients without a topic go to the main
+// topic in one list. Nothing to say — nothing is sent. Once per report.
+async function reportNoContactsAlert(env, job, work, team) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const dow = botMsk(Date.now()).dow;
+  if (dow === 0 || dow === 6 || job.noContactsAt) return;
+  const zero = (job.report.clients || []).filter((c) => !(c.period && c.period.contacts > 0));
+  job.noContactsAt = new Date().toISOString();
+  if (!zero.length) return;
+  const owners = await atLoadOwners(kv);
+  const byId = new Map(team.users.map((u) => [u.id, u]));
+  const topics = {};
+  for (const k of (await kv.list({ prefix: `bot:topic:${work.id}:` })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    const thread = Number(k.name.split(':').pop());
+    if (rec && rec.projectId && thread && !topics[rec.projectId]) topics[rec.projectId] = thread;
+  }
+  const label = escapeHtml(job.report.periodLabel);
+  const nums = (p) => (p.budget > 0 ? `расход ${Math.round(p.budget).toLocaleString('ru-RU')} ₽, ${Number(p.views || 0).toLocaleString('ru-RU')} просмотров` : 'бюджет не тратится');
+  const loose = [];
+  for (const c of zero) {
+    const p = c.period || {};
+    const u = owners[c.projectId] && byId.get(owners[c.projectId].userId);
+    const tag = u && u.active ? reportTag(u) : '';
+    const thread = topics[c.projectId];
+    if (!thread) { loose.push(`• <b>${escapeHtml(c.name)}</b> — ${nums(p)}${tag ? ` · ${tag}` : ''}`); continue; }
+    await botSend(env, work.id, `⚠️ <b>Нет контактов</b> — ${label}: ${nums(p)}.\n${tag ? `${tag}, р` : 'Р'}азберите причину сегодня и напишите план здесь.`, { message_thread_id: thread });
+  }
+  if (loose.length) await botSend(env, work.id, [`⚠️ <b>Без контактов</b> — ${label}`, ...loose].join('\n'));
 }
 
 // ── Control bot (Telegram): keeps agency tasks and deadlines from getting lost ──
@@ -5929,7 +5968,7 @@ async function botCheckHandoffs(env, nowMs, allTasks, byId) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const team = await atGetTeam(env);
   const recent = (iso) => { const ms = Date.parse(iso || 0); return ms && nowMs - ms <= BOT_SLA_LOOKBACK_MS ? ms : 0; };
-  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && (u.role === 'specialist' || u.role === 'trainee'); };
+  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['lead', 'specialist', 'trainee'].includes(u.role); };
   // A task on the manager (or the owner / assistant) is answered right in the client's chat — there
   // is nothing to pass on to the specialists, so only unassigned client requests are checked.
   const handledInChat = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['manager', 'owner', 'assistant'].includes(u.role); };
@@ -6052,6 +6091,11 @@ async function botScheduled(env) {
     await atRunProjectMerges(env);
   } catch (err) {
     console.error('project merge failed', err && err.stack);
+  }
+  try {
+    await atMigrateRoles(env);
+  } catch (err) {
+    console.error('role migration failed', err && err.stack);
   }
   try {
     await atEnsureNewMembers(env);
@@ -6410,6 +6454,7 @@ async function handleBotApi(request, env, url) {
 //   refl:<wed>:<userId> -> «Рефлексия» for the week starting on that Wednesday — see below
 //   mail:<YYYY-MM>     -> «Рассылки» for that month — see atMailApi
 //   at:owners          -> who leads which client and its priority — see atLoadOwners
+//   at:goals           -> { <projectId>: { goal, now, by, at } } — «К чему стремимся» / «Что делаем сейчас»
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -6418,6 +6463,7 @@ const AT_ROLES = {
   manager: 'Клиентский менеджер',
   specialist: 'Специалист по Авито',
   trainee: 'Стажёр по Авито',
+  lead: 'Старший специалист по Авито', // controls the specialists: plans, quality, goals of the cabinets
   assistant: 'Ассистент', // same access as the owner, except the owner's own record
 };
 // Tracker sections («Задачи» is always on). By default they follow the role; the owner can turn
@@ -6427,6 +6473,7 @@ const AT_ROLE_SECTIONS = {
   owner: AT_SECTIONS,
   assistant: AT_SECTIONS,
   manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'],
+  lead: ['tasks', 'clients', 'meet', 'reflection'],
   specialist: ['tasks', 'meet', 'reflection'],
   trainee: ['tasks', 'meet', 'reflection'],
 };
@@ -6573,7 +6620,26 @@ async function atSeedTeam(env) {
 const AT_NEW_MEMBERS = [
   { id: 'sofia', name: 'София Романовна', role: 'assistant', aliases: ['София', 'Софья', 'Соня'], tgId: '993366229', tgUsername: 'sofiuspasskaya' },
   { id: 'stanislav', name: 'Станислав', role: 'trainee', aliases: ['Станислав', 'Стас'], tgId: '426349175' },
+  { id: 'arina', name: 'Арина', role: 'trainee', aliases: ['Арина'], tgId: '1613493945' },
 ];
+// One-time role changes (30.10.2026): the three specialists stop being trainees, Евгений becomes the
+// senior specialist. Matched by id; the label follows the role.
+const AT_ROLE_MIGRATIONS = { key: 'at:migr:roles-2026-10-30', roles: { albina: 'specialist', stanislav: 'specialist', ekaterina: 'specialist', evgeny: 'lead' } };
+async function atMigrateRoles(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (await kv.get(AT_ROLE_MIGRATIONS.key)) return;
+  const team = await atGetTeam(env);
+  const done = [];
+  for (const u of team.users) {
+    const role = AT_ROLE_MIGRATIONS.roles[u.id];
+    if (!role || u.role === role) continue;
+    u.role = role;
+    u.roleLabel = AT_ROLES[role];
+    done.push(`${u.id}: ${role}`);
+  }
+  if (done.length) { await atPutTeam(kv, team); await atTouch(kv, ['#team']); }
+  await kv.put(AT_ROLE_MIGRATIONS.key, JSON.stringify({ at: new Date().toISOString(), done }));
+}
 // The access message for a new member: their own invite link (both addresses) and what the bot does.
 // Sent when they are added — or, if they hadn't opened the bot yet (Telegram doesn't let a bot write
 // first), as soon as they press Start.
@@ -6729,7 +6795,7 @@ function atIsTrackerTask(t) {
 // so they never go to the client manager — «Готово» closes them straight away.
 function atIsInternalTask(task, users) {
   if (!task || task.origin === 'client') return false;
-  const isSpec = (u) => !!u && (u.role === 'specialist' || u.role === 'trainee');
+  const isSpec = (u) => !!u && ['lead', 'specialist', 'trainee'].includes(u.role);
   const author = task.createdById ? users.find((u) => u.id === task.createdById) : task.author ? atMatchUser(task.author, users) : null;
   if (!isSpec(author)) return false;
   const aid = atAssigneeId(task, users);
@@ -6756,7 +6822,7 @@ async function atTouch(kv, ids) {
   return rec.v;
 }
 async function atLoadProjects(kv) {
-  const [list, owners] = await Promise.all([listByPrefix(kv, 'project:'), atLoadOwners(kv)]);
+  const [list, owners, goals] = await Promise.all([listByPrefix(kv, 'project:'), atLoadOwners(kv), kv.get('at:goals', 'json')]);
   return list.map((p) => ({
     id: p.id,
     name: p.name,
@@ -6766,6 +6832,7 @@ async function atLoadProjects(kv) {
     staffUrl: p.staffUrl || null,
     ownerId: (owners[p.id] && owners[p.id].userId) || null,
     priority: (owners[p.id] && owners[p.id].priority) || null,
+    goal: (goals && goals[p.id]) || null,
   })).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
 
@@ -7212,11 +7279,11 @@ function atMeetHuman(date, time) {
 // (Monday-based, roles manager / specialist / client); results and the history chart read them too.
 // One record per person and week, written only by that person; the page always sends every answer
 // it knows, so a save from one Cloudflare location can't drop one made a moment ago from another.
-// Who rates clients every week (the specialists — the «trainee» role). The client manager and the
-// specialists' lead («specialist» role) don't rate any more, but see the results like the owner does.
+// Who rates clients every week: the specialists and the trainees. The client manager and the senior
+// specialist («lead») don't rate, but see the results like the owner does.
 // Their earlier answers stay in the results and the history (REFL_READ_ROLES).
-const REFL_ROLES = new Set(['trainee']);
-const REFL_VIEW_ROLES = new Set(['manager', 'specialist']);
+const REFL_ROLES = new Set(['specialist', 'trainee']);
+const REFL_VIEW_ROLES = new Set(['manager', 'lead']);
 const REFL_READ_ROLES = new Set([...REFL_ROLES, ...REFL_VIEW_ROLES]);
 const REFL_TTL = 60 * 60 * 24 * 400;
 const REFL_COMMENT_MAX = 400;
@@ -7233,10 +7300,9 @@ function reflClients(projects) {
   return projects.filter((p) => !p.inactive).map((p) => p.id);
 }
 // The clients a specialist rates: the active ones they lead («Клиенты → Настройки»). Someone who leads
-// nobody yet rates every active client, so the form is never empty.
+// nobody (a new trainee) has no reflection to fill in.
 function reflClientsFor(projects, userId) {
-  const mine = projects.filter((p) => !p.inactive && p.ownerId === userId).map((p) => p.id);
-  return mine.length ? mine : reflClients(projects);
+  return projects.filter((p) => !p.inactive && p.ownerId === userId).map((p) => p.id);
 }
 function reflDone(rec, clientIds) {
   const a = (rec && rec.answers) || {};
@@ -7248,6 +7314,7 @@ async function atReflectionState(kv, me, mem, nowMs) {
   const week = reflWeek(nowMs);
   const rec = (await kv.get(`refl:${week}:${me.id}`, 'json')) || { answers: {} };
   const clients = reflClientsFor(mem.projects, me.id);
+  if (!clients.length && !rec.doneAt) return null;
   return { week, next: reflAddDays(week, 7), clients, answers: rec.answers || {}, done: reflDone(rec, clients), total: clients.length, doneAt: rec.doneAt || null };
 }
 async function atReflectionSave(env, team, me, body, nowMs) {
@@ -7396,13 +7463,12 @@ async function atMailApi(env, me, action, body, nowMs) {
 
 async function atReflectionResults(env, team, week) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  // The raters, plus anyone who rated this week before they stopped rating (or left).
+  // The raters who lead clients, plus anyone who rated this week before they stopped rating (or left).
   const all = team.users.filter((u) => REFL_READ_ROLES.has(u.role));
-  const allRecs = await Promise.all(all.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
-  const keep = all.map((u, i) => (u.active && REFL_ROLES.has(u.role)) || !!allRecs[i]);
+  const [allRecs, mem] = await Promise.all([Promise.all(all.map((u) => kv.get(`refl:${week}:${u.id}`, 'json'))), atSnapshot(env)]);
+  const keep = all.map((u, i) => (u.active && REFL_ROLES.has(u.role) && reflClientsFor(mem.projects, u.id).length > 0) || !!allRecs[i]);
   const people = all.filter((u, i) => keep[i]);
   const recs = allRecs.filter((r, i) => keep[i]);
-  const mem = await atSnapshot(env);
   if (!recs.some(Boolean)) {
     // A week from before the tracker: the old dashboard's ratings for its Monday.
     const monday = reflAddDays(week, -2);
@@ -7508,6 +7574,7 @@ async function atReflectionCron(env, team, nowMs) {
   }
   for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
     const clients = reflClientsFor(mem.projects, u.id);
+    if (!clients.length) continue;
     const key = `refl:${week}:${u.id}`;
     const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
     // Closed by hand without rating anyone — open it again, once a week.
@@ -8198,6 +8265,21 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     await kv.put('at:owners', JSON.stringify(next));
     await atTouch(kv, ['#projects']);
     return json({ ok: true, projects: await atLoadProjects(kv) });
+  }
+
+  // Цель и текущая стратегия кабинета («Клиенты»): пишут руководитель и старший специалист.
+  if (action === 'client-goal') {
+    if (!seesClients || !(isOwner || me.role === 'lead')) return json({ error: 'forbidden' }, 403);
+    const pid = atClean(body.projectId, 80);
+    if (!(await kv.get(`project:${pid}`))) return json({ error: 'not_found' }, 404);
+    const goals = (await kv.get('at:goals', 'json')) || {};
+    const goal = atClean(body.goal, 300);
+    const now = atClean(body.now, 300);
+    if (goal || now) goals[pid] = { goal, now, by: me.name, at: new Date(nowMs).toISOString() };
+    else delete goals[pid];
+    await kv.put('at:goals', JSON.stringify(goals));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, goal: goals[pid] || null });
   }
 
   // Цифры по клиентам для вкладки «Клиенты»: вчера, текущий месяц, траты за неделю и аванс.
