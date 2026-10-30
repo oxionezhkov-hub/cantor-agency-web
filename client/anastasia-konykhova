@@ -3,406 +3,462 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Анастасия Коныхова — образование, перевод, культура</title>
 <meta name="description" content="Анастасия Коныхова — основатель онлайн-школы «Высшая Лига Знаний», сооснователь агентства «Переводы Про», синхронный переводчик, психолог и культуролог.">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238D2342'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='28' fill='%23F6F1E8' text-anchor='middle'%3EАК%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#0C1322">
+<link rel="icon" type="image/png" href="images/anastasia-konykhova/logo-vlz.png">
+<link rel="apple-touch-icon" href="images/anastasia-konykhova/logo-vlz.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* Layout: тёмная «аудитория» — кинематографичный портрет, академическая антиква, золотые линейки как в дипломе; светлая бумажная вставка для учебников */
 :root {
-  --ivory: #F6F1E8;
-  --ivory-deep: #EDE4D6;
-  --wine: #8D2342;
-  --wine-dark: #6E1A33;
-  --ink: #292727;
-  --ink-soft: #5B5552;
-  --green: #263C36;
-  --gold: #B69A64;
-  --powder: #D8B9B7;
-  --line: #DDD2C1;
-  --white: #FFFDF9;
+  --night:   #0C1322;
+  --night-2: #111B30;
+  --night-3: #18243D;
+  --parch:   #EEE6D4;
+  --parch-2: rgba(238, 230, 212, .7);
+  --parch-3: rgba(238, 230, 212, .45);
+  --gold:    #CFAA5E;
+  --gold-2:  #E8CD8F;
+  --line:    rgba(238, 230, 212, .13);
+  --paper:   #EFE8D8;
+  --paper-ink: #111B30;
+  --paper-ink-2: #4A5268;
+  --danger:  #F08A7A;
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
 
-  --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'Manrope', system-ui, sans-serif;
+  --f-display: 'Old Standard TT', 'Times New Roman', Georgia, serif;
+  --f-body:    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono:    'IBM Plex Mono', ui-monospace, Menlo, monospace;
 
-  --max: 1200px;
-  --pad: clamp(16px, 5vw, 64px);
+  --wrap: 1280px;
+  --gut: clamp(16px, 4.5vw, 56px);
+  --ease: cubic-bezier(.16, .84, .24, 1);
+  color-scheme: dark;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
 body {
-  font-family: var(--sans);
-  font-size: 16px;
-  line-height: 1.65;
-  color: var(--ink);
-  background: var(--ivory);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  margin: 0; font-family: var(--f-body); font-weight: 300; font-size: 17px; line-height: 1.7;
+  color: var(--parch); background: var(--night); overflow-x: hidden; -webkit-font-smoothing: antialiased;
 }
-img { display: block; max-width: 100%; }
-a { color: inherit; }
-.wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--pad); }
+body.menu-open, body.lb-open { overflow: hidden; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+::selection { background: var(--gold); color: var(--night); }
 
-/* ── type ── */
-h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.08; letter-spacing: -0.01em; }
-h2 { font-size: clamp(36px, 5vw, 60px); }
-h3 { font-size: clamp(24px, 2.6vw, 32px); }
-.eyebrow {
-  font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--wine); font-weight: 600;
-  display: inline-flex; align-items: center; gap: 12px;
-}
-.eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--gold); }
-.lead { font-family: var(--serif); font-size: clamp(22px, 2.3vw, 28px); line-height: 1.35; color: var(--ink); }
-.muted { color: var(--ink-soft); }
-section { padding: clamp(72px, 10vw, 130px) 0; }
-.sec-head { max-width: 760px; margin-bottom: clamp(40px, 5vw, 64px); }
-.sec-head h2 { margin: 18px 0 18px; }
+.wrap { width: 100%; max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
+.mono { font-family: var(--f-mono); font-size: 12px; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; }
+.gold { color: var(--gold); }
+.sec { padding-block: clamp(80px, 11vw, 150px); position: relative; }
+.eyebrow { display: flex; align-items: center; gap: 16px; color: var(--gold); margin-bottom: 24px; }
+.eyebrow::after { content: ''; flex: 0 0 64px; height: 1px; background: currentColor; opacity: .6; }
+.sec-title { font-size: clamp(38px, 5.6vw, 76px); line-height: 1.02; letter-spacing: -.01em; }
+.sec-title em { color: var(--gold-2); }
+.sec-lead { color: var(--parch-2); max-width: 52ch; margin-top: 20px; }
 
-/* ── buttons ── */
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 15px 28px; border-radius: 999px; font: 500 15px var(--sans);
-  text-decoration: none; cursor: pointer; border: 1px solid var(--wine);
-  transition: background .25s, color .25s, transform .25s;
-}
-.btn:hover { transform: translateY(-1px); }
-.btn-primary { background: var(--wine); color: var(--ivory); }
-.btn-primary:hover { background: var(--wine-dark); }
-.btn-ghost { background: transparent; color: var(--wine); }
-.btn-ghost:hover { background: var(--wine); color: var(--ivory); }
-.link-arrow {
-  display: inline-flex; align-items: center; gap: 8px; font-weight: 500; font-size: 15px;
-  color: var(--wine); text-decoration: none; border-bottom: 1px solid rgba(141,35,66,.3);
-  padding-bottom: 2px; transition: border-color .2s;
-}
-.link-arrow:hover { border-color: var(--wine); }
-.link-arrow::after { content: "→"; }
-
-/* ── nav ── */
-.nav {
-  position: sticky; top: 0; z-index: 50;
-  background: rgba(246,241,232,.9); backdrop-filter: blur(10px);
-  border-bottom: 1px solid transparent; transition: border-color .3s;
-}
-.nav.scrolled { border-color: var(--line); }
-.nav-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
-.mono { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--wine); text-decoration: none; letter-spacing: .04em; }
-.mono span { color: var(--ink); font-weight: 500; font-size: 18px; margin-left: 10px; letter-spacing: 0; }
-.nav-links { display: flex; gap: 28px; list-style: none; }
-.nav-links a { text-decoration: none; font-size: 14px; color: var(--ink-soft); transition: color .2s; }
-.nav-links a:hover { color: var(--wine); }
-.nav-cta { padding: 10px 20px; font-size: 14px; }
-.burger { display: none; background: none; border: 0; width: 40px; height: 40px; cursor: pointer; }
-.burger span { display: block; width: 22px; height: 1.5px; background: var(--ink); margin: 5px auto; transition: transform .3s, opacity .3s; }
-
-/* ── hero ── */
-.hero { padding: clamp(40px, 6vw, 80px) 0 clamp(72px, 8vw, 110px); }
-.hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(32px, 6vw, 88px); align-items: center; }
-.hero h1 { font-size: clamp(54px, 8.4vw, 116px); line-height: .95; margin: 22px 0 28px; }
-.hero h1 em { font-style: italic; color: var(--wine); }
-.hero .lead { max-width: 600px; }
-.roles { list-style: none; margin: 28px 0 36px; border-top: 1px solid var(--line); }
-.roles li {
-  display: flex; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line);
-  font-size: 15px; color: var(--ink-soft);
-}
-.roles li::before { content: "✦"; color: var(--gold); font-size: 11px; line-height: 2.2; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
-.hero-photo { position: relative; }
-.hero-photo .frame { position: relative; border-radius: 300px 300px 6px 6px; overflow: hidden; aspect-ratio: 4/5.4; box-shadow: 0 30px 60px -30px rgba(41,39,39,.45); }
-.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
-.hero-photo::before {
-  content: ""; position: absolute; inset: -14px -14px 14px 14px;
-  border: 1px solid var(--gold); border-radius: 300px 300px 6px 6px; z-index: -1;
-}
-.hero-quote {
-  position: absolute; left: -36px; bottom: 34px; max-width: 250px;
-  background: var(--white); padding: 18px 22px; border-radius: 4px;
-  font-family: var(--serif); font-style: italic; font-size: 19px; line-height: 1.3;
-  box-shadow: 0 20px 40px -24px rgba(41,39,39,.4); border-left: 2px solid var(--wine);
-}
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: clamp(56px, 7vw, 90px); border-top: 1px solid var(--line); }
-.stat { padding: 28px 28px 0 0; }
-.stat + .stat { padding-left: 28px; border-left: 1px solid var(--line); }
-.stat b { display: block; font-family: var(--serif); font-weight: 500; font-size: clamp(40px, 4.6vw, 60px); line-height: 1; color: var(--wine); }
-.stat span { display: block; margin-top: 10px; font-size: 14px; color: var(--ink-soft); max-width: 260px; }
-
-/* ── projects ── */
-.projects { background: var(--white); }
-.proj-main {
-  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 72px); align-items: center;
-  padding-bottom: clamp(56px, 7vw, 90px); border-bottom: 1px solid var(--line); margin-bottom: clamp(56px, 7vw, 90px);
-}
-.proj-main .logo-box { background: #000; border-radius: 6px; aspect-ratio: 1/1; display: grid; place-items: center; overflow: hidden; }
-.proj-main .logo-box img { width: 78%; }
-.tag { display: inline-block; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 14px; }
-.proj-main h3 { font-size: clamp(32px, 3.6vw, 46px); margin-bottom: 18px; }
-.proj-main p { color: var(--ink-soft); margin-bottom: 22px; }
-.mini-stats { display: flex; flex-wrap: wrap; gap: 28px; margin: 26px 0 30px; }
-.mini-stats div b { display: block; font-family: var(--serif); font-size: 34px; font-weight: 500; color: var(--wine); line-height: 1; }
-.mini-stats div span { font-size: 13px; color: var(--ink-soft); }
-
-.proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.proj {
-  display: flex; flex-direction: column; background: var(--ivory); border: 1px solid var(--line);
-  border-radius: 6px; overflow: hidden; transition: transform .35s, box-shadow .35s;
-}
-.proj:hover { transform: translateY(-4px); box-shadow: 0 24px 40px -28px rgba(41,39,39,.45); }
-.proj-media { aspect-ratio: 16/11; overflow: hidden; background: var(--ivory-deep); }
-.proj-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s; }
-.proj:hover .proj-media img { transform: scale(1.04); }
-.proj-media.logo { display: grid; place-items: center; }
-.proj-media.logo.dark { background: #000; }
-.proj-media.logo img { width: auto; height: 74%; object-fit: contain; }
-.proj-media.logo.ethos img { height: auto; width: 100%; }
-.proj-media.type { display: grid; place-items: center; background: var(--green); color: var(--ivory); font-family: var(--serif); font-size: 34px; font-style: italic; text-align: center; padding: 24px; line-height: 1.1; }
-.proj-media.type.wine { background: var(--wine); }
-.proj-media.type.powder { background: var(--powder); color: var(--ink); }
-.proj-body { padding: 26px 26px 28px; display: flex; flex-direction: column; flex: 1; }
-.proj-body .tag { margin-bottom: 10px; }
-.proj-body h3 { font-size: 27px; margin-bottom: 12px; }
-.proj-body p { font-size: 15px; color: var(--ink-soft); margin-bottom: 20px; flex: 1; }
-.proj-links { display: flex; flex-wrap: wrap; gap: 10px 22px; }
-
-/* ── about ── */
-.about-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(32px, 6vw, 90px); align-items: start; }
-.about-photo { position: sticky; top: 100px; }
-.about-photo img { border-radius: 6px; aspect-ratio: 3/4; object-fit: cover; width: 100%; }
-.about-photo figcaption { margin-top: 12px; font-size: 13px; color: var(--ink-soft); font-style: italic; }
-.about-text p { margin-bottom: 18px; color: var(--ink-soft); }
-.about-text .lead { margin-bottom: 26px; }
-.quote {
-  margin: 44px 0; padding: 34px 0; border-top: 1px solid var(--gold); border-bottom: 1px solid var(--gold);
-  font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.2; color: var(--wine);
-}
-.quote small { display: block; margin-top: 14px; font: 500 13px var(--sans); font-style: normal; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
-.timeline { list-style: none; margin-top: 46px; position: relative; }
-.timeline::before { content: ""; position: absolute; left: 92px; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
-.timeline li { display: grid; grid-template-columns: 92px 1fr; gap: 0 30px; padding: 0 0 26px; position: relative; }
-.timeline li::after { content: ""; position: absolute; left: 88px; top: 9px; width: 9px; height: 9px; border-radius: 50%; background: var(--ivory); border: 1px solid var(--wine); }
-.timeline li.teach::after { background: var(--wine); }
-.timeline .yr { font-family: var(--serif); font-size: 22px; color: var(--wine); line-height: 1.2; }
-.timeline .tl-body { padding-left: 4px; }
-.timeline b { display: block; font-weight: 600; font-size: 15px; }
-.timeline span { font-size: 14px; color: var(--ink-soft); }
-
-/* ── credentials ── */
-.creds { background: var(--green); color: var(--ivory); }
-.creds .eyebrow { color: var(--gold); }
-.creds h2 { color: var(--ivory); }
-.creds .muted { color: rgba(246,241,232,.7); }
-.cred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 56px; }
-.cred { display: grid; grid-template-columns: 110px 1fr; gap: 20px; padding: 20px 0; border-bottom: 1px solid rgba(246,241,232,.15); }
-.cred .yr { font-family: var(--serif); font-size: 20px; color: var(--gold); }
-.cred p { font-size: 15px; color: rgba(246,241,232,.88); }
-.cred p b { color: var(--ivory); font-weight: 600; }
-.registry { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 44px; }
-.registry a {
-  display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px;
-  border: 1px solid rgba(182,154,100,.6); color: var(--ivory); text-decoration: none; font-size: 14px; transition: background .25s;
-}
-.registry a:hover { background: rgba(182,154,100,.18); }
-
-/* ── approach ── */
-.approach-top { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(32px, 6vw, 80px); align-items: center; margin-bottom: clamp(56px, 7vw, 90px); }
-.approach-top img { border-radius: 6px; aspect-ratio: 1/1; object-fit: cover; width: 100%; }
-.approach-top p { color: var(--ink-soft); margin-top: 22px; }
-.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-top: 1px solid var(--line); counter-reset: step; margin-bottom: 56px; }
-.step { padding: 26px 22px 0 0; counter-increment: step; }
-.step + .step { padding-left: 22px; border-left: 1px solid var(--line); }
-.step::before { content: "0" counter(step); display: block; font-family: var(--serif); font-size: 40px; color: var(--powder); line-height: 1; margin-bottom: 14px; }
-.step b { display: block; font-family: var(--serif); font-size: 23px; font-weight: 500; margin-bottom: 8px; }
-.step span { font-size: 14px; color: var(--ink-soft); }
-.principles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-.principle { background: var(--white); border-radius: 6px; padding: 26px 24px; border-top: 2px solid var(--wine); }
-.principle b { display: block; font-family: var(--serif); font-size: 23px; font-weight: 500; margin-bottom: 10px; }
-.principle span { font-size: 14px; color: var(--ink-soft); }
-
-/* ── results ── */
-.results { background: var(--white); }
-.res-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 44px; }
-.res-stat { background: var(--wine); color: var(--ivory); border-radius: 6px; padding: 30px 28px; }
-.res-stat b { display: block; font-family: var(--serif); font-size: clamp(40px, 4.4vw, 56px); font-weight: 500; line-height: 1; }
-.res-stat span { display: block; margin-top: 12px; font-size: 14px; color: rgba(246,241,232,.85); }
-.cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-.case { border: 1px solid var(--line); border-radius: 6px; padding: 30px 30px 26px; background: var(--ivory); display: flex; flex-direction: column; }
-.case .meta { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-.case h3 { font-size: 27px; margin: 12px 0 12px; }
-.case p { font-size: 15px; color: var(--ink-soft); flex: 1; }
-.case .res { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 15px; font-weight: 500; color: var(--green); display: flex; gap: 10px; }
-.case .res::before { content: "→"; color: var(--wine); }
-.case.wide { grid-column: span 2; }
-.more-res { margin-top: 36px; list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.more-res li { padding-top: 16px; border-top: 1px solid var(--wine); font-size: 15px; }
-.reviews-cta { margin-top: 56px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 30px; border-radius: 6px; background: var(--ivory-deep); }
-.reviews-cta p { font-family: var(--serif); font-size: 26px; flex: 1 1 280px; line-height: 1.2; }
-
-/* ── books ── */
-.books-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.book { border-radius: 6px; padding: 34px 30px; min-height: 260px; display: flex; flex-direction: column; justify-content: space-between; }
-.book:nth-child(1) { background: var(--wine); color: var(--ivory); }
-.book:nth-child(2) { background: var(--green); color: var(--ivory); }
-.book:nth-child(3) { background: var(--powder); }
-.book h3 { font-size: 30px; margin: 14px 0 12px; }
-.book p { font-size: 15px; opacity: .85; }
-.book .tag { color: inherit; opacity: .7; margin: 0; }
-.book .soon { margin-top: 24px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
-
-/* ── press ── */
-.press-list { list-style: none; border-top: 1px solid var(--line); }
-.press-list a {
-  display: grid; grid-template-columns: 220px 1fr 40px; gap: 24px; align-items: baseline;
-  padding: 22px 0; border-bottom: 1px solid var(--line); text-decoration: none; transition: padding .3s, color .3s;
-}
-.press-list a:hover { padding-left: 12px; color: var(--wine); }
-.press-list .src { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-.press-list .ttl { font-family: var(--serif); font-size: 24px; line-height: 1.25; }
-.press-list .arr { text-align: right; color: var(--wine); }
-
-/* ── media ── */
-.media { background: var(--ivory-deep); }
-.pods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.pod { border-radius: 6px; overflow: hidden; background: var(--white); }
-.pod-video { position: relative; aspect-ratio: 16/9; background: var(--green); display: grid; place-items: center; }
-.pod-video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .45; filter: grayscale(.3); }
-.pod-video .soon-badge { position: relative; padding: 8px 16px; border-radius: 999px; background: rgba(246,241,232,.92); font-size: 13px; color: var(--ink); }
-.pod-body { padding: 22px 24px 26px; }
-.pod-body .tag { margin-bottom: 6px; }
-.pod-body h3 { font-size: 24px; margin-bottom: 8px; }
-.pod-body p { font-size: 14px; color: var(--ink-soft); }
-.socials { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 44px; }
-.socials a {
-  padding: 13px 22px; border-radius: 999px; border: 1px solid var(--line); background: var(--white);
-  text-decoration: none; font-size: 14px; transition: border-color .25s, color .25s;
-}
-.socials a:hover { border-color: var(--wine); color: var(--wine); }
-
-/* ── gallery ── */
-.gallery { padding: 0; }
-.gallery-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.gallery-strip img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
-
-/* ── contact ── */
-.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 88px); align-items: start; }
-.contact-photo img { border-radius: 300px 300px 6px 6px; aspect-ratio: 3/4; object-fit: cover; width: 100%; }
-.contact-direct { margin-top: 26px; display: grid; gap: 10px; }
-.contact-direct a { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; font-size: 15px; }
-.contact-direct a span:first-child { color: var(--ink-soft); }
-.contact-direct a span:last-child { color: var(--wine); font-weight: 500; }
-form { margin-top: 30px; display: grid; gap: 14px; }
-label.fld { display: grid; gap: 6px; font-size: 13px; color: var(--ink-soft); }
-input, select, textarea {
-  font: 400 16px var(--sans); color: var(--ink); background: var(--white);
-  border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; width: 100%;
-  transition: border-color .2s;
-}
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--wine); }
-textarea { min-height: 110px; resize: vertical; }
-.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-soft); }
-.consent input { width: auto; margin-top: 4px; accent-color: var(--wine); }
-.form-msg { font-size: 14px; min-height: 20px; }
-.form-msg.ok { color: var(--green); }
-.form-msg.err { color: var(--wine); }
-
-/* ── footer ── */
-footer { background: var(--ink); color: rgba(246,241,232,.75); padding: 56px 0 40px; font-size: 14px; }
-.foot-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 28px; }
-footer .mono { color: var(--ivory); }
-footer a { color: rgba(246,241,232,.85); text-decoration: none; }
-footer a:hover { color: var(--gold); }
-.foot-links { display: flex; flex-wrap: wrap; gap: 10px 22px; }
-footer details { margin-top: 30px; border-top: 1px solid rgba(246,241,232,.12); padding-top: 22px; }
-footer summary { cursor: pointer; color: rgba(246,241,232,.85); }
-footer details p { margin-top: 12px; font-size: 13px; max-width: 900px; line-height: 1.6; }
-
-/* ── reveal ── */
-.rv { opacity: 0; transform: translateY(24px); transition: opacity .9s ease, transform .9s ease; }
-.rv.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
-
-/* ── responsive ── */
-@media (max-width: 1080px) {
-  .nav-links { gap: 18px; }
-  .proj-grid { grid-template-columns: repeat(2, 1fr); }
-  .steps { grid-template-columns: repeat(2, 1fr); }
-  .step, .step + .step { padding: 24px 0 0; border-left: 0; }
-  .principles { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 900px) {
-  .nav-links, .nav-cta { display: none; }
-  .burger { display: block; }
-  .nav.open .nav-links {
-    display: flex; flex-direction: column; gap: 0; position: absolute; top: 72px; left: 0; right: 0;
-    background: var(--ivory); border-bottom: 1px solid var(--line); padding: 8px var(--pad) 20px;
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rv { animation: rv linear both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
+    @keyframes rv { from { transform: translateY(40px); } to { transform: none; } }
   }
-  .nav.open .nav-links a { display: block; padding: 12px 0; font-size: 17px; border-bottom: 1px solid var(--line); }
-  .nav.open .burger span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
-  .nav.open .burger span:nth-child(2) { opacity: 0; }
-  .nav.open .burger span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
-  .hero-grid, .proj-main, .about-grid, .approach-top, .contact-grid { grid-template-columns: 1fr; }
-  .hero-photo { max-width: 460px; margin: 0 auto; width: 100%; }
-  .hero-quote { left: 12px; }
-  .about-photo { position: static; max-width: 460px; }
-  .proj-main .logo-box { max-width: 360px; }
-  .cred-grid { grid-template-columns: 1fr; }
-  .books-grid, .pods, .more-res, .res-stats { grid-template-columns: 1fr; }
-  .gallery-strip { grid-template-columns: repeat(3, 1fr); }
-  .gallery-strip img:nth-child(n+4) { display: none; }
-  .contact-photo { order: -1; max-width: 360px; }
+}
+
+/* ── Buttons ── */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 54px; padding: 0 30px; font-family: var(--f-mono); font-size: 13px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; overflow: hidden; transition: color .35s var(--ease), border-color .35s, transform .35s var(--ease); white-space: nowrap; isolation: isolate; }
+.btn::before { content: ''; position: absolute; inset: 0; z-index: -1; transform: scaleX(0); transform-origin: 100% 50%; transition: transform .5s var(--ease); }
+.btn:hover::before { transform: scaleX(1); transform-origin: 0 50%; }
+.btn-gold { background: var(--gold); color: var(--night); }
+.btn-gold::before { background: var(--parch); }
+.btn-line { border: 1px solid rgba(238, 230, 212, .35); color: var(--parch); }
+.btn-line::before { background: var(--parch); }
+.btn-line:hover { color: var(--night); border-color: var(--parch); }
+.btn svg { transition: transform .35s var(--ease); }
+.btn:hover svg { transform: translateX(4px); }
+
+/* ── Header ── */
+.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
+.hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.hdr.is-solid { background: rgba(12, 19, 34, .82); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom-color: var(--line); }
+.hdr.is-away { transform: translateY(-110%); }
+.hdr.is-away { pointer-events: none; }
+.hdr-in { display: flex; align-items: center; gap: 32px; height: 80px; }
+.logo { font-family: var(--f-display); font-size: 22px; color: var(--parch); }
+.nav { display: flex; gap: 28px; margin-left: auto; }
+.nav a { position: relative; font-size: 14px; font-weight: 400; color: var(--parch-2); padding-block: 6px; transition: color .25s; }
+.nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--gold); transform: scaleX(0); transform-origin: 100% 50%; transition: transform .4s var(--ease); }
+.nav a:hover, .nav a.is-active { color: var(--parch); }
+.nav a:hover::after, .nav a.is-active::after { transform: scaleX(1); transform-origin: 0 50%; }
+.hdr-cta { min-height: 44px; padding: 0 20px; font-size: 12px; }
+.burger { display: none; margin-left: auto; width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 50%; position: relative; }
+.burger span { position: absolute; left: 14px; right: 14px; height: 1.5px; background: var(--parch); transition: transform .4s var(--ease), opacity .2s; }
+.burger span:nth-child(1) { top: 18px; }
+.burger span:nth-child(2) { top: 23px; right: 20px; background: var(--gold); }
+.burger span:nth-child(3) { top: 28px; }
+.burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(5px) rotate(45deg); }
+.burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+.mnav { position: fixed; inset: 0; z-index: 290; background: var(--night); padding: calc(110px + env(safe-area-inset-top, 0px)) var(--gut) calc(32px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; visibility: hidden; opacity: 0; transition: opacity .4s, visibility .4s; }
+.mnav.is-open { visibility: visible; opacity: 1; }
+.mnav a:not(.btn) { font-family: var(--f-display); font-size: clamp(34px, 9vw, 48px); line-height: 1.25; padding-block: 6px; opacity: 0; transform: translateY(20px); transition: opacity .5s var(--ease), transform .5s var(--ease), color .2s; }
+.mnav a:not(.btn):nth-child(even) { font-style: italic; color: var(--gold-2); }
+.mnav.is-open a:not(.btn) { opacity: 1; transform: none; }
+.mnav.is-open a:nth-child(2) { transition-delay: .05s; }
+.mnav.is-open a:nth-child(3) { transition-delay: .1s; }
+.mnav.is-open a:nth-child(4) { transition-delay: .15s; }
+.mnav.is-open a:nth-child(5) { transition-delay: .2s; }
+.mnav .btn { margin-top: auto; }
+
+/* ── Hero ── */
+.hero { position: relative; overflow: hidden; min-height: min(860px, 100svh); display: flex; align-items: center; padding-top: calc(40px + env(safe-area-inset-top, 0px)); padding-bottom: 40px; background: radial-gradient(120% 90% at 78% 30%, #1d2a44 0%, var(--night) 62%); }
+.hero-photo { position: absolute; top: 0; bottom: 0; right: 0; width: min(58%, 820px); }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; filter: saturate(.9) contrast(1.02); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 34%, #000 82%, transparent 100%), linear-gradient(0deg, transparent 0%, #000 22%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 34%, #000 82%, transparent 100%), linear-gradient(0deg, transparent 0%, #000 22%); mask-composite: intersect; animation: portrait 2.2s var(--ease) both; }
+.hero-in { position: relative; z-index: 2; width: 100%; }
+.hero-kicker { color: var(--gold); display: flex; flex-wrap: wrap; gap: 10px 18px; animation: fadeUp 1s .15s var(--ease) both; }
+.hero-kicker span + span::before { content: '·'; margin-right: 18px; color: var(--parch-3); }
+.hero-name { margin-top: 0; font-size: clamp(64px, 11.5vw, 184px); line-height: .86; letter-spacing: -.02em; }
+.hero-name .ln { display: block; overflow: hidden; padding-bottom: .08em; }
+.hero-name .ln > span { display: block; animation: rise 1.3s var(--ease) both; }
+.hero-name .ln:nth-child(1) > span { font-style: italic; color: var(--gold-2); animation-delay: .1s; }
+.hero-name .ln:nth-child(2) > span { animation-delay: .22s; padding-left: .45em; }
+.hero-rule { height: 1px; margin: clamp(28px, 4vw, 44px) 0; background: linear-gradient(90deg, var(--gold), transparent 70%); transform-origin: 0 50%; animation: draw 1.6s .4s var(--ease) both; max-width: 720px; }
+.hero-row { display: grid; grid-template-columns: minmax(0, 520px) auto; gap: 32px 56px; align-items: end; }
+.hero-desc { font-size: clamp(17px, 1.5vw, 20px); color: var(--parch-2); animation: fadeUp 1s .5s var(--ease) both; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; animation: fadeUp 1s .6s var(--ease) both; }
+.creds { display: flex; gap: 0; animation: fadeUp 1s .75s var(--ease) both; }
+.cred { padding: 4px 28px; border-left: 1px solid var(--line); }
+.cred:first-child { padding-left: 0; border-left: 0; }
+.cred-v { font-family: var(--f-display); font-size: clamp(30px, 3vw, 44px); line-height: 1; color: var(--parch); }
+.cred-l { margin-top: 8px; color: var(--parch-3); font-size: 11px; }
+.scroll-cue { position: absolute; right: var(--gut); bottom: 32px; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--parch-3); writing-mode: vertical-rl; }
+.scroll-cue::after { content: ''; width: 1px; height: 56px; background: linear-gradient(var(--gold), transparent); animation: cue 2.4s var(--ease) infinite; }
+
+/* ── Projects ── */
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); margin-top: clamp(40px, 5vw, 64px); }
+.proj { position: relative; padding: clamp(32px, 4vw, 56px) clamp(0px, 4vw, 56px) clamp(32px, 4vw, 56px) 0; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.proj + .proj { border-left: 1px solid var(--line); padding-left: clamp(24px, 4vw, 56px); padding-right: 0; }
+.proj::before { content: ''; position: absolute; top: -1px; left: 0; height: 1px; width: 100%; background: var(--gold); transform: scaleX(0); transform-origin: 0 50%; transition: transform .8s var(--ease); }
+.proj:hover::before { transform: scaleX(1); }
+.proj-tag { color: var(--gold); }
+.proj h3 { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.05; }
+.proj p { color: var(--parch-2); }
+.proj-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--parch-3); font-size: 14px; }
+.proj-list li::before { content: '—'; margin-right: 8px; color: var(--gold); }
+.proj-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: auto; padding-top: 28px; border-top: 1px solid var(--line); }
+.ps-num { font-family: var(--f-display); font-size: clamp(36px, 3.6vw, 54px); line-height: 1; color: var(--gold-2); font-variant-numeric: lining-nums tabular-nums; }
+.ps-label { margin-top: 8px; font-size: 13px; color: var(--parch-3); line-height: 1.4; }
+.link { margin-top: -8px; display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; color: var(--parch); font-size: 15px; padding-bottom: 4px; background: linear-gradient(var(--gold), var(--gold)) 0 100% / 100% 1px no-repeat; transition: background-size .5s var(--ease), color .2s; }
+.link:hover { color: var(--gold-2); background-size: 30% 1px; }
+
+/* ── About ── */
+.about-wide { position: relative; border-radius: 2px; overflow: hidden; aspect-ratio: 21 / 9; max-height: 620px; width: 100%; }
+.about-wide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 32%; }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .about-wide img { animation: parallax linear both; animation-timeline: view(); scale: 1.18; }
+    @keyframes parallax { from { transform: translateY(-7%); } to { transform: translateY(7%); } }
+  }
+}
+.about-wide figcaption { position: absolute; left: 24px; bottom: 20px; color: var(--parch-2); }
+.about { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(40px, 6vw, 96px); margin-top: clamp(48px, 6vw, 80px); }
+.quote { font-family: var(--f-display); font-size: clamp(30px, 3.6vw, 52px); line-height: 1.12; letter-spacing: -.01em; }
+.quote em { color: var(--gold-2); }
+.quote::before { content: '«'; display: block; font-size: 1.6em; line-height: .6; color: var(--gold); margin-bottom: 12px; }
+.about-body { color: var(--parch-2); margin-top: 28px; max-width: 58ch; }
+.about-body + .about-body { margin-top: 16px; }
+.cv { list-style: none; margin: 0; padding: 0; }
+.cv li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 18px; padding: 20px 0; border-top: 1px solid var(--line); }
+.cv li:last-child { border-bottom: 1px solid var(--line); }
+.cv-y { color: var(--gold); padding-top: 4px; }
+.cv strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 21px; line-height: 1.2; color: var(--parch); }
+.cv span { display: block; color: var(--parch-3); font-size: 14px; margin-top: 4px; }
+
+/* ── Results ── */
+.results { background: var(--night-2); }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: clamp(40px, 5vw, 64px); border-top: 1px solid var(--line); }
+.num { padding: 36px 28px 8px 0; min-width: 0; }
+.num + .num { border-left: 1px solid var(--line); padding-left: 28px; }
+.num-v { font-family: var(--f-display); font-size: clamp(52px, 6.4vw, 104px); line-height: .9; color: var(--parch); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.02em; }
+.num p { margin-top: 18px; color: var(--parch-2); font-size: 15px; line-height: 1.5; max-width: 26ch; }
+.olymp { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px 40px; align-items: center; padding: 28px 32px; border: 1px solid var(--line); background: linear-gradient(90deg, rgba(207, 170, 94, .08), transparent 60%); }
+.olymp-v { font-family: var(--f-display); font-size: clamp(56px, 6vw, 88px); line-height: .9; color: var(--parch); }
+.olymp p { color: var(--parch-2); }
+.olymp strong { color: var(--parch); font-weight: 500; }
+
+/* ── Reviews ── */
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; }
+.car-ctrl { display: flex; gap: 10px; }
+.car-btn { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; border: 1px solid rgba(238, 230, 212, .3); transition: background-color .3s, color .3s, border-color .3s, opacity .3s; }
+.car-btn:hover:not(:disabled) { background: var(--gold); border-color: var(--gold); color: var(--night); }
+.car-btn:disabled { opacity: .3; cursor: default; }
+.is-static .car-ctrl, .is-static .car-bar { display: none; }
+.car-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-block: clamp(40px, 5vw, 56px) 28px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; }
+.car-track::-webkit-scrollbar { display: none; }
+.car-track.is-dragging { cursor: grabbing; scroll-snap-type: none; }
+.car-track.is-dragging * { pointer-events: none; }
+.car-bar { max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
+.car-bar > div { height: 1px; background: var(--line); }
+.car-thumb { display: block; height: 1px; background: var(--gold); transition: transform .12s linear; }
+.rev { scroll-snap-align: start; flex: 0 0 min(440px, 84vw); display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 3vw, 40px); background: var(--night-2); border: 1px solid var(--line); }
+.rev-mark { font-family: var(--f-display); font-size: 72px; line-height: .5; height: 28px; color: var(--gold); }
+.rev blockquote { margin: 0; font-family: var(--f-display); font-size: clamp(19px, 1.6vw, 22px); line-height: 1.45; color: var(--parch); }
+.rev-foot { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: end; }
+.rev-foot strong { font-weight: 500; font-size: 15px; }
+.rev-foot span { color: var(--parch-3); font-size: 13px; }
+.grade { grid-row: span 2; text-align: right; }
+.grade b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1; color: var(--gold-2); }
+.grade small { display: block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--parch-3); margin-top: 4px; }
+.orig { justify-self: start; color: var(--parch-3); font-size: 13px; border-bottom: 1px solid var(--line); transition: color .2s, border-color .2s; }
+.orig:hover { color: var(--gold); border-color: var(--gold); }
+
+/* ── Books (paper band) ── */
+.paper { background: var(--paper); color: var(--paper-ink); }
+.paper .eyebrow { color: #8A6A28; }
+.paper .sec-title em { color: #8A6A28; }
+.paper .sec-lead { color: var(--paper-ink-2); }
+.books { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 3vw, 44px); margin-top: clamp(40px, 5vw, 64px); perspective: 1400px; }
+.book { display: flex; flex-direction: column; gap: 18px; }
+.book-cover { position: relative; display: block; aspect-ratio: 594 / 850; border-radius: 2px 6px 6px 2px; overflow: hidden; background: #d9d0bc; box-shadow: 0 1px 0 rgba(0, 0, 0, .08), 0 34px 40px -26px rgba(17, 27, 48, .55); transform-origin: 0 50%; transition: transform .7s var(--ease), box-shadow .7s var(--ease); }
+.book-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .25), rgba(255, 255, 255, .2) 2.5%, transparent 7%); pointer-events: none; }
+.book-cover img { width: 100%; height: 100%; object-fit: cover; }
+.book:hover .book-cover { transform: rotateY(-18deg); box-shadow: 22px 34px 44px -24px rgba(17, 27, 48, .6); }
+.book-t { font-family: var(--f-display); font-size: 22px; line-height: 1.15; }
+.book-m { font-size: 14px; color: var(--paper-ink-2); }
+
+/* ── Media ── */
+.media { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 80px); align-items: end; }
+.video { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #070b14; }
+.video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; opacity: .72; transition: transform 1.2s var(--ease), opacity .6s; }
+.video:hover img { transform: scale(1.05); opacity: .85; }
+.video-play { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 8px; padding: clamp(20px, 3vw, 36px); text-align: left; background: linear-gradient(180deg, transparent 35%, rgba(7, 11, 20, .9)); }
+.pbtn { position: absolute; top: clamp(18px, 3vw, 32px); right: clamp(18px, 3vw, 32px); width: 88px; height: 88px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; color: var(--gold); transition: background-color .4s, color .4s, transform .5s var(--ease); }
+.pbtn::after { content: ''; position: absolute; inset: 8px; border-radius: 50%; border: 1px solid rgba(207, 170, 94, .35); }
+.video-play:hover .pbtn { background: var(--gold); color: var(--night); transform: scale(1.06); }
+.video-play strong { font-family: var(--f-display); font-weight: 400; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.15; max-width: 24ch; }
+.video-play span:not(.pbtn) { color: var(--parch-2); font-size: 14px; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 3; }
+.video.is-playing .video-play, .video.is-playing img { display: none; }
+.video-alt { display: inline-block; margin-top: 14px; color: var(--parch-3); font-size: 14px; }
+.video-alt:hover { color: var(--gold); }
+.socials { display: grid; margin-top: 36px; border-top: 1px solid var(--line); }
+.social { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); transition: padding .4s var(--ease), color .3s; }
+.social:hover { padding-left: 12px; color: var(--gold-2); }
+.social-ic { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--gold); }
+.social strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.1; }
+.social span { font-size: 13px; color: var(--parch-3); word-break: break-word; }
+
+/* ── Contact ── */
+.contact { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(40px, 6vw, 110px); }
+.contact-photo { margin-top: 40px; position: relative; max-width: 380px; }
+.contact-photo img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 15%; filter: grayscale(.25); }
+.contact-photo::after { content: ''; position: absolute; inset: 14px -14px -14px 14px; border: 1px solid var(--gold); z-index: -1; }
+.form { display: grid; gap: 36px; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 28px; }
+.field { position: relative; display: grid; gap: 6px; }
+.field label, .field-label { color: var(--gold); font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.field input, .field select, .field textarea { width: 100%; font: inherit; font-size: 18px; font-weight: 300; color: var(--parch); padding: 12px 0; background: transparent; border: 0; border-bottom: 1px solid rgba(238, 230, 212, .3); border-radius: 0; outline: none; transition: border-color .3s; -webkit-appearance: none; appearance: none; }
+.field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CFAA5E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center; padding-right: 28px; }
+.field select option { background: var(--night-2); color: var(--parch); }
+.field textarea { min-height: 100px; resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--parch-3); }
+.field input:focus, .field select:focus, .field textarea:focus { border-bottom-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+.field-err { position: absolute; left: 0; top: calc(100% + 6px); display: none; font-size: 13px; line-height: 1.2; color: var(--danger); }
+.field.is-error input { border-bottom-color: var(--danger); }
+.field.is-error .field-err { display: block; }
+.form-foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.form-note { font-size: 13px; color: var(--parch-3); max-width: 36ch; }
+.form-note a { color: var(--parch-2); text-decoration: underline; text-underline-offset: 3px; }
+.form-note a:hover { color: var(--gold-2); }
+.dd { position: relative; }
+.dd-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(238, 230, 212, .3); font-size: 18px; font-weight: 300; text-align: left; color: var(--parch); transition: border-color .3s; }
+.dd-btn:hover { border-bottom-color: rgba(238, 230, 212, .55); }
+.dd.is-open .dd-btn, .dd-btn:focus-visible { outline: none; border-bottom-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+.dd-chev { color: var(--gold); flex-shrink: 0; transition: transform .4s var(--ease); }
+.dd.is-open .dd-chev { transform: rotate(180deg); }
+.dd-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 10px); margin: 0; padding: 8px 0; list-style: none; max-height: 300px; overflow-y: auto; background: var(--night-3); border: 1px solid rgba(207, 170, 94, .35); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .25s, transform .3s var(--ease), visibility .25s; outline: none; }
+.dd.is-open .dd-list { opacity: 1; visibility: visible; transform: none; }
+.dd-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; font-size: 16px; color: var(--parch-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.dd-list li.is-active { background: rgba(207, 170, 94, .1); color: var(--parch); }
+.dd-list li[aria-selected="true"] { color: var(--gold-2); }
+.dd-list li[aria-selected="true"]::after { content: ''; width: 15px; height: 15px; flex-shrink: 0; background: var(--gold); -webkit-mask: var(--tick) center / contain no-repeat; mask: var(--tick) center / contain no-repeat; }
+.btn.is-loading { opacity: .6; pointer-events: none; }
+.success { padding: 44px 36px; border: 1px solid var(--gold); outline: none; }
+.success-check { width: 76px; height: 76px; margin-bottom: 22px; display: block; animation: pop .6s var(--ease) both; }
+.success-check circle { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 208; stroke-dashoffset: 208; animation: draw .8s .1s var(--ease) forwards; }
+.success-check path { fill: none; stroke: var(--gold-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw .5s .6s var(--ease) forwards; }
+.success h3 { font-size: 36px; font-style: italic; color: var(--gold-2); animation: fadeUp .7s .55s var(--ease) both; }
+.success p { color: var(--parch-2); margin-top: 8px; animation: fadeUp .7s .65s var(--ease) both; }
+
+/* ── Policy dialog ── */
+.dlg { width: min(720px, calc(100% - 32px)); max-height: min(86vh, 900px); padding: 0; border: 1px solid rgba(207, 170, 94, .4); background: var(--night-2); color: var(--parch); box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .8); }
+.dlg::backdrop { background: rgba(5, 8, 15, .75); }
+.dlg[open] { animation: fadeUp .4s var(--ease) both; }
+.dlg-in { position: relative; padding: clamp(28px, 4vw, 52px); }
+.dlg h2 { font-size: clamp(26px, 3vw, 36px); line-height: 1.1; padding-right: 52px; margin-bottom: 20px; }
+.dlg h3 { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 26px 0 8px; }
+.dlg p { color: var(--parch-2); font-size: 15px; }
+.dlg-close { position: absolute; top: 20px; right: 20px; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); transition: background-color .2s, color .2s; }
+.dlg-close:hover { background: var(--gold); color: var(--night); }
+.foot-bottom a { color: var(--parch-2); text-decoration: underline; text-underline-offset: 3px; }
+.foot-bottom a:hover { color: var(--gold-2); }
+
+/* ── Footer ── */
+.foot { border-top: 1px solid var(--line); padding-block: 56px calc(36px + env(safe-area-inset-bottom, 0px)); }
+.foot-big { font-family: var(--f-display); font-size: clamp(56px, 12vw, 200px); line-height: .85; letter-spacing: -.02em; color: var(--night-3); -webkit-text-stroke: 1px rgba(207, 170, 94, .35); white-space: nowrap; overflow: hidden; }
+.foot-big i { color: transparent; }
+.foot-in { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 32px; }
+.foot p { color: var(--parch-3); font-size: 14px; max-width: 44ch; }
+.foot h4 { margin: 0 0 14px; color: var(--gold); }
+.foot-col a { display: block; padding: 4px 0; color: var(--parch-2); font-size: 15px; transition: color .2s; }
+.foot-col a:hover { color: var(--gold-2); }
+.foot-bottom { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--parch-3); font-size: 13px; }
+
+/* ── Lightbox ── */
+.lb { position: fixed; inset: 0; z-index: 500; display: grid; grid-template-columns: 72px minmax(0, 1fr) 72px; align-items: center; gap: 8px; padding: calc(64px + env(safe-area-inset-top, 0px)) 12px calc(56px + env(safe-area-inset-bottom, 0px)); background: rgba(7, 11, 20, .95); opacity: 0; transition: opacity .26s; }
+.lb.is-open { opacity: 1; }
+.lb-fig { margin: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-width: 0; }
+.lb-img { max-width: 100%; max-height: calc(100% - 44px); object-fit: contain; box-shadow: 0 40px 90px rgba(0, 0, 0, .6); opacity: 0; transform: scale(.97); transition: opacity .35s, transform .5s var(--ease); }
+.lb-img.is-in { opacity: 1; transform: none; }
+.lb-cap { color: var(--parch-2); font-size: 14px; text-align: center; max-width: 60ch; }
+.lb-btn { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgba(238, 230, 212, .3); color: var(--parch); transition: background-color .2s, color .2s; }
+.lb-btn:hover { background: var(--gold); color: var(--night); border-color: var(--gold); }
+.lb-close { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; }
+.lb-count { position: absolute; top: calc(30px + env(safe-area-inset-top, 0px)); left: 24px; color: var(--gold); font-family: var(--f-mono); font-size: 13px; letter-spacing: .1em; }
+
+/* ── Keyframes ── */
+@keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes draw { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes portrait { from { opacity: 0; transform: scale(1.08) translateX(3%); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(.5); } 60% { transform: scale(1.06); } 100% { transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes cue { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .nav { gap: 18px; }
+  .nums { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .num:nth-child(3) { border-left: 0; padding-left: 0; }
+  .num:nth-child(n+3) { border-top: 1px solid var(--line); margin-top: 28px; }
+}
+@media (max-width: 980px) {
+  .nav, .hdr-cta { display: none; }
+  .burger { display: block; }
+  .hero { display: block; min-height: 0; padding-top: 0; }
+  .hero-photo { position: relative; width: 100%; height: min(118vw, 620px); }
+  .hero-photo img { -webkit-mask-image: linear-gradient(0deg, transparent 0%, #000 34%); mask-image: linear-gradient(0deg, transparent 0%, #000 34%); -webkit-mask-composite: source-over; mask-composite: add; object-position: 50% 12%; }
+  .hero-in { margin-top: -28vw; }
+  .hero-row { grid-template-columns: 1fr; }
+  .scroll-cue { display: none; }
+  .projects { grid-template-columns: 1fr; }
+  .proj, .proj + .proj { padding: 36px 0; border-left: 0; }
+  .proj + .proj { border-top: 1px solid var(--line); }
+  .about { grid-template-columns: 1fr; }
+  .about-wide { aspect-ratio: 4 / 3; }
+  .books { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media { grid-template-columns: 1fr; }
+  .contact { grid-template-columns: 1fr; }
+  .contact-photo { display: none; }
+  .foot-in { grid-template-columns: 1fr 1fr; }
+  .foot-in > :first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 640px) {
-  body { font-size: 15px; }
-  .mono span { display: none; }
-  .stats { grid-template-columns: 1fr; }
-  .stat, .stat + .stat { padding: 20px 0; border-left: 0; border-bottom: 1px solid var(--line); }
-  .proj-grid, .cases, .principles, .steps { grid-template-columns: 1fr; }
-  .case.wide { grid-column: auto; }
-  .hero-photo::before { inset: -8px -8px 8px 8px; }
-  .hero-quote { position: relative; left: auto; bottom: auto; margin: -40px 16px 0; max-width: none; }
-  .timeline::before { left: 64px; }
-  .timeline li { grid-template-columns: 64px 1fr; gap: 0 22px; }
-  .timeline li::after { left: 60px; }
-  .timeline .yr { font-size: 18px; }
-  .cred { grid-template-columns: 1fr; gap: 4px; }
-  .press-list a { grid-template-columns: 1fr 24px; gap: 6px 12px; }
-  .press-list .src { grid-column: 1 / -1; }
-  .press-list .ttl { font-size: 21px; }
-  .reviews-cta { padding: 24px 20px; }
+  body { font-size: 16px; }
+  .hdr-in { height: 68px; }
+  .hero-in { margin-top: -20vw; }
+  .pbtn { width: 60px; height: 60px; top: 14px; right: 14px; }
+  .pbtn::after { inset: 5px; }
+  .video-play strong { font-size: 18px; }
+  .pbtn svg { width: 22px; height: 22px; }
+  .hero-name .ln:nth-child(2) > span { padding-left: .25em; }
+  .hero-actions .btn { flex: 1 1 100%; }
+  .creds { flex-wrap: wrap; row-gap: 20px; }
+  .cred { padding: 0 18px; }
+  .cred:nth-child(3) { border-left: 0; padding-left: 0; }
+  .sec-head { grid-template-columns: 1fr; }
+  .sec-head .car-ctrl { display: none; }
+  .proj-stats { gap: 10px; }
+  .ps-label { font-size: 12px; }
+  .cv li { grid-template-columns: 1fr; gap: 4px; }
+  .nums { grid-template-columns: 1fr; }
+  .num, .num + .num { border-left: 0; padding: 28px 0 0; }
+  .num + .num { border-top: 1px solid var(--line); margin-top: 28px; }
+  .olymp { grid-template-columns: 1fr; padding: 24px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-foot .btn { width: 100%; }
+  .lb { grid-template-columns: minmax(0, 1fr); padding-inline: 8px; }
+  .lb-prev, .lb-next { position: absolute; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .lb-prev { left: calc(50% - 66px); }
+  .lb-next { right: calc(50% - 66px); }
+  .foot-in { grid-template-columns: 1fr; }
+}
+
+/* ── Коныхова: роли на первом экране, логотипы и несколько рядов проектов ── */
+.hero-roles { margin-top: 24px; flex-direction: column; flex-wrap: nowrap; gap: 6px; animation: fadeUp 1s .55s var(--ease) both; }
+.projects .proj:nth-child(odd) { border-left: 0; padding-left: 0; padding-right: clamp(0px, 4vw, 56px); }
+.projects .proj:nth-child(n+3) { border-top: 1px solid var(--line); }
+.proj-logo { width: 88px; height: 88px; object-fit: cover; border-radius: 2px; }
+.proj .link + .link { margin-top: -12px; }
+.rev-links { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-top: 32px; }
+.rev-links .link { margin-top: 0; }
+.social-ic.mono { font-size: 10px; letter-spacing: .06em; }
+@media (max-width: 980px) {
+  .projects .proj:nth-child(odd) { padding: 36px 0; }
+  .contact-photo { display: block; max-width: 300px; }
 }
 </style>
 </head>
 <body>
 
-<header class="nav" id="nav">
-  <div class="wrap nav-inner">
-    <a href="#top" class="mono">АК<span>Анастасия Коныхова</span></a>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="#projects">Проекты</a></li>
-      <li><a href="#about">Обо мне</a></li>
-      <li><a href="#approach">Подход</a></li>
-      <li><a href="#results">Результаты</a></li>
-      <li><a href="#press">Публикации</a></li>
-      <li><a href="#contact">Контакты</a></li>
-    </ul>
-    <a href="#contact" class="btn btn-primary nav-cta">Связаться</a>
-    <button class="burger" id="burger" aria-label="Меню" aria-expanded="false"><span></span><span></span><span></span></button>
+<div class="progress" aria-hidden="true"></div>
+
+<header class="hdr" data-reveal>
+  <div class="wrap hdr-in">
+    <a href="#top" class="logo">Анастасия Коныхова</a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#projects">Проекты</a>
+      <a href="#about">Обо мне</a>
+      <a href="#results">Результаты</a>
+      <a href="#reviews">Истории учеников</a>
+      <a href="#media">Публикации</a>
+    </nav>
+    <a href="#contact" class="btn btn-line hdr-cta">Связаться</a>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
   </div>
 </header>
 
-<main id="top">
+<div class="mnav" id="mnav" aria-hidden="true">
+  <a href="#projects">Проекты</a>
+  <a href="#about">Обо мне</a>
+  <a href="#results">Результаты</a>
+  <a href="#reviews">Истории учеников</a>
+  <a href="#media">Публикации</a>
+  <a href="#contact" class="btn btn-gold">Связаться</a>
+</div>
 
-<!-- ═══ HERO ═══ -->
-<section class="hero">
-  <div class="wrap">
-    <div class="hero-grid">
-      <div class="rv">
-        <span class="eyebrow">Образование · перевод · культура</span>
-        <h1>Анастасия <em>Коныхова</em></h1>
-        <p class="lead">Основатель онлайн-школы «Высшая Лига Знаний», синхронный переводчик и практикующий психолог. Создаю проекты, в которых соединяются любовь к человеку, интеллект и эстетика.</p>
-        <ul class="roles">
+<main>
+<section class="hero" id="top">
+  <div class="hero-photo"><img src="images/anastasia-konykhova/portrait-hero.jpg" alt="Анастасия Коныхова" fetchpriority="high"></div>
+  <div class="wrap hero-in">
+    <h1 class="hero-name"><span class="ln"><span>Анастасия</span></span><span class="ln"><span>Коныхова</span></span></h1>
+    <div class="hero-rule"></div>
+    <div class="hero-row">
+      <div>
+        <p class="hero-desc">Основатель онлайн-школы «Высшая Лига Знаний», синхронный переводчик и практикующий психолог. Создаю проекты, в которых соединяются любовь к человеку, интеллект и эстетика.</p>
+        <ul class="proj-list hero-roles">
           <li>Сооснователь агентства «Переводы Про»</li>
           <li>Руководитель проекта международной коммуникации Ethos</li>
           <li>Создатель лаборатории подготовки брендов «Собственный язык»</li>
@@ -410,502 +466,616 @@ footer details p { margin-top: 12px; font-size: 13px; max-width: 900px; line-hei
           <li>Член Ассоциации медицинских переводчиков</li>
         </ul>
         <div class="hero-actions">
-          <a href="#projects" class="btn btn-primary">Мои проекты</a>
-          <a href="#contact" class="btn btn-ghost">Связаться</a>
+          <a href="#projects" class="btn btn-gold">Проекты <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a href="#contact" class="btn btn-line">Связаться</a>
         </div>
       </div>
-      <div class="hero-photo rv">
-        <div class="frame"><img src="images/anastasia-konykhova/portrait-hero.jpg" alt="Анастасия Коныхова в библиотеке" fetchpriority="high"></div>
-        <div class="hero-quote">«Жить своим делом и зажигать сердца вокруг»</div>
+      <div class="creds">
+        <div class="cred"><div class="cred-v">18</div><div class="cred-l mono">лет в образовании</div></div>
+        <div class="cred"><div class="cred-v">800+</div><div class="cred-l mono">учеников</div></div>
+        <div class="cred"><div class="cred-v">22</div><div class="cred-l mono">преподавателя</div></div>
       </div>
     </div>
-    <div class="stats rv">
-      <div class="stat"><b>18 лет</b><span>в образовании — МГЛУ, Дипакадемия МИД, РАНХиГС, своя школа</span></div>
-      <div class="stat"><b>800+</b><span>учеников от 5 до 60 лет</span></div>
-      <div class="stat"><b>22</b><span>постоянных преподавателя в «Высшей Лиге Знаний»</span></div>
-    </div>
   </div>
+  <div class="scroll-cue mono" aria-hidden="true">Листайте</div>
 </section>
 
-<!-- ═══ PROJECTS ═══ -->
-<section class="projects" id="projects">
+<section class="sec" id="projects">
   <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">Проекты</span>
-      <h2>Вселенная моих проектов</h2>
-      <p class="muted">Образование, перевод, психология, культура и брендинг. Все направления связаны одной идеей: помогать людям и проектам развиваться через знания, точную коммуникацию и продуманную стратегию.</p>
-    </div>
-
-    <div class="proj-main rv">
-      <div class="logo-box"><img src="images/anastasia-konykhova/logo-vlz.png" alt="Логотип онлайн-школы «Высшая Лига Знаний» — The Knowledge League"></div>
-      <div>
-        <span class="tag">Главное дело · с 2024 года</span>
+    <h2 class="sec-title">Образование, перевод, бренды и&nbsp;культура: <em>одна логика</em></h2>
+    <div class="projects">
+      <article class="proj rv">
+        <img class="proj-logo" src="images/anastasia-konykhova/logo-vlz.png" alt="Логотип «Высшей Лиги Знаний»" loading="lazy">
         <h3>Онлайн-школа «Высшая Лига Знаний»</h3>
-        <p>Премиальная многопредметная онлайн-школа персонализированного образования для детей от 5–6 лет, подростков, студентов и взрослых. Готовим к ОГЭ, ЕГЭ, ДВИ, международным экзаменам и поступлению, сопровождаем по программам IB, A-Level, GCSE и IGCSE, преподаём языки, школьные, вузовские и творческие дисциплины.</p>
-        <p>Семья получает не набор разрозненных репетиторов, а единую траекторию: диагностику, персональную программу, подбор преподавателей, контроль прогресса и корректировку стратегии.</p>
-        <div class="mini-stats">
-          <div><b>20+</b><span>направлений</span></div>
-          <div><b>22</b><span>преподавателя</span></div>
-          <div><b>4</b><span>международные программы</span></div>
-        </div>
-        <a class="btn btn-primary" href="https://anastasiaviptutor.ru/online-school" target="_blank" rel="noopener">Сайт школы</a>
-      </div>
-    </div>
-
-    <div class="proj-grid">
-      <article class="proj rv">
-        <div class="proj-media logo dark"><img src="images/anastasia-konykhova/logo-perevody-pro.jpg" alt="Логотип агентства «Переводы Про»"></div>
-        <div class="proj-body">
-          <span class="tag">Сооснователь</span>
-          <h3>Агентство «Переводы Про»</h3>
-          <p>Полное сопровождение переводческого проекта: анализ тематики, подбор команды, глоссарии, NDA и контроль качества. Деловые, медицинские, юридические и культурные проекты, международные переговоры и конференции.</p>
-          <div class="proj-links"><a class="link-arrow" href="https://perevodpro.com/" target="_blank" rel="noopener">perevodpro.com</a></div>
+        <p>Премиальная многопредметная онлайн-школа персонализированного образования для детей от 5–6 лет, подростков, студентов и взрослых. Готовим к ОГЭ, ЕГЭ, ДВИ, международным экзаменам и поступлению, сопровождаем по программам IB, A-Level, GCSE и IGCSE. Семья получает не набор разрозненных репетиторов, а единую траекторию: диагностику, персональную программу, подбор преподавателей и контроль прогресса.</p>
+        <a class="link" href="https://anastasiaviptutor.ru/online-school" target="_blank" rel="noopener">Сайт школы <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <div class="proj-stats">
+          <div><div class="ps-num">2024</div><div class="ps-label">год основания</div></div>
+          <div><div class="ps-num">20+</div><div class="ps-label">образовательных направлений</div></div>
+          <div><div class="ps-num" data-count="22">22</div><div class="ps-label">постоянных преподавателя</div></div>
         </div>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media"><img src="images/anastasia-konykhova/kabina.jpg" alt="Анастасия в кабине синхронного перевода" style="object-position: center 25%"></div>
-        <div class="proj-body">
-          <span class="tag">Синхронный переводчик</span>
-          <h3>В кабине синхрониста</h3>
-          <p>Работаю на Петербургском и Восточном экономических форумах, правительственных и деловых мероприятиях. Член экспертного совета Национальной Лиги переводчиков и Ассоциации медицинских переводчиков.</p>
-          <div class="proj-links"><a class="link-arrow" href="#creds">Членство в профсообществах</a></div>
+        <img class="proj-logo" src="images/anastasia-konykhova/logo-perevody-pro.jpg" alt="Логотип агентства «Переводы Про»" loading="lazy">
+        <h3>Агентство «Переводы&nbsp;Про»</h3>
+        <p>Я сооснователь агентства и практикующий синхронист. Выстраиваем полное сопровождение проекта: от анализа тематики и подбора команды до глоссариев, NDA и контроля качества. Деловые, медицинские, юридические и культурные проекты, международные переговоры и конференции.</p>
+        <a class="link" href="https://perevodpro.com/" target="_blank" rel="noopener">Сайт агентства <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <div class="proj-stats">
+          <div><div class="ps-num">ПМЭФ</div><div class="ps-label">синхронный перевод</div></div>
+          <div><div class="ps-num">ВЭФ</div><div class="ps-label">синхронный перевод</div></div>
+          <div><div class="ps-num">НЛП</div><div class="ps-label">экспертный совет лиги</div></div>
         </div>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media logo ethos"><img src="images/anastasia-konykhova/logo-ethos.jpg" alt="Логотип проекта Ethos"></div>
-        <div class="proj-body">
-          <span class="tag">Руководитель проекта</span>
-          <h3>Ethos</h3>
-          <p>Проект международной коммуникации: помогаем компаниям и людям точно и бережно говорить с зарубежными партнёрами и аудиторией.</p>
-        </div>
+        <img class="proj-logo" src="images/anastasia-konykhova/logo-ethos.jpg" alt="Логотип проекта Ethos" loading="lazy">
+        <h3>Ethos</h3>
+        <p>Руковожу проектом международной коммуникации: помогаем компаниям и людям точно и бережно говорить с зарубежными партнёрами и аудиторией.</p>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media type wine">Собственный язык</div>
-        <div class="proj-body">
-          <span class="tag">Создатель</span>
-          <h3>Лаборатория «Собственный язык»</h3>
-          <p>Лаборатория подготовки брендов: помогаем бренду найти свой голос, смыслы и язык, на котором он говорит с людьми.</p>
-          <div class="proj-links"><a class="link-arrow" href="https://sobstvenny-yazyk.ru/" target="_blank" rel="noopener">sobstvenny-yazyk.ru</a></div>
-        </div>
+        <span class="proj-tag mono">Лаборатория подготовки брендов</span>
+        <h3>«Собственный язык»</h3>
+        <p>Создала лабораторию, которая помогает бренду найти свой голос, смыслы и язык, на котором он говорит с людьми.</p>
+        <a class="link" href="https://sobstvenny-yazyk.ru/" target="_blank" rel="noopener">Сайт лаборатории <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media"><img src="images/anastasia-konykhova/metropol.jpg" alt="Встреча клуба «Жизнь как чудо» в отеле «Метрополь»"></div>
-        <div class="proj-body">
-          <span class="tag">Автор и куратор</span>
-          <h3>Клуб «Жизнь как чудо»</h3>
-          <p>Клуб интеллектуального досуга: лекции, психологические практики, музейные маршруты, гастрономические встречи, искусство и парфюмерия. Например, лекция об ароматах в живописи импрессионистов и чаепитие об английских и русских традициях в «Метрополе».</p>
-          <div class="proj-links">
-            <a class="link-arrow" href="https://lifeasmiracle.taplink.ws" target="_blank" rel="noopener">Страница клуба</a>
-            <a class="link-arrow" href="https://t.me/life_as_miracle" target="_blank" rel="noopener">Telegram-канал</a>
-          </div>
-        </div>
+        <span class="proj-tag mono">Культурно-просветительский клуб</span>
+        <h3>«Жизнь как чудо»</h3>
+        <p>Клуб интеллектуального досуга: лекции, психологические практики, музейные маршруты, гастрономические встречи, искусство и парфюмерия. Например, лекция об ароматах в живописи импрессионистов и чаепитие об английских и русских традициях в «Метрополе».</p>
+        <a class="link" href="https://lifeasmiracle.taplink.ws" target="_blank" rel="noopener">Страница клуба <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="link" href="https://t.me/life_as_miracle" target="_blank" rel="noopener">Telegram-канал клуба <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media"><img src="images/anastasia-konykhova/consultation.jpg" alt="Анастасия на консультации" style="object-position: center 30%"></div>
-        <div class="proj-body">
-          <span class="tag">Практикующий психолог</span>
-          <h3>Психолог и карьерный консультант</h3>
-          <p>Психологическое консультирование и профориентация для подростков и взрослых: выбор профессии и образовательной траектории, работа с тревогой и мотивацией.</p>
-          <div class="proj-links"><a class="link-arrow" href="https://innerpower.site/" target="_blank" rel="noopener">innerpower.site</a></div>
-        </div>
+        <span class="proj-tag mono">Психолог и карьерный консультант</span>
+        <h3>Психологическое консультирование</h3>
+        <p>Консультирую подростков и взрослых, помогаю с профориентацией и выбором образовательной траектории, работаю с тревогой и мотивацией.</p>
+        <a class="link" href="https://innerpower.site/" target="_blank" rel="noopener">Сайт психолога <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media type">Парфюмерия<br>и мифы</div>
-        <div class="proj-body">
-          <span class="tag">Авторский проект</span>
-          <h3>Парфюмерный проект</h3>
-          <p>Для меня аромат — художественный текст: способ рассказывать истории и сохранять воспоминания. Пишу о парфюмерии, её истории и мифах.</p>
-          <div class="proj-links"><a class="link-arrow" href="https://t.me/parfumandmyths" target="_blank" rel="noopener">Telegram-канал</a></div>
-        </div>
+        <span class="proj-tag mono">Парфюмерия</span>
+        <h3>Ароматы и международные бренды</h3>
+        <p>Для меня аромат — художественный текст. Веду авторский канал о парфюмерии. Как приглашённый партнёр участвую в международных проектах: private label и travel retail, производство во Франции, переговоры и координация партнёров. PD Château — пример разработки и продвижения бренда.</p>
+        <a class="link" href="https://t.me/parfumandmyths" target="_blank" rel="noopener">Канал о парфюмерии <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="link" href="https://www.pdchateau.com/" target="_blank" rel="noopener">PD Château <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </article>
-
       <article class="proj rv">
-        <div class="proj-media type powder">PD Château</div>
-        <div class="proj-body">
-          <span class="tag">Пример: бренд под ключ</span>
-          <h3>Международные проекты в парфюмерии</h3>
-          <p>Приглашённый партнёр: private label и travel retail, производство во Франции, координация партнёров и переговоры. Пример разработки и продвижения бренда на международном рынке.</p>
-          <div class="proj-links"><a class="link-arrow" href="https://www.pdchateau.com/" target="_blank" rel="noopener">pdchateau.com</a></div>
-        </div>
-      </article>
-
-      <article class="proj rv">
-        <div class="proj-media"><img src="images/anastasia-konykhova/museum-green.jpg" alt="Анастасия в музейном интерьере" style="object-position: center 20%"></div>
-        <div class="proj-body">
-          <span class="tag">Наставник</span>
-          <h3>Schoolsmart</h3>
-          <p>Наставник и лидер Методического центра: исследуем реальные задачи преподавателей, собираем методики, создаём образовательные продукты и сообщество экспертов.</p>
-        </div>
+        <span class="proj-tag mono">Наставник</span>
+        <h3>Schoolsmart</h3>
+        <p>Наставник и лидер Методического центра: исследуем реальные задачи преподавателей, собираем методики, создаём образовательные продукты и сообщество экспертов.</p>
       </article>
     </div>
   </div>
 </section>
 
-<!-- ═══ ABOUT ═══ -->
-<section id="about">
-  <div class="wrap about-grid">
-    <figure class="about-photo rv">
-      <img src="images/anastasia-konykhova/street-1.jpg" alt="Анастасия Коныхова на прогулке" style="object-position: center 30%">
-      <figcaption>Языки, культура и путешествия — продолжение работы</figcaption>
+<section class="sec" id="about" style="padding-top:0">
+  <div class="wrap">
+    <figure class="about-wide rv" style="margin:0">
+      <img src="images/anastasia-konykhova/reading.jpg" alt="Анастасия Коныхова с книгой в библиотеке" loading="lazy">
     </figure>
-    <div class="about-text">
-      <div class="rv">
-        <span class="eyebrow">Обо мне</span>
-        <h2 style="margin:18px 0 26px">Из дома, где искусство было самой жизнью</h2>
-        <p class="lead">Я выросла в доме, где искусство, литература и творчество были не дополнением к жизни, а самой жизнью.</p>
-        <p>Мой папа — писатель Леонид Коныхов, мама — художник и создатель бренда украшений Poesia Наталья Коныхова. У нас бывали художники, музыканты, актёры, кинокритики. Поэтому мне всегда казалось естественным соединять языки, культуру, психологию, искусство и образование.</p>
-        <p>В пятом классе у меня появилась учительница английского Тамара Николаевна Манюгина. Мы читали в оригинале «Маленьких женщин» и говорили о книгах и жизни — и уже в 11 лет я знала, что стану переводчиком и преподавателем. Позже на меня сильно повлияли Дмитрий Борисович Ольховиков, мой преподаватель английского и риторики, и Андрей Константинович Шавкин, который передал мне итальянский и свою авторскую методику.</p>
-        <p>Я преподавала в МГЛУ, Дипломатической академии МИД России и РАНХиГС. Но поняла, что могу быть полезна гораздо большему числу людей в частной практике. Из неё выросла «Высшая Лига Знаний».</p>
+    <div class="about">
+      <div>
+        <p class="quote">Жить своим делом и&nbsp;<em>зажигать сердца вокруг.</em></p>
+        <p class="about-body">Я выросла в доме, где искусство, литература и творчество были не дополнением к жизни, а самой жизнью. Мой папа — писатель Леонид Коныхов, мама — художник и создатель бренда украшений Poesia Наталья Коныхова.</p>
+        <p class="about-body">В пятом классе у меня появилась учительница английского Тамара Николаевна Манюгина, и уже в 11 лет я знала, что стану переводчиком и преподавателем. Позже на меня сильно повлияли Дмитрий Борисович Ольховиков, мой преподаватель английского и риторики, и Андрей Константинович Шавкин, который передал мне итальянский и свою авторскую методику.</p>
+        <p class="about-body">Я преподавала в МГЛУ, Дипломатической академии МИД России и РАНХиГС. Но поняла, что могу быть полезна гораздо большему числу людей в частной практике. Из неё выросла «Высшая Лига Знаний».</p>
+        <p class="about-body">Мои увлечения продолжают работу: музеи, театр, вокал и фортепиано, испанский, китайский и немецкий, путешествия, парфюмерия, фотография и скрапбукинг.</p>
       </div>
-
-      <div class="quote rv">«Жить своим делом и зажигать сердца вокруг»<small>Мой девиз</small></div>
-
-      <ol class="timeline rv">
-        <li><div class="yr">2007</div><div class="tl-body"><b>МГЛУ</b><span>Культуролог со знанием итальянского и английского языков.</span></div></li>
-        <li class="teach"><div class="yr">2012</div><div class="tl-body"><b>Диплом с отличием и начало преподавания в МГЛУ</b><span>И квалификация преподавателя русского как иностранного.</span></div></li>
-        <li class="teach"><div class="yr">2014</div><div class="tl-body"><b>Начала преподавать в РАНХиГС при Президенте РФ</b></div></li>
-        <li><div class="yr">2015</div><div class="tl-body"><b>Аспирантура РАНХиГС</b><span>Теория и история культуры, преподаватель-исследователь.</span></div></li>
-        <li class="teach"><div class="yr">2016</div><div class="tl-body"><b>Начала преподавать в Дипломатической академии МИД РФ</b></div></li>
-        <li><div class="yr">2019</div><div class="tl-body"><b>Синхронный перевод</b><span>Программа профессиональной подготовки МГЛУ.</span></div></li>
-        <li><div class="yr">2022</div><div class="tl-body"><b>Психология</b><span>Психолог-акмеолог, психологическое консультирование в Высшей школе психологии Института психологии РАН.</span></div></li>
-        <li><div class="yr">2024</div><div class="tl-body"><b>«Высшая Лига Знаний»</b><span>Своя онлайн-школа.</span></div></li>
+      <ol class="cv rv">
+        <li><span class="cv-y mono">2007</span><div><strong>МГЛУ</strong><span>Культуролог со знанием итальянского и английского языков, диплом с отличием</span></div></li>
+        <li><span class="cv-y mono">2012</span><div><strong>Начала преподавать в МГЛУ</strong><span>Квалификация преподавателя русского как иностранного</span></div></li>
+        <li><span class="cv-y mono">2014</span><div><strong>Начала преподавать в РАНХиГС</strong><span>при Президенте РФ; позже — аспирантура по теории и истории культуры</span></div></li>
+        <li><span class="cv-y mono">2016</span><div><strong>Начала преподавать в Дипакадемии МИД РФ</strong></div></li>
+        <li><span class="cv-y mono">2019</span><div><strong>Синхронный перевод</strong><span>Программа профессиональной подготовки МГЛУ</span></div></li>
+        <li><span class="cv-y mono">2022</span><div><strong>Психология</strong><span>Психолог-акмеолог; психологическое консультирование в Высшей школе психологии Института психологии РАН</span></div></li>
+        <li><span class="cv-y mono">2024</span><div><strong>Онлайн-школа «Высшая Лига Знаний»</strong><span>22 преподавателя, 20+ направлений</span></div></li>
       </ol>
-
-      <p class="rv" style="margin-top:24px">Мои увлечения продолжают работу: музеи, театр, выставки, вокал и фортепиано. Сейчас учу испанский, китайский и немецкий. Путешествую, чтобы знакомиться со странами через язык, архитектуру, кухню и традиции. Коллекционирую парфюмерию — для меня аромат как художественный текст. Ещё люблю фотографию и скрапбукинг.</p>
     </div>
   </div>
 </section>
 
-<!-- ═══ CREDENTIALS ═══ -->
-<section class="creds" id="creds">
+<section class="sec results" id="results">
   <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">Образование</span>
-      <h2>Дипломы и квалификации</h2>
-      <p class="muted">Фундаментальное гуманитарное образование, синхронный перевод и психология.</p>
+    <h2 class="sec-title">Восемнадцать лет <em>в цифрах</em></h2>
+    <div class="nums">
+      <div class="num rv"><div class="num-v">800+</div><p>учеников от 5 до 60 лет</p></div>
+      <div class="num rv"><div class="num-v">97</div><p>баллов ЕГЭ по литературе и 95 — по русскому у Сони</p></div>
+      <div class="num rv"><div class="num-v" data-count="92">92</div><p>балла ДВИ МГУ по английскому у Алёны</p></div>
+      <div class="num rv"><div class="num-v">A</div><p>высшие оценки A-Level по психологии и социологии у Насти</p></div>
     </div>
-    <div class="cred-grid rv">
-      <div class="cred"><div class="yr">2007–2012</div><p><b>МГЛУ</b> — культуролог со знанием итальянского и английского языков, диплом с отличием</p></div>
-      <div class="cred"><div class="yr">2011–2012</div><p><b>МГЛУ</b> — теория и практика преподавания русского языка как иностранного</p></div>
-      <div class="cred"><div class="yr">2015–2018</div><p><b>РАНХиГС</b> — аспирантура, теория и история культуры</p></div>
-      <div class="cred"><div class="yr">2019–2020</div><p><b>МГЛУ</b> — программа «Синхронный перевод»</p></div>
-      <div class="cred"><div class="yr">2020–2021</div><p><b>Rock your retour</b> (Interpretation school, UK)</p></div>
-      <div class="cred"><div class="yr">2022</div><p><b>НИУ ВШЭ</b> — визуальная культура, лаборатория исследований советской архитектуры и искусства</p></div>
-      <div class="cred"><div class="yr">2022</div><p><b>Школа дизайна Contented</b> — авторская фотография</p></div>
-      <div class="cred"><div class="yr">2022–2023</div><p><b>Институт профессионального образования</b> — психолог-акмеолог</p></div>
-      <div class="cred"><div class="yr">2022–2023</div><p><b>Высшая школа психологии Института психологии РАН</b> — психологическое консультирование</p></div>
-      <div class="cred"><div class="yr">2023–2024</div><p><b>Центр краткосрочной и системной терапии «Представь себе»</b></p></div>
-      <div class="cred"><div class="yr">МГИМО</div><p><b>МГИМО и ТПП Парижа</b> — «Французский язык для делового общения»</p></div>
-    </div>
-    <div class="registry rv">
-      <a href="https://search.russian-translators.ru/translators/konykhova1.html" target="_blank" rel="noopener">✦ Национальная Лига переводчиков — реестр</a>
-      <a href="https://association-of-medical-translators.ru/registry/konyhova-anastasiya-leonidovna/" target="_blank" rel="noopener">✦ Ассоциация медицинских переводчиков — реестр</a>
+    <div class="olymp rv">
+      <div class="olymp-v">4</div>
+      <p><strong>международные программы</strong> в школе: IB, A-Level, GCSE и IGCSE — плюс ОГЭ, ЕГЭ, ДВИ и поступление в сильные школы и университеты России и других стран.</p>
     </div>
   </div>
 </section>
 
-<!-- ═══ APPROACH ═══ -->
-<section id="approach">
-  <div class="wrap">
-    <div class="approach-top">
-      <div class="rv">
-        <span class="eyebrow">Подход</span>
-        <h2 style="margin-top:18px">Персонализированное стратегическое обучение</h2>
-        <p class="lead" style="margin-top:24px">Я начинаю не с учебника, а с человека. Методика подстраивается под ученика, а требования к результату остаются высокими.</p>
-        <p>Меня расстраивает, когда образование подменяют формальными показателями: годами учат язык и боятся говорить, получают пятёрки и не понимают предмета. И когда ученика, который не вписался в систему, называют «ленивым». Лень почти всегда — защитная реакция: на страх, на осуждение, на пробелы, которые копились годами. Поэтому мы сначала ищем причину, а потом строим маршрут. Обучение — без давления и страха ошибки.</p>
+<section class="sec" id="reviews">
+  <div data-carousel>
+    <div class="wrap sec-head">
+      <div>
+        <h2 class="sec-title">Истории <em>учеников</em></h2>
       </div>
-      <img class="rv" src="images/anastasia-konykhova/reading.jpg" alt="Анастасия с книгой в библиотеке">
+      <div class="car-ctrl">
+        <button class="car-btn" type="button" data-prev aria-label="Предыдущие истории"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+        <button class="car-btn" type="button" data-next aria-label="Следующие истории"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
     </div>
-
-    <div class="steps rv">
-      <div class="step"><b>Диагностика</b><span>Цель, исходный уровень, интересы, темп, психологические особенности.</span></div>
-      <div class="step"><b>Точка А и точка Б</b><span>Конкретная цель — экзамен, поступление, переезд — и то, что стоит за ней.</span></div>
-      <div class="step"><b>Маршрут</b><span>Программа, формат, сроки, контрольные точки, подбор преподавателей.</span></div>
-      <div class="step"><b>Контроль</b><span>Тесты, пробные экзамены, отчёты; все занятия записываются для родителей.</span></div>
-      <div class="step"><b>Корректировка</b><span>Меняются цели или обстоятельства — меняем стратегию.</span></div>
+    <div class="car-track" tabindex="0" aria-label="Истории учеников">
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Я была её пятым преподавателем, в школе говорили, что она «не способна». Мы читали книжки про щенят — иногда вниз головой с дивана. Через месяц перелом, в том же полугодии — одна из лучших в классе.</blockquote>
+        <div class="rev-foot"><strong>Стеша</strong><div class="grade"><b>Париж</b><small>межд. школа</small></div><span>Английский · с 8 лет</span></div>
+      </article>
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Не хватало знаний, скорости и уверенности. Без быстрых решений — тема за темой, до самостоятельности. Прошёл в МГИМО, РАНХиГС и РУДН, выбрал «Право и политику» с двойным дипломом.</blockquote>
+        <div class="rev-foot"><strong>Илья</strong><div class="grade"><b>3</b><small>вуза</small></div><span>ОГЭ и ЕГЭ · 8–11 класс</span></div>
+      </article>
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Грант в области атомной энергетики, а половина обучения неожиданно на итальянском. Интенсив на реальных задачах и речь с первых занятий — переехала и успешно учится в Италии.</blockquote>
+        <div class="rev-foot"><strong>Анна</strong><div class="grade"><b>5</b><small>месяцев</small></div><span>Итальянский с нуля</span></div>
+      </article>
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Авторская программа: культура, история, география, религия, литература, искусство — и отдельная линия подготовки к IGCSE. Сильная академическая база и целостная картина мира.</blockquote>
+        <div class="rev-foot"><strong>Костя</strong><div class="grade"><b>7</b><small>областей</small></div><span>Авторский курс · IGCSE</span></div>
+      </article>
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Пробелы с 4 по 9 класс по русскому, английскому и математике. Единая стратегия, команда преподавателей, отчётность. Семья вернулась за три месяца до экзаменов — Ваня сдал ОГЭ и принят в 10 класс.</blockquote>
+        <div class="rev-foot"><strong>Ваня</strong><div class="grade"><b>3</b><small>месяца</small></div><span>ОГЭ · команда школы</span></div>
+      </article>
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Прошла собеседование на английском на позицию финансового директора в одном из подразделений Amazon.</blockquote>
+        <div class="rev-foot"><strong>Наталья</strong><div class="grade"><b>CFO</b><small>Amazon</small></div><span>Английский для карьеры</span></div>
+      </article>
+      <article class="rev">
+        <div class="rev-mark" aria-hidden="true">“</div>
+        <blockquote>Алёша поступил в МГИМО. Катя, начавшая английский в пять лет, поступила в школу с углублённой языковой программой.</blockquote>
+        <div class="rev-foot"><strong>Алёша и Катя</strong><div class="grade"><b>2</b><small>поступления</small></div><span>Английский</span></div>
+      </article>
     </div>
-
-    <div class="principles">
-      <div class="principle rv"><b>Через интересы</b><span>Материалы связываем с тем, что человеку правда интересно: от профессии до видеоигр.</span></div>
-      <div class="principle rv"><b>Межпредметные связи</b><span>Языки соединяем с культурой, историей, литературой, психологией.</span></div>
-      <div class="principle rv"><b>Речь с первых минут</b><span>Сразу говорим, слушаем и строим «каркас» языка, который потом наполняется словами.</span></div>
-      <div class="principle rv"><b>Психология</b><span>Вижу причины тревоги и сопротивления и бережно работаю с ними. Никогда не строю обучение на страхе.</span></div>
+    <div class="car-bar"><div><span class="car-thumb"></span></div></div>
+    <div class="wrap rev-links">
+      <a class="link" href="https://profi.ru/profile/KonyhovaAL/#reviews-tab" target="_blank" rel="noopener">Отзывы на Профи.ру <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+      <a class="link" href="https://repetit.ru/repetitor.aspx?id=39271" target="_blank" rel="noopener">Отзывы на Repetit.ru <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
     </div>
   </div>
 </section>
 
-<!-- ═══ RESULTS ═══ -->
-<section class="results" id="results">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">Результаты учеников</span>
-      <h2>Истории, где результат казался недостижимым</h2>
-    </div>
-    <div class="res-stats rv">
-      <div class="res-stat"><b>95 и 97</b><span>ЕГЭ по русскому и литературе — Соня</span></div>
-      <div class="res-stat"><b>92</b><span>ДВИ МГУ по английскому — Алёна</span></div>
-      <div class="res-stat"><b>A-Level</b><span>высшие оценки по психологии и социологии — Настя</span></div>
-    </div>
-    <div class="cases">
-      <article class="case rv">
-        <span class="meta">Английский · 8 лет · 4 года занятий</span>
-        <h3>Стеша: от «ненавижу английский» до школы в Париже</h3>
-        <p>Я была её пятым преподавателем, в школе говорили, что она «не способна». Мы читали книжки про щенят — иногда вниз головой с дивана. Через месяц перелом, в том же полугодии — одна из лучших в классе.</p>
-        <div class="res">Международная школа в Париже</div>
-      </article>
-      <article class="case rv">
-        <span class="meta">ОГЭ и ЕГЭ · 8–11 класс</span>
-        <h3>Илья: от пробелов к международной программе</h3>
-        <p>Не хватало знаний, скорости и уверенности. Без быстрых решений — тема за темой, до самостоятельности.</p>
-        <div class="res">Прошёл в МГИМО, РАНХиГС и РУДН, выбрал «Право и политику» с двойным дипломом</div>
-      </article>
-      <article class="case rv">
-        <span class="meta">Итальянский · с нуля · 5 месяцев</span>
-        <h3>Анна: грант на учёбу в Италии</h3>
-        <p>Грант в области атомной энергетики, а половина обучения неожиданно на итальянском. Интенсив на реальных задачах и речь с первых занятий.</p>
-        <div class="res">Переехала и успешно учится в Италии</div>
-      </article>
-      <article class="case rv">
-        <span class="meta">Авторский курс · IGCSE · с 12 лет</span>
-        <h3>Костя: семь областей знания в одном курсе</h3>
-        <p>Авторская программа: культура, история, география, религия, литература, искусство — и отдельная линия подготовки к IGCSE.</p>
-        <div class="res">Сильная академическая база и целостная картина мира</div>
-      </article>
-      <article class="case wide rv">
-        <span class="meta">ОГЭ · команда школы · 3 месяца</span>
-        <h3>Ваня: от риска провала до 10 класса</h3>
-        <p>Пробелы с 4 по 9 класс по русскому, английскому и математике. Единая стратегия, команда преподавателей, отчётность. Семья уходила на внешние курсы и вернулась за три месяца до экзаменов.</p>
-        <div class="res">Сдал ОГЭ, принят в 10 класс</div>
-      </article>
-    </div>
-    <ul class="more-res rv">
-      <li>Алёша поступил в МГИМО</li>
-      <li>Наталья прошла собеседование на английском на позицию финансового директора в одном из подразделений Amazon</li>
-      <li>Катя, начавшая английский в пять лет, поступила в школу с углублённой языковой программой</li>
-    </ul>
-    <div class="reviews-cta rv">
-      <p>Отзывы учеников и родителей — на независимых площадках</p>
-      <a class="btn btn-primary" href="https://profi.ru/profile/KonyhovaAL/#reviews-tab" target="_blank" rel="noopener">Отзывы на Профи.ру</a>
-      <a class="btn btn-ghost" href="https://repetit.ru/repetitor.aspx?id=39271" target="_blank" rel="noopener">Отзывы на Repetit.ru</a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ BOOKS ═══ -->
-<section id="books">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">Авторские материалы</span>
-      <h2>Книга, курс и пособие</h2>
-    </div>
-    <div class="books-grid">
-      <div class="book rv"><div><span class="tag">Книга</span><h3>Моя книга</h3><p>Обложка, описание и ссылка на покупку появятся здесь совсем скоро.</p></div><div class="soon">Скоро</div></div>
-      <div class="book rv"><div><span class="tag">Курс</span><h3>Авторский курс</h3><p>Для кого курс, программа и как записаться.</p></div><div class="soon">Скоро</div></div>
-      <div class="book rv"><div><span class="tag">Пособие</span><h3>Учебное пособие</h3><p>О чём пособие и где его получить.</p></div><div class="soon">Скоро</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ PRESS ═══ -->
-<section id="press" style="padding-top:0">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">Публикации</span>
-      <h2>Экспертные комментарии и статьи</h2>
-    </div>
-    <ul class="press-list rv">
-      <li><a href="https://vc.ru/id1839396/691162-top-5-repetitorov-angliiskogo-yazyka" target="_blank" rel="noopener"><span class="src">vc.ru</span><span class="ttl">Топ-5 репетиторов английского языка</span><span class="arr">↗</span></a></li>
-      <li><a href="https://journal.sovcombank.ru/obuchenie/orkse-v-chetvertom-klasse-chto-eto-za-predmet" target="_blank" rel="noopener"><span class="src">Журнал Совкомбанка</span><span class="ttl">ОРКСЭ в четвёртом классе: что это за предмет</span><span class="arr">↗</span></a></li>
-      <li><a href="https://www.jv.ru/news/cto-takoe-kincugi-i-kak-eto-aponskoe-iskusstvo-mozet-izlecit-razbitoe-serdce" target="_blank" rel="noopener"><span class="src">jv.ru</span><span class="ttl">Что такое кинцуги и как японское искусство может излечить разбитое сердце</span><span class="arr">↗</span></a></li>
-      <li><a href="https://fedpress.ru/article/3304480" target="_blank" rel="noopener"><span class="src">ФедералПресс</span><span class="ttl">Экспертный комментарий</span><span class="arr">↗</span></a></li>
-      <li><a href="http://www.publishing-vak.ru/file/archive-culture-2017-2/40-konykhova.pdf" target="_blank" rel="noopener"><span class="src">Научная статья · 2017</span><span class="ttl">Публикация в журнале из перечня ВАК</span><span class="arr">↗</span></a></li>
-      <li><a href="https://www.youtube.com/watch?v=X985BhWVNpA" target="_blank" rel="noopener"><span class="src">YouTube</span><span class="ttl">Видео с моим участием</span><span class="arr">↗</span></a></li>
-    </ul>
-  </div>
-</section>
-
-<!-- ═══ MEDIA ═══ -->
-<section class="media" id="media">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow">Подкасты и соцсети</span>
-      <h2>Слушайте и читайте</h2>
-    </div>
-    <div class="pods">
-      <article class="pod rv">
-        <div class="pod-video"><img src="images/anastasia-konykhova/library-cream.jpg" alt=""><span class="soon-badge">Видео скоро</span></div>
-        <div class="pod-body"><span class="tag">Подкаст 1</span><h3>Для партнёров</h3><p>Пять направлений, творческая семья и путь из вузов в своё дело.</p></div>
-      </article>
-      <article class="pod rv">
-        <div class="pod-video"><img src="images/anastasia-konykhova/library-cream-2.jpg" alt=""><span class="soon-badge">Видео скоро</span></div>
-        <div class="pod-body"><span class="tag">Подкаст 2</span><h3>Для преподавателей</h3><p>Как устроена работа в команде школы.</p></div>
-      </article>
-      <article class="pod rv">
-        <div class="pod-video"><img src="images/anastasia-konykhova/portrait-close.jpg" alt=""><span class="soon-badge">Видео скоро</span></div>
-        <div class="pod-body"><span class="tag">Подкаст 3</span><h3>Для учеников и родителей</h3><p>Как строится персональная образовательная стратегия.</p></div>
-      </article>
-    </div>
-    <div class="socials rv">
-      <a href="https://t.me/assakonikhova" target="_blank" rel="noopener">Telegram @assakonikhova</a>
-      <a href="https://t.me/life_as_miracle" target="_blank" rel="noopener">Клуб «Жизнь как чудо» в Telegram</a>
-      <a href="https://vk.ru/id154064709" target="_blank" rel="noopener">ВКонтакте</a>
-      <a href="https://www.youtube.com/@rockyourenglishnow" target="_blank" rel="noopener">YouTube</a>
-      <a href="https://profi.ru/profile/KonyhovaAL" target="_blank" rel="noopener">Профи.ру</a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ GALLERY ═══ -->
-<section class="gallery" aria-label="Фотографии">
-  <div class="gallery-strip">
-    <img loading="lazy" src="images/anastasia-konykhova/street-2.jpg" alt="Анастасия Коныхова на улице">
-    <img loading="lazy" src="images/anastasia-konykhova/tea.jpg" alt="Чаепитие клуба «Жизнь как чудо»">
-    <img loading="lazy" src="images/anastasia-konykhova/library-cream.jpg" alt="Анастасия в библиотеке">
-    <img loading="lazy" src="images/anastasia-konykhova/museum-green.jpg" alt="Анастасия в музее">
-    <img loading="lazy" src="images/anastasia-konykhova/portrait-close.jpg" alt="Портрет Анастасии">
-  </div>
-</section>
-
-<!-- ═══ CONTACT ═══ -->
-<section id="contact">
-  <div class="wrap contact-grid">
+<section class="sec" id="media">
+  <div class="wrap media">
     <div class="rv">
-      <span class="eyebrow">Связаться</span>
-      <h2 style="margin:18px 0 20px">Напишите мне</h2>
-      <p class="muted">Партнёрство, перевод, лекции, интервью или обучение — оставьте контакты и выберите тему, я отвечу.</p>
-      <form id="leadForm" novalidate>
-        <label class="fld">Имя<input name="name" autocomplete="name" required></label>
-        <label class="fld">Телефон или Telegram<input name="phone" autocomplete="tel" required></label>
-        <label class="fld">Тема обращения
-          <select name="topic">
-            <option>Онлайн-школа «Высшая Лига Знаний»</option>
-            <option>Синхронный перевод — «Переводы Про»</option>
-            <option>Международная коммуникация — Ethos</option>
-            <option>Бренд — лаборатория «Собственный язык»</option>
-            <option>Консультация психолога</option>
-            <option>Клуб «Жизнь как чудо» и лекции</option>
-            <option>Партнёрство и совместные проекты</option>
-            <option>Интервью и выступления</option>
-            <option>Работа в команде</option>
-            <option>Другой вопрос</option>
-          </select>
-        </label>
-        <label class="fld">Комментарий<textarea name="comment"></textarea></label>
-        <label class="consent"><input type="checkbox" name="consent" required> <span>Согласна(ен) на обработку персональных данных в соответствии с <a href="#policy">политикой</a></span></label>
-        <button class="btn btn-primary" type="submit">Отправить</button>
-        <div class="form-msg" id="formMsg" role="status"></div>
-      </form>
-      <div class="contact-direct">
-        <a href="https://t.me/assakonikhova" target="_blank" rel="noopener"><span>Telegram</span><span>@assakonikhova</span></a>
-        <a href="https://wa.me/79150395677" target="_blank" rel="noopener"><span>WhatsApp</span><span>+7 915 039-56-77</span></a>
-        <a href="mailto:anastasija901@yandex.ru"><span>Email</span><span>anastasija901@yandex.ru</span></a>
+      <h2 class="sec-title" style="font-size:clamp(34px,4vw,56px)">Публикации <em>и&nbsp;реестры</em></h2>
+      <div class="socials">
+        <a class="social" href="https://vc.ru/id1839396/691162-top-5-repetitorov-angliiskogo-yazyka" target="_blank" rel="noopener"><span class="social-ic mono">vc</span><span><strong>Топ-5 репетиторов английского</strong><span>vc.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="social" href="https://journal.sovcombank.ru/obuchenie/orkse-v-chetvertom-klasse-chto-eto-za-predmet" target="_blank" rel="noopener"><span class="social-ic mono">СК</span><span><strong>ОРКСЭ в четвёртом классе</strong><span>Журнал Совкомбанка</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="social" href="https://www.jv.ru/news/cto-takoe-kincugi-i-kak-eto-aponskoe-iskusstvo-mozet-izlecit-razbitoe-serdce" target="_blank" rel="noopener"><span class="social-ic mono">jv</span><span><strong>Что такое кинцуги</strong><span>jv.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="social" href="https://fedpress.ru/article/3304480" target="_blank" rel="noopener"><span class="social-ic mono">ФП</span><span><strong>Экспертный комментарий</strong><span>ФедералПресс</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="social" href="http://www.publishing-vak.ru/file/archive-culture-2017-2/40-konykhova.pdf" target="_blank" rel="noopener"><span class="social-ic mono">PDF</span><span><strong>Научная статья, 2017</strong><span>publishing-vak.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="social" href="https://search.russian-translators.ru/translators/konykhova1.html" target="_blank" rel="noopener"><span class="social-ic mono">НЛП</span><span><strong>Национальная Лига переводчиков</strong><span>Реестр переводчиков</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+        <a class="social" href="https://association-of-medical-translators.ru/registry/konyhova-anastasiya-leonidovna/" target="_blank" rel="noopener"><span class="social-ic mono">АМП</span><span><strong>Ассоциация медицинских переводчиков</strong><span>Реестр</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
       </div>
     </div>
-    <div class="contact-photo rv"><img loading="lazy" src="images/anastasia-konykhova/street-3.jpg" alt="Анастасия Коныхова" style="object-position: center 25%"></div>
+    <div class="rv">
+      <h2 class="sec-title" style="font-size:clamp(34px,4vw,56px)">Следите <em>за&nbsp;новостями</em></h2>
+      <p class="sec-lead">Лекции клуба, переводческие проекты и новости школы.</p>
+      <div class="socials">
+        <a class="social" href="https://t.me/assakonikhova" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span>
+          <span><strong>Telegram</strong><span>@assakonikhova</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+        <a class="social" href="https://vk.ru/id154064709" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span>
+          <span><strong>ВКонтакте</strong><span>Личная страница</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+        <a class="social" href="https://www.youtube.com/@rockyourenglishnow" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg></span>
+          <span><strong>YouTube</strong><span>@rockyourenglishnow</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+      </div>
+    </div>
   </div>
 </section>
 
+<section class="sec" id="contact" style="background:var(--night-2)">
+  <div class="wrap contact">
+    <div>
+      <h2 class="sec-title">Напишите мне</h2>
+      <p class="sec-lead">Обучение в школе, синхронный перевод, бренд, консультация психолога, лекции или партнёрство — напишите, я отвечу.</p>
+      <div class="contact-photo"><img src="images/anastasia-konykhova/street-3.jpg" alt="Анастасия Коныхова" loading="lazy"></div>
+    </div>
+    <div>
+      <div class="socials" style="margin-top:0">
+        <a class="social" href="https://t.me/assakonikhova" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span>
+          <span><strong>Telegram</strong><span>@assakonikhova</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+        <a class="social" href="https://wa.me/79150395677" target="_blank" rel="noopener">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg></span>
+          <span><strong>WhatsApp</strong><span>+7 915 039-56-77</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+        <a class="social" href="tel:+79150395677">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>
+          <span><strong>Телефон</strong><span>+7 915 039-56-77</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+        <a class="social" href="mailto:anastasija901@yandex.ru">
+          <span class="social-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+          <span><strong>Email</strong><span>anastasija901@yandex.ru</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
 
-<footer>
+<footer class="foot">
   <div class="wrap">
-    <div class="foot-grid">
-      <div>
-        <a href="#top" class="mono">АК</a>
-        <p style="margin-top:12px">Коныхова Анастасия Леонидовна<br>ИНН 501819218774</p>
+    <div class="foot-in">
+      <div><p>Основатель онлайн-школы «Высшая Лига Знаний», сооснователь агентства «Переводы Про», синхронный переводчик, психолог и культуролог.</p></div>
+      <div class="foot-col">
+        <h4 class="mono">Разделы</h4>
+        <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#reviews">Истории учеников</a><a href="#contact">Контакты</a>
       </div>
-      <div class="foot-links">
-        <a href="https://t.me/assakonikhova" target="_blank" rel="noopener">Telegram</a>
-        <a href="https://vk.ru/id154064709" target="_blank" rel="noopener">ВКонтакте</a>
-        <a href="https://www.youtube.com/@rockyourenglishnow" target="_blank" rel="noopener">YouTube</a>
-        <a href="https://profi.ru/profile/KonyhovaAL" target="_blank" rel="noopener">Профи.ру</a>
-        <a href="#policy" id="policyLink">Политика конфиденциальности</a>
+      <div class="foot-col">
+        <h4 class="mono">Ссылки</h4>
+        <a href="https://t.me/assakonikhova" target="_blank" rel="noopener">Telegram</a><a href="https://vk.ru/id154064709" target="_blank" rel="noopener">ВКонтакте</a><a href="https://www.youtube.com/@rockyourenglishnow" target="_blank" rel="noopener">YouTube</a><a href="https://profi.ru/profile/KonyhovaAL" target="_blank" rel="noopener">Профи.ру</a>
       </div>
     </div>
-    <details id="policy">
-      <summary>Политика обработки персональных данных</summary>
-      <p>Оператор персональных данных — Коныхова Анастасия Леонидовна, ИНН 501819218774. Через форму на сайте собираются имя, телефон или ник в Telegram и текст обращения — только чтобы ответить на ваш запрос. Данные не передаются третьим лицам, кроме случаев, предусмотренных законом, и хранятся не дольше, чем нужно для ответа. Отправляя форму, вы даёте согласие на обработку персональных данных в соответствии с Федеральным законом № 152-ФЗ «О персональных данных». Чтобы отозвать согласие или удалить данные, напишите на anastasija901@yandex.ru.</p>
-    </details>
-    <p style="margin-top:28px;font-size:12px;opacity:.6">© <span id="yr"></span> Анастасия Коныхова</p>
+    <div class="foot-bottom"><span>© <span data-year>2026</span> Коныхова Анастасия Леонидовна</span><span>ИНН 501819218774</span></div>
   </div>
 </footer>
 
 <script>
-(function () {
-  const nav = document.getElementById('nav');
-  const burger = document.getElementById('burger');
-  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 10), { passive: true });
-  burger.addEventListener('click', () => {
-    const open = nav.classList.toggle('open');
-    burger.setAttribute('aria-expanded', open);
-  });
-  document.querySelectorAll('#navLinks a').forEach(a => a.addEventListener('click', () => {
-    nav.classList.remove('open');
-    burger.setAttribute('aria-expanded', 'false');
-  }));
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const ICON_L = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ICON_R = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
 
-  document.getElementById('yr').textContent = new Date().getFullYear();
-  document.querySelectorAll('a[href="#policy"]').forEach(a => a.addEventListener('click', () => {
-    document.getElementById('policy').open = true;
-  }));
+  $$('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 
-  // Reveal on scroll
-  const items = document.querySelectorAll('.rv');
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver(entries => entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-    }), { rootMargin: '0px 0px -8% 0px' });
-    items.forEach(el => io.observe(el));
-  } else {
-    items.forEach(el => el.classList.add('in'));
+  /* ── Header: solid after the first scroll, hides while scrolling down ── */
+  const hdr = $('.hdr');
+  const progress = $('.progress');
+  const revealHdr = hdr && hdr.hasAttribute('data-reveal');
+  function onScroll() {
+    const y = window.scrollY;
+    if (hdr) {
+      hdr.classList.toggle('is-solid', y > 24);
+      if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
+    }
+    if (progress) {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  /* ── Mobile menu ── */
+  const burger = $('.burger');
+  const menu = $('.mnav');
+  function setMenu(open) {
+    if (!burger || !menu) return;
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+    menu.classList.toggle('is-open', open);
+    menu.setAttribute('aria-hidden', String(!open));
+    document.body.classList.toggle('menu-open', open);
+  }
+  if (burger && menu) {
+    burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
+    $$('a', menu).forEach(a => a.addEventListener('click', () => setMenu(false)));
+    window.addEventListener('resize', () => { if (window.innerWidth > 980) setMenu(false); });
   }
 
-  // Lead form → mainweb worker /api/leads/notify (source "anastasia-konykhova")
-  const API_URL = 'https://mainweb.oxion-ezhkov.workers.dev/api/leads/notify';
-  const form = document.getElementById('leadForm');
-  const msg = document.getElementById('formMsg');
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const f = form.elements;
-    if (!f.name.value.trim() || !f.phone.value.trim()) {
-      msg.className = 'form-msg err'; msg.textContent = 'Пожалуйста, укажите имя и телефон или Telegram.'; return;
+  /* ── Active section in the nav ── */
+  const navLinks = $$('.nav a[href^="#"]');
+  if ('IntersectionObserver' in window && navLinks.length) {
+    const map = new Map();
+    navLinks.forEach(a => {
+      const s = document.getElementById(a.getAttribute('href').slice(1));
+      if (s) map.set(s, a);
+    });
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        navLinks.forEach(a => a.classList.remove('is-active'));
+        map.get(e.target).classList.add('is-active');
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    map.forEach((a, s) => io.observe(s));
+  }
+
+  /* ── Count-up numbers (the final value is in the markup, so the page reads right without JS) ── */
+  const fmt = n => n.toLocaleString('ru-RU');
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      const el = e.target;
+      const to = Number(el.dataset.count);
+      const t0 = performance.now();
+      const dur = 1500;
+      const step = now => {
+        const p = Math.min(1, (now - t0) / dur);
+        el.textContent = fmt(Math.round(to * (1 - Math.pow(1 - p, 4))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }), { threshold: 0.5 });
+    $$('[data-count]').forEach(el => io.observe(el));
+  }
+
+  /* ── Carousels: scroll-snap track + arrows + progress thumb + mouse drag ── */
+  $$('[data-carousel]').forEach(root => {
+    const track = $('.car-track', root);
+    const prev = $('[data-prev]', root);
+    const next = $('[data-next]', root);
+    const thumb = $('.car-thumb', root);
+    const stepSize = () => {
+      const it = track.children[0];
+      if (!it) return track.clientWidth;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      return it.getBoundingClientRect().width + gap;
+    };
+    function update() {
+      const max = track.scrollWidth - track.clientWidth;
+      if (prev) prev.disabled = track.scrollLeft <= 2;
+      if (next) next.disabled = track.scrollLeft >= max - 2;
+      if (thumb) {
+        const ratio = Math.min(1, track.clientWidth / track.scrollWidth);
+        thumb.style.width = (ratio * 100) + '%';
+        thumb.style.transform = 'translateX(' + (max > 0 ? (track.scrollLeft / max) * (1 / ratio - 1) * 100 : 0) + '%)';
+      }
+      root.classList.toggle('is-static', max <= 2);
     }
-    if (!f.consent.checked) {
-      msg.className = 'form-msg err'; msg.textContent = 'Нужно согласие на обработку персональных данных.'; return;
-    }
-    const btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    msg.className = 'form-msg'; msg.textContent = 'Отправляем…';
-    fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        source: 'anastasia-konykhova',
-        fields: {
-          'Имя': f.name.value.trim(),
-          'Телефон / Telegram': f.phone.value.trim(),
-          'Тема': f.topic.value,
-          'Комментарий': f.comment.value.trim(),
-        },
-      }),
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('request_failed');
-        form.reset();
-        msg.className = 'form-msg ok'; msg.textContent = 'Спасибо! Заявка отправлена, я свяжусь с вами.';
-      })
-      .catch(() => {
-        msg.className = 'form-msg err';
-        msg.innerHTML = 'Не удалось отправить. Напишите, пожалуйста, в <a href="https://t.me/assakonikhova" target="_blank" rel="noopener">Telegram</a> или <a href="https://wa.me/79150395677" target="_blank" rel="noopener">WhatsApp</a>.';
-      })
-      .finally(() => { btn.disabled = false; });
+    const go = dir => track.scrollBy({ left: dir * stepSize(), behavior: reduce ? 'auto' : 'smooth' });
+    if (prev) prev.addEventListener('click', () => go(-1));
+    if (next) next.addEventListener('click', () => go(1));
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+
+    let down = false, sx = 0, sl = 0, moved = false;
+    track.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      down = true; moved = false; sx = e.clientX; sl = track.scrollLeft;
+    });
+    window.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - sx;
+      if (!moved && Math.abs(dx) > 6) { moved = true; track.classList.add('is-dragging'); }
+      if (moved) track.scrollLeft = sl - dx;
+    });
+    window.addEventListener('pointerup', () => {
+      if (!down) return;
+      down = false;
+      track.classList.remove('is-dragging');
+    });
+    track.addEventListener('click', e => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+    $$('img', track).forEach(img => img.setAttribute('draggable', 'false'));
   });
+
+  /* ── Lightbox for review originals and book covers ── */
+  const lbLinks = $$('[data-lb]');
+  let lbOpen = false;
+  let lbClose = () => {};
+  let lbStep = () => {};
+  if (lbLinks.length) {
+    const lb = document.createElement('div');
+    lb.className = 'lb';
+    lb.hidden = true;
+    lb.setAttribute('role', 'dialog');
+    lb.setAttribute('aria-modal', 'true');
+    lb.setAttribute('aria-label', 'Просмотр изображения');
+    lb.innerHTML =
+      '<button class="lb-btn lb-close" type="button" aria-label="Закрыть">' + ICON_X + '</button>' +
+      '<button class="lb-btn lb-prev" type="button" aria-label="Предыдущее">' + ICON_L + '</button>' +
+      '<figure class="lb-fig"><img class="lb-img" alt=""><figcaption class="lb-cap"></figcaption></figure>' +
+      '<button class="lb-btn lb-next" type="button" aria-label="Следующее">' + ICON_R + '</button>' +
+      '<div class="lb-count" aria-live="polite"></div>';
+    document.body.appendChild(lb);
+    const img = $('.lb-img', lb), cap = $('.lb-cap', lb), count = $('.lb-count', lb);
+    const bClose = $('.lb-close', lb), bPrev = $('.lb-prev', lb), bNext = $('.lb-next', lb);
+    let group = [], idx = 0, lastFocus = null;
+
+    function show(i) {
+      idx = (i + group.length) % group.length;
+      const a = group[idx];
+      img.classList.remove('is-in');
+      img.src = a.getAttribute('href');
+      img.alt = a.dataset.caption || '';
+      cap.textContent = a.dataset.caption || '';
+      count.textContent = group.length > 1 ? (idx + 1) + ' / ' + group.length : '';
+      bPrev.hidden = bNext.hidden = group.length < 2;
+    }
+    img.addEventListener('load', () => img.classList.add('is-in'));
+    function open(a) {
+      group = lbLinks.filter(x => x.dataset.lb === a.dataset.lb);
+      lastFocus = document.activeElement;
+      show(group.indexOf(a));
+      lb.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => lb.classList.add('is-open')));
+      document.body.classList.add('lb-open');
+      lbOpen = true;
+      bClose.focus();
+    }
+    lbClose = () => {
+      if (!lbOpen) return;
+      lbOpen = false;
+      lb.classList.remove('is-open');
+      document.body.classList.remove('lb-open');
+      setTimeout(() => { lb.hidden = true; img.removeAttribute('src'); }, reduce ? 0 : 260);
+      if (lastFocus) lastFocus.focus();
+    };
+    lbStep = d => show(idx + d);
+    lbLinks.forEach(a => a.addEventListener('click', e => { e.preventDefault(); open(a); }));
+    bClose.addEventListener('click', lbClose);
+    bPrev.addEventListener('click', () => lbStep(-1));
+    bNext.addEventListener('click', () => lbStep(1));
+    lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('lb-fig')) lbClose(); });
+    let tx = 0, ty = 0;
+    lb.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - tx;
+      const dy = e.changedTouches[0].clientY - ty;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) lbStep(dx < 0 ? 1 : -1);
+      else if (dy > 90) lbClose();
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (lbOpen) {
+      if (e.key === 'Escape') lbClose();
+      if (e.key === 'ArrowRight') lbStep(1);
+      if (e.key === 'ArrowLeft') lbStep(-1);
+      return;
+    }
+    if (e.key === 'Escape') setMenu(false);
+  });
+
+  /* ── Video: poster first, the player loads on click ── */
+  $$('[data-video]').forEach(box => {
+    const btn = $('.video-play', box);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const f = document.createElement('iframe');
+      f.src = box.dataset.video;
+      f.title = box.dataset.title || 'Видео';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.allowFullscreen = true;
+      box.appendChild(f);
+      box.classList.add('is-playing');
+    });
+  });
+
+  /* ── Dropdowns in the site's own style ── */
+  $$('[data-dd]').forEach((dd, n) => {
+    const btn = $('.dd-btn', dd);
+    const list = $('.dd-list', dd);
+    const val = $('.dd-val', dd);
+    const input = $('input[type="hidden"]', dd);
+    const opts = $$('[role="option"]', list);
+    let active = Math.max(0, opts.findIndex(o => o.getAttribute('aria-selected') === 'true'));
+    opts.forEach((o, i) => { if (!o.id) o.id = 'dd' + n + '-' + i; });
+    const setActive = (i, scroll) => {
+      active = (i + opts.length) % opts.length;
+      opts.forEach((o, k) => o.classList.toggle('is-active', k === active));
+      list.setAttribute('aria-activedescendant', opts[active].id);
+      if (scroll) opts[active].scrollIntoView({ block: 'nearest' });
+    };
+    const open = () => {
+      dd.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      setActive(active, true);
+      list.focus({ preventScroll: true });
+    };
+    const close = focusBtn => {
+      if (!dd.classList.contains('is-open')) return;
+      dd.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (focusBtn) btn.focus({ preventScroll: true });
+    };
+    const choose = i => {
+      opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === i)));
+      val.textContent = opts[i].textContent.trim();
+      if (input) input.value = opts[i].dataset.value || opts[i].textContent.trim();
+      active = i;
+      close(true);
+    };
+    btn.addEventListener('click', () => (dd.classList.contains('is-open') ? close(true) : open()));
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+    });
+    opts.forEach((o, i) => {
+      o.addEventListener('click', () => choose(i));
+      o.addEventListener('mousemove', () => { if (active !== i) setActive(i, false); });
+    });
+    list.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1, true); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1, true); }
+      else if (e.key === 'Home') { e.preventDefault(); setActive(0, true); }
+      else if (e.key === 'End') { e.preventDefault(); setActive(opts.length - 1, true); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+      else if (e.key === 'Tab') close(false);
+    });
+    document.addEventListener('click', e => { if (!dd.contains(e.target)) close(false); });
+  });
+
+  /* ── Privacy policy dialog ── */
+  $$('[data-dialog]').forEach(a => a.addEventListener('click', e => {
+    const d = document.getElementById(a.dataset.dialog);
+    if (!d || typeof d.showModal !== 'function') return;
+    e.preventDefault();
+    d.showModal();
+    document.body.classList.add('lb-open');
+  }));
+  $$('dialog').forEach(d => {
+    d.addEventListener('close', () => document.body.classList.remove('lb-open'));
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+  });
+
+  /* ── Contact form ── */
+  const form = $('#contactForm');
+  if (form) {
+    const phone = $('#inp-phone');
+    const name = $('#inp-name');
+    const success = $('#formSuccess');
+    phone.addEventListener('input', e => {
+      if (e.inputType && e.inputType.indexOf('delete') === 0) return;
+      let d = phone.value.replace(/\D/g, '');
+      if (!d) { phone.value = ''; return; }
+      if (d[0] === '8') d = '7' + d.slice(1);
+      if (d[0] !== '7') d = '7' + d;
+      d = d.slice(0, 11);
+      let out = '+7';
+      if (d.length > 1) out += ' (' + d.slice(1, 4);
+      if (d.length >= 4) out += ')';
+      if (d.length > 4) out += ' ' + d.slice(4, 7);
+      if (d.length > 7) out += '-' + d.slice(7, 9);
+      if (d.length > 9) out += '-' + d.slice(9, 11);
+      phone.value = out;
+    });
+    const mark = (input, bad) => {
+      input.closest('.field').classList.toggle('is-error', bad);
+      input.setAttribute('aria-invalid', String(bad));
+    };
+    name.addEventListener('input', () => mark(name, false));
+    phone.addEventListener('input', () => mark(phone, false));
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const badName = !name.value.trim();
+      const badPhone = phone.value.replace(/\D/g, '').length < 11;
+      mark(name, badName);
+      mark(phone, badPhone);
+      if (badName || badPhone) { (badName ? name : phone).focus(); return; }
+      const btn = $('button[type="submit"]', form);
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      setTimeout(() => {
+        form.hidden = true;
+        success.hidden = false;
+        success.focus();
+      }, 700);
+    });
+  }
 })();
 </script>
 </body>

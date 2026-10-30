@@ -7,6 +7,18 @@ yourself** — don't wait to be asked and don't stop at "pushed to the branch". 
 cantor.agency only from `main` (`.github/workflows/deploy.yml`), so without a PR the change never
 goes live. Give the PR link in the final reply.
 
+## MBA «Личный бренд» sites: strictly use the design template
+
+A participant's personal site (CRM item «Выбран формат сайта», e.g. «Дизайн Б, Html») is built
+**from the chosen template, not from scratch**: Дизайн 1 / А = `client/anna-aleshina1`,
+Дизайн 2 / Б = `client/anna-aleshina2`, Дизайн 3 / В = `client/anna-aleshina3`
+(live: cantor.agency/client/anna-aleshina1…3). Copy the template file as is — its CSS, fonts,
+colours, sections, markup classes and script — and only swap the content (texts from
+`site-structure/data/<slug>.json` plus the client's edits, photos in `client/images/<slug>/`).
+New CSS only as a small labelled override block for what the content needs. Put the page at
+`client/<slug>` (no extension). **No contact form** unless the user asks for one: the contact
+section lists Telegram / WhatsApp / phone / email instead.
+
 ## PR monitoring: no timer-based polling
 
 When watching a PR in this repo (via `subscribe_pr_activity` or similar), do
