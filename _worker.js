@@ -3965,9 +3965,7 @@ async function reportPostToChat(env, job) {
     const work = (await listByPrefix(kv, 'bot:chat:')).find((c) => c.kind === 'work');
     if (!work) throw new Error('рабочий чат не найден — добавьте бота в рабочий чат');
     const team = await atGetTeam(env);
-    const tags = team.users.filter((u) => u.active && u.role === 'manager').map((u) => (u.tgUsername
-      ? `@${escapeHtml(u.tgUsername)}`
-      : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(u.name)));
+    const tags = team.users.filter((u) => u.active && u.role === 'manager').map(reportTag);
     const caption = [
       `📄 <b>Отчёт по клиентам Авито</b> — ${escapeHtml(job.report.periodLabel)}`,
       `Клиентов: ${job.report.clients.length}${job.observations ? '' : ' · наблюдения автоматические (ИИ не ответил)'}`,
@@ -3979,10 +3977,51 @@ async function reportPostToChat(env, job) {
     if (!res || !res.ok) throw new Error((res && res.description) || 'Telegram не принял файл');
     job.postedAt = new Date().toISOString();
     job.postError = null;
+    try {
+      await reportNoContactsAlert(env, job, work, team);
+    } catch (e) {
+      console.error('no-contacts alert failed', e && e.stack);
+    }
   } catch (e) {
     job.postError = String(e && e.message).slice(0, 200);
   }
   await putReportJob(kv, job);
+}
+function reportTag(u) {
+  return u.tgUsername ? `@${escapeHtml(u.tgUsername)}`
+    : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(atFirstName(u.name));
+}
+// On weekdays, right after the report is posted (so the day's numbers have been checked and entered):
+// every client of the report with no contacts over its period gets a message in its own work-chat
+// topic, tagging whoever leads it («Клиенты → Настройки»). Clients without a topic go to the main
+// topic in one list. Nothing to say — nothing is sent. Once per report.
+async function reportNoContactsAlert(env, job, work, team) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const dow = botMsk(Date.now()).dow;
+  if (dow === 0 || dow === 6 || job.noContactsAt) return;
+  const zero = (job.report.clients || []).filter((c) => !(c.period && c.period.contacts > 0));
+  job.noContactsAt = new Date().toISOString();
+  if (!zero.length) return;
+  const owners = await atLoadOwners(kv);
+  const byId = new Map(team.users.map((u) => [u.id, u]));
+  const topics = {};
+  for (const k of (await kv.list({ prefix: `bot:topic:${work.id}:` })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    const thread = Number(k.name.split(':').pop());
+    if (rec && rec.projectId && thread && !topics[rec.projectId]) topics[rec.projectId] = thread;
+  }
+  const label = escapeHtml(job.report.periodLabel);
+  const nums = (p) => (p.budget > 0 ? `расход ${Math.round(p.budget).toLocaleString('ru-RU')} ₽, ${Number(p.views || 0).toLocaleString('ru-RU')} просмотров` : 'бюджет не тратится');
+  const loose = [];
+  for (const c of zero) {
+    const p = c.period || {};
+    const u = owners[c.projectId] && byId.get(owners[c.projectId].userId);
+    const tag = u && u.active ? reportTag(u) : '';
+    const thread = topics[c.projectId];
+    if (!thread) { loose.push(`• <b>${escapeHtml(c.name)}</b> — ${nums(p)}${tag ? ` · ${tag}` : ''}`); continue; }
+    await botSend(env, work.id, `⚠️ <b>Нет контактов</b> — ${label}: ${nums(p)}.\n${tag ? `${tag}, р` : 'Р'}азберите причину сегодня и напишите план здесь.`, { message_thread_id: thread });
+  }
+  if (loose.length) await botSend(env, work.id, [`⚠️ <b>Без контактов</b> — ${label}`, ...loose].join('\n'));
 }
 
 // ── Control bot (Telegram): keeps agency tasks and deadlines from getting lost ──
@@ -6410,6 +6449,7 @@ async function handleBotApi(request, env, url) {
 //   refl:<wed>:<userId> -> «Рефлексия» for the week starting on that Wednesday — see below
 //   mail:<YYYY-MM>     -> «Рассылки» for that month — see atMailApi
 //   at:owners          -> who leads which client and its priority — see atLoadOwners
+//   at:goals           -> { <projectId>: { goal, now, by, at } } — «К чему стремимся» / «Что делаем сейчас»
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -6427,7 +6467,7 @@ const AT_ROLE_SECTIONS = {
   owner: AT_SECTIONS,
   assistant: AT_SECTIONS,
   manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'],
-  specialist: ['tasks', 'meet', 'reflection'],
+  specialist: ['tasks', 'clients', 'meet', 'reflection'],
   trainee: ['tasks', 'meet', 'reflection'],
 };
 function atSections(u) {
@@ -6756,7 +6796,7 @@ async function atTouch(kv, ids) {
   return rec.v;
 }
 async function atLoadProjects(kv) {
-  const [list, owners] = await Promise.all([listByPrefix(kv, 'project:'), atLoadOwners(kv)]);
+  const [list, owners, goals] = await Promise.all([listByPrefix(kv, 'project:'), atLoadOwners(kv), kv.get('at:goals', 'json')]);
   return list.map((p) => ({
     id: p.id,
     name: p.name,
@@ -6766,6 +6806,7 @@ async function atLoadProjects(kv) {
     staffUrl: p.staffUrl || null,
     ownerId: (owners[p.id] && owners[p.id].userId) || null,
     priority: (owners[p.id] && owners[p.id].priority) || null,
+    goal: (goals && goals[p.id]) || null,
   })).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
 
@@ -8198,6 +8239,21 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     await kv.put('at:owners', JSON.stringify(next));
     await atTouch(kv, ['#projects']);
     return json({ ok: true, projects: await atLoadProjects(kv) });
+  }
+
+  // Цель и текущая стратегия кабинета («Клиенты»): пишут руководитель, ассистент и старший специалист.
+  if (action === 'client-goal') {
+    if (!seesClients || !(isAdmin || me.role === 'specialist')) return json({ error: 'forbidden' }, 403);
+    const pid = atClean(body.projectId, 80);
+    if (!(await kv.get(`project:${pid}`))) return json({ error: 'not_found' }, 404);
+    const goals = (await kv.get('at:goals', 'json')) || {};
+    const goal = atClean(body.goal, 300);
+    const now = atClean(body.now, 300);
+    if (goal || now) goals[pid] = { goal, now, by: me.name, at: new Date(nowMs).toISOString() };
+    else delete goals[pid];
+    await kv.put('at:goals', JSON.stringify(goals));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, goal: goals[pid] || null });
   }
 
   // Цифры по клиентам для вкладки «Клиенты»: вчера, текущий месяц, траты за неделю и аванс.

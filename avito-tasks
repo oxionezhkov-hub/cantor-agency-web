@@ -292,6 +292,22 @@ a{color:inherit}
 .task.expanded .t-chev{transform:rotate(180deg)}
 
 /* inline editor */
+.cc-goal{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:8px 10px;display:grid;gap:4px;font-size:13px}
+.cc-goal .row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;align-items:baseline}
+.cc-goal .row span,.cc-goal label span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint)}
+.cc-goal .row p{margin:0;color:var(--ink);line-height:1.4;overflow-wrap:anywhere}
+.cc-goal .meta{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:11.5px;color:var(--faint);margin-top:-2px}
+.cc-goal .meta.stale{color:var(--amber);font-weight:600}
+.cc-goal .meta .icon-btn{width:26px;height:26px}
+.cc-goal.edit{gap:8px}
+.cc-goal.edit label{display:grid;gap:3px}
+.cc-goal.edit .textarea{min-height:0;font-size:13px;padding:7px 9px;resize:vertical}
+.cc-goal-act{display:flex;justify-content:flex-end;gap:6px}
+.cc-goal-add{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-size:12.5px;font-weight:600;color:var(--muted);padding:4px 2px}
+.cc-goal-add:hover{color:var(--accent)}
+.g-goal{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted);margin:-2px 4px 8px 30px;line-height:1.4}
+.g-goal b{color:var(--text);font-weight:600}
+.group.collapsed .g-goal{display:none}
 .claim-sec .sec-sub{font-size:13px;color:var(--muted);margin:-6px 2px 10px}
 .claim-head{width:100%;text-align:left;border-radius:10px;padding:6px 4px;margin-left:-4px}
 .claim-head:hover{background:var(--sunken)}
@@ -1655,7 +1671,7 @@ const isAdmin = () => S.me && (S.me.role === 'owner' || S.me.role === 'assistant
 // Разделы трекера: какие видит человек, решает сервер (по роли или как настроил руководитель).
 const SEC_BY_ROLE = {
   owner: ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'], assistant: ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'],
-  manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'], specialist: ['tasks', 'meet', 'reflection'], trainee: ['tasks', 'meet', 'reflection'],
+  manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'], specialist: ['tasks', 'clients', 'meet', 'reflection'], trainee: ['tasks', 'meet', 'reflection'],
 };
 const hasSec = (k) => !!S.me && (S.me.sections || SEC_BY_ROLE[S.me.role] || ['tasks']).includes(k);
 const canSeeClients = () => hasSec('clients');
@@ -2471,8 +2487,16 @@ function groupHtml(g, now) {
   return `<div class="group ${collapsed ? 'collapsed' : ''}" data-group="${esc(g.key)}">
     <button class="g-head" data-act="toggle-group">${ico('chev', 'chev')}<span class="g-name">${esc(g.name)}</span>
       <span class="g-meta">${over ? `<span class="red">просрочено ${over}</span>` : ''}${inform ? `<span>сообщить ${inform}</span>` : ''}<span>${open.length} ${plural(open.length, 'открыта', 'открыты', 'открыто')}</span></span></button>
-    <div class="g-list">${g.tasks.map((t) => card(t, now)).join('')}</div>
+    ${groupGoal(g)}<div class="g-list">${g.tasks.map((t) => card(t, now)).join('')}</div>
   </div>`;
+}
+// Над задачами клиента — его цель и что делаем сейчас (если записаны).
+function groupGoal(g) {
+  if (S.f.group === 'assignee' || S.f.group === 'due' || !g.key.startsWith('c:')) return '';
+  const p = projectById(g.key.slice(2));
+  const x = p && p.goal;
+  if (!x || !(x.goal || x.now)) return '';
+  return `<div class="g-goal">${x.goal ? `<span><b>Цель:</b> ${esc(x.goal)}</span>` : ''}${x.now ? `<span><b>Сейчас:</b> ${esc(x.now)}</span>` : ''}</div>`;
 }
 
 function dueHtml(t, now) {
@@ -3070,6 +3094,59 @@ $('clientCards').addEventListener('click', async (e) => {
       toast('Отмечено: клиенту написали');
     } catch (err) { touch.disabled = false; toast('Не сохранилось — нет связи'); }
   }
+});
+
+// ── Цель и текущая стратегия кабинета: «К чему стремимся» / «Что делаем сейчас» ──
+// Пишут руководитель, ассистент и старший специалист (понедельник, среда, пятница); видно на карточке
+// клиента и строкой над его задачами. Запись старше 3 дней подсвечивается — пора обновить.
+let goalOpen = null;
+const canEditGoal = () => isAdmin() || (S.me && S.me.role === 'specialist');
+const goalStale = (g) => !g || !g.at || Date.now() - Date.parse(g.at) > 3 * 86400000;
+function goalHtml(p) {
+  const g = p.goal;
+  if (goalOpen === p.id) {
+    return `<form class="cc-goal edit" data-goalform>
+      <label><span>Цель</span><textarea class="textarea" data-goal="goal" rows="2" maxlength="300" placeholder="К чему стремимся: 3 контакта в день, набор в группы ЕГЭ…">${esc(g ? g.goal : '')}</textarea></label>
+      <label><span>Сейчас</span><textarea class="textarea" data-goal="now" rows="2" maxlength="300" placeholder="Что тестируем и следующий шаг: меняем первое фото на 10 объявлениях, сравним через 5 дней">${esc(g ? g.now : '')}</textarea></label>
+      <div class="cc-goal-act"><button type="button" class="btn btn-quiet btn-sm" data-goal-cancel>Отмена</button><button class="btn btn-primary btn-sm">Сохранить</button></div>
+    </form>`;
+  }
+  if (!g) return canEditGoal() ? `<button class="cc-goal-add" data-goal-edit>${ico('plus', 'ic-sm')}Цель и стратегия</button>` : '';
+  const d = Date.parse(g.at);
+  return `<div class="cc-goal">
+    ${g.goal ? `<div class="row"><span>Цель</span><p>${esc(g.goal)}</p></div>` : ''}
+    ${g.now ? `<div class="row"><span>Сейчас</span><p>${esc(g.now)}</p></div>` : ''}
+    <div class="meta ${goalStale(g) ? 'stale' : ''}">${esc(fmtDay(d, Date.now()))}${g.by ? ` · ${esc(first(g.by))}` : ''}${canEditGoal() ? `<button class="icon-btn" data-goal-edit title="Изменить" aria-label="Изменить цель и стратегию">${ico('edit', 'ic-sm')}</button>` : ''}</div>
+  </div>`;
+}
+$('clientCards').addEventListener('click', (e) => {
+  const cardEl = e.target.closest('[data-client]');
+  if (!cardEl) return;
+  if (e.target.closest('[data-goal-edit]')) {
+    goalOpen = cardEl.dataset.client; renderClients();
+    const f = $('clientCards').querySelector('[data-goalform] textarea');
+    if (f) f.focus();
+  }
+  if (e.target.closest('[data-goal-cancel]')) { goalOpen = null; renderClients(); }
+});
+$('clientCards').addEventListener('submit', async (e) => {
+  const form = e.target.closest('[data-goalform]');
+  if (!form) return;
+  e.preventDefault();
+  const pid = form.closest('[data-client]').dataset.client;
+  const val = (k) => form.querySelector(`[data-goal="${k}"]`).value.trim();
+  const btn = form.querySelector('.btn-primary');
+  btn.disabled = true;
+  try {
+    const res = await api('client-goal', { projectId: pid, goal: val('goal'), now: val('now') });
+    if (!res.ok) throw new Error();
+    const p = projectById(pid);
+    if (p) p.goal = res.data.goal;
+    goalOpen = null;
+    document.activeElement && document.activeElement.blur();
+    renderClients();
+    toast('Цель и стратегия сохранены');
+  } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
 });
 
 // ── вкладка «Рефлексия» ──
@@ -4968,6 +5045,7 @@ function renderClients() {
       return `<div class="ccard lv-${level} ${p.inactive ? 'off' : ''} ${CF.focus === p.id ? 'focus' : ''}" data-client="${esc(p.id)}">
         <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div>${ownerLine(p) ? `<div class="cc-sub">${esc(ownerLine(p))}</div>` : ''}</div>
           ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
+        ${p.inactive ? '' : goalHtml(p)}
         ${clientMetricsHtml(p, m)}
         ${clientAdvanceHtml(p, m)}
         ${p.inactive ? '' : todo.some((t) => t.kind !== 'money') ? `<div class="cc-todo">${todo.filter((t) => t.kind !== 'money').map((t) => `<div class="cc-do ${t.tone}">${t.html}</div>`).join('')}</div>` : ''}
