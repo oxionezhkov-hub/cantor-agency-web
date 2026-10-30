@@ -5968,7 +5968,7 @@ async function botCheckHandoffs(env, nowMs, allTasks, byId) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const team = await atGetTeam(env);
   const recent = (iso) => { const ms = Date.parse(iso || 0); return ms && nowMs - ms <= BOT_SLA_LOOKBACK_MS ? ms : 0; };
-  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && (u.role === 'specialist' || u.role === 'trainee'); };
+  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['lead', 'specialist', 'trainee'].includes(u.role); };
   // A task on the manager (or the owner / assistant) is answered right in the client's chat — there
   // is nothing to pass on to the specialists, so only unassigned client requests are checked.
   const handledInChat = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['manager', 'owner', 'assistant'].includes(u.role); };
@@ -6091,6 +6091,11 @@ async function botScheduled(env) {
     await atRunProjectMerges(env);
   } catch (err) {
     console.error('project merge failed', err && err.stack);
+  }
+  try {
+    await atMigrateRoles(env);
+  } catch (err) {
+    console.error('role migration failed', err && err.stack);
   }
   try {
     await atEnsureNewMembers(env);
@@ -6458,6 +6463,7 @@ const AT_ROLES = {
   manager: 'Клиентский менеджер',
   specialist: 'Специалист по Авито',
   trainee: 'Стажёр по Авито',
+  lead: 'Старший специалист по Авито', // controls the specialists: plans, quality, goals of the cabinets
   assistant: 'Ассистент', // same access as the owner, except the owner's own record
 };
 // Tracker sections («Задачи» is always on). By default they follow the role; the owner can turn
@@ -6467,7 +6473,8 @@ const AT_ROLE_SECTIONS = {
   owner: AT_SECTIONS,
   assistant: AT_SECTIONS,
   manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'],
-  specialist: ['tasks', 'clients', 'meet', 'reflection'],
+  lead: ['tasks', 'clients', 'meet', 'reflection'],
+  specialist: ['tasks', 'meet', 'reflection'],
   trainee: ['tasks', 'meet', 'reflection'],
 };
 function atSections(u) {
@@ -6613,7 +6620,26 @@ async function atSeedTeam(env) {
 const AT_NEW_MEMBERS = [
   { id: 'sofia', name: 'София Романовна', role: 'assistant', aliases: ['София', 'Софья', 'Соня'], tgId: '993366229', tgUsername: 'sofiuspasskaya' },
   { id: 'stanislav', name: 'Станислав', role: 'trainee', aliases: ['Станислав', 'Стас'], tgId: '426349175' },
+  { id: 'arina', name: 'Арина', role: 'trainee', aliases: ['Арина'], tgId: '1613493945' },
 ];
+// One-time role changes (30.10.2026): the three specialists stop being trainees, Евгений becomes the
+// senior specialist. Matched by id; the label follows the role.
+const AT_ROLE_MIGRATIONS = { key: 'at:migr:roles-2026-10-30', roles: { albina: 'specialist', stanislav: 'specialist', ekaterina: 'specialist', evgeny: 'lead' } };
+async function atMigrateRoles(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (await kv.get(AT_ROLE_MIGRATIONS.key)) return;
+  const team = await atGetTeam(env);
+  const done = [];
+  for (const u of team.users) {
+    const role = AT_ROLE_MIGRATIONS.roles[u.id];
+    if (!role || u.role === role) continue;
+    u.role = role;
+    u.roleLabel = AT_ROLES[role];
+    done.push(`${u.id}: ${role}`);
+  }
+  if (done.length) { await atPutTeam(kv, team); await atTouch(kv, ['#team']); }
+  await kv.put(AT_ROLE_MIGRATIONS.key, JSON.stringify({ at: new Date().toISOString(), done }));
+}
 // The access message for a new member: their own invite link (both addresses) and what the bot does.
 // Sent when they are added — or, if they hadn't opened the bot yet (Telegram doesn't let a bot write
 // first), as soon as they press Start.
@@ -6769,7 +6795,7 @@ function atIsTrackerTask(t) {
 // so they never go to the client manager — «Готово» closes them straight away.
 function atIsInternalTask(task, users) {
   if (!task || task.origin === 'client') return false;
-  const isSpec = (u) => !!u && (u.role === 'specialist' || u.role === 'trainee');
+  const isSpec = (u) => !!u && ['lead', 'specialist', 'trainee'].includes(u.role);
   const author = task.createdById ? users.find((u) => u.id === task.createdById) : task.author ? atMatchUser(task.author, users) : null;
   if (!isSpec(author)) return false;
   const aid = atAssigneeId(task, users);
@@ -7253,11 +7279,11 @@ function atMeetHuman(date, time) {
 // (Monday-based, roles manager / specialist / client); results and the history chart read them too.
 // One record per person and week, written only by that person; the page always sends every answer
 // it knows, so a save from one Cloudflare location can't drop one made a moment ago from another.
-// Who rates clients every week (the specialists — the «trainee» role). The client manager and the
-// specialists' lead («specialist» role) don't rate any more, but see the results like the owner does.
+// Who rates clients every week: the specialists and the trainees. The client manager and the senior
+// specialist («lead») don't rate, but see the results like the owner does.
 // Their earlier answers stay in the results and the history (REFL_READ_ROLES).
-const REFL_ROLES = new Set(['trainee']);
-const REFL_VIEW_ROLES = new Set(['manager', 'specialist']);
+const REFL_ROLES = new Set(['specialist', 'trainee']);
+const REFL_VIEW_ROLES = new Set(['manager', 'lead']);
 const REFL_READ_ROLES = new Set([...REFL_ROLES, ...REFL_VIEW_ROLES]);
 const REFL_TTL = 60 * 60 * 24 * 400;
 const REFL_COMMENT_MAX = 400;
@@ -7274,10 +7300,9 @@ function reflClients(projects) {
   return projects.filter((p) => !p.inactive).map((p) => p.id);
 }
 // The clients a specialist rates: the active ones they lead («Клиенты → Настройки»). Someone who leads
-// nobody yet rates every active client, so the form is never empty.
+// nobody (a new trainee) has no reflection to fill in.
 function reflClientsFor(projects, userId) {
-  const mine = projects.filter((p) => !p.inactive && p.ownerId === userId).map((p) => p.id);
-  return mine.length ? mine : reflClients(projects);
+  return projects.filter((p) => !p.inactive && p.ownerId === userId).map((p) => p.id);
 }
 function reflDone(rec, clientIds) {
   const a = (rec && rec.answers) || {};
@@ -7289,6 +7314,7 @@ async function atReflectionState(kv, me, mem, nowMs) {
   const week = reflWeek(nowMs);
   const rec = (await kv.get(`refl:${week}:${me.id}`, 'json')) || { answers: {} };
   const clients = reflClientsFor(mem.projects, me.id);
+  if (!clients.length && !rec.doneAt) return null;
   return { week, next: reflAddDays(week, 7), clients, answers: rec.answers || {}, done: reflDone(rec, clients), total: clients.length, doneAt: rec.doneAt || null };
 }
 async function atReflectionSave(env, team, me, body, nowMs) {
@@ -7437,13 +7463,12 @@ async function atMailApi(env, me, action, body, nowMs) {
 
 async function atReflectionResults(env, team, week) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  // The raters, plus anyone who rated this week before they stopped rating (or left).
+  // The raters who lead clients, plus anyone who rated this week before they stopped rating (or left).
   const all = team.users.filter((u) => REFL_READ_ROLES.has(u.role));
-  const allRecs = await Promise.all(all.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
-  const keep = all.map((u, i) => (u.active && REFL_ROLES.has(u.role)) || !!allRecs[i]);
+  const [allRecs, mem] = await Promise.all([Promise.all(all.map((u) => kv.get(`refl:${week}:${u.id}`, 'json'))), atSnapshot(env)]);
+  const keep = all.map((u, i) => (u.active && REFL_ROLES.has(u.role) && reflClientsFor(mem.projects, u.id).length > 0) || !!allRecs[i]);
   const people = all.filter((u, i) => keep[i]);
   const recs = allRecs.filter((r, i) => keep[i]);
-  const mem = await atSnapshot(env);
   if (!recs.some(Boolean)) {
     // A week from before the tracker: the old dashboard's ratings for its Monday.
     const monday = reflAddDays(week, -2);
@@ -7549,6 +7574,7 @@ async function atReflectionCron(env, team, nowMs) {
   }
   for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
     const clients = reflClientsFor(mem.projects, u.id);
+    if (!clients.length) continue;
     const key = `refl:${week}:${u.id}`;
     const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
     // Closed by hand without rating anyone — open it again, once a week.
@@ -8243,7 +8269,7 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
 
   // Цель и текущая стратегия кабинета («Клиенты»): пишут руководитель и старший специалист.
   if (action === 'client-goal') {
-    if (!seesClients || !(isOwner || me.role === 'specialist')) return json({ error: 'forbidden' }, 403);
+    if (!seesClients || !(isOwner || me.role === 'lead')) return json({ error: 'forbidden' }, 403);
     const pid = atClean(body.projectId, 80);
     if (!(await kv.get(`project:${pid}`))) return json({ error: 'not_found' }, 404);
     const goals = (await kv.get('at:goals', 'json')) || {};

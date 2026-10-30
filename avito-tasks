@@ -304,8 +304,8 @@ div.cc-goal{cursor:pointer}
 .cc-goal.edit{gap:6px;border-left:0;padding:0}
 .cc-goal.edit .textarea{min-height:0;font-size:13px;padding:7px 9px;resize:vertical}
 .cc-goal-act{display:flex;justify-content:flex-end;gap:6px}
-.cc-head .cc-goal-add{margin-left:auto;width:30px;height:30px;flex:none;color:var(--faint)}
-.cc-head .cc-goal-add:hover{color:var(--accent)}
+.cc-goal-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px 10px;border:1px dashed var(--line);border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);background:transparent}
+.cc-goal-add:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
 .cc-owner{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);min-width:0;white-space:nowrap}
 .g-goal{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted);margin:-2px 4px 8px 30px;line-height:1.4}
 .g-goal .g{color:var(--text)}
@@ -1672,7 +1672,7 @@ const isAdmin = () => S.me && (S.me.role === 'owner' || S.me.role === 'assistant
 // Разделы трекера: какие видит человек, решает сервер (по роли или как настроил руководитель).
 const SEC_BY_ROLE = {
   owner: ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'], assistant: ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'],
-  manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'], specialist: ['tasks', 'clients', 'meet', 'reflection'], trainee: ['tasks', 'meet', 'reflection'],
+  manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'], lead: ['tasks', 'clients', 'meet', 'reflection'], specialist: ['tasks', 'meet', 'reflection'], trainee: ['tasks', 'meet', 'reflection'],
 };
 const hasSec = (k) => !!S.me && (S.me.sections || SEC_BY_ROLE[S.me.role] || ['tasks']).includes(k);
 const canSeeClients = () => hasSec('clients');
@@ -2042,7 +2042,7 @@ function views() {
   if (hasSec('meet')) v.push({ id: 'meet', label: 'Встречи', icon: 'cal' });
   if (hasSec('mail')) v.push({ id: 'mail', label: 'Рассылки', icon: 'send' });
   // Оценки ставят специалисты; КМ и руководитель специалистов (как и руководитель) видят итоги.
-  if (hasSec('reflection') && (S.reflection || isAdmin() || ['manager', 'specialist'].includes(S.me.role))) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
+  if (hasSec('reflection') && (S.reflection || isAdmin() || ['manager', 'lead'].includes(S.me.role))) v.push({ id: 'reflection', label: 'Рефлексия', icon: 'star' });
   if (hasSec('team')) v.push({ id: 'team', label: 'Команда', icon: 'users' });
   if (hasSec('kb')) v.push({ id: 'kb', label: 'База знаний', short: 'База', icon: 'book' });
   return v;
@@ -3098,11 +3098,11 @@ $('clientCards').addEventListener('click', async (e) => {
 });
 
 // ── Цель и текущая стратегия кабинета: «К чему стремимся» / «Что делаем сейчас» ──
-// Пишут руководитель и старший специалист (понедельник, среда, пятница): «+» в углу карточки, дальше —
-// нажатием на сами строки. Внизу карточки — строка цели и строка «сейчас» (серее); то же — над задачами
+// Пишут руководитель и старший специалист (понедельник, среда, пятница): пока пусто — плашка «Заполните
+// цель кабинета» внизу карточки, дальше — нажатием на сами строки. Внизу карточки — строка цели и строка «сейчас» (серее); то же — над задачами
 // клиента. Запись старше 3 дней отмечена жёлтой чертой слева — пора обновить.
 let goalOpen = null;
-const canEditGoal = () => isOwner() || (S.me && S.me.role === 'specialist');
+const canEditGoal = () => isOwner() || (S.me && S.me.role === 'lead');
 const goalStale = (g) => !g || !g.at || Date.now() - Date.parse(g.at) > 3 * 86400000;
 function goalHtml(p) {
   const g = p.goal;
@@ -3113,7 +3113,7 @@ function goalHtml(p) {
       <div class="cc-goal-act"><button type="button" class="btn btn-quiet btn-sm" data-goal-cancel>Отмена</button><button class="btn btn-primary btn-sm">Сохранить</button></div>
     </form>`;
   }
-  if (!g) return '';
+  if (!g) return canEditGoal() ? `<button type="button" class="cc-goal-add" data-goal-edit>${ico('plus', 'ic-sm')}Заполните цель кабинета</button>` : '';
   const when = `${fmtDay(Date.parse(g.at), Date.now())}${g.by ? `, ${first(g.by)}` : ''}`;
   const tag = canEditGoal() ? 'button' : 'div';
   return `<${tag} class="cc-goal ${goalStale(g) ? 'stale' : ''}" ${canEditGoal() ? 'data-goal-edit type="button"' : ''} title="${esc([g.goal, g.now, `Обновлено ${when}`].filter(Boolean).join('\n'))}">
@@ -3890,7 +3890,7 @@ document.addEventListener('click', (e) => {
 
 // ── вкладка «Команда» (только руководитель) ──
 function renderTeamStatic() {
-  $('newRole').innerHTML = [['manager', 'Клиентский менеджер'], ['specialist', 'Специалист по Авито'], ['trainee', 'Стажёр по Авито'], ['assistant', 'Ассистент']].map(([k, v]) => `<option value="${k}" ${k === 'trainee' ? 'selected' : ''}>${v}</option>`).join('');
+  $('newRole').innerHTML = [['manager', 'Клиентский менеджер'], ['lead', 'Старший специалист по Авито'], ['specialist', 'Специалист по Авито'], ['trainee', 'Стажёр по Авито'], ['assistant', 'Ассистент']].map(([k, v]) => `<option value="${k}" ${k === 'trainee' ? 'selected' : ''}>${v}</option>`).join('');
   if (S.team) renderMembers();
 }
 async function loadTeam() {
@@ -5047,7 +5047,7 @@ function renderClients() {
       const link = (url, label, icon) => (url ? `<a class="cc-ico" href="${esc(url)}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ico(icon)}</a>` : '');
       return `<div class="ccard lv-${level} ${p.inactive ? 'off' : ''} ${CF.focus === p.id ? 'focus' : ''}" data-client="${esc(p.id)}">
         <div class="cc-head"><div><div class="cc-name">${esc(p.name)}</div></div>
-          ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : !p.goal && goalOpen !== p.id && canEditGoal() ? `<button class="icon-btn cc-goal-add" data-goal-edit title="Цель и что делаем сейчас" aria-label="Добавить цель и стратегию">${ico('plus', 'ic-sm')}</button>` : ''}</div>
+          ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
         ${clientMetricsHtml(p, m)}
         ${clientAdvanceHtml(p, m)}
         ${p.inactive ? '' : todo.some((t) => t.kind !== 'money') ? `<div class="cc-todo">${todo.filter((t) => t.kind !== 'money').map((t) => `<div class="cc-do ${t.tone}">${t.html}</div>`).join('')}</div>` : ''}
@@ -5114,7 +5114,7 @@ $('members').addEventListener('click', async (e) => {
 });
 
 // ── «Клиенты → Настройки»: кто ведёт клиента и его приоритет (руководитель и ассистент) ──
-const CO_ROLES = ['specialist', 'trainee'];
+const CO_ROLES = ['lead', 'specialist', 'trainee'];
 function ownerLine(p) {
   const u = p.ownerId && userById(p.ownerId);
   return u ? first(u.name) : '';
