@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F4F3F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<script>
+  try { var t = localStorage.getItem('aiSales.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<title>Avito AI Sales</title>
+<link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<style>
+:root{
+  --accent:#E8391D;--accent-600:#C42D13;--accent-bg:#FFF0EB;--accent-ring:rgba(232,57,29,.16);
+  --bg:#F4F3F0;--surface:#fff;--surface-2:#FAF9F7;--sunken:#EFEDE9;
+  --line:#E5E2DD;--line-2:#EEECE8;
+  --ink:#151515;--text:#2A2927;--muted:#76716A;--faint:#A7A29B;
+  --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--blue:#2556C4;--blue-bg:#E9EFFC;--red:#D5311A;--red-bg:#FDEBE7;
+  --me:#1F1E1C;--me-text:#F4F2EE;
+  --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);
+  --shadow-lg:0 18px 48px rgba(22,20,18,.16);
+  --r:14px;--r-sm:10px;
+  --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --display:'Unbounded','Geologica',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+    --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;
+    --line:#2E2C2A;--line-2:#282624;
+    --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+    --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--blue:#7FA2F5;--blue-bg:#18264A;--red:#FF6F57;--red-bg:#3D1812;
+    --me:#2C2A27;--me-text:#F4F2EE;
+    --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+  --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;
+  --line:#2E2C2A;--line-2:#282624;
+  --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--blue:#7FA2F5;--blue-bg:#18264A;--red:#FF6F57;--red-bg:#3D1812;
+  --me:#2C2A27;--me-text:#F4F2EE;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);font-size:14.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--blue)}
+.hide{display:none!important}
+.muted{color:var(--muted)}.faint{color:var(--faint)}.small{font-size:12.5px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;font-weight:500;white-space:nowrap;transition:background .12s,border-color .12s}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.good{background:var(--green-bg);border-color:transparent;color:var(--green)}
+.btn.warn{background:var(--red-bg);border-color:transparent;color:var(--red)}
+.btn.sm{height:28px;padding:0 10px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default}
+.input,.select,textarea.input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:8px 11px;outline:none;font-size:14px}
+.input:focus,textarea.input:focus,.select:focus{border-color:var(--ink);box-shadow:0 0 0 3px var(--accent-ring)}
+textarea.input{resize:vertical;min-height:70px;line-height:1.45}
+.select{height:34px;padding:0 10px}
+label.f{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.chip.accent{background:var(--accent-bg);color:var(--accent)}
+.chip.green{background:var(--green-bg);color:var(--green)}
+.chip.amber{background:var(--amber-bg);color:var(--amber)}
+.chip.blue{background:var(--blue-bg);color:var(--blue)}
+.chip.red{background:var(--red-bg);color:var(--red)}
+
+/* top */
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
+.top-in{display:flex;align-items:center;gap:12px;padding:10px 20px;flex-wrap:wrap}
+.logo{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:8px}
+.logo i{width:10px;height:10px;border-radius:3px;background:var(--accent);display:inline-block}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{height:32px;padding:0 12px;border-radius:999px;font-size:13.5px;color:var(--muted);font-weight:500}
+.tab.on{background:var(--ink);color:var(--bg)}
+.tab .n{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;margin-left:5px}
+.grow{flex:1}
+.safe{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--green);background:var(--green-bg);padding:4px 10px;border-radius:999px;font-weight:500}
+.sync{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.progress{height:3px;background:var(--line-2);position:relative;overflow:hidden}
+.progress b{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width .3s}
+
+main{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
+
+/* dialogs */
+.dlg{display:grid;grid-template-columns:360px 1fr;gap:14px;height:calc(100vh - 92px);min-height:520px}
+.list{display:flex;flex-direction:column;overflow:hidden}
+.list-head{padding:12px;border-bottom:1px solid var(--line-2);display:flex;flex-direction:column;gap:8px}
+.filters{display:flex;gap:4px;flex-wrap:wrap}
+.filters button{height:26px;padding:0 9px;border-radius:999px;font-size:12px;color:var(--muted);background:var(--sunken)}
+.filters button.on{background:var(--ink);color:var(--bg)}
+.items{overflow-y:auto;flex:1}
+.item{display:grid;grid-template-columns:38px 1fr auto;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line-2);cursor:pointer;align-items:start}
+.item:hover{background:var(--surface-2)}
+.item.on{background:var(--accent-bg)}
+.ava{width:38px;height:38px;border-radius:50%;background:var(--sunken);display:grid;place-items:center;font-weight:600;color:var(--muted);font-size:14px;overflow:hidden;flex:none}
+.ava img{width:100%;height:100%;object-fit:cover}
+.item .nm{font-weight:600;color:var(--ink);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .it{font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .lt{font-size:12.5px;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px}
+.item .tm{font-size:11.5px;color:var(--faint);text-align:right;white-space:nowrap}
+.item .bd{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;margin-top:6px}
+
+.chat{display:flex;flex-direction:column;overflow:hidden}
+.chat-head{padding:12px 16px;border-bottom:1px solid var(--line-2);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.chat-head .t{font-weight:600;color:var(--ink);font-size:15px}
+.chat-head .s{font-size:12px;color:var(--muted)}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--surface-2)}
+.day{align-self:center;font-size:11.5px;color:var(--faint);margin:10px 0 4px}
+.b{max-width:72%;padding:8px 12px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.42;position:relative}
+.b .tm{display:block;font-size:10.5px;opacity:.6;margin-top:3px;text-align:right}
+.b.client{align-self:flex-start;background:var(--surface);border:1px solid var(--line-2);border-bottom-left-radius:4px}
+.b.manager{align-self:flex-end;background:var(--me);color:var(--me-text);border-bottom-right-radius:4px}
+.b.system{align-self:center;background:transparent;color:var(--muted);font-size:12px;text-align:center;max-width:90%}
+.b.ai{align-self:flex-end;background:var(--blue-bg);color:var(--text);border:1px dashed var(--blue);border-bottom-right-radius:4px}
+.b .rev{font-size:11px;margin-top:4px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.b.manager .btn{color:var(--text)}
+.b.manager .btn.good{color:var(--green)}.b.manager .btn.warn{color:var(--red)}
+.chk{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:13.5px}.chk input{flex:none;margin-top:4px}
+.empty{display:grid;place-items:center;height:100%;color:var(--muted);text-align:center;padding:30px}
+
+.draft{border-top:1px solid var(--line-2);padding:12px 16px;background:var(--surface);max-height:58%;overflow-y:auto}
+.draft-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.draft-h b{color:var(--blue);font-weight:600}
+.draft-text{background:var(--blue-bg);border-radius:12px;padding:10px 12px;white-space:pre-wrap;font-size:14.5px;color:var(--ink)}
+.draft-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.why{margin-top:10px;font-size:12.5px;color:var(--muted)}
+.why summary{cursor:pointer;color:var(--muted)}
+.why ul{margin:6px 0 0 18px}
+.why .old{text-decoration:line-through;opacity:.7}
+.note{margin-top:6px}
+.warnbox{background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:8px 10px;font-size:12.5px;margin-bottom:8px}
+.errbox{background:var(--red-bg);color:var(--red);border-radius:10px;padding:8px 10px;font-size:12.5px;margin:8px 0;white-space:pre-wrap}
+
+/* generic panes */
+.grid2{display:grid;grid-template-columns:300px 1fr;gap:14px}
+.pane{padding:16px}
+.pane h2{font-family:var(--display);font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.pane h3{font-size:14px;font-weight:600;color:var(--ink);margin:18px 0 6px}
+.pane p.lead{color:var(--muted);font-size:13px;margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.script{border:1px solid var(--line-2);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--surface-2)}
+.script .row .input{flex:1}
+.prov{border:1px solid var(--line-2);border-radius:12px;padding:12px;margin-bottom:10px}
+.out{white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:12px;font-size:13.5px;margin-top:10px;max-height:480px;overflow:auto}
+.fb{border-bottom:1px solid var(--line-2);padding:12px 0;display:grid;gap:4px;font-size:13.5px}
+.fb .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fb .pair div{background:var(--surface-2);border-radius:10px;padding:8px 10px;white-space:pre-wrap}
+.stat{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.stat div{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 14px;min-width:120px}
+.stat b{display:block;font-size:20px;color:var(--ink);font-family:var(--display);font-weight:600}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:60;display:grid;place-items:center;padding:16px}
+.modal{width:min(980px,100%);max-height:90vh;overflow:auto;padding:18px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:80;font-size:13.5px;box-shadow:var(--shadow-lg);max-width:90vw}
+.gate{max-width:360px;margin:12vh auto;padding:24px}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.back{display:none}
+@media (max-width:860px){
+  main{padding:10px 12px 30px}
+  .top-in{padding:8px 12px}
+  .dlg{grid-template-columns:1fr;height:auto}
+  .dlg .list{height:calc(100vh - 140px)}
+  .dlg.open .list{display:none}
+  .dlg:not(.open) .chat{display:none}
+  .dlg .chat{height:calc(100vh - 110px)}
+  .back{display:inline-flex}
+  .grid2{grid-template-columns:1fr!important}
+  .chat-head .select{flex:1 1 40%;min-width:0;width:auto!important;max-width:none!important}
+  .chat-head > div[style*="flex:1"]{flex-basis:60%!important}
+  .b{max-width:88%}
+  .fb .pair{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="gate" class="card gate hide">
+  <div class="logo" style="margin-bottom:14px"><i></i>Avito AI Sales</div>
+  <p class="muted small" style="margin-bottom:12px">ИИ-менеджер для чатов Авито. Введите пароль дашборда.</p>
+  <form id="gateForm" class="row"><input id="pw" class="input" type="password" placeholder="Пароль" autocomplete="current-password" style="flex:1"><button class="btn primary">Войти</button></form>
+  <div id="gateErr" class="errbox hide"></div>
+</div>
+
+<div id="app" class="hide">
+  <header class="top">
+    <div class="top-in">
+      <div class="logo"><i></i>Avito AI Sales</div>
+      <select id="cabSel" class="select" style="width:auto"></select>
+      <nav class="tabs" id="tabs">
+        <button class="tab on" data-tab="dialogs">Диалоги<span class="n hide" id="nWaiting"></span></button>
+        <button class="tab" data-tab="sim">Тест-клиент</button>
+        <button class="tab" data-tab="prompt">Скрипты и база знаний</button>
+        <button class="tab" data-tab="models">Модели и настройки</button>
+        <button class="tab" data-tab="learn">Обучение</button>
+      </nav>
+      <div class="grow"></div>
+      <span class="safe" title="Сервис только читает чаты и предлагает ответы. Отправки в Авито нет.">● Отправка в Авито выключена — только черновики</span>
+      <div class="sync"><span id="syncInfo"></span><button class="btn sm" id="syncBtn">↻ Обновить</button><button class="btn sm" id="themeBtn" title="Тема">◐</button></div>
+    </div>
+    <div class="progress hide" id="prog"><b style="width:0"></b></div>
+  </header>
+
+  <main>
+    <!-- Диалоги -->
+    <section id="t-dialogs" class="dlg">
+      <div class="card list">
+        <div class="list-head">
+          <input id="q" class="input" placeholder="Поиск по имени, объявлению, тексту">
+          <div class="filters" id="filters">
+            <button data-f="all" class="on">Все</button>
+            <button data-f="waiting">Ждут ответа</button>
+            <button data-f="draft">Есть черновик</button>
+            <button data-f="human">Нужен человек</button>
+            <button data-f="reviewed">Проверены</button>
+          </div>
+        </div>
+        <div class="items" id="items"></div>
+      </div>
+      <div class="card chat" id="chat"><div class="empty">Выберите диалог слева.<br><span class="small faint">Новые сообщения подтягиваются из Авито сами — каждые 10 минут и при открытой странице.</span></div></div>
+    </section>
+
+    <!-- Тест-клиент -->
+    <section id="t-sim" class="grid2 hide">
+      <div class="card pane">
+        <h2>Тест-клиент</h2>
+        <p class="lead">Пишите как родитель или ученик — ИИ отвечает за преподавателя. Ответы можно исправлять: правки идут в обучение.</p>
+        <button class="btn primary" id="simNew">+ Новый тест</button>
+        <div id="simList" style="margin-top:12px"></div>
+      </div>
+      <div class="card chat" id="simChat" style="height:calc(100vh - 92px);min-height:520px"><div class="empty">Создайте тест или выберите его слева.</div></div>
+    </section>
+
+    <!-- Промпт -->
+    <section id="t-prompt" class="hide">
+      <div class="card pane">
+        <div class="row"><h2 class="grow">Скрипты, правила и база знаний</h2>
+          <button class="btn" id="pDefaults">Вернуть исходные</button>
+          <select class="select" id="pHist" style="width:auto"><option value="">Прошлые версии…</option></select>
+          <button class="btn primary" id="pSave">Сохранить</button></div>
+        <p class="lead">Из этого ИИ собирает ответ. Исходный сценарий составлен по 145 диалогам Елены за октябрь. Всё здесь можно править: ИИ использует новую версию сразу.</p>
+
+        <h3>Свободные окна для диагностики</h3>
+        <p class="lead">ИИ предлагает время только отсюда. Если поле пустое, он спрашивает клиента, когда тому удобно, и помечает диалог «нужен человек».</p>
+        <textarea id="pSlots" class="input" rows="4"></textarea>
+
+        <h3>Роль и правила</h3>
+        <textarea id="pSystem" class="input" rows="16"></textarea>
+
+        <h3>База знаний</h3>
+        <p class="lead">Факты, цены, форматы, контакты, ссылка ZOOM. Всё, что ИИ может сказать клиенту, должно быть здесь.</p>
+        <textarea id="pKnow" class="input" rows="10"></textarea>
+
+        <h3>Скрипты</h3>
+        <div id="pScripts"></div>
+        <button class="btn" id="pAddScript">+ Скрипт</button>
+
+        <h3>Подсказки ИИ</h3>
+        <div class="row">
+          <button class="btn" id="sugScripts">Предложить скрипты по живым диалогам</button>
+          <button class="btn" id="sugRules">Сформулировать правила из правок</button>
+        </div>
+        <div id="sugOut"></div>
+      </div>
+    </section>
+
+    <!-- Модели -->
+    <section id="t-models" class="hide">
+      <div class="grid2" style="grid-template-columns:1fr 1fr">
+        <div class="card pane">
+          <h2>Как работает ИИ</h2>
+          <label class="f">Модель по умолчанию</label>
+          <select id="mDefault" class="select"></select>
+          <label class="chk"><input type="checkbox" id="mSelf"> Самопроверка: вторым шагом ИИ проверяет черновик по истории и базе знаний и исправляет его</label>
+          <label class="chk"><input type="checkbox" id="mAuto"> Сам писать черновики к новым сообщениям (каждые 10 минут)</label>
+          <div class="row" style="margin-top:8px"><span class="small muted">…к сообщениям не старше</span><input id="mHours" class="input" type="number" min="1" style="width:80px"><span class="small muted">часов</span></div>
+          <button class="btn primary" id="mSave" style="margin-top:12px">Сохранить</button>
+
+          <h3>Кабинеты Авито</h3>
+          <div id="cabList"></div>
+          <div class="row" style="margin-top:8px"><select id="cabAdd" class="select" style="flex:1"></select><input id="cabSince" class="input" type="date" style="width:160px"><button class="btn" id="cabAddBtn">Подключить</button></div>
+          <p class="lead" style="margin-top:6px">Подключённый кабинет только читается: сообщения в Авито сервис не отправляет.</p>
+        </div>
+        <div class="card pane">
+          <h2>Подключения моделей</h2>
+          <p class="lead">Бесплатные модели Workers AI работают без ключа. Чтобы попробовать другие, добавьте ключ: он хранится на сервере и в браузер больше не возвращается. Модель можно выбрать для всех диалогов, для одного диалога или для теста.</p>
+          <div id="provList"></div>
+          <div class="prov" id="provForm">
+            <div class="row"><select id="prType" class="select" style="flex:1"></select><input id="prLabel" class="input" placeholder="Название" style="flex:1"></div>
+            <label class="f">Адрес API</label><input id="prBase" class="input">
+            <label class="f">Ключ API</label><input id="prKey" class="input" type="password" placeholder="sk-…" autocomplete="off">
+            <label class="f">Модели (через запятую)</label><input id="prModels" class="input">
+            <input type="hidden" id="prId">
+            <div class="row" style="margin-top:10px"><button class="btn primary" id="prSave">Сохранить подключение</button><button class="btn hide" id="prCancel">Отмена</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Обучение -->
+    <section id="t-learn" class="hide">
+      <div class="card pane">
+        <h2>Обучение на правках</h2>
+        <p class="lead">Каждая оценка черновика («Верно», «Исправить», «Не отвечать») сохраняется. Последние правки ИИ видит как примеры в каждом ответе. Кнопка «Сформулировать правила из правок» во вкладке «Скрипты» превращает их в постоянные правила.</p>
+        <div class="stat" id="lStat"></div>
+        <div id="lModels" class="small muted"></div>
+        <div id="lList"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="modal" class="modal-bg hide"><div class="card modal" id="modalIn"></div></div>
+<div id="toast" class="toast hide"></div>
+
+<script>
+'use strict';
+// Страница на cantor.agency, API — в воркере Cloudflare. На cantor.agency запросы идут через функцию
+// Яндекс Облака (пропускает /api/dashboard/*), если она не ответила — напрямую в воркер.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const API_PROXY_URL = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch';
+const API_PATH = '/api/dashboard/ai-sales/';
+const ROUTES = (() => {
+  const host = location.hostname;
+  const same = (p) => location.origin + p;
+  const direct = (p) => API_BASE + p;
+  const proxy = (p) => API_PROXY_URL + '?p=' + encodeURIComponent(p);
+  if (host === 'localhost' || host === '127.0.0.1') return [same];
+  if (/workers\.dev$/.test(host)) return [same, proxy];
+  return [proxy, direct];
+})();
+let routeFirst = 0;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+
+const S = {
+  pw: store.get('aiSales.pw') || '',
+  state: null, acc: store.get('aiSales.acc') || '', tab: 'dialogs',
+  chats: [], chatId: null, chat: null, filter: 'all', q: '',
+  sims: [], simId: null, sim: null, prompt: null, defaults: null,
+  busy: {}, editing: null,
+};
+
+async function api(action, { method = 'GET', body, params } = {}) {
+  const qs = new URLSearchParams(Object.assign({ accountId: S.acc }, params || {})).toString();
+  const path = API_PATH + action + (qs ? '?' + qs : '');
+  let lastErr;
+  for (let n = 0; n < ROUTES.length; n += 1) {
+    const idx = (routeFirst + n) % ROUTES.length;
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 32000);
+      const res = await fetch(ROUTES[idx](path), {
+        method, signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', 'x-dashboard-password': S.pw },
+        body: body ? JSON.stringify(Object.assign({ accountId: S.acc }, body)) : undefined,
+      });
+      clearTimeout(timer);
+      const data = await res.json().catch(() => ({}));
+      if ((res.status === 502 || res.status === 504) && !data.error && n < ROUTES.length - 1) continue;
+      routeFirst = idx;
+      if (res.status === 401) { showGate('Неверный пароль'); throw new Error('unauthorized'); }
+      if (!res.ok) throw new Error(data.message || data.error || ('HTTP ' + res.status));
+      return data;
+    } catch (e) { lastErr = e; if (e.message === 'unauthorized') throw e; }
+  }
+  throw lastErr || new Error('network');
+}
+
+// Задачи ИИ: сервер ждёт до 20 с, дальше страница сама спрашивает, готово ли.
+async function waitJob(job) {
+  const t0 = Date.now();
+  while (job && (job.status === 'running' || job.status === 'queued') && Date.now() - t0 < 180000) {
+    await new Promise((r) => setTimeout(r, 2500));
+    job = (await api('job', { params: { id: job.id } })).job;
+  }
+  if (!job || job.status === 'running' || job.status === 'queued') throw new Error('ИИ отвечает слишком долго — попробуйте ещё раз или другую модель');
+  if (job.status === 'error') throw new Error(job.error || 'ошибка ИИ');
+  return job.result;
+}
+
+// ── utils ──
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const linkify = (t) => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+function toast(msg, ms) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), ms || 3200); }
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date();
+  const hm = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return hm;
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return 'вчера';
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+function fmtDay(ts) { return new Date(ts).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' }); }
+function ago(ts) { if (!ts) return 'ещё не обновлялось'; const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? 'только что' : m < 60 ? m + ' мин назад' : Math.round(m / 60) + ' ч назад'; }
+function initials(n) { return (String(n || '?').trim().split(/\s+/).map((x) => x[0]).join('').slice(0, 2) || '?').toUpperCase(); }
+function modelLabel(ref) { const m = (S.state.models || []).find((x) => x.ref === ref); return m ? m.label.replace(/ \(.*\)$/, '') : String(ref || '').replace(/^[^:]+:/, '').replace(/^@cf\/[^/]+\//, ''); }
+function modelOptions(sel, withDefault) {
+  return (withDefault ? `<option value="">По умолчанию (${esc(modelLabel(S.state.config.defaultModel))})</option>` : '') +
+    S.state.models.map((m) => `<option value="${esc(m.ref)}"${m.ref === sel ? ' selected' : ''}>${esc(m.label)}</option>`).join('');
+}
+function stageOptions(sel) { return '<option value="">Этап: авто</option>' + Object.entries(S.state.stages).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join(''); }
+function stageChip(k) {
+  if (!k) return '';
+  const cls = { booked: 'green', messenger: 'green', lost: 'red', spam: 'red', offer: 'blue', cold: 'amber' }[k] || '';
+  return `<span class="chip ${cls}">${esc(S.state.stages[k] || k)}</span>`;
+}
+
+// ── gate / boot ──
+function showGate(err) {
+  $('#app').classList.add('hide'); $('#gate').classList.remove('hide');
+  $('#gateErr').classList.toggle('hide', !err); $('#gateErr').textContent = err || '';
+}
+$('#gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); S.pw = $('#pw').value.trim(); store.set('aiSales.pw', S.pw); boot();
+});
+async function boot() {
+  if (!S.pw) return showGate();
+  try { await loadState(); } catch (e) { if (e.message !== 'unauthorized') showGate('Не удалось загрузить: ' + e.message); return; }
+  $('#gate').classList.add('hide'); $('#app').classList.remove('hide');
+  const h = location.hash.replace('#', '');
+  if (['dialogs', 'sim', 'prompt', 'models', 'learn'].includes(h)) setTab(h);
+  await loadChats();
+  firstImport();
+  setInterval(() => { if (!document.hidden && S.tab === 'dialogs') loadChats(true); }, 60000);
+  setInterval(() => { if (!document.hidden) syncOnce(true); }, 180000);
+}
+async function loadState() {
+  S.state = await api('state', { params: { accountId: S.acc || '' } });
+  const cabs = S.state.config.cabinets;
+  if (!cabs.some((c) => c.accountId === S.acc)) S.acc = cabs[0] ? cabs[0].accountId : '';
+  store.set('aiSales.acc', S.acc);
+  $('#cabSel').innerHTML = cabs.map((c) => `<option value="${esc(c.accountId)}"${c.accountId === S.acc ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+  renderSyncInfo();
+}
+function cab() { return S.state.config.cabinets.find((c) => c.accountId === S.acc) || {}; }
+function renderSyncInfo() { const c = cab(); $('#syncInfo').textContent = 'Авито: ' + ago(c.lastSyncAt); }
+$('#cabSel').addEventListener('change', async (e) => { S.acc = e.target.value; store.set('aiSales.acc', S.acc); S.chatId = null; S.simId = null; await loadChats(); firstImport(); setTab(S.tab); });
+
+$('#themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = next; store.set('aiSales.theme', next);
+});
+
+// ── tabs ──
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
+function setTab(t) {
+  S.tab = t; history.replaceState(null, '', '#' + t);
+  $$('#tabs .tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  ['dialogs', 'sim', 'prompt', 'models', 'learn'].forEach((x) => $('#t-' + x).classList.toggle('hide', x !== t));
+  if (t === 'sim') loadSims();
+  if (t === 'prompt') loadPrompt();
+  if (t === 'models') renderModels();
+  if (t === 'learn') loadLearn();
+}
+
+// ── sync ──
+async function syncOnce(quiet) {
+  if (S.busy.sync) return;
+  S.busy.sync = true; $('#syncBtn').disabled = true;
+  try {
+    const r = await api('sync', { method: 'POST', body: {} });
+    if (r.errors && r.errors.length && !quiet) toast('Часть чатов не загрузилась: ' + r.errors[0]);
+    await loadChats(true);
+    return r;
+  } catch (e) { if (!quiet) toast('Авито не ответил: ' + e.message); return null; }
+  finally { S.busy.sync = false; $('#syncBtn').disabled = false; await refreshCab(); }
+}
+async function refreshCab() { try { const st = await api('state'); S.state = st; renderSyncInfo(); } catch (e) {} }
+$('#syncBtn').addEventListener('click', () => fullSync());
+// Первая загрузка: история с даты подключения кабинета, порциями по ~15 секунд.
+async function fullSync() {
+  const bar = $('#prog'); bar.classList.remove('hide');
+  let guard = 0;
+  while (guard++ < 80) {
+    const r = await syncOnce(guard > 1);
+    if (!r) break;
+    const done = r.total - r.remaining;
+    bar.firstElementChild.style.width = (r.total ? Math.round(done / r.total * 100) : 100) + '%';
+    $('#syncInfo').textContent = `Загружено ${done} из ${r.total} диалогов…`;
+    if (r.imported && r.remaining === 0) break;
+  }
+  bar.classList.add('hide'); renderSyncInfo();
+}
+function firstImport() { const c = cab(); if (!c.imported || !c.chats || c.lastSyncAt == null || Date.now() - c.lastSyncAt > 15 * 60000) fullSync(); }
+
+// ── dialogs list ──
+async function loadChats(quiet) {
+  try {
+    const r = await api('chats');
+    S.chats = r.chats || [];
+    renderList();
+    const typing = document.activeElement && $('#chat').contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if (S.chatId && !S.editing && !typing) openChat(S.chatId, true);
+  } catch (e) { if (!quiet) toast('Не удалось загрузить диалоги: ' + e.message); }
+}
+$('#q').addEventListener('input', (e) => { S.q = e.target.value.toLowerCase(); renderList(); });
+$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; S.filter = b.dataset.f; $$('#filters button').forEach((x) => x.classList.toggle('on', x === b)); renderList(); });
+function chatMatches(c) {
+  if (S.q && !(`${c.name} ${c.itemTitle} ${c.lastText}`.toLowerCase().includes(S.q))) return false;
+  if (S.filter === 'waiting') return c.waiting;
+  if (S.filter === 'draft') return c.hasDraft && !c.draftReviewed;
+  if (S.filter === 'human') return c.draftNeedsHuman && !c.draftReviewed;
+  if (S.filter === 'reviewed') return c.draftReviewed;
+  return true;
+}
+function renderList() {
+  const waiting = S.chats.filter((c) => c.waiting).length;
+  $('#nWaiting').textContent = waiting; $('#nWaiting').classList.toggle('hide', !waiting);
+  const list = S.chats.filter(chatMatches);
+  $('#items').innerHTML = list.length ? list.map((c) => {
+    const st = c.stage || c.aiStage;
+    const badges = [
+      c.waiting ? '<span class="chip accent">ждёт ответа</span>' : '',
+      c.hasDraft && !c.draftReviewed ? '<span class="chip blue">черновик ИИ</span>' : '',
+      c.draftReviewed ? '<span class="chip green">проверен</span>' : '',
+      c.draftNeedsHuman && !c.draftReviewed ? '<span class="chip amber">нужен человек</span>' : '',
+      stageChip(st),
+    ].join('');
+    return `<div class="item${c.chatId === S.chatId ? ' on' : ''}" data-id="${esc(c.chatId)}">
+      <div class="ava">${c.avatar ? `<img src="${esc(c.avatar)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : esc(initials(c.name))}</div>
+      <div style="min-width:0"><div class="nm">${esc(c.name || 'Без имени')}</div><div class="it">${esc(c.itemTitle || '')}</div>
+        <div class="lt">${c.lastAuthor === 'manager' ? '<span class="faint">Вы: </span>' : ''}${esc(c.lastText || (c.stale ? 'загружается…' : ''))}</div>
+        <div class="bd">${badges}</div></div>
+      <div class="tm">${esc(fmtTime(c.lastAt || c.updated * 1000))}${c.waiting ? '<br><span class="dot"></span>' : ''}</div>
+    </div>`;
+  }).join('') : `<div class="empty">${S.chats.length ? 'Ничего не найдено' : 'Диалоги загружаются из Авито…'}</div>`;
+}
+$('#items').addEventListener('click', (e) => { const it = e.target.closest('.item'); if (it) openChat(it.dataset.id); });
+
+// ── one chat ──
+async function openChat(id, refresh) {
+  if (!refresh) { S.chatId = id; S.editing = null; renderList(); $('#t-dialogs').classList.add('open'); $('#chat').innerHTML = '<div class="empty"><span class="spin"></span></div>'; }
+  try {
+    const r = await api('chat', { params: { chatId: id } });
+    if (S.chatId !== id) return;
+    S.chat = r.chat; renderChat(!refresh);
+  } catch (e) { if (!refresh) $('#chat').innerHTML = `<div class="empty">Диалог ещё не загружен: ${esc(e.message)}</div>`; }
+}
+function bubbles(messages, extra) {
+  let lastDay = '', out = '';
+  messages.forEach((m) => {
+    const day = new Date(m.at).toDateString();
+    if (day !== lastDay) { out += `<div class="day">${esc(fmtDay(m.at))}</div>`; lastDay = day; }
+    const cls = m.author === 'manager' ? 'manager' : m.author === 'system' ? 'system' : 'client';
+    out += `<div class="b ${cls}">${linkify(m.text)}<span class="tm">${esc(new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))}</span>${extra ? extra(m) : ''}</div>`;
+  });
+  return out;
+}
+function renderChat(scroll) {
+  const c = S.chat;
+  const idxEntry = S.chats.find((x) => x.chatId === c.chatId) || {};
+  const msgs = c.messages || [];
+  const lastMeaningful = [...msgs].reverse().find((m) => m.author !== 'system' || /заинтересовал/i.test(m.text));
+  const d = c.draft;
+  const outdated = d && lastMeaningful && d.forMsgId && d.forMsgId !== lastMeaningful.id;
+  $('#chat').innerHTML = `
+    <div class="chat-head">
+      <button class="btn sm back" id="backBtn">←</button>
+      <div class="ava">${c.avatar ? `<img src="${esc(c.avatar)}" alt="" onerror="this.replaceWith(document.createTextNode('•'))">` : esc(initials(c.name))}</div>
+      <div style="min-width:0;flex:1"><div class="t">${esc(c.name || 'Без имени')}</div>
+        <div class="s">${c.itemUrl ? `<a href="${esc(c.itemUrl)}" target="_blank" rel="noopener">${esc(c.itemTitle)}</a>` : esc(c.itemTitle || '')}</div></div>
+      <select class="select" id="cStage" style="width:auto">${stageOptions(c.stage || '')}</select>
+      <select class="select" id="cModel" style="width:auto;max-width:240px" title="Модель для этого диалога">${modelOptions(c.model || '', true)}</select>
+    </div>
+    <div class="msgs" id="msgs">${bubbles(msgs)}${d && d.reply && !d.review ? `<div class="b ai">${esc(d.reply)}<span class="tm">черновик ИИ — не отправлен</span></div>` : ''}</div>
+    <div class="draft">${draftPanel(d, outdated, idxEntry)}
+      <details class="why note"><summary>Заметка по диалогу (видит ИИ)</summary><textarea class="input" id="cNote" rows="2" placeholder="Например: мама просила писать только после 18:00">${esc(c.note || '')}</textarea><button class="btn sm" id="cNoteSave" style="margin-top:6px">Сохранить заметку</button></details>
+    </div>`;
+  if (scroll !== false) { const m = $('#msgs'); m.scrollTop = m.scrollHeight; }
+  bindChat();
+}
+function draftPanel(d, outdated, idxEntry) {
+  if (S.busy.draft === S.chatId) return '<div class="draft-h"><span class="spin"></span> ИИ читает историю, базу знаний и пишет ответ…</div>';
+  if (!d) {
+    return `<div class="draft-h">Черновика ещё нет${idxEntry.waiting ? ' · клиент ждёт ответа' : ''}</div>
+      <div class="draft-actions"><button class="btn accent" data-a="gen">✦ Предложить ответ</button><button class="btn" data-a="cmp">⚖ Сравнить модели</button></div>`;
+  }
+  const rv = d.review;
+  const sc = d.selfCheck;
+  const scChip = !sc ? '' : sc.ok === true ? '<span class="chip green">самопроверка ✓</span>' : sc.ok === false ? '<span class="chip amber">исправлен самопроверкой</span>' : '<span class="chip">самопроверка не прошла</span>';
+  let html = '';
+  if (outdated) html += '<div class="warnbox">После черновика пришли новые сообщения — сделайте новый вариант.</div>';
+  if (d.needsHuman) html += `<div class="warnbox">Нужен человек: ${esc(d.humanReason || 'ИИ не уверен')}</div>`;
+  html += `<div class="draft-h"><b>Черновик ИИ</b><span>${esc(modelLabel(d.model))}</span><span>${(d.ms / 1000).toFixed(1)} с</span>${scChip}${d.stage ? stageChip(d.stage) : ''}${d.confidence ? `<span class="chip">уверенность ${Math.round(d.confidence * 100)}%</span>` : ''}${rv ? `<span class="chip ${rv.action === 'approve' ? 'green' : rv.action === 'edit' ? 'blue' : 'red'}">${rv.action === 'approve' ? 'одобрен' : rv.action === 'edit' ? 'исправлен' : 'не отвечать'}</span>` : ''}</div>`;
+  if (S.editing === d.id) {
+    html += `<textarea class="input" id="edText" rows="4">${esc(rv && rv.text ? rv.text : d.reply)}</textarea>
+      <input class="input" id="edWhy" placeholder="Почему так (необязательно): ИИ учтёт в следующий раз" style="margin-top:6px">
+      <div class="draft-actions"><button class="btn primary" data-a="saveEdit">Сохранить правку</button><button class="btn" data-a="cancelEdit">Отмена</button></div>`;
+  } else {
+    html += d.needsReply === false && !d.reply ? '<div class="draft-text muted">ИИ считает, что отвечать не нужно.</div>' : `<div class="draft-text">${esc(rv && rv.action === 'edit' ? rv.text : d.reply)}</div>`;
+    html += `<div class="draft-actions">
+      <button class="btn good" data-a="approve" title="Ответ правильный — запомнить как хороший пример">✓ Верно</button>
+      <button class="btn" data-a="edit">✎ Исправить</button>
+      <button class="btn warn" data-a="reject" title="Здесь не нужно отвечать">✕ Не отвечать</button>
+      <button class="btn" data-a="regen">↻ Новый вариант</button>
+      <button class="btn" data-a="cmp">⚖ Сравнить модели</button>
+      <button class="btn" data-a="copy">⧉ Копировать</button></div>`;
+  }
+  html += `<details class="why"><summary>Как ИИ думал</summary>
+    ${d.analysis ? `<p style="margin-top:6px">${esc(d.analysis)}</p>` : ''}
+    ${d.checks && d.checks.length ? `<ul>${d.checks.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${sc && sc.issues && sc.issues.length ? `<p style="margin-top:6px"><b>Самопроверка нашла:</b></p><ul>${sc.issues.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${d.firstReply ? `<p style="margin-top:6px">До самопроверки: <span class="old">${esc(d.firstReply)}</span></p>` : ''}
+    ${d.instruction ? `<p>Пожелание: ${esc(d.instruction)}</p>` : ''}
+    ${(S.chat.drafts || []).length > 1 ? `<p style="margin-top:6px"><b>Прошлые варианты:</b></p><ul>${S.chat.drafts.slice(1, 6).map((x) => `<li><span class="faint">${esc(modelLabel(x.model))}:</span> ${esc(x.reply)}</li>`).join('')}</ul>` : ''}
+  </details>`;
+  return html;
+}
+function bindChat() {
+  const c = S.chat;
+  $('#backBtn').onclick = () => { $('#t-dialogs').classList.remove('open'); };
+  $('#cStage').onchange = async (e) => { await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, stage: e.target.value } }); toast('Этап сохранён'); loadChats(true); };
+  $('#cModel').onchange = async (e) => { await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, model: e.target.value } }); c.model = e.target.value; toast('Модель для диалога: ' + (e.target.value ? modelLabel(e.target.value) : 'по умолчанию')); };
+  $('#cNoteSave').onclick = async () => { await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, note: $('#cNote').value } }); c.note = $('#cNote').value; toast('Заметка сохранена'); };
+  $$('#chat [data-a]').forEach((b) => b.addEventListener('click', () => chatAction(b.dataset.a)));
+}
+async function chatAction(a) {
+  const c = S.chat; const d = c.draft;
+  if (a === 'gen') return genDraft();
+  if (a === 'regen') {
+    const instr = await promptModal('Новый вариант', 'Что изменить? (необязательно) Например: «короче», «предложи субботу», «ответь про цену».', '', true);
+    if (instr === null) return; return genDraft(instr.text, instr.model);
+  }
+  if (a === 'cmp') return compareModels();
+  if (a === 'copy') { const t = d.review && d.review.action === 'edit' ? d.review.text : d.reply; navigator.clipboard.writeText(t).then(() => toast('Скопировано')); return; }
+  if (a === 'edit') { S.editing = d.id; renderChat(false); $('#edText').focus(); return; }
+  if (a === 'cancelEdit') { S.editing = null; renderChat(false); return; }
+  if (a === 'approve' || a === 'reject' || a === 'saveEdit') {
+    const action = a === 'saveEdit' ? 'edit' : a;
+    const text = a === 'saveEdit' ? $('#edText').value.trim() : '';
+    if (a === 'saveEdit' && !text) return toast('Пустой текст');
+    try {
+      await api('feedback', { method: 'POST', body: { chatId: c.chatId, draftId: d.id, action, text, comment: a === 'saveEdit' ? $('#edWhy').value : '' } });
+      S.editing = null; toast(action === 'approve' ? 'Запомнил как хороший ответ' : action === 'edit' ? 'Правка сохранена — ИИ учтёт её' : 'Запомнил: здесь не отвечаем');
+      await openChat(c.chatId, true); loadChats(true);
+    } catch (e) { toast('Ошибка: ' + e.message); }
+  }
+}
+async function genDraft(instruction, model) {
+  const id = S.chatId; S.busy.draft = id; renderChat(false);
+  try {
+    const r = await api('draft', { method: 'POST', body: { chatId: id, instruction: instruction || '', model: model || undefined } });
+    await waitJob(r.job);
+  } catch (e) { toast('ИИ: ' + e.message, 6000); }
+  S.busy.draft = null;
+  if (S.chatId === id) await openChat(id, true);
+  loadChats(true);
+}
+
+// ── modals ──
+function openModal(html) { $('#modalIn').innerHTML = html; $('#modal').classList.remove('hide'); }
+function closeModal() { $('#modal').classList.add('hide'); $('#modalIn').innerHTML = ''; }
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+function promptModal(title, lead, value, withModel) {
+  return new Promise((resolve) => {
+    openModal(`<h2 style="font-family:var(--display);font-size:16px;margin-bottom:6px">${esc(title)}</h2><p class="muted small">${esc(lead)}</p>
+      <textarea class="input" id="pmText" rows="3" style="margin-top:10px">${esc(value || '')}</textarea>
+      ${withModel ? `<label class="f">Модель</label><select class="select" id="pmModel">${modelOptions('', true)}</select>` : ''}
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="pmOk">Сделать</button><button class="btn" id="pmCancel">Отмена</button></div>`);
+    $('#pmOk').onclick = () => { const r = { text: $('#pmText').value.trim(), model: withModel ? $('#pmModel').value : '' }; closeModal(); resolve(r); };
+    $('#pmCancel').onclick = () => { closeModal(); resolve(null); };
+  });
+}
+// Сравнение: один и тот же диалог — несколько моделей; черновик диалога не меняется.
+function compareModels() {
+  const def = S.state.config.defaultModel;
+  openModal(`<h2 style="font-family:var(--display);font-size:16px">Сравнить модели на этом диалоге</h2>
+    <p class="muted small">Отметьте до 4 моделей. Варианты не сохраняются в диалог и никуда не отправляются.</p>
+    <div style="margin-top:10px;display:grid;gap:6px">${S.state.models.map((m, i) => `<label class="row small"><input type="checkbox" value="${esc(m.ref)}"${m.ref === def || i === 1 ? ' checked' : ''}> ${esc(m.label)}</label>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="cmpGo">Сравнить</button><button class="btn" id="cmpClose">Закрыть</button></div>
+    <div class="cmp" id="cmpOut"></div>`);
+  $('#cmpClose').onclick = closeModal;
+  $('#cmpGo').onclick = async () => {
+    const refs = $$('#modalIn input[type=checkbox]:checked').map((x) => x.value).slice(0, 4);
+    if (!refs.length) return;
+    $('#cmpOut').innerHTML = refs.map((r, i) => `<div class="card pane" id="cmp${i}"><b>${esc(modelLabel(r))}</b><div class="muted small" style="margin-top:6px"><span class="spin"></span> думает…</div></div>`).join('');
+    await Promise.all(refs.map(async (ref, i) => {
+      const box = $('#cmp' + i);
+      try {
+        const r = await api('draft', { method: 'POST', body: { chatId: S.chatId, model: ref, save: false } });
+        const res = await waitJob(r.job); const d = res.draft;
+        if (!box) return;
+        box.innerHTML = `<b>${esc(modelLabel(ref))}</b> <span class="faint small">${(d.ms / 1000).toFixed(1)} с${d.selfCheck && d.selfCheck.ok === false ? ' · исправлен самопроверкой' : ''}</span>
+          <div class="draft-text" style="margin-top:8px">${esc(d.reply || '(не отвечать)')}</div>
+          ${d.needsHuman ? `<div class="warnbox" style="margin-top:6px">Нужен человек: ${esc(d.humanReason)}</div>` : ''}
+          <p class="small muted" style="margin-top:6px">${esc(d.analysis || '')}</p>
+          <button class="btn sm" data-use="${esc(ref)}" style="margin-top:6px">Сделать моделью этого диалога</button>`;
+        box.querySelector('[data-use]').onclick = async () => { await api('chat-meta', { method: 'POST', body: { chatId: S.chatId, model: ref } }); S.chat.model = ref; toast('Модель диалога: ' + modelLabel(ref)); };
+      } catch (e) { if (box) box.innerHTML = `<b>${esc(modelLabel(ref))}</b><div class="errbox">${esc(e.message)}</div>`; }
+    }));
+  };
+}
+
+// ── simulator ──
+async function loadSims() {
+  try { S.sims = (await api('sims')).sims; } catch (e) { toast(e.message); }
+  $('#simList').innerHTML = S.sims.length ? S.sims.map((s) => `<div class="item${s.id === S.simId ? ' on' : ''}" data-sim="${esc(s.id)}" style="grid-template-columns:1fr auto;border-radius:10px"><div><div class="nm">${esc(s.title)}</div><div class="it">${esc(modelLabel(s.model))} · ${s.count} сообщ.</div></div><div class="tm">${esc(fmtTime(s.updatedAt))}</div></div>`).join('') : '<p class="muted small">Тестов пока нет.</p>';
+  $$('#simList [data-sim]').forEach((el) => el.onclick = () => openSim(el.dataset.sim));
+  if (S.simId) openSim(S.simId);
+}
+$('#simNew').onclick = async () => {
+  const r = await api('sim', { method: 'POST', body: { title: '' } });
+  S.simId = r.sim.id; loadSims();
+};
+async function openSim(id) {
+  S.simId = id;
+  $$('#simList [data-sim]').forEach((el) => el.classList.toggle('on', el.dataset.sim === id));
+  try { S.sim = (await api('sim', { params: { id } })).sim; renderSim(); } catch (e) { toast(e.message); }
+}
+function renderSim() {
+  const s = S.sim;
+  $('#simChat').innerHTML = `
+    <div class="chat-head">
+      <input class="input" id="sTitle" value="${esc(s.title)}" style="flex:1;min-width:140px">
+      <select class="select" id="sModel" style="width:auto;max-width:260px">${modelOptions(s.model)}</select>
+      <button class="btn sm" id="sUndo" title="Убрать последнее сообщение клиента и ответ">↶ Шаг назад</button>
+      <button class="btn sm" id="sReset">Заново</button>
+      <button class="btn sm warn" id="sDel">Удалить</button>
+    </div>
+    <div class="chat-head" style="padding-top:0;border:0">
+      <input class="input" id="sItem" value="${esc(s.itemTitle || '')}" placeholder="Объявление (необязательно): Репетитор по русскому — ОГЭ" style="flex:1;min-width:200px">
+      <input class="input" id="sNote" value="${esc(s.note || '')}" placeholder="Заметка для ИИ (необязательно)" style="flex:1;min-width:200px">
+    </div>
+    <div class="msgs" id="sMsgs">${s.messages.length ? bubbles(s.messages, simExtra) : '<div class="empty">Напишите первое сообщение от лица клиента.<br><span class="small faint">Например: «Здравствуйте! Сколько стоят занятия? Сын в 9 классе, ОГЭ»</span></div>'}
+      ${S.busy.sim === s.id ? '<div class="b ai"><span class="spin"></span> ИИ печатает…</div>' : ''}</div>
+    <div class="draft">
+      <div class="row"><textarea class="input" id="sText" rows="2" placeholder="Сообщение от клиента… (Enter — отправить, Shift+Enter — новая строка)" style="flex:1"></textarea>
+        <div style="display:grid;gap:6px"><button class="btn primary" id="sSend">Отправить</button><button class="btn sm" id="sOffer" title="Как будто клиент откликнулся на рассылку">+ отклик на рассылку</button></div></div>
+      <p class="small faint" style="margin-top:6px">Тест никуда не отправляется. Ответы ИИ можно оценить — оценки идут в обучение.</p>
+    </div>`;
+  const m = $('#sMsgs'); m.scrollTop = m.scrollHeight;
+  const meta = (patch) => api('sim', { method: 'POST', body: Object.assign({ id: s.id }, patch) }).then((r) => { S.sim = r.sim; });
+  $('#sTitle').onchange = (e) => meta({ title: e.target.value }).then(loadSims);
+  $('#sModel').onchange = (e) => meta({ model: e.target.value });
+  $('#sItem').onchange = (e) => meta({ itemTitle: e.target.value });
+  $('#sNote').onchange = (e) => meta({ note: e.target.value });
+  $('#sReset').onclick = () => meta({ reset: true }).then(renderSim);
+  $('#sUndo').onclick = () => meta({ undo: true }).then(renderSim);
+  $('#sDel').onclick = async () => { if (!confirm('Удалить тест?')) return; await api('sim', { method: 'DELETE', body: { id: s.id } }); S.simId = null; S.sim = null; $('#simChat').innerHTML = '<div class="empty">Тест удалён.</div>'; loadSims(); };
+  $('#sSend').onclick = () => simSend('client');
+  $('#sOffer').onclick = () => simSend('system', 'Покупателя заинтересовало ваше предложение');
+  $('#sText').onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); simSend('client'); } };
+  $$('#sMsgs [data-sfb]').forEach((b) => b.onclick = () => simFeedback(b.dataset.mid, b.dataset.sfb));
+}
+function simExtra(m) {
+  if (m.author !== 'manager') return '';
+  const d = m.draft || {};
+  const rv = m.review ? `<span class="chip ${m.review === 'approve' ? 'green' : m.review === 'edit' ? 'blue' : 'red'}">${m.review === 'approve' ? 'верно' : m.review === 'edit' ? 'исправлено' : 'не отвечать'}</span>` : '';
+  return `<div class="rev">${d.model ? `<span>${esc(modelLabel(d.model))} · ${((d.ms || 0) / 1000).toFixed(1)} с</span>` : ''}${d.needsHuman ? '<span>· нужен человек</span>' : ''}${d.selfCheck && d.selfCheck.ok === false ? '<span>· исправлен самопроверкой</span>' : ''}${rv}
+    ${m.review ? '' : `<button class="btn sm good" data-sfb="approve" data-mid="${esc(m.id)}">✓</button><button class="btn sm" data-sfb="edit" data-mid="${esc(m.id)}">✎</button><button class="btn sm warn" data-sfb="reject" data-mid="${esc(m.id)}">✕</button>`}</div>`;
+}
+async function simSend(as, preset) {
+  const s = S.sim; const text = preset || $('#sText').value.trim();
+  if (!text || S.busy.sim) return;
+  S.busy.sim = s.id;
+  s.messages.push({ id: 'tmp', at: Date.now(), author: as, text }); renderSim();
+  try {
+    const r = await api('sim-message', { method: 'POST', body: { id: s.id, text, as } });
+    await waitJob(r.job);
+  } catch (e) { toast('ИИ: ' + e.message, 6000); }
+  S.busy.sim = null;
+  if (S.simId === s.id) await openSim(s.id);
+  loadSims();
+}
+async function simFeedback(mid, action) {
+  const m = S.sim.messages.find((x) => x.id === mid);
+  let text = '', comment = '';
+  if (action === 'edit') {
+    const r = await promptModal('Как должна была ответить Елена?', 'Исправьте текст. ИИ учтёт правку в следующих ответах.', m.text);
+    if (!r || !r.text) return; text = r.text;
+  }
+  await api('feedback', { method: 'POST', body: { simId: S.sim.id, messageId: mid, action, text, comment } });
+  toast('Сохранено в обучение'); openSim(S.sim.id);
+}
+
+// ── prompt ──
+async function loadPrompt() {
+  try {
+    const r = await api('prompt'); S.prompt = r.prompt; S.defaults = r.defaults;
+    $('#pHist').innerHTML = '<option value="">Прошлые версии…</option>' + r.history.map((k) => `<option value="${esc(k)}">${esc(new Date(k.split(':').slice(-3).join(':')).toLocaleString('ru-RU'))}</option>`).join('');
+    fillPrompt(S.prompt);
+  } catch (e) { toast(e.message); }
+}
+function fillPrompt(p) {
+  $('#pSystem').value = p.system || ''; $('#pKnow').value = p.knowledge || ''; $('#pSlots').value = p.slots || '';
+  $('#pScripts').innerHTML = (p.scripts || []).map(scriptRow).join('');
+}
+function scriptRow(s) {
+  return `<div class="script"><div class="row"><input class="input sTitle" value="${esc(s.title)}" placeholder="Название"><button class="btn sm warn sDel" type="button">Удалить</button></div>
+    <input class="input sWhen" value="${esc(s.when || '')}" placeholder="Когда использовать" style="margin-top:6px">
+    <textarea class="input sText" rows="2" style="margin-top:6px">${esc(s.text)}</textarea></div>`;
+}
+$('#pScripts').addEventListener('click', (e) => { if (e.target.classList.contains('sDel')) e.target.closest('.script').remove(); });
+$('#pAddScript').onclick = () => { $('#pScripts').insertAdjacentHTML('beforeend', scriptRow({ title: '', when: '', text: '' })); };
+$('#pDefaults').onclick = () => { if (confirm('Вернуть исходный сценарий? Текущий останется в «Прошлых версиях» после сохранения.')) fillPrompt(S.defaults); };
+$('#pHist').onchange = async (e) => { if (!e.target.value) return; const r = await api('prompt-version', { params: { key: e.target.value } }); if (r.prompt) { fillPrompt(r.prompt); toast('Версия загружена — нажмите «Сохранить», чтобы вернуть её'); } };
+$('#pSave').onclick = async () => {
+  const scripts = $$('#pScripts .script').map((el) => ({ title: $('.sTitle', el).value, when: $('.sWhen', el).value, text: $('.sText', el).value }));
+  try { await api('prompt', { method: 'POST', body: { system: $('#pSystem').value, knowledge: $('#pKnow').value, slots: $('#pSlots').value, scripts } }); toast('Сохранено. ИИ уже использует новую версию'); loadPrompt(); }
+  catch (e) { toast('Ошибка: ' + e.message); }
+};
+async function suggest(kind) {
+  $('#sugOut').innerHTML = '<p class="muted small" style="margin-top:10px"><span class="spin"></span> ИИ читает ' + (kind === 'rules' ? 'правки' : 'диалоги') + '… это может занять минуту-две</p>';
+  try {
+    const r = await api('suggest', { method: 'POST', body: { kind } });
+    const res = await waitJob(r.job);
+    $('#sugOut').innerHTML = `<div class="out">${esc(res.text)}</div>${kind === 'rules' ? '<button class="btn" id="sugApply" style="margin-top:8px">Добавить эти правила в «Роль и правила»</button>' : '<p class="small muted" style="margin-top:6px">Понравившиеся формулировки перенесите в скрипты и сохраните.</p>'}`;
+    const ap = $('#sugApply'); if (ap) ap.onclick = () => { $('#pSystem').value += '\n\nПравила из правок:\n' + res.text.trim(); toast('Добавлено — не забудьте сохранить'); };
+  } catch (e) { $('#sugOut').innerHTML = `<div class="errbox">${esc(e.message)}</div>`; }
+}
+$('#sugScripts').onclick = () => suggest('scripts');
+$('#sugRules').onclick = () => suggest('rules');
+
+// ── models & settings ──
+async function renderModels() {
+  await refreshCab();
+  const c = S.state.config;
+  $('#mDefault').innerHTML = modelOptions(c.defaultModel);
+  $('#mSelf').checked = c.selfCheck; $('#mAuto').checked = c.autoDraft; $('#mHours').value = c.autoDraftHours;
+  $('#cabList').innerHTML = c.cabinets.map((x) => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><b class="grow">${esc(x.name)}</b><span class="small muted">с ${esc(x.since)} · ${x.chats || 0} диалогов · ${esc(ago(x.lastSyncAt))}</span>${c.cabinets.length > 1 ? `<button class="btn sm warn" data-rmcab="${esc(x.accountId)}">Отключить</button>` : ''}</div>`).join('');
+  $$('[data-rmcab]').forEach((b) => b.onclick = async () => { if (!confirm('Отключить кабинет от ИИ-менеджера?')) return; await api('config', { method: 'POST', body: { removeCabinet: b.dataset.rmcab } }); await loadState(); renderModels(); });
+  try {
+    const accs = (await api('avito-accounts')).accounts.filter((a) => !c.cabinets.some((x) => x.accountId === a.id));
+    $('#cabAdd').innerHTML = '<option value="">Кабинет Авито…</option>' + accs.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+  } catch (e) {}
+  if (!$('#cabSince').value) $('#cabSince').value = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  $('#prType').innerHTML = Object.entries(S.state.providerTypes).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('');
+  if (!$('#prId').value) prefillType();
+  $('#provList').innerHTML = '<div class="prov"><b>Workers AI</b> <span class="chip green">бесплатно, без ключа</span><div class="small muted" style="margin-top:4px">' + S.state.models.filter((m) => m.ref.startsWith('workers:')).map((m) => `${esc(modelLabel(m.ref))} <button class="btn sm" data-test="${esc(m.ref)}">проверить</button>`).join(' · ') + '</div></div>' +
+    S.state.providers.map((p) => `<div class="prov"><div class="row"><b class="grow">${esc(p.label)}</b><span class="chip">${esc((S.state.providerTypes[p.type] || {}).label || p.type)}</span>${p.hasKey ? `<span class="chip green">ключ …${esc(p.keyTail)}</span>` : '<span class="chip red">нет ключа</span>'}<button class="btn sm" data-edit="${esc(p.id)}">Изменить</button><button class="btn sm warn" data-del="${esc(p.id)}">Удалить</button></div>
+      <div class="small muted" style="margin-top:6px">${p.models.map((m) => `${esc(m)} <button class="btn sm" data-test="${esc(p.id + ':' + m)}">проверить</button>`).join(' · ') || 'Модели не указаны'}</div></div>`).join('');
+  $$('#provList [data-test]').forEach((b) => b.onclick = async () => {
+    b.disabled = true; b.textContent = '…';
+    try { const r = await api('provider-test', { method: 'POST', body: { model: b.dataset.test } }); toast(r.ok ? `✓ ${r.text} (${(r.ms / 1000).toFixed(1)} с)` : '✕ ' + r.error, 7000); } catch (e) { toast(e.message); }
+    b.disabled = false; b.textContent = 'проверить';
+  });
+  $$('#provList [data-del]').forEach((b) => b.onclick = async () => { if (!confirm('Удалить подключение и его ключ?')) return; await api('provider', { method: 'DELETE', body: { id: b.dataset.del } }); await loadState(); renderModels(); });
+  $$('#provList [data-edit]').forEach((b) => b.onclick = () => {
+    const p = S.state.providers.find((x) => x.id === b.dataset.edit);
+    $('#prId').value = p.id; $('#prType').value = p.type; $('#prLabel').value = p.label; $('#prBase').value = p.baseUrl; $('#prKey').value = ''; $('#prKey').placeholder = p.hasKey ? 'оставьте пустым, чтобы не менять' : 'ключ';
+    $('#prModels').value = p.models.join(', '); $('#prCancel').classList.remove('hide'); $('#prSave').textContent = 'Сохранить изменения';
+  });
+}
+const MODEL_HINTS = {
+  openai: 'gpt-5-mini, gpt-4.1-mini', anthropic: 'claude-sonnet-5-5, claude-haiku-5-5', gemini: 'gemini-2.5-flash, gemini-2.5-pro',
+  openrouter: 'anthropic/claude-sonnet-4.5, openai/gpt-4.1-mini', deepseek: 'deepseek-chat', yandex: 'gpt://<folder_id>/yandexgpt/latest', custom: '',
+};
+function prefillType() {
+  const t = $('#prType').value; const v = S.state.providerTypes[t] || {};
+  $('#prBase').value = v.baseUrl || ''; $('#prLabel').value = v.label || ''; $('#prModels').value = MODEL_HINTS[t] || '';
+}
+$('#prType').onchange = () => { if (!$('#prId').value) prefillType(); };
+$('#prCancel').onclick = () => { $('#prId').value = ''; $('#prKey').value = ''; $('#prKey').placeholder = 'sk-…'; $('#prCancel').classList.add('hide'); $('#prSave').textContent = 'Сохранить подключение'; prefillType(); };
+$('#prSave').onclick = async () => {
+  try {
+    await api('provider', { method: 'POST', body: { id: $('#prId').value || undefined, type: $('#prType').value, label: $('#prLabel').value, baseUrl: $('#prBase').value, apiKey: $('#prKey').value, models: $('#prModels').value } });
+    $('#prCancel').click(); toast('Подключение сохранено. Нажмите «проверить» у модели'); await loadState(); renderModels();
+  } catch (e) { toast('Ошибка: ' + e.message); }
+};
+$('#mSave').onclick = async () => {
+  await api('config', { method: 'POST', body: { defaultModel: $('#mDefault').value, selfCheck: $('#mSelf').checked, autoDraft: $('#mAuto').checked, autoDraftHours: Number($('#mHours').value) } });
+  toast('Сохранено'); await loadState();
+};
+$('#cabAddBtn').onclick = async () => {
+  const id = $('#cabAdd').value; if (!id) return;
+  await api('config', { method: 'POST', body: { addCabinet: { accountId: id, since: $('#cabSince').value } } });
+  toast('Кабинет подключён — выберите его вверху, история загрузится'); await loadState(); renderModels();
+};
+
+// ── learning ──
+async function loadLearn() {
+  let fb = [];
+  try { fb = (await api('feedback')).feedback; } catch (e) { return toast(e.message); }
+  const n = (a) => fb.filter((f) => f.action === a).length;
+  $('#lStat').innerHTML = `<div><b>${fb.length}</b><span class="small muted">оценок</span></div><div><b>${n('approve')}</b><span class="small muted">верно как есть</span></div><div><b>${n('edit')}</b><span class="small muted">исправлено</span></div><div><b>${n('reject')}</b><span class="small muted">не отвечать</span></div><div><b>${fb.length ? Math.round(n('approve') / fb.length * 100) : 0}%</b><span class="small muted">точность</span></div>`;
+  const byModel = {};
+  fb.forEach((f) => { const k = f.model || '—'; byModel[k] = byModel[k] || { a: 0, t: 0 }; byModel[k].t += 1; if (f.action === 'approve') byModel[k].a += 1; });
+  $('#lModels').innerHTML = Object.keys(byModel).length ? 'По моделям: ' + Object.entries(byModel).map(([k, v]) => `${esc(modelLabel(k))} — ${v.a}/${v.t} верно`).join(' · ') : '';
+  $('#lList').innerHTML = fb.length ? fb.map((f) => `<div class="fb">
+    <div class="row"><span class="chip ${f.action === 'approve' ? 'green' : f.action === 'edit' ? 'blue' : 'red'}">${f.action === 'approve' ? 'верно' : f.action === 'edit' ? 'исправлено' : 'не отвечать'}</span><span class="small muted">${esc(new Date(f.at).toLocaleString('ru-RU'))} · ${f.source === 'sim' ? 'тест-клиент' : 'диалог'} · ${esc(modelLabel(f.model))}</span><span class="grow"></span><button class="btn sm warn" data-fbdel="${esc(f.key)}">Удалить</button></div>
+    ${f.lastClient ? `<div class="small"><span class="muted">Клиент:</span> ${esc(f.lastClient)}</div>` : ''}
+    <div class="pair"><div><span class="small muted">ИИ:</span>\n${esc(f.aiText)}</div><div><span class="small muted">Как надо:</span>\n${esc(f.action === 'reject' ? '(не отвечать)' : f.finalText)}</div></div>
+    ${f.comment ? `<div class="small"><span class="muted">Почему:</span> ${esc(f.comment)}</div>` : ''}</div>`).join('') : '<p class="muted">Оценок пока нет. Откройте диалог и оцените черновик ИИ.</p>';
+  $$('[data-fbdel]').forEach((b) => b.onclick = async () => { await api('feedback', { method: 'DELETE', body: { key: b.dataset.fbdel } }); loadLearn(); });
+}
+
+boot();
+</script>
+</body>
+</html>
