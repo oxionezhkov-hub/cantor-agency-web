@@ -12321,6 +12321,9 @@ async function handleAiSalesApi(request, env, url, ctx) {
   if (action === 'chat' && isGet) {
     const rec = await kv.get(`aisales:chat:${accountId}:${q('chatId')}`, 'json');
     if (!rec) return json({ error: 'not_found' }, 404);
+    // Город, цена, ссылка приходят со списком чатов и могут быть новее, чем в записи чата.
+    const meta = (await aisIndex(env, accountId)).chats[q('chatId')] || {};
+    ['itemCity', 'itemPrice', 'itemUrl', 'itemTitle', 'name', 'avatar'].forEach((k) => { if (meta[k] && !rec[k]) rec[k] = meta[k]; });
     return json({ chat: rec });
   }
 

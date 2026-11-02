@@ -52,7 +52,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
 body{font-family:var(--font);font-size:15px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
@@ -176,6 +176,42 @@ body.topless main{padding-top:20px}
 .item .bd{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
 .item .bd:empty{display:none}
 .udot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+/* выпадающие списки в стиле страницы (вместо системных) */
+.fsel{display:block;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.fsel:hover{border-color:var(--faint)}
+.pop.menu{padding:6px}
+.pop.menu .mi{white-space:normal}
+/* этап — заметная плашка с текстом */
+.stage-pill{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;max-width:240px}
+.stage-pill span{overflow:hidden;text-overflow:ellipsis}
+.stage-pill .ic{width:15px;height:15px;flex:none}
+.stage-pill:hover{border-color:var(--faint);color:var(--ink)}
+.stage-pill.ai{border-style:dashed}
+.stage-pill.green{background:var(--green-bg);border-color:transparent;color:var(--green)}
+.stage-pill.blue{background:var(--blue-bg);border-color:transparent;color:var(--blue)}
+.stage-pill.red{background:var(--red-bg);border-color:transparent;color:var(--red)}
+.stage-pill.amber{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
+/* рассылка Авито («предложение») — зелёным, как в самом Авито */
+.b.system.offer{background:var(--green-bg);color:var(--green)}
+.b.system.offer a{color:var(--green)}
+/* настройки */
+.settings{display:grid;gap:12px}
+.srow{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line-2)}
+.srow:last-child{border-bottom:0}
+.srow .sl{flex:1;min-width:0;display:grid;gap:2px}
+.srow .sl b,.prov-h .sl b{color:var(--ink);font-weight:600;font-size:14.5px}
+.srow .sl span,.prov-h .sl span{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.srow .sc{flex:none;display:flex;align-items:center;gap:8px}
+.srow .sc > .select{min-width:280px}
+.switch{position:relative;width:44px;height:26px;display:inline-block;cursor:pointer;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch i{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.switch i::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.switch input:checked + i{background:var(--accent)}
+.switch input:checked + i::after{transform:translateX(18px)}
+.switch input:focus-visible + i{outline:2px solid var(--accent);outline-offset:2px}
+.prov-h{display:flex;align-items:center;gap:8px}
+.prov-h .sl{flex:1;min-width:0;display:grid;gap:2px}
 .item .top-row{display:flex;align-items:baseline;gap:8px}
 .item .top-row .nm{flex:1;min-width:0}
 .item .top-row .tm{flex:none}
@@ -272,7 +308,7 @@ body.topless main{padding-top:20px}
 .sec-head h2{flex:1;margin:0}
 .script{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--surface-2);display:grid;gap:8px}
 .script .row .input{flex:1;font-weight:600}
-.prov{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:var(--surface-2)}
+.prov{border:1px solid var(--line-2);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:var(--surface-2)}
 .prov .models{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mtag{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 4px 0 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:500}
 .cab{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-2)}
@@ -330,10 +366,15 @@ body.topless main{padding-top:20px}
   .dlg:not(.open) .chat{display:none}
   .dlg .chat{height:calc(100vh - var(--top) - 24px)}
   .back{display:grid}
-  .chat-head{gap:8px}
-  .chat-head .who{flex-basis:calc(100% - 110px)}
-  .chat-head .select{flex:1 1 40%;max-width:none}
+  .chat-head{gap:6px;flex-wrap:nowrap;padding:10px}
+  .chat-head .who{flex:1;min-width:0}
+  .chat-head > .avatar{display:none}
+  .chat-head .who .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stage-pill{max-width:42vw;height:32px;padding:0 10px;font-size:12.5px}
   .grid2,.grid2.even{grid-template-columns:1fr}
+  .srow{flex-wrap:wrap}
+  .srow .sc{width:100%}
+  .srow .sc > .select{min-width:0;flex:1}
   .b{max-width:88%}
   .fb .pair{grid-template-columns:1fr}
   .safe{height:34px;font-size:12px}
@@ -400,7 +441,7 @@ body.topless main{padding-top:20px}
       </nav>
       <div class="top-right">
         <select id="cabSel" class="select cab-sel" title="Кабинет Авито"></select>
-        <span class="sync" title="Когда последний раз читали чаты в Авито"><i class="conn-dot" id="connDot"></i><span id="syncInfo"></span></span>
+        <span class="sync" title="Когда сервис последний раз забирал новые сообщения из Авито (сам — каждые 10 минут и каждые 3 минуты, пока страница открыта)"><i class="conn-dot" id="connDot"></i><span id="syncInfo"></span></span>
         <button class="icon-btn" id="syncBtn" title="Обновить из Авито" aria-label="Обновить из Авито"><svg class="ic"><use href="#i-refresh"/></svg></button>
         <button class="icon-btn" id="themeBtn" title="Тема" aria-label="Тема"><svg class="ic"><use href="#i-moon"/></svg></button>
         <button class="icon-btn" id="topHide" title="Скрыть верхнюю панель" aria-label="Скрыть верхнюю панель"><svg class="ic" style="transform:rotate(180deg)"><use href="#i-chev"/></svg></button>
@@ -469,34 +510,24 @@ body.topless main{padding-top:20px}
 
     <!-- Модели -->
     <section id="t-models" class="hide">
-      <div class="grid2 even">
+      <div class="settings">
         <div class="card pane">
-          <h2>Как работает ИИ</h2>
-          <label class="f">Модель по умолчанию</label>
-          <select id="mDefault" class="select"></select>
-          <label class="chk"><input type="checkbox" id="mSelf"><span>Самопроверка — вторым шагом ИИ сверяет черновик с историей и базой знаний и исправляет его</span></label>
-          <label class="chk"><input type="checkbox" id="mAuto"><span>Сам писать черновики к новым сообщениям (каждые 10 минут)</span></label>
-          <div class="row" style="margin-top:10px;padding-left:26px"><span class="small muted">к сообщениям не старше</span><input id="mHours" class="input" type="number" min="1" style="width:80px"><span class="small muted">часов</span></div>
-          <button class="btn primary" id="mSave" style="margin-top:16px"><svg class="ic"><use href="#i-save"/></svg>Сохранить</button>
-
-          <h3>Кабинеты Авито</h3>
-          <div id="cabList"></div>
-          <div class="row" style="margin-top:10px"><select id="cabAdd" class="select" style="flex:1;min-width:160px"></select><input id="cabSince" class="input" type="date" style="width:160px"><button class="btn" id="cabAddBtn"><svg class="ic"><use href="#i-plus"/></svg>Подключить</button></div>
-          <p class="lead" style="margin-top:8px">Подключённый кабинет только читается: сообщения в Авито сервис не отправляет.</p>
+          <div class="sec-head"><h2>Как отвечает ИИ</h2><button class="btn primary sm" id="mSave"><svg class="ic ic-sm"><use href="#i-save"/></svg>Сохранить</button></div>
+          <div class="srow"><div class="sl"><b>Модель по умолчанию</b><span>Для всех диалогов, где не выбрана своя</span></div><div class="sc"><select id="mDefault" class="select"></select></div></div>
+          <div class="srow"><div class="sl"><b>Самопроверка</b><span>Вторым шагом ИИ сверяет черновик с историей и базой знаний и исправляет его</span></div><div class="sc"><label class="switch"><input type="checkbox" id="mSelf"><i></i></label></div></div>
+          <div class="srow"><div class="sl"><b>Черновики сами</b><span>Каждые 10 минут — к новым сообщениям и напоминания молчащим клиентам</span></div><div class="sc"><label class="switch"><input type="checkbox" id="mAuto"><i></i></label></div></div>
+          <div class="srow"><div class="sl"><b>Не старше</b><span>К сообщениям старше этого черновики сами не пишутся</span></div><div class="sc row" style="flex-wrap:nowrap"><input id="mHours" class="input" type="number" min="1" style="width:90px"><span class="small muted">часов</span></div></div>
         </div>
         <div class="card pane">
-          <h2>Подключения моделей</h2>
-          <p class="lead">Бесплатные модели Workers AI работают без ключа. Чтобы попробовать другие, добавьте ключ: он хранится на сервере и в браузер больше не возвращается.</p>
+          <div class="sec-head"><h2>Подключения моделей</h2><button class="btn sm" id="prAdd"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Подключить модель</button></div>
+          <p class="lead">Бесплатные модели Workers AI работают без ключа. Ключ других сервисов хранится на сервере и в браузер больше не возвращается. Галочка у модели — проверить, что она отвечает.</p>
           <div id="provList"></div>
-          <div class="prov" id="provForm" style="background:var(--surface)">
-            <div class="row" style="margin-bottom:2px"><b style="color:var(--ink)" id="prFormTitle">Новое подключение</b></div>
-            <div class="row" style="flex-wrap:nowrap"><select id="prType" class="select" style="flex:1"></select><input id="prLabel" class="input" placeholder="Название" style="flex:1"></div>
-            <label class="f">Адрес API</label><input id="prBase" class="input">
-            <label class="f">Ключ API</label><input id="prKey" class="input" type="password" placeholder="sk-…" autocomplete="off">
-            <label class="f">Модели (через запятую)</label><input id="prModels" class="input">
-            <input type="hidden" id="prId">
-            <div class="row" style="margin-top:14px"><button class="btn primary" id="prSave"><svg class="ic"><use href="#i-key"/></svg>Сохранить подключение</button><button class="btn quiet hide" id="prCancel">Отмена</button></div>
-          </div>
+        </div>
+        <div class="card pane">
+          <div class="sec-head"><h2>Кабинеты Авито</h2></div>
+          <div id="cabList"></div>
+          <div class="srow" style="border-bottom:0"><div class="sl"><b>Подключить ещё</b><span>Кабинет только читается — в Авито ничего не отправляется</span></div>
+            <div class="sc row" style="flex-wrap:nowrap"><select id="cabAdd" class="select" style="min-width:180px"></select><input id="cabSince" class="input" type="date" style="width:150px" title="С какой даты загрузить историю"><button class="btn" id="cabAddBtn"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Подключить</button></div></div>
         </div>
       </div>
     </section>
@@ -589,7 +620,8 @@ const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const I = (n, c) => `<svg class="ic${c ? ' ' + c : ''}"><use href="#i-${n}"/></svg>`;
 // Длинные ссылки (системные сообщения Авито) — коротко: «avito.ru/…», полный адрес в title.
-const linkify = (t) => esc(t).replace(/(https?:\/\/[^\s<]+)/g, (u) => {
+// Авито иногда склеивает две ссылки подряд («https://www.avito.ruhttps://…») — режем на каждом «http».
+const linkify = (t) => esc(String(t || '').replace(/https?:\/\/[^\/\s]+(?=https?:\/\/)/g, '')).replace(/https?:\/\/(?:(?!https?:\/\/)[^\s<])+/g, (u) => {
   let label = u; try { const x = new URL(u.replace(/&amp;/g, '&')); label = x.hostname.replace(/^www\./, '') + (x.pathname.length > 1 ? '/…' : ''); } catch (e) {}
   return `<a href="${u}" target="_blank" rel="noopener" title="${u}">${label}</a>`;
 });
@@ -620,6 +652,7 @@ function modelOptions(sel, withDefault) {
     S.state.models.map((m) => `<option value="${esc(m.ref)}"${m.ref === sel ? ' selected' : ''}>${esc(m.label)}</option>`).join('');
 }
 function stageOptions(sel) { return '<option value="">Этап: авто</option>' + Object.entries(S.state.stages).map(([k, v]) => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join(''); }
+const STAGE_CLS = { booked: 'green', messenger: 'green', lost: 'red', spam: 'red', offer: 'blue', cold: 'amber' };
 function stageChip(k) {
   if (!k) return '';
   const cls = { booked: 'green', messenger: 'green', lost: 'red', spam: 'red', offer: 'blue', cold: 'amber' }[k] || '';
@@ -654,7 +687,7 @@ async function loadState() {
   renderSyncInfo();
 }
 function cab() { return S.state.config.cabinets.find((c) => c.accountId === S.acc) || {}; }
-function renderSyncInfo() { const c = cab(); $('#syncInfo').textContent = 'Авито: ' + ago(c.lastSyncAt); $('#connDot').classList.toggle('busy', Boolean(S.busy.sync)); }
+function renderSyncInfo() { const c = cab(); $('#syncInfo').textContent = c.lastSyncAt ? 'Чаты обновлены ' + ago(c.lastSyncAt) : 'Чаты ещё не загружены'; $('#connDot').classList.toggle('busy', Boolean(S.busy.sync)); }
 $('#cabSel').addEventListener('change', async (e) => { S.acc = e.target.value; store.set('aiSales.acc', S.acc); S.chatId = null; S.simId = null; await loadChats(); firstImport(); setTab(S.tab); });
 
 $('#themeBtn').addEventListener('click', () => {
@@ -781,7 +814,9 @@ function closePop() { if (popEl) { popEl.remove(); popEl = null; } }
 function openPop(anchor, html, bind) {
   closePop();
   popEl = document.createElement('div'); popEl.className = 'pop'; popEl.innerHTML = html; document.body.appendChild(popEl);
-  const r = anchor.getBoundingClientRect(); const w = popEl.offsetWidth;
+  const r = anchor.getBoundingClientRect();
+  if (anchor.classList.contains('fsel')) { popEl.classList.add('menu'); popEl.style.minWidth = r.width + 'px'; }
+  const w = popEl.offsetWidth;
   popEl.style.top = Math.min(r.bottom + 6, innerHeight - popEl.offsetHeight - 8) + 'px';
   popEl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
   popEl.dataset.for = anchor.id || '';
@@ -795,6 +830,32 @@ function menuPop(anchor, items, cur, onPick) {
     $$('.mi', p).forEach((b) => b.onclick = () => { closePop(); onPick(b.dataset.v); });
   });
 }
+
+// Системные выпадающие списки заменяем кнопкой с меню в стиле страницы. Сам <select> остаётся
+// (скрытым) — значение и событие change идут через него, так что остальной код не меняется.
+let fselN = 0;
+function enhanceSelect(sel) {
+  if (sel._fancy || sel.multiple) return;
+  sel._fancy = true;
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.id = 'fsel' + (++fselN); btn.dataset.pop = '1';
+  btn.className = sel.className.replace(/\bhide\b/, '') + ' fsel';
+  btn.style.cssText = sel.style.cssText; if (sel.title) btn.title = sel.title;
+  sel.style.display = 'none'; sel.after(btn);
+  const update = () => {
+    const o = sel.options[sel.selectedIndex];
+    btn.textContent = o ? o.textContent : '—';
+    btn.classList.toggle('hide', sel.classList.contains('hide'));
+  };
+  sel._fu = update;
+  btn.onclick = () => menuPop(btn, Array.from(sel.options).map((o) => [o.value, o.textContent]), sel.value, (v) => { sel.value = v; update(); sel.dispatchEvent(new Event('change')); });
+  new MutationObserver(update).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  update();
+}
+function enhanceAll(root) { $$('select.select', root || document).forEach(enhanceSelect); }
+new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) { if (n.matches && n.matches('select.select')) enhanceSelect(n); else enhanceAll(n); } })))
+  .observe(document.body, { childList: true, subtree: true });
+enhanceAll();
 
 // ── один диалог ──
 async function openChat(id, refresh, mode) {
@@ -810,7 +871,7 @@ function bubbles(messages, extra) {
   messages.forEach((m) => {
     const day = new Date(m.at).toDateString();
     if (day !== lastDay) { out += `<div class="day">${esc(fmtDay(m.at))}</div>`; lastDay = day; }
-    const cls = m.author === 'manager' ? 'manager' : m.author === 'system' ? 'system' : 'client';
+    const cls = m.author === 'manager' ? 'manager' : m.author === 'system' ? (/предложени/i.test(m.text) ? 'system offer' : 'system') : 'client';
     out += `<div class="b ${cls}">${linkify(msgText(m))}<span class="tm">${esc(new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))}</span>${extra ? extra(m) : ''}</div>`;
   });
   return out;
@@ -839,7 +900,7 @@ function renderChat(mode) {
       ${avatar(c, 'lg')}
       <div class="who" style="min-width:0;flex:1"><div class="t">${esc(c.name || 'Без имени')}<button class="icon-btn${c.note ? ' on' : ''}" id="infoBtn" data-pop title="Объявление, город, заметка" aria-label="Информация о диалоге">${I('info')}</button></div>
 </div>
-      <button class="icon-btn hbtn${stage ? ' set' : ''}" id="stageBtn" data-pop title="Этап: ${esc(S.state.stages[stage || aiStage] || 'авто')}" aria-label="Этап">${I('flag')}</button>
+      <button class="stage-pill ${STAGE_CLS[stage || aiStage] || ''}${!stage && aiStage ? ' ai' : ''}" id="stageBtn" data-pop title="${stage ? 'Этап выбран вручную' : aiStage ? 'Этап определил ИИ — нажмите, чтобы выбрать' : 'Выбрать этап'}">${I('flag')}<span>${esc(S.state.stages[stage || aiStage] || 'Этап')}</span></button>
       <button class="icon-btn hbtn${c.model ? ' set' : ''}" id="modelBtn" data-pop title="Модель: ${esc(c.model ? modelLabel(c.model) : 'по умолчанию — ' + modelLabel(S.state.config.defaultModel))}" aria-label="Модель">${I('bot')}</button>
     </div>
     <div class="msgs" id="msgs">${bubbles(c.messages || [])}${showDraftBubbles ? ds.parts.map((p, i) => `<div class="b ai">${i === 0 ? `<span class="lbl">${esc(KIND[ds.d.kind] || 'Черновик')} · ИИ</span>` : ''}${esc(p)}${i === ds.parts.length - 1 ? '<span class="tm">черновик · не отправлен</span>' : ''}</div>`).join('') : ''}</div>
@@ -896,7 +957,8 @@ function thinkPanel(d) {
     ${(S.chat.drafts || []).length > 1 ? `<div><b>Прошлые варианты:</b></div><ul>${S.chat.drafts.slice(1, 6).map((x) => `<li><span class="faint">${esc(modelLabel(x.model))}:</span> ${esc(x.reply || '(не писать)')}</li>`).join('')}</ul>` : ''}
   </div>`;
 }
-function infoHtml(c) {
+function infoHtml(c0) {
+  const c = Object.assign({}, S.chats.find((x) => x.chatId === c0.chatId) || {}, Object.fromEntries(Object.entries(c0).filter(([, v]) => v != null && v !== '')));
   const st = c.stage || (c.draft && c.draft.stage) || '';
   return `<div class="info">
     <div><span class="k">Объявление</span>${c.itemUrl ? `<a href="${esc(c.itemUrl)}" target="_blank" rel="noopener">${esc(c.itemTitle || 'открыть')}</a>` : esc(c.itemTitle || '—')}${c.itemPrice ? ` · ${esc(c.itemPrice)}` : ''}</div>
@@ -1137,54 +1199,64 @@ async function renderModels() {
   const c = S.state.config;
   $('#mDefault').innerHTML = modelOptions(c.defaultModel);
   $('#mSelf').checked = c.selfCheck; $('#mAuto').checked = c.autoDraft; $('#mHours').value = c.autoDraftHours;
-  $('#cabList').innerHTML = c.cabinets.map((x) => `<div class="cab">${avatar({ name: x.name })}<div style="flex:1;min-width:0"><div style="font-weight:600;color:var(--ink)">${esc(x.name)}</div><div class="small muted">с ${esc(new Date(x.since).toLocaleDateString('ru-RU'))} · ${x.chats || 0} диалогов · обновлено ${esc(ago(x.lastSyncAt))}</div></div>${c.cabinets.length > 1 ? `<button class="btn sm warn" data-rmcab="${esc(x.accountId)}">Отключить</button>` : ''}</div>`).join('');
+  $('#cabList').innerHTML = c.cabinets.map((x) => `<div class="srow">${avatar({ name: x.name })}<div class="sl"><b>${esc(x.name)}</b><span>история с ${esc(new Date(x.since).toLocaleDateString('ru-RU'))} · ${x.chats || 0} диалогов · чаты обновлены ${esc(ago(x.lastSyncAt))}</span></div><div class="sc">${c.cabinets.length > 1 ? `<button class="btn sm warn" data-rmcab="${esc(x.accountId)}">Отключить</button>` : ''}</div></div>`).join('');
   $$('[data-rmcab]').forEach((b) => b.onclick = async () => { if (!confirm('Отключить кабинет от ИИ-менеджера?')) return; await api('config', { method: 'POST', body: { removeCabinet: b.dataset.rmcab } }); await loadState(); renderModels(); });
   try {
     const accs = (await api('avito-accounts')).accounts.filter((a) => !c.cabinets.some((x) => x.accountId === a.id));
     $('#cabAdd').innerHTML = '<option value="">Кабинет Авито…</option>' + accs.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   } catch (e) {}
   if (!$('#cabSince').value) $('#cabSince').value = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-  $('#prType').innerHTML = Object.entries(S.state.providerTypes).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('');
-  if (!$('#prId').value) prefillType();
-  const testBtn = (ref, label) => `<span class="mtag">${esc(label)}<button class="icon-btn sm" data-test="${esc(ref)}" title="Проверить модель" aria-label="Проверить">${I('check', 'ic-sm')}</button></span>`;
-  $('#provList').innerHTML = `<div class="prov"><div class="row"><b class="grow" style="color:var(--ink)">Workers AI</b><span class="chip green">бесплатно, без ключа</span></div><div class="models">${S.state.models.filter((m) => m.ref.startsWith('workers:')).map((m) => testBtn(m.ref, modelLabel(m.ref))).join('')}</div></div>` +
-    S.state.providers.map((p) => `<div class="prov"><div class="row"><b class="grow" style="color:var(--ink)">${esc(p.label)}</b>${p.hasKey ? `<span class="chip green">${I('key', 'ic-sm')}…${esc(p.keyTail)}</span>` : '<span class="chip red">нет ключа</span>'}<button class="icon-btn sm" data-edit="${esc(p.id)}" title="Изменить" aria-label="Изменить">${I('edit', 'ic-sm')}</button><button class="icon-btn sm" data-del="${esc(p.id)}" title="Удалить" aria-label="Удалить" style="color:var(--red)">${I('trash', 'ic-sm')}</button></div>
-      <div class="small muted" style="margin-top:2px">${esc((S.state.providerTypes[p.type] || {}).label || p.type)} · ${esc(p.baseUrl)}</div>
-      <div class="models">${p.models.map((m) => testBtn(p.id + ':' + m, m)).join('') || '<span class="small muted">Модели не указаны</span>'}</div></div>`).join('');
+  const testBtn = (ref, label) => `<span class="mtag">${esc(label)}<button class="icon-btn sm" data-test="${esc(ref)}" title="Проверить, что модель отвечает" aria-label="Проверить">${I('check', 'ic-sm')}</button></span>`;
+  const prov = (title, sub, chip, models, actions) => `<div class="prov"><div class="prov-h"><div class="sl"><b>${title}</b><span>${sub}</span></div>${chip}${actions || ''}</div><div class="models">${models}</div></div>`;
+  $('#provList').innerHTML = prov('Workers AI', 'Cloudflare · общий бесплатный лимит на день', '<span class="chip green">без ключа</span>', S.state.models.filter((m) => m.ref.startsWith('workers:')).map((m) => testBtn(m.ref, modelLabel(m.ref))).join('')) +
+    S.state.providers.map((p) => prov(esc(p.label), `${esc((S.state.providerTypes[p.type] || {}).label || p.type)} · ${esc(p.baseUrl)}`,
+      p.hasKey ? `<span class="chip green">${I('key', 'ic-sm')}…${esc(p.keyTail)}</span>` : '<span class="chip red">нет ключа</span>',
+      p.models.map((m) => testBtn(p.id + ':' + m, m)).join('') || '<span class="small muted">Модели не указаны</span>',
+      `<button class="icon-btn sm" data-edit="${esc(p.id)}" title="Изменить" aria-label="Изменить">${I('edit', 'ic-sm')}</button><button class="icon-btn sm" data-del="${esc(p.id)}" title="Удалить" aria-label="Удалить" style="color:var(--red)">${I('trash', 'ic-sm')}</button>`)).join('');
   $$('#provList [data-test]').forEach((b) => b.onclick = async () => {
     b.disabled = true; b.innerHTML = '<span class="spin"></span>';
-    try { const r = await api('provider-test', { method: 'POST', body: { model: b.dataset.test } }); toast(r.ok ? `✓ ${r.text} (${(r.ms / 1000).toFixed(1)} с)` : '✕ ' + r.error, 7000); } catch (e) { toast(e.message); }
+    try { const r = await api('provider-test', { method: 'POST', body: { model: b.dataset.test } }); toast(r.ok ? `Отвечает: ${r.text} (${(r.ms / 1000).toFixed(1)} с)` : 'Ошибка: ' + r.error, 7000); } catch (e) { toast(e.message); }
     b.disabled = false; b.innerHTML = I('check', 'ic-sm');
   });
   $$('#provList [data-del]').forEach((b) => b.onclick = async () => { if (!confirm('Удалить подключение и его ключ?')) return; await api('provider', { method: 'DELETE', body: { id: b.dataset.del } }); await loadState(); renderModels(); });
-  $$('#provList [data-edit]').forEach((b) => b.onclick = () => {
-    const p = S.state.providers.find((x) => x.id === b.dataset.edit);
-    $('#prId').value = p.id; $('#prType').value = p.type; $('#prLabel').value = p.label; $('#prBase').value = p.baseUrl; $('#prKey').value = ''; $('#prKey').placeholder = p.hasKey ? 'оставьте пустым, чтобы не менять' : 'ключ';
-    $('#prModels').value = p.models.join(', '); $('#prCancel').classList.remove('hide'); $('#prFormTitle').textContent = 'Изменить: ' + p.label; $('#prForm' + 'Title').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  $$('#provList [data-edit]').forEach((b) => b.onclick = () => providerModal(S.state.providers.find((x) => x.id === b.dataset.edit)));
 }
 const MODEL_HINTS = {
   openai: 'gpt-5-mini, gpt-4.1-mini', anthropic: 'claude-sonnet-5-5, claude-haiku-5-5', gemini: 'gemini-2.5-flash, gemini-2.5-pro',
-  openrouter: 'anthropic/claude-sonnet-4.5, openai/gpt-4.1-mini', deepseek: 'deepseek-chat', yandex: 'gpt://<folder_id>/yandexgpt/latest', custom: '',
+  openrouter: 'anthropic/claude-sonnet-5.5, anthropic/claude-haiku-5.5, openai/gpt-5-mini, deepseek/deepseek-chat', deepseek: 'deepseek-chat', yandex: 'gpt://<folder_id>/yandexgpt/latest', custom: '',
 };
-function prefillType() {
-  const t = $('#prType').value; const v = S.state.providerTypes[t] || {};
-  $('#prBase').value = v.baseUrl || ''; $('#prLabel').value = v.label || ''; $('#prModels').value = MODEL_HINTS[t] || '';
+// Подключение модели — в окне, чтобы форма не висела на странице. autocomplete=off/new-password:
+// иначе браузер подставляет в поле ключа сохранённый пароль дашборда.
+function providerModal(p) {
+  const types = S.state.providerTypes;
+  openModal(`<h2>${p ? 'Изменить подключение' : 'Подключить модель'}</h2>
+    <form id="prForm" autocomplete="off">
+      <label class="f">Сервис</label><select id="prType" class="select">${Object.entries(types).map(([k, v]) => `<option value="${k}"${p && p.type === k ? ' selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+      <label class="f">Название</label><input id="prLabel" class="input" autocomplete="off">
+      <label class="f">Адрес API</label><input id="prBase" class="input" autocomplete="off">
+      <label class="f">Ключ API</label><input id="prKey" class="input" type="password" autocomplete="new-password" name="provider-api-key" placeholder="${p && p.hasKey ? 'оставьте пустым, чтобы не менять ключ …' + esc(p.keyTail) : 'вставьте ключ'}">
+      <label class="f">Модели через запятую</label><input id="prModels" class="input" autocomplete="off">
+      <div class="row" style="margin-top:16px;justify-content:flex-end"><button type="button" class="btn quiet" id="prCancel">Отмена</button><button type="submit" class="btn primary">${I('key', 'ic-sm')}Сохранить</button></div>
+    </form>`, true);
+  const fill = () => { const v = types[$('#prType').value] || {}; $('#prBase').value = v.baseUrl || ''; $('#prLabel').value = v.label || ''; $('#prModels').value = MODEL_HINTS[$('#prType').value] || ''; };
+  if (p) { $('#prLabel').value = p.label; $('#prBase').value = p.baseUrl; $('#prModels').value = p.models.join(', '); } else fill();
+  $('#prType').onchange = () => { if (!p) fill(); };
+  $('#prCancel').onclick = closeModal;
+  $('#prForm').onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api('provider', { method: 'POST', body: { id: p ? p.id : undefined, type: $('#prType').value, label: $('#prLabel').value, baseUrl: $('#prBase').value, apiKey: $('#prKey').value, models: $('#prModels').value } });
+      closeModal(); toast('Подключение сохранено — нажмите галочку у модели, чтобы проверить'); await loadState(); renderModels();
+    } catch (err) { toast('Ошибка: ' + err.message); }
+  };
 }
-$('#prType').onchange = () => { if (!$('#prId').value) prefillType(); };
-$('#prCancel').onclick = () => { $('#prId').value = ''; $('#prKey').value = ''; $('#prKey').placeholder = 'sk-…'; $('#prCancel').classList.add('hide'); $('#prFormTitle').textContent = 'Новое подключение'; prefillType(); };
-$('#prSave').onclick = async () => {
-  try {
-    await api('provider', { method: 'POST', body: { id: $('#prId').value || undefined, type: $('#prType').value, label: $('#prLabel').value, baseUrl: $('#prBase').value, apiKey: $('#prKey').value, models: $('#prModels').value } });
-    $('#prCancel').click(); toast('Подключение сохранено. Нажмите «проверить» у модели'); await loadState(); renderModels();
-  } catch (e) { toast('Ошибка: ' + e.message); }
-};
+$('#prAdd').onclick = () => providerModal(null);
 $('#mSave').onclick = async () => {
   await api('config', { method: 'POST', body: { defaultModel: $('#mDefault').value, selfCheck: $('#mSelf').checked, autoDraft: $('#mAuto').checked, autoDraftHours: Number($('#mHours').value) } });
   toast('Сохранено'); await loadState();
 };
 $('#cabAddBtn').onclick = async () => {
-  const id = $('#cabAdd').value; if (!id) return;
+  const id = $('#cabAdd').value; if (!id) return toast('Выберите кабинет');
   await api('config', { method: 'POST', body: { addCabinet: { accountId: id, since: $('#cabSince').value } } });
   toast('Кабинет подключён — выберите его вверху, история загрузится'); await loadState(); renderModels();
 };
