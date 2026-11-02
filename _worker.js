@@ -2939,6 +2939,8 @@ async function handleDashboardApi(request, env, url, ctx) {
     ]);
     await Promise.all([...analyticsList.keys, ...ratingsList.keys, ...dailyMetricsList.keys].map((k) => kv.delete(k.name)));
     await atTouch(kv, ['#projects']);
+    const heal = botHealDeadLinks(env).catch((err) => console.error('heal links failed', err && err.stack));
+    if (ctx && ctx.waitUntil) ctx.waitUntil(heal); else await heal;
     return json({ ok: true });
   }
 
@@ -4520,6 +4522,39 @@ async function atMergeProjects(env, fromId, toId) {
   await atTouch(kv, ['#projects', '#clients', ...touched]);
   return done;
 }
+// Work-chat topics and client chats still linked to a deleted client: linked again by their name to
+// the one client it fits (a deleted duplicate «Елена Чакова» → «Марина Чакова»), or unlinked when none
+// fits (and stays unlinked — a deleted client isn't recreated from its topic); their tasks follow. Runs with every cron and after a client is deleted; writes only what changed.
+async function botHealDeadLinks(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const projects = await botProjects(kv);
+  const ids = new Set(projects.map((p) => p.id));
+  const moved = {}; // "chatId:threadId" -> new projectId | null
+  for (const prefix of ['bot:topic:', 'bot:chat:']) {
+    for (const k of (await kv.list({ prefix })).keys) {
+      const rec = await kv.get(k.name, 'json');
+      if (!rec || !rec.projectId || ids.has(rec.projectId)) continue;
+      const match = botMatchProject(rec.name || rec.title || '', projects);
+      // Locked either way: an unlinked topic must not bring the deleted client back as a new one.
+      await kv.put(k.name, JSON.stringify({ ...rec, projectId: match ? match.id : null, projectLocked: true }));
+      const [chatId, threadId] = prefix === 'bot:topic:' ? k.name.slice(prefix.length).split(':') : [k.name.slice(prefix.length), '0'];
+      moved[`${chatId}:${threadId}`] = match ? match.id : null;
+    }
+  }
+  if (!Object.keys(moved).length) return;
+  const touched = [];
+  for (const t of await botAllTasks(kv)) {
+    if (!t.projectId || ids.has(t.projectId)) continue;
+    const key = `${t.chatId}:${t.threadId || 0}`;
+    if (!(key in moved)) continue;
+    t.projectId = moved[key];
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks && AT_MEM.tasks.has(t.id)) AT_MEM.tasks.set(t.id, t);
+    touched.push(t.id);
+  }
+  await atTouch(kv, ['#projects', ...touched]);
+}
+
 // One-time merges of clients created twice: [the duplicate, the client to keep].
 const PROJECT_MERGES = [
   ['elena-kisileva', 'elena-kiseleva'], // 26.10.2026: the work-chat topic «Кисилева Елена» had a typo
@@ -6089,6 +6124,7 @@ async function botScheduled(env) {
   }
   try {
     await atRunProjectMerges(env);
+    await botHealDeadLinks(env);
   } catch (err) {
     console.error('project merge failed', err && err.stack);
   }
