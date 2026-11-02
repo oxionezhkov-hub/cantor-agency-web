@@ -68,6 +68,15 @@ Avito cabinets (ids from `/api/avito/accounts`, the same as `project.avitoAccoun
 - `GET /api/avito/messages?accountId=<id>&chatId=<chat_id>` — a chat's messages, oldest first;
   `author` is `manager` (the cabinet, i.e. our client) or `client` (a parent / student writing in).
 - `GET /api/avito/autoload?accountId=<id>` — the last autoload report.
+- `GET /api/avito/tariff?accountId=<id>` — the cabinet's Avito tariff: `tariff`, `active`, `startsAt`,
+  `endsAt`, `daysLeft`, the scheduled next one and Avito's `raw` answer. Without `accountId` — every
+  cabinet (`tariffs`). A lapsed tariff stops autoload and new listings — check it first when a
+  cabinet goes quiet.
+- `GET /api/avito/raw?accountId=<id>&path=<Avito API path>` — any read from Avito's API for that
+  cabinet (`{user_id}` in the path becomes the cabinet's id), e.g. `/core/v1/accounts/self`,
+  `/core/v1/items?per_page=100`, `/autoload/v2/reports`. `POST` with a JSON body only to Avito's
+  read-only POST endpoints (stats v1/v2 items, spendings, operations history, VAS prices, CPA
+  balance, call tracking); anything else is refused. Answer: `{ status, path, data }`.
 
 Reading Avito chats: the mailing (an «предложение», e.g. a free consultation) shows up as system
 messages «Пользователь ознакомился с вашим предложением…» (opened) and «Покупателя заинтересовало
