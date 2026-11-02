@@ -68,10 +68,11 @@ Avito cabinets (ids from `/api/avito/accounts`, the same as `project.avitoAccoun
 - `GET /api/avito/messages?accountId=<id>&chatId=<chat_id>` — a chat's messages, oldest first;
   `author` is `manager` (the cabinet, i.e. our client) or `client` (a parent / student writing in).
 - `GET /api/avito/autoload?accountId=<id>` — the last autoload report.
-- `GET /api/avito/tariff?accountId=<id>` — the cabinet's Avito tariff: `tariff`, `active`, `startsAt`,
-  `endsAt`, `daysLeft`, the scheduled next one and Avito's `raw` answer. Without `accountId` — every
-  cabinet (`tariffs`). A lapsed tariff stops autoload and new listings — check it first when a
-  cabinet goes quiet.
+- `GET /api/avito/tariff?accountId=<id>` — the cabinet's Avito subscription («Подписка (набор услуг)»,
+  3000 руб a month), read off its operations history: `lastPaidAt`, `paidUntil`, `daysLeft`, `active`,
+  `autoRenew` (Avito renews it from the wallet on its own) and every charge in the last 120 days.
+  Without `accountId` — every cabinet (`tariffs`). A lapsed subscription stops autoload and new
+  listings — check it first when a cabinet goes quiet.
 - `GET /api/avito/raw?accountId=<id>&path=<Avito API path>` — any read from Avito's API for that
   cabinet (`{user_id}` in the path becomes the cabinet's id), e.g. `/core/v1/accounts/self`,
   `/core/v1/items?per_page=100`, `/autoload/v2/reports`. `POST` with a JSON body only to Avito's
