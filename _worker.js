@@ -2939,6 +2939,8 @@ async function handleDashboardApi(request, env, url, ctx) {
     ]);
     await Promise.all([...analyticsList.keys, ...ratingsList.keys, ...dailyMetricsList.keys].map((k) => kv.delete(k.name)));
     await atTouch(kv, ['#projects']);
+    const heal = botHealDeadLinks(env).catch((err) => console.error('heal links failed', err && err.stack));
+    if (ctx && ctx.waitUntil) ctx.waitUntil(heal); else await heal;
     return json({ ok: true });
   }
 
@@ -4520,6 +4522,39 @@ async function atMergeProjects(env, fromId, toId) {
   await atTouch(kv, ['#projects', '#clients', ...touched]);
   return done;
 }
+// Work-chat topics and client chats still linked to a deleted client: linked again by their name to
+// the one client it fits (a deleted duplicate «Елена Чакова» → «Марина Чакова»), or unlinked when none
+// fits (and stays unlinked — a deleted client isn't recreated from its topic); their tasks follow. Runs with every cron and after a client is deleted; writes only what changed.
+async function botHealDeadLinks(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const projects = await botProjects(kv);
+  const ids = new Set(projects.map((p) => p.id));
+  const moved = {}; // "chatId:threadId" -> new projectId | null
+  for (const prefix of ['bot:topic:', 'bot:chat:']) {
+    for (const k of (await kv.list({ prefix })).keys) {
+      const rec = await kv.get(k.name, 'json');
+      if (!rec || !rec.projectId || ids.has(rec.projectId)) continue;
+      const match = botMatchProject(rec.name || rec.title || '', projects);
+      // Locked either way: an unlinked topic must not bring the deleted client back as a new one.
+      await kv.put(k.name, JSON.stringify({ ...rec, projectId: match ? match.id : null, projectLocked: true }));
+      const [chatId, threadId] = prefix === 'bot:topic:' ? k.name.slice(prefix.length).split(':') : [k.name.slice(prefix.length), '0'];
+      moved[`${chatId}:${threadId}`] = match ? match.id : null;
+    }
+  }
+  if (!Object.keys(moved).length) return;
+  const touched = [];
+  for (const t of await botAllTasks(kv)) {
+    if (!t.projectId || ids.has(t.projectId)) continue;
+    const key = `${t.chatId}:${t.threadId || 0}`;
+    if (!(key in moved)) continue;
+    t.projectId = moved[key];
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks && AT_MEM.tasks.has(t.id)) AT_MEM.tasks.set(t.id, t);
+    touched.push(t.id);
+  }
+  await atTouch(kv, ['#projects', ...touched]);
+}
+
 // One-time merges of clients created twice: [the duplicate, the client to keep].
 const PROJECT_MERGES = [
   ['elena-kisileva', 'elena-kiseleva'], // 26.10.2026: the work-chat topic «Кисилева Елена» had a typo
@@ -6089,11 +6124,13 @@ async function botScheduled(env) {
   }
   try {
     await atRunProjectMerges(env);
+    await botHealDeadLinks(env);
   } catch (err) {
     console.error('project merge failed', err && err.stack);
   }
   try {
     await atMigrateRoles(env);
+    await atRefreshPhotos(env);
   } catch (err) {
     console.error('role migration failed', err && err.stack);
   }
@@ -6704,7 +6741,42 @@ function atAccessMessage(team, first) {
   return lines.join('\n');
 }
 function atPublicUser(u) {
-  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId };
+  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId, pv: u.photoV || null };
+}
+// Avatars from Telegram: once a day the bot takes each team member's current profile photo (the small
+// 160 px size) and keeps it as a data URL in at:photo:<userId>; user.photoV is its Telegram file id, so
+// the page (action 'photos') knows when to fetch it again. Members without a photo keep their initials.
+async function atRefreshPhotos(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!env.CONTROL_BOT_TOKEN) return;
+  const flag = `at:photos-run:${botMsk(Date.now()).date}`;
+  if (await kv.get(flag)) return;
+  await kv.put(flag, '1', { expirationTtl: 3 * 86400 });
+  const team = await atGetTeam(env);
+  let changed = false;
+  for (const u of team.users.filter((x) => x.active && x.tgId)) {
+    const res = await botApi(env, 'getUserProfilePhotos', { user_id: Number(u.tgId), limit: 1 });
+    const sizes = res && res.ok && res.result && res.result.photos && res.result.photos[0];
+    if (!sizes || !sizes.length) {
+      if (res && res.ok && u.photoV) { delete u.photoV; await kv.delete(`at:photo:${u.id}`); changed = true; }
+      continue;
+    }
+    const small = sizes[0];
+    if (small.file_unique_id === u.photoV) continue;
+    const file = await botApi(env, 'getFile', { file_id: small.file_id });
+    if (!file || !file.ok || !file.result || !file.result.file_path) continue;
+    try {
+      const img = await fetch(`https://api.telegram.org/file/bot${env.CONTROL_BOT_TOKEN}/${file.result.file_path}`, { signal: AbortSignal.timeout(10000) });
+      if (!img.ok) continue;
+      const bytes = new Uint8Array(await img.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      await kv.put(`at:photo:${u.id}`, `data:image/jpeg;base64,${btoa(bin)}`);
+      u.photoV = small.file_unique_id;
+      changed = true;
+    } catch (err) { /* next time */ }
+  }
+  if (changed) { await atPutTeam(kv, team); await atTouch(kv, ['#team']); }
 }
 async function atAuth(team, token) {
   const [id, v, sig] = String(token || '').split('.');
@@ -8135,6 +8207,13 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const list = (await kv.get(key, 'json')) || [];
     if (list.some((n) => !n.read)) await kv.put(key, JSON.stringify(list.map((n) => ({ ...n, read: true }))));
     return json({ ok: true });
+  }
+
+  // Аватарки из Telegram: { photos: { <userId>: dataURL } } — для тех, у кого есть pv.
+  if (action === 'photos') {
+    const ids = team.users.filter((u) => u.photoV).map((u) => u.id);
+    const vals = await Promise.all(ids.map((id) => kv.get(`at:photo:${id}`)));
+    return json({ photos: Object.fromEntries(ids.map((id, i) => [id, vals[i]]).filter(([, v]) => v)) });
   }
 
   if (action === 'tg-unlink') {

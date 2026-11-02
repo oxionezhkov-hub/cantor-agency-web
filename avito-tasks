@@ -120,8 +120,17 @@ a{color:inherit}
 .conn-dot.off{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
 @keyframes pulse{50%{opacity:.35}}
 .tabs{display:flex;gap:4px;margin-left:-6px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.dragging{cursor:grabbing;user-select:none}
+.dragging *{pointer-events:none}
+/* Полосы прокрутки — тонкие, в цветах интерфейса, а не серые системные. */
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--faint);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+.tab{text-decoration:none;-webkit-user-drag:none;user-select:none;flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
 .tab:hover{color:var(--ink);background:var(--sunken)}
 .tab.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line)}
 .tab .count{font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
@@ -311,6 +320,7 @@ div.cc-goal{cursor:pointer}
 .g-goal .g{color:var(--text)}
 .group.collapsed .g-goal{display:none}
 .claim-sec .sec-sub{font-size:13px;color:var(--muted);margin:-6px 2px 10px}
+.others-row{margin:4px 0 14px}
 .claim-head{width:100%;text-align:left;border-radius:10px;padding:6px 4px;margin-left:-4px}
 .claim-head:hover{background:var(--sunken)}
 .claim-tg{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
@@ -568,6 +578,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 /* ── Рассылки ── */
 .ml-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 @media (max-width:720px){.ml-top{width:100%;justify-content:space-between}}
+.ml-who{width:auto;min-height:34px;padding:5px 30px 5px 12px;font-size:13px}
 .ml-nav{display:flex;align-items:center;gap:2px;font-size:14px;color:var(--ink)}
 .ml-nav b{min-width:116px;text-align:center}
 .ml-nav .icon-btn{width:34px;height:34px}
@@ -953,6 +964,10 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .an-sw[aria-checked="true"] .l{color:var(--faint)}
 .an-sticky{position:sticky;top:var(--top);z-index:6;background:var(--bg);padding:8px 0;margin-bottom:6px;box-shadow:-24px 0 0 var(--bg),24px 0 0 var(--bg)}
 .an-sticky .an-nav{min-height:38px}
+.an-nav{position:relative}
+/* «Вчера» появляется справа от листалки, не сдвигая её. */
+.an-yday{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%)}
+@media (max-width:760px){.an-sticky .an-nav:has(.an-day){padding-right:84px}.an-yday{left:auto;right:0}}
 #anBody.an-stale{opacity:.45;pointer-events:none;transition:opacity .12s}
 /* На компьютере листалка дней / месяцев — по центру той же строки, что иконки и переключатель (и тоже закреплена). */
 @media (min-width:761px){.an-sticky{width:max-content;max-width:calc(100% - 360px);margin:-52px auto 14px;box-shadow:none;background:transparent}}
@@ -961,7 +976,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .an-day{display:inline-flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
 .an-day .icon-btn{width:32px;height:32px}
 .an-day .icon-btn[disabled]{opacity:.35;pointer-events:none}
-.an-date{font-weight:600;color:var(--ink);font-size:14px;padding:0 8px;min-width:128px;text-align:center;font-variant-numeric:tabular-nums}
+.an-date{font-weight:600;color:var(--ink);font-size:14px;padding:0 8px;min-width:150px;text-align:center;font-variant-numeric:tabular-nums}
 .an-months{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:100%}
 .an-months::-webkit-scrollbar{display:none}
 .an-months .chip{flex:none;height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--muted)}
@@ -1296,7 +1311,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
         <button class="btn btn-primary btn-sm c-new" id="newClient" hidden><svg class="ic ic-sm"><use href="#i-plus"/></svg><span>Клиент</span></button>
       </div>
       <div class="cards" id="clientCards"></div>
-      <div style="margin-top:14px"><button class="btn btn-quiet btn-sm" id="toggleInactive"></button></div>
+      <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap"><span id="clientsOthers"></span><button class="btn btn-quiet btn-sm" id="toggleInactive"></button></div>
     </section>
 
     <!-- Аналитика -->
@@ -1313,7 +1328,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
       </div>
       <div class="an-sticky"><div class="an-nav" id="anNav"></div></div>
       <div id="anBody"></div>
-      <div class="an-foot"><button class="btn btn-quiet btn-sm" id="anInactive" hidden></button></div>
+      <div class="an-foot" style="display:flex;gap:6px;flex-wrap:wrap"><span id="anOthers"></span><button class="btn btn-quiet btn-sm" id="anInactive" hidden></button></div>
     </section>
 
     <!-- Команда -->
@@ -1368,6 +1383,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
           <h1>Рассылки</h1>
         </div>
         <div class="ml-top">
+          <select class="select ml-who" id="mlWho" hidden aria-label="Чьи клиенты"></select>
           <div class="ml-nav"><button class="icon-btn" data-ml-step="-1" aria-label="Раньше"><svg class="ic ic-sm rot-l"><use href="#i-chev"/></svg></button><b id="mlMonth"></b><button class="icon-btn" data-ml-step="1" aria-label="Позже"><svg class="ic ic-sm rot-r"><use href="#i-chev"/></svg></button></div>
           <button class="btn btn-primary btn-sm" data-ml-new><svg class="ic ic-sm"><use href="#i-plus"/></svg>Рассылка</button>
         </div>
@@ -1658,9 +1674,28 @@ function colorFor(id) { const i = S.users.findIndex((u) => u.id === id); if (i >
 function initials(name) { const w = String(name || '?').trim().split(/\s+/); return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase(); }
 // Фото команды лежат в /images/avito-tasks/<id>.jpg; у кого фото нет (или оно не загрузилось) — инициалы на цветном круге.
 const TEAM_PHOTOS = { oleg: 1, olga: 1, evgeny: 1, albina: 1, ekaterina: 1, sofia: 1, stanislav: 1 };
+// У кого нет файла в /images/avito-tasks — аватарка из Telegram (бот обновляет раз в день), с кэшем на устройстве.
+const K_PHOTOS = 'avitoTasks.photos';
+const PHOTOS = store.json(K_PHOTOS) || {};
+let photosLoading = false;
+async function ensurePhotos() {
+  const need = (S.users || []).filter((u) => u.pv && !TEAM_PHOTOS[u.id] && (!PHOTOS[u.id] || PHOTOS[u.id].v !== u.pv));
+  if (!need.length || photosLoading || !S.token) return;
+  photosLoading = true;
+  try {
+    const res = await api('photos');
+    if (res.ok) {
+      for (const u of S.users) if (u.pv && res.data.photos[u.id]) PHOTOS[u.id] = { v: u.pv, src: res.data.photos[u.id] };
+      store.set(K_PHOTOS, JSON.stringify(PHOTOS));
+      render();
+    }
+  } catch (e) { /* в следующий раз */ }
+  photosLoading = false;
+}
 function avatar(user, size, id) {
   const u = user || { id: '?', name: '?' };
-  const photo = TEAM_PHOTOS[u.id] ? `<img src="/images/avito-tasks/${esc(u.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : '';
+  const tg = !TEAM_PHOTOS[u.id] && u.pv && PHOTOS[u.id] && PHOTOS[u.id].v === u.pv ? PHOTOS[u.id].src : '';
+  const photo = TEAM_PHOTOS[u.id] ? `<img src="/images/avito-tasks/${esc(u.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : tg ? `<img src="${tg}" alt="">` : '';
   return `<span class="avatar ${size || ''}"${id ? ` id="${id}"` : ''} style="background:${colorFor(u.id)}">${esc(initials(u.name))}${photo}</span>`;
 }
 const userById = (id) => S.users.find((u) => u.id === id);
@@ -1676,6 +1711,23 @@ const SEC_BY_ROLE = {
 };
 const hasSec = (k) => !!S.me && (S.me.sections || SEC_BY_ROLE[S.me.role] || ['tasks']).includes(k);
 const canSeeClients = () => hasSec('clients');
+// «Мои клиенты»: у кого за ним закреплены клиенты («Клиенты → Настройки»), тот в «Клиентах», «Аналитике»,
+// «Задачах» и «Рассылках» по умолчанию видит только их; остальных — кнопкой «Показать остальных»
+// (своя для каждого раздела, запоминается на устройстве). Кто ни за кем не закреплён, видит всех.
+const myClientIds = () => new Set(S.projects.filter((p) => !p.inactive && S.me && p.ownerId === S.me.id).map((p) => p.id));
+const onlyMine = (key) => !prefs[`others_${key}`] && myClientIds().size > 0;
+function othersToggle(key, hidden, what) {
+  if (!myClientIds().size || (!hidden && !prefs[`others_${key}`])) return '';
+  return `<button class="btn btn-quiet btn-sm" data-others="${key}">${prefs[`others_${key}`] ? 'Только мои клиенты' : `Показать остальных ${what} (${hidden})`}</button>`;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-others]');
+  if (!b) return;
+  const k = `others_${b.dataset.others}`;
+  prefs[k] = !prefs[k];
+  store.set(K_PREFS, JSON.stringify(prefs));
+  render();
+});
 
 // ── Telegram: открываем приложение, а не вкладку ──
 function tgAppUrl(url) {
@@ -2001,6 +2053,7 @@ function applySync(d, fromCache) {
   if (!d.unchanged) {
     S.ver = fromCache ? null : d.ver;
     S.users = d.users || [];
+    setTimeout(ensurePhotos, 0);
     S.projects = d.projects || [];
     S.tasks = mergeSaved(d.tasks || [], d.gone).filter((t) => !PENDING_DELETES.has(t.id));
     S.clients = d.clients || null;
@@ -2063,7 +2116,8 @@ function renderHeader() {
   // …у «Рассылок» — сколько прошедших рассылок ждут итога.
   const mailWait = mlWaitCount();
   const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : v.id === 'meet' && meetToday ? meetToday : v.id === 'mail' && mailWait ? mailWait : 0);
-  const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
+  // Ссылки, а не кнопки: правой кнопкой / колёсиком / Ctrl — открыть раздел в новой вкладке.
+  const tabHtml = (v) => `<a class="tab ${S.view === v.id ? 'on' : ''}" href="#${v.id}" data-view="${v.id}" draggable="false">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</a>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
   // Внизу — не больше пяти кнопок: четыре раздела и «Ещё» со всеми остальными (если разделов больше пяти).
   // Открытый раздел из «Ещё» подсвечивает саму кнопку «Ещё» и показывает её подпись.
@@ -2142,7 +2196,8 @@ function openNavMore() {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-navmore]')) { openNavMore(); return; }
   const b = e.target.closest('[data-view]');
-  if (b) setView(b.dataset.view);
+  if (b && b.tagName === 'A' && (e.ctrlKey || e.metaKey || e.shiftKey || e.button)) return; // новая вкладка — браузеру
+  if (b) { if (b.tagName === 'A') e.preventDefault(); setView(b.dataset.view); }
   const t = e.target.closest('[data-teamtab]');
   if (t && S.teamTab !== t.dataset.teamtab) {
     S.teamTab = t.dataset.teamtab;
@@ -2420,10 +2475,15 @@ function byUrgency(now) { return (a, b) => urgency(b, now) - urgency(a, now) || 
 function renderLists() {
   const now = Date.now();
   // Ничьи задачи (бот нашёл в чате, исполнитель не назван) — над всеми, пока кто-нибудь не возьмёт.
-  const unclaimed = S.f.scope === 'byme' || S.f.assignee ? [] : S.tasks.filter((t) => isUnclaimed(t) && matchesBasics(t))
+  // Только мои клиенты: задачи их клиентов, мои и поставленные мной, задачи без клиента (не действует,
+  // если клиент выбран в фильтре).
+  const mineIds = onlyMine('tasks') && !S.f.client ? myClientIds() : null;
+  const keepT = (t) => !mineIds || !t.projectId || mineIds.has(t.projectId) || t.assigneeId === S.me.id || t.createdById === S.me.id;
+  const hiddenT = mineIds ? S.tasks.filter((t) => isOpen(t) && !keepT(t)).length : 0;
+  const unclaimed = S.f.scope === 'byme' || S.f.assignee ? [] : S.tasks.filter((t) => isUnclaimed(t) && keepT(t) && matchesBasics(t))
     .sort((a, b) => String(b.startedAt || b.createdAt).localeCompare(String(a.startedAt || a.createdAt)));
   const unIds = new Set(unclaimed.map((t) => t.id));
-  const list = S.tasks.filter((t) => !unIds.has(t.id) && matches(t, now));
+  const list = S.tasks.filter((t) => !unIds.has(t.id) && keepT(t) && matches(t, now));
   const sort = byUrgency(now);
   const informFirst = canSeeClients() && !stIs('done');
   const inform = informFirst ? list.filter((t) => needsInform(t) && t.assigneeId !== S.me.id).sort(sort) : [];
@@ -2453,6 +2513,8 @@ function renderLists() {
     html += rest.length ? groups(rest, now).map((g) => groupHtml(g, now)).join('') : '<div class="empty">Здесь пусто</div>';
     html += '</div>';
   }
+  const others = S.f.client ? '' : othersToggle('tasks', hiddenT, 'задач');
+  if (others) html += `<div class="others-row">${others}</div>`;
   $('lists').innerHTML = html;
 }
 
@@ -2696,7 +2758,7 @@ function openTask(id) {
   });
 }
 function openFromHash() {
-  const sec = (location.hash.match(/^#(analytics|clients|meet|team|kb)$/) || [])[1];
+  const sec = (location.hash.match(/^#(tasks|ai|analytics|clients|meet|mail|team|kb)$/) || [])[1];
   if (sec) { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === sec)) setView(sec); return; }
   if (location.hash === '#reflection') { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === 'reflection')) setView('reflection'); return; }
   const m = location.hash.match(/^#(t|kb|ai)=(.+)$/);
@@ -2716,6 +2778,36 @@ function openKbJob(id) {
   if (S.view === 'kb') { renderKbForm(); loadKbJobs(); } else setView('kb');
 }
 window.addEventListener('hashchange', openFromHash);
+
+// Горизонтальные ленты (разделы сверху, месяцы, фильтры) листаются и зажатой мышью, не только колесом.
+// Если ленту потащили, отпускание не считается нажатием на вкладку.
+const DRAG_SCROLL = '.tabs, .an-months, .c-filt, .stats, .filters';
+let dragS = null;
+document.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return;
+  const el = e.target.closest(DRAG_SCROLL);
+  if (!el || el.scrollWidth <= el.clientWidth) return;
+  dragS = { el, x: e.clientX, left: el.scrollLeft, moved: false };
+});
+document.addEventListener('pointermove', (e) => {
+  if (!dragS) return;
+  const dx = e.clientX - dragS.x;
+  if (!dragS.moved && Math.abs(dx) < 6) return;
+  dragS.moved = true;
+  dragS.el.scrollLeft = dragS.left - dx;
+  dragS.el.classList.add('dragging');
+});
+document.addEventListener('pointerup', () => {
+  if (!dragS) return;
+  const d = dragS;
+  dragS = null;
+  d.el.classList.remove('dragging');
+  if (d.moved) {
+    const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    window.addEventListener('click', stop, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', stop, { capture: true }), 0);
+  }
+});
 const PENDING_DELETES = new Map();
 function taskDeleteNow(id, t) {
   if (!PENDING_DELETES.has(id)) return;
@@ -4632,7 +4724,7 @@ function anSurnameKey(name) {
   return w.length > 1 && /^[А-ЯЁA-Z]/.test(w[w.length - 1]) ? `${w[w.length - 1]} ${w.slice(0, -1).join(' ')}` : w.join(' ');
 }
 const anBySurname = (a, b) => anSurnameKey(a.name).localeCompare(anSurnameKey(b.name), 'ru');
-function anProjects() { return S.projects.filter((p) => AN.showInactive || !p.inactive).sort((a, b) => (a.inactive - b.inactive) || anBySurname(a, b)); }
+function anProjects() { const mine = onlyMine('an'); return S.projects.filter((p) => (AN.showInactive || !p.inactive) && (!mine || p.ownerId === S.me.id)).sort((a, b) => (a.inactive - b.inactive) || anBySurname(a, b)); }
 function anRow(pid) { return (AN.rows || []).find((r) => r.projectId === pid) || { budget: 0, views: 0, contacts: 0, diagnostics: 0, sales: 0 }; }
 function anTotals() {
   const ids = new Set(anProjects().map((p) => p.id));
@@ -4645,7 +4737,7 @@ function renderAnalytics() {
   $('anSub').textContent = day ? 'Бюджет, просмотры и контакты — из кабинетов Авито, диагностики и продажи вносит менеджер. Ячейки сохраняются сами.' : 'Итоги и конверсии считаются по всем дням периода.';
   $('anSw').setAttribute('aria-checked', String(!day));
   $('anNav').innerHTML = day
-    ? `<div class="an-day"><button class="icon-btn" data-an="prev" aria-label="Предыдущий день">${ico('chev', 'rot90')}</button><span class="an-date">${esc(per)}</span><button class="icon-btn" data-an="next" aria-label="Следующий день" ${AN.day >= anYesterday() ? 'disabled' : ''}>${ico('chev', 'rot-90')}</button></div>${AN.day !== anYesterday() ? '<button class="btn btn-ghost btn-sm" data-an="yesterday">Вчера</button>' : ''}`
+    ? `<div class="an-day"><button class="icon-btn" data-an="prev" aria-label="Предыдущий день">${ico('chev', 'rot90')}</button><span class="an-date">${esc(per)}</span><button class="icon-btn" data-an="next" aria-label="Следующий день" ${AN.day >= anYesterday() ? 'disabled' : ''}>${ico('chev', 'rot-90')}</button></div>${AN.day !== anYesterday() ? '<button class="btn btn-ghost btn-sm an-yday" data-an="yesterday">Вчера</button>' : ''}`
     : `<div class="an-months"><button class="chip ${AN.month ? '' : 'on'}" data-an="month" data-m="">Всё время</button>${anMonths().map((m) => `<button class="chip ${AN.month === m.key ? 'on' : ''}" data-an="month" data-m="${m.key}">${m.label}</button>`).join('')}</div>`;
   const ps = anProjects();
   if (!AN.rows) {
@@ -4679,6 +4771,7 @@ function renderAnalytics() {
     $('anBody').classList.toggle('an-stale', !!AN.stale);
   }
   const inactive = S.projects.filter((p) => p.inactive).length;
+  $('anOthers').innerHTML = othersToggle('an', S.projects.filter((p) => !p.inactive && p.ownerId !== S.me.id).length, 'клиентов');
   $('anInactive').hidden = !inactive;
   $('anInactive').textContent = AN.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
 }
@@ -5016,7 +5109,8 @@ function renderClients() {
   clientsRefreshLabel();
   if (S.view === 'clients') loadClientMetrics(false);
   const now = Date.now();
-  const all = S.projects.map((p) => { const i = clientInfo(p); const m = CM.data && CM.data[p.id]; return { p, i, m, todo: p.inactive ? [] : clientTodo(p, i, m, now) }; });
+  const mineOnly = onlyMine('clients');
+  const all = S.projects.filter((p) => !mineOnly || p.ownerId === S.me.id).map((p) => { const i = clientInfo(p); const m = CM.data && CM.data[p.id]; return { p, i, m, todo: p.inactive ? [] : clientTodo(p, i, m, now) }; });
   const active = all.filter((r) => !r.p.inactive);
   const has = (kind) => active.filter((r) => r.todo.some((t) => t.kind === kind)).length;
   const attention = active.filter((r) => r.todo.length).length;
@@ -5063,6 +5157,7 @@ function renderClients() {
   $('newClient').hidden = !isAdmin();
   $('clientOwners').hidden = !isAdmin();
   const inactive = S.projects.filter((p) => p.inactive).length;
+  $('clientsOthers').innerHTML = othersToggle('clients', S.projects.filter((p) => !p.inactive && p.ownerId !== S.me.id).length, 'клиентов');
   $('toggleInactive').hidden = !inactive || filtering;
   $('toggleInactive').textContent = prefs.showInactive ? 'Скрыть неактивных клиентов' : `Показать неактивных клиентов (${inactive})`;
   if (CF.focus) {
@@ -5260,7 +5355,7 @@ function mlGroups(list) {
   list.forEach((it) => { const k = mlOwner(it); if (!g.has(k)) g.set(k, []); g.get(k).push(it); });
   return [...g.entries()].sort((a, b) => (!a[0]) - (!b[0]) || b[1].length - a[1].length);
 }
-function mlDaySorted(d, owner) { return ML.items.filter((it) => it.date === d && (owner == null || mlOwner(it) === owner)).sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' })); }
+function mlDaySorted(d, owner) { return ML.items.filter((it) => it.date === d && (!ML.keep || ML.keep(it)) && (owner == null || mlOwner(it) === owner)).sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' })); }
 // Окно по центру экрана (на телефоне — снизу): список дня или карточка рассылки.
 function mlModal(title, body, foot) {
   $('drawerRoot').innerHTML = `<div class="scrim" data-close></div>
@@ -5279,7 +5374,20 @@ function renderMail() {
   if (!ML.month) ML.month = mtToday().slice(0, 7);
   const [y, m] = ML.month.split('-').map(Number);
   $('mlMonth').textContent = `${AN_MONTHS[m - 1]} ${y}`;
-  const items = ML.loadedFor === ML.month ? ML.items : [];
+  // Чьи рассылки: руководителю, ассистенту, старшему специалисту и менеджеру — выбор специалиста;
+  // специалистам и стажёрам — по умолчанию только их клиенты, остальные кнопкой под календарём.
+  const boss = isAdmin() || ['lead', 'manager'].includes(S.me.role);
+  const who = $('mlWho');
+  who.hidden = !boss;
+  if (boss) {
+    const people = S.users.filter((u) => S.projects.some((p) => !p.inactive && p.ownerId === u.id)).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    who.innerHTML = `<option value="">Все специалисты</option>${people.map((u) => `<option value="${esc(u.id)}" ${ML.who === u.id ? 'selected' : ''}>${esc(first(u.name))}</option>`).join('')}<option value="-" ${ML.who === '-' ? 'selected' : ''}>Без ответственного</option>`;
+  }
+  const mineIds = !boss && onlyMine('mail') ? myClientIds() : null;
+  const keep = (it) => (mineIds ? mineIds.has(it.projectId) : !boss || !ML.who || (ML.who === '-' ? !mlOwner(it) : mlOwner(it) === ML.who));
+  const raw = ML.loadedFor === ML.month ? ML.items : [];
+  const items = raw.filter(keep);
+  ML.keep = keep;
   const today = mtToday();
   const lead = (new Date(`${ML.month}-01T12:00:00Z`).getUTCDay() + 6) % 7;
   const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
@@ -5306,7 +5414,8 @@ function renderMail() {
       ${dayItems.map(mlRow).join('')}
       <button class="btn btn-ghost btn-sm" data-ml-new="${ML.day}">${ico('plus', 'ic-sm')}Рассылка</button></div>`;
   }
-  $('mlBody').innerHTML = `<div class="ml-cal">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}${cells}</div>${list}`;
+  const others = mineIds || (!boss && prefs.others_mail) ? othersToggle('mail', raw.filter((it) => !keep(it)).length, 'рассылок') : '';
+  $('mlBody').innerHTML = `${others ? `<div class="others-row">${others}</div>` : ''}<div class="ml-cal">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}${cells}</div>${list}`;
 }
 function mlOpen(it, date) {
   const d = it || { date: date || mtToday(), projectId: '', budget: null, contacts: null, result: null, comment: '' };
@@ -5354,6 +5463,7 @@ function mlApply(data) {
   renderMail();
   renderHeader();
 }
+$('mlWho').addEventListener('change', (e) => { ML.who = e.target.value; ML.day = null; renderMail(); });
 $('view-mail').addEventListener('click', (e) => {
   const step = e.target.closest('[data-ml-step]');
   if (step) { ML.month = mlShift(ML.month || mtToday().slice(0, 7), +step.dataset.mlStep); ML.day = null; renderMail(); loadMail(); return; }
