@@ -114,7 +114,7 @@ label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:1
 
 /* шапка */
 .top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
-.top-in{max-width:1280px;margin:0 auto;height:var(--top);display:flex;align-items:center;gap:14px;padding:0 20px}
+.top-in{max-width:1400px;margin:0 auto;height:var(--top);display:flex;align-items:center;gap:14px;padding:0 20px}
 .logo{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:9px;flex:none;text-decoration:none}
 .logo i{width:26px;height:26px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center}
 .logo i .ic{width:15px;height:15px;stroke-width:2}
@@ -134,7 +134,7 @@ label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:1
 .progress b{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width .3s}
 
 /* страница */
-main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
+main{max-width:1400px;margin:0 auto;padding:14px 16px 14px}
 .hello{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
 .hello h1{font-family:var(--display);font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.015em;line-height:1.25}
 .hello .sub{color:var(--muted);font-size:14px;margin-top:4px}
@@ -144,10 +144,19 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
 .safe .ic{width:16px;height:16px}
 
 /* диалоги */
-.dlg{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;height:calc(100vh - 176px);min-height:520px}
+.dlg{display:grid;grid-template-columns:340px minmax(0,1fr);gap:12px;height:calc(100vh - var(--top) - 28px);min-height:480px}
+body.topless .dlg{height:calc(100vh - 34px)}
+body.topless{--top:0px}
+body.topless .top{display:none}
+.top-show{position:fixed;top:0;right:28px;z-index:31;display:none;background:var(--surface);border:1px solid var(--line);border-top:0;box-shadow:var(--shadow);width:44px;height:18px;border-radius:0 0 10px 10px}
+.top-show .ic{width:15px;height:15px}
+body.topless .top-show{display:grid}
+body.topless main{padding-top:20px}
+.cab-sel{width:auto;max-width:210px;min-height:34px;font-size:13px;font-weight:600;color:var(--ink);margin-right:6px}
 .list{display:flex;flex-direction:column;overflow:hidden}
-.list-head{padding:12px;border-bottom:1px solid var(--line-2);display:grid;gap:10px}
-.search{position:relative}
+.list-head{padding:10px;border-bottom:1px solid var(--line-2);display:flex;gap:6px;align-items:center}
+.list-head .select{flex:1;min-height:38px;font-weight:600;color:var(--ink)}
+.search{position:relative;flex:1}
 .search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);width:16px;height:16px}
 .search .input{padding-left:36px}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -167,6 +176,44 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
 .item .bd{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
 .item .bd:empty{display:none}
 .udot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.item .top-row{display:flex;align-items:baseline;gap:8px}
+.item .top-row .nm{flex:1;min-width:0}
+.item .top-row .tm{flex:none}
+.item .ind{display:flex;gap:5px;align-items:center;justify-content:flex-end;margin-top:6px;min-height:14px}
+.item .ind .ic{width:15px;height:15px}
+.ind-draft{color:var(--blue)}.ind-bell{color:var(--amber)}.ind-human{color:var(--amber)}.ind-ok{color:var(--green)}
+
+/* всплывашки: инфо о клиенте, этап, модель */
+.pop{position:fixed;z-index:70;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);padding:6px;min-width:220px;max-width:min(360px,92vw);max-height:70vh;overflow:auto;animation:fade .12s}
+.pop .mi{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:9px;font-size:13.5px;text-align:left;color:var(--text)}
+.pop .mi:hover{background:var(--sunken)}
+.pop .mi.on{color:var(--ink);font-weight:700}
+.pop .mi .ic{width:15px;height:15px;color:var(--accent);visibility:hidden}
+.pop .mi.on .ic{visibility:visible}
+.pop .info{padding:8px 10px;display:grid;gap:8px;font-size:13.5px}
+.pop .info .k{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.pop .info a{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.hbtn{position:relative}
+.hbtn.set{color:var(--accent);background:var(--accent-bg)}
+.who .t{display:flex;align-items:center;gap:4px}
+.who .t .icon-btn{width:26px;height:26px;color:var(--faint)}
+.who .t .icon-btn:hover{color:var(--ink)}
+.who .t .icon-btn .ic{width:16px;height:16px}
+.who .note-line{font-size:12.5px;color:var(--amber);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* черновик */
+.bar{border-top:1px solid var(--line-2);padding:10px 14px;background:var(--surface);display:grid;gap:8px;max-height:55%;overflow-y:auto}
+.bar .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bar .acts .btn{min-height:36px;padding:0 13px;font-size:13.5px}
+.bar .hint{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.think{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--muted);display:grid;gap:6px}
+.think .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.think ul{margin:0 0 0 18px}
+.think .old{text-decoration:line-through;opacity:.7}
+.icon-btn.on{color:var(--blue);background:var(--blue-bg)}
+.edit-part{display:flex;gap:6px;align-items:flex-start}
+.edit-part textarea{flex:1;min-height:44px}
+.b.ai .lbl{display:block;font-size:11px;font-weight:700;color:var(--blue);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
 .avatar{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;font-weight:700;color:#fff;flex:none;overflow:hidden;position:relative;letter-spacing:.02em}
 .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface)}
 .avatar.lg{width:42px;height:42px;font-size:15px}
@@ -273,14 +320,15 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
   .tab .lbl-long{display:none}
   .tab .lbl-short{display:inline}
   .sync{display:none}
+  .cab-sel{max-width:130px;margin-right:0}
   .hello h1{font-size:19px}
   .hello-r{width:100%}
   .hello-r .select{flex:1}
   .dlg{grid-template-columns:1fr;height:auto}
-  .dlg .list{height:calc(100vh - 200px)}
+  .dlg .list{height:calc(100vh - var(--top) - 24px)}
   .dlg.open .list{display:none}
   .dlg:not(.open) .chat{display:none}
-  .dlg .chat{height:calc(100vh - 80px)}
+  .dlg .chat{height:calc(100vh - var(--top) - 24px)}
   .back{display:grid}
   .chat-head{gap:8px}
   .chat-head .who{flex-basis:calc(100% - 110px)}
@@ -323,6 +371,10 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/></symbol>
   <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3 10v4h4l9 5V5L7 10z"/><path d="M19 9a4 4 0 010 6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/></symbol>
 </svg>
 
@@ -339,7 +391,6 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
 <div id="app" class="hide">
   <header class="top">
     <div class="top-in">
-      <div class="logo"><i><svg class="ic"><use href="#i-bot"/></svg></i><span>AI Sales</span></div>
       <nav class="tabs" id="tabs">
         <button class="tab on" data-tab="dialogs"><svg class="ic ic-sm"><use href="#i-msg"/></svg>Диалоги<span class="n hide" id="nWaiting"></span></button>
         <button class="tab" data-tab="sim"><svg class="ic ic-sm"><use href="#i-user"/></svg><span class="lbl-long">Тест-клиент</span><span class="lbl-short">Тест</span></button>
@@ -348,30 +399,25 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
         <button class="tab" data-tab="learn"><svg class="ic ic-sm"><use href="#i-chart"/></svg>Обучение</button>
       </nav>
       <div class="top-right">
+        <select id="cabSel" class="select cab-sel" title="Кабинет Авито"></select>
         <span class="sync" title="Когда последний раз читали чаты в Авито"><i class="conn-dot" id="connDot"></i><span id="syncInfo"></span></span>
         <button class="icon-btn" id="syncBtn" title="Обновить из Авито" aria-label="Обновить из Авито"><svg class="ic"><use href="#i-refresh"/></svg></button>
         <button class="icon-btn" id="themeBtn" title="Тема" aria-label="Тема"><svg class="ic"><use href="#i-moon"/></svg></button>
-        <a class="icon-btn" href="/avito-tasks" title="Avito Tasks" aria-label="Avito Tasks"><svg class="ic"><use href="#i-tasks"/></svg></a>
+        <button class="icon-btn" id="topHide" title="Скрыть верхнюю панель" aria-label="Скрыть верхнюю панель"><svg class="ic" style="transform:rotate(180deg)"><use href="#i-chev"/></svg></button>
       </div>
     </div>
     <div class="progress hide" id="prog"><b style="width:0"></b></div>
   </header>
+  <button class="icon-btn top-show" id="topShow" title="Показать верхнюю панель" aria-label="Показать верхнюю панель"><svg class="ic"><use href="#i-chev"/></svg></button>
 
   <main>
-    <div class="hello">
-      <div><h1 id="hTitle">Диалоги</h1><div class="sub" id="hSub"></div></div>
-      <div class="hello-r">
-        <select id="cabSel" class="select" title="Кабинет Авито"></select>
-        <span class="safe" title="Сервис только читает чаты и предлагает ответы. Отправки в Авито нет."><svg class="ic"><use href="#i-shield"/></svg>Только черновики — в Авито не отправляем</span>
-      </div>
-    </div>
-
     <!-- Диалоги -->
     <section id="t-dialogs" class="dlg">
       <div class="card list">
         <div class="list-head">
-          <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="q" class="input" placeholder="Имя, объявление или текст"></div>
-          <div class="filters" id="filters"></div>
+          <select id="fSel" class="select" title="Какие диалоги показать"></select>
+          <div class="search hide" id="searchBox"><svg class="ic"><use href="#i-search"/></svg><input id="q" class="input" placeholder="Имя, объявление или текст"></div>
+          <button class="icon-btn" id="searchBtn" title="Поиск" aria-label="Поиск"><svg class="ic"><use href="#i-search"/></svg></button>
         </div>
         <div class="items" id="items"></div>
       </div>
@@ -384,7 +430,7 @@ main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
         <button class="btn primary block" id="simNew"><svg class="ic"><use href="#i-plus"/></svg>Новый тест</button>
         <div id="simList" style="margin-top:10px"></div>
       </div>
-      <div class="card chat" id="simChat" style="height:calc(100vh - 176px);min-height:520px"><div class="empty"><div class="e-ic"><svg class="ic"><use href="#i-user"/></svg></div><div>Создайте тест или выберите его слева</div></div></div>
+      <div class="card chat" id="simChat" style="height:calc(100vh - var(--top) - 28px);min-height:480px"><div class="empty"><div class="e-ic"><svg class="ic"><use href="#i-user"/></svg></div><div>Создайте тест или выберите его слева</div></div></div>
     </section>
 
     <!-- Промпт -->
@@ -620,29 +666,18 @@ function themeIcon() {
   $('#themeBtn').innerHTML = I(dark ? 'sun' : 'moon');
 }
 themeIcon();
+// Верхняя панель сворачивается стрелкой справа; выбор запоминается.
+function setTopless(on) { document.body.classList.toggle('topless', on); store.set('aiSales.topless', on ? '1' : ''); }
+setTopless(store.get('aiSales.topless') === '1');
+$('#topHide').onclick = () => setTopless(true);
+$('#topShow').onclick = () => setTopless(false);
 
 // ── tabs ──
 $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
-const HELLO = {
-  dialogs: ['Диалоги', 'Переписка из Авито и ответы, которые предлагает ИИ'],
-  sim: ['Тест-клиент', 'Пишите за родителя или ученика — ИИ отвечает за преподавателя'],
-  prompt: ['Скрипты и база знаний', 'Правила, формулировки и факты, из которых ИИ собирает ответ'],
-  models: ['Модели и настройки', 'Какая модель отвечает и какие кабинеты подключены'],
-  learn: ['Обучение', 'Оценки и правки черновиков — ИИ учится на них'],
-};
-function renderHello() {
-  const [t, sub] = HELLO[S.tab] || HELLO.dialogs;
-  $('#hTitle').textContent = t;
-  if (S.tab === 'dialogs' && S.chats.length) {
-    const w = S.chats.filter((c) => c.waiting).length;
-    $('#hSub').textContent = `${S.chats.length} диалогов с ${cab().since ? new Date(cab().since).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) : '—'}` + (w ? ` · ${w} ждут ответа` : '');
-  } else $('#hSub').textContent = sub;
-}
 function setTab(t) {
   S.tab = t; history.replaceState(null, '', '#' + t);
   $$('#tabs .tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   ['dialogs', 'sim', 'prompt', 'models', 'learn'].forEach((x) => $('#t-' + x).classList.toggle('hide', x !== t));
-  renderHello();
   if (t === 'sim') loadSims();
   if (t === 'prompt') loadPrompt();
   if (t === 'models') renderModels();
@@ -686,60 +721,89 @@ async function loadChats(quiet) {
     S.chats = r.chats || [];
     renderList();
     const typing = document.activeElement && $('#chat').contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
-    if (S.chatId && !S.editing && !typing) openChat(S.chatId, true);
+    if (S.chatId && !S.editing && !typing && !popEl && !S.busy.draft) openChat(S.chatId, true);
   } catch (e) { if (!quiet) toast('Не удалось загрузить диалоги: ' + e.message); }
 }
+// ── поиск и статусы: одна строка ──
 $('#q').addEventListener('input', (e) => { S.q = e.target.value.toLowerCase(); renderList(); });
-$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; S.filter = b.dataset.f; renderList(); });
+$('#searchBtn').addEventListener('click', () => {
+  const open = $('#searchBox').classList.contains('hide');
+  $('#searchBox').classList.toggle('hide', !open); $('#fSel').classList.toggle('hide', open);
+  $('#searchBtn').innerHTML = I(open ? 'x' : 'search');
+  if (open) $('#q').focus(); else { $('#q').value = ''; S.q = ''; renderList(); }
+});
+$('#q').addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#searchBtn').click(); });
+$('#fSel').addEventListener('change', (e) => { S.filter = e.target.value; renderList(); });
 function chatMatches(c) {
-  if (S.q && !(`${c.name} ${c.itemTitle} ${c.lastText}`.toLowerCase().includes(S.q))) return false;
-  return chatMatchesFilter(c);
+  if (S.q && !(`${c.name} ${c.itemTitle} ${c.itemCity || ''} ${c.lastText}`.toLowerCase().includes(S.q))) return false;
+  return chatMatchesFilter(c, S.filter);
 }
-function chatMatchesFilter(c) {
-  if (S.filter === 'waiting') return c.waiting;
-  if (S.filter === 'draft') return c.hasDraft && !c.draftReviewed;
-  if (S.filter === 'human') return c.draftNeedsHuman && !c.draftReviewed;
-  if (S.filter === 'reviewed') return c.draftReviewed;
+const draftOpen = (c) => c.hasDraft && !c.draftReviewed && (!c.draftFor || c.draftFor === c.lastMsgId);
+function chatMatchesFilter(c, f) {
+  if (f === 'waiting') return c.waiting;
+  if (f === 'followup') return c.followupDue;
+  if (f === 'draft') return draftOpen(c);
+  if (f === 'human') return c.draftNeedsHuman && draftOpen(c);
+  if (f === 'reviewed') return c.draftReviewed;
   return true;
 }
-const FILTERS = [['all', 'Все', ''], ['waiting', 'Ждут ответа', 'var(--accent)'], ['draft', 'Черновик', 'var(--blue)'], ['human', 'Нужен человек', 'var(--amber)'], ['reviewed', 'Проверены', 'var(--green)']];
+const FILTERS = [['all', 'Все диалоги'], ['waiting', 'Ждут ответа'], ['followup', 'Пора напомнить'], ['draft', 'Есть черновик ИИ'], ['human', 'Нужен человек'], ['reviewed', 'Проверены']];
 function renderFilters() {
-  const cnt = (f) => S.chats.filter((c) => { const keep = S.filter; S.filter = f; const r = chatMatchesFilter(c); S.filter = keep; return r; }).length;
-  $('#filters').innerHTML = FILTERS.map(([k, label, color]) => `<button data-f="${k}" class="${S.filter === k ? 'on' : ''}">${color ? `<i class="dot" style="background:${color}"></i>` : ''}${label}<b>${cnt(k)}</b></button>`).join('');
+  $('#fSel').innerHTML = FILTERS.map(([k, label]) => `<option value="${k}"${S.filter === k ? ' selected' : ''}>${label} · ${S.chats.filter((c) => chatMatchesFilter(c, k)).length}</option>`).join('');
 }
 function renderList() {
   const waiting = S.chats.filter((c) => c.waiting).length;
   $('#nWaiting').textContent = waiting; $('#nWaiting').classList.toggle('hide', !waiting);
-  renderFilters(); renderHello();
+  renderFilters();
   const list = S.chats.filter(chatMatches);
   $('#items').innerHTML = list.length ? list.map((c) => {
-    const st = c.stage || c.aiStage;
-    const badges = [
-      c.waiting ? '<span class="chip accent">ждёт ответа</span>' : '',
-      c.hasDraft && !c.draftReviewed ? '<span class="chip blue">черновик ИИ</span>' : '',
-      c.draftReviewed ? '<span class="chip green">проверен</span>' : '',
-      c.draftNeedsHuman && !c.draftReviewed ? '<span class="chip amber">нужен человек</span>' : '',
-      stageChip(st),
+    const ind = [
+      draftOpen(c) ? `<span class="ind-draft" title="Есть черновик ИИ">${I('spark')}</span>` : '',
+      c.followupDue ? `<span class="ind-bell" title="Клиент молчит — пора напомнить">${I('bell')}</span>` : '',
+      c.draftNeedsHuman && draftOpen(c) ? `<span class="ind-human" title="Нужен человек">${I('user')}</span>` : '',
+      c.waiting ? '<i class="udot" title="Ждёт ответа"></i>' : '',
     ].join('');
+    const last = String(c.lastText || '').replace(/^\[Системное сообщение\]\s*/i, '').replace(/https?:\/\/(?:www\.)?([^/\s]+)\S*/g, '$1/…') || (c.stale ? 'загружается…' : '');
     return `<div class="item${c.chatId === S.chatId ? ' on' : ''}" data-id="${esc(c.chatId)}">
       ${avatar(c)}
-      <div style="min-width:0"><div class="nm">${esc(c.name || 'Без имени')}</div><div class="it">${esc(c.itemTitle || '')}</div>
-        <div class="lt">${c.lastAuthor === 'manager' ? '<span class="faint">Вы: </span>' : ''}${esc(String(c.lastText || '').replace(/^\[Системное сообщение\]\s*/i, '') || (c.stale ? 'загружается…' : ''))}</div>
-        <div class="bd">${badges}</div></div>
-      <div class="tm">${esc(fmtTime(c.lastAt || c.updated * 1000))}${c.waiting ? '<i class="udot"></i>' : ''}</div>
+      <div style="min-width:0"><div class="top-row"><div class="nm">${esc(c.name || 'Без имени')}</div><span class="tm">${esc(fmtTime(c.lastAt || c.updated * 1000))}</span></div>
+        <div class="it">${esc([c.itemCity, c.itemTitle].filter(Boolean).join(' · '))}</div>
+        <div class="lt">${c.lastAuthor === 'manager' ? '<span class="faint">Вы: </span>' : ''}${esc(last)}</div></div>
+      <div class="ind">${ind}</div>
     </div>`;
   }).join('') : (S.chats.length ? emptyState('search', 'Ничего не найдено') : emptyState('msg', 'Диалоги загружаются из Авито…', 'Первая загрузка занимает пару минут'));
 }
 $('#items').addEventListener('click', (e) => { const it = e.target.closest('.item'); if (it) openChat(it.dataset.id); });
 
-// ── one chat ──
-async function openChat(id, refresh) {
-  if (!refresh) { S.chatId = id; S.editing = null; renderList(); $('#t-dialogs').classList.add('open'); $('#chat').innerHTML = '<div class="empty"><span class="spin"></span></div>'; }
+// ── всплывашки ──
+let popEl = null;
+function closePop() { if (popEl) { popEl.remove(); popEl = null; } }
+function openPop(anchor, html, bind) {
+  closePop();
+  popEl = document.createElement('div'); popEl.className = 'pop'; popEl.innerHTML = html; document.body.appendChild(popEl);
+  const r = anchor.getBoundingClientRect(); const w = popEl.offsetWidth;
+  popEl.style.top = Math.min(r.bottom + 6, innerHeight - popEl.offsetHeight - 8) + 'px';
+  popEl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  popEl.dataset.for = anchor.id || '';
+  if (bind) bind(popEl);
+}
+document.addEventListener('mousedown', (e) => { if (popEl && !popEl.contains(e.target) && !e.target.closest('[data-pop]')) closePop(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+function menuPop(anchor, items, cur, onPick) {
+  if (popEl && popEl.dataset.for === anchor.id) return closePop();
+  openPop(anchor, items.map(([v, label]) => `<button class="mi${v === cur ? ' on' : ''}" data-v="${esc(v)}">${I('check')}${esc(label)}</button>`).join(''), (p) => {
+    $$('.mi', p).forEach((b) => b.onclick = () => { closePop(); onPick(b.dataset.v); });
+  });
+}
+
+// ── один диалог ──
+async function openChat(id, refresh, mode) {
+  if (!refresh) { S.chatId = id; S.editing = null; S.think = false; closePop(); renderList(); $('#t-dialogs').classList.add('open'); $('#chat').innerHTML = '<div class="empty"><span class="spin"></span></div>'; }
   try {
     const r = await api('chat', { params: { chatId: id } });
     if (S.chatId !== id) return;
-    S.chat = r.chat; renderChat(!refresh);
-  } catch (e) { if (!refresh) $('#chat').innerHTML = `<div class="empty">Диалог ещё не загружен: ${esc(e.message)}</div>`; }
+    S.chat = r.chat; renderChat(refresh ? (mode || 'keep') : 'bottom');
+  } catch (e) { if (!refresh) $('#chat').innerHTML = emptyState('msg', 'Диалог ещё не загружен', e.message); }
 }
 function bubbles(messages, extra) {
   let lastDay = '', out = '';
@@ -751,105 +815,155 @@ function bubbles(messages, extra) {
   });
   return out;
 }
-function renderChat(scroll) {
-  const c = S.chat;
-  const idxEntry = S.chats.find((x) => x.chatId === c.chatId) || {};
-  const msgs = c.messages || [];
+function draftState() {
+  const c = S.chat; const d = c.draft; const msgs = c.messages || [];
   const lastMeaningful = [...msgs].reverse().find((m) => m.author !== 'system' || /заинтересовал/i.test(m.text));
-  const d = c.draft;
-  const outdated = d && lastMeaningful && d.forMsgId && d.forMsgId !== lastMeaningful.id;
+  const outdated = Boolean(d && lastMeaningful && d.forMsgId && d.forMsgId !== lastMeaningful.id);
+  const sent = Boolean(d && d.review && d.review.action === 'sent');
+  const live = d && !outdated && !sent;
+  return { d, outdated, sent, live, parts: d ? (d.review && d.review.parts) || d.parts || (d.reply ? [d.reply] : []) : [] };
+}
+const KIND = { reminder: 'Напоминание', followup: 'Дожим', answer: 'Ответ' };
+function renderChat(mode) {
+  const c = S.chat;
+  const box = $('#msgs');
+  const prevTop = box ? box.scrollTop : 0;
+  const nearBottom = box ? box.scrollHeight - box.scrollTop - box.clientHeight < 80 : true;
+  const ds = draftState();
+  const showDraftBubbles = ds.live && ds.parts.length && !(ds.d.review && ds.d.review.action === 'reject') && S.editing !== ds.d.id;
+  const stage = c.stage || '';
+  const aiStage = (ds.d && ds.d.stage) || '';
   $('#chat').innerHTML = `
     <div class="chat-head">
       <button class="icon-btn back" id="backBtn" aria-label="К списку">${I('back')}</button>
       ${avatar(c, 'lg')}
-      <div class="who"><div class="t">${esc(c.name || 'Без имени')}</div>
-        <div class="s">${c.itemUrl ? `<a href="${esc(c.itemUrl)}" target="_blank" rel="noopener" title="${esc(c.itemTitle)}">${esc(c.itemTitle)}</a>${I('ext', 'ic-sm')}` : esc(c.itemTitle || '')}</div></div>
-      <select class="select" id="cStage" title="Этап воронки">${stageOptions(c.stage || '')}</select>
-      <select class="select" id="cModel" title="Модель для этого диалога">${modelOptions(c.model || '', true)}</select>
+      <div class="who" style="min-width:0;flex:1"><div class="t">${esc(c.name || 'Без имени')}<button class="icon-btn${c.note ? ' on' : ''}" id="infoBtn" data-pop title="Объявление, город, заметка" aria-label="Информация о диалоге">${I('info')}</button></div>
+</div>
+      <button class="icon-btn hbtn${stage ? ' set' : ''}" id="stageBtn" data-pop title="Этап: ${esc(S.state.stages[stage || aiStage] || 'авто')}" aria-label="Этап">${I('flag')}</button>
+      <button class="icon-btn hbtn${c.model ? ' set' : ''}" id="modelBtn" data-pop title="Модель: ${esc(c.model ? modelLabel(c.model) : 'по умолчанию — ' + modelLabel(S.state.config.defaultModel))}" aria-label="Модель">${I('bot')}</button>
     </div>
-    <div class="msgs" id="msgs">${bubbles(msgs)}${d && d.reply && !d.review ? `<div class="b ai">${esc(d.reply)}<span class="tm">черновик ИИ · не отправлен</span></div>` : ''}</div>
-    <div class="draft">${draftPanel(d, outdated, idxEntry)}
-      <details class="why"><summary>${I('chev')}Заметка по диалогу — её видит ИИ</summary><textarea class="input" id="cNote" rows="2" placeholder="Например: мама просила писать только после 18:00" style="margin-top:8px">${esc(c.note || '')}</textarea><button class="btn sm" id="cNoteSave" style="margin-top:8px">${I('save', 'ic-sm')}Сохранить заметку</button></details>
-    </div>`;
-  if (scroll !== false) { const m = $('#msgs'); m.scrollTop = m.scrollHeight; }
+    <div class="msgs" id="msgs">${bubbles(c.messages || [])}${showDraftBubbles ? ds.parts.map((p, i) => `<div class="b ai">${i === 0 ? `<span class="lbl">${esc(KIND[ds.d.kind] || 'Черновик')} · ИИ</span>` : ''}${esc(p)}${i === ds.parts.length - 1 ? '<span class="tm">черновик · не отправлен</span>' : ''}</div>`).join('') : ''}</div>
+    <div class="bar" id="bar">${draftBar(ds)}</div>`;
+  const m = $('#msgs');
+  if (mode === 'bottom' || (mode !== 'keep' && nearBottom) || (mode === 'keep' && nearBottom)) m.scrollTop = m.scrollHeight;
+  else m.scrollTop = prevTop;
   bindChat();
 }
-function draftPanel(d, outdated, idxEntry) {
-  if (S.busy.draft === S.chatId) return '<div class="draft-h"><span class="spin"></span>ИИ читает историю, базу знаний и пишет ответ…</div>';
-  if (!d) {
-    return `<div class="draft-h"><span class="ttl">${I('spark')}Черновик ИИ</span><span>ещё нет${idxEntry.waiting ? ' · клиент ждёт ответа' : ''}</span></div>
-      <div class="draft-actions" style="margin-top:0"><button class="btn primary" data-a="gen">${I('spark')}Предложить ответ</button><button class="btn" data-a="cmp">${I('scale')}Сравнить модели</button></div>`;
+function draftBar(ds) {
+  const idxEntry = S.chats.find((x) => x.chatId === S.chatId) || {};
+  if (S.busy.draft === S.chatId) return '<div class="hint"><span class="spin"></span>ИИ читает историю и базу знаний, пишет ответ…</div>';
+  const d = ds.d;
+  if (!ds.live) {
+    const silent = idxEntry.followupDue || (idxEntry.lastAuthor === 'manager');
+    const note = ds.sent ? `<div class="hint">${I('check', 'ic-sm')}Елена ответила сама — ИИ записал её ответ в обучение</div>` : ds.outdated ? `<div class="hint">${I('alert', 'ic-sm')}После прошлого черновика пришли новые сообщения</div>` : '';
+    return `${note}<div class="acts"><button class="btn primary" data-a="gen">${I(silent ? 'bell' : 'spark')}${silent ? 'Предложить напоминание' : 'Предложить ответ'}</button><button class="btn" data-a="cmp">${I('scale')}Сравнить модели</button></div>`;
   }
   const rv = d.review;
+  let html = '';
+  if (d.needsHuman) html += `<div class="banner" style="margin:0">${I('user')}<span><b>Нужен человек:</b> ${esc(d.humanReason || 'ИИ не уверен')}</span></div>`;
+  if (!ds.parts.length) html += `<div class="hint">${I('check', 'ic-sm')}ИИ считает, что писать сейчас не нужно${d.analysis ? ': ' + esc(d.analysis) : ''}</div>`;
+  if (rv && rv.action !== 'sent') html += `<div class="hint">${I('check', 'ic-sm')}${rv.action === 'approve' ? 'Одобрено' : rv.action === 'edit' ? 'Исправлено — ИИ учтёт правку' : 'Отмечено «не отвечать»'}</div>`;
+  if (S.editing === d.id) {
+    const parts = (rv && rv.parts) || d.parts || [d.reply];
+    html += `<div id="edParts">${parts.map((p) => editPart(p)).join('')}</div>
+      <div class="acts"><button class="btn sm" data-a="addPart">${I('plus', 'ic-sm')}Ещё сообщение</button><input class="input" id="edWhy" placeholder="Почему так (необязательно) — ИИ учтёт" style="flex:1;min-width:180px;min-height:36px"></div>
+      <div class="acts"><button class="btn primary" data-a="saveEdit">${I('check')}Сохранить правку</button><button class="btn quiet" data-a="cancelEdit">Отмена</button></div>`;
+    return html;
+  }
+  html += `<div class="acts">
+    <button class="btn good" data-a="approve" title="Ответ правильный — запомнить как хороший пример">${I('check')}Верно</button>
+    <button class="btn" data-a="edit">${I('edit')}Исправить</button>
+    <button class="btn" data-a="regen">${I('refresh')}Ещё вариант</button>
+    <button class="btn" data-a="cmp">${I('scale')}Сравнить</button>
+    <button class="icon-btn" data-a="copy" title="Копировать" aria-label="Копировать">${I('copy')}</button>
+    <button class="icon-btn${S.think ? ' on' : ''}" data-a="think" title="Как ИИ думал" aria-label="Как ИИ думал">${I('info')}</button>
+    <span class="grow"></span>
+    <button class="btn warn" data-a="reject" title="Здесь не нужно отвечать">${I('x')}Не отвечать</button></div>`;
+  if (S.think) html += thinkPanel(d);
+  return html;
+}
+function editPart(p) { return `<div class="edit-part" style="margin-bottom:6px"><textarea class="input" rows="2">${esc(p)}</textarea><button class="icon-btn sm" data-a="rmPart" title="Убрать сообщение" aria-label="Убрать сообщение">${I('x', 'ic-sm')}</button></div>`; }
+function thinkPanel(d) {
   const sc = d.selfCheck;
   const scChip = !sc ? '' : sc.ok === true ? '<span class="chip green">самопроверка пройдена</span>' : sc.ok === false ? '<span class="chip amber">исправлен самопроверкой</span>' : '<span class="chip">самопроверка не прошла</span>';
-  let html = '';
-  if (outdated) html += `<div class="banner">${I('alert')}<span>После черновика пришли новые сообщения — сделайте новый вариант.</span></div>`;
-  if (d.needsHuman) html += `<div class="banner">${I('user')}<span><b>Нужен человек:</b> ${esc(d.humanReason || 'ИИ не уверен')}</span></div>`;
-  html += `<div class="draft-h"><span class="ttl">${I('spark')}Черновик ИИ</span><span>${esc(modelLabel(d.model))} · ${(d.ms / 1000).toFixed(1)} с</span>${scChip}${d.stage ? stageChip(d.stage) : ''}${d.confidence ? `<span class="chip">уверенность ${Math.round(d.confidence * 100)}%</span>` : ''}${rv ? `<span class="chip ${rv.action === 'approve' ? 'green' : rv.action === 'edit' ? 'blue' : 'red'}">${rv.action === 'approve' ? 'одобрен' : rv.action === 'edit' ? 'исправлен' : 'не отвечать'}</span>` : ''}</div>`;
-  if (S.editing === d.id) {
-    html += `<textarea class="input" id="edText" rows="4">${esc(rv && rv.text ? rv.text : d.reply)}</textarea>
-      <input class="input" id="edWhy" placeholder="Почему так (необязательно) — ИИ учтёт в следующий раз" style="margin-top:8px">
-      <div class="draft-actions"><button class="btn primary" data-a="saveEdit">${I('check')}Сохранить правку</button><button class="btn quiet" data-a="cancelEdit">Отмена</button></div>`;
-  } else {
-    html += d.needsReply === false && !d.reply ? '<div class="draft-text muted">ИИ считает, что отвечать не нужно.</div>' : `<div class="draft-text">${esc(rv && rv.action === 'edit' ? rv.text : d.reply)}</div>`;
-    html += `<div class="draft-actions">
-      <button class="btn good" data-a="approve" title="Ответ правильный — запомнить как хороший пример">${I('check')}Верно</button>
-      <button class="btn" data-a="edit">${I('edit')}Исправить</button>
-      <button class="btn" data-a="regen">${I('refresh')}Новый вариант</button>
-      <button class="btn" data-a="cmp">${I('scale')}Сравнить</button>
-      <button class="icon-btn" data-a="copy" title="Копировать" aria-label="Копировать">${I('copy')}</button>
-      <span class="grow"></span>
-      <button class="btn warn" data-a="reject" title="Здесь не нужно отвечать">${I('x')}Не отвечать</button></div>`;
-  }
-  html += `<details class="why"><summary>${I('chev')}Как ИИ думал</summary>
-    ${d.analysis ? `<p style="margin-top:6px">${esc(d.analysis)}</p>` : ''}
+  return `<div class="think">
+    <div class="meta"><span class="chip">${esc(modelLabel(d.model))} · ${(d.ms / 1000).toFixed(1)} с</span>${d.kind ? `<span class="chip blue">${esc(KIND[d.kind] || d.kind)}</span>` : ''}${scChip}${d.stage ? stageChip(d.stage) : ''}${d.confidence ? `<span class="chip">уверенность ${Math.round(d.confidence * 100)}%</span>` : ''}</div>
+    ${d.analysis ? `<div>${esc(d.analysis)}</div>` : ''}
     ${d.checks && d.checks.length ? `<ul>${d.checks.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-    ${sc && sc.issues && sc.issues.length ? `<p style="margin-top:6px"><b>Самопроверка нашла:</b></p><ul>${sc.issues.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-    ${d.firstReply ? `<p style="margin-top:6px">До самопроверки: <span class="old">${esc(d.firstReply)}</span></p>` : ''}
-    ${d.instruction ? `<p>Пожелание: ${esc(d.instruction)}</p>` : ''}
-    ${(S.chat.drafts || []).length > 1 ? `<p style="margin-top:6px"><b>Прошлые варианты:</b></p><ul>${S.chat.drafts.slice(1, 6).map((x) => `<li><span class="faint">${esc(modelLabel(x.model))}:</span> ${esc(x.reply)}</li>`).join('')}</ul>` : ''}
-  </details>`;
-  return html;
+    ${sc && sc.issues && sc.issues.length ? `<div><b>Самопроверка нашла:</b></div><ul>${sc.issues.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${d.firstReply ? `<div>До самопроверки: <span class="old">${esc(d.firstReply)}</span></div>` : ''}
+    ${d.instruction ? `<div>Пожелание: ${esc(d.instruction)}</div>` : ''}
+    ${(S.chat.drafts || []).length > 1 ? `<div><b>Прошлые варианты:</b></div><ul>${S.chat.drafts.slice(1, 6).map((x) => `<li><span class="faint">${esc(modelLabel(x.model))}:</span> ${esc(x.reply || '(не писать)')}</li>`).join('')}</ul>` : ''}
+  </div>`;
+}
+function infoHtml(c) {
+  const st = c.stage || (c.draft && c.draft.stage) || '';
+  return `<div class="info">
+    <div><span class="k">Объявление</span>${c.itemUrl ? `<a href="${esc(c.itemUrl)}" target="_blank" rel="noopener">${esc(c.itemTitle || 'открыть')}</a>` : esc(c.itemTitle || '—')}${c.itemPrice ? ` · ${esc(c.itemPrice)}` : ''}</div>
+    <div><span class="k">Город</span>${esc(c.itemCity || '—')}</div>
+    <div><span class="k">Этап</span>${esc(S.state.stages[st] || 'не определён')}${!c.stage && st ? ' <span class="faint">(по мнению ИИ)</span>' : ''}</div>
+    <div><span class="k">Заметка — её видит ИИ</span><textarea class="input" id="cNote" rows="3" placeholder="Например: мама просила писать только после 18:00" style="margin-top:4px">${esc(c.note || '')}</textarea>
+      <button class="btn sm primary" id="cNoteSave" style="margin-top:6px">${I('save', 'ic-sm')}Сохранить</button></div>
+  </div>`;
 }
 function bindChat() {
   const c = S.chat;
   $('#backBtn').onclick = () => { $('#t-dialogs').classList.remove('open'); };
-  $('#cStage').onchange = async (e) => { await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, stage: e.target.value } }); toast('Этап сохранён'); loadChats(true); };
-  $('#cModel').onchange = async (e) => { await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, model: e.target.value } }); c.model = e.target.value; toast('Модель для диалога: ' + (e.target.value ? modelLabel(e.target.value) : 'по умолчанию')); };
-  $('#cNoteSave').onclick = async () => { await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, note: $('#cNote').value } }); c.note = $('#cNote').value; toast('Заметка сохранена'); };
-  $$('#chat [data-a]').forEach((b) => b.addEventListener('click', () => chatAction(b.dataset.a)));
+  const ib = $('#infoBtn');
+  const showInfo = () => openPop(ib, infoHtml(c), (p) => {
+    $('#cNoteSave', p).onclick = async () => { const note = $('#cNote', p).value; await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, note } }); c.note = note; closePop(); toast('Заметка сохранена'); renderChat('keep'); };
+    p.addEventListener('mouseleave', () => { if (!p.dataset.pinned && document.activeElement !== $('#cNote', p)) closePop(); });
+  });
+  // Наведение — показать; клик — закрепить (не закроется, пока не кликнуть мимо).
+  ib.onmouseenter = () => { if (!popEl || popEl.dataset.for !== 'infoBtn') showInfo(); };
+  ib.onmouseleave = (e) => { setTimeout(() => { if (popEl && popEl.dataset.for === 'infoBtn' && !popEl.dataset.pinned && !popEl.matches(':hover') && document.activeElement !== $('#cNote', popEl)) closePop(); }, 150); };
+  ib.onclick = () => {
+    if (popEl && popEl.dataset.for === 'infoBtn' && popEl.dataset.pinned) return closePop();
+    if (!popEl || popEl.dataset.for !== 'infoBtn') showInfo();
+    popEl.dataset.pinned = '1';
+  };
+  $('#stageBtn').onclick = (e) => menuPop(e.currentTarget, [['', 'Авто (определяет ИИ)'], ...Object.entries(S.state.stages)], c.stage || '', async (v) => {
+    await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, stage: v } }); c.stage = v || null; toast('Этап: ' + (S.state.stages[v] || 'авто')); renderChat('keep'); loadChats(true);
+  });
+  $('#modelBtn').onclick = (e) => menuPop(e.currentTarget, [['', 'По умолчанию — ' + modelLabel(S.state.config.defaultModel)], ...S.state.models.map((m) => [m.ref, m.label])], c.model || '', async (v) => {
+    await api('chat-meta', { method: 'POST', body: { chatId: c.chatId, model: v } }); c.model = v || null; toast('Модель диалога: ' + (v ? modelLabel(v) : 'по умолчанию')); renderChat('keep');
+  });
+  $$('#bar [data-a]').forEach((b) => b.addEventListener('click', () => chatAction(b.dataset.a, b)));
 }
-async function chatAction(a) {
+function editedParts() { return $$('#edParts textarea').map((t) => t.value.trim()).filter(Boolean); }
+async function chatAction(a, el) {
   const c = S.chat; const d = c.draft;
   if (a === 'gen') return genDraft();
   if (a === 'regen') {
-    const instr = await promptModal('Новый вариант', 'Что изменить? (необязательно) Например: «короче», «предложи субботу», «ответь про цену».', '', true);
+    const instr = await promptModal('Ещё вариант', 'Что изменить? (необязательно) Например: «короче», «предложи субботу», «ответь про цену», «напомни про встречу».', '', true);
     if (instr === null) return; return genDraft(instr.text, instr.model);
   }
   if (a === 'cmp') return compareModels();
-  if (a === 'copy') { const t = d.review && d.review.action === 'edit' ? d.review.text : d.reply; navigator.clipboard.writeText(t).then(() => toast('Скопировано')); return; }
-  if (a === 'edit') { S.editing = d.id; renderChat(false); $('#edText').focus(); return; }
-  if (a === 'cancelEdit') { S.editing = null; renderChat(false); return; }
+  if (a === 'think') { S.think = !S.think; renderChat('keep'); return; }
+  if (a === 'copy') { const ps = draftState().parts; navigator.clipboard.writeText(ps.join('\n\n')).then(() => toast('Скопировано')); return; }
+  if (a === 'edit') { S.editing = d.id; renderChat('keep'); const t = $('#edParts textarea'); if (t) t.focus(); return; }
+  if (a === 'addPart') { $('#edParts').insertAdjacentHTML('beforeend', editPart('')); $$('#edParts [data-a="rmPart"]').forEach((b) => { b.onclick = () => b.closest('.edit-part').remove(); }); $$('#edParts textarea').pop().focus(); return; }
+  if (a === 'rmPart') { el.closest('.edit-part').remove(); return; }
+  if (a === 'cancelEdit') { S.editing = null; renderChat('keep'); return; }
   if (a === 'approve' || a === 'reject' || a === 'saveEdit') {
     const action = a === 'saveEdit' ? 'edit' : a;
-    const text = a === 'saveEdit' ? $('#edText').value.trim() : '';
-    if (a === 'saveEdit' && !text) return toast('Пустой текст');
+    const parts = a === 'saveEdit' ? editedParts() : [];
+    if (a === 'saveEdit' && !parts.length) return toast('Пустой текст');
     try {
-      await api('feedback', { method: 'POST', body: { chatId: c.chatId, draftId: d.id, action, text, comment: a === 'saveEdit' ? $('#edWhy').value : '' } });
+      await api('feedback', { method: 'POST', body: { chatId: c.chatId, draftId: d.id, action, parts, comment: a === 'saveEdit' ? $('#edWhy').value : '' } });
       S.editing = null; toast(action === 'approve' ? 'Запомнил как хороший ответ' : action === 'edit' ? 'Правка сохранена — ИИ учтёт её' : 'Запомнил: здесь не отвечаем');
-      await openChat(c.chatId, true); loadChats(true);
+      await openChat(c.chatId, true, 'keep'); loadChats(true);
     } catch (e) { toast('Ошибка: ' + e.message); }
   }
 }
 async function genDraft(instruction, model) {
-  const id = S.chatId; S.busy.draft = id; renderChat(false);
+  const id = S.chatId; S.busy.draft = id; S.think = false; renderChat('keep');
   try {
     const r = await api('draft', { method: 'POST', body: { chatId: id, instruction: instruction || '', model: model || undefined } });
     await waitJob(r.job);
   } catch (e) { toast('ИИ: ' + e.message, 6000); }
   S.busy.draft = null;
-  if (S.chatId === id) await openChat(id, true);
+  if (S.chatId === id) await openChat(id, true, 'bottom');
   loadChats(true);
 }
 
