@@ -6130,6 +6130,7 @@ async function botScheduled(env) {
   }
   try {
     await atMigrateRoles(env);
+    await atRefreshPhotos(env);
   } catch (err) {
     console.error('role migration failed', err && err.stack);
   }
@@ -6740,7 +6741,42 @@ function atAccessMessage(team, first) {
   return lines.join('\n');
 }
 function atPublicUser(u) {
-  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId };
+  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId, pv: u.photoV || null };
+}
+// Avatars from Telegram: once a day the bot takes each team member's current profile photo (the small
+// 160 px size) and keeps it as a data URL in at:photo:<userId>; user.photoV is its Telegram file id, so
+// the page (action 'photos') knows when to fetch it again. Members without a photo keep their initials.
+async function atRefreshPhotos(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!env.CONTROL_BOT_TOKEN) return;
+  const flag = `at:photos-run:${botMsk(Date.now()).date}`;
+  if (await kv.get(flag)) return;
+  await kv.put(flag, '1', { expirationTtl: 3 * 86400 });
+  const team = await atGetTeam(env);
+  let changed = false;
+  for (const u of team.users.filter((x) => x.active && x.tgId)) {
+    const res = await botApi(env, 'getUserProfilePhotos', { user_id: Number(u.tgId), limit: 1 });
+    const sizes = res && res.ok && res.result && res.result.photos && res.result.photos[0];
+    if (!sizes || !sizes.length) {
+      if (res && res.ok && u.photoV) { delete u.photoV; await kv.delete(`at:photo:${u.id}`); changed = true; }
+      continue;
+    }
+    const small = sizes[0];
+    if (small.file_unique_id === u.photoV) continue;
+    const file = await botApi(env, 'getFile', { file_id: small.file_id });
+    if (!file || !file.ok || !file.result || !file.result.file_path) continue;
+    try {
+      const img = await fetch(`https://api.telegram.org/file/bot${env.CONTROL_BOT_TOKEN}/${file.result.file_path}`, { signal: AbortSignal.timeout(10000) });
+      if (!img.ok) continue;
+      const bytes = new Uint8Array(await img.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      await kv.put(`at:photo:${u.id}`, `data:image/jpeg;base64,${btoa(bin)}`);
+      u.photoV = small.file_unique_id;
+      changed = true;
+    } catch (err) { /* next time */ }
+  }
+  if (changed) { await atPutTeam(kv, team); await atTouch(kv, ['#team']); }
 }
 async function atAuth(team, token) {
   const [id, v, sig] = String(token || '').split('.');
@@ -8171,6 +8207,13 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     const list = (await kv.get(key, 'json')) || [];
     if (list.some((n) => !n.read)) await kv.put(key, JSON.stringify(list.map((n) => ({ ...n, read: true }))));
     return json({ ok: true });
+  }
+
+  // Аватарки из Telegram: { photos: { <userId>: dataURL } } — для тех, у кого есть pv.
+  if (action === 'photos') {
+    const ids = team.users.filter((u) => u.photoV).map((u) => u.id);
+    const vals = await Promise.all(ids.map((id) => kv.get(`at:photo:${id}`)));
+    return json({ photos: Object.fromEntries(ids.map((id, i) => [id, vals[i]]).filter(([, v]) => v)) });
   }
 
   if (action === 'tg-unlink') {

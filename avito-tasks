@@ -120,8 +120,17 @@ a{color:inherit}
 .conn-dot.off{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
 @keyframes pulse{50%{opacity:.35}}
 .tabs{display:flex;gap:4px;margin-left:-6px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.dragging{cursor:grabbing;user-select:none}
+.dragging *{pointer-events:none}
+/* Полосы прокрутки — тонкие, в цветах интерфейса, а не серые системные. */
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--faint);background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
+.tab{text-decoration:none;-webkit-user-drag:none;user-select:none;flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px}
 .tab:hover{color:var(--ink);background:var(--sunken)}
 .tab.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line)}
 .tab .count{font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
@@ -1665,9 +1674,28 @@ function colorFor(id) { const i = S.users.findIndex((u) => u.id === id); if (i >
 function initials(name) { const w = String(name || '?').trim().split(/\s+/); return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase(); }
 // Фото команды лежат в /images/avito-tasks/<id>.jpg; у кого фото нет (или оно не загрузилось) — инициалы на цветном круге.
 const TEAM_PHOTOS = { oleg: 1, olga: 1, evgeny: 1, albina: 1, ekaterina: 1, sofia: 1, stanislav: 1 };
+// У кого нет файла в /images/avito-tasks — аватарка из Telegram (бот обновляет раз в день), с кэшем на устройстве.
+const K_PHOTOS = 'avitoTasks.photos';
+const PHOTOS = store.json(K_PHOTOS) || {};
+let photosLoading = false;
+async function ensurePhotos() {
+  const need = (S.users || []).filter((u) => u.pv && !TEAM_PHOTOS[u.id] && (!PHOTOS[u.id] || PHOTOS[u.id].v !== u.pv));
+  if (!need.length || photosLoading || !S.token) return;
+  photosLoading = true;
+  try {
+    const res = await api('photos');
+    if (res.ok) {
+      for (const u of S.users) if (u.pv && res.data.photos[u.id]) PHOTOS[u.id] = { v: u.pv, src: res.data.photos[u.id] };
+      store.set(K_PHOTOS, JSON.stringify(PHOTOS));
+      render();
+    }
+  } catch (e) { /* в следующий раз */ }
+  photosLoading = false;
+}
 function avatar(user, size, id) {
   const u = user || { id: '?', name: '?' };
-  const photo = TEAM_PHOTOS[u.id] ? `<img src="/images/avito-tasks/${esc(u.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : '';
+  const tg = !TEAM_PHOTOS[u.id] && u.pv && PHOTOS[u.id] && PHOTOS[u.id].v === u.pv ? PHOTOS[u.id].src : '';
+  const photo = TEAM_PHOTOS[u.id] ? `<img src="/images/avito-tasks/${esc(u.id)}.jpg" alt="" loading="lazy" onerror="this.remove()">` : tg ? `<img src="${tg}" alt="">` : '';
   return `<span class="avatar ${size || ''}"${id ? ` id="${id}"` : ''} style="background:${colorFor(u.id)}">${esc(initials(u.name))}${photo}</span>`;
 }
 const userById = (id) => S.users.find((u) => u.id === id);
@@ -2025,6 +2053,7 @@ function applySync(d, fromCache) {
   if (!d.unchanged) {
     S.ver = fromCache ? null : d.ver;
     S.users = d.users || [];
+    setTimeout(ensurePhotos, 0);
     S.projects = d.projects || [];
     S.tasks = mergeSaved(d.tasks || [], d.gone).filter((t) => !PENDING_DELETES.has(t.id));
     S.clients = d.clients || null;
@@ -2087,7 +2116,8 @@ function renderHeader() {
   // …у «Рассылок» — сколько прошедших рассылок ждут итога.
   const mailWait = mlWaitCount();
   const badge = (v) => (v.id === 'clients' && alerts ? alerts : v.id === 'reflection' && left ? left : v.id === 'meet' && meetToday ? meetToday : v.id === 'mail' && mailWait ? mailWait : 0);
-  const tabHtml = (v) => `<button class="tab ${S.view === v.id ? 'on' : ''}" data-view="${v.id}">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</button>`;
+  // Ссылки, а не кнопки: правой кнопкой / колёсиком / Ctrl — открыть раздел в новой вкладке.
+  const tabHtml = (v) => `<a class="tab ${S.view === v.id ? 'on' : ''}" href="#${v.id}" data-view="${v.id}" draggable="false">${esc(v.label)}${badge(v) ? `<span class="count">${badge(v)}</span>` : ''}</a>`;
   $('tabs').innerHTML = vs.length > 1 ? vs.map(tabHtml).join('') : '';
   // Внизу — не больше пяти кнопок: четыре раздела и «Ещё» со всеми остальными (если разделов больше пяти).
   // Открытый раздел из «Ещё» подсвечивает саму кнопку «Ещё» и показывает её подпись.
@@ -2166,7 +2196,8 @@ function openNavMore() {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-navmore]')) { openNavMore(); return; }
   const b = e.target.closest('[data-view]');
-  if (b) setView(b.dataset.view);
+  if (b && b.tagName === 'A' && (e.ctrlKey || e.metaKey || e.shiftKey || e.button)) return; // новая вкладка — браузеру
+  if (b) { if (b.tagName === 'A') e.preventDefault(); setView(b.dataset.view); }
   const t = e.target.closest('[data-teamtab]');
   if (t && S.teamTab !== t.dataset.teamtab) {
     S.teamTab = t.dataset.teamtab;
@@ -2727,7 +2758,7 @@ function openTask(id) {
   });
 }
 function openFromHash() {
-  const sec = (location.hash.match(/^#(analytics|clients|meet|team|kb)$/) || [])[1];
+  const sec = (location.hash.match(/^#(tasks|ai|analytics|clients|meet|mail|team|kb)$/) || [])[1];
   if (sec) { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === sec)) setView(sec); return; }
   if (location.hash === '#reflection') { history.replaceState(null, '', location.pathname + location.search); if (views().some((v) => v.id === 'reflection')) setView('reflection'); return; }
   const m = location.hash.match(/^#(t|kb|ai)=(.+)$/);
@@ -2747,6 +2778,36 @@ function openKbJob(id) {
   if (S.view === 'kb') { renderKbForm(); loadKbJobs(); } else setView('kb');
 }
 window.addEventListener('hashchange', openFromHash);
+
+// Горизонтальные ленты (разделы сверху, месяцы, фильтры) листаются и зажатой мышью, не только колесом.
+// Если ленту потащили, отпускание не считается нажатием на вкладку.
+const DRAG_SCROLL = '.tabs, .an-months, .c-filt, .stats, .filters';
+let dragS = null;
+document.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return;
+  const el = e.target.closest(DRAG_SCROLL);
+  if (!el || el.scrollWidth <= el.clientWidth) return;
+  dragS = { el, x: e.clientX, left: el.scrollLeft, moved: false };
+});
+document.addEventListener('pointermove', (e) => {
+  if (!dragS) return;
+  const dx = e.clientX - dragS.x;
+  if (!dragS.moved && Math.abs(dx) < 6) return;
+  dragS.moved = true;
+  dragS.el.scrollLeft = dragS.left - dx;
+  dragS.el.classList.add('dragging');
+});
+document.addEventListener('pointerup', () => {
+  if (!dragS) return;
+  const d = dragS;
+  dragS = null;
+  d.el.classList.remove('dragging');
+  if (d.moved) {
+    const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+    window.addEventListener('click', stop, { capture: true, once: true });
+    setTimeout(() => window.removeEventListener('click', stop, { capture: true }), 0);
+  }
+});
 const PENDING_DELETES = new Map();
 function taskDeleteNow(id, t) {
   if (!PENDING_DELETES.has(id)) return;
