@@ -1832,7 +1832,96 @@ async function handleAvitoApi(request, env, url) {
     }
   }
 
+  // The cabinet's Avito tariff (Расширенный и т. п.) and when it ends: GET /api/avito/tariff?accountId=…
+  // Without accountId — every cabinet, one after another. When it lapses, autoload stops and new
+  // listings aren't published, so this is the first thing to check when a cabinet goes quiet.
+  if (pathname === '/api/avito/tariff' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    if (accountId) {
+      const account = await kv.get(`account:${accountId}`, 'json');
+      if (!account) return json({ error: 'not_found' }, 404);
+      return json(await fetchAvitoTariff(env, account));
+    }
+    const list = await kv.list({ prefix: 'account:' });
+    const accounts = (await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')))).filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    const tariffs = [];
+    for (const account of accounts) tariffs.push(await fetchAvitoTariff(env, account));
+    return json({ tariffs });
+  }
+
+  // Any read from Avito's API for a cabinet: GET /api/avito/raw?accountId=…&path=/core/v1/accounts/self
+  // ({user_id} in the path becomes the cabinet's id). GET goes to any path; POST only to the paths
+  // where Avito uses POST to read (statistics, operations history, balance, prices, calls) — the body
+  // is passed through. Nothing that changes a cabinet (prices, promotion, listings, messages) goes here.
+  if (pathname === '/api/avito/raw' && (request.method === 'GET' || request.method === 'POST')) {
+    const accountId = url.searchParams.get('accountId');
+    const rawPath = url.searchParams.get('path') || '';
+    if (!accountId || !rawPath) return json({ error: 'missing_fields' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    const path = rawPath.replace(/\{user_?id\}/gi, account.userId);
+    if (!/^\/[A-Za-z0-9_\-./]*(\?.*)?$/.test(path) || path.includes('..') || /^\/token\b/.test(path)) {
+      return json({ error: 'bad_path' }, 400);
+    }
+    if (request.method === 'POST' && !AVITO_READ_POSTS.some((re) => re.test(path.split('?')[0]))) {
+      return json({ error: 'post_not_allowed', message: 'POST only for read-only Avito endpoints', allowed: AVITO_READ_POSTS.map(String) }, 403);
+    }
+    try {
+      const token = await avitoGetToken(env, account);
+      const body = request.method === 'POST' ? await request.text() : undefined;
+      const res = await avitoRequest(token, path, { method: request.method, body });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch (e) { data = text; }
+      return json({ status: res.status, path, data }, res.ok ? 200 : 502);
+    } catch (e) {
+      return json({ error: 'raw_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
   return json({ error: 'not_found' }, 404);
+}
+
+// Avito endpoints that take POST but only read. /api/avito/raw lets POST through to these and nothing else.
+const AVITO_READ_POSTS = [
+  /^\/stats\/v1\/accounts\/\d+\/items\/?$/,
+  /^\/stats\/v2\/accounts\/\d+\/items\/?$/,
+  /^\/stats\/v2\/accounts\/\d+\/spendings\/?$/,
+  /^\/core\/v1\/accounts\/operations_history\/?$/,
+  /^\/core\/v1\/accounts\/\d+\/price\/vas\/?$/,
+  /^\/cpa\/v3\/balanceInfo\/?$/,
+  /^\/cpa\/v2\/(calls|chats)ByTime\/?$/,
+  /^\/calltracking\/v1\/getCalls\/?$/,
+];
+
+// Avito answers /tariff/info/1 with the current tariff and the scheduled next one; times come in
+// unix seconds. Kept raw too — the field set isn't documented in full.
+async function fetchAvitoTariff(env, account) {
+  const out = { accountId: account.id, name: account.name, active: null, tariff: null, startsAt: null, endsAt: null, daysLeft: null, scheduled: null, raw: null, error: null };
+  try {
+    const token = await avitoGetToken(env, account);
+    const data = await avitoJson(token, '/tariff/info/1');
+    out.raw = data;
+    const toIso = (v) => {
+      const n = Number(v);
+      if (!v || !Number.isFinite(n) || n <= 0) return null;
+      return new Date(n < 1e12 ? n * 1000 : n).toISOString();
+    };
+    const cur = data && data.current;
+    if (cur) {
+      out.active = cur.isActive != null ? Boolean(cur.isActive) : null;
+      out.tariff = cur.level || cur.name || null;
+      out.startsAt = toIso(cur.startTime);
+      out.endsAt = toIso(cur.closeTime);
+      if (out.endsAt) out.daysLeft = Math.floor((Date.parse(out.endsAt) - Date.now()) / 86400000);
+    }
+    const next = data && data.scheduled;
+    if (next) out.scheduled = { tariff: next.level || next.name || null, startsAt: toIso(next.startTime), endsAt: toIso(next.closeTime) };
+  } catch (e) {
+    out.error = String(e && e.message).slice(0, 300);
+  }
+  return out;
 }
 
 // ── /sales-crm: single-screen table CRM for Avito sales leads ──
