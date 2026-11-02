@@ -11732,7 +11732,17 @@ function aisChatState(messages) {
     lastMsgId: last ? last.id : null,
     waiting: Boolean(last && last.author !== 'manager'),
     msgCount: messages.length,
+    // Сколько сообщений Елены подряд в конце (после последнего от клиента) — чтобы не дожимать без конца.
+    managerStreak: (() => { let n = 0; for (let i = meaningful.length - 1; i >= 0 && meaningful[i].author === 'manager'; i -= 1) n += 1; return n; })(),
+    lastClientAt: (() => { for (let i = meaningful.length - 1; i >= 0; i -= 1) if (meaningful[i].author !== 'manager') return meaningful[i].at; return null; })(),
   };
+}
+// Клиент молчит после сообщения Елены — пора напомнить (не чаще двух дожимов подряд).
+const AIS_FOLLOWUP_HOURS = 20;
+function aisFollowupDue(c, now = Date.now()) {
+  const st = c.stage || c.aiStage;
+  return c.lastAuthor === 'manager' && (c.managerStreak || 1) <= 2 && c.lastAt && now - c.lastAt > AIS_FOLLOWUP_HOURS * 3600000
+    && now - c.lastAt < 10 * 86400000 && !['lost', 'spam', 'messenger'].includes(st);
 }
 function aisChatMeta(c, userId) {
   const other = (c.users || []).find((u) => String(u.id) !== String(userId)) || {};
@@ -11745,6 +11755,8 @@ function aisChatMeta(c, userId) {
     itemId: item.id ? String(item.id) : '',
     itemTitle: item.title || '',
     itemUrl: item.url || '',
+    itemCity: (item.location && item.location.title) || '',
+    itemPrice: item.price_string || '',
     updated: Number(c.updated) || 0,
   };
 }
@@ -11763,7 +11775,8 @@ async function aisSync(env, accountId, { budgetMs = 15000, pages } = {}) {
   const sinceSec = Date.parse(`${cab.since}T00:00:00+03:00`) / 1000;
 
   // 1. Список чатов: после первой полной загрузки хватает одной страницы (новые — сверху).
-  const maxPages = pages || (idx.imported ? 1 : 10);
+  const metaRescan = (idx.metaVersion || 0) < 2; // один раз пройти все страницы, чтобы у старых чатов появился город
+  const maxPages = pages || (idx.imported && !metaRescan ? 1 : 10);
   const changes = {}; // chatId -> поля, которые меняет эта синхронизация (в конце ложатся на свежий индекс)
   let reachedEnd = false;
   for (let page = 0; page < maxPages; page += 1) {
@@ -11779,7 +11792,7 @@ async function aisSync(env, accountId, { budgetMs = 15000, pages } = {}) {
     }
     if (old || batch.length < 100 || !(data.meta && data.meta.has_more)) { reachedEnd = true; break; }
   }
-  if (reachedEnd) idx.imported = true;
+  if (reachedEnd) { idx.imported = true; idx.metaVersion = 2; }
 
   // 2. Сообщения изменившихся чатов, новые — первыми, пока есть время.
   const stale = Object.values(idx.chats).filter((c) => c.stale).sort((a, b) => b.updated - a.updated);
@@ -11792,9 +11805,11 @@ async function aisSync(env, accountId, { budgetMs = 15000, pages } = {}) {
       const key = `aisales:chat:${accountId}:${s.chatId}`;
       const rec = (await kv.get(key, 'json')) || { chatId: s.chatId, drafts: [] };
       rec.messages = raw.map((m) => aisMapMessage(m, userId));
-      Object.assign(rec, { name: s.name, avatar: s.avatar, itemId: s.itemId, itemTitle: s.itemTitle, itemUrl: s.itemUrl, syncedAt: Date.now() });
+      Object.assign(rec, { name: s.name, avatar: s.avatar, itemId: s.itemId, itemTitle: s.itemTitle, itemUrl: s.itemUrl, itemCity: s.itemCity, itemPrice: s.itemPrice, syncedAt: Date.now() });
+      const learned = await aisLearnFromSent(env, accountId, rec);
       await kv.put(key, JSON.stringify(rec));
       const st = aisChatState(rec.messages);
+      if (learned) changes[s.chatId] = { ...(changes[s.chatId] || {}), draftReviewed: true, hasDraft: false };
       changes[s.chatId] = {
         ...(changes[s.chatId] || {}), ...st, stale: false, fetchedUpdated: s.updated,
         needsDraft: st.waiting && !(rec.draft && rec.draft.forMsgId === st.lastMsgId),
@@ -11809,6 +11824,7 @@ async function aisSync(env, accountId, { budgetMs = 15000, pages } = {}) {
   const out = await aisIndex(env, accountId);
   Object.entries(changes).forEach(([id, patch]) => { out.chats[id] = { ...(out.chats[id] || {}), ...patch }; });
   out.imported = out.imported || idx.imported;
+  out.metaVersion = Math.max(out.metaVersion || 0, idx.metaVersion || 0);
   out.lastSyncAt = Date.now();
   await kv.put(`aisales:index:${accountId}`, JSON.stringify(out));
   const remaining = Object.values(out.chats).filter((c) => c.stale).length;
@@ -11885,6 +11901,42 @@ async function aisCallModel(env, ref, system, user, o = {}) {
 }
 
 // ── Промпт черновика ──
+// Похожесть двух текстов по словам (0…1) — ловим повторы и сравниваем черновик с тем, что Елена отправила сама.
+function aisWords(t) { return new Set(String(t || '').toLowerCase().replace(/ё/g, 'е').match(/[a-zа-я0-9]{3,}/g) || []); }
+function aisSimilar(a, b) {
+  const A = aisWords(a); const B = aisWords(b);
+  if (!A.size || !B.size) return 0;
+  let n = 0; A.forEach((w) => { if (B.has(w)) n += 1; });
+  return n / Math.min(A.size, B.size);
+}
+// Елена ответила в Авито сама, а черновик ИИ так и висел: сравниваем и записываем в обучение —
+// совпало по смыслу → «верно», иначе → «как надо» = её настоящий ответ.
+async function aisLearnFromSent(env, accountId, rec) {
+  const d = rec.draft;
+  if (!d || d.review || !d.forMsgId) return false;
+  const msgs = rec.messages || [];
+  const i = msgs.findIndex((m) => m.id === d.forMsgId);
+  if (i < 0) return false;
+  const sent = [];
+  for (let j = i + 1; j < msgs.length; j += 1) {
+    if (msgs[j].author === 'client') break;
+    if (msgs[j].author === 'manager' && msgs[j].type === 'text') sent.push(msgs[j].text);
+  }
+  if (!sent.length) return false;
+  const finalText = sent.join('\n\n');
+  const sim = d.reply ? aisSimilar(d.reply, finalText) : 0;
+  const action = sim >= 0.7 ? 'approve' : 'edit';
+  d.review = { action: 'sent', text: finalText, similar: Math.round(sim * 100) / 100, at: Date.now() };
+  rec.drafts = (rec.drafts || []).map((x) => (x.id === d.id ? d : x));
+  const lastClient = [...msgs.slice(0, i + 1)].reverse().find((m) => m.author === 'client');
+  await aisKv(env).put(`aisales:fb:${accountId}:${new Date().toISOString()}:${aisId().slice(0, 4)}`, JSON.stringify({
+    at: Date.now(), action, source: 'sent', chatId: rec.chatId, model: d.model || null,
+    lastClient: lastClient ? lastClient.text : '', context: aisTranscript(msgs.slice(0, i + 1), 8),
+    aiText: d.reply || '', finalText, finalParts: sent, comment: action === 'approve' ? 'Елена отправила почти то же самое' : 'Так Елена ответила сама',
+  }));
+  return true;
+}
+
 async function aisFeedbackList(env, accountId, limit = 200) {
   const kv = aisKv(env);
   const list = await kv.list({ prefix: `aisales:fb:${accountId}:`, limit: 1000 });
@@ -11901,29 +11953,45 @@ function aisBuildSystem(prompt, feedback) {
   }
   if (prompt.knowledge) parts.push(`\n# База знаний\n${prompt.knowledge}`);
   parts.push(`\n# Свободные окна для диагностики\n${String(prompt.slots || '').trim() || 'не указаны'}`);
-  const edits = feedback.filter((f) => f.action === 'edit' && f.finalText).slice(0, 12);
+  const edits = feedback.filter((f) => f.action === 'edit' && f.finalText).slice(0, 14);
   const good = feedback.filter((f) => f.action === 'approve').slice(0, 4);
   if (edits.length || good.length) {
     parts.push('\n# Как Елена исправляла черновики — это главный ориентир. Пиши как в «Как надо», не как в черновике.');
     edits.forEach((f) => {
-      parts.push(`- Клиент писал: «${String(f.lastClient || '').slice(0, 300)}»\n  Черновик ИИ: «${String(f.aiText || '').slice(0, 400)}»\n  Как надо: «${String(f.finalText).slice(0, 400)}»${f.comment ? `\n  Почему: ${String(f.comment).slice(0, 300)}` : ''}`);
+      parts.push(`- Клиент писал: «${String(f.lastClient || '').slice(0, 300)}»\n  Черновик ИИ: «${String(f.aiText || '').slice(0, 400)}»\n  Как надо: «${(Array.isArray(f.finalParts) && f.finalParts.length > 1 ? f.finalParts.join('» + отдельным сообщением «') : String(f.finalText)).slice(0, 500)}»${f.comment ? `\n  Почему: ${String(f.comment).slice(0, 300)}` : ''}`);
     });
     good.forEach((f) => parts.push(`- Хороший ответ (одобрен): клиент «${String(f.lastClient || '').slice(0, 200)}» → «${String(f.finalText || f.aiText || '').slice(0, 300)}»`));
   }
+  parts.push(AIS_HARD_RULES);
   parts.push([
     '\n# Формат ответа',
-    'Сначала мысленно проверь: что уже известно из истории, на что клиент ждёт ответа, какой следующий шаг по скриптам, не нарушаешь ли правила. Затем верни строго один JSON без пояснений вокруг:',
+    'Сначала мысленно проверь: что уже известно из истории, что Елена уже писала и спрашивала, на что клиент ждёт ответа, какой следующий шаг. Затем верни строго один JSON без пояснений вокруг:',
     '{"analysis":"1–2 предложения: кто пишет, что хочет, что уже известно, этап",',
-    ' "checks":["что именно проверил в истории и базе знаний (коротко, 2–5 пунктов)"],',
+    ' "checks":["что именно проверил (коротко, 2–5 пунктов), в том числе — что не повторяю свои прошлые сообщения"],',
     ` "stage":"${Object.keys(AIS_STAGES).join('|')}",`,
     ' "needs_reply":true,',
-    ' "reply":"текст следующего сообщения от Елены (пусто, если отвечать не нужно)",',
+    ' "kind":"answer|reminder|followup",',
+    ' "messages":["первое сообщение","второе (если нужно)"],',
     ' "needs_human":false,',
     ' "human_reason":"почему нужен человек (если needs_human)",',
     ' "confidence":0.8}',
+    'messages — 1–3 отдельных сообщения в чат, как их отправил бы человек; пустой список, если писать не нужно.',
   ].join('\n'));
   return parts.join('\n');
 }
+
+// Правила, которые работают при любом редактируемом промпте (его правят на странице).
+const AIS_HARD_RULES = [
+  '\n# Обязательно',
+  '- Не повторяй свои прошлые сообщения и вопросы. Если Елена уже предлагала время, спрашивала класс или «Удобно будет?» и клиент на это не ответил, не задавай тот же вопрос снова: ответь на то, что клиент написал сейчас, и закончи мягко («Что-то ещё уточнить?», «Напишите, когда будет удобно»).',
+  '- Одно и то же предложение (время, диагностика) — не больше одного раза подряд. После отказа от времени спроси, когда удобно клиенту, а не предлагай те же окна.',
+  '- Пиши как в мессенджере: если в ответе две разные мысли (ответ на вопрос + следующий шаг, подтверждение + ссылка), разбей на 2 отдельных сообщения. Короткое «Хорошо.» или «Поняла Вас.» — отдельным сообщением допустимо. Не больше 3 сообщений.',
+  '- Если последнее сообщение в диалоге — Елены (клиент молчит), реши, нужно ли напоминание (kind):',
+  '  • встреча назначена на сегодня/завтра и клиент не подтверждал в этот день → reminder: «Здравствуйте! Напоминаю, что сегодня в … по Мск мы встречаемся на бесплатной онлайн-диагностике. Всё в силе?»;',
+  '  • клиент молчит больше суток после вопроса/предложения → followup: мягкий дожим по скрипту «Дожим»;',
+  '  • уже было два дожима подряд, клиент отказался или всё договорено → needs_reply=false, messages=[].',
+  '  Никогда не пиши напоминание, которое по смыслу повторяет предыдущее сообщение Елены.',
+].join('\n');
 
 function aisTranscript(messages, max = 60) {
   const lines = messages.slice(-max).map((m) => {
@@ -11934,18 +12002,36 @@ function aisTranscript(messages, max = 60) {
   return lines.join('\n') || '(сообщений нет)';
 }
 
+function aisHoursAgo(ts) { const h = (Date.now() - ts) / 3600000; return h < 1 ? `${Math.max(1, Math.round(h * 60))} мин` : h < 48 ? `${Math.round(h)} ч` : `${Math.round(h / 24)} дн`; }
+function aisSituation(chat) {
+  const msgs = chat.messages || [];
+  const st = aisChatState(msgs);
+  const mine = msgs.filter((m) => m.author === 'manager' && m.type === 'text').slice(-5);
+  const lines = [];
+  if (!st.lastAuthor) lines.push('Ситуация: в чате ещё нет сообщений от клиента и Елены.');
+  else if (st.lastAuthor === 'manager') lines.push(`Ситуация: последнее сообщение — Елены, клиент молчит уже ${aisHoursAgo(st.lastAt)}; Елена написала подряд ${st.managerStreak} сообщ. Реши, нужно ли напоминание/дожим (см. «Обязательно»).`);
+  else lines.push(`Ситуация: клиент ждёт ответа ${aisHoursAgo(st.lastAt)}. Ответь на его последнее сообщение.`);
+  if (mine.length) {
+    lines.push('Последние сообщения Елены в этом чате — НЕ повторяй их и не задавай те же вопросы снова:');
+    mine.forEach((m) => lines.push(`  — «${String(m.text).slice(0, 300)}» (${aisHoursAgo(m.at)} назад)`));
+  }
+  return lines.join('\n');
+}
+
 function aisBuildUser(chat, opts = {}) {
   return [
     `Сейчас: ${aisMsk(Date.now())} (Мск).`,
-    chat.itemTitle ? `Объявление: ${chat.itemTitle}` : '',
+    chat.itemTitle ? `Объявление: ${chat.itemTitle}${chat.itemCity ? ` (город в объявлении: ${chat.itemCity})` : ''}` : '',
     chat.name ? `Имя клиента в Авито: ${chat.name}` : '',
     chat.note ? `Заметка менеджера по этому диалогу: ${chat.note}` : '',
     '',
     'История диалога (старые сверху):',
     aisTranscript(chat.messages || []),
     '',
+    aisSituation(chat),
+    '',
     opts.instruction ? `Пожелание к ответу от менеджера: ${opts.instruction}\n` : '',
-    'Напиши следующее сообщение от Елены. Верни JSON.',
+    'Напиши следующее сообщение (или 2–3 сообщения) от Елены. Верни JSON.',
   ].filter((x) => x !== '').join('\n');
 }
 
@@ -11957,17 +12043,35 @@ function aisCheckSystem(prompt) {
     '3) не противоречит ли договорённостям из истории (время, дата, формат);',
     '4) все факты, цены и время — только из базы знаний и свободных окон, ничего не выдумано;',
     '5) стиль Елены: коротко (1–3 предложения), без эмодзи и markdown, на «Вы», время «по Мск», в конце один вопрос/шаг;',
-    '6) не здоровается повторно, если сегодня уже здоровались; не отправляет ссылку или телефон не по правилам.',
+    '6) не здоровается повторно, если сегодня уже здоровались; не отправляет ссылку или телефон не по правилам;',
+    '7) НЕ повторяет по смыслу прошлые сообщения и вопросы Елены (то же время, тот же вопрос «Удобно будет?», то же приглашение) — это главная ошибка, исправляй её обязательно;',
+    '8) если две разные мысли — они разбиты на отдельные сообщения (не больше 3).',
     '',
     `# База знаний\n${prompt.knowledge || ''}`,
     `\n# Свободные окна\n${String(prompt.slots || '').trim() || 'не указаны'}`,
     '',
-    'Верни строго JSON: {"ok":true|false,"issues":["что не так"],"fixed_reply":"исправленный текст, если ok=false, иначе пусто"}',
+    'Верни строго JSON: {"ok":true|false,"issues":["что не так"],"fixed_messages":["исправленные сообщения, если ok=false; пустой список, если писать вообще не нужно"]}',
   ].join('\n');
 }
 
 function aisCleanReply(t) {
   return String(t || '').replace(/^["«»\s]+|["«»\s]+$/g, '').replace(/\*\*/g, '').trim();
+}
+
+function aisParts(parsed) {
+  let list = Array.isArray(parsed.messages) ? parsed.messages : parsed.reply != null ? [parsed.reply] : [];
+  if (typeof parsed.messages === 'string') list = [parsed.messages];
+  return list.map(aisCleanReply).filter(Boolean).slice(0, 3);
+}
+// Какие части черновика по смыслу повторяют недавние сообщения Елены.
+function aisRepeats(chat, parts) {
+  const mine = (chat.messages || []).filter((m) => m.author === 'manager' && m.type === 'text').slice(-6);
+  const out = [];
+  parts.forEach((p, i) => {
+    const hit = mine.find((m) => aisWords(p).size >= 3 && aisSimilar(p, m.text) >= 0.75);
+    if (hit) out.push({ i, text: p, like: hit.text });
+  });
+  return out;
 }
 
 async function aisGenerate(env, accountId, chat, opts = {}) {
@@ -11978,13 +12082,15 @@ async function aisGenerate(env, accountId, chat, opts = {}) {
   const system = aisBuildSystem(prompt, feedback);
   const user = aisBuildUser(chat, opts);
   const r1 = await aisCallModel(env, model, system, user, { maxTokens: 1500, temperature: 0.4 });
-  const parsed = botParseJson(r1.text) || { reply: r1.text, analysis: '(модель ответила не в формате JSON)' };
+  const parsed = botParseJson(r1.text) || { messages: [r1.text], analysis: '(модель ответила не в формате JSON)' };
+  const st = aisChatState(chat.messages || []);
   const draft = {
     id: aisId(),
     at: Date.now(),
     model,
-    forMsgId: aisChatState(chat.messages || []).lastMsgId,
-    reply: aisCleanReply(parsed.reply),
+    forMsgId: st.lastMsgId,
+    parts: aisParts(parsed),
+    kind: ['answer', 'reminder', 'followup'].includes(parsed.kind) ? parsed.kind : (st.lastAuthor === 'manager' ? 'followup' : 'answer'),
     analysis: String(parsed.analysis || ''),
     checks: Array.isArray(parsed.checks) ? parsed.checks.map(String).slice(0, 8) : [],
     stage: AIS_STAGES[parsed.stage] ? parsed.stage : null,
@@ -11995,22 +12101,38 @@ async function aisGenerate(env, accountId, chat, opts = {}) {
     instruction: opts.instruction || '',
     ms: r1.ms,
   };
+  if (!draft.needsReply) draft.parts = [];
+  const repeats = aisRepeats(chat, draft.parts);
   const doCheck = opts.selfCheck == null ? cfg.selfCheck : opts.selfCheck;
-  if (doCheck && draft.reply) {
+  if ((doCheck || repeats.length) && draft.parts.length) {
     try {
-      const checkUser = `История диалога:\n${aisTranscript(chat.messages || [])}\n\nСейчас: ${aisMsk(Date.now())} (Мск).\n\nЧерновик следующего сообщения Елены:\n«${draft.reply}»\n\nПроверь и верни JSON.`;
+      const rep = repeats.length ? `\n\nВНИМАНИЕ: эти части черновика повторяют прошлые сообщения Елены — перепиши их по-другому или убери:\n${repeats.map((r) => `«${r.text}» ≈ «${r.like}»`).join('\n')}` : '';
+      const checkUser = `История диалога:\n${aisTranscript(chat.messages || [])}\n\nСейчас: ${aisMsk(Date.now())} (Мск).\n\nЧерновик следующих сообщений Елены:\n${draft.parts.map((p, i) => `${i + 1}) «${p}»`).join('\n')}${rep}\n\nПроверь и верни JSON.`;
       const r2 = await aisCallModel(env, model, aisCheckSystem(prompt), checkUser, { maxTokens: 900, temperature: 0.1 });
       const check = botParseJson(r2.text);
       draft.ms += r2.ms;
       if (check) {
-        draft.selfCheck = { ok: check.ok !== false, issues: Array.isArray(check.issues) ? check.issues.map(String).slice(0, 6) : [] };
-        const fixed = aisCleanReply(check.fixed_reply);
-        if (check.ok === false && fixed) { draft.firstReply = draft.reply; draft.reply = fixed; }
+        draft.selfCheck = { ok: check.ok !== false && !repeats.length, issues: Array.isArray(check.issues) ? check.issues.map(String).slice(0, 6) : [] };
+        const fixed = Array.isArray(check.fixed_messages) ? check.fixed_messages.map(aisCleanReply).filter(Boolean).slice(0, 3)
+          : check.fixed_reply ? [aisCleanReply(check.fixed_reply)].filter(Boolean) : null;
+        // ok=false и пустой список — «писать не нужно»; при одном лишь повторе пустой список не берём.
+        if (fixed && (check.ok === false || fixed.length)) { draft.firstParts = draft.parts; draft.parts = fixed; }
       }
     } catch (e) {
       draft.selfCheck = { ok: null, issues: [`Самопроверка не прошла: ${String(e && e.message).slice(0, 200)}`] };
     }
   }
+  // Повторы, которые остались и после проверки, просто выкидываем.
+  const still = aisRepeats(chat, draft.parts);
+  if (still.length) {
+    draft.parts = draft.parts.filter((_, i) => !still.some((r) => r.i === i));
+    draft.selfCheck = draft.selfCheck || { ok: false, issues: [] };
+    draft.selfCheck.ok = false;
+    draft.selfCheck.issues.push(`Убрал повтор прошлых сообщений: ${still.map((r) => `«${r.text.slice(0, 80)}»`).join(', ')}`);
+  }
+  if (!draft.parts.length) draft.needsReply = false;
+  draft.reply = draft.parts.join('\n\n');
+  if (draft.firstParts) draft.firstReply = draft.firstParts.join('\n\n');
   return draft;
 }
 
@@ -12036,7 +12158,7 @@ async function aisRunJob(env, job) {
         await kv.put(key, JSON.stringify(fresh));
         await aisUpdateIndexEntry(env, job.accountId, job.chatId, {
           needsDraft: false, hasDraft: Boolean(draft.reply), draftAt: draft.at, draftNeedsHuman: draft.needsHuman,
-          draftNeedsReply: draft.needsReply, aiStage: draft.stage, draftReviewed: false,
+          draftNeedsReply: draft.needsReply, aiStage: draft.stage, draftReviewed: false, draftFor: draft.forMsgId, draftKind: draft.kind,
         });
       }
       result = { draft };
@@ -12046,7 +12168,8 @@ async function aisRunJob(env, job) {
       if (!sim) throw new Error('sim_not_found');
       const draft = await aisGenerate(env, job.accountId, { ...sim, name: sim.clientName || 'Тест-клиент' }, { model: sim.model, ...(job.params || {}) });
       const fresh = (await kv.get(key, 'json')) || sim;
-      fresh.messages.push({ id: aisId(), at: Date.now(), author: 'manager', type: 'text', text: draft.reply || '(ИИ решил не отвечать)', draft });
+      const parts = draft.parts && draft.parts.length ? draft.parts : ['(ИИ решил не отвечать)'];
+      parts.forEach((t, i) => fresh.messages.push({ id: aisId(), at: Date.now() + i, author: 'manager', type: 'text', text: t, draft: i === parts.length - 1 ? draft : undefined, group: draft.id }));
       fresh.updatedAt = Date.now();
       await kv.put(key, JSON.stringify(fresh));
       result = { draft };
@@ -12118,7 +12241,10 @@ async function aiSalesCron(env) {
     if (!cfg.autoDraft) continue;
     const idx = await aisIndex(env, cab.accountId);
     const fresh = Date.now() - (cfg.autoDraftHours || 48) * 3600 * 1000;
-    const todo = Object.values(idx.chats).filter((c) => c.needsDraft && c.waiting && (c.lastAt || 0) > fresh).sort((a, b) => b.lastAt - a.lastAt).slice(0, 6);
+    const answers = Object.values(idx.chats).filter((c) => c.needsDraft && c.waiting && (c.lastAt || 0) > fresh);
+    // Напоминания: клиент молчит после Елены — один черновик на каждое её последнее сообщение.
+    const followups = Object.values(idx.chats).filter((c) => aisFollowupDue(c) && c.draftFor !== c.lastMsgId);
+    const todo = [...answers.sort((a, b) => b.lastAt - a.lastAt), ...followups.sort((a, b) => b.lastAt - a.lastAt)].slice(0, 8);
     for (const c of todo) {
       const job = { id: aisId(), kind: 'draft', accountId: cab.accountId, chatId: c.chatId, params: { save: true }, createdAt: Date.now(), auto: true };
       await aisRunJob(env, job);
@@ -12186,7 +12312,9 @@ async function handleAiSalesApi(request, env, url, ctx) {
 
   if (action === 'chats' && isGet) {
     const idx = await aisIndex(env, accountId);
-    const chats = Object.values(idx.chats).sort((a, b) => (b.lastAt || b.updated * 1000 || 0) - (a.lastAt || a.updated * 1000 || 0));
+    const now = Date.now();
+    const chats = Object.values(idx.chats).map((c) => ({ ...c, followupDue: aisFollowupDue(c, now) }))
+      .sort((a, b) => (b.lastAt || b.updated * 1000 || 0) - (a.lastAt || a.updated * 1000 || 0));
     return json({ chats, lastSyncAt: idx.lastSyncAt, imported: idx.imported });
   }
 
@@ -12237,6 +12365,8 @@ async function handleAiSalesApi(request, env, url, ctx) {
   if (action === 'feedback' && request.method === 'POST') {
     const act = ['approve', 'edit', 'reject'].includes(body.action) ? body.action : null;
     if (!act) return json({ error: 'bad_action' }, 400);
+    const editParts = Array.isArray(body.parts) ? body.parts.map((p) => String(p || '').trim()).filter(Boolean).slice(0, 5) : null;
+    if (editParts) body.text = editParts.join('\n\n');
     let messages = [];
     let draft = null;
     if (body.simId) {
@@ -12257,7 +12387,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
       draft = (rec.drafts || []).find((d) => d.id === body.draftId) || rec.draft;
       if (!draft) return json({ error: 'no_draft' }, 400);
       messages = rec.messages || [];
-      draft.review = { action: act, text: act === 'edit' ? String(body.text || '') : '', comment: String(body.comment || ''), at: Date.now() };
+      draft.review = { action: act, text: act === 'edit' ? String(body.text || '') : '', parts: act === 'edit' ? (editParts || [String(body.text || '')]) : null, comment: String(body.comment || ''), at: Date.now() };
       if (rec.draft && rec.draft.id === draft.id) rec.draft = draft;
       rec.drafts = (rec.drafts || []).map((d) => (d.id === draft.id ? draft : d));
       await kv.put(key, JSON.stringify(rec));
@@ -12268,6 +12398,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
       at: Date.now(), action: act, source: body.simId ? 'sim' : 'chat', chatId: body.chatId || null, simId: body.simId || null,
       model: draft.model || null, lastClient: lastClient ? lastClient.text : '', context: aisTranscript(messages, 8),
       aiText: draft.reply || '', finalText: act === 'edit' ? String(body.text || '') : act === 'approve' ? draft.reply : '',
+      finalParts: act === 'edit' ? (editParts || [String(body.text || '')]) : act === 'approve' ? (draft.parts || [draft.reply]) : [],
       comment: String(body.comment || '').slice(0, 1000),
     };
     await kv.put(`aisales:fb:${accountId}:${new Date().toISOString()}:${aisId().slice(0, 4)}`, JSON.stringify(fb));
