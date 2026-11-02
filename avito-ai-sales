@@ -20,12 +20,13 @@
   --line:#E5E2DD;--line-2:#EEECE8;
   --ink:#151515;--text:#2A2927;--muted:#76716A;--faint:#A7A29B;
   --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--blue:#2556C4;--blue-bg:#E9EFFC;--red:#D5311A;--red-bg:#FDEBE7;
-  --me:#1F1E1C;--me-text:#F4F2EE;
+  --me:#2A2927;--me-text:#F7F5F1;
   --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);
   --shadow-lg:0 18px 48px rgba(22,20,18,.16);
   --r:14px;--r-sm:10px;
   --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --display:'Unbounded','Geologica',sans-serif;
+  --top:60px;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
@@ -35,7 +36,7 @@
     --line:#2E2C2A;--line-2:#282624;
     --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
     --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--blue:#7FA2F5;--blue-bg:#18264A;--red:#FF6F57;--red-bg:#3D1812;
-    --me:#2C2A27;--me-text:#F4F2EE;
+    --me:#3A3632;--me-text:#F4F2EE;
     --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);
     color-scheme:dark;
   }
@@ -46,234 +47,375 @@
   --line:#2E2C2A;--line-2:#282624;
   --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
   --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--blue:#7FA2F5;--blue-bg:#18264A;--red:#FF6F57;--red-bg:#3D1812;
-  --me:#2C2A27;--me-text:#F4F2EE;
+  --me:#3A3632;--me-text:#F4F2EE;
   --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);
   color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--font);font-size:14.5px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+body{font-family:var(--font);font-size:15px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
-a{color:var(--blue)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
 .hide{display:none!important}
-.muted{color:var(--muted)}.faint{color:var(--faint)}.small{font-size:12.5px}
-.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;font-weight:500;white-space:nowrap;transition:background .12s,border-color .12s}
+.muted{color:var(--muted)}.faint{color:var(--faint)}.small{font-size:13px}
+.grow{flex:1}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ic{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic-sm{width:15px;height:15px}
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+
+/* кнопки и поля — как в Avito Tasks */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);transition:background .15s,border-color .15s,color .15s,transform .08s;white-space:nowrap;text-decoration:none}
 .btn:hover{border-color:var(--faint)}
-.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:active{transform:scale(.98)}
+.btn.primary,.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover,.btn.accent:hover{background:var(--accent-600);border-color:var(--accent-600)}
 .btn.good{background:var(--green-bg);border-color:transparent;color:var(--green)}
-.btn.warn{background:var(--red-bg);border-color:transparent;color:var(--red)}
-.btn.sm{height:28px;padding:0 10px;font-size:12.5px}
-.btn:disabled{opacity:.5;cursor:default}
-.input,.select,textarea.input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:8px 11px;outline:none;font-size:14px}
-.input:focus,textarea.input:focus,.select:focus{border-color:var(--ink);box-shadow:0 0 0 3px var(--accent-ring)}
-textarea.input{resize:vertical;min-height:70px;line-height:1.45}
-.select{height:34px;padding:0 10px}
-label.f{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
-.card{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);box-shadow:var(--shadow)}
-.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:500;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.btn.good:hover{border-color:var(--green)}
+.btn.warn{background:transparent;border-color:transparent;color:var(--red)}
+.btn.warn:hover{background:var(--red-bg)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--muted);padding:0 10px}
+.btn.quiet:hover{color:var(--ink);background:var(--sunken)}
+.btn.sm{min-height:32px;padding:0 12px;font-size:13px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;pointer-events:none}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--muted);position:relative;flex:none;text-decoration:none}
+.icon-btn:hover{background:var(--sunken);color:var(--ink)}
+.icon-btn.sm{width:32px;height:32px}
+.input,.select,textarea.input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;min-height:40px;transition:border-color .15s,box-shadow .15s;outline:none}
+.input:focus,.select:focus,textarea.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+textarea.input{resize:vertical;line-height:1.5}
+.select{appearance:none;-webkit-appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2376716A' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px;letter-spacing:.01em}
+.chk{display:flex;align-items:flex-start;gap:10px;margin-top:12px;font-size:14px;cursor:pointer}
+.chk input{flex:none;margin-top:4px;accent-color:var(--accent);width:16px;height:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--sunken);color:var(--muted);white-space:nowrap}
 .chip.accent{background:var(--accent-bg);color:var(--accent)}
 .chip.green{background:var(--green-bg);color:var(--green)}
 .chip.amber{background:var(--amber-bg);color:var(--amber)}
 .chip.blue{background:var(--blue-bg);color:var(--blue)}
 .chip.red{background:var(--red-bg);color:var(--red)}
 
-/* top */
-.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
-.top-in{display:flex;align-items:center;gap:12px;padding:10px 20px;flex-wrap:wrap}
-.logo{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:8px}
-.logo i{width:10px;height:10px;border-radius:3px;background:var(--accent);display:inline-block}
-.tabs{display:flex;gap:4px;flex-wrap:wrap}
-.tab{height:32px;padding:0 12px;border-radius:999px;font-size:13.5px;color:var(--muted);font-weight:500}
-.tab.on{background:var(--ink);color:var(--bg)}
-.tab .n{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;margin-left:5px}
-.grow{flex:1}
-.safe{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--green);background:var(--green-bg);padding:4px 10px;border-radius:999px;font-weight:500}
-.sync{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+/* вход */
+.center{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.gate{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:34px 28px;text-align:center;box-shadow:var(--shadow)}
+.gate-ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;margin:0 auto 18px;background:var(--accent-bg);color:var(--accent)}
+.gate-ic .ic{width:26px;height:26px}
+.gate h1{font-family:var(--display);font-size:19px;font-weight:700;color:var(--ink);margin-bottom:10px;letter-spacing:-.01em}
+.gate p{color:var(--muted);font-size:14.5px;margin-bottom:22px}
+.gate form{display:grid;gap:10px}
+.gl-err{min-height:20px;font-size:13px;color:var(--red);margin-top:10px}
+
+/* шапка */
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
+.top-in{max-width:1280px;margin:0 auto;height:var(--top);display:flex;align-items:center;gap:14px;padding:0 20px}
+.logo{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:9px;flex:none;text-decoration:none}
+.logo i{width:26px;height:26px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center}
+.logo i .ic{width:15px;height:15px;stroke-width:2}
+.tabs{display:flex;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px;border:1px solid transparent}
+.tab:hover{color:var(--ink);background:var(--sunken)}
+.tab.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow);border-color:var(--line)}
+.tab .lbl-short{display:none}
+.tab .n{font-size:11px;font-weight:700;background:var(--accent);color:#fff;border-radius:999px;padding:1px 6px;line-height:1.5}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:4px;flex:none}
+.sync{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-right:4px;white-space:nowrap}
+.conn-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);flex:none}
+.conn-dot.busy{background:var(--amber);box-shadow:0 0 0 3px var(--amber-bg);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
 .progress{height:3px;background:var(--line-2);position:relative;overflow:hidden}
 .progress b{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width .3s}
 
-main{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
+/* страница */
+main{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
+.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.hello h1{font-family:var(--display);font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.015em;line-height:1.25}
+.hello .sub{color:var(--muted);font-size:14px;margin-top:4px}
+.hello-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hello-r .select{width:auto;min-width:200px;font-weight:600;color:var(--ink)}
+.safe{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:999px;background:var(--green-bg);color:var(--green);font-size:13px;font-weight:600;white-space:nowrap}
+.safe .ic{width:16px;height:16px}
 
-/* dialogs */
-.dlg{display:grid;grid-template-columns:360px 1fr;gap:14px;height:calc(100vh - 92px);min-height:520px}
+/* диалоги */
+.dlg{display:grid;grid-template-columns:360px minmax(0,1fr);gap:14px;height:calc(100vh - 176px);min-height:520px}
 .list{display:flex;flex-direction:column;overflow:hidden}
-.list-head{padding:12px;border-bottom:1px solid var(--line-2);display:flex;flex-direction:column;gap:8px}
-.filters{display:flex;gap:4px;flex-wrap:wrap}
-.filters button{height:26px;padding:0 9px;border-radius:999px;font-size:12px;color:var(--muted);background:var(--sunken)}
-.filters button.on{background:var(--ink);color:var(--bg)}
+.list-head{padding:12px;border-bottom:1px solid var(--line-2);display:grid;gap:10px}
+.search{position:relative}
+.search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);width:16px;height:16px}
+.search .input{padding-left:36px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line)}
+.filters button:hover{border-color:var(--faint)}
+.filters button.on{border-color:var(--ink);color:var(--ink)}
+.filters button b{font-weight:700;color:var(--ink)}
+.filters .dot{width:7px;height:7px;border-radius:50%}
 .items{overflow-y:auto;flex:1}
-.item{display:grid;grid-template-columns:38px 1fr auto;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line-2);cursor:pointer;align-items:start}
+.item{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:11px;padding:12px 14px;border-bottom:1px solid var(--line-2);cursor:pointer;align-items:start;transition:background .12s}
 .item:hover{background:var(--surface-2)}
 .item.on{background:var(--accent-bg)}
-.ava{width:38px;height:38px;border-radius:50%;background:var(--sunken);display:grid;place-items:center;font-weight:600;color:var(--muted);font-size:14px;overflow:hidden;flex:none}
-.ava img{width:100%;height:100%;object-fit:cover}
-.item .nm{font-weight:600;color:var(--ink);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item .it{font-size:11.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item .lt{font-size:12.5px;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px}
-.item .tm{font-size:11.5px;color:var(--faint);text-align:right;white-space:nowrap}
-.item .bd{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;margin-top:6px}
+.item .nm{font-weight:600;color:var(--ink);font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .it{font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .lt{font-size:13px;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:3px;line-height:1.4}
+.item .tm{font-size:12px;color:var(--faint);text-align:right;white-space:nowrap;display:grid;justify-items:end;gap:6px}
+.item .bd{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.item .bd:empty{display:none}
+.udot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.avatar{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;font-weight:700;color:#fff;flex:none;overflow:hidden;position:relative;letter-spacing:.02em}
+.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--surface)}
+.avatar.lg{width:42px;height:42px;font-size:15px}
 
-.chat{display:flex;flex-direction:column;overflow:hidden}
+.chat{display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .chat-head{padding:12px 16px;border-bottom:1px solid var(--line-2);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.chat-head .t{font-weight:600;color:var(--ink);font-size:15px}
-.chat-head .s{font-size:12px;color:var(--muted)}
-.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--surface-2)}
-.day{align-self:center;font-size:11.5px;color:var(--faint);margin:10px 0 4px}
-.b{max-width:72%;padding:8px 12px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.42;position:relative}
-.b .tm{display:block;font-size:10.5px;opacity:.6;margin-top:3px;text-align:right}
-.b.client{align-self:flex-start;background:var(--surface);border:1px solid var(--line-2);border-bottom-left-radius:4px}
-.b.manager{align-self:flex-end;background:var(--me);color:var(--me-text);border-bottom-right-radius:4px}
-.b.system{align-self:center;background:transparent;color:var(--muted);font-size:12px;text-align:center;max-width:90%}
-.b.ai{align-self:flex-end;background:var(--blue-bg);color:var(--text);border:1px dashed var(--blue);border-bottom-right-radius:4px}
-.b .rev{font-size:11px;margin-top:4px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
-.b.manager .btn{color:var(--text)}
-.b.manager .btn.good{color:var(--green)}.b.manager .btn.warn{color:var(--red)}
-.chk{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:13.5px}.chk input{flex:none;margin-top:4px}
-.empty{display:grid;place-items:center;height:100%;color:var(--muted);text-align:center;padding:30px}
+.chat-head .who{min-width:0;flex:1}
+.chat-head .t{font-weight:700;color:var(--ink);font-size:15.5px;line-height:1.3}
+.chat-head .s{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.chat-head .s a{text-decoration:none;overflow:hidden;text-overflow:ellipsis}
+.chat-head .s a:hover{color:var(--ink);text-decoration:underline}
+.chat-head .select{width:auto;max-width:230px;min-height:36px;font-size:13px}
+.msgs{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:6px;background:var(--surface-2)}
+.day{align-self:center;font-size:12px;font-weight:600;color:var(--faint);margin:12px 0 6px;padding:3px 10px;border-radius:999px;background:var(--sunken)}
+.b{max-width:72%;padding:9px 13px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px;line-height:1.45;position:relative}
+.b .tm{display:block;font-size:11px;opacity:.6;margin-top:3px;text-align:right}
+.b a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.b.client{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px;color:var(--ink)}
+.b.manager{align-self:flex-end;background:var(--me);color:var(--me-text);border-bottom-right-radius:5px}
+.b.system{align-self:center;background:var(--sunken);color:var(--muted);font-size:12.5px;text-align:center;max-width:82%;border-radius:12px;padding:7px 12px}
+.b.system .tm{text-align:center}
+.b.ai{align-self:flex-end;background:var(--blue-bg);color:var(--ink);border:1px dashed var(--blue);border-bottom-right-radius:5px}
+.b .rev{font-size:11.5px;margin-top:6px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;align-items:center;opacity:.9}
+.b.manager .icon-btn{color:var(--me-text);background:rgba(255,255,255,.1)}
+.b.manager .icon-btn:hover{background:rgba(255,255,255,.2)}
+.empty{display:grid;place-items:center;align-content:center;gap:10px;height:100%;color:var(--muted);text-align:center;padding:30px;font-size:14px}
+.empty .e-ic{width:52px;height:52px;border-radius:16px;background:var(--sunken);display:grid;place-items:center;color:var(--faint)}
+.empty .e-ic .ic{width:24px;height:24px}
 
-.draft{border-top:1px solid var(--line-2);padding:12px 16px;background:var(--surface);max-height:58%;overflow-y:auto}
-.draft-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:8px}
-.draft-h b{color:var(--blue);font-weight:600}
-.draft-text{background:var(--blue-bg);border-radius:12px;padding:10px 12px;white-space:pre-wrap;font-size:14.5px;color:var(--ink)}
-.draft-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.why{margin-top:10px;font-size:12.5px;color:var(--muted)}
-.why summary{cursor:pointer;color:var(--muted)}
+.draft{border-top:1px solid var(--line-2);padding:14px 16px;background:var(--surface);max-height:58%;overflow-y:auto}
+.draft-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.draft-h .ttl{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-weight:700;font-size:13.5px}
+.draft-h .ttl .ic{color:var(--blue);width:16px;height:16px}
+.draft-text{background:var(--blue-bg);border-radius:14px;padding:11px 14px;white-space:pre-wrap;font-size:14.5px;color:var(--ink);line-height:1.5}
+.draft-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.why{margin-top:12px;font-size:13px;color:var(--muted)}
+.why summary{cursor:pointer;color:var(--muted);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.why summary::-webkit-details-marker{display:none}
+.why summary .ic{width:14px;height:14px;transition:transform .15s}
+.why[open] summary .ic{transform:rotate(180deg)}
 .why ul{margin:6px 0 0 18px}
 .why .old{text-decoration:line-through;opacity:.7}
-.note{margin-top:6px}
-.warnbox{background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:8px 10px;font-size:12.5px;margin-bottom:8px}
-.errbox{background:var(--red-bg);color:var(--red);border-radius:10px;padding:8px 10px;font-size:12.5px;margin:8px 0;white-space:pre-wrap}
+.banner{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;font-size:13px;margin-bottom:10px;background:var(--amber-bg);color:var(--amber)}
+.banner .ic{width:16px;height:16px;margin-top:2px}
+.banner span{color:var(--text)}
+.errbox{background:var(--red-bg);color:var(--red);border-radius:12px;padding:9px 12px;font-size:13px;margin:8px 0;white-space:pre-wrap}
 
-/* generic panes */
-.grid2{display:grid;grid-template-columns:300px 1fr;gap:14px}
-.pane{padding:16px}
-.pane h2{font-family:var(--display);font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px}
-.pane h3{font-size:14px;font-weight:600;color:var(--ink);margin:18px 0 6px}
-.pane p.lead{color:var(--muted);font-size:13px;margin-bottom:10px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.script{border:1px solid var(--line-2);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--surface-2)}
-.script .row .input{flex:1}
-.prov{border:1px solid var(--line-2);border-radius:12px;padding:12px;margin-bottom:10px}
-.out{white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:12px;font-size:13.5px;margin-top:10px;max-height:480px;overflow:auto}
-.fb{border-bottom:1px solid var(--line-2);padding:12px 0;display:grid;gap:4px;font-size:13.5px}
+/* остальные вкладки */
+.grid2{display:grid;grid-template-columns:320px minmax(0,1fr);gap:14px}
+.grid2.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pane{padding:20px}
+.pane h2{font-family:var(--display);font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.01em;margin-bottom:4px}
+.pane h3{font-size:14.5px;font-weight:700;color:var(--ink);margin:22px 0 4px}
+.pane p.lead{color:var(--muted);font-size:13.5px;margin-bottom:10px}
+.sec-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.sec-head h2{flex:1;margin:0}
+.script{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--surface-2);display:grid;gap:8px}
+.script .row .input{flex:1;font-weight:600}
+.prov{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:var(--surface-2)}
+.prov .models{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mtag{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 4px 0 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:500}
+.cab{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-2)}
+.out{white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14px;margin-top:12px;max-height:480px;overflow:auto}
+.sim-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;margin-top:4px}
+.sim-item:hover{background:var(--sunken)}
+.sim-item.on{background:var(--accent-bg)}
+.sim-item .nm{font-weight:600;color:var(--ink);font-size:14px}
+.sim-item .it{font-size:12px;color:var(--faint)}
+.composer{border-top:1px solid var(--line-2);padding:12px 16px;background:var(--surface);display:grid;gap:8px}
+.composer .row{align-items:flex-end;flex-wrap:nowrap}
+.fb{border-bottom:1px solid var(--line-2);padding:14px 0;display:grid;gap:6px;font-size:14px}
 .fb .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fb .pair div{background:var(--surface-2);border-radius:10px;padding:8px 10px;white-space:pre-wrap}
-.stat{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
-.stat div{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 14px;min-width:120px}
-.stat b{display:block;font-size:20px;color:var(--ink);font-family:var(--display);font-weight:600}
-.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:12px}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:60;display:grid;place-items:center;padding:16px}
-.modal{width:min(980px,100%);max-height:90vh;overflow:auto;padding:18px}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:80;font-size:13.5px;box-shadow:var(--shadow-lg);max-width:90vw}
-.gate{max-width:360px;margin:12vh auto;padding:24px}
-.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block}
+.fb .pair div{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 12px;white-space:pre-wrap}
+.fb .pair .lbl{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 8px}
+.stat{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--text)}
+.stat b{font-weight:700;color:var(--ink)}
+.stat .dot{width:8px;height:8px;border-radius:50%}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:14px}
+.cmp .card{padding:14px}
+.modal-bg{position:fixed;inset:0;background:rgba(10,10,10,.28);z-index:60;display:grid;place-items:center;padding:16px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.modal{width:min(980px,100%);max-height:90vh;overflow:auto;padding:22px;border-radius:20px;box-shadow:var(--shadow-lg)}
+.modal.narrow{width:min(520px,100%)}
+.modal h2{font-family:var(--display);font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.mlist{display:grid;gap:6px;margin-top:12px}
+.mlist label{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;font-size:14px;cursor:pointer}
+.mlist label:has(input:checked){border-color:var(--accent);background:var(--accent-bg)}
+.mlist input{accent-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;z-index:80;font-size:14px;box-shadow:var(--shadow-lg);max-width:min(560px,92vw);animation:rise .18s ease-out}
+@keyframes rise{from{opacity:0;transform:translate(-50%,8px)}}
+.spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;flex:none}
 @keyframes sp{to{transform:rotate(360deg)}}
 .back{display:none}
+@media (max-width:980px){
+  .sync span:last-child{display:none}
+}
 @media (max-width:860px){
-  main{padding:10px 12px 30px}
-  .top-in{padding:8px 12px}
+  :root{--top:56px}
+  main{padding:14px 12px 30px}
+  .top-in{padding:0 10px;gap:8px}
+  .logo span{display:none}
+  .tab{padding:0 11px;font-size:13.5px}
+  .tab .lbl-long{display:none}
+  .tab .lbl-short{display:inline}
+  .sync{display:none}
+  .hello h1{font-size:19px}
+  .hello-r{width:100%}
+  .hello-r .select{flex:1}
   .dlg{grid-template-columns:1fr;height:auto}
-  .dlg .list{height:calc(100vh - 140px)}
+  .dlg .list{height:calc(100vh - 200px)}
   .dlg.open .list{display:none}
   .dlg:not(.open) .chat{display:none}
-  .dlg .chat{height:calc(100vh - 110px)}
-  .back{display:inline-flex}
-  .grid2{grid-template-columns:1fr!important}
-  .chat-head .select{flex:1 1 40%;min-width:0;width:auto!important;max-width:none!important}
-  .chat-head > div[style*="flex:1"]{flex-basis:60%!important}
+  .dlg .chat{height:calc(100vh - 80px)}
+  .back{display:grid}
+  .chat-head{gap:8px}
+  .chat-head .who{flex-basis:calc(100% - 110px)}
+  .chat-head .select{flex:1 1 40%;max-width:none}
+  .grid2,.grid2.even{grid-template-columns:1fr}
   .b{max-width:88%}
   .fb .pair{grid-template-columns:1fr}
+  .safe{height:34px;font-size:12px}
 }
 </style>
 </head>
 <body>
-<div id="gate" class="card gate hide">
-  <div class="logo" style="margin-bottom:14px"><i></i>Avito AI Sales</div>
-  <p class="muted small" style="margin-bottom:12px">ИИ-менеджер для чатов Авито. Введите пароль дашборда.</p>
-  <form id="gateForm" class="row"><input id="pw" class="input" type="password" placeholder="Пароль" autocomplete="current-password" style="flex:1"><button class="btn primary">Войти</button></form>
-  <div id="gateErr" class="errbox hide"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 14h.01M15 14h.01"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z"/><path d="M4 20.5A2.5 2.5 0 006.5 23H20v-5M8 7.5h8M8 11h5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 1.8-2M4 12l1 1 1.8-2M4 18l1 1 1.8-2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 7h14M5 7l-3 7a3 3 0 006 0zM19 7l-3 7a3 3 0 006 0z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="M3 10v4h4l9 5V5L7 10z"/><path d="M19 9a4 4 0 010 6"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/></symbol>
+</svg>
+
+<div id="gate" class="center hide">
+  <div class="gate">
+    <div class="gate-ic"><svg class="ic"><use href="#i-lock"/></svg></div>
+    <h1>Вход в Avito AI Sales</h1>
+    <p>ИИ-менеджер для чатов Авито: читает переписку и предлагает ответы. Введите пароль дашборда.</p>
+    <form id="gateForm"><input id="pw" class="input" type="password" placeholder="Пароль" autocomplete="current-password"><button class="btn primary block"><svg class="ic"><use href="#i-lock"/></svg>Войти</button></form>
+    <div id="gateErr" class="gl-err"></div>
+  </div>
 </div>
 
 <div id="app" class="hide">
   <header class="top">
     <div class="top-in">
-      <div class="logo"><i></i>Avito AI Sales</div>
-      <select id="cabSel" class="select" style="width:auto"></select>
+      <div class="logo"><i><svg class="ic"><use href="#i-bot"/></svg></i><span>AI Sales</span></div>
       <nav class="tabs" id="tabs">
-        <button class="tab on" data-tab="dialogs">Диалоги<span class="n hide" id="nWaiting"></span></button>
-        <button class="tab" data-tab="sim">Тест-клиент</button>
-        <button class="tab" data-tab="prompt">Скрипты и база знаний</button>
-        <button class="tab" data-tab="models">Модели и настройки</button>
-        <button class="tab" data-tab="learn">Обучение</button>
+        <button class="tab on" data-tab="dialogs"><svg class="ic ic-sm"><use href="#i-msg"/></svg>Диалоги<span class="n hide" id="nWaiting"></span></button>
+        <button class="tab" data-tab="sim"><svg class="ic ic-sm"><use href="#i-user"/></svg><span class="lbl-long">Тест-клиент</span><span class="lbl-short">Тест</span></button>
+        <button class="tab" data-tab="prompt"><svg class="ic ic-sm"><use href="#i-book"/></svg>Скрипты</button>
+        <button class="tab" data-tab="models"><svg class="ic ic-sm"><use href="#i-settings"/></svg>Модели</button>
+        <button class="tab" data-tab="learn"><svg class="ic ic-sm"><use href="#i-chart"/></svg>Обучение</button>
       </nav>
-      <div class="grow"></div>
-      <span class="safe" title="Сервис только читает чаты и предлагает ответы. Отправки в Авито нет.">● Отправка в Авито выключена — только черновики</span>
-      <div class="sync"><span id="syncInfo"></span><button class="btn sm" id="syncBtn">↻ Обновить</button><button class="btn sm" id="themeBtn" title="Тема">◐</button></div>
+      <div class="top-right">
+        <span class="sync" title="Когда последний раз читали чаты в Авито"><i class="conn-dot" id="connDot"></i><span id="syncInfo"></span></span>
+        <button class="icon-btn" id="syncBtn" title="Обновить из Авито" aria-label="Обновить из Авито"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        <button class="icon-btn" id="themeBtn" title="Тема" aria-label="Тема"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <a class="icon-btn" href="/avito-tasks" title="Avito Tasks" aria-label="Avito Tasks"><svg class="ic"><use href="#i-tasks"/></svg></a>
+      </div>
     </div>
     <div class="progress hide" id="prog"><b style="width:0"></b></div>
   </header>
 
   <main>
+    <div class="hello">
+      <div><h1 id="hTitle">Диалоги</h1><div class="sub" id="hSub"></div></div>
+      <div class="hello-r">
+        <select id="cabSel" class="select" title="Кабинет Авито"></select>
+        <span class="safe" title="Сервис только читает чаты и предлагает ответы. Отправки в Авито нет."><svg class="ic"><use href="#i-shield"/></svg>Только черновики — в Авито не отправляем</span>
+      </div>
+    </div>
+
     <!-- Диалоги -->
     <section id="t-dialogs" class="dlg">
       <div class="card list">
         <div class="list-head">
-          <input id="q" class="input" placeholder="Поиск по имени, объявлению, тексту">
-          <div class="filters" id="filters">
-            <button data-f="all" class="on">Все</button>
-            <button data-f="waiting">Ждут ответа</button>
-            <button data-f="draft">Есть черновик</button>
-            <button data-f="human">Нужен человек</button>
-            <button data-f="reviewed">Проверены</button>
-          </div>
+          <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="q" class="input" placeholder="Имя, объявление или текст"></div>
+          <div class="filters" id="filters"></div>
         </div>
         <div class="items" id="items"></div>
       </div>
-      <div class="card chat" id="chat"><div class="empty">Выберите диалог слева.<br><span class="small faint">Новые сообщения подтягиваются из Авито сами — каждые 10 минут и при открытой странице.</span></div></div>
+      <div class="card chat" id="chat"><div class="empty"><div class="e-ic"><svg class="ic"><use href="#i-msg"/></svg></div><div>Выберите диалог слева</div><div class="small faint">Новые сообщения подтягиваются из Авито сами — каждые 10 минут и при открытой странице.</div></div></div>
     </section>
 
     <!-- Тест-клиент -->
     <section id="t-sim" class="grid2 hide">
       <div class="card pane">
-        <h2>Тест-клиент</h2>
-        <p class="lead">Пишите как родитель или ученик — ИИ отвечает за преподавателя. Ответы можно исправлять: правки идут в обучение.</p>
-        <button class="btn primary" id="simNew">+ Новый тест</button>
-        <div id="simList" style="margin-top:12px"></div>
+        <button class="btn primary block" id="simNew"><svg class="ic"><use href="#i-plus"/></svg>Новый тест</button>
+        <div id="simList" style="margin-top:10px"></div>
       </div>
-      <div class="card chat" id="simChat" style="height:calc(100vh - 92px);min-height:520px"><div class="empty">Создайте тест или выберите его слева.</div></div>
+      <div class="card chat" id="simChat" style="height:calc(100vh - 176px);min-height:520px"><div class="empty"><div class="e-ic"><svg class="ic"><use href="#i-user"/></svg></div><div>Создайте тест или выберите его слева</div></div></div>
     </section>
 
     <!-- Промпт -->
     <section id="t-prompt" class="hide">
       <div class="card pane">
-        <div class="row"><h2 class="grow">Скрипты, правила и база знаний</h2>
-          <button class="btn" id="pDefaults">Вернуть исходные</button>
+        <div class="sec-head"><h2>Сценарий ИИ</h2>
           <select class="select" id="pHist" style="width:auto"><option value="">Прошлые версии…</option></select>
-          <button class="btn primary" id="pSave">Сохранить</button></div>
-        <p class="lead">Из этого ИИ собирает ответ. Исходный сценарий составлен по 145 диалогам Елены за октябрь. Всё здесь можно править: ИИ использует новую версию сразу.</p>
+          <button class="btn" id="pDefaults"><svg class="ic"><use href="#i-undo"/></svg>Исходный</button>
+          <button class="btn primary" id="pSave"><svg class="ic"><use href="#i-save"/></svg>Сохранить</button></div>
+        <p class="lead">Из этого ИИ собирает ответ. Исходный сценарий составлен по 145 диалогам Елены за октябрь. Изменения начинают работать сразу после сохранения.</p>
 
         <h3>Свободные окна для диагностики</h3>
-        <p class="lead">ИИ предлагает время только отсюда. Если поле пустое, он спрашивает клиента, когда тому удобно, и помечает диалог «нужен человек».</p>
+        <p class="lead">ИИ предлагает время только отсюда. Если поле пустое, он спрашивает клиента, когда удобно, и помечает диалог «нужен человек».</p>
         <textarea id="pSlots" class="input" rows="4"></textarea>
 
         <h3>Роль и правила</h3>
         <textarea id="pSystem" class="input" rows="16"></textarea>
 
         <h3>База знаний</h3>
-        <p class="lead">Факты, цены, форматы, контакты, ссылка ZOOM. Всё, что ИИ может сказать клиенту, должно быть здесь.</p>
+        <p class="lead">Факты, цены, форматы, контакты, ссылка ZOOM. ИИ может говорить клиенту только то, что написано здесь.</p>
         <textarea id="pKnow" class="input" rows="10"></textarea>
 
         <h3>Скрипты</h3>
+        <p class="lead">Готовые формулировки. ИИ использует их почти дословно.</p>
         <div id="pScripts"></div>
-        <button class="btn" id="pAddScript">+ Скрипт</button>
+        <button class="btn" id="pAddScript"><svg class="ic"><use href="#i-plus"/></svg>Скрипт</button>
 
         <h3>Подсказки ИИ</h3>
         <div class="row">
-          <button class="btn" id="sugScripts">Предложить скрипты по живым диалогам</button>
-          <button class="btn" id="sugRules">Сформулировать правила из правок</button>
+          <button class="btn" id="sugScripts"><svg class="ic"><use href="#i-spark"/></svg>Предложить скрипты по живым диалогам</button>
+          <button class="btn" id="sugRules"><svg class="ic"><use href="#i-spark"/></svg>Сформулировать правила из правок</button>
         </div>
         <div id="sugOut"></div>
       </div>
@@ -281,32 +423,33 @@ main{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
 
     <!-- Модели -->
     <section id="t-models" class="hide">
-      <div class="grid2" style="grid-template-columns:1fr 1fr">
+      <div class="grid2 even">
         <div class="card pane">
           <h2>Как работает ИИ</h2>
           <label class="f">Модель по умолчанию</label>
           <select id="mDefault" class="select"></select>
-          <label class="chk"><input type="checkbox" id="mSelf"> Самопроверка: вторым шагом ИИ проверяет черновик по истории и базе знаний и исправляет его</label>
-          <label class="chk"><input type="checkbox" id="mAuto"> Сам писать черновики к новым сообщениям (каждые 10 минут)</label>
-          <div class="row" style="margin-top:8px"><span class="small muted">…к сообщениям не старше</span><input id="mHours" class="input" type="number" min="1" style="width:80px"><span class="small muted">часов</span></div>
-          <button class="btn primary" id="mSave" style="margin-top:12px">Сохранить</button>
+          <label class="chk"><input type="checkbox" id="mSelf"><span>Самопроверка — вторым шагом ИИ сверяет черновик с историей и базой знаний и исправляет его</span></label>
+          <label class="chk"><input type="checkbox" id="mAuto"><span>Сам писать черновики к новым сообщениям (каждые 10 минут)</span></label>
+          <div class="row" style="margin-top:10px;padding-left:26px"><span class="small muted">к сообщениям не старше</span><input id="mHours" class="input" type="number" min="1" style="width:80px"><span class="small muted">часов</span></div>
+          <button class="btn primary" id="mSave" style="margin-top:16px"><svg class="ic"><use href="#i-save"/></svg>Сохранить</button>
 
           <h3>Кабинеты Авито</h3>
           <div id="cabList"></div>
-          <div class="row" style="margin-top:8px"><select id="cabAdd" class="select" style="flex:1"></select><input id="cabSince" class="input" type="date" style="width:160px"><button class="btn" id="cabAddBtn">Подключить</button></div>
-          <p class="lead" style="margin-top:6px">Подключённый кабинет только читается: сообщения в Авито сервис не отправляет.</p>
+          <div class="row" style="margin-top:10px"><select id="cabAdd" class="select" style="flex:1;min-width:160px"></select><input id="cabSince" class="input" type="date" style="width:160px"><button class="btn" id="cabAddBtn"><svg class="ic"><use href="#i-plus"/></svg>Подключить</button></div>
+          <p class="lead" style="margin-top:8px">Подключённый кабинет только читается: сообщения в Авито сервис не отправляет.</p>
         </div>
         <div class="card pane">
           <h2>Подключения моделей</h2>
-          <p class="lead">Бесплатные модели Workers AI работают без ключа. Чтобы попробовать другие, добавьте ключ: он хранится на сервере и в браузер больше не возвращается. Модель можно выбрать для всех диалогов, для одного диалога или для теста.</p>
+          <p class="lead">Бесплатные модели Workers AI работают без ключа. Чтобы попробовать другие, добавьте ключ: он хранится на сервере и в браузер больше не возвращается.</p>
           <div id="provList"></div>
-          <div class="prov" id="provForm">
-            <div class="row"><select id="prType" class="select" style="flex:1"></select><input id="prLabel" class="input" placeholder="Название" style="flex:1"></div>
+          <div class="prov" id="provForm" style="background:var(--surface)">
+            <div class="row" style="margin-bottom:2px"><b style="color:var(--ink)" id="prFormTitle">Новое подключение</b></div>
+            <div class="row" style="flex-wrap:nowrap"><select id="prType" class="select" style="flex:1"></select><input id="prLabel" class="input" placeholder="Название" style="flex:1"></div>
             <label class="f">Адрес API</label><input id="prBase" class="input">
             <label class="f">Ключ API</label><input id="prKey" class="input" type="password" placeholder="sk-…" autocomplete="off">
             <label class="f">Модели (через запятую)</label><input id="prModels" class="input">
             <input type="hidden" id="prId">
-            <div class="row" style="margin-top:10px"><button class="btn primary" id="prSave">Сохранить подключение</button><button class="btn hide" id="prCancel">Отмена</button></div>
+            <div class="row" style="margin-top:14px"><button class="btn primary" id="prSave"><svg class="ic"><use href="#i-key"/></svg>Сохранить подключение</button><button class="btn quiet hide" id="prCancel">Отмена</button></div>
           </div>
         </div>
       </div>
@@ -315,9 +458,7 @@ main{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
     <!-- Обучение -->
     <section id="t-learn" class="hide">
       <div class="card pane">
-        <h2>Обучение на правках</h2>
-        <p class="lead">Каждая оценка черновика («Верно», «Исправить», «Не отвечать») сохраняется. Последние правки ИИ видит как примеры в каждом ответе. Кнопка «Сформулировать правила из правок» во вкладке «Скрипты» превращает их в постоянные правила.</p>
-        <div class="stat" id="lStat"></div>
+        <div class="stats" id="lStat" style="margin-top:0"></div>
         <div id="lModels" class="small muted"></div>
         <div id="lList"></div>
       </div>
@@ -400,7 +541,20 @@ async function waitJob(job) {
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const linkify = (t) => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const I = (n, c) => `<svg class="ic${c ? ' ' + c : ''}"><use href="#i-${n}"/></svg>`;
+// Длинные ссылки (системные сообщения Авито) — коротко: «avito.ru/…», полный адрес в title.
+const linkify = (t) => esc(t).replace(/(https?:\/\/[^\s<]+)/g, (u) => {
+  let label = u; try { const x = new URL(u.replace(/&amp;/g, '&')); label = x.hostname.replace(/^www\./, '') + (x.pathname.length > 1 ? '/…' : ''); } catch (e) {}
+  return `<a href="${u}" target="_blank" rel="noopener" title="${u}">${label}</a>`;
+});
+const PALETTE = ['#E8391D', '#2556C4', '#1C8048', '#B06500', '#7B3FC4', '#0E8A8A', '#C4287A', '#5A6B7B'];
+function avColor(n) { let h = 0; String(n || '').split('').forEach((ch) => { h = (h * 31 + ch.charCodeAt(0)) >>> 0; }); return PALETTE[h % PALETTE.length]; }
+function avatar(c, cls) {
+  const img = c.avatar ? `<img src="${esc(c.avatar)}" alt="" loading="lazy" onerror="this.remove()">` : '';
+  return `<span class="avatar${cls ? ' ' + cls : ''}" style="background:${avColor(c.name)}">${esc(initials(c.name))}${img}</span>`;
+}
+function emptyState(icon, title, sub) { return `<div class="empty"><div class="e-ic">${I(icon)}</div><div>${esc(title)}</div>${sub ? `<div class="small faint">${esc(sub)}</div>` : ''}</div>`; }
+function msgText(m) { return m.author === 'system' ? String(m.text || '').replace(/^\[Системное сообщение\]\s*/i, '') : m.text; }
 function toast(msg, ms) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), ms || 3200); }
 function fmtTime(ts) {
   if (!ts) return '';
@@ -429,7 +583,7 @@ function stageChip(k) {
 // ── gate / boot ──
 function showGate(err) {
   $('#app').classList.add('hide'); $('#gate').classList.remove('hide');
-  $('#gateErr').classList.toggle('hide', !err); $('#gateErr').textContent = err || '';
+  $('#gateErr').textContent = err || '';
 }
 $('#gateForm').addEventListener('submit', async (e) => {
   e.preventDefault(); S.pw = $('#pw').value.trim(); store.set('aiSales.pw', S.pw); boot();
@@ -454,20 +608,41 @@ async function loadState() {
   renderSyncInfo();
 }
 function cab() { return S.state.config.cabinets.find((c) => c.accountId === S.acc) || {}; }
-function renderSyncInfo() { const c = cab(); $('#syncInfo').textContent = 'Авито: ' + ago(c.lastSyncAt); }
+function renderSyncInfo() { const c = cab(); $('#syncInfo').textContent = 'Авито: ' + ago(c.lastSyncAt); $('#connDot').classList.toggle('busy', Boolean(S.busy.sync)); }
 $('#cabSel').addEventListener('change', async (e) => { S.acc = e.target.value; store.set('aiSales.acc', S.acc); S.chatId = null; S.simId = null; await loadChats(); firstImport(); setTab(S.tab); });
 
 $('#themeBtn').addEventListener('click', () => {
   const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const next = cur === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = next; store.set('aiSales.theme', next);
+  const next = cur === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = next; store.set('aiSales.theme', next); themeIcon();
 });
+function themeIcon() {
+  const dark = (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+  $('#themeBtn').innerHTML = I(dark ? 'sun' : 'moon');
+}
+themeIcon();
 
 // ── tabs ──
 $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
+const HELLO = {
+  dialogs: ['Диалоги', 'Переписка из Авито и ответы, которые предлагает ИИ'],
+  sim: ['Тест-клиент', 'Пишите за родителя или ученика — ИИ отвечает за преподавателя'],
+  prompt: ['Скрипты и база знаний', 'Правила, формулировки и факты, из которых ИИ собирает ответ'],
+  models: ['Модели и настройки', 'Какая модель отвечает и какие кабинеты подключены'],
+  learn: ['Обучение', 'Оценки и правки черновиков — ИИ учится на них'],
+};
+function renderHello() {
+  const [t, sub] = HELLO[S.tab] || HELLO.dialogs;
+  $('#hTitle').textContent = t;
+  if (S.tab === 'dialogs' && S.chats.length) {
+    const w = S.chats.filter((c) => c.waiting).length;
+    $('#hSub').textContent = `${S.chats.length} диалогов с ${cab().since ? new Date(cab().since).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) : '—'}` + (w ? ` · ${w} ждут ответа` : '');
+  } else $('#hSub').textContent = sub;
+}
 function setTab(t) {
   S.tab = t; history.replaceState(null, '', '#' + t);
   $$('#tabs .tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   ['dialogs', 'sim', 'prompt', 'models', 'learn'].forEach((x) => $('#t-' + x).classList.toggle('hide', x !== t));
+  renderHello();
   if (t === 'sim') loadSims();
   if (t === 'prompt') loadPrompt();
   if (t === 'models') renderModels();
@@ -477,14 +652,14 @@ function setTab(t) {
 // ── sync ──
 async function syncOnce(quiet) {
   if (S.busy.sync) return;
-  S.busy.sync = true; $('#syncBtn').disabled = true;
+  S.busy.sync = true; $('#syncBtn').disabled = true; $('#connDot').classList.add('busy');
   try {
     const r = await api('sync', { method: 'POST', body: {} });
     if (r.errors && r.errors.length && !quiet) toast('Часть чатов не загрузилась: ' + r.errors[0]);
     await loadChats(true);
     return r;
   } catch (e) { if (!quiet) toast('Авито не ответил: ' + e.message); return null; }
-  finally { S.busy.sync = false; $('#syncBtn').disabled = false; await refreshCab(); }
+  finally { S.busy.sync = false; $('#syncBtn').disabled = false; $('#connDot').classList.remove('busy'); await refreshCab(); }
 }
 async function refreshCab() { try { const st = await api('state'); S.state = st; renderSyncInfo(); } catch (e) {} }
 $('#syncBtn').addEventListener('click', () => fullSync());
@@ -515,18 +690,27 @@ async function loadChats(quiet) {
   } catch (e) { if (!quiet) toast('Не удалось загрузить диалоги: ' + e.message); }
 }
 $('#q').addEventListener('input', (e) => { S.q = e.target.value.toLowerCase(); renderList(); });
-$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; S.filter = b.dataset.f; $$('#filters button').forEach((x) => x.classList.toggle('on', x === b)); renderList(); });
+$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; S.filter = b.dataset.f; renderList(); });
 function chatMatches(c) {
   if (S.q && !(`${c.name} ${c.itemTitle} ${c.lastText}`.toLowerCase().includes(S.q))) return false;
+  return chatMatchesFilter(c);
+}
+function chatMatchesFilter(c) {
   if (S.filter === 'waiting') return c.waiting;
   if (S.filter === 'draft') return c.hasDraft && !c.draftReviewed;
   if (S.filter === 'human') return c.draftNeedsHuman && !c.draftReviewed;
   if (S.filter === 'reviewed') return c.draftReviewed;
   return true;
 }
+const FILTERS = [['all', 'Все', ''], ['waiting', 'Ждут ответа', 'var(--accent)'], ['draft', 'Черновик', 'var(--blue)'], ['human', 'Нужен человек', 'var(--amber)'], ['reviewed', 'Проверены', 'var(--green)']];
+function renderFilters() {
+  const cnt = (f) => S.chats.filter((c) => { const keep = S.filter; S.filter = f; const r = chatMatchesFilter(c); S.filter = keep; return r; }).length;
+  $('#filters').innerHTML = FILTERS.map(([k, label, color]) => `<button data-f="${k}" class="${S.filter === k ? 'on' : ''}">${color ? `<i class="dot" style="background:${color}"></i>` : ''}${label}<b>${cnt(k)}</b></button>`).join('');
+}
 function renderList() {
   const waiting = S.chats.filter((c) => c.waiting).length;
   $('#nWaiting').textContent = waiting; $('#nWaiting').classList.toggle('hide', !waiting);
+  renderFilters(); renderHello();
   const list = S.chats.filter(chatMatches);
   $('#items').innerHTML = list.length ? list.map((c) => {
     const st = c.stage || c.aiStage;
@@ -538,13 +722,13 @@ function renderList() {
       stageChip(st),
     ].join('');
     return `<div class="item${c.chatId === S.chatId ? ' on' : ''}" data-id="${esc(c.chatId)}">
-      <div class="ava">${c.avatar ? `<img src="${esc(c.avatar)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : esc(initials(c.name))}</div>
+      ${avatar(c)}
       <div style="min-width:0"><div class="nm">${esc(c.name || 'Без имени')}</div><div class="it">${esc(c.itemTitle || '')}</div>
-        <div class="lt">${c.lastAuthor === 'manager' ? '<span class="faint">Вы: </span>' : ''}${esc(c.lastText || (c.stale ? 'загружается…' : ''))}</div>
+        <div class="lt">${c.lastAuthor === 'manager' ? '<span class="faint">Вы: </span>' : ''}${esc(String(c.lastText || '').replace(/^\[Системное сообщение\]\s*/i, '') || (c.stale ? 'загружается…' : ''))}</div>
         <div class="bd">${badges}</div></div>
-      <div class="tm">${esc(fmtTime(c.lastAt || c.updated * 1000))}${c.waiting ? '<br><span class="dot"></span>' : ''}</div>
+      <div class="tm">${esc(fmtTime(c.lastAt || c.updated * 1000))}${c.waiting ? '<i class="udot"></i>' : ''}</div>
     </div>`;
-  }).join('') : `<div class="empty">${S.chats.length ? 'Ничего не найдено' : 'Диалоги загружаются из Авито…'}</div>`;
+  }).join('') : (S.chats.length ? emptyState('search', 'Ничего не найдено') : emptyState('msg', 'Диалоги загружаются из Авито…', 'Первая загрузка занимает пару минут'));
 }
 $('#items').addEventListener('click', (e) => { const it = e.target.closest('.item'); if (it) openChat(it.dataset.id); });
 
@@ -563,7 +747,7 @@ function bubbles(messages, extra) {
     const day = new Date(m.at).toDateString();
     if (day !== lastDay) { out += `<div class="day">${esc(fmtDay(m.at))}</div>`; lastDay = day; }
     const cls = m.author === 'manager' ? 'manager' : m.author === 'system' ? 'system' : 'client';
-    out += `<div class="b ${cls}">${linkify(m.text)}<span class="tm">${esc(new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))}</span>${extra ? extra(m) : ''}</div>`;
+    out += `<div class="b ${cls}">${linkify(msgText(m))}<span class="tm">${esc(new Date(m.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))}</span>${extra ? extra(m) : ''}</div>`;
   });
   return out;
 }
@@ -576,48 +760,49 @@ function renderChat(scroll) {
   const outdated = d && lastMeaningful && d.forMsgId && d.forMsgId !== lastMeaningful.id;
   $('#chat').innerHTML = `
     <div class="chat-head">
-      <button class="btn sm back" id="backBtn">←</button>
-      <div class="ava">${c.avatar ? `<img src="${esc(c.avatar)}" alt="" onerror="this.replaceWith(document.createTextNode('•'))">` : esc(initials(c.name))}</div>
-      <div style="min-width:0;flex:1"><div class="t">${esc(c.name || 'Без имени')}</div>
-        <div class="s">${c.itemUrl ? `<a href="${esc(c.itemUrl)}" target="_blank" rel="noopener">${esc(c.itemTitle)}</a>` : esc(c.itemTitle || '')}</div></div>
-      <select class="select" id="cStage" style="width:auto">${stageOptions(c.stage || '')}</select>
-      <select class="select" id="cModel" style="width:auto;max-width:240px" title="Модель для этого диалога">${modelOptions(c.model || '', true)}</select>
+      <button class="icon-btn back" id="backBtn" aria-label="К списку">${I('back')}</button>
+      ${avatar(c, 'lg')}
+      <div class="who"><div class="t">${esc(c.name || 'Без имени')}</div>
+        <div class="s">${c.itemUrl ? `<a href="${esc(c.itemUrl)}" target="_blank" rel="noopener" title="${esc(c.itemTitle)}">${esc(c.itemTitle)}</a>${I('ext', 'ic-sm')}` : esc(c.itemTitle || '')}</div></div>
+      <select class="select" id="cStage" title="Этап воронки">${stageOptions(c.stage || '')}</select>
+      <select class="select" id="cModel" title="Модель для этого диалога">${modelOptions(c.model || '', true)}</select>
     </div>
-    <div class="msgs" id="msgs">${bubbles(msgs)}${d && d.reply && !d.review ? `<div class="b ai">${esc(d.reply)}<span class="tm">черновик ИИ — не отправлен</span></div>` : ''}</div>
+    <div class="msgs" id="msgs">${bubbles(msgs)}${d && d.reply && !d.review ? `<div class="b ai">${esc(d.reply)}<span class="tm">черновик ИИ · не отправлен</span></div>` : ''}</div>
     <div class="draft">${draftPanel(d, outdated, idxEntry)}
-      <details class="why note"><summary>Заметка по диалогу (видит ИИ)</summary><textarea class="input" id="cNote" rows="2" placeholder="Например: мама просила писать только после 18:00">${esc(c.note || '')}</textarea><button class="btn sm" id="cNoteSave" style="margin-top:6px">Сохранить заметку</button></details>
+      <details class="why"><summary>${I('chev')}Заметка по диалогу — её видит ИИ</summary><textarea class="input" id="cNote" rows="2" placeholder="Например: мама просила писать только после 18:00" style="margin-top:8px">${esc(c.note || '')}</textarea><button class="btn sm" id="cNoteSave" style="margin-top:8px">${I('save', 'ic-sm')}Сохранить заметку</button></details>
     </div>`;
   if (scroll !== false) { const m = $('#msgs'); m.scrollTop = m.scrollHeight; }
   bindChat();
 }
 function draftPanel(d, outdated, idxEntry) {
-  if (S.busy.draft === S.chatId) return '<div class="draft-h"><span class="spin"></span> ИИ читает историю, базу знаний и пишет ответ…</div>';
+  if (S.busy.draft === S.chatId) return '<div class="draft-h"><span class="spin"></span>ИИ читает историю, базу знаний и пишет ответ…</div>';
   if (!d) {
-    return `<div class="draft-h">Черновика ещё нет${idxEntry.waiting ? ' · клиент ждёт ответа' : ''}</div>
-      <div class="draft-actions"><button class="btn accent" data-a="gen">✦ Предложить ответ</button><button class="btn" data-a="cmp">⚖ Сравнить модели</button></div>`;
+    return `<div class="draft-h"><span class="ttl">${I('spark')}Черновик ИИ</span><span>ещё нет${idxEntry.waiting ? ' · клиент ждёт ответа' : ''}</span></div>
+      <div class="draft-actions" style="margin-top:0"><button class="btn primary" data-a="gen">${I('spark')}Предложить ответ</button><button class="btn" data-a="cmp">${I('scale')}Сравнить модели</button></div>`;
   }
   const rv = d.review;
   const sc = d.selfCheck;
-  const scChip = !sc ? '' : sc.ok === true ? '<span class="chip green">самопроверка ✓</span>' : sc.ok === false ? '<span class="chip amber">исправлен самопроверкой</span>' : '<span class="chip">самопроверка не прошла</span>';
+  const scChip = !sc ? '' : sc.ok === true ? '<span class="chip green">самопроверка пройдена</span>' : sc.ok === false ? '<span class="chip amber">исправлен самопроверкой</span>' : '<span class="chip">самопроверка не прошла</span>';
   let html = '';
-  if (outdated) html += '<div class="warnbox">После черновика пришли новые сообщения — сделайте новый вариант.</div>';
-  if (d.needsHuman) html += `<div class="warnbox">Нужен человек: ${esc(d.humanReason || 'ИИ не уверен')}</div>`;
-  html += `<div class="draft-h"><b>Черновик ИИ</b><span>${esc(modelLabel(d.model))}</span><span>${(d.ms / 1000).toFixed(1)} с</span>${scChip}${d.stage ? stageChip(d.stage) : ''}${d.confidence ? `<span class="chip">уверенность ${Math.round(d.confidence * 100)}%</span>` : ''}${rv ? `<span class="chip ${rv.action === 'approve' ? 'green' : rv.action === 'edit' ? 'blue' : 'red'}">${rv.action === 'approve' ? 'одобрен' : rv.action === 'edit' ? 'исправлен' : 'не отвечать'}</span>` : ''}</div>`;
+  if (outdated) html += `<div class="banner">${I('alert')}<span>После черновика пришли новые сообщения — сделайте новый вариант.</span></div>`;
+  if (d.needsHuman) html += `<div class="banner">${I('user')}<span><b>Нужен человек:</b> ${esc(d.humanReason || 'ИИ не уверен')}</span></div>`;
+  html += `<div class="draft-h"><span class="ttl">${I('spark')}Черновик ИИ</span><span>${esc(modelLabel(d.model))} · ${(d.ms / 1000).toFixed(1)} с</span>${scChip}${d.stage ? stageChip(d.stage) : ''}${d.confidence ? `<span class="chip">уверенность ${Math.round(d.confidence * 100)}%</span>` : ''}${rv ? `<span class="chip ${rv.action === 'approve' ? 'green' : rv.action === 'edit' ? 'blue' : 'red'}">${rv.action === 'approve' ? 'одобрен' : rv.action === 'edit' ? 'исправлен' : 'не отвечать'}</span>` : ''}</div>`;
   if (S.editing === d.id) {
     html += `<textarea class="input" id="edText" rows="4">${esc(rv && rv.text ? rv.text : d.reply)}</textarea>
-      <input class="input" id="edWhy" placeholder="Почему так (необязательно): ИИ учтёт в следующий раз" style="margin-top:6px">
-      <div class="draft-actions"><button class="btn primary" data-a="saveEdit">Сохранить правку</button><button class="btn" data-a="cancelEdit">Отмена</button></div>`;
+      <input class="input" id="edWhy" placeholder="Почему так (необязательно) — ИИ учтёт в следующий раз" style="margin-top:8px">
+      <div class="draft-actions"><button class="btn primary" data-a="saveEdit">${I('check')}Сохранить правку</button><button class="btn quiet" data-a="cancelEdit">Отмена</button></div>`;
   } else {
     html += d.needsReply === false && !d.reply ? '<div class="draft-text muted">ИИ считает, что отвечать не нужно.</div>' : `<div class="draft-text">${esc(rv && rv.action === 'edit' ? rv.text : d.reply)}</div>`;
     html += `<div class="draft-actions">
-      <button class="btn good" data-a="approve" title="Ответ правильный — запомнить как хороший пример">✓ Верно</button>
-      <button class="btn" data-a="edit">✎ Исправить</button>
-      <button class="btn warn" data-a="reject" title="Здесь не нужно отвечать">✕ Не отвечать</button>
-      <button class="btn" data-a="regen">↻ Новый вариант</button>
-      <button class="btn" data-a="cmp">⚖ Сравнить модели</button>
-      <button class="btn" data-a="copy">⧉ Копировать</button></div>`;
+      <button class="btn good" data-a="approve" title="Ответ правильный — запомнить как хороший пример">${I('check')}Верно</button>
+      <button class="btn" data-a="edit">${I('edit')}Исправить</button>
+      <button class="btn" data-a="regen">${I('refresh')}Новый вариант</button>
+      <button class="btn" data-a="cmp">${I('scale')}Сравнить</button>
+      <button class="icon-btn" data-a="copy" title="Копировать" aria-label="Копировать">${I('copy')}</button>
+      <span class="grow"></span>
+      <button class="btn warn" data-a="reject" title="Здесь не нужно отвечать">${I('x')}Не отвечать</button></div>`;
   }
-  html += `<details class="why"><summary>Как ИИ думал</summary>
+  html += `<details class="why"><summary>${I('chev')}Как ИИ думал</summary>
     ${d.analysis ? `<p style="margin-top:6px">${esc(d.analysis)}</p>` : ''}
     ${d.checks && d.checks.length ? `<ul>${d.checks.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     ${sc && sc.issues && sc.issues.length ? `<p style="margin-top:6px"><b>Самопроверка нашла:</b></p><ul>${sc.issues.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
@@ -669,15 +854,15 @@ async function genDraft(instruction, model) {
 }
 
 // ── modals ──
-function openModal(html) { $('#modalIn').innerHTML = html; $('#modal').classList.remove('hide'); }
+function openModal(html, narrow) { $('#modalIn').innerHTML = html; $('#modalIn').classList.toggle('narrow', Boolean(narrow)); $('#modal').classList.remove('hide'); }
 function closeModal() { $('#modal').classList.add('hide'); $('#modalIn').innerHTML = ''; }
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
 function promptModal(title, lead, value, withModel) {
   return new Promise((resolve) => {
-    openModal(`<h2 style="font-family:var(--display);font-size:16px;margin-bottom:6px">${esc(title)}</h2><p class="muted small">${esc(lead)}</p>
+    openModal(`<h2>${esc(title)}</h2><p class="muted small">${esc(lead)}</p>
       <textarea class="input" id="pmText" rows="3" style="margin-top:10px">${esc(value || '')}</textarea>
       ${withModel ? `<label class="f">Модель</label><select class="select" id="pmModel">${modelOptions('', true)}</select>` : ''}
-      <div class="row" style="margin-top:12px"><button class="btn primary" id="pmOk">Сделать</button><button class="btn" id="pmCancel">Отмена</button></div>`);
+      <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn quiet" id="pmCancel">Отмена</button><button class="btn primary" id="pmOk">${I('check')}Готово</button></div>`, true);
     $('#pmOk').onclick = () => { const r = { text: $('#pmText').value.trim(), model: withModel ? $('#pmModel').value : '' }; closeModal(); resolve(r); };
     $('#pmCancel').onclick = () => { closeModal(); resolve(null); };
   });
@@ -685,16 +870,16 @@ function promptModal(title, lead, value, withModel) {
 // Сравнение: один и тот же диалог — несколько моделей; черновик диалога не меняется.
 function compareModels() {
   const def = S.state.config.defaultModel;
-  openModal(`<h2 style="font-family:var(--display);font-size:16px">Сравнить модели на этом диалоге</h2>
+  openModal(`<h2>Сравнить модели на этом диалоге</h2>
     <p class="muted small">Отметьте до 4 моделей. Варианты не сохраняются в диалог и никуда не отправляются.</p>
-    <div style="margin-top:10px;display:grid;gap:6px">${S.state.models.map((m, i) => `<label class="row small"><input type="checkbox" value="${esc(m.ref)}"${m.ref === def || i === 1 ? ' checked' : ''}> ${esc(m.label)}</label>`).join('')}</div>
-    <div class="row" style="margin-top:12px"><button class="btn primary" id="cmpGo">Сравнить</button><button class="btn" id="cmpClose">Закрыть</button></div>
+    <div class="mlist">${S.state.models.map((m, i) => `<label><input type="checkbox" value="${esc(m.ref)}"${m.ref === def || i === 1 ? ' checked' : ''}> ${esc(m.label)}</label>`).join('')}</div>
+    <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn quiet" id="cmpClose">Закрыть</button><button class="btn primary" id="cmpGo">${I('scale')}Сравнить</button></div>
     <div class="cmp" id="cmpOut"></div>`);
   $('#cmpClose').onclick = closeModal;
   $('#cmpGo').onclick = async () => {
     const refs = $$('#modalIn input[type=checkbox]:checked').map((x) => x.value).slice(0, 4);
     if (!refs.length) return;
-    $('#cmpOut').innerHTML = refs.map((r, i) => `<div class="card pane" id="cmp${i}"><b>${esc(modelLabel(r))}</b><div class="muted small" style="margin-top:6px"><span class="spin"></span> думает…</div></div>`).join('');
+    $('#cmpOut').innerHTML = refs.map((r, i) => `<div class="card" id="cmp${i}"><b>${esc(modelLabel(r))}</b><div class="muted small row" style="margin-top:8px"><span class="spin"></span>думает…</div></div>`).join('');
     await Promise.all(refs.map(async (ref, i) => {
       const box = $('#cmp' + i);
       try {
@@ -703,9 +888,9 @@ function compareModels() {
         if (!box) return;
         box.innerHTML = `<b>${esc(modelLabel(ref))}</b> <span class="faint small">${(d.ms / 1000).toFixed(1)} с${d.selfCheck && d.selfCheck.ok === false ? ' · исправлен самопроверкой' : ''}</span>
           <div class="draft-text" style="margin-top:8px">${esc(d.reply || '(не отвечать)')}</div>
-          ${d.needsHuman ? `<div class="warnbox" style="margin-top:6px">Нужен человек: ${esc(d.humanReason)}</div>` : ''}
+          ${d.needsHuman ? `<div class="banner" style="margin:8px 0 0">${I('user')}<span>Нужен человек: ${esc(d.humanReason)}</span></div>` : ''}
           <p class="small muted" style="margin-top:6px">${esc(d.analysis || '')}</p>
-          <button class="btn sm" data-use="${esc(ref)}" style="margin-top:6px">Сделать моделью этого диалога</button>`;
+          <button class="btn sm" data-use="${esc(ref)}" style="margin-top:8px">${I('check', 'ic-sm')}Модель этого диалога</button>`;
         box.querySelector('[data-use]').onclick = async () => { await api('chat-meta', { method: 'POST', body: { chatId: S.chatId, model: ref } }); S.chat.model = ref; toast('Модель диалога: ' + modelLabel(ref)); };
       } catch (e) { if (box) box.innerHTML = `<b>${esc(modelLabel(ref))}</b><div class="errbox">${esc(e.message)}</div>`; }
     }));
@@ -715,7 +900,7 @@ function compareModels() {
 // ── simulator ──
 async function loadSims() {
   try { S.sims = (await api('sims')).sims; } catch (e) { toast(e.message); }
-  $('#simList').innerHTML = S.sims.length ? S.sims.map((s) => `<div class="item${s.id === S.simId ? ' on' : ''}" data-sim="${esc(s.id)}" style="grid-template-columns:1fr auto;border-radius:10px"><div><div class="nm">${esc(s.title)}</div><div class="it">${esc(modelLabel(s.model))} · ${s.count} сообщ.</div></div><div class="tm">${esc(fmtTime(s.updatedAt))}</div></div>`).join('') : '<p class="muted small">Тестов пока нет.</p>';
+  $('#simList').innerHTML = S.sims.length ? S.sims.map((s) => `<div class="sim-item${s.id === S.simId ? ' on' : ''}" data-sim="${esc(s.id)}"><span class="avatar" style="background:${avColor(s.title)};width:34px;height:34px;font-size:12px">${I('user', 'ic-sm')}</span><div style="min-width:0;flex:1"><div class="nm">${esc(s.title)}</div><div class="it">${esc(modelLabel(s.model))} · ${s.count} сообщ. · ${esc(fmtTime(s.updatedAt))}</div></div></div>`).join('') : '<p class="muted small" style="padding:8px 4px">Тестов пока нет.</p>';
   $$('#simList [data-sim]').forEach((el) => el.onclick = () => openSim(el.dataset.sim));
   if (S.simId) openSim(S.simId);
 }
@@ -732,22 +917,22 @@ function renderSim() {
   const s = S.sim;
   $('#simChat').innerHTML = `
     <div class="chat-head">
-      <input class="input" id="sTitle" value="${esc(s.title)}" style="flex:1;min-width:140px">
-      <select class="select" id="sModel" style="width:auto;max-width:260px">${modelOptions(s.model)}</select>
-      <button class="btn sm" id="sUndo" title="Убрать последнее сообщение клиента и ответ">↶ Шаг назад</button>
-      <button class="btn sm" id="sReset">Заново</button>
-      <button class="btn sm warn" id="sDel">Удалить</button>
+      <input class="input" id="sTitle" value="${esc(s.title)}" style="flex:1;min-width:140px;font-weight:600">
+      <select class="select" id="sModel" title="Модель для теста">${modelOptions(s.model)}</select>
+      <button class="icon-btn" id="sUndo" title="Шаг назад: убрать последнее сообщение клиента и ответ" aria-label="Шаг назад">${I('undo')}</button>
+      <button class="icon-btn" id="sReset" title="Начать заново" aria-label="Начать заново">${I('refresh')}</button>
+      <button class="icon-btn" id="sDel" title="Удалить тест" aria-label="Удалить тест" style="color:var(--red)">${I('trash')}</button>
     </div>
     <div class="chat-head" style="padding-top:0;border:0">
       <input class="input" id="sItem" value="${esc(s.itemTitle || '')}" placeholder="Объявление (необязательно): Репетитор по русскому — ОГЭ" style="flex:1;min-width:200px">
       <input class="input" id="sNote" value="${esc(s.note || '')}" placeholder="Заметка для ИИ (необязательно)" style="flex:1;min-width:200px">
     </div>
-    <div class="msgs" id="sMsgs">${s.messages.length ? bubbles(s.messages, simExtra) : '<div class="empty">Напишите первое сообщение от лица клиента.<br><span class="small faint">Например: «Здравствуйте! Сколько стоят занятия? Сын в 9 классе, ОГЭ»</span></div>'}
-      ${S.busy.sim === s.id ? '<div class="b ai"><span class="spin"></span> ИИ печатает…</div>' : ''}</div>
-    <div class="draft">
-      <div class="row"><textarea class="input" id="sText" rows="2" placeholder="Сообщение от клиента… (Enter — отправить, Shift+Enter — новая строка)" style="flex:1"></textarea>
-        <div style="display:grid;gap:6px"><button class="btn primary" id="sSend">Отправить</button><button class="btn sm" id="sOffer" title="Как будто клиент откликнулся на рассылку">+ отклик на рассылку</button></div></div>
-      <p class="small faint" style="margin-top:6px">Тест никуда не отправляется. Ответы ИИ можно оценить — оценки идут в обучение.</p>
+    <div class="msgs" id="sMsgs">${s.messages.length ? bubbles(s.messages, simExtra) : emptyState('msg', 'Напишите первое сообщение от лица клиента', 'Например: «Здравствуйте! Сколько стоят занятия? Сын в 9 классе, ОГЭ»')}
+      ${S.busy.sim === s.id ? '<div class="b ai row"><span class="spin"></span>ИИ печатает…</div>' : ''}</div>
+    <div class="composer">
+      <div class="row"><textarea class="input" id="sText" rows="2" placeholder="Сообщение от клиента… Enter — отправить, Shift+Enter — новая строка" style="flex:1"></textarea>
+        <button class="btn primary" id="sSend">${I('send')}Отправить</button></div>
+      <div class="row"><button class="btn sm" id="sOffer" title="Как будто клиент откликнулся на рассылку">${I('megaphone', 'ic-sm')}Отклик на рассылку</button><span class="small faint">Тест никуда не отправляется. Ответы ИИ можно оценить — оценки идут в обучение.</span></div>
     </div>`;
   const m = $('#sMsgs'); m.scrollTop = m.scrollHeight;
   const meta = (patch) => api('sim', { method: 'POST', body: Object.assign({ id: s.id }, patch) }).then((r) => { S.sim = r.sim; });
@@ -757,7 +942,7 @@ function renderSim() {
   $('#sNote').onchange = (e) => meta({ note: e.target.value });
   $('#sReset').onclick = () => meta({ reset: true }).then(renderSim);
   $('#sUndo').onclick = () => meta({ undo: true }).then(renderSim);
-  $('#sDel').onclick = async () => { if (!confirm('Удалить тест?')) return; await api('sim', { method: 'DELETE', body: { id: s.id } }); S.simId = null; S.sim = null; $('#simChat').innerHTML = '<div class="empty">Тест удалён.</div>'; loadSims(); };
+  $('#sDel').onclick = async () => { if (!confirm('Удалить тест?')) return; await api('sim', { method: 'DELETE', body: { id: s.id } }); S.simId = null; S.sim = null; $('#simChat').innerHTML = emptyState('user', 'Тест удалён'); loadSims(); };
   $('#sSend').onclick = () => simSend('client');
   $('#sOffer').onclick = () => simSend('system', 'Покупателя заинтересовало ваше предложение');
   $('#sText').onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); simSend('client'); } };
@@ -768,7 +953,7 @@ function simExtra(m) {
   const d = m.draft || {};
   const rv = m.review ? `<span class="chip ${m.review === 'approve' ? 'green' : m.review === 'edit' ? 'blue' : 'red'}">${m.review === 'approve' ? 'верно' : m.review === 'edit' ? 'исправлено' : 'не отвечать'}</span>` : '';
   return `<div class="rev">${d.model ? `<span>${esc(modelLabel(d.model))} · ${((d.ms || 0) / 1000).toFixed(1)} с</span>` : ''}${d.needsHuman ? '<span>· нужен человек</span>' : ''}${d.selfCheck && d.selfCheck.ok === false ? '<span>· исправлен самопроверкой</span>' : ''}${rv}
-    ${m.review ? '' : `<button class="btn sm good" data-sfb="approve" data-mid="${esc(m.id)}">✓</button><button class="btn sm" data-sfb="edit" data-mid="${esc(m.id)}">✎</button><button class="btn sm warn" data-sfb="reject" data-mid="${esc(m.id)}">✕</button>`}</div>`;
+    ${m.review ? '' : `<button class="icon-btn sm" data-sfb="approve" data-mid="${esc(m.id)}" title="Верно">${I('check', 'ic-sm')}</button><button class="icon-btn sm" data-sfb="edit" data-mid="${esc(m.id)}" title="Исправить">${I('edit', 'ic-sm')}</button><button class="icon-btn sm" data-sfb="reject" data-mid="${esc(m.id)}" title="Не отвечать">${I('x', 'ic-sm')}</button>`}</div>`;
 }
 async function simSend(as, preset) {
   const s = S.sim; const text = preset || $('#sText').value.trim();
@@ -807,11 +992,11 @@ function fillPrompt(p) {
   $('#pScripts').innerHTML = (p.scripts || []).map(scriptRow).join('');
 }
 function scriptRow(s) {
-  return `<div class="script"><div class="row"><input class="input sTitle" value="${esc(s.title)}" placeholder="Название"><button class="btn sm warn sDel" type="button">Удалить</button></div>
-    <input class="input sWhen" value="${esc(s.when || '')}" placeholder="Когда использовать" style="margin-top:6px">
-    <textarea class="input sText" rows="2" style="margin-top:6px">${esc(s.text)}</textarea></div>`;
+  return `<div class="script"><div class="row" style="flex-wrap:nowrap"><input class="input sTitle" value="${esc(s.title)}" placeholder="Название"><button class="icon-btn sDel" type="button" title="Удалить скрипт" aria-label="Удалить скрипт" style="color:var(--red)">${I('trash')}</button></div>
+    <input class="input sWhen" value="${esc(s.when || '')}" placeholder="Когда использовать">
+    <textarea class="input sText" rows="2">${esc(s.text)}</textarea></div>`;
 }
-$('#pScripts').addEventListener('click', (e) => { if (e.target.classList.contains('sDel')) e.target.closest('.script').remove(); });
+$('#pScripts').addEventListener('click', (e) => { const b = e.target.closest('.sDel'); if (b) b.closest('.script').remove(); });
 $('#pAddScript').onclick = () => { $('#pScripts').insertAdjacentHTML('beforeend', scriptRow({ title: '', when: '', text: '' })); };
 $('#pDefaults').onclick = () => { if (confirm('Вернуть исходный сценарий? Текущий останется в «Прошлых версиях» после сохранения.')) fillPrompt(S.defaults); };
 $('#pHist').onchange = async (e) => { if (!e.target.value) return; const r = await api('prompt-version', { params: { key: e.target.value } }); if (r.prompt) { fillPrompt(r.prompt); toast('Версия загружена — нажмите «Сохранить», чтобы вернуть её'); } };
@@ -821,11 +1006,11 @@ $('#pSave').onclick = async () => {
   catch (e) { toast('Ошибка: ' + e.message); }
 };
 async function suggest(kind) {
-  $('#sugOut').innerHTML = '<p class="muted small" style="margin-top:10px"><span class="spin"></span> ИИ читает ' + (kind === 'rules' ? 'правки' : 'диалоги') + '… это может занять минуту-две</p>';
+  $('#sugOut').innerHTML = '<p class="muted small row" style="margin-top:12px"><span class="spin"></span>ИИ читает ' + (kind === 'rules' ? 'правки' : 'диалоги') + '… это может занять минуту-две</p>';
   try {
     const r = await api('suggest', { method: 'POST', body: { kind } });
     const res = await waitJob(r.job);
-    $('#sugOut').innerHTML = `<div class="out">${esc(res.text)}</div>${kind === 'rules' ? '<button class="btn" id="sugApply" style="margin-top:8px">Добавить эти правила в «Роль и правила»</button>' : '<p class="small muted" style="margin-top:6px">Понравившиеся формулировки перенесите в скрипты и сохраните.</p>'}`;
+    $('#sugOut').innerHTML = `<div class="out">${esc(res.text)}</div>${kind === 'rules' ? '<button class="btn" id="sugApply" style="margin-top:10px">' + I('plus') + 'Добавить в «Роль и правила»</button>' : '<p class="small muted" style="margin-top:6px">Понравившиеся формулировки перенесите в скрипты и сохраните.</p>'}`;
     const ap = $('#sugApply'); if (ap) ap.onclick = () => { $('#pSystem').value += '\n\nПравила из правок:\n' + res.text.trim(); toast('Добавлено — не забудьте сохранить'); };
   } catch (e) { $('#sugOut').innerHTML = `<div class="errbox">${esc(e.message)}</div>`; }
 }
@@ -838,7 +1023,7 @@ async function renderModels() {
   const c = S.state.config;
   $('#mDefault').innerHTML = modelOptions(c.defaultModel);
   $('#mSelf').checked = c.selfCheck; $('#mAuto').checked = c.autoDraft; $('#mHours').value = c.autoDraftHours;
-  $('#cabList').innerHTML = c.cabinets.map((x) => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><b class="grow">${esc(x.name)}</b><span class="small muted">с ${esc(x.since)} · ${x.chats || 0} диалогов · ${esc(ago(x.lastSyncAt))}</span>${c.cabinets.length > 1 ? `<button class="btn sm warn" data-rmcab="${esc(x.accountId)}">Отключить</button>` : ''}</div>`).join('');
+  $('#cabList').innerHTML = c.cabinets.map((x) => `<div class="cab">${avatar({ name: x.name })}<div style="flex:1;min-width:0"><div style="font-weight:600;color:var(--ink)">${esc(x.name)}</div><div class="small muted">с ${esc(new Date(x.since).toLocaleDateString('ru-RU'))} · ${x.chats || 0} диалогов · обновлено ${esc(ago(x.lastSyncAt))}</div></div>${c.cabinets.length > 1 ? `<button class="btn sm warn" data-rmcab="${esc(x.accountId)}">Отключить</button>` : ''}</div>`).join('');
   $$('[data-rmcab]').forEach((b) => b.onclick = async () => { if (!confirm('Отключить кабинет от ИИ-менеджера?')) return; await api('config', { method: 'POST', body: { removeCabinet: b.dataset.rmcab } }); await loadState(); renderModels(); });
   try {
     const accs = (await api('avito-accounts')).accounts.filter((a) => !c.cabinets.some((x) => x.accountId === a.id));
@@ -847,19 +1032,21 @@ async function renderModels() {
   if (!$('#cabSince').value) $('#cabSince').value = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   $('#prType').innerHTML = Object.entries(S.state.providerTypes).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('');
   if (!$('#prId').value) prefillType();
-  $('#provList').innerHTML = '<div class="prov"><b>Workers AI</b> <span class="chip green">бесплатно, без ключа</span><div class="small muted" style="margin-top:4px">' + S.state.models.filter((m) => m.ref.startsWith('workers:')).map((m) => `${esc(modelLabel(m.ref))} <button class="btn sm" data-test="${esc(m.ref)}">проверить</button>`).join(' · ') + '</div></div>' +
-    S.state.providers.map((p) => `<div class="prov"><div class="row"><b class="grow">${esc(p.label)}</b><span class="chip">${esc((S.state.providerTypes[p.type] || {}).label || p.type)}</span>${p.hasKey ? `<span class="chip green">ключ …${esc(p.keyTail)}</span>` : '<span class="chip red">нет ключа</span>'}<button class="btn sm" data-edit="${esc(p.id)}">Изменить</button><button class="btn sm warn" data-del="${esc(p.id)}">Удалить</button></div>
-      <div class="small muted" style="margin-top:6px">${p.models.map((m) => `${esc(m)} <button class="btn sm" data-test="${esc(p.id + ':' + m)}">проверить</button>`).join(' · ') || 'Модели не указаны'}</div></div>`).join('');
+  const testBtn = (ref, label) => `<span class="mtag">${esc(label)}<button class="icon-btn sm" data-test="${esc(ref)}" title="Проверить модель" aria-label="Проверить">${I('check', 'ic-sm')}</button></span>`;
+  $('#provList').innerHTML = `<div class="prov"><div class="row"><b class="grow" style="color:var(--ink)">Workers AI</b><span class="chip green">бесплатно, без ключа</span></div><div class="models">${S.state.models.filter((m) => m.ref.startsWith('workers:')).map((m) => testBtn(m.ref, modelLabel(m.ref))).join('')}</div></div>` +
+    S.state.providers.map((p) => `<div class="prov"><div class="row"><b class="grow" style="color:var(--ink)">${esc(p.label)}</b>${p.hasKey ? `<span class="chip green">${I('key', 'ic-sm')}…${esc(p.keyTail)}</span>` : '<span class="chip red">нет ключа</span>'}<button class="icon-btn sm" data-edit="${esc(p.id)}" title="Изменить" aria-label="Изменить">${I('edit', 'ic-sm')}</button><button class="icon-btn sm" data-del="${esc(p.id)}" title="Удалить" aria-label="Удалить" style="color:var(--red)">${I('trash', 'ic-sm')}</button></div>
+      <div class="small muted" style="margin-top:2px">${esc((S.state.providerTypes[p.type] || {}).label || p.type)} · ${esc(p.baseUrl)}</div>
+      <div class="models">${p.models.map((m) => testBtn(p.id + ':' + m, m)).join('') || '<span class="small muted">Модели не указаны</span>'}</div></div>`).join('');
   $$('#provList [data-test]').forEach((b) => b.onclick = async () => {
-    b.disabled = true; b.textContent = '…';
+    b.disabled = true; b.innerHTML = '<span class="spin"></span>';
     try { const r = await api('provider-test', { method: 'POST', body: { model: b.dataset.test } }); toast(r.ok ? `✓ ${r.text} (${(r.ms / 1000).toFixed(1)} с)` : '✕ ' + r.error, 7000); } catch (e) { toast(e.message); }
-    b.disabled = false; b.textContent = 'проверить';
+    b.disabled = false; b.innerHTML = I('check', 'ic-sm');
   });
   $$('#provList [data-del]').forEach((b) => b.onclick = async () => { if (!confirm('Удалить подключение и его ключ?')) return; await api('provider', { method: 'DELETE', body: { id: b.dataset.del } }); await loadState(); renderModels(); });
   $$('#provList [data-edit]').forEach((b) => b.onclick = () => {
     const p = S.state.providers.find((x) => x.id === b.dataset.edit);
     $('#prId').value = p.id; $('#prType').value = p.type; $('#prLabel').value = p.label; $('#prBase').value = p.baseUrl; $('#prKey').value = ''; $('#prKey').placeholder = p.hasKey ? 'оставьте пустым, чтобы не менять' : 'ключ';
-    $('#prModels').value = p.models.join(', '); $('#prCancel').classList.remove('hide'); $('#prSave').textContent = 'Сохранить изменения';
+    $('#prModels').value = p.models.join(', '); $('#prCancel').classList.remove('hide'); $('#prFormTitle').textContent = 'Изменить: ' + p.label; $('#prForm' + 'Title').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }
 const MODEL_HINTS = {
@@ -871,7 +1058,7 @@ function prefillType() {
   $('#prBase').value = v.baseUrl || ''; $('#prLabel').value = v.label || ''; $('#prModels').value = MODEL_HINTS[t] || '';
 }
 $('#prType').onchange = () => { if (!$('#prId').value) prefillType(); };
-$('#prCancel').onclick = () => { $('#prId').value = ''; $('#prKey').value = ''; $('#prKey').placeholder = 'sk-…'; $('#prCancel').classList.add('hide'); $('#prSave').textContent = 'Сохранить подключение'; prefillType(); };
+$('#prCancel').onclick = () => { $('#prId').value = ''; $('#prKey').value = ''; $('#prKey').placeholder = 'sk-…'; $('#prCancel').classList.add('hide'); $('#prFormTitle').textContent = 'Новое подключение'; prefillType(); };
 $('#prSave').onclick = async () => {
   try {
     await api('provider', { method: 'POST', body: { id: $('#prId').value || undefined, type: $('#prType').value, label: $('#prLabel').value, baseUrl: $('#prBase').value, apiKey: $('#prKey').value, models: $('#prModels').value } });
@@ -893,15 +1080,16 @@ async function loadLearn() {
   let fb = [];
   try { fb = (await api('feedback')).feedback; } catch (e) { return toast(e.message); }
   const n = (a) => fb.filter((f) => f.action === a).length;
-  $('#lStat').innerHTML = `<div><b>${fb.length}</b><span class="small muted">оценок</span></div><div><b>${n('approve')}</b><span class="small muted">верно как есть</span></div><div><b>${n('edit')}</b><span class="small muted">исправлено</span></div><div><b>${n('reject')}</b><span class="small muted">не отвечать</span></div><div><b>${fb.length ? Math.round(n('approve') / fb.length * 100) : 0}%</b><span class="small muted">точность</span></div>`;
+  const acc = fb.length ? Math.round(n('approve') / fb.length * 100) : 0;
+  $('#lStat').innerHTML = `<span class="stat">Оценок <b>${fb.length}</b></span><span class="stat"><i class="dot" style="background:var(--green)"></i>Верно <b>${n('approve')}</b></span><span class="stat"><i class="dot" style="background:var(--blue)"></i>Исправлено <b>${n('edit')}</b></span><span class="stat"><i class="dot" style="background:var(--red)"></i>Не отвечать <b>${n('reject')}</b></span><span class="stat">Точность <b>${acc}%</b></span>`;
   const byModel = {};
   fb.forEach((f) => { const k = f.model || '—'; byModel[k] = byModel[k] || { a: 0, t: 0 }; byModel[k].t += 1; if (f.action === 'approve') byModel[k].a += 1; });
   $('#lModels').innerHTML = Object.keys(byModel).length ? 'По моделям: ' + Object.entries(byModel).map(([k, v]) => `${esc(modelLabel(k))} — ${v.a}/${v.t} верно`).join(' · ') : '';
   $('#lList').innerHTML = fb.length ? fb.map((f) => `<div class="fb">
-    <div class="row"><span class="chip ${f.action === 'approve' ? 'green' : f.action === 'edit' ? 'blue' : 'red'}">${f.action === 'approve' ? 'верно' : f.action === 'edit' ? 'исправлено' : 'не отвечать'}</span><span class="small muted">${esc(new Date(f.at).toLocaleString('ru-RU'))} · ${f.source === 'sim' ? 'тест-клиент' : 'диалог'} · ${esc(modelLabel(f.model))}</span><span class="grow"></span><button class="btn sm warn" data-fbdel="${esc(f.key)}">Удалить</button></div>
+    <div class="row"><span class="chip ${f.action === 'approve' ? 'green' : f.action === 'edit' ? 'blue' : 'red'}">${f.action === 'approve' ? 'верно' : f.action === 'edit' ? 'исправлено' : 'не отвечать'}</span><span class="small muted">${esc(new Date(f.at).toLocaleString('ru-RU'))} · ${f.source === 'sim' ? 'тест-клиент' : 'диалог'} · ${esc(modelLabel(f.model))}</span><span class="grow"></span><button class="icon-btn sm" data-fbdel="${esc(f.key)}" title="Удалить" aria-label="Удалить" style="color:var(--red)">${I('trash', 'ic-sm')}</button></div>
     ${f.lastClient ? `<div class="small"><span class="muted">Клиент:</span> ${esc(f.lastClient)}</div>` : ''}
-    <div class="pair"><div><span class="small muted">ИИ:</span>\n${esc(f.aiText)}</div><div><span class="small muted">Как надо:</span>\n${esc(f.action === 'reject' ? '(не отвечать)' : f.finalText)}</div></div>
-    ${f.comment ? `<div class="small"><span class="muted">Почему:</span> ${esc(f.comment)}</div>` : ''}</div>`).join('') : '<p class="muted">Оценок пока нет. Откройте диалог и оцените черновик ИИ.</p>';
+    <div class="pair"><div><span class="lbl">ИИ</span>${esc(f.aiText)}</div><div><span class="lbl">Как надо</span>${esc(f.action === 'reject' ? '(не отвечать)' : f.finalText)}</div></div>
+    ${f.comment ? `<div class="small"><span class="muted">Почему:</span> ${esc(f.comment)}</div>` : ''}</div>`).join('') : emptyState('chart', 'Оценок пока нет', 'Откройте диалог и оцените черновик ИИ: «Верно», «Исправить» или «Не отвечать»');
   $$('[data-fbdel]').forEach((b) => b.onclick = async () => { await api('feedback', { method: 'DELETE', body: { key: b.dataset.fbdel } }); loadLearn(); });
 }
 
