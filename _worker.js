@@ -11487,6 +11487,822 @@ async function handleMbaReportApi(request, env) {
   return json({ error: 'method_not_allowed' }, 405);
 }
 
+// ── /avito-ai-sales: ИИ-менеджер для чатов Авито ──
+// Читает чаты подключённых кабинетов (пока — Елена Добрынина) в своё хранилище и предлагает
+// ответы, которые написал бы преподаватель. В Авито НИЧЕГО НЕ ОТПРАВЛЯЕТ: только читает чаты
+// (GET) и сохраняет черновики у себя. Правки черновиков людьми сохраняются и подмешиваются
+// в промпт как примеры («обучение»). Модели: Workers AI (бесплатно, без ключа) и любые
+// подключённые по ключу — OpenAI, Anthropic, Gemini, OpenRouter, DeepSeek, YandexGPT и т. п.
+//
+// API: /api/dashboard/ai-sales/* (так его пропускает прокси Яндекс Облака), пароль дашборда.
+// KV (AVITO_KV), префикс «aisales:»:
+//   aisales:config                — кабинеты, модель по умолчанию, самопроверка, автоответы
+//   aisales:providers             — подключения моделей с ключами (наружу ключи не отдаются)
+//   aisales:prompt:<acc>          — промпт, скрипты, база знаний, свободные окна кабинета
+//   aisales:prompthist:<acc>:<ts> — прошлые версии промпта (30 дней)
+//   aisales:index:<acc>           — список чатов кабинета (кратко)
+//   aisales:chat:<acc>:<chatId>   — сообщения чата, черновик ИИ и его история
+//   aisales:fb:<acc>:<ts>         — правки и одобрения черновиков (примеры для обучения)
+//   aisales:sim:<acc>:<id>        — диалоги тест-клиента
+//   aisales:job:<id>              — фоновые задачи ИИ (черновик, тест, подсказки), 3 дня
+
+const AIS_WORKERS_MODELS = [
+  { ref: 'workers:@cf/qwen/qwen3-30b-a3b-fp8', label: 'Qwen3 30B (Workers AI, бесплатно)' },
+  { ref: 'workers:@cf/openai/gpt-oss-120b', label: 'GPT-OSS 120B (Workers AI, бесплатно)' },
+  { ref: 'workers:@cf/openai/gpt-oss-20b', label: 'GPT-OSS 20B (Workers AI, бесплатно)' },
+  { ref: 'workers:@cf/meta/llama-3.3-70b-instruct-fp8-fast', label: 'Llama 3.3 70B (Workers AI, бесплатно)' },
+];
+const AIS_PROVIDER_TYPES = {
+  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1' },
+  anthropic: { label: 'Anthropic (Claude)', baseUrl: 'https://api.anthropic.com/v1' },
+  gemini: { label: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
+  openrouter: { label: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
+  deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1' },
+  yandex: { label: 'YandexGPT', baseUrl: 'https://llm.api.cloud.yandex.net/v1' },
+  custom: { label: 'Другой (OpenAI-совместимый)', baseUrl: '' },
+};
+const AIS_STAGES = {
+  new: 'Новый', qualify: 'Уточнение', offer: 'Предложена диагностика', booked: 'Записан на диагностику',
+  after: 'После диагностики', messenger: 'Ушёл в мессенджер', cold: 'Молчит', lost: 'Отказ', spam: 'Не клиент',
+};
+const AIS_DEFAULT_CABINET = { accountId: '6c974a5d5326', name: 'Елена Добрынина', since: '2026-10-01' };
+const AIS_DEFAULT_CONFIG = {
+  cabinets: [AIS_DEFAULT_CABINET],
+  defaultModel: 'workers:@cf/qwen/qwen3-30b-a3b-fp8',
+  selfCheck: true,
+  autoDraft: true,
+  autoDraftHours: 48, // черновики сами пишутся только к сообщениям не старше этого
+  sendEnabled: false, // отправки в Авито нет вообще; флаг только для честного показа на странице
+};
+
+// Сценарий по умолчанию собран по чатам Елены Добрыниной за октябрь 2026 (145 диалогов).
+// Контакты (телефон для МАХ/Телеграма, ссылка ZOOM) в репозиторий не кладём — их вписывают
+// на странице, в «Базе знаний».
+const AIS_DEFAULT_PROMPT = {
+  system: [
+    'Ты — ассистент Елены Николаевны Добрыниной, репетитора по русскому языку. Ты пишешь ответы в чате Авито от её имени, от первого лица (женский род: «поняла», «отправлю»), так, как написала бы она сама.',
+    'Главная цель каждого диалога — записать на бесплатную онлайн-диагностику в ZOOM: Елена знакомится с учеником, определяет уровень знаний, рассказывает о своей системе работы и отвечает на вопросы. Дальнейшие договорённости (оплата, расписание, платформа) — после диагностики, в МАХ или Телеграме.',
+    '',
+    'Как пишет Елена:',
+    '- Коротко: 1–3 предложения, без эмодзи, без списков и markdown. Обращение на «Вы» (с заглавной). Если пишет сам ученик-подросток — можно «ты» в бытовых фразах, но приглашение всё равно на «Вы»/нейтрально.',
+    '- Здоровается («Здравствуйте!») только в первом сообщении дня. Время всегда пишет так: «18.15 по Мск».',
+    '- Сначала отвечает на прямой вопрос клиента, потом делает следующий шаг. В конце — один конкретный вопрос («Удобно будет?», «Записать вас?»).',
+    '- Не уговаривает и не давит. На отказ — вежливо прощается.',
+    '',
+    'Правила, которые нельзя нарушать:',
+    '1. Перед ответом перечитай всю историю. Не переспрашивай то, что уже известно (класс, цель, договорённое время, мессенджер, имя). Не противоречь тому, что уже обещано.',
+    '2. Время встречи предлагай только из раздела «Свободные окна». Если окон нет или клиенту ни одно не подходит — спроси, в какие дни и время удобно, и поставь needs_human=true.',
+    '3. Цены: не начинай с цены. На первый вопрос о цене — «Стоимость зависит от нескольких факторов: цели, формата и количества занятий в неделю. Подробно рассказываю на первой встрече.» Если клиент настаивает — назови диапазон из базы знаний. Скидок не придумывай.',
+    '4. Не выдумывай факты, которых нет в базе знаний или истории. Если не знаешь ответа — напиши нейтрально и поставь needs_human=true.',
+    '5. Ссылку на ZOOM отправляй только в день встречи (если клиент просит или до встречи меньше часа). Телефон для МАХ/Телеграма — когда клиент готов заниматься или просит связаться в мессенджере.',
+    '6. Голосовые, фото и звонки ты не видишь. Если от них зависит ответ — needs_human=true.',
+    '7. Спам, предложения услуг, рассылки других школ — needs_reply=false, stage=spam.',
+    '8. Если клиент написал «спасибо», «хорошо», «ок» после того, как всё уже договорено, — отвечать не нужно (needs_reply=false) или коротко «Хорошо. До встречи!», если это уместно.',
+  ].join('\n'),
+  scripts: [
+    { title: 'Первое сообщение, класс неизвестен', when: 'Клиент спрашивает, как записаться / есть ли места, а класс не назван.', text: 'Здравствуйте! Какой класс?' },
+    { title: 'Приглашение на диагностику', when: 'Класс или цель известны. Основной шаг.', text: 'Предлагаю встретиться на бесплатной онлайн-диагностике, где мы познакомимся, определим уровень знаний ребёнка, я расскажу о своей системе работы и отвечу на все Ваши вопросы. Есть время {окно} по Мск. Удобно будет?' },
+    { title: 'Отклик на рассылку (предложение)', when: 'В чате системное сообщение «Покупателя заинтересовало ваше предложение» и Елена ещё не писала.', text: 'Здравствуйте! Вы откликнулись на предложение прийти на бесплатную диагностику по русскому языку. Диагностика проходит в ZOOM, длится 30-40 минут. Определим уровень знаний, составим план занятий. Удобно встретиться {окно} по Мск?' },
+    { title: 'Подтверждение записи', when: 'Клиент согласился на время.', text: 'Хорошо. За 5-10 мин до встречи отправлю ссылку для подключения в ZOOM. Камера должна быть включена. Присутствие родителя обязательно.' },
+    { title: 'Платформа / куда ссылку', when: 'Спрашивают, где пройдёт встреча, или просят ссылку в мессенджер.', text: 'Встречаемся в ZOOM. Ссылку отправлю здесь. Если удобнее в МАХ или Телеграме — напишите контакт, отправлю туда.' },
+    { title: 'Цена — первый вопрос', when: 'Спрашивают стоимость до диагностики.', text: 'Стоимость зависит от нескольких факторов: цели, формата и количества занятий в неделю. Подробно об этом рассказываю на первой встрече. Записать вас на бесплатный урок-диагностику?' },
+    { title: 'Цена — настаивают', when: 'Повторно просят хотя бы диапазон.', text: 'Занятия в мини-группе — от 1500 р., индивидуальные — от 2500 р. Записать вас на бесплатный урок-диагностику?' },
+    { title: 'Форматы', when: 'Спрашивают, группа или индивидуально.', text: 'Есть разные форматы: мини-группа до 3 человек и индивидуальные занятия. Подбираем под цель ученика.' },
+    { title: 'Только офлайн', when: 'Хотят занятия вживую.', text: 'Работаю только онлайн. Подойдёт такой формат?' },
+    { title: 'Другой город / часовой пояс', when: 'Смущает регион или время.', text: 'Регион роли не играет, подготовка везде одинаковая. Время указываю московское, т.к. ученики из разных часовых поясов.' },
+    { title: 'Родитель не может присутствовать', when: 'Ученик-школьник просит провести диагностику без родителя.', text: 'Обычно первую встречу провожу в присутствии родителя. Когда родитель сможет подключиться?' },
+    { title: 'Нет камеры / только телефон', when: 'Нет камеры на компьютере.', text: 'Вы можете подключиться с двух устройств, телефон использовать как камеру. Первую встречу можно провести и с телефона.' },
+    { title: 'Перенос встречи', when: 'Клиент не может в назначенное время.', text: 'Хорошо. Есть время {окно} по Мск. Удобно будет? / Напишите, в какие дни и в какое время будет удобно. Что-нибудь обязательно подберём.' },
+    { title: 'Напоминание в день встречи', when: 'Встреча сегодня, клиент ещё не подтвердил.', text: 'Здравствуйте! Напоминаю, что сегодня в {время} по Мск мы встречаемся на бесплатной онлайн-диагностике. Всё в силе?' },
+    { title: 'Дожим, нет ответа 1–2 дня', when: 'Последним писала Елена, клиент молчит.', text: 'Здравствуйте! Ваш запрос ещё актуален? Записать вас на бесплатный урок-диагностику?' },
+    { title: 'Последний дожим', when: 'Клиент молчит после напоминания.', text: 'Здравствуйте! Пишу последний раз, чтобы не надоедать. Если преподавателя уже нашли, дайте, пожалуйста, знать. Если занятия ещё нужны, напишите — подберу время на выходных. Предложение актуально?' },
+    { title: 'Готовы заниматься после диагностики', when: 'Клиент пишет, что согласен заниматься / хочет записаться после встречи.', text: 'Здравствуйте! Хорошо. Напишите мне, пожалуйста, в МАХ или Телеграм {телефон}.' },
+    { title: 'Отказ', when: 'Нашли другого, дорого, передумали.', text: 'Поняла Вас. Спасибо за ответ. Будет нужна помощь — обращайтесь.' },
+  ],
+  knowledge: [
+    'Елена Николаевна Добрынина — репетитор по русскому языку. Живёт в Екатеринбурге, работает только онлайн: встречи в ZOOM, занятия на онлайн-платформе (регистрация на платформе — после оплаты).',
+    'С кем работает: 5–11 классы, подготовка к ОГЭ и ЕГЭ, ВПР, итоговое сочинение, изложение, грамотность и повышение успеваемости; студенты колледжа; взрослые. В команде есть преподаватель для взрослых, для которых русский не родной (решение — после согласования с преподавателем, needs_human).',
+    'Бесплатная диагностика: ZOOM, 30–60 минут, камера включена, присутствие родителя обязательно для школьников (взрослый ученик или студент может без родителя). Ссылка — за 5–10 минут до встречи, здесь или в МАХ/Телеграме.',
+    'Форматы и стоимость: мини-группа до 3 человек — от 1500 р. за занятие (60–90 мин); индивидуальные — от 2500 р. Общий диапазон 1500–3000 р. Точная стоимость зависит от цели, формата и числа занятий в неделю — обсуждается на диагностике.',
+    'Контакты для МАХ/Телеграма и ссылку ZOOM впишите сюда: Телефон: … Телеграм: … ZOOM: …',
+  ].join('\n'),
+  slots: 'Впишите свободные окна для диагностики на ближайшие дни, например:\nвт 03.11 — 18.15\nср 04.11 — 12.00, 19.30\nЕсли пусто — ИИ спрашивает удобное время и зовёт человека.',
+};
+
+function aisKv(env) { return env.AVITO_KV; }
+function aisId() { return crypto.randomUUID().replace(/-/g, '').slice(0, 12); }
+
+async function aisConfig(env) {
+  const saved = await aisKv(env).get('aisales:config', 'json');
+  return { ...AIS_DEFAULT_CONFIG, ...(saved || {}), sendEnabled: false };
+}
+async function aisProviders(env) {
+  return (await aisKv(env).get('aisales:providers', 'json')) || [];
+}
+function aisMaskProvider(p) {
+  const { apiKey, ...rest } = p;
+  return { ...rest, hasKey: Boolean(apiKey), keyTail: apiKey ? String(apiKey).slice(-4) : '' };
+}
+async function aisPrompt(env, accountId) {
+  const saved = await aisKv(env).get(`aisales:prompt:${accountId}`, 'json');
+  return { ...AIS_DEFAULT_PROMPT, ...(saved || {}) };
+}
+async function aisIndex(env, accountId) {
+  return (await aisKv(env).get(`aisales:index:${accountId}`, 'json')) || { chats: {}, imported: false, lastSyncAt: null };
+}
+async function aisModelList(env) {
+  const providers = await aisProviders(env);
+  const list = AIS_WORKERS_MODELS.slice();
+  providers.forEach((p) => (p.models || []).forEach((m) => list.push({ ref: `${p.id}:${m}`, label: `${m} (${p.label || AIS_PROVIDER_TYPES[p.type]?.label || p.type})` })));
+  return list;
+}
+
+// Время по Москве: «пн 02.11 14:05».
+function aisMsk(ts) {
+  const d = new Date(Number(ts) + 3 * 3600 * 1000);
+  const wd = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][d.getUTCDay()];
+  const p = (n) => String(n).padStart(2, '0');
+  return `${wd} ${p(d.getUTCDate())}.${p(d.getUTCMonth() + 1)} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+}
+
+// ── Синхронизация с Авито (только чтение) ──
+function aisMapMessage(m, userId) {
+  const author = String(m.author_id) === String(userId) ? 'manager' : m.type === 'system' ? 'system' : 'client';
+  return { id: String(m.id), at: Number(m.created) * 1000, author, type: m.type, text: avitoMessageText(m) };
+}
+// «Покупателя заинтересовало ваше предложение» — клиент откликнулся на рассылку: ждёт ответа.
+function aisIsInterest(m) { return m.author === 'system' && /заинтересовал/i.test(m.text || ''); }
+function aisChatState(messages) {
+  const meaningful = messages.filter((m) => m.author !== 'system' || aisIsInterest(m));
+  const last = meaningful[meaningful.length - 1] || null;
+  const lastAny = messages[messages.length - 1] || null;
+  return {
+    lastAt: lastAny ? lastAny.at : null,
+    lastText: lastAny ? String(lastAny.text || '').slice(0, 160) : '',
+    lastAuthor: last ? (last.author === 'system' ? 'client' : last.author) : null,
+    lastMsgId: last ? last.id : null,
+    waiting: Boolean(last && last.author !== 'manager'),
+    msgCount: messages.length,
+  };
+}
+function aisChatMeta(c, userId) {
+  const other = (c.users || []).find((u) => String(u.id) !== String(userId)) || {};
+  const item = (c.context && c.context.value) || {};
+  const avatar = other.public_user_profile && other.public_user_profile.avatar;
+  return {
+    chatId: c.id,
+    name: other.name || '',
+    avatar: (avatar && (avatar.default || avatar.images && Object.values(avatar.images)[0])) || '',
+    itemId: item.id ? String(item.id) : '',
+    itemTitle: item.title || '',
+    itemUrl: item.url || '',
+    updated: Number(c.updated) || 0,
+  };
+}
+
+async function aisSync(env, accountId, { budgetMs = 15000, pages } = {}) {
+  const kv = aisKv(env);
+  const cfg = await aisConfig(env);
+  const cab = cfg.cabinets.find((c) => c.accountId === accountId);
+  if (!cab) throw new Error('cabinet_not_connected');
+  const account = await kv.get(`account:${accountId}`, 'json');
+  if (!account) throw new Error('avito_account_not_found');
+  const started = Date.now();
+  const token = await avitoGetToken(env, account);
+  const userId = String(account.userId);
+  const idx = await aisIndex(env, accountId);
+  const sinceSec = Date.parse(`${cab.since}T00:00:00+03:00`) / 1000;
+
+  // 1. Список чатов: после первой полной загрузки хватает одной страницы (новые — сверху).
+  const maxPages = pages || (idx.imported ? 1 : 10);
+  const changes = {}; // chatId -> поля, которые меняет эта синхронизация (в конце ложатся на свежий индекс)
+  let reachedEnd = false;
+  for (let page = 0; page < maxPages; page += 1) {
+    const data = await avitoJson(token, `/messenger/${AVITO_CHATS_VERSION}/accounts/${userId}/chats?chat_types=u2i&limit=100&offset=${page * 100}`);
+    const batch = data.chats || [];
+    let old = false;
+    for (const c of batch) {
+      if (Number(c.updated) < sinceSec) { old = true; continue; }
+      const meta = aisChatMeta(c, userId);
+      const prev = idx.chats[c.id] || {};
+      idx.chats[c.id] = { ...prev, ...meta, stale: prev.stale || prev.fetchedUpdated !== meta.updated };
+      changes[c.id] = { ...meta, stale: idx.chats[c.id].stale };
+    }
+    if (old || batch.length < 100 || !(data.meta && data.meta.has_more)) { reachedEnd = true; break; }
+  }
+  if (reachedEnd) idx.imported = true;
+
+  // 2. Сообщения изменившихся чатов, новые — первыми, пока есть время.
+  const stale = Object.values(idx.chats).filter((c) => c.stale).sort((a, b) => b.updated - a.updated);
+  let fetched = 0;
+  const errors = [];
+  for (const s of stale) {
+    if (Date.now() - started > budgetMs) break;
+    try {
+      const raw = await fetchAllAvitoMessages(token, userId, s.chatId);
+      const key = `aisales:chat:${accountId}:${s.chatId}`;
+      const rec = (await kv.get(key, 'json')) || { chatId: s.chatId, drafts: [] };
+      rec.messages = raw.map((m) => aisMapMessage(m, userId));
+      Object.assign(rec, { name: s.name, avatar: s.avatar, itemId: s.itemId, itemTitle: s.itemTitle, itemUrl: s.itemUrl, syncedAt: Date.now() });
+      await kv.put(key, JSON.stringify(rec));
+      const st = aisChatState(rec.messages);
+      changes[s.chatId] = {
+        ...(changes[s.chatId] || {}), ...st, stale: false, fetchedUpdated: s.updated,
+        needsDraft: st.waiting && !(rec.draft && rec.draft.forMsgId === st.lastMsgId),
+      };
+      fetched += 1;
+    } catch (e) {
+      errors.push(`${s.chatId}: ${String(e && e.message).slice(0, 160)}`);
+      if (/avito_402/.test(String(e && e.message))) break;
+    }
+  }
+  // Пока шла синхронизация, задача ИИ могла отметить черновик в индексе — кладём свои поля поверх свежего.
+  const out = await aisIndex(env, accountId);
+  Object.entries(changes).forEach(([id, patch]) => { out.chats[id] = { ...(out.chats[id] || {}), ...patch }; });
+  out.imported = out.imported || idx.imported;
+  out.lastSyncAt = Date.now();
+  await kv.put(`aisales:index:${accountId}`, JSON.stringify(out));
+  const remaining = Object.values(out.chats).filter((c) => c.stale).length;
+  return { fetched, remaining, imported: out.imported, total: Object.keys(out.chats).length, errors };
+}
+
+async function aisUpdateIndexEntry(env, accountId, chatId, patch) {
+  const idx = await aisIndex(env, accountId);
+  if (!idx.chats[chatId]) return;
+  idx.chats[chatId] = { ...idx.chats[chatId], ...patch };
+  await aisKv(env).put(`aisales:index:${accountId}`, JSON.stringify(idx));
+}
+
+// ── Модели ──
+async function aisCallModel(env, ref, system, user, o = {}) {
+  const t0 = Date.now();
+  const i = String(ref || '').indexOf(':');
+  if (i < 0) throw new Error(`bad_model_ref: ${ref}`);
+  const pid = ref.slice(0, i);
+  const model = ref.slice(i + 1);
+  const temperature = o.temperature == null ? 0.4 : o.temperature;
+  const maxTokens = o.maxTokens || 1500;
+  let text = '';
+  if (pid === 'workers') {
+    text = await botAi(env, system, user, maxTokens, { model, temperature });
+    return { text, ms: Date.now() - t0 };
+  }
+  const p = (await aisProviders(env)).find((x) => x.id === pid);
+  if (!p) throw new Error(`Подключение «${pid}» не найдено — выберите другую модель`);
+  if (!p.apiKey) throw new Error(`У подключения «${p.label}» нет ключа`);
+  const base = String(p.baseUrl || AIS_PROVIDER_TYPES[p.type]?.baseUrl || '').replace(/\/+$/, '');
+  const signal = AbortSignal.timeout(o.timeoutMs || 55000);
+  const fail = async (res) => { throw new Error(`${p.label}: ${res.status} ${(await res.text().catch(() => '')).slice(0, 300)}`); };
+  if (p.type === 'anthropic') {
+    const res = await fetch(`${base}/messages`, {
+      method: 'POST', signal,
+      headers: { 'content-type': 'application/json', 'x-api-key': p.apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model, max_tokens: maxTokens, temperature, system, messages: [{ role: 'user', content: user }] }),
+    });
+    if (!res.ok) await fail(res);
+    const data = await res.json();
+    text = (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
+  } else if (p.type === 'gemini') {
+    const res = await fetch(`${base}/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST', signal,
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': p.apiKey },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: user }] }],
+        generationConfig: { temperature, maxOutputTokens: maxTokens },
+      }),
+    });
+    if (!res.ok) await fail(res);
+    const data = await res.json();
+    text = ((data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || []).map((x) => x.text || '').join('');
+  } else {
+    // OpenAI и все OpenAI-совместимые: OpenRouter, DeepSeek, YandexGPT, Groq, Mistral…
+    const isOpenAi = /api\.openai\.com/.test(base);
+    const reasoningModel = /^(o\d|gpt-5)/.test(model);
+    const body = { model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] };
+    if (isOpenAi) body.max_completion_tokens = reasoningModel ? Math.max(maxTokens, 4000) : maxTokens;
+    else body.max_tokens = maxTokens;
+    if (!reasoningModel) body.temperature = temperature;
+    const headers = { 'content-type': 'application/json' };
+    if (p.type === 'yandex') headers.Authorization = `Api-Key ${p.apiKey}`;
+    else headers.Authorization = `Bearer ${p.apiKey}`;
+    if (p.type === 'openrouter') { headers['HTTP-Referer'] = 'https://cantor.agency/avito-ai-sales'; headers['X-Title'] = 'Cantor Avito AI Sales'; }
+    const res = await fetch(`${base}/chat/completions`, { method: 'POST', signal, headers, body: JSON.stringify(body) });
+    if (!res.ok) await fail(res);
+    const data = await res.json();
+    text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  }
+  return { text: String(text).replace(/<think>[\s\S]*?<\/think>/g, '').trim(), ms: Date.now() - t0 };
+}
+
+// ── Промпт черновика ──
+async function aisFeedbackList(env, accountId, limit = 200) {
+  const kv = aisKv(env);
+  const list = await kv.list({ prefix: `aisales:fb:${accountId}:`, limit: 1000 });
+  const keys = list.keys.map((k) => k.name).sort().reverse().slice(0, limit);
+  const recs = await Promise.all(keys.map((k) => kv.get(k, 'json').then((r) => r && { ...r, key: k })));
+  return recs.filter(Boolean);
+}
+
+function aisBuildSystem(prompt, feedback) {
+  const parts = [prompt.system];
+  if (prompt.scripts && prompt.scripts.length) {
+    parts.push('\n# Скрипты (готовые формулировки Елены — используй их почти дословно, подставляя данные)');
+    prompt.scripts.forEach((s) => parts.push(`- ${s.title}${s.when ? ` (когда: ${s.when})` : ''}: «${s.text}»`));
+  }
+  if (prompt.knowledge) parts.push(`\n# База знаний\n${prompt.knowledge}`);
+  parts.push(`\n# Свободные окна для диагностики\n${String(prompt.slots || '').trim() || 'не указаны'}`);
+  const edits = feedback.filter((f) => f.action === 'edit' && f.finalText).slice(0, 12);
+  const good = feedback.filter((f) => f.action === 'approve').slice(0, 4);
+  if (edits.length || good.length) {
+    parts.push('\n# Как Елена исправляла черновики — это главный ориентир. Пиши как в «Как надо», не как в черновике.');
+    edits.forEach((f) => {
+      parts.push(`- Клиент писал: «${String(f.lastClient || '').slice(0, 300)}»\n  Черновик ИИ: «${String(f.aiText || '').slice(0, 400)}»\n  Как надо: «${String(f.finalText).slice(0, 400)}»${f.comment ? `\n  Почему: ${String(f.comment).slice(0, 300)}` : ''}`);
+    });
+    good.forEach((f) => parts.push(`- Хороший ответ (одобрен): клиент «${String(f.lastClient || '').slice(0, 200)}» → «${String(f.finalText || f.aiText || '').slice(0, 300)}»`));
+  }
+  parts.push([
+    '\n# Формат ответа',
+    'Сначала мысленно проверь: что уже известно из истории, на что клиент ждёт ответа, какой следующий шаг по скриптам, не нарушаешь ли правила. Затем верни строго один JSON без пояснений вокруг:',
+    '{"analysis":"1–2 предложения: кто пишет, что хочет, что уже известно, этап",',
+    ' "checks":["что именно проверил в истории и базе знаний (коротко, 2–5 пунктов)"],',
+    ` "stage":"${Object.keys(AIS_STAGES).join('|')}",`,
+    ' "needs_reply":true,',
+    ' "reply":"текст следующего сообщения от Елены (пусто, если отвечать не нужно)",',
+    ' "needs_human":false,',
+    ' "human_reason":"почему нужен человек (если needs_human)",',
+    ' "confidence":0.8}',
+  ].join('\n'));
+  return parts.join('\n');
+}
+
+function aisTranscript(messages, max = 60) {
+  const lines = messages.slice(-max).map((m) => {
+    const who = m.author === 'manager' ? 'Елена' : m.author === 'system' ? 'Система Авито' : 'Клиент';
+    return `[${aisMsk(m.at)}] ${who}: ${String(m.text || '').slice(0, 1200)}`;
+  });
+  if (messages.length > max) lines.unshift(`(ранее было ещё ${messages.length - max} сообщений)`);
+  return lines.join('\n') || '(сообщений нет)';
+}
+
+function aisBuildUser(chat, opts = {}) {
+  return [
+    `Сейчас: ${aisMsk(Date.now())} (Мск).`,
+    chat.itemTitle ? `Объявление: ${chat.itemTitle}` : '',
+    chat.name ? `Имя клиента в Авито: ${chat.name}` : '',
+    chat.note ? `Заметка менеджера по этому диалогу: ${chat.note}` : '',
+    '',
+    'История диалога (старые сверху):',
+    aisTranscript(chat.messages || []),
+    '',
+    opts.instruction ? `Пожелание к ответу от менеджера: ${opts.instruction}\n` : '',
+    'Напиши следующее сообщение от Елены. Верни JSON.',
+  ].filter((x) => x !== '').join('\n');
+}
+
+function aisCheckSystem(prompt) {
+  return [
+    'Ты — строгий редактор переписки репетитора Елены Добрыниной с клиентами на Авито. Тебе дают историю диалога и черновик следующего сообщения Елены. Проверь черновик:',
+    '1) отвечает ли он на последний вопрос/сообщение клиента;',
+    '2) не переспрашивает ли то, что уже известно из истории (класс, цель, время, мессенджер);',
+    '3) не противоречит ли договорённостям из истории (время, дата, формат);',
+    '4) все факты, цены и время — только из базы знаний и свободных окон, ничего не выдумано;',
+    '5) стиль Елены: коротко (1–3 предложения), без эмодзи и markdown, на «Вы», время «по Мск», в конце один вопрос/шаг;',
+    '6) не здоровается повторно, если сегодня уже здоровались; не отправляет ссылку или телефон не по правилам.',
+    '',
+    `# База знаний\n${prompt.knowledge || ''}`,
+    `\n# Свободные окна\n${String(prompt.slots || '').trim() || 'не указаны'}`,
+    '',
+    'Верни строго JSON: {"ok":true|false,"issues":["что не так"],"fixed_reply":"исправленный текст, если ok=false, иначе пусто"}',
+  ].join('\n');
+}
+
+function aisCleanReply(t) {
+  return String(t || '').replace(/^["«»\s]+|["«»\s]+$/g, '').replace(/\*\*/g, '').trim();
+}
+
+async function aisGenerate(env, accountId, chat, opts = {}) {
+  const cfg = await aisConfig(env);
+  const prompt = await aisPrompt(env, accountId);
+  const feedback = await aisFeedbackList(env, accountId, 60);
+  const model = opts.model || chat.model || cfg.defaultModel;
+  const system = aisBuildSystem(prompt, feedback);
+  const user = aisBuildUser(chat, opts);
+  const r1 = await aisCallModel(env, model, system, user, { maxTokens: 1500, temperature: 0.4 });
+  const parsed = botParseJson(r1.text) || { reply: r1.text, analysis: '(модель ответила не в формате JSON)' };
+  const draft = {
+    id: aisId(),
+    at: Date.now(),
+    model,
+    forMsgId: aisChatState(chat.messages || []).lastMsgId,
+    reply: aisCleanReply(parsed.reply),
+    analysis: String(parsed.analysis || ''),
+    checks: Array.isArray(parsed.checks) ? parsed.checks.map(String).slice(0, 8) : [],
+    stage: AIS_STAGES[parsed.stage] ? parsed.stage : null,
+    needsReply: parsed.needs_reply !== false,
+    needsHuman: Boolean(parsed.needs_human),
+    humanReason: String(parsed.human_reason || ''),
+    confidence: Number(parsed.confidence) || null,
+    instruction: opts.instruction || '',
+    ms: r1.ms,
+  };
+  const doCheck = opts.selfCheck == null ? cfg.selfCheck : opts.selfCheck;
+  if (doCheck && draft.reply) {
+    try {
+      const checkUser = `История диалога:\n${aisTranscript(chat.messages || [])}\n\nСейчас: ${aisMsk(Date.now())} (Мск).\n\nЧерновик следующего сообщения Елены:\n«${draft.reply}»\n\nПроверь и верни JSON.`;
+      const r2 = await aisCallModel(env, model, aisCheckSystem(prompt), checkUser, { maxTokens: 900, temperature: 0.1 });
+      const check = botParseJson(r2.text);
+      draft.ms += r2.ms;
+      if (check) {
+        draft.selfCheck = { ok: check.ok !== false, issues: Array.isArray(check.issues) ? check.issues.map(String).slice(0, 6) : [] };
+        const fixed = aisCleanReply(check.fixed_reply);
+        if (check.ok === false && fixed) { draft.firstReply = draft.reply; draft.reply = fixed; }
+      }
+    } catch (e) {
+      draft.selfCheck = { ok: null, issues: [`Самопроверка не прошла: ${String(e && e.message).slice(0, 200)}`] };
+    }
+  }
+  return draft;
+}
+
+// ── Фоновые задачи ИИ ──
+// Прокси Яндекс Облака ждёт воркер не дольше ~28 с, а ИИ (особенно с самопроверкой) бывает дольше.
+// Поэтому запрос запускает задачу и ждёт её до 20 с; не успела — страница опрашивает job?id=…,
+// а задачу, которую прервал воркер, крон через пару минут запускает заново.
+async function aisRunJob(env, job) {
+  const kv = aisKv(env);
+  const save = (patch) => kv.put(`aisales:job:${job.id}`, JSON.stringify(Object.assign(job, patch)), { expirationTtl: 3 * 86400 });
+  try {
+    await save({ status: 'running', startedAt: Date.now(), attempts: (job.attempts || 0) + 1 });
+    let result;
+    if (job.kind === 'draft') {
+      const key = `aisales:chat:${job.accountId}:${job.chatId}`;
+      const chat = await kv.get(key, 'json');
+      if (!chat) throw new Error('chat_not_found');
+      const draft = await aisGenerate(env, job.accountId, chat, job.params || {});
+      if (job.params && job.params.save !== false) {
+        const fresh = (await kv.get(key, 'json')) || chat;
+        fresh.drafts = [draft, ...(fresh.drafts || [])].slice(0, 15);
+        fresh.draft = draft;
+        await kv.put(key, JSON.stringify(fresh));
+        await aisUpdateIndexEntry(env, job.accountId, job.chatId, {
+          needsDraft: false, hasDraft: Boolean(draft.reply), draftAt: draft.at, draftNeedsHuman: draft.needsHuman,
+          draftNeedsReply: draft.needsReply, aiStage: draft.stage, draftReviewed: false,
+        });
+      }
+      result = { draft };
+    } else if (job.kind === 'sim') {
+      const key = `aisales:sim:${job.accountId}:${job.simId}`;
+      const sim = await kv.get(key, 'json');
+      if (!sim) throw new Error('sim_not_found');
+      const draft = await aisGenerate(env, job.accountId, { ...sim, name: sim.clientName || 'Тест-клиент' }, { model: sim.model, ...(job.params || {}) });
+      const fresh = (await kv.get(key, 'json')) || sim;
+      fresh.messages.push({ id: aisId(), at: Date.now(), author: 'manager', type: 'text', text: draft.reply || '(ИИ решил не отвечать)', draft });
+      fresh.updatedAt = Date.now();
+      await kv.put(key, JSON.stringify(fresh));
+      result = { draft };
+    } else if (job.kind === 'suggest') {
+      result = await aisSuggest(env, job.accountId, job.params || {});
+    } else {
+      throw new Error(`unknown job kind ${job.kind}`);
+    }
+    await save({ status: 'done', finishedAt: Date.now(), result });
+  } catch (e) {
+    await save({ status: 'error', finishedAt: Date.now(), error: String((e && e.message) || e).slice(0, 600) });
+  }
+  return job;
+}
+
+async function aisStartJob(env, ctx, job) {
+  job.id = aisId();
+  job.createdAt = Date.now();
+  job.status = 'queued';
+  await aisKv(env).put(`aisales:job:${job.id}`, JSON.stringify(job), { expirationTtl: 3 * 86400 });
+  const run = aisRunJob(env, job);
+  if (ctx && ctx.waitUntil) ctx.waitUntil(run);
+  const done = await Promise.race([run.then(() => true), sleep(20000).then(() => false)]);
+  return done ? job : { id: job.id, kind: job.kind, status: 'running' };
+}
+
+// Подсказки: новые скрипты по живым диалогам или правила по накопленным правкам.
+async function aisSuggest(env, accountId, params) {
+  const cfg = await aisConfig(env);
+  const prompt = await aisPrompt(env, accountId);
+  const model = params.model || cfg.defaultModel;
+  if (params.kind === 'rules') {
+    const fb = (await aisFeedbackList(env, accountId, 80)).filter((f) => f.action === 'edit' || f.action === 'reject');
+    if (!fb.length) return { text: 'Пока нет правок — нечего обобщать. Исправьте несколько черновиков, и здесь появятся правила.' };
+    const sample = fb.map((f) => `Клиент: «${String(f.lastClient || '').slice(0, 250)}»\nЧерновик: «${String(f.aiText || '').slice(0, 300)}»\nКак надо: «${String(f.finalText || '(не отвечать)').slice(0, 300)}»${f.comment ? `\nКомментарий: ${f.comment}` : ''}`).join('\n\n');
+    const r = await aisCallModel(env, model,
+      'Ты помогаешь настроить ИИ-ассистента репетитора. По парам «черновик ИИ → как исправил человек» сформулируй короткие правила (5–12 пунктов), чего ИИ должен избегать и как писать. Только правила, каждое с новой строки, начиная с «- ». Не повторяй то, что уже есть в текущем промпте.',
+      `Текущий промпт:\n${prompt.system}\n\nПравки:\n${sample}`, { maxTokens: 1200, temperature: 0.2, timeoutMs: 120000 });
+    return { text: r.text };
+  }
+  const kv = aisKv(env);
+  const idx = await aisIndex(env, accountId);
+  const ids = Object.values(idx.chats).filter((c) => (c.msgCount || 0) >= 4).sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0)).slice(0, 40).map((c) => c.chatId);
+  const chats = (await Promise.all(ids.map((id) => kv.get(`aisales:chat:${accountId}:${id}`, 'json')))).filter(Boolean);
+  let text = '';
+  for (const c of chats) {
+    const t = aisTranscript((c.messages || []).filter((m) => m.author !== 'system'), 24);
+    if (text.length + t.length > 28000) break;
+    text += `\n=== Диалог\n${t}\n`;
+  }
+  if (!text) return { text: 'Диалогов пока нет — сначала загрузите чаты.' };
+  const r = await aisCallModel(env, model,
+    'Ты — эксперт по продажам услуг репетиторов. Проанализируй реальные диалоги репетитора (Елена) с клиентами на Авито. Выдели повторяющиеся ситуации и лучшие формулировки Елены, а также места, где диалог терялся. Верни: 1) список скриптов в формате «Название | Когда использовать | Текст сообщения» (8–15 штук, тексты — в стиле Елены, почти дословно её лучшие ответы); 2) 3–6 советов, где можно было записать больше людей на диагностику.',
+    `Текущие скрипты:\n${(prompt.scripts || []).map((s) => `- ${s.title}: ${s.text}`).join('\n')}\n\nДиалоги:\n${text}`, { maxTokens: 3000, temperature: 0.3, timeoutMs: 120000 });
+  return { text: r.text };
+}
+
+// ── Крон: новые сообщения и автоматические черновики ──
+async function aiSalesCron(env) {
+  const kv = aisKv(env);
+  const cfg = await aisConfig(env);
+  for (const cab of cfg.cabinets) {
+    try {
+      await aisSync(env, cab.accountId, { budgetMs: 90000 });
+    } catch (e) {
+      console.error('ai-sales sync failed', cab.accountId, e && e.message);
+      continue;
+    }
+    if (!cfg.autoDraft) continue;
+    const idx = await aisIndex(env, cab.accountId);
+    const fresh = Date.now() - (cfg.autoDraftHours || 48) * 3600 * 1000;
+    const todo = Object.values(idx.chats).filter((c) => c.needsDraft && c.waiting && (c.lastAt || 0) > fresh).sort((a, b) => b.lastAt - a.lastAt).slice(0, 6);
+    for (const c of todo) {
+      const job = { id: aisId(), kind: 'draft', accountId: cab.accountId, chatId: c.chatId, params: { save: true }, createdAt: Date.now(), auto: true };
+      await aisRunJob(env, job);
+    }
+  }
+  // Задачи, которые оборвались вместе с запросом страницы, — перезапускаем (не больше двух попыток).
+  const list = await kv.list({ prefix: 'aisales:job:' });
+  for (const k of list.keys) {
+    const job = await kv.get(k.name, 'json');
+    if (job && (job.status === 'running' || job.status === 'queued') && Date.now() - (job.startedAt || job.createdAt) > 120000 && (job.attempts || 0) < 2) {
+      await aisRunJob(env, job);
+    }
+  }
+}
+
+// ── HTTP API ──
+async function handleAiSalesApi(request, env, url, ctx) {
+  if (!checkDashboardAuth(request)) return json({ error: 'unauthorized' }, 401);
+  const kv = aisKv(env);
+  const action = url.pathname.slice('/api/dashboard/ai-sales/'.length);
+  const q = (k) => url.searchParams.get(k);
+  const isGet = request.method === 'GET';
+  const body = isGet ? {} : ((await readJson(request)) || {});
+  const cfg = await aisConfig(env);
+  const accountId = q('accountId') || body.accountId || (cfg.cabinets[0] && cfg.cabinets[0].accountId);
+  const cabinetOk = (id) => cfg.cabinets.some((c) => c.accountId === id);
+
+  if (action === 'state' && isGet) {
+    const providers = (await aisProviders(env)).map(aisMaskProvider);
+    const cabinets = await Promise.all(cfg.cabinets.map(async (c) => {
+      const idx = await aisIndex(env, c.accountId);
+      const chats = Object.values(idx.chats);
+      return { ...c, lastSyncAt: idx.lastSyncAt, imported: idx.imported, chats: chats.length, waiting: chats.filter((x) => x.waiting).length, drafts: chats.filter((x) => x.hasDraft && !x.draftReviewed).length };
+    }));
+    return json({ config: { ...cfg, cabinets }, providers, providerTypes: AIS_PROVIDER_TYPES, models: await aisModelList(env), stages: AIS_STAGES });
+  }
+
+  if (action === 'avito-accounts' && isGet) {
+    const list = await kv.list({ prefix: 'account:' });
+    const recs = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    return json({ accounts: recs.filter(Boolean).map((a) => ({ id: a.id, name: a.name })).sort((a, b) => a.name.localeCompare(b.name, 'ru')) });
+  }
+
+  if (action === 'config' && request.method === 'POST') {
+    const next = { ...cfg };
+    if (typeof body.defaultModel === 'string' && body.defaultModel.includes(':')) next.defaultModel = body.defaultModel;
+    if (typeof body.selfCheck === 'boolean') next.selfCheck = body.selfCheck;
+    if (typeof body.autoDraft === 'boolean') next.autoDraft = body.autoDraft;
+    if (Number(body.autoDraftHours) > 0) next.autoDraftHours = Math.min(Number(body.autoDraftHours), 24 * 14);
+    if (body.addCabinet && body.addCabinet.accountId) {
+      const acc = await kv.get(`account:${body.addCabinet.accountId}`, 'json');
+      if (!acc) return json({ error: 'avito_account_not_found' }, 404);
+      if (!next.cabinets.some((c) => c.accountId === acc.id)) {
+        next.cabinets = [...next.cabinets, { accountId: acc.id, name: acc.name, since: /^\d{4}-\d{2}-\d{2}$/.test(body.addCabinet.since || '') ? body.addCabinet.since : new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10) }];
+      }
+    }
+    if (body.removeCabinet) next.cabinets = next.cabinets.filter((c) => c.accountId !== body.removeCabinet);
+    next.cabinets = next.cabinets.map(({ accountId: a, name, since }) => ({ accountId: a, name, since }));
+    delete next.sendEnabled;
+    await kv.put('aisales:config', JSON.stringify(next));
+    return json({ ok: true });
+  }
+
+  if (!cabinetOk(accountId) && !['provider', 'provider-test', 'job'].includes(action)) return json({ error: 'cabinet_not_connected' }, 400);
+
+  if (action === 'chats' && isGet) {
+    const idx = await aisIndex(env, accountId);
+    const chats = Object.values(idx.chats).sort((a, b) => (b.lastAt || b.updated * 1000 || 0) - (a.lastAt || a.updated * 1000 || 0));
+    return json({ chats, lastSyncAt: idx.lastSyncAt, imported: idx.imported });
+  }
+
+  if (action === 'chat' && isGet) {
+    const rec = await kv.get(`aisales:chat:${accountId}:${q('chatId')}`, 'json');
+    if (!rec) return json({ error: 'not_found' }, 404);
+    return json({ chat: rec });
+  }
+
+  if (action === 'sync' && request.method === 'POST') {
+    try {
+      return json(await aisSync(env, accountId, { budgetMs: 14000 }));
+    } catch (e) {
+      return json({ error: 'sync_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
+  if (action === 'chat-meta' && request.method === 'POST') {
+    const key = `aisales:chat:${accountId}:${body.chatId}`;
+    const rec = await kv.get(key, 'json');
+    if (!rec) return json({ error: 'not_found' }, 404);
+    const patch = {};
+    if ('model' in body) rec.model = body.model || null;
+    if ('note' in body) rec.note = String(body.note || '').slice(0, 2000);
+    if ('stage' in body) { rec.stage = AIS_STAGES[body.stage] ? body.stage : null; patch.stage = rec.stage; }
+    if ('model' in body) patch.model = rec.model;
+    await kv.put(key, JSON.stringify(rec));
+    await aisUpdateIndexEntry(env, accountId, body.chatId, patch);
+    return json({ ok: true, chat: rec });
+  }
+
+  if (action === 'draft' && request.method === 'POST') {
+    if (!body.chatId) return json({ error: 'missing_chat' }, 400);
+    const job = await aisStartJob(env, ctx, {
+      kind: 'draft', accountId, chatId: body.chatId,
+      params: { model: body.model || undefined, instruction: String(body.instruction || '').slice(0, 1000), save: body.save !== false, selfCheck: typeof body.selfCheck === 'boolean' ? body.selfCheck : undefined },
+    });
+    return json({ job });
+  }
+
+  if (action === 'job' && isGet) {
+    const job = await kv.get(`aisales:job:${q('id')}`, 'json');
+    if (!job) return json({ error: 'not_found' }, 404);
+    return json({ job });
+  }
+
+  // Оценка черновика человеком: approve — как есть, edit — исправленный текст, reject — не отвечать.
+  if (action === 'feedback' && request.method === 'POST') {
+    const act = ['approve', 'edit', 'reject'].includes(body.action) ? body.action : null;
+    if (!act) return json({ error: 'bad_action' }, 400);
+    let messages = [];
+    let draft = null;
+    if (body.simId) {
+      const key = `aisales:sim:${accountId}:${body.simId}`;
+      const sim = await kv.get(key, 'json');
+      if (!sim) return json({ error: 'not_found' }, 404);
+      const i = sim.messages.findIndex((m) => m.id === body.messageId);
+      if (i < 0) return json({ error: 'not_found' }, 404);
+      draft = sim.messages[i].draft || { reply: sim.messages[i].text };
+      messages = sim.messages.slice(0, i);
+      if (act === 'edit') sim.messages[i].text = String(body.text || '');
+      sim.messages[i].review = act;
+      await kv.put(key, JSON.stringify(sim));
+    } else {
+      const key = `aisales:chat:${accountId}:${body.chatId}`;
+      const rec = await kv.get(key, 'json');
+      if (!rec) return json({ error: 'not_found' }, 404);
+      draft = (rec.drafts || []).find((d) => d.id === body.draftId) || rec.draft;
+      if (!draft) return json({ error: 'no_draft' }, 400);
+      messages = rec.messages || [];
+      draft.review = { action: act, text: act === 'edit' ? String(body.text || '') : '', comment: String(body.comment || ''), at: Date.now() };
+      if (rec.draft && rec.draft.id === draft.id) rec.draft = draft;
+      rec.drafts = (rec.drafts || []).map((d) => (d.id === draft.id ? draft : d));
+      await kv.put(key, JSON.stringify(rec));
+      await aisUpdateIndexEntry(env, accountId, body.chatId, { draftReviewed: true });
+    }
+    const lastClient = [...messages].reverse().find((m) => m.author === 'client');
+    const fb = {
+      at: Date.now(), action: act, source: body.simId ? 'sim' : 'chat', chatId: body.chatId || null, simId: body.simId || null,
+      model: draft.model || null, lastClient: lastClient ? lastClient.text : '', context: aisTranscript(messages, 8),
+      aiText: draft.reply || '', finalText: act === 'edit' ? String(body.text || '') : act === 'approve' ? draft.reply : '',
+      comment: String(body.comment || '').slice(0, 1000),
+    };
+    await kv.put(`aisales:fb:${accountId}:${new Date().toISOString()}:${aisId().slice(0, 4)}`, JSON.stringify(fb));
+    return json({ ok: true });
+  }
+
+  if (action === 'feedback' && isGet) {
+    return json({ feedback: await aisFeedbackList(env, accountId, 300) });
+  }
+  if (action === 'feedback' && request.method === 'DELETE') {
+    if (!String(body.key || '').startsWith(`aisales:fb:${accountId}:`)) return json({ error: 'bad_key' }, 400);
+    await kv.delete(body.key);
+    return json({ ok: true });
+  }
+
+  if (action === 'prompt' && isGet) {
+    const hist = await kv.list({ prefix: `aisales:prompthist:${accountId}:` });
+    return json({ prompt: await aisPrompt(env, accountId), defaults: AIS_DEFAULT_PROMPT, history: hist.keys.map((k) => k.name).sort().reverse().slice(0, 20) });
+  }
+  if (action === 'prompt-version' && isGet) {
+    const key = q('key') || '';
+    if (!key.startsWith(`aisales:prompthist:${accountId}:`)) return json({ error: 'bad_key' }, 400);
+    return json({ prompt: await kv.get(key, 'json') });
+  }
+  if (action === 'prompt' && request.method === 'POST') {
+    const prev = await aisPrompt(env, accountId);
+    const next = {
+      system: String(body.system ?? prev.system).slice(0, 30000),
+      knowledge: String(body.knowledge ?? prev.knowledge).slice(0, 40000),
+      slots: String(body.slots ?? prev.slots).slice(0, 5000),
+      scripts: Array.isArray(body.scripts)
+        ? body.scripts.slice(0, 80).map((s) => ({ title: String(s.title || '').slice(0, 200), when: String(s.when || '').slice(0, 500), text: String(s.text || '').slice(0, 2000) })).filter((s) => s.text)
+        : prev.scripts,
+      updatedAt: Date.now(),
+    };
+    await kv.put(`aisales:prompthist:${accountId}:${new Date().toISOString()}`, JSON.stringify(prev), { expirationTtl: 30 * 86400 });
+    await kv.put(`aisales:prompt:${accountId}`, JSON.stringify(next));
+    return json({ ok: true, prompt: next });
+  }
+
+  if (action === 'suggest' && request.method === 'POST') {
+    const job = await aisStartJob(env, ctx, { kind: 'suggest', accountId, params: { kind: body.kind === 'rules' ? 'rules' : 'scripts', model: body.model || undefined } });
+    return json({ job });
+  }
+
+  // Подключения моделей: ключ хранится в KV и наружу не отдаётся (только последние 4 символа).
+  if (action === 'provider' && request.method === 'POST') {
+    const providers = await aisProviders(env);
+    const type = AIS_PROVIDER_TYPES[body.type] ? body.type : 'custom';
+    const models = (Array.isArray(body.models) ? body.models : String(body.models || '').split(/[\n,]+/)).map((m) => String(m).trim()).filter(Boolean).slice(0, 30);
+    let p = body.id ? providers.find((x) => x.id === body.id) : null;
+    if (body.id && !p) return json({ error: 'not_found' }, 404);
+    if (!p) { p = { id: `p${aisId().slice(0, 6)}`, createdAt: Date.now() }; providers.push(p); }
+    Object.assign(p, {
+      type, label: String(body.label || AIS_PROVIDER_TYPES[type].label).slice(0, 80),
+      baseUrl: String(body.baseUrl || AIS_PROVIDER_TYPES[type].baseUrl || '').trim(),
+      models, updatedAt: Date.now(),
+    });
+    if (typeof body.apiKey === 'string' && body.apiKey.trim()) p.apiKey = body.apiKey.trim();
+    if (!p.baseUrl) return json({ error: 'missing_base_url' }, 400);
+    await kv.put('aisales:providers', JSON.stringify(providers));
+    return json({ ok: true, provider: aisMaskProvider(p) });
+  }
+  if (action === 'provider' && request.method === 'DELETE') {
+    const providers = (await aisProviders(env)).filter((x) => x.id !== body.id);
+    await kv.put('aisales:providers', JSON.stringify(providers));
+    return json({ ok: true });
+  }
+  if (action === 'provider-test' && request.method === 'POST') {
+    try {
+      const r = await aisCallModel(env, body.model, 'Отвечай одним коротким предложением по-русски.', 'Скажи «Готов к работе» и назови свою модель.', { maxTokens: 300, temperature: 0, timeoutMs: 25000 });
+      return json({ ok: true, text: r.text, ms: r.ms });
+    } catch (e) {
+      return json({ ok: false, error: String(e && e.message).slice(0, 500) });
+    }
+  }
+
+  // Тест-клиент: свои диалоги, где человек пишет за клиента, а ИИ отвечает за Елену.
+  if (action === 'sims' && isGet) {
+    const list = await kv.list({ prefix: `aisales:sim:${accountId}:` });
+    const recs = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    return json({ sims: recs.filter(Boolean).map((s) => ({ id: s.id, title: s.title, model: s.model, updatedAt: s.updatedAt, count: s.messages.length })).sort((a, b) => b.updatedAt - a.updatedAt) });
+  }
+  if (action === 'sim' && isGet) {
+    const sim = await kv.get(`aisales:sim:${accountId}:${q('id')}`, 'json');
+    if (!sim) return json({ error: 'not_found' }, 404);
+    return json({ sim });
+  }
+  if (action === 'sim' && request.method === 'POST') {
+    const key = (id) => `aisales:sim:${accountId}:${id}`;
+    let sim = body.id ? await kv.get(key(body.id), 'json') : null;
+    if (!sim) sim = { id: aisId(), createdAt: Date.now(), messages: [], title: '', model: cfg.defaultModel };
+    if ('title' in body) sim.title = String(body.title || '').slice(0, 120);
+    if ('model' in body && body.model) sim.model = body.model;
+    if ('itemTitle' in body) sim.itemTitle = String(body.itemTitle || '').slice(0, 200);
+    if ('clientName' in body) sim.clientName = String(body.clientName || '').slice(0, 80);
+    if ('note' in body) sim.note = String(body.note || '').slice(0, 1000);
+    if (body.reset) sim.messages = [];
+    if (body.undo) { while (sim.messages.length && sim.messages[sim.messages.length - 1].author === 'manager') sim.messages.pop(); sim.messages.pop(); }
+    if (!sim.title) sim.title = `Тест ${aisMsk(Date.now())}`;
+    sim.updatedAt = Date.now();
+    await kv.put(key(sim.id), JSON.stringify(sim));
+    return json({ sim });
+  }
+  if (action === 'sim' && request.method === 'DELETE') {
+    await kv.delete(`aisales:sim:${accountId}:${body.id}`);
+    return json({ ok: true });
+  }
+  if (action === 'sim-message' && request.method === 'POST') {
+    const key = `aisales:sim:${accountId}:${body.id}`;
+    const sim = await kv.get(key, 'json');
+    if (!sim) return json({ error: 'not_found' }, 404);
+    const text = String(body.text || '').trim();
+    if (text) sim.messages.push({ id: aisId(), at: Date.now(), author: body.as === 'system' ? 'system' : 'client', type: body.as === 'system' ? 'system' : 'text', text: text.slice(0, 3000) });
+    if (body.model) sim.model = body.model;
+    sim.updatedAt = Date.now();
+    await kv.put(key, JSON.stringify(sim));
+    const job = await aisStartJob(env, ctx, { kind: 'sim', accountId, simId: sim.id, params: { instruction: String(body.instruction || '').slice(0, 1000) } });
+    return json({ job });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleApi(request, env, url, ctx) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
@@ -11528,6 +12344,11 @@ async function handleApi(request, env, url, ctx) {
 
   if (pathname.startsWith('/api/dashboard/avito-tasks/')) {
     return handleAvitoTasksApi(request, env, url, ctx);
+  }
+
+  // ИИ-менеджер для чатов Авито (/avito-ai-sales) — до общего /api/dashboard/, там своя логика.
+  if (pathname.startsWith('/api/dashboard/ai-sales/')) {
+    return handleAiSalesApi(request, env, url, ctx);
   }
 
   if (pathname.startsWith('/api/dashboard/finance/')) {
@@ -12368,5 +13189,6 @@ export default {
     ctx.waitUntil(waiCron(env).catch((err) => console.error('workers ai jobs cron failed', err && err.stack)));
     ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
     ctx.waitUntil(finRemindCron(env).catch((err) => console.error('finance reminders cron failed', err && err.stack)));
+    ctx.waitUntil(aiSalesCron(env).catch((err) => console.error('ai-sales cron failed', err && err.stack)));
   },
 };

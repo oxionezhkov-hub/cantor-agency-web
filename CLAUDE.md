@@ -75,3 +75,11 @@ messages «Пользователь ознакомился с вашим пре�
 were sent in total is not in the API. Requests to Avito go through the Yandex Cloud function
 (`yc-dashboard-api-proxy`), so a cabinet can be slow (tens of seconds) — fetch messages a few chats
 at a time, not dozens in parallel.
+
+ИИ-менеджер для чатов Авито (`cantor.agency/avito-ai-sales`, код — «/avito-ai-sales» в `_worker.js`):
+- `GET /api/dashboard/ai-sales/state` — подключённые кабинеты, модели, настройки (ключи моделей не отдаются).
+- `GET /api/dashboard/ai-sales/chats?accountId=<id>` — диалоги кабинета (ждёт ли ответа, есть ли черновик ИИ, этап).
+- `GET /api/dashboard/ai-sales/chat?accountId=<id>&chatId=<chat_id>` — сообщения, черновик ИИ и прошлые варианты.
+- `GET /api/dashboard/ai-sales/feedback?accountId=<id>` — правки и одобрения черновиков людьми.
+- `GET /api/dashboard/ai-sales/prompt?accountId=<id>` — промпт, скрипты, база знаний, свободные окна.
+Сервис только читает Авито; в Авито он ничего не отправляет.
