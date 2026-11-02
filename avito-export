@@ -292,11 +292,9 @@ input,textarea,select{font-family:inherit}
 // reaches this worker — call the workers.dev host directly instead (same pattern
 // as mba-mybrand's/serp-analysis's API_BASE), relying on the worker's permissive CORS headers.
 const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
-const ADMIN_STORAGE_KEY = 'avito_export_admin_ok';
-// Client-side gate only (same convention as /serp-analysis) — not a real auth boundary.
-// Real protection is that Avito client_secret values are never sent back to the browser
-// after being saved (see maskAvitoAccount in _worker.js).
-const ADMIN_PASSWORD = '12345678';
+// The gate's password goes with every request (x-dashboard-password) and the worker checks it — its
+// AVITO_API_PASSWORD secret, or the dashboard password until that is set. Kept in this browser only.
+const ADMIN_STORAGE_KEY = 'avito_export_pw';
 
 let accounts = [];
 let selectedId = null;
@@ -311,9 +309,10 @@ let selectedChatId = null;
 
 async function api(path, opts) {
   const res = await fetch(API_BASE + path, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-dashboard-password': localStorage.getItem(ADMIN_STORAGE_KEY) || '' },
     ...opts,
   });
+  if (res.status === 401) { logout(); throw new Error('Неверный пароль'); }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.message || body.error || ('http_' + res.status));
@@ -343,18 +342,20 @@ function showToast(text) {
 }
 
 /* ════════════ GATE ════════════ */
-function isAdminUnlocked() { return localStorage.getItem(ADMIN_STORAGE_KEY) === '1'; }
+function isAdminUnlocked() { return Boolean(localStorage.getItem(ADMIN_STORAGE_KEY)); }
 function logout() {
   localStorage.removeItem(ADMIN_STORAGE_KEY);
   document.getElementById('app').classList.add('hidden');
   document.getElementById('adminGate').classList.remove('hidden');
 }
-document.getElementById('gateForm').addEventListener('submit', (e) => {
+document.getElementById('gateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = document.getElementById('gatePassword');
   const err = document.getElementById('gateError');
-  if (input.value === ADMIN_PASSWORD) {
-    localStorage.setItem(ADMIN_STORAGE_KEY, '1');
+  // The worker checks the password: a request with it either goes through or comes back 401.
+  const res = await fetch(API_BASE + '/api/avito/accounts', { headers: { 'x-dashboard-password': input.value } }).catch(() => null);
+  if (res && res.ok) {
+    localStorage.setItem(ADMIN_STORAGE_KEY, input.value);
     input.value = '';
     err.classList.remove('show');
     boot();

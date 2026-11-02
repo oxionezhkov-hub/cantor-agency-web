@@ -61,12 +61,67 @@ async function avitoForward(event, method, avitoPath) {
   }
 }
 
+// ?p=/avito-call/<путь Авито> с заголовками x-avito-client-id / x-avito-client-secret: функция сама
+// получает токен кабинета и в этом же вызове делает запрос. Токен, полученный одним вызовом функции,
+// Авито не принимает в другом (у вызовов разные исходящие адреса) — поэтому всё в одном вызове.
+// Токен держится в памяти экземпляра функции, при 401/403 берётся новый.
+const AVITO_TOKENS = new Map(); // clientId -> { token, until }
+
+async function avitoToken(clientId, clientSecret, fresh) {
+  const cached = AVITO_TOKENS.get(clientId);
+  if (!fresh && cached && cached.until > Date.now()) return cached.token;
+  const res = await fetch(`${AVITO_ORIGIN}/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }).toString(),
+    signal: AbortSignal.timeout(10000),
+  });
+  const data = await res.json().catch(() => null);
+  if (!data || !data.access_token) throw new Error(`token: ${res.status} ${JSON.stringify(data).slice(0, 200)}`);
+  AVITO_TOKENS.set(clientId, { token: data.access_token, until: Date.now() + Math.max(60, Number(data.expires_in || 3600) - 300) * 1000 });
+  return data.access_token;
+}
+
+async function avitoCall(event, method, avitoPath) {
+  const json = (statusCode, data) => ({ statusCode, headers: { 'Content-Type': 'application/json', 'X-Avito-Proxy-Error': '1' }, body: JSON.stringify(data) });
+  if (process.env.PROXY_KEY && header(event, 'x-proxy-key') !== process.env.PROXY_KEY) return json(403, { error: 'bad_key' });
+  const clientId = header(event, 'x-avito-client-id');
+  const clientSecret = header(event, 'x-avito-client-secret');
+  if (!clientId || !clientSecret) return json(400, { error: 'no_credentials' });
+  let url;
+  try { url = new URL(avitoPath, AVITO_ORIGIN); } catch (e) { return json(400, { error: 'bad_path' }); }
+  if (url.origin !== AVITO_ORIGIN) return json(400, { error: 'bad_path' });
+  let body;
+  if (method !== 'GET' && method !== 'HEAD' && event.body) body = event.isBase64Encoded ? Buffer.from(event.body, 'base64') : event.body;
+  const headers = { 'Content-Type': header(event, 'content-type') || 'application/json' };
+  const source = header(event, 'x-source');
+  if (source) headers['X-Source'] = source;
+  try {
+    let res;
+    for (const fresh of [false, true]) {
+      const token = await avitoToken(clientId, clientSecret, fresh);
+      res = await fetch(url.toString(), { method, headers: { ...headers, Authorization: `Bearer ${token}` }, body, signal: AbortSignal.timeout(20000) });
+      if (res.status !== 401 && res.status !== 403) break;
+    }
+    const buf = Buffer.from(await res.arrayBuffer());
+    const contentType = res.headers.get('content-type') || 'application/octet-stream';
+    const isText = /json|text|xml|form/.test(contentType);
+    const out = { 'Content-Type': contentType };
+    const remaining = res.headers.get('x-ratelimit-remaining');
+    if (remaining !== null) out['X-RateLimit-Remaining'] = remaining;
+    return { statusCode: res.status, headers: out, body: isText ? buf.toString('utf8') : buf.toString('base64'), isBase64Encoded: !isText };
+  } catch (e) {
+    return json(504, { error: 'avito_unreachable', message: String(e && e.message) });
+  }
+}
+
 module.exports.handler = async function (event) {
   const method = (event.httpMethod || 'GET').toUpperCase();
   if (method === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
 
   const path = (event.queryStringParameters || {}).p || '';
   if (path.startsWith('/avito-api/')) return avitoForward(event, method, path.slice('/avito-api'.length));
+  if (path.startsWith('/avito-call/')) return avitoCall(event, method, path.slice('/avito-call'.length));
   const isFeed = (method === 'GET' || method === 'HEAD') && /^\/feed\/[a-z0-9-]{4,60}\/(avito\.xml|img\/[0-9a-f]{20}\/[A-Za-z0-9_-]+\.[a-z]{3,4})$/.test(path);
   if (!isFeed && !/^\/api\/dashboard\/[A-Za-z0-9/_-]*(\?.*)?$/.test(path)) {
     return { statusCode: 400, headers: { ...CORS, 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'bad_path' }) };

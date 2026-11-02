@@ -984,12 +984,20 @@ function maskAvitoAccount(account) {
   return { ...rest, hasSecret: Boolean(clientSecret) };
 }
 
-async function avitoGetToken(env, account) {
+// A cached token Avito no longer accepts (403 «Not authorized» — e.g. one taken before the switch to the
+// Yandex Cloud proxy, or replaced by a token request that timed out on our side but went through at
+// Avito) is swapped for a fresh one once: avitoRequest asks for it and keeps using it for that token.
+const AVITO_TOKEN_OWNER = new Map(); // token -> { env, account }
+const AVITO_TOKEN_SWAP = new Map(); // stale token -> fresh token
+async function avitoGetToken(env, account, fresh = false) {
   const kv = env.AVITO_KV;
   const tokenKey = `token:${account.id}`;
-  const cached = await kv.get(tokenKey, 'json');
+  const cached = fresh ? null : await kv.get(tokenKey, 'json');
   const now = Date.now();
-  if (cached && cached.expiresAt > now + 60_000) return cached.accessToken;
+  if (cached && cached.expiresAt > now + 60_000) {
+    AVITO_TOKEN_OWNER.set(cached.accessToken, { env, account });
+    return AVITO_TOKEN_SWAP.get(cached.accessToken) || cached.accessToken;
+  }
 
   const res = await avitoFetch('/token', {
     method: 'POST',
@@ -1008,6 +1016,7 @@ async function avitoGetToken(env, account) {
   if (!data.access_token) throw new Error('auth_no_token_in_response');
   const expiresAt = now + Number(data.expires_in || 86400) * 1000;
   await kv.put(tokenKey, JSON.stringify({ accessToken: data.access_token, expiresAt }));
+  AVITO_TOKEN_OWNER.set(data.access_token, { env, account });
   return data.access_token;
 }
 
@@ -1032,15 +1041,69 @@ async function avitoLookupUserId(clientId, clientSecret) {
   return String(self.id);
 }
 
-async function avitoRequest(token, path, options = {}, attempt = 0) {
-  const res = await avitoFetch(path, {
-    ...options,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
-  });
+// A cabinet's call made whole inside the Yandex Cloud function (?p=/avito-call/…): it takes the token
+// and makes the request in the same invocation. A token taken by one invocation is refused («Not
+// authorized») in another — the function's calls leave from different addresses — so /avito-api/
+// with our own token doesn't work for cabinet data. null: the function can't do it (an older version,
+// unreachable) — the caller goes the other way.
+async function avitoCallViaProxy(account, path, options) {
+  try {
+    const res = await fetch(`${AVITO_PROXY.url}?p=${encodeURIComponent(`/avito-call${path}`)}`, {
+      method: options.method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+        'x-avito-client-id': account.clientId,
+        'x-avito-client-secret': account.clientSecret,
+        ...(AVITO_PROXY.key ? { 'x-proxy-key': AVITO_PROXY.key } : {}),
+      },
+      body: options.body,
+      signal: AbortSignal.timeout(AVITO_PROXY_TIMEOUT_MS),
+    });
+    if (res.status === 400) {
+      const data = await res.clone().json().catch(() => null);
+      if (data && (data.error === 'bad_path' || data.error === 'no_credentials')) throw new Error(`proxy: ${data.error}`);
+    }
+    return res;
+  } catch (e) {
+    console.error('avito-call via proxy failed, going straight to Avito', e && e.message);
+    AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
+    return null;
+  }
+}
+
+async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = false) {
+  token = AVITO_TOKEN_SWAP.get(token) || token;
+  const owner = AVITO_TOKEN_OWNER.get(token);
+  let res = null;
+  if (owner && AVITO_PROXY.url && Date.now() > AVITO_PROXY_OFF_UNTIL) {
+    res = await avitoCallViaProxy(owner.account, path, options);
+    if (res && (res.status === 401 || res.status === 403) && /not authorized|bad bearer/i.test(await res.clone().text().catch(() => ''))) {
+      // Avito refuses even the function's own fresh token: back to going straight, as before the proxy.
+      console.error('avito: not authorized even via the proxy — going straight to Avito for 10 minutes');
+      AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
+      res = null;
+    }
+  }
+  if (!res) {
+    res = await avitoFetch(path, {
+      ...options,
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
+    });
+  }
+  if ((res.status === 401 || res.status === 403) && !refreshed && AVITO_TOKEN_OWNER.has(token)) {
+    const text = await res.clone().text().catch(() => '');
+    if (res.status === 401 || /not authorized|bad bearer|token/i.test(text)) {
+      const { env, account } = AVITO_TOKEN_OWNER.get(token);
+      const freshToken = await avitoGetToken(env, account, true);
+      AVITO_TOKEN_SWAP.set(token, freshToken);
+      return avitoRequest(freshToken, path, options, attempt, true);
+    }
+  }
   // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
   if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
-    return avitoRequest(token, path, options, attempt + 1);
+    return avitoRequest(token, path, options, attempt + 1, refreshed);
   }
   return res;
 }
@@ -1769,7 +1832,96 @@ async function handleAvitoApi(request, env, url) {
     }
   }
 
+  // The cabinet's Avito tariff (Расширенный и т. п.) and when it ends: GET /api/avito/tariff?accountId=…
+  // Without accountId — every cabinet, one after another. When it lapses, autoload stops and new
+  // listings aren't published, so this is the first thing to check when a cabinet goes quiet.
+  if (pathname === '/api/avito/tariff' && request.method === 'GET') {
+    const accountId = url.searchParams.get('accountId');
+    if (accountId) {
+      const account = await kv.get(`account:${accountId}`, 'json');
+      if (!account) return json({ error: 'not_found' }, 404);
+      return json(await fetchAvitoTariff(env, account));
+    }
+    const list = await kv.list({ prefix: 'account:' });
+    const accounts = (await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')))).filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    const tariffs = [];
+    for (const account of accounts) tariffs.push(await fetchAvitoTariff(env, account));
+    return json({ tariffs });
+  }
+
+  // Any read from Avito's API for a cabinet: GET /api/avito/raw?accountId=…&path=/core/v1/accounts/self
+  // ({user_id} in the path becomes the cabinet's id). GET goes to any path; POST only to the paths
+  // where Avito uses POST to read (statistics, operations history, balance, prices, calls) — the body
+  // is passed through. Nothing that changes a cabinet (prices, promotion, listings, messages) goes here.
+  if (pathname === '/api/avito/raw' && (request.method === 'GET' || request.method === 'POST')) {
+    const accountId = url.searchParams.get('accountId');
+    const rawPath = url.searchParams.get('path') || '';
+    if (!accountId || !rawPath) return json({ error: 'missing_fields' }, 400);
+    const account = await kv.get(`account:${accountId}`, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    const path = rawPath.replace(/\{user_?id\}/gi, account.userId);
+    if (!/^\/[A-Za-z0-9_\-./]*(\?.*)?$/.test(path) || path.includes('..') || /^\/token\b/.test(path)) {
+      return json({ error: 'bad_path' }, 400);
+    }
+    if (request.method === 'POST' && !AVITO_READ_POSTS.some((re) => re.test(path.split('?')[0]))) {
+      return json({ error: 'post_not_allowed', message: 'POST only for read-only Avito endpoints', allowed: AVITO_READ_POSTS.map(String) }, 403);
+    }
+    try {
+      const token = await avitoGetToken(env, account);
+      const body = request.method === 'POST' ? await request.text() : undefined;
+      const res = await avitoRequest(token, path, { method: request.method, body });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch (e) { data = text; }
+      return json({ status: res.status, path, data }, res.ok ? 200 : 502);
+    } catch (e) {
+      return json({ error: 'raw_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
   return json({ error: 'not_found' }, 404);
+}
+
+// Avito endpoints that take POST but only read. /api/avito/raw lets POST through to these and nothing else.
+const AVITO_READ_POSTS = [
+  /^\/stats\/v1\/accounts\/\d+\/items\/?$/,
+  /^\/stats\/v2\/accounts\/\d+\/items\/?$/,
+  /^\/stats\/v2\/accounts\/\d+\/spendings\/?$/,
+  /^\/core\/v1\/accounts\/operations_history\/?$/,
+  /^\/core\/v1\/accounts\/\d+\/price\/vas\/?$/,
+  /^\/cpa\/v3\/balanceInfo\/?$/,
+  /^\/cpa\/v2\/(calls|chats)ByTime\/?$/,
+  /^\/calltracking\/v1\/getCalls\/?$/,
+];
+
+// Avito answers /tariff/info/1 with the current tariff and the scheduled next one; times come in
+// unix seconds. Kept raw too — the field set isn't documented in full.
+async function fetchAvitoTariff(env, account) {
+  const out = { accountId: account.id, name: account.name, active: null, tariff: null, startsAt: null, endsAt: null, daysLeft: null, scheduled: null, raw: null, error: null };
+  try {
+    const token = await avitoGetToken(env, account);
+    const data = await avitoJson(token, '/tariff/info/1');
+    out.raw = data;
+    const toIso = (v) => {
+      const n = Number(v);
+      if (!v || !Number.isFinite(n) || n <= 0) return null;
+      return new Date(n < 1e12 ? n * 1000 : n).toISOString();
+    };
+    const cur = data && data.current;
+    if (cur) {
+      out.active = cur.isActive != null ? Boolean(cur.isActive) : null;
+      out.tariff = cur.level || cur.name || null;
+      out.startsAt = toIso(cur.startTime);
+      out.endsAt = toIso(cur.closeTime);
+      if (out.endsAt) out.daysLeft = Math.floor((Date.parse(out.endsAt) - Date.now()) / 86400000);
+    }
+    const next = data && data.scheduled;
+    if (next) out.scheduled = { tariff: next.level || next.name || null, startsAt: toIso(next.startTime), endsAt: toIso(next.closeTime) };
+  } catch (e) {
+    out.error = String(e && e.message).slice(0, 300);
+  }
+  return out;
 }
 
 // ── /sales-crm: single-screen table CRM for Avito sales leads ──
@@ -2840,6 +2992,8 @@ async function handleDashboardApi(request, env, url, ctx) {
       briefUrl: existing.briefUrl || null,
       staffUrl: existing.staffUrl || null, // ссылка Авито «доступ для сотрудников» — вход команды в кабинет клиента
       avitoProfileUrl: existing.avitoProfileUrl || null,
+      // Linked, but kept out of «Подтянуть» for now (the tracker's «Кабинеты Авито» checkbox).
+      ...(existing.avitoPullOff ? { avitoPullOff: true } : {}),
       // Inactive clients sink to the bottom of the Projects/Analytics lists and are left out of
       // the daily report and the Avito pull — history stays, nothing is deleted. The dashboard
       // marks a client inactive by colouring it grey, so a colour change sets the flag.
@@ -2874,6 +3028,8 @@ async function handleDashboardApi(request, env, url, ctx) {
     ]);
     await Promise.all([...analyticsList.keys, ...ratingsList.keys, ...dailyMetricsList.keys].map((k) => kv.delete(k.name)));
     await atTouch(kv, ['#projects']);
+    const heal = botHealDeadLinks(env).catch((err) => console.error('heal links failed', err && err.stack));
+    if (ctx && ctx.waitUntil) ctx.waitUntil(heal); else await heal;
     return json({ ok: true });
   }
 
@@ -3077,6 +3233,44 @@ async function handleDashboardApi(request, env, url, ctx) {
     return json({ ok: true });
   }
 
+
+  // ── Chat log (read-only): what the control bot logged in the work-chat topics and client chats ──
+  // GET /api/dashboard/chat-log                         -> { sources: [{ chatId, threadId, label, kind, projectId }] }
+  // GET /api/dashboard/chat-log?projectId=<id>&from=YYYY-MM-DD&to=YYYY-MM-DD
+  //     (or &chatId=<id>&threadId=<id> for one source)  -> { sources, messages: [{ t, at, source, from, team, text, reply }] }
+  // Days are MSK; default — the last 30 days, at most 120 days per request.
+  if (pathname === '/api/dashboard/chat-log' && request.method === 'GET') {
+    const sources = await chatLogSources(kv);
+    const projectId = url.searchParams.get('projectId');
+    const chatId = url.searchParams.get('chatId');
+    const threadId = url.searchParams.get('threadId') || '0';
+    const picked = projectId ? sources.filter((s) => s.projectId === projectId)
+      : chatId ? sources.filter((s) => String(s.chatId) === chatId && String(s.threadId) === threadId) : null;
+    if (!picked) return json({ sources });
+    const day = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? Date.parse(`${s}T00:00:00+03:00`) : NaN);
+    const toMs = Number.isFinite(day(url.searchParams.get('to'))) ? day(url.searchParams.get('to')) + 24 * 3600000 - 1 : Date.now();
+    let fromMs = Number.isFinite(day(url.searchParams.get('from'))) ? day(url.searchParams.get('from')) : toMs - 30 * 24 * 3600000;
+    fromMs = Math.max(fromMs, toMs - 120 * 24 * 3600000);
+    const lists = await Promise.all(picked.map((s) => botReadLogs(kv, s.chatId, s.threadId, fromMs, toMs)));
+    const messages = [];
+    lists.forEach((list, i) => {
+      for (const e of list) messages.push({ t: e.t, at: new Date(e.t).toISOString(), source: picked[i].label, from: e.from, team: e.team, text: e.text, reply: e.reply || null });
+    });
+    messages.sort((a, b) => a.t - b.t);
+    return json({ sources: picked, messages });
+  }
+
+  // ── Reflection (read-only): the weekly «Рефлексия» — each employee's 1–10 score and comment per client ──
+  // GET /api/dashboard/reflection                    -> { current, results, history } for the current week
+  // GET /api/dashboard/reflection?week=YYYY-MM-DD    -> the same for the week starting on that Wednesday
+  if (pathname === '/api/dashboard/reflection' && request.method === 'GET') {
+    const current = reflWeek(Date.now());
+    const asked = url.searchParams.get('week');
+    const week = /^\d{4}-\d{2}-\d{2}$/.test(asked || '') && asked <= current ? asked : current;
+    const team = await atGetTeam(env);
+    const [results, history] = await Promise.all([atReflectionResults(env, team, week), atReflectionHistory(env)]);
+    return json({ current, results, history });
+  }
 
   // ── Avito cabinets linked to projects (for the "Авито: вчера" popup) ──
   if (pathname === '/api/dashboard/avito-links' && request.method === 'GET') {
@@ -3513,7 +3707,8 @@ async function startAvitoPull(env, date, force) {
     status: 'running',
     startedAt: new Date().toISOString(),
     finishedAt: null,
-    pending: projects.filter((p) => p.avitoAccountId && !p.inactive && !kept[p.id]).map((p) => p.id),
+    // project.avitoPullOff: the cabinet is linked (API keys in), but its numbers aren't pulled yet.
+    pending: projects.filter((p) => p.avitoAccountId && !p.inactive && !p.avitoPullOff && !kept[p.id]).map((p) => p.id),
     results: kept,
   };
   if (!pull.pending.length) { pull.status = 'done'; pull.finishedAt = pull.startedAt; }
@@ -3861,9 +4056,7 @@ async function reportPostToChat(env, job) {
     const work = (await listByPrefix(kv, 'bot:chat:')).find((c) => c.kind === 'work');
     if (!work) throw new Error('рабочий чат не найден — добавьте бота в рабочий чат');
     const team = await atGetTeam(env);
-    const tags = team.users.filter((u) => u.active && u.role === 'manager').map((u) => (u.tgUsername
-      ? `@${escapeHtml(u.tgUsername)}`
-      : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(u.name)));
+    const tags = team.users.filter((u) => u.active && u.role === 'manager').map(reportTag);
     const caption = [
       `📄 <b>Отчёт по клиентам Авито</b> — ${escapeHtml(job.report.periodLabel)}`,
       `Клиентов: ${job.report.clients.length}${job.observations ? '' : ' · наблюдения автоматические (ИИ не ответил)'}`,
@@ -3875,10 +4068,51 @@ async function reportPostToChat(env, job) {
     if (!res || !res.ok) throw new Error((res && res.description) || 'Telegram не принял файл');
     job.postedAt = new Date().toISOString();
     job.postError = null;
+    try {
+      await reportNoContactsAlert(env, job, work, team);
+    } catch (e) {
+      console.error('no-contacts alert failed', e && e.stack);
+    }
   } catch (e) {
     job.postError = String(e && e.message).slice(0, 200);
   }
   await putReportJob(kv, job);
+}
+function reportTag(u) {
+  return u.tgUsername ? `@${escapeHtml(u.tgUsername)}`
+    : u.tgId ? `<a href="tg://user?id=${encodeURIComponent(u.tgId)}">${escapeHtml(atFirstName(u.name))}</a>` : escapeHtml(atFirstName(u.name));
+}
+// On weekdays, right after the report is posted (so the day's numbers have been checked and entered):
+// every client of the report with no contacts over its period gets a message in its own work-chat
+// topic, tagging whoever leads it («Клиенты → Настройки»). Clients without a topic go to the main
+// topic in one list. Nothing to say — nothing is sent. Once per report.
+async function reportNoContactsAlert(env, job, work, team) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const dow = botMsk(Date.now()).dow;
+  if (dow === 0 || dow === 6 || job.noContactsAt) return;
+  const zero = (job.report.clients || []).filter((c) => !(c.period && c.period.contacts > 0));
+  job.noContactsAt = new Date().toISOString();
+  if (!zero.length) return;
+  const owners = await atLoadOwners(kv);
+  const byId = new Map(team.users.map((u) => [u.id, u]));
+  const topics = {};
+  for (const k of (await kv.list({ prefix: `bot:topic:${work.id}:` })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    const thread = Number(k.name.split(':').pop());
+    if (rec && rec.projectId && thread && !topics[rec.projectId]) topics[rec.projectId] = thread;
+  }
+  const label = escapeHtml(job.report.periodLabel);
+  const nums = (p) => (p.budget > 0 ? `расход ${Math.round(p.budget).toLocaleString('ru-RU')} ₽, ${Number(p.views || 0).toLocaleString('ru-RU')} просмотров` : 'бюджет не тратится');
+  const loose = [];
+  for (const c of zero) {
+    const p = c.period || {};
+    const u = owners[c.projectId] && byId.get(owners[c.projectId].userId);
+    const tag = u && u.active ? reportTag(u) : '';
+    const thread = topics[c.projectId];
+    if (!thread) { loose.push(`• <b>${escapeHtml(c.name)}</b> — ${nums(p)}${tag ? ` · ${tag}` : ''}`); continue; }
+    await botSend(env, work.id, `⚠️ <b>Нет контактов</b> — ${label}: ${nums(p)}.\n${tag ? `${tag}, р` : 'Р'}азберите причину сегодня и напишите план здесь.`, { message_thread_id: thread });
+  }
+  if (loose.length) await botSend(env, work.id, [`⚠️ <b>Без контактов</b> — ${label}`, ...loose].join('\n'));
 }
 
 // ── Control bot (Telegram): keeps agency tasks and deadlines from getting lost ──
@@ -4130,7 +4364,24 @@ function botMatchProject(title, projects) {
     const surname = words[words.length - 1] || '';
     return surname.length > 3 && t.includes(` ${surname.slice(0, surname.length - 1)}`);
   });
-  return bySurname.length === 1 ? bySurname[0] : null;
+  if (bySurname.length === 1) return bySurname[0];
+  // A one-letter typo in the surname («Кисилева» / «Киселева») is the same client, not a new one —
+  // as long as exactly one client fits.
+  const titleWords = t.trim().split(' ').filter((w) => w.length >= 6);
+  const typo = projects.filter((p) => {
+    const words = botNorm(p.name).split(' ');
+    const surname = words[words.length - 1] || '';
+    return surname.length >= 6 && titleWords.some((w) => botEditDistance1(w, surname));
+  });
+  return typo.length === 1 ? typo[0] : null;
+}
+// True when a and b differ by exactly one letter replaced, added or removed.
+function botEditDistance1(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
+  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
+  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
 }
 async function botProjects(kv) {
   return listByPrefix(kv, 'project:');
@@ -4273,6 +4524,140 @@ async function botRelinkClients(env, { create } = {}) {
   if (touched.length) await atTouch(kv, touched);
   return { created, tasks: touched.length };
 }
+// ── A client created twice (a typo in a chat title) → one client ──
+// Moves everything of `fromId` to `toId` — tasks, work-chat topics and client chats (locked to it), who
+// leads it («Клиенты → Настройки»), the client board note, mailings, reflection answers, daily and monthly
+// metrics, the Avito cabinet and the finance dashboard's client — then reactivates `toId` and deletes
+// `fromId`. What `toId` already has wins.
+async function atMergeProjects(env, fromId, toId) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const [from, to] = await Promise.all([kv.get(`project:${fromId}`, 'json'), kv.get(`project:${toId}`, 'json')]);
+  if (!from || !to) return { skipped: true };
+  const done = { tasks: 0, links: 0 };
+  const touched = [];
+  for (const t of await listByPrefix(kv, 'task:')) {
+    if (t.projectId !== fromId) continue;
+    t.projectId = toId;
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks && AT_MEM.tasks.has(t.id)) AT_MEM.tasks.set(t.id, t);
+    touched.push(t.id);
+  }
+  done.tasks = touched.length;
+  for (const prefix of ['bot:topic:', 'bot:chat:']) {
+    for (const k of (await kv.list({ prefix })).keys) {
+      const rec = await kv.get(k.name, 'json');
+      if (!rec || rec.projectId !== fromId) continue;
+      await kv.put(k.name, JSON.stringify({ ...rec, projectId: toId, projectLocked: true }));
+      done.links += 1;
+    }
+  }
+  const owners = await kv.get('at:owners', 'json');
+  if (owners && owners[fromId]) {
+    if (!owners[toId]) owners[toId] = owners[fromId];
+    delete owners[fromId];
+    await kv.put('at:owners', JSON.stringify(owners));
+  }
+  const board = await kv.get('at:clients', 'json');
+  if (board && board[fromId]) {
+    if (!board[toId] || String(board[fromId].lastUpdateAt || '') > String(board[toId].lastUpdateAt || '')) board[toId] = { ...board[toId], ...board[fromId] };
+    delete board[fromId];
+    await kv.put('at:clients', JSON.stringify(board));
+  }
+  for (const k of (await kv.list({ prefix: 'mail:' })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    if (!rec || !(rec.items || []).some((x) => x.projectId === fromId)) continue;
+    rec.items = rec.items.map((x) => (x.projectId === fromId ? { ...x, projectId: toId } : x));
+    await kv.put(k.name, JSON.stringify(rec));
+  }
+  for (const k of (await kv.list({ prefix: 'refl:' })).keys) {
+    const rec = await kv.get(k.name, 'json');
+    if (!rec || !rec.answers || !rec.answers[fromId]) continue;
+    if (!rec.answers[toId]) rec.answers[toId] = rec.answers[fromId];
+    delete rec.answers[fromId];
+    await kv.put(k.name, JSON.stringify(rec), { expirationTtl: REFL_TTL });
+  }
+  for (const prefix of ['dailyMetrics', 'analytics']) {
+    for (const k of (await kv.list({ prefix: `${prefix}:${fromId}:` })).keys) {
+      const dest = `${prefix}:${toId}:${k.name.slice(`${prefix}:${fromId}:`.length)}`;
+      if (!(await kv.get(dest))) {
+        const rec = await kv.get(k.name, 'json');
+        if (rec) await kv.put(dest, JSON.stringify({ ...rec, projectId: toId }));
+      }
+      await kv.delete(k.name);
+    }
+  }
+  const fin = await kv.get('fin:data', 'json');
+  if (fin && Array.isArray(fin.clients) && fin.clients.some((c) => c.pid === fromId)) {
+    const keep = fin.clients.find((c) => c.pid === toId);
+    fin.clients = fin.clients.filter((c) => {
+      if (c.pid !== fromId) return true;
+      if (!keep) { c.pid = toId; return true; }
+      keep.alias = [...new Set([...(keep.alias || []), fromId, ...(c.alias || [])])];
+      if (c.pays && Object.keys(c.pays).length) keep.pays = { ...c.pays, ...(keep.pays || {}) };
+      return false;
+    });
+    fin.rev = Number(fin.rev || 0) + 1;
+    fin.savedAt = new Date().toISOString();
+    await kv.put('fin:data', JSON.stringify(fin));
+  }
+  const now = new Date().toISOString();
+  await kv.put(`project:${toId}`, JSON.stringify({
+    ...to, inactive: false, rowColor: to.rowColor === 'gray' ? '' : to.rowColor || '',
+    avitoAccountId: to.avitoAccountId || from.avitoAccountId || null,
+    profileUrl: to.profileUrl || from.profileUrl || null, briefUrl: to.briefUrl || from.briefUrl || null, staffUrl: to.staffUrl || from.staffUrl || null,
+    updatedAt: now,
+  }));
+  await kv.delete(`project:${fromId}`);
+  await atTouch(kv, ['#projects', '#clients', ...touched]);
+  return done;
+}
+// Work-chat topics and client chats still linked to a deleted client: linked again by their name to
+// the one client it fits (a deleted duplicate «Елена Чакова» → «Марина Чакова»), or unlinked when none
+// fits (and stays unlinked — a deleted client isn't recreated from its topic); their tasks follow. Runs with every cron and after a client is deleted; writes only what changed.
+async function botHealDeadLinks(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const projects = await botProjects(kv);
+  const ids = new Set(projects.map((p) => p.id));
+  const moved = {}; // "chatId:threadId" -> new projectId | null
+  for (const prefix of ['bot:topic:', 'bot:chat:']) {
+    for (const k of (await kv.list({ prefix })).keys) {
+      const rec = await kv.get(k.name, 'json');
+      if (!rec || !rec.projectId || ids.has(rec.projectId)) continue;
+      const match = botMatchProject(rec.name || rec.title || '', projects);
+      // Locked either way: an unlinked topic must not bring the deleted client back as a new one.
+      await kv.put(k.name, JSON.stringify({ ...rec, projectId: match ? match.id : null, projectLocked: true }));
+      const [chatId, threadId] = prefix === 'bot:topic:' ? k.name.slice(prefix.length).split(':') : [k.name.slice(prefix.length), '0'];
+      moved[`${chatId}:${threadId}`] = match ? match.id : null;
+    }
+  }
+  if (!Object.keys(moved).length) return;
+  const touched = [];
+  for (const t of await botAllTasks(kv)) {
+    if (!t.projectId || ids.has(t.projectId)) continue;
+    const key = `${t.chatId}:${t.threadId || 0}`;
+    if (!(key in moved)) continue;
+    t.projectId = moved[key];
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks && AT_MEM.tasks.has(t.id)) AT_MEM.tasks.set(t.id, t);
+    touched.push(t.id);
+  }
+  await atTouch(kv, ['#projects', ...touched]);
+}
+
+// One-time merges of clients created twice: [the duplicate, the client to keep].
+const PROJECT_MERGES = [
+  ['elena-kisileva', 'elena-kiseleva'], // 26.10.2026: the work-chat topic «Кисилева Елена» had a typo
+];
+async function atRunProjectMerges(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  for (const [fromId, toId] of PROJECT_MERGES) {
+    const flag = `projmerge:${fromId}`;
+    if (await kv.get(flag)) continue;
+    const res = await atMergeProjects(env, fromId, toId);
+    await kv.put(flag, JSON.stringify({ at: new Date().toISOString(), toId, ...res }));
+  }
+}
+
 // One-time (2026-09-30): the clients whose topics were already in the work chat but not in the dashboard.
 const CLIENTS_SEED_V2 = [
   ['natalina-sass', 'Наталина Сасс'], ['elena-okuneva', 'Елена Окунева'], ['natalya-valiullova', 'Наталья Валиуллова'],
@@ -4482,6 +4867,9 @@ async function botOnMessage(env, msg, edited) {
   const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
   if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
   if (isTeam) await botSaveStaffLink(env, chatRec, threadId, text);
+  if (chatRec.kind === 'work' && !edited) {
+    try { await botTrackQuestions(env, chatRec, threadId, msg, text, t, replyTo); } catch (err) { console.error('question tracking failed', err && err.message); }
+  }
 
   if (chatRec.kind === 'client' && !edited) {
     const pendingKey = `bot:pending:${chat.id}`;
@@ -4511,6 +4899,52 @@ async function botOnMessage(env, msg, edited) {
       signalChanged = true;
     }
     if (signalChanged) await atTouch(kv, ['#clients']);
+  }
+}
+
+// ── Questions in the work chat nobody answered ──
+// A question in the work chat («@oleg рассылку согласовываем с клиентом? или сами решаем?») is not a task:
+// it waits in bot:questions until someone answers — a reply to it, a message from the person it tags,
+// or, when nobody is tagged, anyone else's message in that topic. After 3 working hours without an
+// answer the person asked (the tagged ones; nobody tagged — the owner) gets one message with a link
+// straight to it in the chat. A question that asks someone to do something («можешь поправить фото?»)
+// is a task instead (BOT_REQUEST_RE) and isn't tracked here.
+//   bot:questions -> [{ chatId, threadId, msgId, t, from, fromId, text, tags: [tg usernames] }]  (3 days at most)
+const BOT_QUESTION_WMIN = 180;
+async function botTrackQuestions(env, chatRec, threadId, msg, text, t, replyTo) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const fromId = String(msg.from.id);
+  const fromTag = msg.from.username ? String(msg.from.username).toLowerCase() : null;
+  const tags = [...String(text).matchAll(/@([A-Za-z0-9_]{4,})/g)].map((m) => m[1].toLowerCase());
+  const isQuestion = /\?/.test(text) && String(text).replace(/@\w+/g, '').trim().length >= 8 && !botIsAckText(text) && !BOT_REQUEST_RE.test(text);
+  const list = (await kv.get('bot:questions', 'json')) || [];
+  const left = list.filter((q) => {
+    if (t - q.t > 3 * 24 * 3600000) return false;
+    if (String(q.chatId) !== String(chatRec.id) || Number(q.threadId) !== Number(threadId) || String(q.fromId) === fromId) return true;
+    if (replyTo && Number(replyTo) === Number(q.msgId)) return false;
+    return q.tags.length ? !(fromTag && q.tags.includes(fromTag)) : false;
+  });
+  if (isQuestion) left.push({ chatId: chatRec.id, threadId: Number(threadId), msgId: msg.message_id, t, from: botUserName(msg.from), fromId, text: String(text).slice(0, 300), tags });
+  if (left.length !== list.length || isQuestion) await kv.put('bot:questions', JSON.stringify(left.slice(-100)));
+}
+async function botQuestionsCron(env, team, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const list = (await kv.get('bot:questions', 'json')) || [];
+  const due = list.filter((q) => botWorkingMinutes(q.t, nowMs) >= BOT_QUESTION_WMIN);
+  if (!due.length) return;
+  await kv.put('bot:questions', JSON.stringify(list.filter((q) => !due.includes(q))));
+  for (const q of due) {
+    const chat = await kv.get(`bot:chat:${q.chatId}`, 'json');
+    const topic = q.threadId ? await kv.get(`bot:topic:${q.chatId}:${q.threadId}`, 'json') : null;
+    const link = botMessageLink(q.chatId, chat && chat.isForum ? q.threadId : null, q.msgId);
+    const asked = team.users.filter((u) => u.active && u.tgId && u.tgUsername && q.tags.includes(String(u.tgUsername).toLowerCase()) && String(u.tgId) !== String(q.fromId));
+    const text = [
+      `❓ <b>Вопрос без ответа 3 рабочих часа</b>${topic && topic.name ? ` · ${escapeHtml(topic.name)}` : chat && chat.title ? ` · ${escapeHtml(chat.title)}` : ''}`,
+      `${escapeHtml(q.from)}, ${botFmtDate(q.t)}: «${escapeHtml(q.text)}»`,
+    ].join('\n');
+    const extra = link ? { reply_markup: { inline_keyboard: [[{ text: 'Открыть сообщение', url: link }]] } } : {};
+    if (asked.length) for (const u of asked) await botSend(env, u.tgId, text, extra);
+    else await botNotifyOwner(env, text, extra);
   }
 }
 
@@ -4877,13 +5311,18 @@ function botIsLimitError(err) {
 }
 async function botAi(env, system, user, maxTokens, opts = {}) {
   if (!env.AI) throw new Error('AI binding is not configured');
-  const res = await env.AI.run(opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT, {
-    messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
-    max_tokens: maxTokens || 1500,
-    temperature: opts.temperature == null ? 0.1 : opts.temperature,
-  });
+  const model = opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT;
+  // OpenAI's gpt-oss models on Workers AI take the Responses API shape (instructions + input).
+  const res = /gpt-oss/.test(model)
+    ? await env.AI.run(model, { instructions: system, input: user, reasoning: { effort: 'low' } })
+    : await env.AI.run(model, {
+      messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
+      max_tokens: maxTokens || 1500,
+      temperature: opts.temperature == null ? 0.1 : opts.temperature,
+    });
   let out = '';
-  if (typeof res === 'string') out = res;
+  if (res && Array.isArray(res.output)) out = res.output.filter((x) => x && x.type === 'message').flatMap((x) => x.content || []).map((c) => c.text || '').join('');
+  else if (typeof res === 'string') out = res;
   else if (res && typeof res.response === 'string') out = res.response;
   else if (res && res.response && typeof res.response === 'object') out = JSON.stringify(res.response);
   else if (res && res.choices && res.choices[0]) out = (res.choices[0].message && res.choices[0].message.content) || res.choices[0].text || '';
@@ -4920,7 +5359,7 @@ const BOT_EXTRACT_SYSTEM = [
   'Просьба команды КЛИЕНТУ (пополнить баланс, прислать скриншот или файл, выбрать время, ответить на вопрос, подтвердить) —',
   'это дело клиента, а НЕ задача команды: такие задачи не заводи.',
   'Пополнение баланса/аванса на Авито — всегда дело клиента: задач на пополнение не заводи, кто бы о нём ни писал.',
-  'Вопрос руководителя или команды на обсуждение («есть смысл увеличить лимит?», «какие будут ближайшие действия?») — не задача:',
+  'Вопрос руководителя или команды на обсуждение или уточнение («есть смысл увеличить лимит?», «какие будут ближайшие действия?», «@oleg рассылку согласовываем с клиентом или сами решаем?») — не задача, даже если кого-то тегнули:',
   'задача только если кого-то прямо просят что-то сделать. Ответ команды «взяли в работу», напоминание клиенту о встрече — тоже не задачи.',
   'Если КМ пересылает в рабочий чат ответ или правки клиента по работе, по которой уже есть открытая задача (тексты, фото, отзывы),',
   '— это update к этой задаче, а не новые задачи; не дроби одно сообщение на несколько задач по одной работе. Упоминание уже',
@@ -4934,9 +5373,9 @@ const BOT_EXTRACT_SYSTEM = [
   ' {"type":"update","task":"<id открытой задачи>","msg":<id сообщения>,"status":"taken|done|informed|cancelled","assignee":"<имя или null>","due":"<YYYY-MM-DD HH:MM или null>"}',
   ']}',
   'assignee — ТОЛЬКО если в сообщении человек прямо назван (имя или @username — см. Telegram в списке команды) или сам пишет, что сделает. Не угадывай по роли',
-  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок («крайний срок 21.10.2026 18:00», «до пятницы»), иначе null.',
+  'или по контексту: если явно не назван — null. due — только если в сообщении прямо назван срок («крайний срок 21.10.2026 18:00», «до пятницы»), иначе null; время самого сообщения сроком не считается.',
   'priority: urgent — «срочно», «горит», «ASAP», «прямо сейчас» или срок в ближайшие 3 часа; high — срок сегодня или завтра, «важно», «в приоритете»; low — «когда будет время», «не срочно»; иначе normal.',
-  'taken — кто-то взял задачу или назвал срок; done — сообщили, что сделано; informed — КМ/Олег сообщили клиенту результат;',
+  'taken — кто-то взял задачу или назвал срок; done — из сообщений команды ясно, что работа сделана («готово», «поправила», «загрузили», «запустили», «сделано», скрин результата); informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
   'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если КМ или Олег уже ответили клиенту',
@@ -4982,13 +5421,38 @@ async function botProcessQueue(env) {
     // Imported history is context only: its tasks came in with the import, and its ids aren't the bot's.
     const unseen = logs.filter((e) => !e.imported && e.id > cursor);
     if (!unseen.length) continue;
-    const fresh = unseen.slice(0, BOT_AI_BATCH_MESSAGES);
-    if (unseen.length > fresh.length) await kv.put(k.name, '1'); // the rest goes next run
+    const batch = unseen.slice(0, BOT_AI_BATCH_MESSAGES);
+    if (unseen.length > batch.length) await kv.put(k.name, '1'); // the rest goes next run
     const context = logs.filter((e) => e.imported || e.id <= cursor).slice(-15);
 
     if (!allTasks) allTasks = await botAllTasks(kv);
-    const openTasks = allTasks.filter((t) => (t.status === 'open' || t.status === 'done')
-      && ((topic.projectId && t.projectId === topic.projectId) || (String(t.chatId) === String(chatId) && String(t.threadId) === String(threadId))));
+    const sameTopic = (t) => (topic.projectId && t.projectId === topic.projectId) || (String(t.chatId) === String(chatId) && String(t.threadId) === String(threadId));
+    const openTasks = allTasks.filter((t) => (t.status === 'open' || t.status === 'done') && sameTopic(t));
+    const recentClosed = allTasks.filter((t) => (t.status === 'closed' || t.status === 'cancelled') && sameTopic(t) && now - Date.parse(t.updatedAt || t.createdAt || 0) < 4 * 24 * 3600000);
+    // A team list «@tag / • item / • item» is read here, item by item, without the model: each item is a
+    // task on the tagged person. A team report «Сделали …» closes the open task it is about. Neither
+    // goes to the model.
+    const listCtx = { chatRec, topic, threadId, fresh: batch, openTasks, recentClosed, team, projectsById };
+    const handled = new Set();
+    for (const e of batch) {
+      if (!e.team || chatRec.kind !== 'work') continue;
+      const items = botParseTaskList(e.text);
+      if (items) {
+        await botApplyEvents(env, items.map((it) => ({
+          type: 'new_task', msg: e.id, fromList: true, text: botShortTask(it.text), detail: it.text, priorityText: it.text,
+          assignee: it.tags.length === 1 ? `@${it.tags[0]}` : null, due: botExplicitDue(it.text) || botExplicitDue(e.text),
+        })), listCtx);
+        handled.add(e.id);
+      } else if (BOT_DONE_REPORT_RE.test(String(e.text || '').trim()) && !/\?/.test(e.text)) {
+        await botCloseByReport(env, listCtx, e);
+      }
+    }
+    const fresh = batch.filter((e) => !handled.has(e.id));
+    if (!fresh.length) {
+      await kv.put(cursorKey, String(batch[batch.length - 1].id));
+      processed += batch.length;
+      continue;
+    }
     const projectName = topic.projectId && projectsById[topic.projectId] ? projectsById[topic.projectId].name : topic.name;
     const user = [
       `Сейчас: ${botFmtDate(now)}.${botMsk(now).date.slice(0, 4)} (МСК). Сегодня ${['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'][botMsk(now).dow]}.`,
@@ -5015,7 +5479,7 @@ async function botProcessQueue(env) {
       // Failed/unparseable: retry next run; after a few tries skip this batch so it can't block the topic.
       const attempts = (Number(await kv.get(attemptsKey)) || 0) + 1;
       if (attempts >= BOT_AI_MAX_ATTEMPTS) {
-        await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
+        await kv.put(cursorKey, String(batch[batch.length - 1].id));
         await kv.delete(attemptsKey);
       } else {
         await kv.put(attemptsKey, String(attempts), { expirationTtl: 60 * 60 * 24 * 3 });
@@ -5027,11 +5491,58 @@ async function botProcessQueue(env) {
       await botSetAiLimited(env, false, { backlog: listing.keys.length });
       state.limited = false;
     }
-    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks, team, projectsById });
-    await kv.put(cursorKey, String(fresh[fresh.length - 1].id));
-    processed += fresh.length;
+    await botApplyEvents(env, parsed.events || [], { chatRec, topic, threadId, fresh, openTasks, recentClosed, team, projectsById });
+    await kv.put(cursorKey, String(batch[batch.length - 1].id));
+    processed += batch.length;
   }
   return { processed };
+}
+
+// «@SEEREKAG / • Проверить публикацию… / • Заменить… / @GSDorr / • Проверить…» → [{ tags, text }], one per item
+// under the tag line above it. null when the message isn't such a list (fewer than two items).
+function botParseTaskList(text) {
+  const items = [];
+  let tags = [];
+  for (const raw of String(text || '').split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const tagLine = line.match(/^((?:@[A-Za-z0-9_]{4,}[\s,;:]*)+)$/);
+    if (tagLine) { tags = [...tagLine[1].matchAll(/@([A-Za-z0-9_]{4,})/g)].map((m) => m[1].toLowerCase()); continue; }
+    const item = line.match(/^(?:[•\-–—*▪●·]|\d{1,2}[.)])\s*(.{6,})$/);
+    if (item && tags.length) items.push({ tags: [...tags], text: item[1].trim() });
+  }
+  return items.length >= 2 ? items : null;
+}
+// A card title from a list item: up to the first bracket / colon / semicolon, at most 14 words.
+function botShortTask(text) {
+  let s = String(text || '').replace(/\s+/g, ' ').trim();
+  const cut = s.search(/\s\(|;|:\s/);
+  if (cut >= 15) s = s.slice(0, cut);
+  const words = s.split(' ');
+  if (words.length > 14) s = `${words.slice(0, 14).join(' ')}…`;
+  return s.replace(/[.,;]+$/, '');
+}
+// «крайний срок 21.10.2026 18:00», «до 23.10», «срок: 24.10 12:00» → «YYYY-MM-DD HH:MM» (no time — 18:00).
+function botExplicitDue(text) {
+  const m = String(text || '').match(/(?:срок|до|к)\s*:?\s*(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?:[,\s]+(?:в\s*)?(\d{1,2})[:.](\d{2}))?/i);
+  if (!m) return null;
+  const year = m[3] ? (m[3].length === 2 ? `20${m[3]}` : m[3]) : botMsk(Date.now()).date.slice(0, 4);
+  const pad = (x) => String(x).padStart(2, '0');
+  return `${year}-${pad(m[2])}-${pad(m[1])} ${m[4] ? pad(m[4]) : '18'}:${m[5] || '00'}`;
+}
+// «Сделали днем рассылку на 2000 руб…» closes the open task «Запустить рассылку на 2000 руб»: the task's
+// words other than its first (the action) are in the report — at least two and most of them.
+async function botCloseByReport(env, ctx, e) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const msg = botTaskStems(e.text);
+  const hits = ctx.openTasks.filter((t) => {
+    if (t.status !== 'open') return false;
+    const stems = [...botTaskStems(t.text)].slice(1);
+    const common = stems.filter((x) => msg.has(x)).length;
+    return common >= 2 && common / stems.length >= 0.6;
+  });
+  if (hits.length !== 1) return; // none, or not sure which one
+  await botApplyEvents(env, [{ type: 'update', task: hits[0].id, msg: e.id, status: 'done' }], ctx);
 }
 
 // The bot only puts a task on someone the message itself names — by name, alias or @username — or
@@ -5096,6 +5607,10 @@ function botIsClientReport(src) {
 }
 // A request in a team message: someone is tagged, asked politely, or told to do something.
 const BOT_ASK_RE = /@\w|(^|[^а-яё])кто[^?]{0,30}(бер|возьм|займ|сдела)|(^|[^а-яё])(можешь|можете|сможешь|сможете|пожалуйста|прошу|просьба|нужно|надо|необходимо|давай|давайте|сделай|сделайте|проверь|проверьте|посмотри|посмотрите|глянь|гляньте|поставь|поставьте|добавь|добавьте|поправь|поправьте|исправь|исправьте|загрузи|загрузите|отправь|отправьте|напиши|напишите|подготовь|подготовьте|узнай|узнайте|уточни|уточните|возьми|возьмите|займись|займитесь)([^а-яё]|$)/i;
+// «Сделали…», «Запустили…», «Готово…» at the start of a team message: a report that something is done.
+const BOT_DONE_REPORT_RE = /^(?:@\w+[\s,]*)*(?:[а-яё]+[\s,]+)?(сделали|сделал[а]?|сделано|запустили|запустил[а]?|разместили|разместил[а]?|поправили|поправил[а]?|исправили|исправил[а]?|загрузили|загрузил[а]?|выложили|отправили|отправил[а]?|обновили|обновил[а]?|подключили|настроили|заменили|удалили|отключили|подняли|снизили|готово|выполнено)([^а-яё]|$)/i;
+// The same, without «@someone»: what turns a question into a request («можешь поправить фото?»).
+const BOT_REQUEST_RE = new RegExp(BOT_ASK_RE.source.replace(/^@\\w\|/, ''), 'i');
 // Why a message the AI read a task from is not work for the team — or null when it is. Shared by new
 // messages and by the one-time sweep of tasks made before these rules.
 function botNotTeamTaskReason(chatRec, src, taskText) {
@@ -5107,23 +5622,32 @@ function botNotTeamTaskReason(chatRec, src, taskText) {
   if (botIsRequestToClient(chatRec, src)) return 'просьба к клиенту — дело клиента';
   if (botIsClientReport(src)) return 'новости клиента о результатах';
   if (!src.team) return null;
+  // «Сделали днем рассылку на 2000 руб, рассчитываем на 8-10 контактов» — a report of done work
+  // (botCloseByReport closes the task it reports), not a new task.
+  if (BOT_DONE_REPORT_RE.test(text) && !/\?/.test(text) && !BOT_REQUEST_RE.test(text)) return 'отчёт о сделанном';
   // «Тексты взяли в работу, спасибо» — our answer to a request, not a new one.
   if (text.length < 160 && !text.includes('?') && /(^|[^а-яё])(взял[аи]?|берём|берем|приняли|принято|получили) (в работу|тексты|фото|материалы|информацию)|(^|[^а-яё])(взял[аи]?|приняли) в работу/i.test(text)) return 'команда подтвердила, что взяла в работу';
   // «Напоминаем о встрече сегодня в 9:30» — the reminder is the work, and it's done.
   if (chatRec && chatRec.kind === 'client' && /(^|[^а-яё])напомина(ем|ю)/i.test(text)) return 'напоминание клиенту уже отправлено';
   // «Дневной лимит есть смысл увеличить?», «Тут какие будут ближайшие действия?» — a question to
   // talk over, not an assignment: it becomes a task only when it asks someone to do something.
-  if (/\?[\s)!.]*$/.test(text) && !BOT_ASK_RE.test(text)) return 'вопрос на обсуждение';
+  // A tag alone doesn't make it a request: «@oleg рассылку согласовываем с клиентом? или сами решаем?»
+  // is a question — it waits for an answer (botQuestionsCron reminds after 3 working hours), not a card.
+  if (/\?/.test(text) && !BOT_REQUEST_RE.test(text)) return 'вопрос на обсуждение';
   return null;
 }
 // The model's priority, checked against the message: «срочно» or a deadline within 3 hours is urgent,
 // a deadline today or tomorrow at least high.
-function botTaskPriority(fromAi, src, dueMs) {
+function botTaskPriority(fromAi, text, dueMs) {
   const order = ['low', 'normal', 'high', 'urgent'];
-  let p = order.includes(fromAi) ? fromAi : 'normal';
+  // The model marks almost everything urgent — only «low» is taken from it; the rest comes from the
+  // task's own words and its deadline (for a list, the item's words — not the whole message's).
+  let p = fromAi === 'low' ? 'low' : 'normal';
   const raise = (to) => { if (order.indexOf(to) > order.indexOf(p)) p = to; };
-  const text = String((src && src.text) || '');
-  if (/(^|[^а-яё])(срочн|горит|asap)/i.test(text)) raise('urgent');
+  text = String(text || '');
+  // «срочно», «в срочном порядке» — not «проверить выполнение срочных правок».
+  if (/(^|[^а-яё])(срочно|в срочном порядке|горит|asap)([^а-яё]|$)/i.test(text)) raise('urgent');
+  if (/(^|[^а-яё])(важн|в приоритете|первым делом|в первую очередь)/i.test(text)) raise('high');
   if (dueMs) {
     const left = dueMs - Date.now();
     if (left < 3 * 3600000) raise('urgent');
@@ -5131,6 +5655,7 @@ function botTaskPriority(fromAi, src, dueMs) {
   }
   return p;
 }
+const BOT_DUE_HINT_RE = /\d{1,2}[.:/]\d{2}|\d{1,2}\s*(час|ч\b)|сегодня|завтра|послезавтра|понедельник|вторник|сред[ау]|четверг|пятниц|суббот|воскресен|до\s+(конца|вечера|утра|обеда|ночи)|через\s+\d|через\s+(час|день|неделю)|срок|дедлайн|к\s+\d|утром|вечером|asap|срочно|сейчас/i;
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -5139,18 +5664,22 @@ async function botApplyEvents(env, events, ctx) {
   const users = ctx.team ? ctx.team.users : [];
   const touched = [];
   const assigned = []; // [task, source message] — the person gets a (quiet) heads-up in Avito Tasks / Telegram
-  const hinted = []; // tasks the chat suggests are done / reported / cancelled — a person confirms
+  const autoClosed = []; // [task, status, message] — set from the chat; the person is told
   for (const ev of Array.isArray(events) ? events : []) {
     if (!ev || typeof ev !== 'object') continue;
     const src = byMsg.get(Number(ev.msg));
-    const dueMs = botParseMskDateTime(ev.due);
-    if (ev.type === 'new_task' && ev.text && botNotTeamTaskReason(ctx.chatRec, src, ev.text)) continue;
+    // A deadline only when the message names one: the model sometimes puts the message's own time there,
+    // which then reads as «due in a minute» and makes the task urgent.
+    const dueMs = ev.fromList ? botParseMskDateTime(ev.due) : src && BOT_DUE_HINT_RE.test(String(src.text || '')) ? botParseMskDateTime(ev.due) : null;
+    if (ev.type === 'new_task' && ev.text && !ev.fromList && botNotTeamTaskReason(ctx.chatRec, src, ev.text)) continue;
     if (ev.type === 'new_task' && ev.text) {
       // The same request often comes twice: the client asks in their chat and the manager passes it
       // on in the work chat, or two messages in a row repeat it — the AI then proposes it again.
       // A task of the same client with (nearly) the same words, still open, is the same task: the
       // new message is noted on it instead of a second card.
       const twin = botFindTwinTask(ctx.openTasks, String(ev.text), ctx.topic.projectId, ctx.chatRec.id, ctx.threadId);
+      // Done and closed in the last days: the chat talking about it again doesn't make it a new task.
+      if (!twin && botFindTwinTask((ctx.recentClosed || []).map((t) => ({ ...t, status: 'open' })), String(ev.text), ctx.topic.projectId, ctx.chatRec.id, ctx.threadId)) continue;
       if (twin) {
         twin.activity = [...(Array.isArray(twin.activity) ? twin.activity : []), { t: Date.now(), by: 'Бот', what: `снова в ${ctx.chatRec.kind === 'client' ? 'чате клиента' : 'рабочем чате'}${src ? ` (${src.from}): «${String(src.text).slice(0, 160)}»` : ''}` }].slice(-20);
         twin.updatedAt = nowIso;
@@ -5164,11 +5693,11 @@ async function botApplyEvents(env, events, ctx) {
         id,
         text: String(ev.text).slice(0, 300),
         // The message the task came from, as the description: who asked and in what words.
-        note: src && src.text ? `${src.from}: «${String(src.text).slice(0, 1500)}»` : '',
+        note: src && src.text ? `${src.from}: «${String(ev.detail || src.text).slice(0, 1500)}»` : '',
         status: 'open',
         owner: null,
         assigneeId: null,
-        priority: botTaskPriority(ev.priority, src, dueMs),
+        priority: botTaskPriority(ev.priority, ev.priorityText || (src && src.text), dueMs),
         // A deadline the message names is the task's deadline («крайний срок 21.10 18:00»).
         due: dueMs ? botIsoMsk(dueMs) : null,
         suggestedDue: dueMs ? botIsoMsk(dueMs) : null,
@@ -5206,8 +5735,8 @@ async function botApplyEvents(env, events, ctx) {
       }
       if (dueMs) task.due = botIsoMsk(dueMs);
       if (ev.status === 'taken' && !task.takenAt) task.takenAt = src ? new Date(src.t).toISOString() : nowIso;
-      // The bot never closes a task itself: "done" / "клиенту сообщили" / "отменена" read from the chat
-      // only mark it (task.hint) and ask the person to confirm with a button.
+      // «Готово» / «клиенту сообщили» / «не нужно» from our own message in the chat sets the status by itself
+      // (the person is told, quietly, and can put it back in the tracker); a question or a bare «ок» doesn't.
       const closes = (ev.status === 'done' || ev.status === 'cancelled') ? task.status === 'open'
         : ev.status === 'informed' ? task.status === 'open' || task.status === 'done' : false;
       // A question ("а это сделали?") is not an answer; and a task already asked about with the same
@@ -5216,14 +5745,18 @@ async function botApplyEvents(env, events, ctx) {
       // Only our own messages say that something is done or was told to the client — not the
       // client's, and not a bare «хорошо» / «окей».
       const weak = !src || src.team === false || botIsAckText(src.text) || String(src.text || '').trim().length < 12;
-      const lastAsked = task.hintSeen && task.hintSeen[ev.status] ? Date.parse(task.hintSeen[ev.status]) : 0;
-      if (closes && !asking && !weak && (!task.hint || task.hint.status !== ev.status) && !(lastAsked && Date.now() - lastAsked < 24 * 3600000)) {
-        task.hint = { status: ev.status, at: src ? new Date(src.t).toISOString() : nowIso, msgId: src ? src.id : null, from: src ? src.from : null, text: src ? String(src.text).slice(0, 200) : null };
-        task.hintSeen = { ...(task.hintSeen || {}), [ev.status]: nowIso };
-        hinted.push(task);
+      let label = ev.status === 'taken' ? 'взяли в работу' : null;
+      if (closes && !asking && !weak) {
+        const at = src ? new Date(src.t).toISOString() : nowIso;
+        if (ev.status === 'done') Object.assign(task, { status: 'done', doneAt: task.doneAt || at });
+        if (ev.status === 'informed') Object.assign(task, { status: 'closed', doneAt: task.doneAt || at, informedAt: at });
+        if (ev.status === 'cancelled') task.status = 'cancelled';
+        task.updatedBy = 'Бот';
+        delete task.hint;
+        label = `${{ done: 'сделано', informed: 'закрыл — клиенту сообщили', cancelled: 'отменил — не нужна' }[ev.status]}${src ? ` (${src.from}: «${String(src.text).replace(/\s+/g, ' ').slice(0, 120)}»)` : ''}`;
+        autoClosed.push([task, ev.status, src]);
       }
       task.updatedAt = nowIso;
-      const label = { taken: 'взяли в работу', done: 'похоже, сделано — ждёт подтверждения', informed: 'похоже, клиенту сообщили — ждёт подтверждения', cancelled: 'похоже, не нужна — ждёт подтверждения' }[ev.status];
       task.activity = [...(Array.isArray(task.activity) ? task.activity : []), { t: Date.now(), by: 'Бот', what: `по переписке${label ? `: ${label}` : ''}` }].slice(-20);
       await kv.put(`task:${task.id}`, JSON.stringify(task));
       touched.push(task.id);
@@ -5240,42 +5773,20 @@ async function botApplyEvents(env, events, ctx) {
       extra: { ...atTgButtons(task, true), disable_notification: true },
     });
   }
-  // "Похоже, сделано": the assignee (for «клиенту сообщили» — the client manager) confirms with a button.
-  // One chat message that seems to settle several tasks makes ONE Telegram message per person, with
-  // a button per task — not a message per task.
-  const groups = new Map();
-  for (const task of hinted) {
-    const h = task.hint;
-    const to = h.status === 'informed'
+  // Statuses set from the chat: the assignee (for «клиенту сообщили» — the client managers) gets a quiet
+  // note with the message it was read from; a wrong guess is put back in the tracker.
+  for (const [task, status, src] of autoClosed) {
+    const to = status === 'informed'
       ? users.filter((u) => u.role === 'manager' && u.active).map((u) => u.id)
       : [atAssigneeId(task, users)].filter(Boolean);
-    const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
-    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот: похоже, задача ${what} — подтвердите: ${task.text}`, by: 'Бот' });
-    for (const uid of to) {
-      const key = `${uid}|${h.status}|${h.msgId || task.id}`;
-      if (!groups.has(key)) groups.set(key, { uid, h, tasks: [] });
-      groups.get(key).tasks.push(task);
-    }
-  }
-  for (const { uid, h, tasks: list } of groups.values()) {
-    const user = users.find((u) => u.id === uid && u.active);
-    if (!user || !user.tgId) continue;
-    const action = { done: ['✅ Да, готово', 'done'], informed: ['✅ Да, закрыть', 'close'], cancelled: ['✖️ Да, отменить', 'cancel'] }[h.status];
-    const quote = h.text ? `\n<i>${escapeHtml(h.from || '')}: «${escapeHtml(h.text)}»</i>` : '';
-    const projectOf = (task) => (task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName);
-    if (list.length === 1) {
-      const task = list[0];
-      const what = { done: 'сделана', informed: 'уже сообщили клиенту', cancelled: 'больше не нужна' }[h.status];
-      await botSend(env, user.tgId, `🤖 <b>Похоже, задача ${what}</b> — подтвердите, если так (сам бот статус не меняет)\n${atTgTaskBlock(task, projectOf(task))}${quote}`,
-        { reply_markup: { inline_keyboard: [[{ text: action[0], callback_data: `at:${action[1]}:${task.id}` }], atOpenTaskRow(task.id)] }, disable_notification: true });
-      continue;
-    }
-    const what = { done: 'сделаны', informed: 'уже сообщили клиенту', cancelled: 'больше не нужны' }[h.status];
-    const client = projectOf(list[0]);
-    const lines = [`🤖 <b>Похоже, задачи ${what}: ${list.length}</b>${client ? ` · ${escapeHtml(client)}` : ''} — подтвердите те, что так (сам бот статус не меняет)`, quote.trim(), ''];
-    list.forEach((task, i) => lines.push(`${i + 1}. <a href="${escapeHtml(atTaskUrl(task.id))}">${escapeHtml(task.text)}</a>`));
-    const buttons = list.map((task, i) => [{ text: `${action[0].split(',')[0].replace('Да', '')} ${i + 1}. ${String(task.text).slice(0, 40)}`.replace(/\s+/g, ' ').trim(), callback_data: `at:${action[1]}:${task.id}` }]);
-    await botSend(env, user.tgId, lines.filter((l, i) => l || i === 2).join('\n'), { reply_markup: { inline_keyboard: buttons }, disable_notification: true });
+    if (!to.length) continue;
+    const what = { done: 'сделана', informed: 'закрыта — клиенту сообщили', cancelled: 'отменена — больше не нужна' }[status];
+    const projectName = task.projectId && ctx.projectsById && ctx.projectsById[task.projectId] ? ctx.projectsById[task.projectId].name : task.topicName;
+    const quote = src ? `\n<i>${escapeHtml(src.from || '')}: «${escapeHtml(String(src.text).slice(0, 200))}»</i>` : '';
+    await atNotify(env, ctx.team, to, { kind: 'edited', taskId: task.id, text: `Бот по переписке: задача ${what} — ${task.text}`, by: 'Бот' }, {
+      text: `🤖 <b>Задача ${what}</b> — бот понял это из чата. Если ошибся, верните статус в трекере.\n${atTgTaskBlock(task, projectName)}${quote}`,
+      extra: { reply_markup: { inline_keyboard: [atOpenTaskRow(task.id)] }, disable_notification: true },
+    });
   }
 }
 
@@ -5528,6 +6039,11 @@ async function botRunChecks(env, nowMs) {
       for (const m of team.users.filter((u) => u.role === 'manager' && u.active && u.tgId)) await botSend(env, m.tgId, note);
     }
     try {
+      await botQuestionsCron(env, team, nowMs);
+    } catch (err) {
+      console.error('unanswered questions failed', err && err.stack);
+    }
+    try {
       await botCheckHandoffs(env, nowMs, allTasks, byId);
     } catch (err) {
       console.error('handoff checks failed', err && err.stack);
@@ -5576,7 +6092,7 @@ async function botCheckHandoffs(env, nowMs, allTasks, byId) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const team = await atGetTeam(env);
   const recent = (iso) => { const ms = Date.parse(iso || 0); return ms && nowMs - ms <= BOT_SLA_LOOKBACK_MS ? ms : 0; };
-  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && (u.role === 'specialist' || u.role === 'trainee'); };
+  const isSpec = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['lead', 'specialist', 'trainee'].includes(u.role); };
   // A task on the manager (or the owner / assistant) is answered right in the client's chat — there
   // is nothing to pass on to the specialists, so only unassigned client requests are checked.
   const handledInChat = (id) => { const u = id && team.users.find((x) => x.id === id); return !!u && ['manager', 'owner', 'assistant'].includes(u.role); };
@@ -5696,6 +6212,18 @@ async function botScheduled(env) {
     console.error('clients seed failed', err && err.stack);
   }
   try {
+    await atRunProjectMerges(env);
+    await botHealDeadLinks(env);
+  } catch (err) {
+    console.error('project merge failed', err && err.stack);
+  }
+  try {
+    await atMigrateRoles(env);
+    await atRefreshPhotos(env);
+  } catch (err) {
+    console.error('role migration failed', err && err.stack);
+  }
+  try {
     await atEnsureNewMembers(env);
   } catch (err) {
     console.error('team members seed failed', err && err.stack);
@@ -5777,7 +6305,7 @@ async function botAnswerQuestion(env, question) {
   let reflLines = [];
   try {
     const week = reflWeek(now);
-    const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
+    const recs = await Promise.all(people.filter((u) => REFL_READ_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${week}:${u.id}`, 'json')]));
     reflLines = recs.flatMap(([u, r]) => Object.entries((r && r.answers) || {}).filter(([pid]) => about(pid))
       .map(([pid, a]) => `- ${(byId[pid] || {}).name || pid}: ${u.name} — ${a.score}/10, «${String(a.comment || '').slice(0, 200)}»`));
   } catch (err) { /* reflection is optional context */ }
@@ -6050,6 +6578,9 @@ async function handleBotApi(request, env, url) {
 //   bot:qrun           -> last time a page visit kicked the AI queue
 //   kb:*               -> «База знаний» update requests — see "Avito Tasks → «База знаний»" below
 //   refl:<wed>:<userId> -> «Рефлексия» for the week starting on that Wednesday — see below
+//   mail:<YYYY-MM>     -> «Рассылки» for that month — see atMailApi
+//   at:owners          -> who leads which client and its priority — see atLoadOwners
+//   at:goals           -> { <projectId>: { goal, now, by, at } } — «К чему стремимся» / «Что делаем сейчас»
 
 const AT_PAGE_URL = 'https://cantor.agency/avito-tasks';
 const AT_OWNER_TG = 'oleg_ezhkov';
@@ -6058,15 +6589,17 @@ const AT_ROLES = {
   manager: 'Клиентский менеджер',
   specialist: 'Специалист по Авито',
   trainee: 'Стажёр по Авито',
+  lead: 'Старший специалист по Авито', // controls the specialists: plans, quality, goals of the cabinets
   assistant: 'Ассистент', // same access as the owner, except the owner's own record
 };
 // Tracker sections («Задачи» is always on). By default they follow the role; the owner can turn
 // any section on or off for a person in Команда → Доступы (user.sections), the owner always has all.
-const AT_SECTIONS = ['tasks', 'clients', 'analytics', 'meet', 'reflection', 'team', 'kb'];
+const AT_SECTIONS = ['tasks', 'clients', 'analytics', 'meet', 'mail', 'reflection', 'team', 'kb'];
 const AT_ROLE_SECTIONS = {
   owner: AT_SECTIONS,
   assistant: AT_SECTIONS,
   manager: ['tasks', 'clients', 'analytics', 'meet', 'reflection'],
+  lead: ['tasks', 'clients', 'meet', 'reflection'],
   specialist: ['tasks', 'meet', 'reflection'],
   trainee: ['tasks', 'meet', 'reflection'],
 };
@@ -6213,7 +6746,26 @@ async function atSeedTeam(env) {
 const AT_NEW_MEMBERS = [
   { id: 'sofia', name: 'София Романовна', role: 'assistant', aliases: ['София', 'Софья', 'Соня'], tgId: '993366229', tgUsername: 'sofiuspasskaya' },
   { id: 'stanislav', name: 'Станислав', role: 'trainee', aliases: ['Станислав', 'Стас'], tgId: '426349175' },
+  { id: 'arina', name: 'Арина', role: 'trainee', aliases: ['Арина'], tgId: '1613493945' },
 ];
+// One-time role changes (30.10.2026): the three specialists stop being trainees, Евгений becomes the
+// senior specialist. Matched by id; the label follows the role.
+const AT_ROLE_MIGRATIONS = { key: 'at:migr:roles-2026-10-30', roles: { albina: 'specialist', stanislav: 'specialist', ekaterina: 'specialist', evgeny: 'lead' } };
+async function atMigrateRoles(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (await kv.get(AT_ROLE_MIGRATIONS.key)) return;
+  const team = await atGetTeam(env);
+  const done = [];
+  for (const u of team.users) {
+    const role = AT_ROLE_MIGRATIONS.roles[u.id];
+    if (!role || u.role === role) continue;
+    u.role = role;
+    u.roleLabel = AT_ROLES[role];
+    done.push(`${u.id}: ${role}`);
+  }
+  if (done.length) { await atPutTeam(kv, team); await atTouch(kv, ['#team']); }
+  await kv.put(AT_ROLE_MIGRATIONS.key, JSON.stringify({ at: new Date().toISOString(), done }));
+}
 // The access message for a new member: their own invite link (both addresses) and what the bot does.
 // Sent when they are added — or, if they hadn't opened the bot yet (Telegram doesn't let a bot write
 // first), as soon as they press Start.
@@ -6278,7 +6830,42 @@ function atAccessMessage(team, first) {
   return lines.join('\n');
 }
 function atPublicUser(u) {
-  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId };
+  return { id: u.id, name: u.name, role: u.role, roleLabel: u.roleLabel, active: !!u.active, tg: !!u.tgId, pv: u.photoV || null };
+}
+// Avatars from Telegram: once a day the bot takes each team member's current profile photo (the small
+// 160 px size) and keeps it as a data URL in at:photo:<userId>; user.photoV is its Telegram file id, so
+// the page (action 'photos') knows when to fetch it again. Members without a photo keep their initials.
+async function atRefreshPhotos(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!env.CONTROL_BOT_TOKEN) return;
+  const flag = `at:photos-run:${botMsk(Date.now()).date}`;
+  if (await kv.get(flag)) return;
+  await kv.put(flag, '1', { expirationTtl: 3 * 86400 });
+  const team = await atGetTeam(env);
+  let changed = false;
+  for (const u of team.users.filter((x) => x.active && x.tgId)) {
+    const res = await botApi(env, 'getUserProfilePhotos', { user_id: Number(u.tgId), limit: 1 });
+    const sizes = res && res.ok && res.result && res.result.photos && res.result.photos[0];
+    if (!sizes || !sizes.length) {
+      if (res && res.ok && u.photoV) { delete u.photoV; await kv.delete(`at:photo:${u.id}`); changed = true; }
+      continue;
+    }
+    const small = sizes[0];
+    if (small.file_unique_id === u.photoV) continue;
+    const file = await botApi(env, 'getFile', { file_id: small.file_id });
+    if (!file || !file.ok || !file.result || !file.result.file_path) continue;
+    try {
+      const img = await fetch(`https://api.telegram.org/file/bot${env.CONTROL_BOT_TOKEN}/${file.result.file_path}`, { signal: AbortSignal.timeout(10000) });
+      if (!img.ok) continue;
+      const bytes = new Uint8Array(await img.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      await kv.put(`at:photo:${u.id}`, `data:image/jpeg;base64,${btoa(bin)}`);
+      u.photoV = small.file_unique_id;
+      changed = true;
+    } catch (err) { /* next time */ }
+  }
+  if (changed) { await atPutTeam(kv, team); await atTouch(kv, ['#team']); }
 }
 async function atAuth(team, token) {
   const [id, v, sig] = String(token || '').split('.');
@@ -6369,7 +6956,7 @@ function atIsTrackerTask(t) {
 // so they never go to the client manager — «Готово» closes them straight away.
 function atIsInternalTask(task, users) {
   if (!task || task.origin === 'client') return false;
-  const isSpec = (u) => !!u && (u.role === 'specialist' || u.role === 'trainee');
+  const isSpec = (u) => !!u && ['lead', 'specialist', 'trainee'].includes(u.role);
   const author = task.createdById ? users.find((u) => u.id === task.createdById) : task.author ? atMatchUser(task.author, users) : null;
   if (!isSpec(author)) return false;
   const aid = atAssigneeId(task, users);
@@ -6396,14 +6983,40 @@ async function atTouch(kv, ids) {
   return rec.v;
 }
 async function atLoadProjects(kv) {
-  return (await listByPrefix(kv, 'project:')).map((p) => ({
+  const [list, owners, goals] = await Promise.all([listByPrefix(kv, 'project:'), atLoadOwners(kv), kv.get('at:goals', 'json')]);
+  return list.map((p) => ({
     id: p.id,
     name: p.name,
     inactive: !!p.inactive,
     profileUrl: p.profileUrl || p.avitoProfileUrl || null,
     briefUrl: p.briefUrl || null,
     staffUrl: p.staffUrl || null,
+    ownerId: (owners[p.id] && owners[p.id].userId) || null,
+    priority: (owners[p.id] && owners[p.id].priority) || null,
+    goal: (goals && goals[p.id]) || null,
   })).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+
+// ── Who leads which client: «Клиенты → Настройки» (the owner and the assistant) ──
+//   at:owners -> { <projectId>: { userId, priority: 1 | 2 | 3 } }
+// Until the first save it starts from the split the owner posted in the work chat on 20.10.2026
+// (matched by surname; new clients go to Альбина).
+const AT_OWNERS_SEED = {
+  ekaterina: { 1: ['шевчук', 'армбристер'], 2: ['верхотурова', 'сасс', 'попова'], 3: ['алексеева', 'симагина', 'соболева', 'добрынина'] },
+  albina: { 1: ['кариентиди', 'лютова', 'валиуллова'], 2: ['окунева', 'климович', 'шахин', 'лазарева', 'чакова', 'бусленко'], 3: ['ромашова', 'губкина'] },
+};
+async function atLoadOwners(kv) {
+  const saved = await kv.get('at:owners', 'json');
+  if (saved) return saved;
+  const out = {};
+  for (const p of await listByPrefix(kv, 'project:')) {
+    if (p.inactive) continue;
+    const last = String(p.name || '').trim().split(/\s+/).pop().toLowerCase();
+    for (const [userId, byPrio] of Object.entries(AT_OWNERS_SEED)) {
+      for (const [prio, names] of Object.entries(byPrio)) if (names.includes(last)) out[p.id] = { userId, priority: Number(prio) };
+    }
+  }
+  return out;
 }
 async function atLoadClientSignals(kv) {
   const [chats, pendingList, clients] = await Promise.all([
@@ -6827,7 +7440,12 @@ function atMeetHuman(date, time) {
 // (Monday-based, roles manager / specialist / client); results and the history chart read them too.
 // One record per person and week, written only by that person; the page always sends every answer
 // it knows, so a save from one Cloudflare location can't drop one made a moment ago from another.
-const REFL_ROLES = new Set(['manager', 'specialist', 'trainee']);
+// Who rates clients every week: the specialists and the trainees. The client manager and the senior
+// specialist («lead») don't rate, but see the results like the owner does.
+// Their earlier answers stay in the results and the history (REFL_READ_ROLES).
+const REFL_ROLES = new Set(['specialist', 'trainee']);
+const REFL_VIEW_ROLES = new Set(['manager', 'lead']);
+const REFL_READ_ROLES = new Set([...REFL_ROLES, ...REFL_VIEW_ROLES]);
 const REFL_TTL = 60 * 60 * 24 * 400;
 const REFL_COMMENT_MAX = 400;
 
@@ -6842,6 +7460,11 @@ function reflAddDays(ymd, n) {
 function reflClients(projects) {
   return projects.filter((p) => !p.inactive).map((p) => p.id);
 }
+// The clients a specialist rates: the active ones they lead («Клиенты → Настройки»). Someone who leads
+// nobody (a new trainee) has no reflection to fill in.
+function reflClientsFor(projects, userId) {
+  return projects.filter((p) => !p.inactive && p.ownerId === userId).map((p) => p.id);
+}
 function reflDone(rec, clientIds) {
   const a = (rec && rec.answers) || {};
   return clientIds.filter((id) => a[id] && (a[id].score > 0 || a[id].skip)).length;
@@ -6851,7 +7474,8 @@ async function atReflectionState(kv, me, mem, nowMs) {
   if (!REFL_ROLES.has(me.role)) return null;
   const week = reflWeek(nowMs);
   const rec = (await kv.get(`refl:${week}:${me.id}`, 'json')) || { answers: {} };
-  const clients = reflClients(mem.projects);
+  const clients = reflClientsFor(mem.projects, me.id);
+  if (!clients.length && !rec.doneAt) return null;
   return { week, next: reflAddDays(week, 7), clients, answers: rec.answers || {}, done: reflDone(rec, clients), total: clients.length, doneAt: rec.doneAt || null };
 }
 async function atReflectionSave(env, team, me, body, nowMs) {
@@ -6880,7 +7504,7 @@ async function atReflectionSave(env, team, me, body, nowMs) {
     rec.answers[pid] = { score, comment, at: new Date(nowMs).toISOString() };
     changed.push(pid);
   }
-  const active = reflClients(mem.projects);
+  const active = reflClientsFor(mem.projects, me.id);
   const doneNow = reflDone(rec, active) >= active.length && active.length > 0;
   if (!changed.length && (!doneNow || rec.doneAt)) return { state: await atReflectionState(kv, me, mem, nowMs) };
   if (doneNow && !rec.doneAt) rec.doneAt = new Date(nowMs).toISOString();
@@ -6929,11 +7553,83 @@ async function reflWeekAverages(kv, people, week) {
 }
 // Everyone's answers for a week — the owner and the assistant always, the team per reflLocked.
 const REFL_LEGACY_ROLES = { manager: 'От менеджера', specialist: 'От специалиста', client: 'От клиента' };
+// ── Avito Tasks → «Рассылки» ──
+// One KV record per month: mail:<YYYY-MM> -> { items: [{ id, date, projectId, budget, status, contacts, result,
+// comment, by, at, updatedBy, updatedAt }] }. budget/contacts are whole numbers or null (contacts stay
+// null until the outcome is entered); status — 'launched' (запущено) / 'results' (получены результаты) /
+// null (запланирована); result is 'good' | 'ok' | 'bad' | null. Contacts or a result mean 'results'.
+//   mail       { month }                 -> { month, items }
+//   mail-save  { item: { id?, from?, … } } -> { month, items, item }  (from — the date it had, to move it)
+//   mail-del   { id, date }               -> { month, items }
+const MAIL_RESULTS = ['good', 'ok', 'bad'];
+const MAIL_STATUSES = ['launched', 'results'];
+async function atMailApi(env, me, action, body, nowMs) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const isDay = (v) => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(String(v || ''));
+  const read = async (month) => ((await kv.get(`mail:${month}`, 'json')) || {}).items || [];
+  const write = (month, items) => kv.put(`mail:${month}`, JSON.stringify({ items }));
+  const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+
+  if (action === 'mail') {
+    const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(body.month || '')) ? body.month : botMsk(nowMs).date.slice(0, 7);
+    return { month, items: await read(month) };
+  }
+
+  if (action === 'mail-save') {
+    const it = body.item || {};
+    if (!isDay(it.date)) return { error: 'bad_date', status: 400 };
+    const projectId = atClean(it.projectId, 80);
+    if (!projectId) return { error: 'no_client', status: 400 };
+    const num = (v) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Math.min(1e9, Math.max(0, Math.round(Number(v)))));
+    const month = it.date.slice(0, 7);
+    const iso = new Date(nowMs).toISOString();
+    let items = await read(month);
+    let old = it.id ? items.find((x) => x.id === it.id) : null;
+    // The date moved to another month: take it out of the old month's record.
+    const fromMonth = isDay(it.from) ? it.from.slice(0, 7) : month;
+    if (it.id && !old && fromMonth !== month) {
+      const prev = await read(fromMonth);
+      old = prev.find((x) => x.id === it.id) || null;
+      if (old) await write(fromMonth, prev.filter((x) => x.id !== it.id));
+    }
+    const rec = {
+      ...(old || { id: atClean(it.id, 40) || `ml${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`, by: me.name, at: iso }),
+      date: it.date,
+      projectId,
+      budget: num(it.budget),
+      contacts: num(it.contacts),
+      result: MAIL_RESULTS.includes(it.result) ? it.result : null,
+      status: MAIL_STATUSES.includes(it.status) ? it.status : null,
+      comment: String(it.comment || '').trim().slice(0, 2000),
+      updatedBy: me.name,
+      updatedAt: iso,
+    };
+    if (rec.contacts != null || rec.result) rec.status = 'results';
+    delete rec.sent;
+    items = items.filter((x) => x.id !== rec.id).concat(rec).sort(byDate);
+    await write(month, items);
+    return { month, items, item: rec };
+  }
+
+  if (action === 'mail-del') {
+    if (!isDay(body.date)) return { error: 'bad_date', status: 400 };
+    const month = body.date.slice(0, 7);
+    const items = (await read(month)).filter((x) => x.id !== body.id);
+    await write(month, items);
+    return { month, items };
+  }
+
+  return { error: 'not_found', status: 404 };
+}
+
 async function atReflectionResults(env, team, week) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const people = team.users.filter((u) => u.active && REFL_ROLES.has(u.role));
-  const recs = await Promise.all(people.map((u) => kv.get(`refl:${week}:${u.id}`, 'json')));
-  const mem = await atSnapshot(env);
+  // The raters who lead clients, plus anyone who rated this week before they stopped rating (or left).
+  const all = team.users.filter((u) => REFL_READ_ROLES.has(u.role));
+  const [allRecs, mem] = await Promise.all([Promise.all(all.map((u) => kv.get(`refl:${week}:${u.id}`, 'json'))), atSnapshot(env)]);
+  const keep = all.map((u, i) => (u.active && REFL_ROLES.has(u.role) && reflClientsFor(mem.projects, u.id).length > 0) || !!allRecs[i]);
+  const people = all.filter((u, i) => keep[i]);
+  const recs = allRecs.filter((r, i) => keep[i]);
   if (!recs.some(Boolean)) {
     // A week from before the tracker: the old dashboard's ratings for its Monday.
     const monday = reflAddDays(week, -2);
@@ -6956,7 +7652,12 @@ async function atReflectionResults(env, team, week) {
     week,
     clients,
     prevAvg: await reflWeekAverages(kv, people, reflAddDays(week, -7)),
-    people: people.map((u, i) => ({ id: u.id, name: u.name, role: u.role, answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], clients), doneAt: (recs[i] && recs[i].doneAt) || null })),
+    // rates: false — no longer rates (only the answers given are shown, no «not rated yet»).
+    // mine — the clients this person rates (theirs); done / total count only those.
+    people: people.map((u, i) => {
+      const mine = reflClientsFor(mem.projects, u.id);
+      return { id: u.id, name: u.name, role: u.role, rates: u.active && REFL_ROLES.has(u.role), mine, total: mine.length, answers: (recs[i] && recs[i].answers) || {}, done: reflDone(recs[i], mine), doneAt: (recs[i] && recs[i].doneAt) || null };
+    }),
   };
 }
 // Every week's average per client — the tracker's weeks and the old dashboard's before them.
@@ -7021,7 +7722,20 @@ async function atReflectionCron(env, team, nowMs) {
   const mem = await atSnapshot(env);
   const clients = reflClients(mem.projects);
   if (!clients.length) return;
+  // Those who no longer rate: an open «Заполнить рефлексию» task of theirs is cancelled.
+  for (const u of team.users.filter((x) => REFL_VIEW_ROLES.has(x.role))) {
+    const rec = await kv.get(`refl:${week}:${u.id}`, 'json');
+    const t = rec && rec.taskId && !rec.doneAt && (await kv.get(`task:${rec.taskId}`, 'json'));
+    if (!t || t.status !== 'open') continue;
+    Object.assign(t, { status: 'cancelled', updatedAt: new Date(nowMs).toISOString(), updatedBy: 'Бот' });
+    t.activity = [...(t.activity || []), { t: nowMs, by: 'Бот', what: 'отменил: рефлексию теперь заполняют только специалисты' }].slice(-20);
+    await kv.put(`task:${t.id}`, JSON.stringify(t));
+    if (AT_MEM && AT_MEM.tasks) AT_MEM.tasks.set(t.id, t);
+    await atTouch(kv, [t.id]);
+  }
   for (const u of team.users.filter((x) => x.active && REFL_ROLES.has(x.role))) {
+    const clients = reflClientsFor(mem.projects, u.id);
+    if (!clients.length) continue;
     const key = `refl:${week}:${u.id}`;
     const rec = (await kv.get(key, 'json')) || { week, userId: u.id, answers: {} };
     // Closed by hand without rating anyone — open it again, once a week.
@@ -7049,7 +7763,7 @@ async function atReflectionCron(env, team, nowMs) {
     const now = new Date(nowMs).toISOString();
     const task = {
       id, text: `Заполнить рефлексию по клиентам (неделя с ${week.slice(8, 10)}.${week.slice(5, 7)})`,
-      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому активному клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
+      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому своему клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
       status: 'open', priority: 'normal', source: 'tracker', origin: 'tracker', author: 'Бот', createdById: null,
       assigneeId: u.id, owner: u.name, due: botIsoMsk(due), link: `${AT_PAGE_URL}#reflection`, startedAt: now,
       notified: {}, activity: [{ t: nowMs, by: 'Бот', what: 'поставил задачу на рефлексию' }], createdAt: now, updatedAt: now,
@@ -7059,7 +7773,7 @@ async function atReflectionCron(env, team, nowMs) {
     await kv.put(key, JSON.stringify(rec), { expirationTtl: REFL_TTL });
     await atTouch(kv, [id]);
     await atNotify(env, team, [u.id], { kind: 'assigned', taskId: id, text: `Рефлексия за неделю: оцените клиентов (${clients.length})`, by: 'Бот' }, {
-      text: `🪞 <b>Рефлексия за неделю</b>\nОцените каждого активного клиента по шкале 1–10 и коротко объясните почему — ${clients.length} ${clients.length % 10 === 1 && clients.length % 100 !== 11 ? 'клиент' : 'клиентов'}. Можно прерваться и продолжить потом.`,
+      text: `🪞 <b>Рефлексия за неделю</b>\nОцените каждого своего клиента по шкале 1–10 и коротко объясните почему — ${clients.length} ${clients.length % 10 === 1 && clients.length % 100 !== 11 ? 'клиент' : 'клиентов'}. Можно прерваться и продолжить потом.`,
       extra: { reply_markup: { inline_keyboard: [[{ text: 'Заполнить рефлексию', url: `${AT_PAGE_URL}#reflection` }]] }, disable_notification: true },
     });
   }
@@ -7179,7 +7893,15 @@ async function handleFinanceApi(request, env, url) {
   if (auth.user.role !== 'owner') return json({ error: 'forbidden' }, 403);
 
   if (action === 'load') {
-    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, me: atPublicUser(auth.user) });
+    // Клиенты в финансах дополняются проектами из дашборда / Avito Tasks (новые появляются сами).
+    const projects = (await listByPrefix(kv, 'project:')).map((p) => ({
+      id: p.id, name: p.name, service: p.service || '', inactive: Boolean(p.inactive), createdAt: p.createdAt || null,
+    }));
+    // Ники клиентов: из CRM продаж (имя + Telegram) — по ним страница находит оплаты в операциях.
+    const crm = env.AVITO_KV ? (await listByPrefix(env.AVITO_KV, 'salescrm:client:'))
+      .filter((c) => c && c.name && c.telegram)
+      .map((c) => ({ name: c.name, telegram: salesCrmNormalizeTg(c.telegram), status: c.status || '' })) : [];
+    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, projects, crm, me: atPublicUser(auth.user) });
   }
   if (action === 'save') {
     const data = body.data;
@@ -7194,6 +7916,96 @@ async function handleFinanceApi(request, env, url) {
     return json({ ok: true, rev: next.rev, savedAt: next.savedAt });
   }
   return json({ error: 'not_found' }, 404);
+}
+
+// Reminders to the owner from the control bot (cron, once a day after 10:00 MSK):
+//  - a client's next payment is 5 days away or closer — with everything the dashboard knows about them;
+//  - a staff payout is tomorrow or today.
+// The dates follow the page's own rules (nextPay / empNext in /finance): a client pays monthly on the
+// day they started unless a date was set by hand; a person is paid 14 days after their last payout
+// unless set by hand. Each reminder goes out once per date (fin:sent).
+//   fin:sent -> { "<kind>|<name>|<date>": "<sent on>" }   (entries older than 60 days are dropped)
+//   fin:remind:<date> -> '1' once that day's check has run
+function finHandles(tg) {
+  return String(tg || '').split(/[\s,;]+/).map((h) => h.trim().toLowerCase()).filter((h) => h.startsWith('@'));
+}
+function finDays(from, to) {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5);
+}
+function finClientNext(c, today) {
+  if (!c || c.noNext || c.status !== 'Активен') return null;
+  if (c.next && c.next >= today) return c.next;
+  const day = Number(String(c.start || '').slice(8, 10));
+  if (!day) return null;
+  let [y, m] = today.split('-').map(Number);
+  const mk = (yy, mm) => `${yy}-${String(mm).padStart(2, '0')}-${String(Math.min(day, new Date(Date.UTC(yy, mm, 0)).getUTCDate())).padStart(2, '0')}`;
+  let d = mk(y, m);
+  if (d <= today) { m += 1; if (m > 12) { m = 1; y += 1; } d = mk(y, m); }
+  return d;
+}
+function finStaffNext(s, ops, today) {
+  if (!s || s.noNext) return null;
+  if (s.next && s.next >= today) return s.next;
+  const last = ops.filter((o) => o.sal && o.emp === s.n).map((o) => o.d).sort().pop();
+  if (!last || finDays(last, today) > 35) return null;
+  return avitoAddDays(last, 14);
+}
+const finRub = (v) => `${Math.round(Number(v) || 0).toLocaleString('ru-RU').replace(/ /g, ' ')} ₽`;
+const finDt = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}`;
+const finWhen = (n) => (n === 0 ? 'сегодня' : n === 1 ? 'завтра' : `через ${n} ${n < 5 ? 'дня' : 'дней'}`);
+async function finRemindCron(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv || !botOwnerIds(env).length) return;
+  const nowMsk = new Date(Date.now() + 3 * 3600e3);
+  if (nowMsk.getUTCHours() < 10) return;
+  const today = mskToday();
+  if (await kv.get(`fin:remind:${today}`)) return;
+  await kv.put(`fin:remind:${today}`, '1', { expirationTtl: 3 * 86400 });
+  const data = await kv.get(FIN_KEY, 'json');
+  if (!data) return;
+  const sent = (await kv.get('fin:sent', 'json')) || {};
+  const ops = Array.isArray(data.ops) ? data.ops : [];
+  const msgs = [];
+  for (const c of data.clients || []) {
+    const next = finClientNext(c, today);
+    if (!next) continue;
+    const n = finDays(today, next);
+    const key = `client|${c.name}|${next}`;
+    if (n < 0 || n > 5 || sent[key]) continue;
+    // Оплаты — из операций по контакту клиента (@telegram), иначе из старого реестра.
+    const handles = finHandles(c.tg);
+    const paid = handles.length
+      ? ops.filter((o) => o.kind === 'rev' && o.client && handles.includes(String(o.client).toLowerCase())).reduce((a, o) => a + (Number(o.amt) || 0), 0)
+      : Object.values(c.pays || {}).reduce((a, v) => a + (Number(v) || 0), 0);
+    const months = c.start ? Math.max(1, Math.round(finDays(c.start, today) / 30.4)) : null;
+    msgs.push([
+      `💳 <b>${escapeHtml(c.name)}</b> — оплата ${finWhen(n)}, ${finDt(next)}`,
+      `Сумма продления: ${finRub(c.renew == null ? 25000 : c.renew)}`,
+      c.tg ? `Контакт: ${escapeHtml(c.tg)}` : '',
+      c.start ? `С нами с ${finDt(c.start)}.${c.start.slice(0, 4)}${months ? ` (${months} мес)` : ''}, оплачено всего ${finRub(paid)}` : '',
+      c.note ? `Примечание: ${escapeHtml(c.note)}` : '',
+    ].filter(Boolean).join('\n'));
+    sent[key] = today;
+  }
+  for (const s of data.staff || []) {
+    const next = finStaffNext(s, ops, today);
+    if (!next) continue;
+    const n = finDays(today, next);
+    const key = `staff|${s.n}|${next}`;
+    if (n < 0 || n > 1 || sent[key]) continue;
+    const last = ops.filter((o) => o.sal && o.emp === s.n).sort((a, b) => (a.d < b.d ? 1 : -1))[0];
+    msgs.push([
+      `👤 <b>${escapeHtml(s.n)}</b>${s.role ? ` (${escapeHtml(s.role)})` : ''} — выплата ${finWhen(n)}, ${finDt(next)}`,
+      s.rate ? `Ставка: ${escapeHtml(s.rate)}` : '',
+      s.pay || s.req ? `Платим с: ${escapeHtml([s.pay, s.req].filter(Boolean).join(' · '))}` : '',
+      last ? `Последняя выплата: ${finDt(last.d)} — ${finRub(-last.amt)}` : '',
+    ].filter(Boolean).join('\n'));
+    sent[key] = today;
+  }
+  if (!msgs.length) return;
+  for (const k of Object.keys(sent)) if (finDays(sent[k], today) > 60) delete sent[k];
+  await kv.put('fin:sent', JSON.stringify(sent));
+  await botNotifyOwner(env, `${msgs.join('\n\n')}\n\n<a href="https://cantor.agency/finance">Открыть финансы</a>`);
 }
 
 // ── API: POST /api/dashboard/avito-tasks/<action>, token in the JSON body ──
@@ -7264,6 +8076,7 @@ async function atAvitoDay(env, pull) {
   const pending = new Set((pull && pull.pending) || []);
   const rows = projects.map((p) => {
     if (!p.avitoAccountId) return { projectId: p.id, off: 'кабинет не подключен' };
+    if (p.avitoPullOff) return { projectId: p.id, off: 'не подтягивается — включите в «Кабинеты Авито»' };
     const r = pull && pull.results && pull.results[p.id];
     if (!r) return { projectId: p.id, off: pending.has(p.id) ? 'загружается…' : '—' };
     if (r.views == null && r.contacts == null && r.spend == null) return { projectId: p.id, off: r.errors && r.errors.length ? 'ошибка Авито' : 'нет данных' };
@@ -7328,6 +8141,16 @@ async function atAnalyticsApi(env, ctx, url, action, body) {
     return json({ saved });
   }
   // «Кабинеты Авито» (шестерёнка): ключи и какой кабинет у какого клиента.
+  // «Подтягивать»: a new client's cabinet can be linked before its numbers are wanted in «Подтянуть».
+  if (action === 'an-cabinet-pull') {
+    const project = await kv.get(`project:${String(body.projectId || '')}`, 'json');
+    if (!project) return json({ error: 'not_found' }, 404);
+    if (body.on) delete project.avitoPullOff; else project.avitoPullOff = true;
+    project.updatedAt = new Date().toISOString();
+    await kv.put(`project:${project.id}`, JSON.stringify(project));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, pull: !project.avitoPullOff });
+  }
   if (action === 'an-cabinets' || action === 'an-cabinet-link' || action === 'an-cabinet-import') {
     let out;
     if (action === 'an-cabinets') out = (await dash('GET', '/api/dashboard/avito-links')).data;
@@ -7342,7 +8165,7 @@ async function atAnalyticsApi(env, ctx, url, action, body) {
     return json({
       results: out.results || null,
       accounts: out.accounts || [],
-      projects: projects.map((p) => ({ id: p.id, name: p.name, accountId: linkOf[p.id] || null })),
+      projects: projects.map((p) => ({ id: p.id, name: p.name, accountId: linkOf[p.id] || null, pull: !p.avitoPullOff })),
     });
   }
   // «Отчёт»: тот же отчёт (наблюдения пишет Workers AI), что и в дашборде.
@@ -7475,6 +8298,13 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ ok: true });
   }
 
+  // Аватарки из Telegram: { photos: { <userId>: dataURL } } — для тех, у кого есть pv.
+  if (action === 'photos') {
+    const ids = team.users.filter((u) => u.photoV).map((u) => u.id);
+    const vals = await Promise.all(ids.map((id) => kv.get(`at:photo:${id}`)));
+    return json({ photos: Object.fromEntries(ids.map((id, i) => [id, vals[i]]).filter(([, v]) => v)) });
+  }
+
   if (action === 'tg-unlink') {
     if (me.tgId && !isOwner) {
       me.tgId = null;
@@ -7490,27 +8320,34 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     return json({ reflection: res.state });
   }
   if (action === 'refl-results') {
-    if (!isAdmin && !REFL_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
+    if (!isAdmin && !REFL_READ_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
     const current = reflWeek(nowMs);
     let week = /^\d{4}-\d{2}-\d{2}$/.test(String(body.week || '')) ? body.week : current;
     if (week > current) week = current;
-    if (!isAdmin && reflLocked(nowMs, week, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
+    if (!isAdmin && REFL_ROLES.has(me.role) && reflLocked(nowMs, week, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
       return json({ locked: true, week, current, prev: reflAddDays(current, -7) });
     }
     return json({ results: await atReflectionResults(env, team, week), current });
   }
   if (action === 'refl-history') {
-    if (!isAdmin && !REFL_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
+    if (!isAdmin && !REFL_READ_ROLES.has(me.role)) return json({ error: 'forbidden' }, 403);
     const history = await atReflectionHistory(env);
     const current = reflWeek(nowMs);
     // Until the employee has rated this week, its averages stay off their chart too.
-    if (!isAdmin && reflLocked(nowMs, current, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
+    if (!isAdmin && REFL_ROLES.has(me.role) && reflLocked(nowMs, current, await kv.get(`refl:${current}:${me.id}`, 'json'))) {
       history.weeks = history.weeks.filter((w) => w !== current);
       delete history.overall[current];
       history.clients.forEach((c) => { delete c.points[current]; });
       history.clients = history.clients.filter((c) => Object.keys(c.points).length);
     }
     return json({ history });
+  }
+
+  // «Рассылки» — календарь: когда, какому кабинету, на какой бюджет и что вышло.
+  if (action === 'mail' || action.startsWith('mail-')) {
+    if (!sections.includes('mail')) return json({ error: 'forbidden' }, 403);
+    const res = await atMailApi(env, me, action, body, nowMs);
+    return json(res.error ? { error: res.error } : res, res.status || 200);
   }
 
   // «ИИ-помощник» — у всех: свои диалоги, руководитель видит и чужие.
@@ -7579,6 +8416,38 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
     if (!res.ok) return json(data, res.status);
     const p = data.project;
     return json({ ok: true, project: { id: p.id, name: p.name, inactive: false, profileUrl: null, briefUrl: null, staffUrl: null } });
+  }
+
+  // «Клиенты → Настройки»: кто ведёт клиента и его приоритет. body.owners — { <projectId>: { userId, priority } }.
+  if (action === 'client-owners') {
+    if (!seesClients || !isAdmin) return json({ error: 'forbidden' }, 403);
+    const ids = new Set((await atLoadProjects(kv)).map((p) => p.id));
+    const people = new Set(team.users.filter((u) => u.active).map((u) => u.id));
+    const next = {};
+    for (const [pid, o] of Object.entries((body && body.owners) || {})) {
+      if (!ids.has(pid) || !o) continue;
+      const userId = people.has(o.userId) ? o.userId : null;
+      const priority = [1, 2, 3].includes(Number(o.priority)) ? Number(o.priority) : null;
+      if (userId || priority) next[pid] = { userId, priority };
+    }
+    await kv.put('at:owners', JSON.stringify(next));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, projects: await atLoadProjects(kv) });
+  }
+
+  // Цель и текущая стратегия кабинета («Клиенты»): пишут руководитель и старший специалист.
+  if (action === 'client-goal') {
+    if (!seesClients || !(isOwner || me.role === 'lead')) return json({ error: 'forbidden' }, 403);
+    const pid = atClean(body.projectId, 80);
+    if (!(await kv.get(`project:${pid}`))) return json({ error: 'not_found' }, 404);
+    const goals = (await kv.get('at:goals', 'json')) || {};
+    const goal = atClean(body.goal, 300);
+    const now = atClean(body.now, 300);
+    if (goal || now) goals[pid] = { goal, now, by: me.name, at: new Date(nowMs).toISOString() };
+    else delete goals[pid];
+    await kv.put('at:goals', JSON.stringify(goals));
+    await atTouch(kv, ['#projects']);
+    return json({ ok: true, goal: goals[pid] || null });
   }
 
   // Цифры по клиентам для вкладки «Клиенты»: вчера, текущий месяц, траты за неделю и аванс.
@@ -8726,7 +9595,11 @@ function waiAssistantSystem(job) {
     'Отвечай на новое сообщение, опираясь на эти данные: считай, сравнивай, делай выводы. Ссылаясь на регламент, давай его ссылку.',
     'Не переспрашивай: если чего-то не уточнили, бери по умолчанию последние 7 дней по вчера, все показатели и все объявления — и сразу отвечай по данным. Уточняющий вопрос — только если ответить нельзя совсем (например, непонятно, о каком клиенте речь), и никогда не задавай тот же вопрос второй раз.',
     'Не выдумывай. Если в данных нет того, о чём спрашивают (рассылка, даты публикации объявлений, переписка и т. п.), прямо напиши, чего именно нет. Ты не можешь менять файлы и выгрузки и ничего не делаешь в кабинете Авито: никогда не пиши «добавил», «изменил», «обновил», если этого не было. Не предлагай лишнего, о чём не спрашивали.',
-    'Ответ по-русски, коротко и по делу, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
+    'Если в сообщении несколько вопросов — ответь на каждый отдельным блоком с жирным заголовком (например, **Цифры**, **Чат с клиентом**, **Диалоги на Авито**). Каждый блок подробно: 3–6 пунктов с конкретными цифрами, датами и выводом.',
+    'Роли не путай: клиент агентства — репетитор или школа (например, Наталия Попова). «Чат с клиентом» — переписка агентства с ним в Telegram (ПЕРЕПИСКА). «Диалоги на Авито» — переписка кабинета клиента с покупателями (родителями, учениками). Рассылку бери из блока РАССЫЛКА — цифры там уже посчитаны, не пересчитывай их.',
+    'Вопрос про чат или настроение клиента («всё норм?», «как общение?») — разбери ПЕРЕПИСКУ: что клиент писал в последние дни, доволен ли, есть ли претензии, вопросы без ответа, что обещали и сделали ли. Приведи 1–2 короткие цитаты с датами и дай свою оценку. Если переписки по клиенту в данных нет — так и скажи.',
+    'Цифры бери ровно из данных и не смешивай периоды: итоги за 7 дней отдельно, события по дням — с датами. Не противоречь сам себе. Если в данных написано, что Авито что-то не отдал (ошибка), — прямо скажи это, без догадок о диалогах и объявлениях.',
+    'Пиши по-русски, сначала главное. Оформление: **жирный**, списки строками «• », абзацы через пустую строку. Без markdown-таблиц и заголовков с #. Токены, ключи и пароли не включай.',
     job.prepFiles && job.prepFiles.length ? `Файл выгрузки уже подготовлен и приложится к ответу сам: ${job.prepFiles.map((f) => f.name).join(', ')}. Его колонки: ID, название, статус, цена, категория, адрес, просмотры, контакты, в избранное, ссылка — других (например, даты публикации) в нём нет. В тексте дай краткий итог по нему: сколько объявлений, сколько просмотров и контактов, какие объявления лучшие.` : 'Файлы ты приложить не можешь: если просят выгрузку, скажи, что её можно получить, указав клиента и период (например, «выгрузка по Авито клиента … за неделю»).',
     'Формат ответа строго такой, три части с этими заголовками:',
     '===ОТВЕТ===',
@@ -8788,7 +9661,7 @@ async function waiAssistantStep(env, job) {
     kb ? `ВЫДЕРЖКИ ИЗ РЕГЛАМЕНТОВ:\n${kb}` : '',
     `НОВОЕ СООБЩЕНИЕ от ${job.byName}:\n${job.text}`,
   ].filter(Boolean).join('\n\n');
-  const res = waiAssistantParse(await waiAi(env, waiAssistantSystem(job), user, 2500));
+  const res = waiAssistantParse(await botAi(env, waiAssistantSystem(job), user, 3500, { model: env.ASSISTANT_AI_MODEL || waiModel(env), temperature: 0.3 }));
   if (!res.answer) throw new Error('пустой ответ');
   job.files = [...(job.prepFiles || [])];
   job.result = {
@@ -8968,7 +9841,7 @@ async function aiBuildData(env, job, light) {
         .sort((x, y) => Number(live(y)) - Number(live(x)) || Date.parse(y.updatedAt || y.createdAt || 0) - Date.parse(x.updatedAt || x.createdAt || 0));
       const refl = [];
       for (const wk of [reflWeek(now), reflAddDays(reflWeek(now), -7)]) {
-        const recs = await Promise.all(people.filter((u) => REFL_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${wk}:${u.id}`, 'json')]));
+        const recs = await Promise.all(people.filter((u) => REFL_READ_ROLES.has(u.role)).map(async (u) => [u, await kv.get(`refl:${wk}:${u.id}`, 'json')]));
         for (const [u, r] of recs) { const x = r && r.answers && r.answers[p.id]; if (x && x.score) refl.push(`- неделя ${wk}: ${u.name} — ${x.score}/10${x.comment ? `, «${String(x.comment).slice(0, 200)}»` : ''}`); }
       }
       if (!meetingJobs) meetingJobs = (await Promise.all(((await kv.get('kb:index', 'json')) || []).slice(0, light ? 15 : 40).map((x) => kv.get(`kb:job:${x.id}`, 'json')))).filter((j) => j && j.mode === 'meeting' && j.status === 'done' && j.meeting);
@@ -9010,7 +9883,11 @@ async function aiBuildData(env, job, light) {
   if ((AI_AVITO_RE.test(job.text) || AI_DIALOG_RE.test(job.text)) && !named.length) parts.push('АВИТО: клиент в вопросе не распознан — данные кабинета не загружались. Если нужен кабинет, попроси назвать клиента.');
 
   let text = parts.join('\n\n');
-  if (text.length > AI_DATA_BUDGET) text = `${text.slice(0, AI_DATA_BUDGET)}\n…(обрезано)`;
+  // A question about the chat itself («в чате всё норм?», «как общение?») gets the chat a big share,
+  // not whatever is left after the numbers and tasks.
+  const aboutChat = /чат|переписк|общени|ощущени|настроени|доволь|недоволь|диалог/i.test(job.text);
+  const budget = aboutChat && chatBlock ? AI_DATA_BUDGET - 7000 : AI_DATA_BUDGET;
+  if (text.length > budget) text = `${text.slice(0, budget)}\n…(обрезано)`;
   const room = AI_DATA_BUDGET + 3000 - text.length;
   if (chatBlock && room > 500) text += `\n\n${chatBlock.length > room ? `…${chatBlock.slice(-room)}` : chatBlock}`;
   return text;
@@ -9060,31 +9937,79 @@ async function aiBuildAvito(env, job) {
   return { text: parts.join('\n\n'), prepFiles };
 }
 
-// Avito dialogs of a client for the period: the latest chats with their last messages (a mailing shows
-// up here too — as the cabinet's outgoing messages).
+// Avito dialogs of a client for the period. Roles: «кабинет» is our client (the tutor's cabinet, run by
+// the agency), «покупатель» — a parent or student writing to it. The mailing (Avito «предложение» —
+// a free consultation offer) leaves system messages in a chat: «Пользователь ознакомился с вашим
+// предложением…» when someone opened it, «Покупателя заинтересовало ваше предложение» when they
+// clicked interested. The mailing figures are counted here, per day — the model can't count reliably.
+const AI_OFFER_OPENED_RE = /ознакомился\s+с\s+вашим\s+предложением/i; // Avito puts non-breaking spaces there
+const AI_OFFER_INTEREST_RE = /заинтересовало\s+ваше\s+предложение/i;
+const AI_DECLINE_RE = /не актуальн|уже нет|не нужно|нашли|неактуальн|не интересн|передумал/i;
+const AI_BOOKED_RE = /договорились|до встречи|ссылк[ау] на встречу|приглашение на встречу/i;
 async function aiAvitoChats(env, account, p, period) {
   try {
-    const { chats } = await runAvitoChatList(env, account, 50, 0);
     const from = Date.parse(`${period.from}T00:00:00+03:00`);
-    const recent = chats.filter((c) => c.updated && Date.parse(c.updated) >= from);
+    const list = [];
+    for (let offset = 0; offset < 200; offset += 100) {
+      const { chats, hasMore } = await runAvitoChatList(env, account, 100, offset);
+      list.push(...chats);
+      if (!hasMore || chats.some((c) => c.updated && Date.parse(c.updated) < from)) break;
+    }
+    const recent = list.filter((c) => c.updated && Date.parse(c.updated) >= from).slice(0, 40);
+    const withMsgs = [];
+    for (let i = 0; i < recent.length; i += 5) {
+      const batch = await Promise.all(recent.slice(i, i + 5).map(async (c) => {
+        try {
+          const r = await runAvitoChatMessages(env, account, c.chat_id);
+          return { c, msgs: (Array.isArray(r) ? r : r.messages || []).filter((m) => m && m.datetime).sort((x, y) => Date.parse(x.datetime) - Date.parse(y.datetime)) };
+        } catch (e) {
+          return { c, msgs: [] };
+        }
+      }));
+      withMsgs.push(...batch);
+    }
+    const day = (iso) => botMsk(Date.parse(iso)).date;
+    const hm = (iso) => botFmtDate(Date.parse(iso));
+    const human = (m) => m.author !== 'manager' && m.type !== 'system' && !/Системное\s+сообщение/i.test(String(m.text || '')) && String(m.text || '').trim() && String(m.text) !== '{}';
+    // Mailing: per day of the «opened the offer» message — how many opened, replied, declined, got interested, booked.
+    const offer = {};
+    for (const { c, msgs } of withMsgs) {
+      const opened = msgs.find((m) => AI_OFFER_OPENED_RE.test(String(m.text || '')) && Date.parse(m.datetime) >= from);
+      if (!opened) continue;
+      const after = msgs.filter((m) => Date.parse(m.datetime) >= Date.parse(opened.datetime));
+      const replies = after.filter(human);
+      const d = day(opened.datetime);
+      const o = offer[d] || (offer[d] = { opened: 0, replied: 0, declined: 0, interested: 0, booked: 0, notes: [] });
+      o.opened += 1;
+      const interested = after.some((m) => AI_OFFER_INTEREST_RE.test(String(m.text || '')));
+      const declined = replies.some((m) => AI_DECLINE_RE.test(String(m.text || '')));
+      const booked = after.some((m) => m.author === 'manager' && AI_BOOKED_RE.test(String(m.text || '')));
+      if (replies.length) o.replied += 1;
+      if (declined) o.declined += 1;
+      if (interested) o.interested += 1;
+      if (booked) o.booked += 1;
+      if (replies.length) o.notes.push(`«${String(c.item_title || '').slice(0, 50)}»: ${replies.slice(0, 3).map((m) => `${hm(m.datetime)} «${String(m.text).replace(/\s+/g, ' ').slice(0, 90)}»`).join('; ')}${booked ? ' → договорились о пробном' : ''}`);
+    }
+    const offerLines = Object.keys(offer).sort().map((d) => {
+      const o = offer[d];
+      return `- ${d.slice(8, 10)}.${d.slice(5, 7)}: открыли предложение ${o.opened}, ответили ${o.replied} (отказались ${o.declined}, заинтересовались ${o.interested}), договорились о пробном ${o.booked}${o.notes.length ? `\n${o.notes.map((n) => `    ${n}`).join('\n')}` : ''}`;
+    });
     const lines = [];
     let used = 0;
-    for (const c of recent.slice(0, 8)) {
-      let msgs = [];
-      try { msgs = await runAvitoChatMessages(env, account, c.chat_id); } catch (e) { msgs = []; }
-      const body = (Array.isArray(msgs) ? msgs : msgs.messages || [])
-        .filter((m) => Date.parse(m.datetime) >= from)
-        .sort((x, y) => Date.parse(x.datetime) - Date.parse(y.datetime))
-        .slice(-10)
-        .map((m) => `  ${m.datetime.slice(5, 16).replace('T', ' ')} ${m.author === 'manager' ? 'кабинет' : 'клиент'}: ${String(m.text || `[${m.type}]`).replace(/\s+/g, ' ').slice(0, 220)}`)
-        .join('\n');
-      const block = `- «${String(c.item_title || 'без объявления').slice(0, 70)}»\n${body || `  последнее: ${String(c.last_message_text || '').slice(0, 220)}`}`;
+    for (const { c, msgs } of withMsgs) {
+      const body = msgs.filter((m) => Date.parse(m.datetime) >= from).slice(-10)
+        .map((m) => `  ${hm(m.datetime)} ${m.author === 'manager' ? 'кабинет' : 'покупатель'}: ${String(m.text || `[${m.type}]`).replace(/\s+/g, ' ').slice(0, 200)}`).join('\n');
+      const block = `- «${String(c.item_title || 'без объявления').slice(0, 70)}»\n${body || `  последнее: ${String(c.last_message_text || '').slice(0, 200)}`}`;
       if (used + block.length > 6000) break;
       lines.push(block);
       used += block.length;
     }
-    const rest = recent.length - lines.length;
-    return [`АВИТО, ДИАЛОГИ: ${p.name}, ${period.from} — ${period.to}: чатов с активностью ${recent.length}${recent.length >= 50 ? '+' : ''}`, lines.join('\n') || '  за период переписки нет', rest > 0 ? `(ещё ${rest} чатов не показаны)` : ''].filter(Boolean).join('\n');
+    return [
+      `АВИТО, ДИАЛОГИ кабинета ${p.name} (кабинет — это ${p.name}, покупатель — родитель или ученик, который пишет в кабинет) с ${period.from} по сегодня: чатов с активностью ${recent.length}${recent.length >= 40 ? '+' : ''}`,
+      `РАССЫЛКА (предложение «бесплатная консультация»; посчитано по чатам — видны только те, кто открыл предложение, сколько всего отправлено, в API не видно):\n${offerLines.join('\n') || '- за период никто не открывал предложение'}`,
+      `ПЕРЕПИСКА по чатам:\n${lines.join('\n') || '  за период переписки нет'}`,
+      withMsgs.length > lines.length ? `(ещё ${withMsgs.length - lines.length} чатов не показаны)` : '',
+    ].filter(Boolean).join('\n');
   } catch (e) {
     return `АВИТО, ДИАЛОГИ: ${p.name} — Авито не отдал переписку (${String(e && e.message).slice(0, 160)})`;
   }
@@ -9387,6 +10312,27 @@ async function atChatSources(kv) {
       for (const t of threads) out.push({ chatId: c.id, threadId: t, label: names[t] || (t === '0' ? 'Общий' : `Топик ${t}`) });
     } else {
       out.push({ chatId: c.id, threadId: '0', label: `чат: ${(c.projectId && byId[c.projectId] && byId[c.projectId].name) || c.title}` });
+    }
+  }
+  return out;
+}
+// Same places as atChatSources, plus which client each belongs to — for GET /api/dashboard/chat-log.
+async function chatLogSources(kv) {
+  const byId = await botProjectsById(kv);
+  const name = (id) => (id && byId[id] && byId[id].name) || null;
+  const out = [];
+  for (const c of await listByPrefix(kv, 'bot:chat:')) {
+    if (c.isForum) {
+      const keys = (await kv.list({ prefix: `bot:topic:${c.id}:` })).keys;
+      const recs = await Promise.all(keys.map((k) => kv.get(k.name, 'json')));
+      const topics = { 0: null };
+      keys.forEach((k, i) => { topics[k.name.split(':').pop()] = recs[i] || {}; });
+      for (const [t, r] of Object.entries(topics)) {
+        out.push({ chatId: c.id, threadId: t, kind: c.kind, projectId: (r && r.projectId) || null,
+          label: `${c.kind === 'work' ? 'рабочий чат' : c.title}: ${(r && (name(r.projectId) || r.name)) || (t === '0' ? 'Общий' : `Топик ${t}`)}` });
+      }
+    } else {
+      out.push({ chatId: c.id, threadId: '0', kind: c.kind, projectId: c.projectId || null, label: `чат: ${name(c.projectId) || c.title}` });
     }
   }
   return out;
@@ -9784,40 +10730,89 @@ async function atRunChecks(env, nowMs, tasks, byId) {
   }
 }
 
-// ── Avito → Telegram: per-client notifier bots ──
-// One Telegram bot per client cabinet (token in a Worker secret, never in wrangler.jsonc). Every
-// new client message in the cabinet's Avito Messenger lands in the bot as 🔴 <name linked to the
-// Avito chat> + text, with a «Ответить» button: the reply typed in Telegram goes to the client
-// through the Avito API, from the cabinet itself. Once the chat is answered — from the bot or
-// straight on Avito — every notification of that chat turns 🟢.
-// Delivery: Avito's messenger webhook (subscribed by the setup below) plus a cron poll of the
-// latest chats as a safety net; messages are de-duplicated by id.
-// Access: open — anyone who writes to the bot is subscribed; every subscriber sees the same
-// notifications and the same 🔴/🟢 state. The owner (ANB_OWNER_ID) is told about each new user.
+// ── Avito → Telegram: notifier bots ──
+// A Telegram bot (token in a Worker secret, never in wrangler.jsonc) serving one or more client
+// cabinets. Every new client message in a cabinet's Avito Messenger lands with the people connected
+// to that cabinet as 🔴 <name linked to the Avito chat> + text, with a «Ответить» button: the reply
+// typed in Telegram goes to the client through the Avito API, from the cabinet itself. Once the
+// chat is answered — from the bot or straight on Avito — every notification of that chat turns 🟢.
+// Delivery: each cabinet's Avito messenger webhook (subscribed by the setup below) plus a cron poll
+// of the latest chats as a safety net; messages are de-duplicated by id.
+// Access: by Telegram id. Someone listed in a cabinet's `allow` is connected to it on /start; anyone
+// else is told to ask the owner (ANB_OWNER_ID), who gets the request with one button per cabinet.
+// Subscribers from before cabinets existed (no `cabinets` field) belong to the bot's defaultCabinet;
+// a cabinet's allowSubsOf also admits the subscribers of a retired bot (AVITO_RETIRED_BOTS).
+// The owner may connect to every cabinet himself and gets /users (who is connected where).
 //
 // KV keys (binding "AGENCY_DASHBOARD_KV", "avitobot:<bot>:" prefix):
-//   setup                    -> ANB_SETUP_VERSION once both webhooks are set
-//   subs                     -> [{ id, name, addedAt }]  (Telegram users who get notifications)
-//   chat:<avitoChatId>       -> { name, item, open: [{ c, m, body }] }  (open = 🔴 notifications)
+//   setup                    -> ANB_SETUP_VERSION once the Telegram webhook is set
+//   setup:<cabinet>          -> ANB_SETUP_VERSION once that cabinet's Avito webhook is set
+//   subs                     -> [{ id, name, username, cabinets, off, addedAt }]
+//   ask:<tgUserId>           -> { name, username }  (a stranger waiting for the owner's decision)
+//   chat:<avitoChatId>       -> { cab, name, item, open: [{ c, m, body }] }  (open = 🔴 notifications)
 //   msg:<tgChatId>:<msgId>   -> avitoChatId  (notification / reply prompt → chat, for replies)
 //   await:<tgChatId>         -> avitoChatId  (the chat whose «Ответить» was pressed last)
 //   seen:<avitoMessageId>    -> "1"  (de-dup between webhook and poll)
-//   poll                     -> unix seconds of the newest message the poll has handled
+//   poll / poll:<cabinet>    -> unix seconds of the newest message the poll has handled
+//                               (the default cabinet keeps the old unsuffixed keys)
 
 const AVITO_NOTIFY_BOTS = {
-  romashova: {
-    accountId: 'e54ce32a0dd0', // AVITO_KV account:<id> — Лариса Ромашова
-    tokenEnv: 'AVITO_BOT_TOKEN_ROMASHOVA',
-    name: 'Авито · Лариса Ромашова',
-    owner: 'Ларисы',
+  cantor: {
+    tokenEnv: 'AVITO_BOT_TOKEN_CANTOR', // @cantor_agency_avito_message_bot
+    name: 'Авито · сообщения клиентов',
+    defaultCabinet: null, // every cabinet has its own suffixed keys and webhook URL
+    cabinets: {
+      romashova: {
+        accountId: 'e54ce32a0dd0', // AVITO_KV account:<id>
+        name: 'Лариса Ромашова',
+        owner: 'Ларисы', // «от имени …»
+        allow: ['349677180'], // Telegram ids connected on /start (@LariRoma7)
+        // her people from the old single-cabinet bot: its subscribers are connected here on /start
+        allowSubsOf: 'romashova',
+      },
+      okuneva: {
+        accountId: '4784fc8f45b0',
+        name: 'Елена Окунева',
+        owner: 'Елены',
+        allow: ['5420238976'], // @OkunevaElena10
+      },
+      valiullova: {
+        accountId: '19486c6a0713',
+        name: 'Наталья Валиуллова',
+        owner: 'Натальи',
+        allow: ['1179375006'], // @valiullova
+      },
+      karientidi: {
+        accountId: 'f2ca9c67750c',
+        name: 'Иван Кариентиди',
+        owner: 'Ивана',
+        allow: ['8145598581', '5993133996'],
+      },
+    },
   },
 };
-const ANB_SETUP_VERSION = '2';
+// Bots taken out of service: once the new bot is set up, every subscriber gets one «we moved»
+// message, the cabinet's Avito webhook to the old bot is dropped, and whatever is written to the
+// old bot is answered with a link to the new one. Its KV (subs) stays — allowSubsOf reads it.
+const AVITO_RETIRED_BOTS = {
+  romashova: {
+    tokenEnv: 'AVITO_BOT_TOKEN_ROMASHOVA',
+    movedTo: 'cantor',
+    link: 'https://t.me/cantor_agency_avito_message_bot',
+    avito: [{ accountId: 'e54ce32a0dd0' }], // webhook URL of the old bot: …/avito/<secret> (no suffix)
+  },
+};
+const ANB_SETUP_VERSION = '3';
 const ANB_OWNER_ID = '1326867567';
+const ANB_OWNER_LINK = '<a href="https://t.me/oleg_ezhkov">Олегу Ежкову (@oleg_ezhkov)</a>';
 const ANB_TTL_DAY = 60 * 60 * 24;
 
 function anbKey(bot, rest) {
   return `avitobot:${bot}:${rest}`;
+}
+// The default cabinet keeps the keys it had before cabinets existed.
+function anbCabKey(bot, cfg, cab, rest) {
+  return anbKey(bot, cab === cfg.defaultCabinet ? rest : `${rest}:${cab}`);
 }
 async function anbHash(text, len) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -9828,6 +10823,9 @@ function anbSecrets(token) {
     anbHash(`cantor-avito-bot:tg:${token}`, 48),
     anbHash(`cantor-avito-bot:avito:${token}`, 32),
   ]).then(([tg, avito]) => ({ tg, avito }));
+}
+function anbAvitoHookUrl(bot, cfg, cab, secret) {
+  return `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secret}${cab === cfg.defaultCabinet ? '' : `/${cab}`}`;
 }
 
 async function anbApi(token, method, body) {
@@ -9844,8 +10842,8 @@ async function anbApi(token, method, body) {
   }
 }
 
-async function anbAccount(env, cfg) {
-  const account = await env.AVITO_KV.get(`account:${cfg.accountId}`, 'json');
+async function anbAccount(env, cabinet) {
+  const account = await env.AVITO_KV.get(`account:${cabinet.accountId}`, 'json');
   if (!account || !account.userId) throw new Error('avito_account_not_found');
   return account;
 }
@@ -9861,16 +10859,18 @@ function anbMessageText(m) {
   if (m.type === 'voice') return '🎤 Голосовое сообщение (откройте чат в Авито)';
   if (m.type === 'system') {
     const t = String(content.text || '');
-    if (/создал чат/i.test(t)) return '✏️ Создал чат, но пока ничего не написал — напишите первыми';
-    if (/ознакомился с вашим предложением/i.test(t)) return '📨 Открыл(а) предложение из рассылки';
+    if (/создал\s+чат/i.test(t)) return '✏️ Создал чат, но пока ничего не написал — напишите первыми';
+    if (/заинтересовало\s+ваше\s+предложение/i.test(t)) return '💚 Заинтересовался предложением из рассылки — напишите первыми';
+    if (/ознакомился\s+с\s+вашим\s+предложением/i.test(t)) return '📨 Открыл(а) предложение из рассылки';
     return '';
   }
   return avitoMessageText(m);
 }
-// System messages worth a notification: an empty chat and an opened promo offer are leads too.
+// System messages worth a notification: an empty chat, an opened promo offer and an interested
+// buyer (the green chat) are leads too. Avito puts non-breaking spaces in them — hence \s.
 function anbIsLeadSystem(m) {
   const t = String((m.content && m.content.text) || '');
-  return /создал чат|ознакомился с вашим предложением/i.test(t);
+  return /создал\s+чат|ознакомился\s+с\s+вашим\s+предложением|заинтересовало\s+ваше\s+предложение/i.test(t);
 }
 
 function anbTrim(text, max) {
@@ -9885,10 +10885,39 @@ function anbButtons(chatId, again) {
 async function anbSubs(env, bot) {
   return (await env.AGENCY_DASHBOARD_KV.get(anbKey(bot, 'subs'), 'json')) || [];
 }
+function anbSaveSubs(env, bot, subs) {
+  return env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'subs'), JSON.stringify(subs));
+}
+function anbSubCabinets(cfg, sub) {
+  return (sub.cabinets || [cfg.defaultCabinet]).filter((cab) => cfg.cabinets[cab]);
+}
+function anbUserName(from) {
+  return [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
+}
+function anbCabinetNames(cfg, cabs) {
+  return cabs.map((cab) => cfg.cabinets[cab].name).join(', ');
+}
 
-async function anbChatState(env, bot, cfg, token, account, chatId) {
+function anbInstruction(cfg, cabs) {
+  const many = cabs.length > 1;
+  return `👋 Здравствуйте! Это бот уведомлений с Авито.\n${many ? 'Ваши кабинеты' : 'Ваш кабинет'}: <b>${escapeHtml(anbCabinetNames(cfg, cabs))}</b>.\n\n`
+    + '<b>Как это работает</b>\n'
+    + '• Клиент пишет в Авито — сообщение сразу приходит сюда: имя клиента (ссылка на чат в Авито), объявление и текст.\n'
+    + '• Ещё приходят: 📞 звонки через Авито, ✏️ «создал чат, но ничего не написал», 📨 «открыл предложение из рассылки» и 💚 «заинтересовало предложение из рассылки» — в этих случаях напишите клиенту первыми.\n'
+    + '• 🔴 — клиенту ещё не ответили, 🟢 — уже ответили (здесь или в приложении Авито). Значок меняется сам.\n\n'
+    + '<b>Как ответить клиенту</b>\n'
+    + '• Нажмите «✍️ Ответить» под сообщением и напишите текст — он уйдёт клиенту в Авито от имени кабинета.\n'
+    + '• Отправить можно только текст. Фото, голосовые и файлы — в приложении Авито (ссылка на чат — в имени клиента).\n\n'
+    + '<b>Команды</b>\n'
+    + '/help — эта инструкция\n'
+    + '/stop — отключить уведомления (/start — включить снова)';
+}
+
+// ── incoming Avito message (from the webhook or the poll) ──
+async function anbChatState(env, bot, cab, token, account, chatId) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || { open: [] };
+  state.cab = cab;
   if (!state.name) {
     try {
       const info = await avitoJson(token, `/messenger/v2/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}`);
@@ -9905,8 +10934,7 @@ async function anbChatState(env, bot, cfg, token, account, chatId) {
   return state;
 }
 
-// ── incoming Avito message (from the webhook or the poll) ──
-async function anbHandleAvitoMessage(env, bot, cfg, token, account, v) {
+async function anbHandleAvitoMessage(env, bot, cfg, cab, token, account, v) {
   const kv = env.AGENCY_DASHBOARD_KV;
   if (!v || !v.chat_id || !v.id) return;
   const seenKey = anbKey(bot, `seen:${v.id}`);
@@ -9923,22 +10951,24 @@ async function anbHandleAvitoMessage(env, bot, cfg, token, account, v) {
   const text = anbMessageText(v);
   if (!text) return;
 
-  const subs = await anbSubs(env, bot);
+  const subs = (await anbSubs(env, bot)).filter((s) => !s.off && anbSubCabinets(cfg, s).includes(cab));
   if (!subs.length) return;
-  const state = await anbChatState(env, bot, cfg, avitoToken, account, v.chat_id);
+  const state = await anbChatState(env, bot, cab, avitoToken, account, v.chat_id);
   const body = `<a href="${anbChatLink(v.chat_id)}">${escapeHtml(state.name)}</a>`
     + (state.item ? `\n<i>${escapeHtml(anbTrim(state.item, 150))}</i>` : '')
     + `\n\n${escapeHtml(anbTrim(text, 3000))}`;
   for (const sub of subs) {
+    // Someone connected to several cabinets needs to see which one the client wrote to.
+    const subBody = anbSubCabinets(cfg, sub).length > 1 ? `[${escapeHtml(cfg.cabinets[cab].name)}] ${body}` : body;
     const res = await anbApi(token, 'sendMessage', {
       chat_id: sub.id,
-      text: `🔴 ${body}`,
+      text: `🔴 ${subBody}`,
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
       reply_markup: anbButtons(v.chat_id, false),
     });
     if (res.ok && res.result) {
-      state.open.push({ c: sub.id, m: res.result.message_id, body });
+      state.open.push({ c: sub.id, m: res.result.message_id, body: subBody });
       await kv.put(anbKey(bot, `msg:${sub.id}:${res.result.message_id}`), v.chat_id, { expirationTtl: ANB_TTL_DAY * 30 });
     }
   }
@@ -9968,35 +10998,74 @@ async function anbMarkAnswered(env, bot, token, chatId, { via, by, text }) {
 }
 
 // ── Telegram side ──
-async function anbAddSub(env, bot, cfg, token, subs, from) {
-  const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || String(from.id);
-  subs.push({ id: from.id, name, username: from.username || null, addedAt: new Date().toISOString() });
-  await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'subs'), JSON.stringify(subs));
-  if (String(from.id) === ANB_OWNER_ID) return;
-  const note = `👤 Новый пользователь бота «${escapeHtml(cfg.name)}»: <b>${escapeHtml(name)}</b>`
-    + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code>. Всего пользователей: ${subs.length}.`;
-  // Through this bot if the owner has started it, otherwise through the control bot.
-  const sent = await anbApi(token, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
-  if (!sent.ok && env.CONTROL_BOT_TOKEN) await anbApi(env.CONTROL_BOT_TOKEN, 'sendMessage', { chat_id: ANB_OWNER_ID, text: note, parse_mode: 'HTML' });
+// To the owner through this bot if he has started it, otherwise through the control bot.
+async function anbNotifyOwner(env, token, text, extra) {
+  const body = { chat_id: ANB_OWNER_ID, text, parse_mode: 'HTML', ...(extra || {}) };
+  const sent = await anbApi(token, 'sendMessage', body);
+  if (!sent.ok && env.CONTROL_BOT_TOKEN) {
+    // The buttons only work in this bot — through the control bot just say how to get them.
+    const hint = body.reply_markup ? '\n\nЧтобы выдать доступ кнопками, запустите этого бота и попросите человека написать ему ещё раз.' : '';
+    await anbApi(env.CONTROL_BOT_TOKEN, 'sendMessage', { chat_id: ANB_OWNER_ID, text: text + hint, parse_mode: 'HTML' });
+  }
+  return sent;
+}
+
+// Connects a Telegram user to cabinets (keeping the ones they already have) and turns them back on.
+async function anbConnect(env, bot, cfg, subs, user, cabs) {
+  let sub = subs.find((s) => String(s.id) === String(user.id));
+  if (!sub) {
+    sub = { id: user.id, name: user.name, username: user.username || null, cabinets: [], addedAt: new Date().toISOString() };
+    subs.push(sub);
+  }
+  sub.cabinets = [...new Set([...anbSubCabinets(cfg, sub), ...cabs])];
+  delete sub.off;
+  await anbSaveSubs(env, bot, subs);
+  return sub;
 }
 
 async function anbOnTelegram(env, bot, cfg, token, update) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const subs = await anbSubs(env, bot);
-  const isSub = (id) => subs.some((s) => String(s.id) === String(id));
+  const findSub = (id) => subs.find((s) => String(s.id) === String(id));
+  const isOwner = (id) => String(id) === ANB_OWNER_ID;
 
   if (update.callback_query) {
     const q = update.callback_query;
     const data = String(q.data || '');
-    if (q.from && !isSub(q.from.id)) await anbAddSub(env, bot, cfg, token, subs, q.from);
+    const sub = q.from && findSub(q.from.id);
+
+    // Owner's decision on an access request: g:<tgUserId>:<cabinet> / x:<tgUserId>
+    if ((data.startsWith('g:') || data.startsWith('x:')) && isOwner(q.from.id)) {
+      const [kind, userId, cab] = data.split(':');
+      const ask = (await kv.get(anbKey(bot, `ask:${userId}`), 'json')) || {};
+      const who = `<b>${escapeHtml(ask.name || userId)}</b>${ask.username ? ` (@${escapeHtml(ask.username)})` : ''}, id <code>${escapeHtml(userId)}</code>`;
+      let result;
+      if (kind === 'g' && cfg.cabinets[cab]) {
+        const added = await anbConnect(env, bot, cfg, subs, { id: Number(userId), name: ask.name || userId, username: ask.username }, [cab]);
+        await anbApi(token, 'sendMessage', { chat_id: added.id, text: anbInstruction(cfg, anbSubCabinets(cfg, added)), parse_mode: 'HTML' });
+        result = `✅ ${who} подключён(а) к кабинету «${escapeHtml(cfg.cabinets[cab].name)}».`;
+      } else {
+        result = `🚫 ${who} — доступ не выдан.`;
+      }
+      await kv.delete(anbKey(bot, `ask:${userId}`));
+      await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
+      if (q.message) await anbApi(token, 'editMessageText', { chat_id: q.message.chat.id, message_id: q.message.message_id, text: result, parse_mode: 'HTML' });
+      return;
+    }
+
     if (data.startsWith('r:')) {
       const chatId = data.slice(2);
       const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
+      const cab = state.cab || cfg.defaultCabinet;
+      if (!sub || sub.off || !anbSubCabinets(cfg, sub).includes(cab)) {
+        await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id, text: 'Нет доступа к этому кабинету', show_alert: true });
+        return;
+      }
       await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
       const tgChat = q.message ? q.message.chat.id : q.from.id;
       const prompt = await anbApi(token, 'sendMessage', {
         chat_id: tgChat,
-        text: `✍️ Ответ для <b>${escapeHtml(state.name || 'клиента')}</b>\nНапишите текст — он уйдёт клиенту в Авито от имени ${escapeHtml(cfg.owner)}.`,
+        text: `✍️ Ответ для <b>${escapeHtml(state.name || 'клиента')}</b>\nНапишите текст — он уйдёт клиенту в Авито от имени ${escapeHtml(cfg.cabinets[cab].owner)}.`,
         parse_mode: 'HTML',
         reply_markup: { force_reply: true, input_field_placeholder: 'Ответ клиенту' },
       });
@@ -10004,7 +11073,9 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
         await kv.put(anbKey(bot, `msg:${tgChat}:${prompt.result.message_id}`), chatId, { expirationTtl: ANB_TTL_DAY * 30 });
       }
       await kv.put(anbKey(bot, `await:${tgChat}`), chatId, { expirationTtl: 60 * 60 });
+      return;
     }
+    await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
     return;
   }
 
@@ -10012,17 +11083,54 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   if (!msg || !msg.chat || msg.chat.type !== 'private') return;
   const from = msg.from || {};
   const text = String(msg.text || '').trim();
-  const reply = (t) => anbApi(token, 'sendMessage', { chat_id: msg.chat.id, text: t, parse_mode: 'HTML' });
+  const reply = (t) => anbApi(token, 'sendMessage', { chat_id: msg.chat.id, text: t, parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
+  let sub = findSub(from.id);
+  const user = { id: from.id, name: anbUserName(from), username: from.username };
 
-  if (!isSub(from.id)) {
-    await anbAddSub(env, bot, cfg, token, subs, from);
-    return reply(`Готово! Сюда будут приходить новые сообщения клиентов из Авито (${escapeHtml(cfg.name)}).\n\n`
-      + '🔴 — ещё не ответили, 🟢 — ответили (здесь или на Авито).\n'
-      + 'Нажмите «Ответить» под сообщением, напишите текст — он уйдёт клиенту в Авито.');
+  if (isOwner(from.id) && text === '/users') {
+    const lines = subs.map((s) => `• ${escapeHtml(s.name)}${s.username ? ` (@${escapeHtml(s.username)})` : ''}, <code>${s.id}</code> — `
+      + `${escapeHtml(anbCabinetNames(cfg, anbSubCabinets(cfg, s)) || '—')}${s.off ? ' (отключил уведомления)' : ''}`);
+    return reply(lines.length ? `👥 <b>Пользователи бота</b>\n${lines.join('\n')}` : 'Пока никто не подключён.');
   }
-  if (text.startsWith('/start')) return reply('Вы уже подключены. Новые сообщения клиентов из Авито будут приходить сюда.');
+
+  // Cabinets this person may have: listed in `allow` (or among a retired bot's subscribers), or
+  // all of them for the owner.
+  const allowed = [];
+  for (const [cab, c] of Object.entries(cfg.cabinets)) {
+    if (isOwner(from.id) || (c.allow || []).map(String).includes(String(from.id))) allowed.push(cab);
+    else if (!sub && c.allowSubsOf && (await anbSubs(env, c.allowSubsOf)).some((s) => String(s.id) === String(from.id))) allowed.push(cab);
+  }
+  const missing = allowed.filter((cab) => !sub || !anbSubCabinets(cfg, sub).includes(cab));
+
+  // A cabinet added to `allow` later joins quietly, so the message itself (maybe a reply) still goes through.
+  if (sub && missing.length && !text.startsWith('/start')) sub = await anbConnect(env, bot, cfg, subs, user, allowed);
+  if (!sub || (text.startsWith('/start') && (sub.off || missing.length))) {
+    if (!sub && !allowed.length) {
+      // A stranger: point them to the owner, and ask the owner once per person.
+      const askKey = anbKey(bot, `ask:${from.id}`);
+      if (!(await kv.get(askKey))) {
+        await kv.put(askKey, JSON.stringify({ name: user.name, username: user.username || null }), { expirationTtl: ANB_TTL_DAY * 30 });
+        const buttons = Object.entries(cfg.cabinets).map(([cab, c]) => [{ text: `➕ ${c.name}`, callback_data: `g:${from.id}:${cab}` }]);
+        buttons.push([{ text: '🚫 Не давать доступ', callback_data: `x:${from.id}` }]);
+        await anbNotifyOwner(env, token, `🔐 Просит доступ к боту «${escapeHtml(cfg.name)}»: <b>${escapeHtml(user.name)}</b>`
+          + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code>.\nК какому кабинету подключить?`,
+        { reply_markup: { inline_keyboard: buttons } });
+      }
+      return reply('Здравствуйте! Этот бот присылает уведомления о новых сообщениях клиентов с Авито.\n\n'
+        + `Чтобы получить доступ к уведомлениям, напишите ${ANB_OWNER_LINK} — он подключит вас к вашему кабинету, и сообщения начнут приходить сюда.`);
+    }
+    const isNew = !sub;
+    sub = await anbConnect(env, bot, cfg, subs, user, allowed);
+    if (isNew && !isOwner(from.id)) {
+      await anbNotifyOwner(env, token, `👤 Новый пользователь бота «${escapeHtml(cfg.name)}»: <b>${escapeHtml(user.name)}</b>`
+        + `${from.username ? ` (@${escapeHtml(from.username)})` : ''}, id <code>${from.id}</code> — ${escapeHtml(anbCabinetNames(cfg, anbSubCabinets(cfg, sub)))}.`);
+    }
+    return reply(anbInstruction(cfg, anbSubCabinets(cfg, sub)));
+  }
+  if (text.startsWith('/start') || text === '/help') return reply(anbInstruction(cfg, anbSubCabinets(cfg, sub)));
   if (text === '/stop') {
-    await kv.put(anbKey(bot, 'subs'), JSON.stringify(subs.filter((s) => String(s.id) !== String(from.id))));
+    sub.off = true;
+    await anbSaveSubs(env, bot, subs);
     return reply('Уведомления отключены. Чтобы вернуть — напишите боту /start.');
   }
   if (!text) return reply('Пока можно отправлять клиенту только текст. Фото и файлы — в приложении Авито.');
@@ -10030,9 +11138,12 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   let chatId = null;
   if (msg.reply_to_message) chatId = await kv.get(anbKey(bot, `msg:${msg.chat.id}:${msg.reply_to_message.message_id}`));
   if (!chatId) chatId = await kv.get(anbKey(bot, `await:${msg.chat.id}`));
-  if (!chatId) return reply('Чтобы ответить клиенту, нажмите «✍️ Ответить» под его сообщением.');
+  if (!chatId) return reply('Чтобы ответить клиенту, нажмите «✍️ Ответить» под его сообщением. Как работает бот — /help.');
 
-  const account = await anbAccount(env, cfg);
+  const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
+  const cab = state.cab || cfg.defaultCabinet;
+  if (!anbSubCabinets(cfg, sub).includes(cab)) return reply('Нет доступа к кабинету этого чата.');
+  const account = await anbAccount(env, cfg.cabinets[cab]);
   const avitoToken = await avitoGetToken(env, account);
   const res = await avitoRequest(avitoToken, `/messenger/v1/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}/messages`, {
     method: 'POST',
@@ -10046,49 +11157,62 @@ async function anbOnTelegram(env, bot, cfg, token, update) {
   if (sent && sent.id) await kv.put(anbKey(bot, `seen:${sent.id}`), '1', { expirationTtl: ANB_TTL_DAY * 7 });
   await avitoRequest(avitoToken, `/messenger/v1/accounts/${account.userId}/chats/${encodeURIComponent(chatId)}/read`, { method: 'POST' }).catch(() => null);
   await kv.delete(anbKey(bot, `await:${msg.chat.id}`));
-  const state = (await kv.get(anbKey(bot, `chat:${chatId}`), 'json')) || {};
   await anbMarkAnswered(env, bot, token, chatId, { via: 'tg', by: from.first_name || from.username, text });
   return reply(`✅ Отправлено: <a href="${anbChatLink(chatId)}">${escapeHtml(state.name || 'клиент')}</a>`);
 }
 
-// ── setup: Telegram webhook, bot profile, Avito messenger webhook ──
-async function anbSetup(env, bot, cfg, token) {
+// ── setup: Telegram webhook and bot profile, then each cabinet's Avito messenger webhook ──
+async function anbSetup(env, bot, cfg, token, force) {
+  const kv = env.AGENCY_DASHBOARD_KV;
   const secrets = await anbSecrets(token);
-  const results = {};
-  results.telegram = await anbApi(token, 'setWebhook', {
-    url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/tg`,
-    secret_token: secrets.tg,
-    allowed_updates: ['message', 'callback_query'],
-  });
-  results.name = await anbApi(token, 'setMyName', { name: cfg.name });
-  results.description = await anbApi(token, 'setMyDescription', {
-    description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
-  });
-  results.commands = await anbApi(token, 'setMyCommands', { commands: [{ command: 'stop', description: 'Отключить уведомления' }] });
-  const me = await anbApi(token, 'getMe', {});
-  try {
-    const account = await anbAccount(env, cfg);
-    const avitoToken = await avitoGetToken(env, account);
-    const res = await avitoRequest(avitoToken, '/messenger/v3/webhook', {
-      method: 'POST',
-      body: JSON.stringify({ url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secrets.avito}` }),
+  const results = { avito: {} };
+  if (force || (await kv.get(anbKey(bot, 'setup'))) !== ANB_SETUP_VERSION) {
+    results.telegram = await anbApi(token, 'setWebhook', {
+      url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/tg`,
+      secret_token: secrets.tg,
+      allowed_updates: ['message', 'callback_query'],
     });
-    results.avito = { status: res.status, body: (await res.text().catch(() => '')).slice(0, 300) };
-  } catch (err) {
-    results.avito = { error: String(err && err.message) };
+    results.description = await anbApi(token, 'setMyDescription', {
+      description: 'Уведомления о новых сообщениях клиентов на Авито с ответом прямо из Telegram. Нажмите «Старт», чтобы подключиться.',
+    });
+    results.commands = await anbApi(token, 'setMyCommands', {
+      commands: [
+        { command: 'help', description: 'Как работает бот' },
+        { command: 'stop', description: 'Отключить уведомления' },
+      ],
+    });
+    if (results.telegram && results.telegram.ok) await kv.put(anbKey(bot, 'setup'), ANB_SETUP_VERSION);
   }
-  const ok = !!(results.telegram && results.telegram.ok) && !!(results.avito && results.avito.status === 200);
-  if (ok) await env.AGENCY_DASHBOARD_KV.put(anbKey(bot, 'setup'), ANB_SETUP_VERSION);
-  const username = me.ok && me.result && me.result.username;
+  let ok = !results.telegram || !!results.telegram.ok;
+  for (const [cab, cabinet] of Object.entries(cfg.cabinets)) {
+    const setupKey = anbCabKey(bot, cfg, cab, 'setup');
+    if (!force && (await kv.get(setupKey)) === ANB_SETUP_VERSION) continue;
+    try {
+      const account = await anbAccount(env, cabinet);
+      const avitoToken = await avitoGetToken(env, account);
+      const res = await avitoRequest(avitoToken, '/messenger/v3/webhook', {
+        method: 'POST',
+        body: JSON.stringify({ url: anbAvitoHookUrl(bot, cfg, cab, secrets.avito) }),
+      });
+      results.avito[cab] = { status: res.status, body: (await res.text().catch(() => '')).slice(0, 300) };
+      if (res.status === 200) await kv.put(setupKey, ANB_SETUP_VERSION);
+      else ok = false;
+    } catch (err) {
+      results.avito[cab] = { error: String(err && err.message) };
+      ok = false;
+    }
+  }
+  const me = force ? await anbApi(token, 'getMe', {}) : null;
+  const username = me && me.ok && me.result && me.result.username;
   return { ok, link: username ? `https://t.me/${username}` : null, results };
 }
 
 // ── poll: safety net for missed webhooks ──
-async function anbPoll(env, bot, cfg, token) {
+async function anbPoll(env, bot, cfg, cab, token) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const account = await anbAccount(env, cfg);
+  const account = await anbAccount(env, cfg.cabinets[cab]);
   const avitoToken = await avitoGetToken(env, account);
-  const pollKey = anbKey(bot, 'poll');
+  const pollKey = anbCabKey(bot, cfg, cab, 'poll');
   const since = Number(await kv.get(pollKey)) || 0;
   const data = await avitoJson(avitoToken, `/messenger/${AVITO_CHATS_VERSION}/accounts/${account.userId}/chats?chat_types=u2i&limit=20`);
   const chats = data.chats || [];
@@ -10101,9 +11225,47 @@ async function anbPoll(env, bot, cfg, token) {
     const res = await avitoJson(avitoToken, `/messenger/${AVITO_MESSAGES_VERSION}/accounts/${account.userId}/chats/${encodeURIComponent(c.id)}/messages?limit=20&offset=0`);
     const msgs = (Array.isArray(res) ? res : res.messages || []).filter((m) => Number(m.created) > since);
     msgs.sort((a, b) => Number(a.created) - Number(b.created));
-    for (const m of msgs) await anbHandleAvitoMessage(env, bot, cfg, token, account, { ...m, chat_id: c.id });
+    for (const m of msgs) await anbHandleAvitoMessage(env, bot, cfg, cab, token, account, { ...m, chat_id: c.id });
   }
   if (newest > since) await kv.put(pollKey, String(newest));
+}
+
+// ── retired bots ──
+function anbMovedText(retired) {
+  return '📦 <b>Бот уведомлений Авито переехал.</b>\n\n'
+    + `Новые сообщения клиентов теперь приходят в новый бот: ${retired.link}\n`
+    + 'Откройте его и нажмите «Старт» — подключение произойдёт автоматически. Сюда уведомления больше не придут.';
+}
+
+async function anbRetire(env, bot, retired, token) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const doneKey = anbKey(bot, 'retired');
+  if (await kv.get(doneKey)) return { already: true };
+  // Not before the new bot is live — otherwise people would be sent to a bot that doesn't answer yet.
+  if ((await kv.get(anbKey(retired.movedTo, 'setup'))) !== ANB_SETUP_VERSION) return { waiting: retired.movedTo };
+  await kv.put(doneKey, new Date().toISOString());
+  const results = { notified: [], avito: [] };
+  for (const sub of (await anbSubs(env, bot)).filter((s) => !s.off)) {
+    const res = await anbApi(token, 'sendMessage', { chat_id: sub.id, text: anbMovedText(retired), parse_mode: 'HTML' });
+    results.notified.push(`${sub.name}: ${res.ok ? 'ok' : res.description}`);
+  }
+  const secrets = await anbSecrets(token);
+  for (const cabinet of retired.avito) {
+    try {
+      const account = await anbAccount(env, cabinet);
+      const avitoToken = await avitoGetToken(env, account);
+      const res = await avitoRequest(avitoToken, '/messenger/v1/webhook/unsubscribe', {
+        method: 'POST',
+        body: JSON.stringify({ url: `${BOT_WORKER_ORIGIN}/api/avitobot/${bot}/avito/${secrets.avito}` }),
+      });
+      results.avito.push({ status: res.status });
+    } catch (err) {
+      results.avito.push({ error: String(err && err.message) });
+    }
+  }
+  await anbApi(token, 'setMyDescription', { description: `Бот переехал: ${retired.link}` });
+  await anbApi(token, 'setMyCommands', { commands: [] });
+  return results;
 }
 
 async function avitoNotifyCron(env) {
@@ -10111,18 +11273,36 @@ async function avitoNotifyCron(env) {
     const token = env[cfg.tokenEnv];
     if (!token) continue;
     try {
-      if ((await env.AGENCY_DASHBOARD_KV.get(anbKey(bot, 'setup'))) !== ANB_SETUP_VERSION) await anbSetup(env, bot, cfg, token);
-      await anbPoll(env, bot, cfg, token);
+      await anbSetup(env, bot, cfg, token, false);
     } catch (err) {
-      console.error(`avito notify bot ${bot} cron failed`, err && err.stack);
+      console.error(`avito notify bot ${bot} setup failed`, err && err.stack);
+    }
+    for (const cab of Object.keys(cfg.cabinets)) {
+      try {
+        await anbPoll(env, bot, cfg, cab, token);
+      } catch (err) {
+        console.error(`avito notify bot ${bot}/${cab} poll failed`, err && err.stack);
+      }
+    }
+  }
+  // After the live bots: a retired bot waits for its replacement's setup.
+  for (const [bot, retired] of Object.entries(AVITO_RETIRED_BOTS)) {
+    const token = env[retired.tokenEnv];
+    if (!token) continue;
+    try {
+      await anbRetire(env, bot, retired, token);
+    } catch (err) {
+      console.error(`avito notify bot ${bot} retirement failed`, err && err.stack);
     }
   }
 }
 
 async function handleAvitoBotApi(request, env, url, ctx) {
-  const m = url.pathname.match(/^\/api\/avitobot\/([a-z0-9-]+)\/(tg|avito|setup)(?:\/([a-f0-9]+))?$/);
+  const m = url.pathname.match(/^\/api\/avitobot\/([a-z0-9-]+)\/(tg|avito|setup)(?:\/([a-f0-9]+))?(?:\/([a-z0-9-]+))?$/);
   const bot = m && m[1];
   const cfg = bot && AVITO_NOTIFY_BOTS[bot];
+  const retired = !cfg && bot && AVITO_RETIRED_BOTS[bot];
+  if (retired) return handleRetiredAvitoBot(request, env, url, m, bot, retired);
   if (!cfg) return json({ error: 'not_found' }, 404);
   const token = env[cfg.tokenEnv];
   if (!token) return json({ error: `${cfg.tokenEnv} is not set` }, 503);
@@ -10130,8 +11310,8 @@ async function handleAvitoBotApi(request, env, url, ctx) {
 
   if (m[2] === 'setup') {
     if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
-    const result = await anbSetup(env, bot, cfg, token);
-    result.subscribers = (await anbSubs(env, bot)).map((s) => s.name);
+    const result = await anbSetup(env, bot, cfg, token, true);
+    result.subscribers = (await anbSubs(env, bot)).map((s) => `${s.name}: ${anbCabinetNames(cfg, anbSubCabinets(cfg, s))}${s.off ? ' (off)' : ''}`);
     return json(result);
   }
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
@@ -10148,16 +11328,38 @@ async function handleAvitoBotApi(request, env, url, ctx) {
   }
 
   // Avito messenger webhook: {payload: {type: 'message', value: {id, chat_id, author_id, type, content, …}}}
-  if (m[3] !== secrets.avito) return json({ ok: false }, 403);
+  const cab = m[4] || cfg.defaultCabinet;
+  if (m[3] !== secrets.avito || !cfg.cabinets[cab]) return json({ ok: false }, 403);
   const event = await readJson(request);
   const value = event && event.payload && event.payload.type === 'message' ? event.payload.value : null;
   if (value) {
-    const work = anbAccount(env, cfg)
-      .then((account) => anbHandleAvitoMessage(env, bot, cfg, token, account, value))
-      .catch((err) => console.error(`avito notify bot ${bot} avito event failed`, err && err.stack));
+    const work = anbAccount(env, cfg.cabinets[cab])
+      .then((account) => anbHandleAvitoMessage(env, bot, cfg, cab, token, account, value))
+      .catch((err) => console.error(`avito notify bot ${bot}/${cab} avito event failed`, err && err.stack));
     if (ctx && ctx.waitUntil) ctx.waitUntil(work); else await work;
   }
   return json({ ok: true });
+}
+
+async function handleRetiredAvitoBot(request, env, url, m, bot, retired) {
+  const token = env[retired.tokenEnv];
+  if (!token) return json({ error: `${retired.tokenEnv} is not set` }, 503);
+  if (m[2] === 'setup') {
+    if (url.searchParams.get('key') !== DASHBOARD_PASSWORD) return json({ error: 'unauthorized' }, 401);
+    return json(await anbRetire(env, bot, retired, token));
+  }
+  if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const secrets = await anbSecrets(token);
+  if (m[2] === 'tg') {
+    if (request.headers.get('X-Telegram-Bot-Api-Secret-Token') !== secrets.tg) return json({ ok: false }, 403);
+    const update = await readJson(request);
+    const q = update && update.callback_query;
+    const chatId = q ? q.from.id : update && update.message && update.message.chat.type === 'private' && update.message.chat.id;
+    if (q) await anbApi(token, 'answerCallbackQuery', { callback_query_id: q.id });
+    if (chatId) await anbApi(token, 'sendMessage', { chat_id: chatId, text: anbMovedText(retired), parse_mode: 'HTML' });
+    return json({ ok: true });
+  }
+  return json({ ok: true }); // Avito events that still arrive before the unsubscribe — dropped
 }
 
 // ── /academy: 14-day training course for Avito trainees ──
@@ -10374,6 +11576,822 @@ async function handleMbaReportApi(request, env) {
   return json({ error: 'method_not_allowed' }, 405);
 }
 
+// ── /avito-ai-sales: ИИ-менеджер для чатов Авито ──
+// Читает чаты подключённых кабинетов (пока — Елена Добрынина) в своё хранилище и предлагает
+// ответы, которые написал бы преподаватель. В Авито НИЧЕГО НЕ ОТПРАВЛЯЕТ: только читает чаты
+// (GET) и сохраняет черновики у себя. Правки черновиков людьми сохраняются и подмешиваются
+// в промпт как примеры («обучение»). Модели: Workers AI (бесплатно, без ключа) и любые
+// подключённые по ключу — OpenAI, Anthropic, Gemini, OpenRouter, DeepSeek, YandexGPT и т. п.
+//
+// API: /api/dashboard/ai-sales/* (так его пропускает прокси Яндекс Облака), пароль дашборда.
+// KV (AVITO_KV), префикс «aisales:»:
+//   aisales:config                — кабинеты, модель по умолчанию, самопроверка, автоответы
+//   aisales:providers             — подключения моделей с ключами (наружу ключи не отдаются)
+//   aisales:prompt:<acc>          — промпт, скрипты, база знаний, свободные окна кабинета
+//   aisales:prompthist:<acc>:<ts> — прошлые версии промпта (30 дней)
+//   aisales:index:<acc>           — список чатов кабинета (кратко)
+//   aisales:chat:<acc>:<chatId>   — сообщения чата, черновик ИИ и его история
+//   aisales:fb:<acc>:<ts>         — правки и одобрения черновиков (примеры для обучения)
+//   aisales:sim:<acc>:<id>        — диалоги тест-клиента
+//   aisales:job:<id>              — фоновые задачи ИИ (черновик, тест, подсказки), 3 дня
+
+const AIS_WORKERS_MODELS = [
+  { ref: 'workers:@cf/qwen/qwen3-30b-a3b-fp8', label: 'Qwen3 30B (Workers AI, бесплатно)' },
+  { ref: 'workers:@cf/openai/gpt-oss-120b', label: 'GPT-OSS 120B (Workers AI, бесплатно)' },
+  { ref: 'workers:@cf/openai/gpt-oss-20b', label: 'GPT-OSS 20B (Workers AI, бесплатно)' },
+  { ref: 'workers:@cf/meta/llama-3.3-70b-instruct-fp8-fast', label: 'Llama 3.3 70B (Workers AI, бесплатно)' },
+];
+const AIS_PROVIDER_TYPES = {
+  openai: { label: 'OpenAI', baseUrl: 'https://api.openai.com/v1' },
+  anthropic: { label: 'Anthropic (Claude)', baseUrl: 'https://api.anthropic.com/v1' },
+  gemini: { label: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
+  openrouter: { label: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
+  deepseek: { label: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1' },
+  yandex: { label: 'YandexGPT', baseUrl: 'https://llm.api.cloud.yandex.net/v1' },
+  custom: { label: 'Другой (OpenAI-совместимый)', baseUrl: '' },
+};
+const AIS_STAGES = {
+  new: 'Новый', qualify: 'Уточнение', offer: 'Предложена диагностика', booked: 'Записан на диагностику',
+  after: 'После диагностики', messenger: 'Ушёл в мессенджер', cold: 'Молчит', lost: 'Отказ', spam: 'Не клиент',
+};
+const AIS_DEFAULT_CABINET = { accountId: '6c974a5d5326', name: 'Елена Добрынина', since: '2026-10-01' };
+const AIS_DEFAULT_CONFIG = {
+  cabinets: [AIS_DEFAULT_CABINET],
+  defaultModel: 'workers:@cf/qwen/qwen3-30b-a3b-fp8',
+  selfCheck: true,
+  autoDraft: true,
+  autoDraftHours: 48, // черновики сами пишутся только к сообщениям не старше этого
+  sendEnabled: false, // отправки в Авито нет вообще; флаг только для честного показа на странице
+};
+
+// Сценарий по умолчанию собран по чатам Елены Добрыниной за октябрь 2026 (145 диалогов).
+// Контакты (телефон для МАХ/Телеграма, ссылка ZOOM) в репозиторий не кладём — их вписывают
+// на странице, в «Базе знаний».
+const AIS_DEFAULT_PROMPT = {
+  system: [
+    'Ты — ассистент Елены Николаевны Добрыниной, репетитора по русскому языку. Ты пишешь ответы в чате Авито от её имени, от первого лица (женский род: «поняла», «отправлю»), так, как написала бы она сама.',
+    'Главная цель каждого диалога — записать на бесплатную онлайн-диагностику в ZOOM: Елена знакомится с учеником, определяет уровень знаний, рассказывает о своей системе работы и отвечает на вопросы. Дальнейшие договорённости (оплата, расписание, платформа) — после диагностики, в МАХ или Телеграме.',
+    '',
+    'Как пишет Елена:',
+    '- Коротко: 1–3 предложения, без эмодзи, без списков и markdown. Обращение на «Вы» (с заглавной). Если пишет сам ученик-подросток — можно «ты» в бытовых фразах, но приглашение всё равно на «Вы»/нейтрально.',
+    '- Здоровается («Здравствуйте!») только в первом сообщении дня. Время всегда пишет так: «18.15 по Мск».',
+    '- Сначала отвечает на прямой вопрос клиента, потом делает следующий шаг. В конце — один конкретный вопрос («Удобно будет?», «Записать вас?»).',
+    '- Не уговаривает и не давит. На отказ — вежливо прощается.',
+    '',
+    'Правила, которые нельзя нарушать:',
+    '1. Перед ответом перечитай всю историю. Не переспрашивай то, что уже известно (класс, цель, договорённое время, мессенджер, имя). Не противоречь тому, что уже обещано.',
+    '2. Время встречи предлагай только из раздела «Свободные окна». Если окон нет или клиенту ни одно не подходит — спроси, в какие дни и время удобно, и поставь needs_human=true.',
+    '3. Цены: не начинай с цены. На первый вопрос о цене — «Стоимость зависит от нескольких факторов: цели, формата и количества занятий в неделю. Подробно рассказываю на первой встрече.» Если клиент настаивает — назови диапазон из базы знаний. Скидок не придумывай.',
+    '4. Не выдумывай факты, которых нет в базе знаний или истории. Если не знаешь ответа — напиши нейтрально и поставь needs_human=true.',
+    '5. Ссылку на ZOOM отправляй только в день встречи (если клиент просит или до встречи меньше часа). Телефон для МАХ/Телеграма — когда клиент готов заниматься или просит связаться в мессенджере.',
+    '6. Голосовые, фото и звонки ты не видишь. Если от них зависит ответ — needs_human=true.',
+    '7. Спам, предложения услуг, рассылки других школ — needs_reply=false, stage=spam.',
+    '8. Если клиент написал «спасибо», «хорошо», «ок» после того, как всё уже договорено, — отвечать не нужно (needs_reply=false) или коротко «Хорошо. До встречи!», если это уместно.',
+  ].join('\n'),
+  scripts: [
+    { title: 'Первое сообщение, класс неизвестен', when: 'Клиент спрашивает, как записаться / есть ли места, а класс не назван.', text: 'Здравствуйте! Какой класс?' },
+    { title: 'Приглашение на диагностику', when: 'Класс или цель известны. Основной шаг.', text: 'Предлагаю встретиться на бесплатной онлайн-диагностике, где мы познакомимся, определим уровень знаний ребёнка, я расскажу о своей системе работы и отвечу на все Ваши вопросы. Есть время {окно} по Мск. Удобно будет?' },
+    { title: 'Отклик на рассылку (предложение)', when: 'В чате системное сообщение «Покупателя заинтересовало ваше предложение» и Елена ещё не писала.', text: 'Здравствуйте! Вы откликнулись на предложение прийти на бесплатную диагностику по русскому языку. Диагностика проходит в ZOOM, длится 30-40 минут. Определим уровень знаний, составим план занятий. Удобно встретиться {окно} по Мск?' },
+    { title: 'Подтверждение записи', when: 'Клиент согласился на время.', text: 'Хорошо. За 5-10 мин до встречи отправлю ссылку для подключения в ZOOM. Камера должна быть включена. Присутствие родителя обязательно.' },
+    { title: 'Платформа / куда ссылку', when: 'Спрашивают, где пройдёт встреча, или просят ссылку в мессенджер.', text: 'Встречаемся в ZOOM. Ссылку отправлю здесь. Если удобнее в МАХ или Телеграме — напишите контакт, отправлю туда.' },
+    { title: 'Цена — первый вопрос', when: 'Спрашивают стоимость до диагностики.', text: 'Стоимость зависит от нескольких факторов: цели, формата и количества занятий в неделю. Подробно об этом рассказываю на первой встрече. Записать вас на бесплатный урок-диагностику?' },
+    { title: 'Цена — настаивают', when: 'Повторно просят хотя бы диапазон.', text: 'Занятия в мини-группе — от 1500 р., индивидуальные — от 2500 р. Записать вас на бесплатный урок-диагностику?' },
+    { title: 'Форматы', when: 'Спрашивают, группа или индивидуально.', text: 'Есть разные форматы: мини-группа до 3 человек и индивидуальные занятия. Подбираем под цель ученика.' },
+    { title: 'Только офлайн', when: 'Хотят занятия вживую.', text: 'Работаю только онлайн. Подойдёт такой формат?' },
+    { title: 'Другой город / часовой пояс', when: 'Смущает регион или время.', text: 'Регион роли не играет, подготовка везде одинаковая. Время указываю московское, т.к. ученики из разных часовых поясов.' },
+    { title: 'Родитель не может присутствовать', when: 'Ученик-школьник просит провести диагностику без родителя.', text: 'Обычно первую встречу провожу в присутствии родителя. Когда родитель сможет подключиться?' },
+    { title: 'Нет камеры / только телефон', when: 'Нет камеры на компьютере.', text: 'Вы можете подключиться с двух устройств, телефон использовать как камеру. Первую встречу можно провести и с телефона.' },
+    { title: 'Перенос встречи', when: 'Клиент не может в назначенное время.', text: 'Хорошо. Есть время {окно} по Мск. Удобно будет? / Напишите, в какие дни и в какое время будет удобно. Что-нибудь обязательно подберём.' },
+    { title: 'Напоминание в день встречи', when: 'Встреча сегодня, клиент ещё не подтвердил.', text: 'Здравствуйте! Напоминаю, что сегодня в {время} по Мск мы встречаемся на бесплатной онлайн-диагностике. Всё в силе?' },
+    { title: 'Дожим, нет ответа 1–2 дня', when: 'Последним писала Елена, клиент молчит.', text: 'Здравствуйте! Ваш запрос ещё актуален? Записать вас на бесплатный урок-диагностику?' },
+    { title: 'Последний дожим', when: 'Клиент молчит после напоминания.', text: 'Здравствуйте! Пишу последний раз, чтобы не надоедать. Если преподавателя уже нашли, дайте, пожалуйста, знать. Если занятия ещё нужны, напишите — подберу время на выходных. Предложение актуально?' },
+    { title: 'Готовы заниматься после диагностики', when: 'Клиент пишет, что согласен заниматься / хочет записаться после встречи.', text: 'Здравствуйте! Хорошо. Напишите мне, пожалуйста, в МАХ или Телеграм {телефон}.' },
+    { title: 'Отказ', when: 'Нашли другого, дорого, передумали.', text: 'Поняла Вас. Спасибо за ответ. Будет нужна помощь — обращайтесь.' },
+  ],
+  knowledge: [
+    'Елена Николаевна Добрынина — репетитор по русскому языку. Живёт в Екатеринбурге, работает только онлайн: встречи в ZOOM, занятия на онлайн-платформе (регистрация на платформе — после оплаты).',
+    'С кем работает: 5–11 классы, подготовка к ОГЭ и ЕГЭ, ВПР, итоговое сочинение, изложение, грамотность и повышение успеваемости; студенты колледжа; взрослые. В команде есть преподаватель для взрослых, для которых русский не родной (решение — после согласования с преподавателем, needs_human).',
+    'Бесплатная диагностика: ZOOM, 30–60 минут, камера включена, присутствие родителя обязательно для школьников (взрослый ученик или студент может без родителя). Ссылка — за 5–10 минут до встречи, здесь или в МАХ/Телеграме.',
+    'Форматы и стоимость: мини-группа до 3 человек — от 1500 р. за занятие (60–90 мин); индивидуальные — от 2500 р. Общий диапазон 1500–3000 р. Точная стоимость зависит от цели, формата и числа занятий в неделю — обсуждается на диагностике.',
+    'Контакты для МАХ/Телеграма и ссылку ZOOM впишите сюда: Телефон: … Телеграм: … ZOOM: …',
+  ].join('\n'),
+  slots: 'Впишите свободные окна для диагностики на ближайшие дни, например:\nвт 03.11 — 18.15\nср 04.11 — 12.00, 19.30\nЕсли пусто — ИИ спрашивает удобное время и зовёт человека.',
+};
+
+function aisKv(env) { return env.AVITO_KV; }
+function aisId() { return crypto.randomUUID().replace(/-/g, '').slice(0, 12); }
+
+async function aisConfig(env) {
+  const saved = await aisKv(env).get('aisales:config', 'json');
+  return { ...AIS_DEFAULT_CONFIG, ...(saved || {}), sendEnabled: false };
+}
+async function aisProviders(env) {
+  return (await aisKv(env).get('aisales:providers', 'json')) || [];
+}
+function aisMaskProvider(p) {
+  const { apiKey, ...rest } = p;
+  return { ...rest, hasKey: Boolean(apiKey), keyTail: apiKey ? String(apiKey).slice(-4) : '' };
+}
+async function aisPrompt(env, accountId) {
+  const saved = await aisKv(env).get(`aisales:prompt:${accountId}`, 'json');
+  return { ...AIS_DEFAULT_PROMPT, ...(saved || {}) };
+}
+async function aisIndex(env, accountId) {
+  return (await aisKv(env).get(`aisales:index:${accountId}`, 'json')) || { chats: {}, imported: false, lastSyncAt: null };
+}
+async function aisModelList(env) {
+  const providers = await aisProviders(env);
+  const list = AIS_WORKERS_MODELS.slice();
+  providers.forEach((p) => (p.models || []).forEach((m) => list.push({ ref: `${p.id}:${m}`, label: `${m} (${p.label || AIS_PROVIDER_TYPES[p.type]?.label || p.type})` })));
+  return list;
+}
+
+// Время по Москве: «пн 02.11 14:05».
+function aisMsk(ts) {
+  const d = new Date(Number(ts) + 3 * 3600 * 1000);
+  const wd = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][d.getUTCDay()];
+  const p = (n) => String(n).padStart(2, '0');
+  return `${wd} ${p(d.getUTCDate())}.${p(d.getUTCMonth() + 1)} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+}
+
+// ── Синхронизация с Авито (только чтение) ──
+function aisMapMessage(m, userId) {
+  const author = String(m.author_id) === String(userId) ? 'manager' : m.type === 'system' ? 'system' : 'client';
+  return { id: String(m.id), at: Number(m.created) * 1000, author, type: m.type, text: avitoMessageText(m) };
+}
+// «Покупателя заинтересовало ваше предложение» — клиент откликнулся на рассылку: ждёт ответа.
+function aisIsInterest(m) { return m.author === 'system' && /заинтересовал/i.test(m.text || ''); }
+function aisChatState(messages) {
+  const meaningful = messages.filter((m) => m.author !== 'system' || aisIsInterest(m));
+  const last = meaningful[meaningful.length - 1] || null;
+  const lastAny = messages[messages.length - 1] || null;
+  return {
+    lastAt: lastAny ? lastAny.at : null,
+    lastText: lastAny ? String(lastAny.text || '').slice(0, 160) : '',
+    lastAuthor: last ? (last.author === 'system' ? 'client' : last.author) : null,
+    lastMsgId: last ? last.id : null,
+    waiting: Boolean(last && last.author !== 'manager'),
+    msgCount: messages.length,
+  };
+}
+function aisChatMeta(c, userId) {
+  const other = (c.users || []).find((u) => String(u.id) !== String(userId)) || {};
+  const item = (c.context && c.context.value) || {};
+  const avatar = other.public_user_profile && other.public_user_profile.avatar;
+  return {
+    chatId: c.id,
+    name: other.name || '',
+    avatar: (avatar && (avatar.default || avatar.images && Object.values(avatar.images)[0])) || '',
+    itemId: item.id ? String(item.id) : '',
+    itemTitle: item.title || '',
+    itemUrl: item.url || '',
+    updated: Number(c.updated) || 0,
+  };
+}
+
+async function aisSync(env, accountId, { budgetMs = 15000, pages } = {}) {
+  const kv = aisKv(env);
+  const cfg = await aisConfig(env);
+  const cab = cfg.cabinets.find((c) => c.accountId === accountId);
+  if (!cab) throw new Error('cabinet_not_connected');
+  const account = await kv.get(`account:${accountId}`, 'json');
+  if (!account) throw new Error('avito_account_not_found');
+  const started = Date.now();
+  const token = await avitoGetToken(env, account);
+  const userId = String(account.userId);
+  const idx = await aisIndex(env, accountId);
+  const sinceSec = Date.parse(`${cab.since}T00:00:00+03:00`) / 1000;
+
+  // 1. Список чатов: после первой полной загрузки хватает одной страницы (новые — сверху).
+  const maxPages = pages || (idx.imported ? 1 : 10);
+  const changes = {}; // chatId -> поля, которые меняет эта синхронизация (в конце ложатся на свежий индекс)
+  let reachedEnd = false;
+  for (let page = 0; page < maxPages; page += 1) {
+    const data = await avitoJson(token, `/messenger/${AVITO_CHATS_VERSION}/accounts/${userId}/chats?chat_types=u2i&limit=100&offset=${page * 100}`);
+    const batch = data.chats || [];
+    let old = false;
+    for (const c of batch) {
+      if (Number(c.updated) < sinceSec) { old = true; continue; }
+      const meta = aisChatMeta(c, userId);
+      const prev = idx.chats[c.id] || {};
+      idx.chats[c.id] = { ...prev, ...meta, stale: prev.stale || prev.fetchedUpdated !== meta.updated };
+      changes[c.id] = { ...meta, stale: idx.chats[c.id].stale };
+    }
+    if (old || batch.length < 100 || !(data.meta && data.meta.has_more)) { reachedEnd = true; break; }
+  }
+  if (reachedEnd) idx.imported = true;
+
+  // 2. Сообщения изменившихся чатов, новые — первыми, пока есть время.
+  const stale = Object.values(idx.chats).filter((c) => c.stale).sort((a, b) => b.updated - a.updated);
+  let fetched = 0;
+  const errors = [];
+  for (const s of stale) {
+    if (Date.now() - started > budgetMs) break;
+    try {
+      const raw = await fetchAllAvitoMessages(token, userId, s.chatId);
+      const key = `aisales:chat:${accountId}:${s.chatId}`;
+      const rec = (await kv.get(key, 'json')) || { chatId: s.chatId, drafts: [] };
+      rec.messages = raw.map((m) => aisMapMessage(m, userId));
+      Object.assign(rec, { name: s.name, avatar: s.avatar, itemId: s.itemId, itemTitle: s.itemTitle, itemUrl: s.itemUrl, syncedAt: Date.now() });
+      await kv.put(key, JSON.stringify(rec));
+      const st = aisChatState(rec.messages);
+      changes[s.chatId] = {
+        ...(changes[s.chatId] || {}), ...st, stale: false, fetchedUpdated: s.updated,
+        needsDraft: st.waiting && !(rec.draft && rec.draft.forMsgId === st.lastMsgId),
+      };
+      fetched += 1;
+    } catch (e) {
+      errors.push(`${s.chatId}: ${String(e && e.message).slice(0, 160)}`);
+      if (/avito_402/.test(String(e && e.message))) break;
+    }
+  }
+  // Пока шла синхронизация, задача ИИ могла отметить черновик в индексе — кладём свои поля поверх свежего.
+  const out = await aisIndex(env, accountId);
+  Object.entries(changes).forEach(([id, patch]) => { out.chats[id] = { ...(out.chats[id] || {}), ...patch }; });
+  out.imported = out.imported || idx.imported;
+  out.lastSyncAt = Date.now();
+  await kv.put(`aisales:index:${accountId}`, JSON.stringify(out));
+  const remaining = Object.values(out.chats).filter((c) => c.stale).length;
+  return { fetched, remaining, imported: out.imported, total: Object.keys(out.chats).length, errors };
+}
+
+async function aisUpdateIndexEntry(env, accountId, chatId, patch) {
+  const idx = await aisIndex(env, accountId);
+  if (!idx.chats[chatId]) return;
+  idx.chats[chatId] = { ...idx.chats[chatId], ...patch };
+  await aisKv(env).put(`aisales:index:${accountId}`, JSON.stringify(idx));
+}
+
+// ── Модели ──
+async function aisCallModel(env, ref, system, user, o = {}) {
+  const t0 = Date.now();
+  const i = String(ref || '').indexOf(':');
+  if (i < 0) throw new Error(`bad_model_ref: ${ref}`);
+  const pid = ref.slice(0, i);
+  const model = ref.slice(i + 1);
+  const temperature = o.temperature == null ? 0.4 : o.temperature;
+  const maxTokens = o.maxTokens || 1500;
+  let text = '';
+  if (pid === 'workers') {
+    text = await botAi(env, system, user, maxTokens, { model, temperature });
+    return { text, ms: Date.now() - t0 };
+  }
+  const p = (await aisProviders(env)).find((x) => x.id === pid);
+  if (!p) throw new Error(`Подключение «${pid}» не найдено — выберите другую модель`);
+  if (!p.apiKey) throw new Error(`У подключения «${p.label}» нет ключа`);
+  const base = String(p.baseUrl || AIS_PROVIDER_TYPES[p.type]?.baseUrl || '').replace(/\/+$/, '');
+  const signal = AbortSignal.timeout(o.timeoutMs || 55000);
+  const fail = async (res) => { throw new Error(`${p.label}: ${res.status} ${(await res.text().catch(() => '')).slice(0, 300)}`); };
+  if (p.type === 'anthropic') {
+    const res = await fetch(`${base}/messages`, {
+      method: 'POST', signal,
+      headers: { 'content-type': 'application/json', 'x-api-key': p.apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model, max_tokens: maxTokens, temperature, system, messages: [{ role: 'user', content: user }] }),
+    });
+    if (!res.ok) await fail(res);
+    const data = await res.json();
+    text = (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
+  } else if (p.type === 'gemini') {
+    const res = await fetch(`${base}/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST', signal,
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': p.apiKey },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: user }] }],
+        generationConfig: { temperature, maxOutputTokens: maxTokens },
+      }),
+    });
+    if (!res.ok) await fail(res);
+    const data = await res.json();
+    text = ((data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || []).map((x) => x.text || '').join('');
+  } else {
+    // OpenAI и все OpenAI-совместимые: OpenRouter, DeepSeek, YandexGPT, Groq, Mistral…
+    const isOpenAi = /api\.openai\.com/.test(base);
+    const reasoningModel = /^(o\d|gpt-5)/.test(model);
+    const body = { model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] };
+    if (isOpenAi) body.max_completion_tokens = reasoningModel ? Math.max(maxTokens, 4000) : maxTokens;
+    else body.max_tokens = maxTokens;
+    if (!reasoningModel) body.temperature = temperature;
+    const headers = { 'content-type': 'application/json' };
+    if (p.type === 'yandex') headers.Authorization = `Api-Key ${p.apiKey}`;
+    else headers.Authorization = `Bearer ${p.apiKey}`;
+    if (p.type === 'openrouter') { headers['HTTP-Referer'] = 'https://cantor.agency/avito-ai-sales'; headers['X-Title'] = 'Cantor Avito AI Sales'; }
+    const res = await fetch(`${base}/chat/completions`, { method: 'POST', signal, headers, body: JSON.stringify(body) });
+    if (!res.ok) await fail(res);
+    const data = await res.json();
+    text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+  }
+  return { text: String(text).replace(/<think>[\s\S]*?<\/think>/g, '').trim(), ms: Date.now() - t0 };
+}
+
+// ── Промпт черновика ──
+async function aisFeedbackList(env, accountId, limit = 200) {
+  const kv = aisKv(env);
+  const list = await kv.list({ prefix: `aisales:fb:${accountId}:`, limit: 1000 });
+  const keys = list.keys.map((k) => k.name).sort().reverse().slice(0, limit);
+  const recs = await Promise.all(keys.map((k) => kv.get(k, 'json').then((r) => r && { ...r, key: k })));
+  return recs.filter(Boolean);
+}
+
+function aisBuildSystem(prompt, feedback) {
+  const parts = [prompt.system];
+  if (prompt.scripts && prompt.scripts.length) {
+    parts.push('\n# Скрипты (готовые формулировки Елены — используй их почти дословно, подставляя данные)');
+    prompt.scripts.forEach((s) => parts.push(`- ${s.title}${s.when ? ` (когда: ${s.when})` : ''}: «${s.text}»`));
+  }
+  if (prompt.knowledge) parts.push(`\n# База знаний\n${prompt.knowledge}`);
+  parts.push(`\n# Свободные окна для диагностики\n${String(prompt.slots || '').trim() || 'не указаны'}`);
+  const edits = feedback.filter((f) => f.action === 'edit' && f.finalText).slice(0, 12);
+  const good = feedback.filter((f) => f.action === 'approve').slice(0, 4);
+  if (edits.length || good.length) {
+    parts.push('\n# Как Елена исправляла черновики — это главный ориентир. Пиши как в «Как надо», не как в черновике.');
+    edits.forEach((f) => {
+      parts.push(`- Клиент писал: «${String(f.lastClient || '').slice(0, 300)}»\n  Черновик ИИ: «${String(f.aiText || '').slice(0, 400)}»\n  Как надо: «${String(f.finalText).slice(0, 400)}»${f.comment ? `\n  Почему: ${String(f.comment).slice(0, 300)}` : ''}`);
+    });
+    good.forEach((f) => parts.push(`- Хороший ответ (одобрен): клиент «${String(f.lastClient || '').slice(0, 200)}» → «${String(f.finalText || f.aiText || '').slice(0, 300)}»`));
+  }
+  parts.push([
+    '\n# Формат ответа',
+    'Сначала мысленно проверь: что уже известно из истории, на что клиент ждёт ответа, какой следующий шаг по скриптам, не нарушаешь ли правила. Затем верни строго один JSON без пояснений вокруг:',
+    '{"analysis":"1–2 предложения: кто пишет, что хочет, что уже известно, этап",',
+    ' "checks":["что именно проверил в истории и базе знаний (коротко, 2–5 пунктов)"],',
+    ` "stage":"${Object.keys(AIS_STAGES).join('|')}",`,
+    ' "needs_reply":true,',
+    ' "reply":"текст следующего сообщения от Елены (пусто, если отвечать не нужно)",',
+    ' "needs_human":false,',
+    ' "human_reason":"почему нужен человек (если needs_human)",',
+    ' "confidence":0.8}',
+  ].join('\n'));
+  return parts.join('\n');
+}
+
+function aisTranscript(messages, max = 60) {
+  const lines = messages.slice(-max).map((m) => {
+    const who = m.author === 'manager' ? 'Елена' : m.author === 'system' ? 'Система Авито' : 'Клиент';
+    return `[${aisMsk(m.at)}] ${who}: ${String(m.text || '').slice(0, 1200)}`;
+  });
+  if (messages.length > max) lines.unshift(`(ранее было ещё ${messages.length - max} сообщений)`);
+  return lines.join('\n') || '(сообщений нет)';
+}
+
+function aisBuildUser(chat, opts = {}) {
+  return [
+    `Сейчас: ${aisMsk(Date.now())} (Мск).`,
+    chat.itemTitle ? `Объявление: ${chat.itemTitle}` : '',
+    chat.name ? `Имя клиента в Авито: ${chat.name}` : '',
+    chat.note ? `Заметка менеджера по этому диалогу: ${chat.note}` : '',
+    '',
+    'История диалога (старые сверху):',
+    aisTranscript(chat.messages || []),
+    '',
+    opts.instruction ? `Пожелание к ответу от менеджера: ${opts.instruction}\n` : '',
+    'Напиши следующее сообщение от Елены. Верни JSON.',
+  ].filter((x) => x !== '').join('\n');
+}
+
+function aisCheckSystem(prompt) {
+  return [
+    'Ты — строгий редактор переписки репетитора Елены Добрыниной с клиентами на Авито. Тебе дают историю диалога и черновик следующего сообщения Елены. Проверь черновик:',
+    '1) отвечает ли он на последний вопрос/сообщение клиента;',
+    '2) не переспрашивает ли то, что уже известно из истории (класс, цель, время, мессенджер);',
+    '3) не противоречит ли договорённостям из истории (время, дата, формат);',
+    '4) все факты, цены и время — только из базы знаний и свободных окон, ничего не выдумано;',
+    '5) стиль Елены: коротко (1–3 предложения), без эмодзи и markdown, на «Вы», время «по Мск», в конце один вопрос/шаг;',
+    '6) не здоровается повторно, если сегодня уже здоровались; не отправляет ссылку или телефон не по правилам.',
+    '',
+    `# База знаний\n${prompt.knowledge || ''}`,
+    `\n# Свободные окна\n${String(prompt.slots || '').trim() || 'не указаны'}`,
+    '',
+    'Верни строго JSON: {"ok":true|false,"issues":["что не так"],"fixed_reply":"исправленный текст, если ok=false, иначе пусто"}',
+  ].join('\n');
+}
+
+function aisCleanReply(t) {
+  return String(t || '').replace(/^["«»\s]+|["«»\s]+$/g, '').replace(/\*\*/g, '').trim();
+}
+
+async function aisGenerate(env, accountId, chat, opts = {}) {
+  const cfg = await aisConfig(env);
+  const prompt = await aisPrompt(env, accountId);
+  const feedback = await aisFeedbackList(env, accountId, 60);
+  const model = opts.model || chat.model || cfg.defaultModel;
+  const system = aisBuildSystem(prompt, feedback);
+  const user = aisBuildUser(chat, opts);
+  const r1 = await aisCallModel(env, model, system, user, { maxTokens: 1500, temperature: 0.4 });
+  const parsed = botParseJson(r1.text) || { reply: r1.text, analysis: '(модель ответила не в формате JSON)' };
+  const draft = {
+    id: aisId(),
+    at: Date.now(),
+    model,
+    forMsgId: aisChatState(chat.messages || []).lastMsgId,
+    reply: aisCleanReply(parsed.reply),
+    analysis: String(parsed.analysis || ''),
+    checks: Array.isArray(parsed.checks) ? parsed.checks.map(String).slice(0, 8) : [],
+    stage: AIS_STAGES[parsed.stage] ? parsed.stage : null,
+    needsReply: parsed.needs_reply !== false,
+    needsHuman: Boolean(parsed.needs_human),
+    humanReason: String(parsed.human_reason || ''),
+    confidence: Number(parsed.confidence) || null,
+    instruction: opts.instruction || '',
+    ms: r1.ms,
+  };
+  const doCheck = opts.selfCheck == null ? cfg.selfCheck : opts.selfCheck;
+  if (doCheck && draft.reply) {
+    try {
+      const checkUser = `История диалога:\n${aisTranscript(chat.messages || [])}\n\nСейчас: ${aisMsk(Date.now())} (Мск).\n\nЧерновик следующего сообщения Елены:\n«${draft.reply}»\n\nПроверь и верни JSON.`;
+      const r2 = await aisCallModel(env, model, aisCheckSystem(prompt), checkUser, { maxTokens: 900, temperature: 0.1 });
+      const check = botParseJson(r2.text);
+      draft.ms += r2.ms;
+      if (check) {
+        draft.selfCheck = { ok: check.ok !== false, issues: Array.isArray(check.issues) ? check.issues.map(String).slice(0, 6) : [] };
+        const fixed = aisCleanReply(check.fixed_reply);
+        if (check.ok === false && fixed) { draft.firstReply = draft.reply; draft.reply = fixed; }
+      }
+    } catch (e) {
+      draft.selfCheck = { ok: null, issues: [`Самопроверка не прошла: ${String(e && e.message).slice(0, 200)}`] };
+    }
+  }
+  return draft;
+}
+
+// ── Фоновые задачи ИИ ──
+// Прокси Яндекс Облака ждёт воркер не дольше ~28 с, а ИИ (особенно с самопроверкой) бывает дольше.
+// Поэтому запрос запускает задачу и ждёт её до 20 с; не успела — страница опрашивает job?id=…,
+// а задачу, которую прервал воркер, крон через пару минут запускает заново.
+async function aisRunJob(env, job) {
+  const kv = aisKv(env);
+  const save = (patch) => kv.put(`aisales:job:${job.id}`, JSON.stringify(Object.assign(job, patch)), { expirationTtl: 3 * 86400 });
+  try {
+    await save({ status: 'running', startedAt: Date.now(), attempts: (job.attempts || 0) + 1 });
+    let result;
+    if (job.kind === 'draft') {
+      const key = `aisales:chat:${job.accountId}:${job.chatId}`;
+      const chat = await kv.get(key, 'json');
+      if (!chat) throw new Error('chat_not_found');
+      const draft = await aisGenerate(env, job.accountId, chat, job.params || {});
+      if (job.params && job.params.save !== false) {
+        const fresh = (await kv.get(key, 'json')) || chat;
+        fresh.drafts = [draft, ...(fresh.drafts || [])].slice(0, 15);
+        fresh.draft = draft;
+        await kv.put(key, JSON.stringify(fresh));
+        await aisUpdateIndexEntry(env, job.accountId, job.chatId, {
+          needsDraft: false, hasDraft: Boolean(draft.reply), draftAt: draft.at, draftNeedsHuman: draft.needsHuman,
+          draftNeedsReply: draft.needsReply, aiStage: draft.stage, draftReviewed: false,
+        });
+      }
+      result = { draft };
+    } else if (job.kind === 'sim') {
+      const key = `aisales:sim:${job.accountId}:${job.simId}`;
+      const sim = await kv.get(key, 'json');
+      if (!sim) throw new Error('sim_not_found');
+      const draft = await aisGenerate(env, job.accountId, { ...sim, name: sim.clientName || 'Тест-клиент' }, { model: sim.model, ...(job.params || {}) });
+      const fresh = (await kv.get(key, 'json')) || sim;
+      fresh.messages.push({ id: aisId(), at: Date.now(), author: 'manager', type: 'text', text: draft.reply || '(ИИ решил не отвечать)', draft });
+      fresh.updatedAt = Date.now();
+      await kv.put(key, JSON.stringify(fresh));
+      result = { draft };
+    } else if (job.kind === 'suggest') {
+      result = await aisSuggest(env, job.accountId, job.params || {});
+    } else {
+      throw new Error(`unknown job kind ${job.kind}`);
+    }
+    await save({ status: 'done', finishedAt: Date.now(), result });
+  } catch (e) {
+    await save({ status: 'error', finishedAt: Date.now(), error: String((e && e.message) || e).slice(0, 600) });
+  }
+  return job;
+}
+
+async function aisStartJob(env, ctx, job) {
+  job.id = aisId();
+  job.createdAt = Date.now();
+  job.status = 'queued';
+  await aisKv(env).put(`aisales:job:${job.id}`, JSON.stringify(job), { expirationTtl: 3 * 86400 });
+  const run = aisRunJob(env, job);
+  if (ctx && ctx.waitUntil) ctx.waitUntil(run);
+  const done = await Promise.race([run.then(() => true), sleep(20000).then(() => false)]);
+  return done ? job : { id: job.id, kind: job.kind, status: 'running' };
+}
+
+// Подсказки: новые скрипты по живым диалогам или правила по накопленным правкам.
+async function aisSuggest(env, accountId, params) {
+  const cfg = await aisConfig(env);
+  const prompt = await aisPrompt(env, accountId);
+  const model = params.model || cfg.defaultModel;
+  if (params.kind === 'rules') {
+    const fb = (await aisFeedbackList(env, accountId, 80)).filter((f) => f.action === 'edit' || f.action === 'reject');
+    if (!fb.length) return { text: 'Пока нет правок — нечего обобщать. Исправьте несколько черновиков, и здесь появятся правила.' };
+    const sample = fb.map((f) => `Клиент: «${String(f.lastClient || '').slice(0, 250)}»\nЧерновик: «${String(f.aiText || '').slice(0, 300)}»\nКак надо: «${String(f.finalText || '(не отвечать)').slice(0, 300)}»${f.comment ? `\nКомментарий: ${f.comment}` : ''}`).join('\n\n');
+    const r = await aisCallModel(env, model,
+      'Ты помогаешь настроить ИИ-ассистента репетитора. По парам «черновик ИИ → как исправил человек» сформулируй короткие правила (5–12 пунктов), чего ИИ должен избегать и как писать. Только правила, каждое с новой строки, начиная с «- ». Не повторяй то, что уже есть в текущем промпте.',
+      `Текущий промпт:\n${prompt.system}\n\nПравки:\n${sample}`, { maxTokens: 1200, temperature: 0.2, timeoutMs: 120000 });
+    return { text: r.text };
+  }
+  const kv = aisKv(env);
+  const idx = await aisIndex(env, accountId);
+  const ids = Object.values(idx.chats).filter((c) => (c.msgCount || 0) >= 4).sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0)).slice(0, 40).map((c) => c.chatId);
+  const chats = (await Promise.all(ids.map((id) => kv.get(`aisales:chat:${accountId}:${id}`, 'json')))).filter(Boolean);
+  let text = '';
+  for (const c of chats) {
+    const t = aisTranscript((c.messages || []).filter((m) => m.author !== 'system'), 24);
+    if (text.length + t.length > 28000) break;
+    text += `\n=== Диалог\n${t}\n`;
+  }
+  if (!text) return { text: 'Диалогов пока нет — сначала загрузите чаты.' };
+  const r = await aisCallModel(env, model,
+    'Ты — эксперт по продажам услуг репетиторов. Проанализируй реальные диалоги репетитора (Елена) с клиентами на Авито. Выдели повторяющиеся ситуации и лучшие формулировки Елены, а также места, где диалог терялся. Верни: 1) список скриптов в формате «Название | Когда использовать | Текст сообщения» (8–15 штук, тексты — в стиле Елены, почти дословно её лучшие ответы); 2) 3–6 советов, где можно было записать больше людей на диагностику.',
+    `Текущие скрипты:\n${(prompt.scripts || []).map((s) => `- ${s.title}: ${s.text}`).join('\n')}\n\nДиалоги:\n${text}`, { maxTokens: 3000, temperature: 0.3, timeoutMs: 120000 });
+  return { text: r.text };
+}
+
+// ── Крон: новые сообщения и автоматические черновики ──
+async function aiSalesCron(env) {
+  const kv = aisKv(env);
+  const cfg = await aisConfig(env);
+  for (const cab of cfg.cabinets) {
+    try {
+      await aisSync(env, cab.accountId, { budgetMs: 90000 });
+    } catch (e) {
+      console.error('ai-sales sync failed', cab.accountId, e && e.message);
+      continue;
+    }
+    if (!cfg.autoDraft) continue;
+    const idx = await aisIndex(env, cab.accountId);
+    const fresh = Date.now() - (cfg.autoDraftHours || 48) * 3600 * 1000;
+    const todo = Object.values(idx.chats).filter((c) => c.needsDraft && c.waiting && (c.lastAt || 0) > fresh).sort((a, b) => b.lastAt - a.lastAt).slice(0, 6);
+    for (const c of todo) {
+      const job = { id: aisId(), kind: 'draft', accountId: cab.accountId, chatId: c.chatId, params: { save: true }, createdAt: Date.now(), auto: true };
+      await aisRunJob(env, job);
+    }
+  }
+  // Задачи, которые оборвались вместе с запросом страницы, — перезапускаем (не больше двух попыток).
+  const list = await kv.list({ prefix: 'aisales:job:' });
+  for (const k of list.keys) {
+    const job = await kv.get(k.name, 'json');
+    if (job && (job.status === 'running' || job.status === 'queued') && Date.now() - (job.startedAt || job.createdAt) > 120000 && (job.attempts || 0) < 2) {
+      await aisRunJob(env, job);
+    }
+  }
+}
+
+// ── HTTP API ──
+async function handleAiSalesApi(request, env, url, ctx) {
+  if (!checkDashboardAuth(request)) return json({ error: 'unauthorized' }, 401);
+  const kv = aisKv(env);
+  const action = url.pathname.slice('/api/dashboard/ai-sales/'.length);
+  const q = (k) => url.searchParams.get(k);
+  const isGet = request.method === 'GET';
+  const body = isGet ? {} : ((await readJson(request)) || {});
+  const cfg = await aisConfig(env);
+  const accountId = q('accountId') || body.accountId || (cfg.cabinets[0] && cfg.cabinets[0].accountId);
+  const cabinetOk = (id) => cfg.cabinets.some((c) => c.accountId === id);
+
+  if (action === 'state' && isGet) {
+    const providers = (await aisProviders(env)).map(aisMaskProvider);
+    const cabinets = await Promise.all(cfg.cabinets.map(async (c) => {
+      const idx = await aisIndex(env, c.accountId);
+      const chats = Object.values(idx.chats);
+      return { ...c, lastSyncAt: idx.lastSyncAt, imported: idx.imported, chats: chats.length, waiting: chats.filter((x) => x.waiting).length, drafts: chats.filter((x) => x.hasDraft && !x.draftReviewed).length };
+    }));
+    return json({ config: { ...cfg, cabinets }, providers, providerTypes: AIS_PROVIDER_TYPES, models: await aisModelList(env), stages: AIS_STAGES });
+  }
+
+  if (action === 'avito-accounts' && isGet) {
+    const list = await kv.list({ prefix: 'account:' });
+    const recs = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    return json({ accounts: recs.filter(Boolean).map((a) => ({ id: a.id, name: a.name })).sort((a, b) => a.name.localeCompare(b.name, 'ru')) });
+  }
+
+  if (action === 'config' && request.method === 'POST') {
+    const next = { ...cfg };
+    if (typeof body.defaultModel === 'string' && body.defaultModel.includes(':')) next.defaultModel = body.defaultModel;
+    if (typeof body.selfCheck === 'boolean') next.selfCheck = body.selfCheck;
+    if (typeof body.autoDraft === 'boolean') next.autoDraft = body.autoDraft;
+    if (Number(body.autoDraftHours) > 0) next.autoDraftHours = Math.min(Number(body.autoDraftHours), 24 * 14);
+    if (body.addCabinet && body.addCabinet.accountId) {
+      const acc = await kv.get(`account:${body.addCabinet.accountId}`, 'json');
+      if (!acc) return json({ error: 'avito_account_not_found' }, 404);
+      if (!next.cabinets.some((c) => c.accountId === acc.id)) {
+        next.cabinets = [...next.cabinets, { accountId: acc.id, name: acc.name, since: /^\d{4}-\d{2}-\d{2}$/.test(body.addCabinet.since || '') ? body.addCabinet.since : new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10) }];
+      }
+    }
+    if (body.removeCabinet) next.cabinets = next.cabinets.filter((c) => c.accountId !== body.removeCabinet);
+    next.cabinets = next.cabinets.map(({ accountId: a, name, since }) => ({ accountId: a, name, since }));
+    delete next.sendEnabled;
+    await kv.put('aisales:config', JSON.stringify(next));
+    return json({ ok: true });
+  }
+
+  if (!cabinetOk(accountId) && !['provider', 'provider-test', 'job'].includes(action)) return json({ error: 'cabinet_not_connected' }, 400);
+
+  if (action === 'chats' && isGet) {
+    const idx = await aisIndex(env, accountId);
+    const chats = Object.values(idx.chats).sort((a, b) => (b.lastAt || b.updated * 1000 || 0) - (a.lastAt || a.updated * 1000 || 0));
+    return json({ chats, lastSyncAt: idx.lastSyncAt, imported: idx.imported });
+  }
+
+  if (action === 'chat' && isGet) {
+    const rec = await kv.get(`aisales:chat:${accountId}:${q('chatId')}`, 'json');
+    if (!rec) return json({ error: 'not_found' }, 404);
+    return json({ chat: rec });
+  }
+
+  if (action === 'sync' && request.method === 'POST') {
+    try {
+      return json(await aisSync(env, accountId, { budgetMs: 14000 }));
+    } catch (e) {
+      return json({ error: 'sync_failed', message: String(e && e.message) }, 502);
+    }
+  }
+
+  if (action === 'chat-meta' && request.method === 'POST') {
+    const key = `aisales:chat:${accountId}:${body.chatId}`;
+    const rec = await kv.get(key, 'json');
+    if (!rec) return json({ error: 'not_found' }, 404);
+    const patch = {};
+    if ('model' in body) rec.model = body.model || null;
+    if ('note' in body) rec.note = String(body.note || '').slice(0, 2000);
+    if ('stage' in body) { rec.stage = AIS_STAGES[body.stage] ? body.stage : null; patch.stage = rec.stage; }
+    if ('model' in body) patch.model = rec.model;
+    await kv.put(key, JSON.stringify(rec));
+    await aisUpdateIndexEntry(env, accountId, body.chatId, patch);
+    return json({ ok: true, chat: rec });
+  }
+
+  if (action === 'draft' && request.method === 'POST') {
+    if (!body.chatId) return json({ error: 'missing_chat' }, 400);
+    const job = await aisStartJob(env, ctx, {
+      kind: 'draft', accountId, chatId: body.chatId,
+      params: { model: body.model || undefined, instruction: String(body.instruction || '').slice(0, 1000), save: body.save !== false, selfCheck: typeof body.selfCheck === 'boolean' ? body.selfCheck : undefined },
+    });
+    return json({ job });
+  }
+
+  if (action === 'job' && isGet) {
+    const job = await kv.get(`aisales:job:${q('id')}`, 'json');
+    if (!job) return json({ error: 'not_found' }, 404);
+    return json({ job });
+  }
+
+  // Оценка черновика человеком: approve — как есть, edit — исправленный текст, reject — не отвечать.
+  if (action === 'feedback' && request.method === 'POST') {
+    const act = ['approve', 'edit', 'reject'].includes(body.action) ? body.action : null;
+    if (!act) return json({ error: 'bad_action' }, 400);
+    let messages = [];
+    let draft = null;
+    if (body.simId) {
+      const key = `aisales:sim:${accountId}:${body.simId}`;
+      const sim = await kv.get(key, 'json');
+      if (!sim) return json({ error: 'not_found' }, 404);
+      const i = sim.messages.findIndex((m) => m.id === body.messageId);
+      if (i < 0) return json({ error: 'not_found' }, 404);
+      draft = sim.messages[i].draft || { reply: sim.messages[i].text };
+      messages = sim.messages.slice(0, i);
+      if (act === 'edit') sim.messages[i].text = String(body.text || '');
+      sim.messages[i].review = act;
+      await kv.put(key, JSON.stringify(sim));
+    } else {
+      const key = `aisales:chat:${accountId}:${body.chatId}`;
+      const rec = await kv.get(key, 'json');
+      if (!rec) return json({ error: 'not_found' }, 404);
+      draft = (rec.drafts || []).find((d) => d.id === body.draftId) || rec.draft;
+      if (!draft) return json({ error: 'no_draft' }, 400);
+      messages = rec.messages || [];
+      draft.review = { action: act, text: act === 'edit' ? String(body.text || '') : '', comment: String(body.comment || ''), at: Date.now() };
+      if (rec.draft && rec.draft.id === draft.id) rec.draft = draft;
+      rec.drafts = (rec.drafts || []).map((d) => (d.id === draft.id ? draft : d));
+      await kv.put(key, JSON.stringify(rec));
+      await aisUpdateIndexEntry(env, accountId, body.chatId, { draftReviewed: true });
+    }
+    const lastClient = [...messages].reverse().find((m) => m.author === 'client');
+    const fb = {
+      at: Date.now(), action: act, source: body.simId ? 'sim' : 'chat', chatId: body.chatId || null, simId: body.simId || null,
+      model: draft.model || null, lastClient: lastClient ? lastClient.text : '', context: aisTranscript(messages, 8),
+      aiText: draft.reply || '', finalText: act === 'edit' ? String(body.text || '') : act === 'approve' ? draft.reply : '',
+      comment: String(body.comment || '').slice(0, 1000),
+    };
+    await kv.put(`aisales:fb:${accountId}:${new Date().toISOString()}:${aisId().slice(0, 4)}`, JSON.stringify(fb));
+    return json({ ok: true });
+  }
+
+  if (action === 'feedback' && isGet) {
+    return json({ feedback: await aisFeedbackList(env, accountId, 300) });
+  }
+  if (action === 'feedback' && request.method === 'DELETE') {
+    if (!String(body.key || '').startsWith(`aisales:fb:${accountId}:`)) return json({ error: 'bad_key' }, 400);
+    await kv.delete(body.key);
+    return json({ ok: true });
+  }
+
+  if (action === 'prompt' && isGet) {
+    const hist = await kv.list({ prefix: `aisales:prompthist:${accountId}:` });
+    return json({ prompt: await aisPrompt(env, accountId), defaults: AIS_DEFAULT_PROMPT, history: hist.keys.map((k) => k.name).sort().reverse().slice(0, 20) });
+  }
+  if (action === 'prompt-version' && isGet) {
+    const key = q('key') || '';
+    if (!key.startsWith(`aisales:prompthist:${accountId}:`)) return json({ error: 'bad_key' }, 400);
+    return json({ prompt: await kv.get(key, 'json') });
+  }
+  if (action === 'prompt' && request.method === 'POST') {
+    const prev = await aisPrompt(env, accountId);
+    const next = {
+      system: String(body.system ?? prev.system).slice(0, 30000),
+      knowledge: String(body.knowledge ?? prev.knowledge).slice(0, 40000),
+      slots: String(body.slots ?? prev.slots).slice(0, 5000),
+      scripts: Array.isArray(body.scripts)
+        ? body.scripts.slice(0, 80).map((s) => ({ title: String(s.title || '').slice(0, 200), when: String(s.when || '').slice(0, 500), text: String(s.text || '').slice(0, 2000) })).filter((s) => s.text)
+        : prev.scripts,
+      updatedAt: Date.now(),
+    };
+    await kv.put(`aisales:prompthist:${accountId}:${new Date().toISOString()}`, JSON.stringify(prev), { expirationTtl: 30 * 86400 });
+    await kv.put(`aisales:prompt:${accountId}`, JSON.stringify(next));
+    return json({ ok: true, prompt: next });
+  }
+
+  if (action === 'suggest' && request.method === 'POST') {
+    const job = await aisStartJob(env, ctx, { kind: 'suggest', accountId, params: { kind: body.kind === 'rules' ? 'rules' : 'scripts', model: body.model || undefined } });
+    return json({ job });
+  }
+
+  // Подключения моделей: ключ хранится в KV и наружу не отдаётся (только последние 4 символа).
+  if (action === 'provider' && request.method === 'POST') {
+    const providers = await aisProviders(env);
+    const type = AIS_PROVIDER_TYPES[body.type] ? body.type : 'custom';
+    const models = (Array.isArray(body.models) ? body.models : String(body.models || '').split(/[\n,]+/)).map((m) => String(m).trim()).filter(Boolean).slice(0, 30);
+    let p = body.id ? providers.find((x) => x.id === body.id) : null;
+    if (body.id && !p) return json({ error: 'not_found' }, 404);
+    if (!p) { p = { id: `p${aisId().slice(0, 6)}`, createdAt: Date.now() }; providers.push(p); }
+    Object.assign(p, {
+      type, label: String(body.label || AIS_PROVIDER_TYPES[type].label).slice(0, 80),
+      baseUrl: String(body.baseUrl || AIS_PROVIDER_TYPES[type].baseUrl || '').trim(),
+      models, updatedAt: Date.now(),
+    });
+    if (typeof body.apiKey === 'string' && body.apiKey.trim()) p.apiKey = body.apiKey.trim();
+    if (!p.baseUrl) return json({ error: 'missing_base_url' }, 400);
+    await kv.put('aisales:providers', JSON.stringify(providers));
+    return json({ ok: true, provider: aisMaskProvider(p) });
+  }
+  if (action === 'provider' && request.method === 'DELETE') {
+    const providers = (await aisProviders(env)).filter((x) => x.id !== body.id);
+    await kv.put('aisales:providers', JSON.stringify(providers));
+    return json({ ok: true });
+  }
+  if (action === 'provider-test' && request.method === 'POST') {
+    try {
+      const r = await aisCallModel(env, body.model, 'Отвечай одним коротким предложением по-русски.', 'Скажи «Готов к работе» и назови свою модель.', { maxTokens: 300, temperature: 0, timeoutMs: 25000 });
+      return json({ ok: true, text: r.text, ms: r.ms });
+    } catch (e) {
+      return json({ ok: false, error: String(e && e.message).slice(0, 500) });
+    }
+  }
+
+  // Тест-клиент: свои диалоги, где человек пишет за клиента, а ИИ отвечает за Елену.
+  if (action === 'sims' && isGet) {
+    const list = await kv.list({ prefix: `aisales:sim:${accountId}:` });
+    const recs = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
+    return json({ sims: recs.filter(Boolean).map((s) => ({ id: s.id, title: s.title, model: s.model, updatedAt: s.updatedAt, count: s.messages.length })).sort((a, b) => b.updatedAt - a.updatedAt) });
+  }
+  if (action === 'sim' && isGet) {
+    const sim = await kv.get(`aisales:sim:${accountId}:${q('id')}`, 'json');
+    if (!sim) return json({ error: 'not_found' }, 404);
+    return json({ sim });
+  }
+  if (action === 'sim' && request.method === 'POST') {
+    const key = (id) => `aisales:sim:${accountId}:${id}`;
+    let sim = body.id ? await kv.get(key(body.id), 'json') : null;
+    if (!sim) sim = { id: aisId(), createdAt: Date.now(), messages: [], title: '', model: cfg.defaultModel };
+    if ('title' in body) sim.title = String(body.title || '').slice(0, 120);
+    if ('model' in body && body.model) sim.model = body.model;
+    if ('itemTitle' in body) sim.itemTitle = String(body.itemTitle || '').slice(0, 200);
+    if ('clientName' in body) sim.clientName = String(body.clientName || '').slice(0, 80);
+    if ('note' in body) sim.note = String(body.note || '').slice(0, 1000);
+    if (body.reset) sim.messages = [];
+    if (body.undo) { while (sim.messages.length && sim.messages[sim.messages.length - 1].author === 'manager') sim.messages.pop(); sim.messages.pop(); }
+    if (!sim.title) sim.title = `Тест ${aisMsk(Date.now())}`;
+    sim.updatedAt = Date.now();
+    await kv.put(key(sim.id), JSON.stringify(sim));
+    return json({ sim });
+  }
+  if (action === 'sim' && request.method === 'DELETE') {
+    await kv.delete(`aisales:sim:${accountId}:${body.id}`);
+    return json({ ok: true });
+  }
+  if (action === 'sim-message' && request.method === 'POST') {
+    const key = `aisales:sim:${accountId}:${body.id}`;
+    const sim = await kv.get(key, 'json');
+    if (!sim) return json({ error: 'not_found' }, 404);
+    const text = String(body.text || '').trim();
+    if (text) sim.messages.push({ id: aisId(), at: Date.now(), author: body.as === 'system' ? 'system' : 'client', type: body.as === 'system' ? 'system' : 'text', text: text.slice(0, 3000) });
+    if (body.model) sim.model = body.model;
+    sim.updatedAt = Date.now();
+    await kv.put(key, JSON.stringify(sim));
+    const job = await aisStartJob(env, ctx, { kind: 'sim', accountId, simId: sim.id, params: { instruction: String(body.instruction || '').slice(0, 1000) } });
+    return json({ job });
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 async function handleApi(request, env, url, ctx) {
   const { pathname } = url;
   const kv = env.MBA_MYBRAND_KV;
@@ -10390,7 +12408,11 @@ async function handleApi(request, env, url, ctx) {
     return handleMbaReportApi(request, env);
   }
 
+  // /avito-export's API reads every cabinet's Avito chats (parents' emails, children's names) and adds or
+  // deletes cabinets — it was open to anyone who knew the URL. Now it takes the password the page's gate
+  // asks for: the AVITO_API_PASSWORD secret, or, until that is set, the dashboard password.
   if (pathname.startsWith('/api/avito/')) {
+    if (request.headers.get('x-dashboard-password') !== (env.AVITO_API_PASSWORD || DASHBOARD_PASSWORD)) return json({ error: 'unauthorized' }, 401);
     return handleAvitoApi(request, env, url);
   }
 
@@ -10411,6 +12433,11 @@ async function handleApi(request, env, url, ctx) {
 
   if (pathname.startsWith('/api/dashboard/avito-tasks/')) {
     return handleAvitoTasksApi(request, env, url, ctx);
+  }
+
+  // ИИ-менеджер для чатов Авито (/avito-ai-sales) — до общего /api/dashboard/, там своя логика.
+  if (pathname.startsWith('/api/dashboard/ai-sales/')) {
+    return handleAiSalesApi(request, env, url, ctx);
   }
 
   if (pathname.startsWith('/api/dashboard/finance/')) {
@@ -11250,5 +13277,7 @@ export default {
     ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
     ctx.waitUntil(waiCron(env).catch((err) => console.error('workers ai jobs cron failed', err && err.stack)));
     ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
+    ctx.waitUntil(finRemindCron(env).catch((err) => console.error('finance reminders cron failed', err && err.stack)));
+    ctx.waitUntil(aiSalesCron(env).catch((err) => console.error('ai-sales cron failed', err && err.stack)));
   },
 };

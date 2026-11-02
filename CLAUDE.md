@@ -1,5 +1,12 @@
 # Repository notes for Claude
 
+## Pull requests: always open one
+
+After committing and pushing work to the session branch, **always open a pull request into `main`
+yourself** — don't wait to be asked and don't stop at "pushed to the branch". The site deploys to
+cantor.agency only from `main` (`.github/workflows/deploy.yml`), so without a PR the change never
+goes live. Give the PR link in the final reply.
+
 ## PR monitoring: no timer-based polling
 
 When watching a PR in this repo (via `subscribe_pr_activity` or similar), do
@@ -19,3 +26,69 @@ that is the mechanism for staying informed, not a timer.
 - When the user says they're stepping away and will check back later,
   don't compensate by scheduling checks on their behalf; just leave the
   PR subscribed and let events (or the user, on return) drive the next step.
+
+## Live data: read it through the worker's API
+
+When the user asks for analysis of clients, Avito cabinets, chats or mailings, don't say there is no
+access: the production worker answers HTTP requests and its API has everything the dashboard and
+the tracker show. Base URL: `https://mainweb.oxion-ezhkov.workers.dev` (from this container, plain
+`curl` works).
+
+Passwords — never write them into the repo, a commit or a PR; ask the user for them in the session:
+- `/api/dashboard/*` — header `x-dashboard-password: <dashboard password>`.
+- `/api/avito/*` — header `x-dashboard-password: <AVITO_API_PASSWORD>` (the worker secret; until it
+  is set, the dashboard password). Without it the answer is 401.
+
+Read-only by default: use GET (and the read-only POST below); never call endpoints that add, change
+or delete data (`POST/PUT/DELETE /api/avito/accounts`, `POST /api/dashboard/daily-metric`, …) unless
+the user explicitly asks for that change.
+
+Dashboard (projects = the agency's clients):
+- `GET /api/dashboard/bootstrap` — `projects` (id, name, avitoAccountId, …), `dailyMetrics`
+  (projectId, date, budget, views, contacts, diagnostics, sales — the Analytics table), `analytics`
+  (monthly), `tasks`, `employees`.
+- `GET /api/dashboard/avito-yesterday?projectId=<id>&date=YYYY-MM-DD` — one cabinet's day straight
+  from Avito (views, contacts, spend, advance, errors[]).
+- `GET /api/dashboard/avito-pull?date=YYYY-MM-DD` — the «Подтянуть» pull for a day, per client.
+- `GET /api/dashboard/avito-links` — which Avito cabinet belongs to which client.
+- `GET /api/dashboard/reflection?week=YYYY-MM-DD` — the weekly «Рефлексия» (week starts on a
+  Wednesday; default — the current one): each employee's score 1–10 and comment per client, plus history.
+- `GET /api/dashboard/chat-log` — Telegram chats the control bot logs (work-chat topics, client
+  chats): `sources` with chatId, threadId, label, projectId. With `?projectId=<id>&from=YYYY-MM-DD&to=YYYY-MM-DD`
+  (or `?chatId=…&threadId=…`) — also `messages` (t, at, source, from, team, text), oldest first; MSK
+  days, last 30 days by default, at most 120. Use it for what was agreed with a teacher: mailings and
+  their budgets, personal targets, recommendations, launch dates.
+
+Avito cabinets (ids from `/api/avito/accounts`, the same as `project.avitoAccountId`):
+- `GET /api/avito/accounts` — cabinets: id, name, userId (secrets never come back).
+- `GET /api/avito/overview?accountId=<id>&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD` — listings with
+  views / contacts / favorites for the period, rating.
+- `GET /api/avito/chats?accountId=<id>&limit=100&offset=0` — chats, newest first (`updated`,
+  `item_title`, last message).
+- `GET /api/avito/messages?accountId=<id>&chatId=<chat_id>` — a chat's messages, oldest first;
+  `author` is `manager` (the cabinet, i.e. our client) or `client` (a parent / student writing in).
+- `GET /api/avito/autoload?accountId=<id>` — the last autoload report.
+- `GET /api/avito/tariff?accountId=<id>` — the cabinet's Avito tariff: `tariff`, `active`, `startsAt`,
+  `endsAt`, `daysLeft`, the scheduled next one and Avito's `raw` answer. Without `accountId` — every
+  cabinet (`tariffs`). A lapsed tariff stops autoload and new listings — check it first when a
+  cabinet goes quiet.
+- `GET /api/avito/raw?accountId=<id>&path=<Avito API path>` — any read from Avito's API for that
+  cabinet (`{user_id}` in the path becomes the cabinet's id), e.g. `/core/v1/accounts/self`,
+  `/core/v1/items?per_page=100`, `/autoload/v2/reports`. `POST` with a JSON body only to Avito's
+  read-only POST endpoints (stats v1/v2 items, spendings, operations history, VAS prices, CPA
+  balance, call tracking); anything else is refused. Answer: `{ status, path, data }`.
+
+Reading Avito chats: the mailing (an «предложение», e.g. a free consultation) shows up as system
+messages «Пользователь ознакомился с вашим предложением…» (opened) and «Покупателя заинтересовало
+ваше предложение» (interested) — they contain non-breaking spaces, match with `\s`. How many offers
+were sent in total is not in the API. Requests to Avito go through the Yandex Cloud function
+(`yc-dashboard-api-proxy`), so a cabinet can be slow (tens of seconds) — fetch messages a few chats
+at a time, not dozens in parallel.
+
+ИИ-менеджер для чатов Авито (`cantor.agency/avito-ai-sales`, код — «/avito-ai-sales» в `_worker.js`):
+- `GET /api/dashboard/ai-sales/state` — подключённые кабинеты, модели, настройки (ключи моделей не отдаются).
+- `GET /api/dashboard/ai-sales/chats?accountId=<id>` — диалоги кабинета (ждёт ли ответа, есть ли черновик ИИ, этап).
+- `GET /api/dashboard/ai-sales/chat?accountId=<id>&chatId=<chat_id>` — сообщения, черновик ИИ и прошлые варианты.
+- `GET /api/dashboard/ai-sales/feedback?accountId=<id>` — правки и одобрения черновиков людьми.
+- `GET /api/dashboard/ai-sales/prompt?accountId=<id>` — промпт, скрипты, база знаний, свободные окна.
+Сервис только читает Авито; в Авито он ничего не отправляет.
