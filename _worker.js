@@ -12585,6 +12585,11 @@ async function handleApi(request, env, url, ctx) {
     return handleFeedsApi(request, env, url);
   }
 
+  // Ручное управление ставками Авито (/avito-bids), см. «Avito bids».
+  if (pathname === '/api/dashboard/mbids' || pathname.startsWith('/api/dashboard/mbids/')) {
+    return handleMbidsApi(request, env, url, ctx);
+  }
+
   if (pathname.startsWith('/api/dashboard/avito-tasks/')) {
     return handleAvitoTasksApi(request, env, url, ctx);
   }
@@ -12775,6 +12780,679 @@ function withHtmlContentType(response) {
   const headers = new Headers(response.headers);
   headers.set('Content-Type', 'text/html; charset=utf-8');
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+/* ═══════════════ Avito bids: ручное управление ставками (/avito-bids) ═══════════════
+ *
+ * Объявления любых подключённых кабинетов собираются в одну таблицу. Для каждого задаётся ставка
+ * (руб за просмотр, «Регулировка стоимости просмотра» на Авито = /cpxpromo/1, actionTypeID 5),
+ * график (часы и дни недели по МСК) и отключение по метрикам за текущие сутки МСК (показы, просмотры,
+ * контакты, расходы, CPV, CPA). mbidsProcess на каждом тике cron (раз в 10 минут) решает, какая ставка
+ * должна стоять сейчас: настроенная — или базовая, если вне графика / сработал лимит / закончились деньги,
+ * — и ставит её через POST /cpxpromo/1/setManual. Выключенное объявление сервис не трогает.
+ *
+ * Шкала ставок — GET /cpxpromo/1/getBids/{itemId}: manual.bids = [{ valuePenny, compare }, …].
+ * Первая ступень (compare 0, = minBidPenny) — «базовая ставка» (продвижения нет), следующая —
+ * «минимальная ставка для продвижения», maxBidPenny — потолок. compare ступени, не превышающей
+ * текущую ставку, — «опережение конкурентов» (процент от Авито, сами не считаем).
+ * Шкала перечитывается не чаще раза в ~55 минут на объявление, ставка повторно ставится не чаще раза в час.
+ *
+ * Статистика — POST /stats/v2/accounts/{id}/items (impressions, views, contacts, allSpending в копейках):
+ * grouping item — итоги за период по объявлениям, grouping day + filter.itemIDs — по дням. По часам Авито
+ * не отдаёт, поэтому cron складывает накопленные за сутки значения каждого объявления по часам в
+ * mbids:hist:<acc>:<date> — из разниц соседних часов строятся почасовые графики и блок «Время суток».
+ *
+ * KV (AVITO_KV):
+ *   mbids:cfg:<acc>     -> { items: { <id>: { on, bid, hours, days, lim, groups, notes, title, url, address, addedAt } } } — пишет только страница
+ *   mbids:state:<acc>   -> { items: { <id>: { status, reason, nowPenny, … } }, money, today, catalogAt, active } — пишет только движок
+ *   mbids:catalog:<acc> -> { at, items: [...] } — объявления кабинета (кеш 30 минут)
+ *   mbids:hist:<acc>:<YYYY-MM-DD> -> { <id>: { <hour>: { i, v, c, s, b, cmp } } } — 40 дней
+ *   mbids:statc:<acc>:<from>:<to> -> кеш итогов за период (10 минут)
+ *   mbids:groups        -> { <gid>: { name, createdAt } }
+ *
+ * API /api/dashboard/mbids/… — заголовок x-dashboard-password (AVITO_API_PASSWORD или пароль дашборда).
+ */
+
+const MBIDS_ACTION_TYPE = 5;
+const MBIDS_BIDS_TTL_MS = 55 * 60 * 1000;
+const MBIDS_REAPPLY_MS = 60 * 60 * 1000;
+const MBIDS_MAX_ITEMS = 2000;
+const MBIDS_LIMIT_KEYS = ['imp', 'views', 'contacts', 'spend', 'cpv', 'cpa'];
+const MBIDS_REASONS = {
+  off: 'Ручное управление выключено',
+  time: 'Отключено по времени',
+  spend: 'Отключено по бюджету',
+  imp: 'Отключено по показам',
+  views: 'Отключено по просмотрам',
+  contacts: 'Отключено по контактам',
+  cpv: 'Отключено по стоимости просмотра',
+  cpa: 'Отключено по стоимости контакта',
+  money: 'Закончился аванс',
+  inactive: 'Объявление не активно',
+  nobid: 'Не заполнены обязательные настройки',
+  low: 'Ставка должна быть больше или равна минимальному значению',
+  high: 'Ставка должна быть меньше или равна максимальному значению',
+  account: 'Аккаунт удален',
+  auth: 'Не удалось авторизовать аккаунт',
+  unavailable: 'Продвижение за ставку недоступно',
+  setfail: 'Не удалось изменить ставку',
+};
+
+function mbidsAuth(request, env) {
+  const pw = request.headers.get('x-dashboard-password');
+  return !!pw && (pw === DASHBOARD_PASSWORD || (env.AVITO_API_PASSWORD && pw === env.AVITO_API_PASSWORD));
+}
+
+// МСК без перехода на летнее время: UTC+3.
+function mbidsMsk(ms = Date.now()) {
+  const d = new Date(ms + 3 * 3600 * 1000);
+  return { date: d.toISOString().slice(0, 10), hour: d.getUTCHours(), dow: (d.getUTCDay() + 6) % 7 };
+}
+
+function mbidsDateAdd(date, days) {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function mbidsCity(address) {
+  const parts = String(address || '').split(',').map((s) => s.trim()).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : '';
+}
+
+function mbidsNum(v, { int = false, min = 0 } = {}) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(String(v).replace(',', '.').replace(/\s+/g, ''));
+  if (!Number.isFinite(n) || n < min) return undefined;
+  return int ? Math.round(n) : Math.round(n * 100) / 100;
+}
+
+async function mbidsGet(kv, key, fallback) {
+  return (await kv.get(key, 'json')) || fallback;
+}
+
+async function mbidsAccounts(env) {
+  const out = [];
+  let cursor;
+  do {
+    const page = await env.AVITO_KV.list({ prefix: 'account:', cursor });
+    for (const k of page.keys) {
+      const a = await env.AVITO_KV.get(k.name, 'json');
+      if (a && a.id) out.push(a);
+    }
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+  return out.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+}
+
+async function mbidsCfgAccountIds(kv) {
+  const ids = [];
+  let cursor;
+  do {
+    const page = await kv.list({ prefix: 'mbids:cfg:', cursor });
+    page.keys.forEach((k) => ids.push(k.name.slice('mbids:cfg:'.length)));
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+  return ids;
+}
+
+// Шкала ставок объявления в компактном виде (копейки).
+function mbidsParseBids(data) {
+  const m = data && data.manual;
+  if (!m || !Array.isArray(m.bids) || !m.bids.length) return null;
+  const scale = m.bids.map((b) => [Number(b.valuePenny), Number(b.compare) || 0]).filter((b) => Number.isFinite(b[0])).sort((a, b) => a[0] - b[0]);
+  const promo = scale.find((b) => b[1] > 0);
+  return {
+    actionTypeID: data.actionTypeID || MBIDS_ACTION_TYPE,
+    selectedType: data.selectedType || null,
+    nowPenny: data.selectedType === 'manual' && m.bidPenny != null ? Number(m.bidPenny) : null,
+    basePenny: Number(m.minBidPenny ?? scale[0][0]),
+    minPromoPenny: promo ? promo[0] : Number(m.minBidPenny ?? scale[0][0]),
+    maxPenny: Number(m.maxBidPenny ?? scale[scale.length - 1][0]),
+    recPenny: m.recBidPenny != null ? Number(m.recBidPenny) : null,
+    scale,
+  };
+}
+
+function mbidsCompare(scale, penny) {
+  if (!scale || penny == null) return null;
+  let cmp = 0;
+  for (const [v, c] of scale) { if (v <= penny) cmp = c; else break; }
+  return cmp;
+}
+
+// Итоги stats v2 по объявлениям: { <id>: { i, v, c, s } } (s — рубли).
+async function mbidsFetchTotals(token, userId, ids, dateFrom, dateTo) {
+  const out = {};
+  for (let i = 0; i < ids.length; i += 1000) {
+    const chunk = ids.slice(i, i + 1000).map(Number);
+    let offset = 0;
+    for (let page = 0; page < 10; page++) {
+      const data = await avitoJson(token, `/stats/v2/accounts/${userId}/items`, {
+        method: 'POST',
+        body: JSON.stringify({ dateFrom, dateTo, grouping: 'item', metrics: ['impressions', 'views', 'contacts', 'allSpending'], filter: { itemIDs: chunk }, limit: 1000, offset }),
+      });
+      const groups = (data.result && data.result.groupings) || [];
+      for (const g of groups) {
+        const m = {};
+        (g.metrics || []).forEach((x) => { m[x.slug] = Number(x.value) || 0; });
+        out[g.id] = { i: m.impressions || 0, v: m.views || 0, c: m.contacts || 0, s: Math.round((m.allSpending || 0)) / 100 };
+      }
+      const total = Number(data.result && data.result.dataTotalCount) || 0;
+      offset += groups.length;
+      if (!groups.length || offset >= total) break;
+    }
+  }
+  return out;
+}
+
+async function mbidsFetchDays(token, userId, id, dateFrom, dateTo) {
+  const data = await avitoJson(token, `/stats/v2/accounts/${userId}/items`, {
+    method: 'POST',
+    body: JSON.stringify({ dateFrom, dateTo, grouping: 'day', metrics: ['impressions', 'views', 'contacts', 'allSpending'], filter: { itemIDs: [Number(id)] }, limit: 1000, offset: 0 }),
+  });
+  // id группы дня — unix-время полуночи этой даты (UTC).
+  const rows = ((data.result && data.result.groupings) || []).map((g) => {
+    const m = {};
+    (g.metrics || []).forEach((x) => { m[x.slug] = Number(x.value) || 0; });
+    return { date: new Date(Number(g.id) * 1000).toISOString().slice(0, 10), i: m.impressions || 0, v: m.views || 0, c: m.contacts || 0, s: Math.round(m.allSpending || 0) / 100 };
+  });
+  return rows.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+async function mbidsCatalog(env, account, force) {
+  const kv = env.AVITO_KV;
+  const key = `mbids:catalog:${account.id}`;
+  const cached = await kv.get(key, 'json');
+  if (!force && cached && Date.now() - cached.at < 30 * 60 * 1000) return cached;
+  const token = await avitoGetToken(env, account);
+  const raw = await fetchAllAvitoItems(token);
+  const items = raw.map((r) => ({
+    id: String(r.id), title: r.title || '', url: r.url || '', address: r.address || '', city: mbidsCity(r.address),
+    price: r.price ?? null, status: r.status || '', category: (r.category && r.category.name) || '',
+  }));
+  const out = { at: Date.now(), items };
+  await kv.put(key, JSON.stringify(out));
+  return out;
+}
+
+// Какая ставка должна стоять сейчас и почему. Возвращает { status, reason, wantPenny } (wantPenny null — не трогать).
+function mbidsDecide(c, st, ctx) {
+  if (!c.on) return { status: 'off', reason: MBIDS_REASONS.off, wantPenny: null };
+  if (ctx.active && !ctx.active.has(String(c.id))) return { status: 'err', reason: MBIDS_REASONS.inactive, wantPenny: null };
+  if (c.bid == null) return { status: 'err', reason: MBIDS_REASONS.nobid, wantPenny: null };
+  if (st.unavailable) return { status: 'err', reason: MBIDS_REASONS.unavailable, wantPenny: null };
+  if (st.basePenny == null) return { status: 'err', reason: st.bidsError || MBIDS_REASONS.unavailable, wantPenny: null };
+  const bidPenny = Math.round(c.bid * 100);
+  if (bidPenny < st.minPromoPenny) return { status: 'err', reason: `${MBIDS_REASONS.low} (${Math.ceil(st.minPromoPenny / 100)} ₽)`, wantPenny: null };
+  if (bidPenny > st.maxPenny) return { status: 'err', reason: `${MBIDS_REASONS.high} (${Math.floor(st.maxPenny / 100)} ₽)`, wantPenny: null };
+  const stop = (key) => ({ status: 'stop', reason: MBIDS_REASONS[key], wantPenny: st.basePenny });
+  if (ctx.noMoney) return stop('money');
+  const hours = Array.isArray(c.hours) && c.hours.length ? c.hours : null;
+  const days = Array.isArray(c.days) && c.days.length ? c.days : null;
+  if ((hours && !hours.includes(ctx.now.hour)) || (days && !days.includes(ctx.now.dow))) return stop('time');
+  const t = (ctx.today && ctx.today[c.id]) || null;
+  const lim = c.lim || {};
+  if (t) {
+    if (lim.spend != null && t.s >= lim.spend) return stop('spend');
+    if (lim.imp != null && t.i >= lim.imp) return stop('imp');
+    if (lim.views != null && t.v >= lim.views) return stop('views');
+    if (lim.contacts != null && t.c >= lim.contacts) return stop('contacts');
+    if (lim.cpv != null && t.v > 0 && t.s / t.v >= lim.cpv) return stop('cpv');
+    if (lim.cpa != null && t.c > 0 && t.s / t.c >= lim.cpa) return stop('cpa');
+  }
+  return { status: 'ok', reason: '', wantPenny: bidPenny };
+}
+
+// Один проход по кабинету. ids — только эти объявления (после правки на странице), force — перечитать шкалу.
+async function mbidsProcess(env, accountId, { ids = null, force = false, budgetMs = 50000 } = {}) {
+  const kv = env.AVITO_KV;
+  const started = Date.now();
+  const cfg = await mbidsGet(kv, `mbids:cfg:${accountId}`, { items: {} });
+  const allIds = Object.keys(cfg.items);
+  if (!allIds.length) return { processed: 0 };
+  const state = await mbidsGet(kv, `mbids:state:${accountId}`, { items: {} });
+  state.items = state.items || {};
+  const account = await kv.get(`account:${accountId}`, 'json');
+  if (!account) {
+    allIds.forEach((id) => { state.items[id] = { ...(state.items[id] || {}), status: cfg.items[id].on ? 'err' : 'off', reason: cfg.items[id].on ? MBIDS_REASONS.account : MBIDS_REASONS.off }; });
+    await kv.put(`mbids:state:${accountId}`, JSON.stringify(state));
+    return { processed: 0, error: 'account_missing' };
+  }
+  let token;
+  try {
+    token = await avitoGetToken(env, account);
+  } catch (e) {
+    allIds.forEach((id) => { if (cfg.items[id].on) state.items[id] = { ...(state.items[id] || {}), status: 'err', reason: MBIDS_REASONS.auth, checkedAt: Date.now() }; });
+    await kv.put(`mbids:state:${accountId}`, JSON.stringify(state));
+    return { processed: 0, error: 'auth' };
+  }
+  const now = mbidsMsk();
+  const onIds = allIds.filter((id) => cfg.items[id].on);
+  const errors = [];
+
+  // Активные объявления кабинета (раз в 30 минут).
+  try {
+    const cat = await mbidsCatalog(env, account, false);
+    state.active = cat.items.filter((x) => !x.status || x.status === 'active').map((x) => x.id);
+    state.catalogAt = cat.at;
+  } catch (e) { errors.push(`Объявления: ${String(e.message).slice(0, 120)}`); }
+  const active = Array.isArray(state.active) && state.catalogAt && Date.now() - state.catalogAt < 3 * 3600 * 1000 ? new Set(state.active) : null;
+
+  // Деньги кабинета (раз в 30 минут): аванс + кошелёк <= 0 — продвигать не на что.
+  if (onIds.length && (!state.money || Date.now() - state.money.at > 30 * 60 * 1000)) {
+    try {
+      const m = await fetchAvitoMoney(env, account);
+      if (m.advance != null || m.wallet != null) state.money = { advance: m.advance, wallet: m.wallet, at: Date.now() };
+    } catch (e) { errors.push(`Баланс: ${String(e.message).slice(0, 120)}`); }
+  }
+  const noMoney = !!(state.money && (state.money.advance ?? 0) + (state.money.wallet ?? 0) <= 0);
+
+  // Статистика за сегодня по включённым (раз в ~9 минут) + почасовой снимок.
+  // Объявления без показов за день Авито в ответ не кладёт, поэтому помним, по каким спрашивали (ids).
+  const todayIds = new Set((state.today && state.today.ids) || []);
+  if (onIds.length && (!state.today || state.today.date !== now.date || Date.now() - state.today.at > 9 * 60 * 1000 || onIds.some((id) => !todayIds.has(id)))) {
+    try {
+      const stats = await mbidsFetchTotals(token, account.userId, onIds, now.date, now.date);
+      onIds.forEach((id) => { if (!stats[id]) stats[id] = { i: 0, v: 0, c: 0, s: 0 }; });
+      state.today = { date: now.date, at: Date.now(), stats, ids: onIds };
+      const hkey = `mbids:hist:${accountId}:${now.date}`;
+      const hist = await mbidsGet(kv, hkey, {});
+      for (const id of onIds) {
+        const t = stats[id] || { i: 0, v: 0, c: 0, s: 0 };
+        const st = state.items[id] || {};
+        hist[id] = hist[id] || {};
+        hist[id][now.hour] = { ...t, b: st.nowPenny != null ? st.nowPenny / 100 : null, cmp: st.cmp ?? null, set: cfg.items[id].bid ?? null };
+      }
+      await kv.put(hkey, JSON.stringify(hist), { expirationTtl: 40 * 86400 });
+    } catch (e) { errors.push(`Статистика: ${String(e.message).slice(0, 120)}`); }
+  }
+  const today = state.today && state.today.date === now.date ? state.today.stats : null;
+
+  // Очередь: сначала явно переданные, потом те, кого дольше не проверяли.
+  let queue = (ids ? ids.filter((id) => cfg.items[id]) : onIds).slice();
+  queue.sort((a, b) => ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
+  let processed = 0;
+  const one = async (id) => {
+    const c = { ...cfg.items[id], id };
+    const st = { ...(state.items[id] || {}) };
+    if (c.on || force) {
+      if (force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) {
+        try {
+          const res = await avitoRequest(token, `/cpxpromo/1/getBids/${encodeURIComponent(id)}`);
+          const text = await res.text();
+          if (res.ok) {
+            const p = mbidsParseBids(JSON.parse(text || '{}'));
+            if (p) { Object.assign(st, p); st.unavailable = false; st.bidsError = null; } else st.unavailable = true;
+          } else if (res.status === 401 || res.status === 403) st.bidsError = MBIDS_REASONS.auth;
+          else if (res.status === 400 || res.status === 404) { st.unavailable = true; st.bidsError = `${MBIDS_REASONS.unavailable}: ${text.slice(0, 120)}`; }
+          else st.bidsError = `Авито не ответил (${res.status})`;
+          st.bidsAt = Date.now();
+        } catch (e) { st.bidsError = `Авито не ответил: ${String(e.message).slice(0, 100)}`; }
+      }
+    }
+    const d = mbidsDecide(c, st, { active, noMoney, now, today });
+    st.status = d.status;
+    st.reason = d.reason;
+    if (d.wantPenny != null && (st.nowPenny !== d.wantPenny || st.selectedType !== 'manual')) {
+      const pending = st.setPenny === d.wantPenny && st.setAt && Date.now() - st.setAt < MBIDS_REAPPLY_MS;
+      if (!pending) {
+        try {
+          const res = await avitoRequest(token, '/cpxpromo/1/setManual', {
+            method: 'POST',
+            body: JSON.stringify({ itemID: Number(id), actionTypeID: st.actionTypeID || MBIDS_ACTION_TYPE, bidPenny: d.wantPenny }),
+          });
+          const text = await res.text();
+          if (res.ok) {
+            st.setPenny = d.wantPenny; st.setAt = Date.now(); st.nowPenny = d.wantPenny; st.selectedType = 'manual'; st.setError = null;
+          } else {
+            st.status = 'err'; st.reason = `${MBIDS_REASONS.setfail}: ${res.status} ${text.slice(0, 160)}`; st.setError = st.reason; st.bidsAt = 0;
+          }
+        } catch (e) {
+          st.status = 'err'; st.reason = `${MBIDS_REASONS.setfail}: ${String(e.message).slice(0, 120)}`; st.bidsAt = 0;
+        }
+      }
+    }
+    st.cmp = mbidsCompare(st.scale, st.nowPenny);
+    st.checkedAt = Date.now();
+    state.items[id] = st;
+    processed++;
+  };
+  const workers = Array.from({ length: 4 }, async () => {
+    while (queue.length && Date.now() - started < budgetMs) await one(queue.shift());
+  });
+  await Promise.all(workers);
+  // Объявления, удалённые со страницы, — из состояния тоже.
+  Object.keys(state.items).forEach((id) => { if (!cfg.items[id]) delete state.items[id]; });
+  state.errors = errors;
+  state.runAt = Date.now();
+  await kv.put(`mbids:state:${accountId}`, JSON.stringify(state));
+  return { processed, left: queue.length, errors };
+}
+
+async function mbidsCron(env) {
+  const accIds = await mbidsCfgAccountIds(env.AVITO_KV);
+  const started = Date.now();
+  for (const acc of accIds) {
+    if (Date.now() - started > 8 * 60 * 1000) break;
+    await mbidsProcess(env, acc).catch((e) => console.error('mbids process failed', acc, e && e.stack));
+  }
+}
+
+function mbidsView(acc, accountName, id, c, st) {
+  st = st || {};
+  const p = (v) => (v == null ? null : Math.round(v) / 100);
+  return {
+    key: `${acc}:${id}`, accountId: acc, accountName, id,
+    title: c.title || '', url: c.url || '', address: c.address || '', city: c.city || mbidsCity(c.address),
+    on: !!c.on, bid: c.bid ?? null, hours: c.hours || null, days: c.days || null, lim: c.lim || {}, groups: c.groups || [], notes: c.notes || [],
+    addedAt: c.addedAt || null,
+    status: st.status || (c.on ? 'pending' : 'off'), reason: st.reason || '',
+    now: p(st.nowPenny), selectedType: st.selectedType || null, cmp: st.cmp ?? null,
+    base: p(st.basePenny), minPromo: p(st.minPromoPenny), max: p(st.maxPenny), rec: p(st.recPenny),
+    scale: (st.scale || []).map(([v, cmp]) => [v / 100, cmp]),
+    checkedAt: st.checkedAt || null, setAt: st.setAt || null,
+  };
+}
+
+// Применяет правку {op:'set'|'add'|'sub', value} к числу.
+function mbidsOp(cur, edit, opts) {
+  if (edit === null) return null;
+  if (typeof edit !== 'object') return mbidsNum(edit, opts);
+  const v = mbidsNum(edit.value, opts);
+  if (v === undefined) return undefined;
+  if (v === null) return edit.op === 'set' || !edit.op ? null : cur;
+  if (edit.op === 'add') return cur == null ? v : Math.round((cur + v) * 100) / 100;
+  if (edit.op === 'sub') return cur == null ? null : Math.max(0, Math.round((cur - v) * 100) / 100);
+  return v;
+}
+
+async function handleMbidsApi(request, env, url, ctx) {
+  if (!mbidsAuth(request, env)) return json({ error: 'unauthorized' }, 401);
+  const kv = env.AVITO_KV;
+  const parts = url.pathname.replace(/^\/api\/dashboard\/mbids\/?/, '').split('/').filter(Boolean);
+  const route = `${request.method} ${parts.join('/')}`;
+  const body = request.method === 'POST' || request.method === 'PUT' ? (await readJson(request)) || {} : {};
+  const later = (p) => (ctx && ctx.waitUntil ? ctx.waitUntil(p.catch((e) => console.error('mbids', e && e.stack))) : p);
+  const byAccount = (refs) => {
+    const m = {};
+    (Array.isArray(refs) ? refs : []).forEach((r) => {
+      const [acc, id] = String(typeof r === 'string' ? r : `${r.accountId}:${r.id}`).split(':');
+      if (acc && /^\d+$/.test(id || '')) (m[acc] = m[acc] || []).push(id);
+    });
+    return m;
+  };
+
+  if (route === 'GET state') {
+    const accounts = await mbidsAccounts(env);
+    const names = Object.fromEntries(accounts.map((a) => [a.id, a.name]));
+    const items = [];
+    const money = {};
+    for (const acc of await mbidsCfgAccountIds(kv)) {
+      const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+      const st = await mbidsGet(kv, `mbids:state:${acc}`, { items: {} });
+      Object.entries(cfg.items).forEach(([id, c]) => items.push(mbidsView(acc, names[acc] || '(удалён)', id, c, (st.items || {})[id])));
+      money[acc] = { ...(st.money || {}), todayAt: st.today ? st.today.at : null, runAt: st.runAt || null, errors: st.errors || [] };
+    }
+    return json({
+      accounts: accounts.map((a) => ({ id: a.id, name: a.name })),
+      groups: await mbidsGet(kv, 'mbids:groups', {}),
+      items, money, now: Date.now(),
+    });
+  }
+
+  if (route === 'GET catalog') {
+    const acc = url.searchParams.get('accountId');
+    const account = acc && (await kv.get(`account:${acc}`, 'json'));
+    if (!account) return json({ error: 'Кабинет не найден' }, 404);
+    try {
+      const cat = await mbidsCatalog(env, account, url.searchParams.get('refresh') === '1');
+      const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+      return json({ at: cat.at, items: cat.items.map((x) => ({ ...x, added: !!cfg.items[x.id] })) });
+    } catch (e) {
+      return json({ error: `Авито не отдал объявления: ${String(e.message).slice(0, 200)}` }, 502);
+    }
+  }
+
+  if (route === 'POST items') {
+    const acc = String(body.accountId || '');
+    if (!(await kv.get(`account:${acc}`, 'json'))) return json({ error: 'Кабинет не найден' }, 404);
+    const list = (Array.isArray(body.items) ? body.items : []).filter((x) => x && /^\d+$/.test(String(x.id))).slice(0, 500);
+    if (!list.length) return json({ error: 'Не выбрано ни одного объявления' }, 400);
+    const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+    let added = 0;
+    for (const x of list) {
+      const id = String(x.id);
+      if (cfg.items[id]) continue;
+      if (Object.keys(cfg.items).length >= MBIDS_MAX_ITEMS) break;
+      cfg.items[id] = {
+        on: false, bid: null, hours: null, days: null, lim: {}, groups: [], notes: [],
+        title: String(x.title || '').slice(0, 200), url: String(x.url || '').slice(0, 400), address: String(x.address || '').slice(0, 200),
+        city: mbidsCity(x.address), addedAt: Date.now(),
+      };
+      added++;
+    }
+    cfg.updatedAt = Date.now();
+    await kv.put(`mbids:cfg:${acc}`, JSON.stringify(cfg));
+    // Шкалу ставок новых объявлений подтягиваем в фоне — через несколько минут появятся базовая/мин. ставки.
+    later(mbidsProcess(env, acc, { ids: list.map((x) => String(x.id)).slice(0, 120), force: true, budgetMs: 25000 }));
+    return json({ ok: true, added });
+  }
+
+  if (route === 'POST items/delete') {
+    const m = byAccount(body.refs);
+    let removed = 0;
+    for (const [acc, ids] of Object.entries(m)) {
+      const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+      ids.forEach((id) => { if (cfg.items[id]) { delete cfg.items[id]; removed++; } });
+      if (Object.keys(cfg.items).length) await kv.put(`mbids:cfg:${acc}`, JSON.stringify(cfg));
+      else await Promise.all([kv.delete(`mbids:cfg:${acc}`), kv.delete(`mbids:state:${acc}`)]);
+    }
+    return json({ ok: true, removed });
+  }
+
+  // Правка одного или многих объявлений: set — только переданные поля.
+  if (route === 'POST items/update') {
+    const m = byAccount(body.refs);
+    const set = body.set || {};
+    if (set.hours !== undefined && set.hours !== null && (!Array.isArray(set.hours) || !set.hours.length)) return json({ error: 'Выберите хотя бы один час' }, 400);
+    if (set.days !== undefined && set.days !== null && (!Array.isArray(set.days) || !set.days.length)) return json({ error: 'Выберите хотя бы один день' }, 400);
+    const note = String(body.note || '').trim().slice(0, 300);
+    let changed = 0;
+    const skipped = [];
+    for (const [acc, ids] of Object.entries(m)) {
+      const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+      const st = set.bid && set.bid.min ? await mbidsGet(kv, `mbids:state:${acc}`, { items: {} }) : null;
+      for (const id of ids) {
+        const c = cfg.items[id];
+        if (!c) continue;
+        if (set.on !== undefined) c.on = !!set.on;
+        if (set.bid !== undefined) {
+          if (set.bid && set.bid.min) {
+            const s = st.items[id];
+            if (s && s.minPromoPenny != null) c.bid = Math.ceil(s.minPromoPenny / 100);
+            else skipped.push({ key: `${acc}:${id}`, reason: 'Авито ещё не прислал минимальную ставку' });
+          } else {
+            const v = mbidsOp(c.bid, set.bid, { int: true, min: 0 });
+            if (v === undefined) return json({ error: 'Ставка — целое число рублей' }, 400);
+            c.bid = v;
+          }
+        }
+        if (set.hours !== undefined) c.hours = set.hours === null || set.hours.length === 24 ? null : [...new Set(set.hours.map(Number).filter((h) => h >= 0 && h < 24))].sort((a, b) => a - b);
+        if (set.days !== undefined) c.days = set.days === null || set.days.length === 7 ? null : [...new Set(set.days.map(Number).filter((d) => d >= 0 && d < 7))].sort((a, b) => a - b);
+        if (set.lim) {
+          c.lim = c.lim || {};
+          for (const k of MBIDS_LIMIT_KEYS) {
+            if (set.lim[k] === undefined) continue;
+            const v = mbidsOp(c.lim[k] ?? null, set.lim[k], { int: ['imp', 'views', 'contacts'].includes(k), min: 0 });
+            if (v === undefined) return json({ error: 'Ограничения — неотрицательные числа' }, 400);
+            if (v === null) delete c.lim[k]; else c.lim[k] = v;
+          }
+        }
+        if (note) c.notes = [...(c.notes || []), { at: Date.now(), text: note }].slice(-100);
+        if (body.removeNoteAt) c.notes = (c.notes || []).filter((n) => n.at !== body.removeNoteAt);
+        changed++;
+      }
+      cfg.updatedAt = Date.now();
+      await kv.put(`mbids:cfg:${acc}`, JSON.stringify(cfg));
+      if (set.on !== undefined || set.bid !== undefined || set.hours !== undefined || set.days !== undefined || set.lim) {
+        later(mbidsProcess(env, acc, { ids: ids.slice(0, 60), budgetMs: 25000 }));
+      }
+    }
+    return json({ ok: true, changed, skipped });
+  }
+
+  if (route === 'POST refresh') {
+    const m = byAccount(body.refs);
+    const out = {};
+    for (const [acc, ids] of Object.entries(m)) out[acc] = await mbidsProcess(env, acc, { ids: ids.slice(0, 60), force: true, budgetMs: 25000 });
+    return json({ ok: true, result: out });
+  }
+
+  // Итоги за период по объявлениям кабинета.
+  if (route === 'GET stats') {
+    const acc = url.searchParams.get('accountId');
+    const from = url.searchParams.get('from');
+    const to = url.searchParams.get('to');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from || '') || !/^\d{4}-\d{2}-\d{2}$/.test(to || '')) return json({ error: 'bad_dates' }, 400);
+    const account = acc && (await kv.get(`account:${acc}`, 'json'));
+    if (!account) return json({ error: 'Кабинет не найден' }, 404);
+    const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+    const ids = Object.keys(cfg.items);
+    if (!ids.length) return json({ stats: {} });
+    const today = mbidsMsk().date;
+    if (from === today && to === today) {
+      const st = await mbidsGet(kv, `mbids:state:${acc}`, {});
+      // Движок уже считал сегодняшнее по включённым — если выключенных нет, этого достаточно.
+      const fresh = st.today && st.today.date === today && Date.now() - st.today.at < 12 * 60 * 1000;
+      if (fresh && ids.every((id) => cfg.items[id].on)) return json({ stats: st.today.stats, at: st.today.at });
+    }
+    const ckey = `mbids:statc:${acc}:${from}:${to}`;
+    const cached = await kv.get(ckey, 'json');
+    if (cached && cached.n === ids.length && Date.now() - cached.at < 10 * 60 * 1000) return json({ stats: cached.stats, at: cached.at });
+    try {
+      const token = await avitoGetToken(env, account);
+      const stats = await mbidsFetchTotals(token, account.userId, ids, from, to);
+      await kv.put(ckey, JSON.stringify({ at: Date.now(), n: ids.length, stats }), { expirationTtl: 3600 });
+      return json({ stats, at: Date.now() });
+    } catch (e) {
+      if (cached) return json({ stats: cached.stats, at: cached.at, stale: true });
+      return json({ error: `Статистика Авито: ${String(e.message).slice(0, 200)}` }, 502);
+    }
+  }
+
+  // Подробная статистика объявления: по дням (Авито) или по часам (наши снимки), «Время суток», заметки.
+  if (route === 'GET item-stats') {
+    const acc = url.searchParams.get('accountId');
+    const id = url.searchParams.get('id');
+    const from = url.searchParams.get('from');
+    const to = url.searchParams.get('to');
+    if (!/^\d+$/.test(id || '') || !/^\d{4}-\d{2}-\d{2}$/.test(from || '') || !/^\d{4}-\d{2}-\d{2}$/.test(to || '')) return json({ error: 'bad_params' }, 400);
+    const account = acc && (await kv.get(`account:${acc}`, 'json'));
+    if (!account) return json({ error: 'Кабинет не найден' }, 404);
+    // Почасовые снимки → приращения по часам.
+    const hours = [];
+    const tod = Array.from({ length: 24 }, (_, h) => ({ h, i: 0, v: 0, c: 0, s: 0 }));
+    for (let d = from, n = 0; d <= to && n < 40; d = mbidsDateAdd(d, 1), n++) {
+      const hist = await kv.get(`mbids:hist:${acc}:${d}`, 'json');
+      const rec = hist && hist[id];
+      if (!rec) continue;
+      let prev = { i: 0, v: 0, c: 0, s: 0 };
+      for (let h = 0; h < 24; h++) {
+        const r = rec[h];
+        if (!r) continue;
+        const delta = { i: Math.max(0, r.i - prev.i), v: Math.max(0, r.v - prev.v), c: Math.max(0, r.c - prev.c), s: Math.max(0, Math.round((r.s - prev.s) * 100) / 100) };
+        hours.push({ at: `${d} ${String(h).padStart(2, '0')}:00`, ...delta, b: r.b, cmp: r.cmp, set: r.set });
+        tod[h].i += delta.i; tod[h].v += delta.v; tod[h].c += delta.c; tod[h].s = Math.round((tod[h].s + delta.s) * 100) / 100;
+        prev = r;
+      }
+    }
+    let days = [];
+    let error = null;
+    if (url.searchParams.get('by') !== 'hour') {
+      try {
+        const token = await avitoGetToken(env, account);
+        days = await mbidsFetchDays(token, account.userId, id, from, to);
+      } catch (e) { error = `Статистика Авито: ${String(e.message).slice(0, 200)}`; }
+      // Средняя ставка / опережение за день — из наших снимков.
+      const byDay = {};
+      hours.forEach((h) => { const d = h.at.slice(0, 10); (byDay[d] = byDay[d] || []).push(h); });
+      days.forEach((r) => {
+        const hs = (byDay[r.date] || []).filter((h) => h.b != null);
+        r.b = hs.length ? Math.round((hs.reduce((a, h) => a + h.b, 0) / hs.length) * 100) / 100 : null;
+        const cs = (byDay[r.date] || []).filter((h) => h.cmp != null);
+        r.cmp = cs.length ? Math.round((cs.reduce((a, h) => a + h.cmp, 0) / cs.length) * 10) / 10 : null;
+        const sets = (byDay[r.date] || []).filter((h) => h.set != null);
+        r.set = sets.length ? sets[sets.length - 1].set : null;
+      });
+    }
+    const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+    return json({ days, hours, tod, notes: (cfg.items[id] && cfg.items[id].notes) || [], error });
+  }
+
+  if (route === 'POST groups') {
+    const name = String(body.name || '').trim();
+    if (!name) return json({ error: 'Укажите название группы' }, 400);
+    if (name.length > 50) return json({ error: 'Название — не длиннее 50 символов' }, 400);
+    const groups = await mbidsGet(kv, 'mbids:groups', {});
+    if (Object.values(groups).some((g) => g.name.toLowerCase() === name.toLowerCase())) return json({ error: 'Группа с таким названием уже есть' }, 400);
+    const gid = randomHex(5);
+    groups[gid] = { name, createdAt: Date.now() };
+    await kv.put('mbids:groups', JSON.stringify(groups));
+    return json({ ok: true, id: gid, groups });
+  }
+
+  if (request.method === 'PUT' && parts[0] === 'groups' && parts[1]) {
+    const groups = await mbidsGet(kv, 'mbids:groups', {});
+    if (!groups[parts[1]]) return json({ error: 'not_found' }, 404);
+    const name = String(body.name || '').trim();
+    if (!name) return json({ error: 'Укажите название группы' }, 400);
+    if (name.length > 50) return json({ error: 'Название — не длиннее 50 символов' }, 400);
+    if (Object.entries(groups).some(([k, g]) => k !== parts[1] && g.name.toLowerCase() === name.toLowerCase())) return json({ error: 'Группа с таким названием уже есть' }, 400);
+    groups[parts[1]].name = name;
+    await kv.put('mbids:groups', JSON.stringify(groups));
+    return json({ ok: true, groups });
+  }
+
+  if (route === 'POST groups/delete') {
+    const groups = await mbidsGet(kv, 'mbids:groups', {});
+    const del = new Set((Array.isArray(body.ids) ? body.ids : []).map(String));
+    del.forEach((g) => delete groups[g]);
+    await kv.put('mbids:groups', JSON.stringify(groups));
+    for (const acc of await mbidsCfgAccountIds(kv)) {
+      const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+      let touched = false;
+      Object.values(cfg.items).forEach((c) => {
+        const next = (c.groups || []).filter((g) => !del.has(g));
+        if (next.length !== (c.groups || []).length) { c.groups = next; touched = true; }
+      });
+      if (touched) await kv.put(`mbids:cfg:${acc}`, JSON.stringify(cfg));
+    }
+    return json({ ok: true, groups });
+  }
+
+  if (route === 'POST groups/members') {
+    const gid = String(body.groupId || '');
+    const groups = await mbidsGet(kv, 'mbids:groups', {});
+    if (!groups[gid]) return json({ error: 'Группа не найдена' }, 404);
+    const add = body.action !== 'remove';
+    let changed = 0;
+    for (const [acc, ids] of Object.entries(byAccount(body.refs))) {
+      const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+      ids.forEach((id) => {
+        const c = cfg.items[id];
+        if (!c) return;
+        const set = new Set(c.groups || []);
+        if (add) set.add(gid); else set.delete(gid);
+        c.groups = [...set];
+        changed++;
+      });
+      await kv.put(`mbids:cfg:${acc}`, JSON.stringify(cfg));
+    }
+    return json({ ok: true, changed });
+  }
+
+  return json({ error: 'not_found' }, 404);
 }
 
 /* ═══════════════ Avito feeds: Google Sheets → Avito autoload XML (like BananLab) ═══════════════
@@ -13431,6 +14109,7 @@ export default {
     ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
     ctx.waitUntil(waiCron(env).catch((err) => console.error('workers ai jobs cron failed', err && err.stack)));
     ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
+    ctx.waitUntil(mbidsCron(env).catch((err) => console.error('avito bids cron failed', err && err.stack)));
     ctx.waitUntil(finRemindCron(env).catch((err) => console.error('finance reminders cron failed', err && err.stack)));
     ctx.waitUntil(aiSalesCron(env).catch((err) => console.error('ai-sales cron failed', err && err.stack)));
   },

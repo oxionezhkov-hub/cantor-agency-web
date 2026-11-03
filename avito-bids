@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ставки Авито — Cantor Agency</title>
+<link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<style>
+:root{
+  --accent:#E8391D;--accent-600:#C42D13;--accent-bg:#FFF0EB;--accent-ring:rgba(232,57,29,.16);
+  --bg:#F4F3F0;--surface:#fff;--surface-2:#FAF9F7;--sunken:#EFEDE9;--line:#E5E2DD;--line-2:#EEECE8;
+  --ink:#151515;--text:#2A2927;--muted:#76716A;--faint:#A7A29B;
+  --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--red:#D5311A;--red-bg:#FDEBE7;--blue:#2563C9;--violet:#7A4CC2;
+  --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);--shadow-lg:0 18px 48px rgba(22,20,18,.16);--scrim:rgba(18,16,14,.38);
+  --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--display:'Unbounded','Geologica',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+  --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;--line:#2E2C2A;--line-2:#282624;
+  --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--red:#FF6F57;--red-bg:#3D1812;--blue:#6EA2FF;--violet:#B48CFF;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);--scrim:rgba(0,0,0,.55);color-scheme:dark;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1600px;margin:0 auto;padding:20px 20px 90px;display:grid;gap:14px}
+.wrap>*{min-width:0}
+.kpis>*{min-width:0}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar h1{font:700 20px var(--display);color:var(--ink);margin:0;letter-spacing:-.01em}
+.sp{flex:1}
+.nav{display:flex;gap:4px}
+.nav a{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px}
+.nav a:hover{background:var(--sunken);color:var(--ink)}
+.nav a.cur{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--faint)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent-600)}
+.btn.danger{color:var(--red)}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:8px}
+.btn[disabled]{opacity:.55;cursor:wait}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.seg{display:inline-flex;background:var(--sunken);border-radius:11px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:500;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.sum{display:flex;gap:22px;flex-wrap:wrap;padding:12px 16px;font-size:13px;color:var(--muted)}
+.sum b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px}
+.kpi{padding:12px 16px}
+.kpi h3{margin:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi-row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+.kv .l{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.kv .v{font-size:19px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kv.cv .v{font-size:14px;color:var(--accent)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.search{flex:1;min-width:220px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 11px;font-size:13px}
+.search:focus,.f input:focus,.f select:focus,.f textarea:focus,.cell-in:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.per{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.per select,.per input{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;font-size:13px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);color:var(--accent);border-radius:999px;padding:2px 4px 2px 10px;font-size:12px;font-weight:500}
+.chip button{border:0;background:transparent;color:inherit;cursor:pointer;padding:0 6px;font-size:14px;line-height:1}
+.tbl-wrap{overflow:auto;max-height:calc(100vh - 140px)}
+.full .tbl-wrap{max-height:none}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0;z-index:2;line-height:1.25;vertical-align:bottom}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--ink)}
+th .ar{color:var(--accent);margin-left:3px}
+td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;font-size:13px}
+tr.sel td{background:var(--accent-bg)}
+tr.det td{background:var(--surface-2);padding:0}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.r{text-align:right}
+.td-ttl{min-width:260px}
+.ttl{font-weight:500;color:var(--ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:320px;line-height:1.3}
+a.ttl:hover{color:var(--accent)}
+.sub{font-size:11.5px;color:var(--muted)}
+.dash{color:var(--faint)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;border:0;cursor:help}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-ok{color:var(--green);background:var(--green-bg)}.p-stop{color:var(--amber);background:var(--amber-bg)}.p-err{color:var(--red);background:var(--red-bg)}.p-off{color:var(--muted);background:var(--sunken)}
+.tg{position:relative;width:36px;height:20px;flex:none;display:inline-block}
+.tg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
+.tg span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s}
+.tg span::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.tg input:checked+span{background:var(--accent)}
+.tg input:checked+span::after{left:18px}
+.tg input:disabled+span{opacity:.45}
+.tg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.cell-in{width:76px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 7px;font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.cell-in.bad{border-color:var(--red)}
+.cb{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0}
+.exp{border:0;background:transparent;cursor:pointer;color:var(--muted);padding:2px 4px;border-radius:6px;transition:transform .15s}
+.exp.open{transform:rotate(180deg)}
+.lnkb{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:0;font-weight:500;font-size:12.5px;text-align:left}
+.lnkb:hover{text-decoration:underline}
+.sched{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.sched .lnkb,td .lnkb{white-space:nowrap}
+.selbar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 10px 8px 16px;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow-lg);z-index:30;flex-wrap:wrap;max-width:calc(100% - 24px)}
+.selbar .btn{background:transparent;color:var(--bg);border-color:rgba(255,255,255,.25)}
+@media (prefers-color-scheme: dark){.selbar .btn{border-color:rgba(0,0,0,.25)}}
+.selbar .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.empty{padding:36px;text-align:center;color:var(--muted)}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:41;width:min(620px,calc(100% - 32px));max-height:min(90vh,860px);display:flex;flex-direction:column;background:var(--bg);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden}
+.modal.wide{width:min(1100px,calc(100% - 32px))}
+.m-h{padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center}
+.m-h h2{font-size:16px;font-weight:600;color:var(--ink);margin:0;flex:1}
+.m-b{padding:16px 18px;overflow:auto;display:grid;gap:12px}
+.m-f{padding:12px 18px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.f label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
+.f input,.f select,.f textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px;font-size:13.5px}
+.f textarea{min-height:110px;resize:vertical;font-family:inherit}
+.note{font-size:12.5px;color:var(--muted)}
+.err-box{background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:13px}
+.ok-box{background:var(--green-bg);color:var(--green);border-radius:10px;padding:10px 12px;font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.be-row{display:grid;grid-template-columns:40px 190px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.be-row:last-child{border-bottom:0}
+.be-row .lbl{font-size:13px;font-weight:500;color:var(--ink)}
+.be-row.dis .ctl{opacity:.4;pointer-events:none}
+.ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ctl select,.ctl input[type=number],.ctl input[type=text]{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-size:13px}
+.ctl input[type=number]{width:110px}
+.hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.hgrid label,.dgrid label{display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;padding:5px 0;font-size:12px;cursor:pointer;background:var(--surface);user-select:none}
+.hgrid input,.dgrid input{display:none}
+.hgrid label.on,.dgrid label.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pop{position:fixed;z-index:45;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px;width:min(340px,calc(100% - 24px));display:grid;gap:10px}
+.pop .q{display:flex;gap:6px;flex-wrap:wrap}
+.tip{position:fixed;z-index:60;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 10px;border-radius:8px;max-width:320px;pointer-events:none;box-shadow:var(--shadow-lg)}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13px;box-shadow:var(--shadow-lg);z-index:70;max-width:min(560px,calc(100% - 32px))}
+.gate{min-height:100vh;display:grid;place-items:center;padding:16px}
+.gate .card{padding:22px;width:min(360px,100%);display:grid;gap:12px}
+.det-in{padding:14px 16px 18px;display:grid;gap:14px;position:sticky;left:0;width:min(1560px,calc(100vw - 42px))}
+.full .det-in{width:calc(100vw - 4px)}
+.det-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.det-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.det-k .box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.det-k h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.det-k .ln{display:flex;justify-content:space-between;gap:8px;font-size:12.5px}
+.det-k .ln b{color:var(--ink);font-variant-numeric:tabular-nums}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.chart svg{display:block;width:100%;height:220px}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.legend label{display:inline-flex;gap:5px;align-items:center;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.legend input{display:none}
+.legend label.offl{opacity:.4}
+.tod{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:80px}
+.tod div{background:var(--accent);border-radius:3px 3px 0 0;min-height:1px;opacity:.85}
+.tod-l{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;font-size:9.5px;color:var(--muted);text-align:center}
+.notes{display:grid;gap:6px}
+.notes .n{display:flex;gap:10px;font-size:12.5px;align-items:baseline}
+.notes .n time{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.scale{font-size:12px;border-collapse:collapse;width:auto}
+.scale td,.scale th{padding:3px 10px;border-bottom:1px solid var(--line-2);position:static;background:transparent}
+.scale tr.cur td{color:var(--accent);font-weight:600}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;padding:14px}
+.gcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;background:var(--surface);cursor:pointer}
+.gcard:hover{border-color:var(--faint)}
+.gcard .gn{font-weight:600;color:var(--ink);display:flex;gap:8px;align-items:center}
+.gcard .gs{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.gcard .gs b{color:var(--ink)}
+.colrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.colrow .sp{flex:1}
+.ico{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted);padding:0}
+.ico:hover{color:var(--ink)}
+.full{position:fixed;inset:0;z-index:35;border-radius:0;overflow:auto}
+.help h3{margin:6px 0 2px;font-size:14px;color:var(--ink)}
+.help p,.help li{font-size:13px;margin:4px 0}
+@media (max-width:900px){.kpis{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.wrap{padding:14px 16px 90px}.be-row{grid-template-columns:36px minmax(0,1fr)}.be-row .ctl{grid-column:1/-1}.grid2{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <form class="card" id="gateForm">
+    <div class="f"><label for="gatePw">Пароль дашборда</label><input id="gatePw" type="password" autocomplete="current-password"></div>
+    <div class="note" id="gateErr"></div>
+    <button class="btn pri" type="submit">Войти</button>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <div class="bar">
+    <h1>Ручное управление ставками</h1>
+    <button class="btn sm" type="button" id="helpBtn">Инструкция</button>
+    <span class="sp"></span>
+    <nav class="nav" aria-label="Разделы Авито"><a href="/avito-feeds">Автозагрузка</a><a class="cur" href="/avito-bids" aria-current="page">Ставки</a></nav>
+  </div>
+
+  <div class="card sum" id="sum"></div>
+
+  <div class="bar">
+    <div class="seg" role="tablist"><button type="button" class="on" data-tab="all" role="tab">Все объявления</button><button type="button" data-tab="groups" role="tab">Группы объявлений</button></div>
+    <span id="groupHead" hidden></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card" id="tableCard">
+    <div class="tools">
+      <input class="search" id="q" type="search" placeholder="Поиск по объявлениям (заголовок, номер объявления, город)">
+      <button class="btn" type="button" id="filtersBtn">Фильтры ▾</button>
+      <button class="btn" type="button" id="colsBtn">Столбцы</button>
+      <button class="btn" type="button" id="fullBtn" title="Во весь экран" aria-label="Во весь экран">⛶</button>
+      <button class="btn" type="button" id="refreshBtn" title="Перечитать ставки из Авито для видимых объявлений">Обновить из Авито</button>
+      <button class="btn pri" type="button" id="addBtn">Добавить объявления</button>
+    </div>
+    <div class="per">
+      <span>Период статистики объявлений:</span>
+      <select id="period"><option value="today">Сегодня</option><option value="yesterday">Вчера</option><option value="7">7 дней</option><option value="30">30 дней</option><option value="custom">Свой период</option></select>
+      <span id="customPer" hidden><input type="date" id="pFrom"> — <input type="date" id="pTo"></span>
+      <span class="sub" id="statInfo"></span>
+      <span class="sp"></span>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="tbl-wrap"><table><thead id="thead"></thead><tbody id="rows"><tr><td class="empty">Загрузка…</td></tr></tbody></table></div>
+  </div>
+
+  <div class="card" id="groupsCard" hidden>
+    <div class="tools">
+      <span class="note" id="gInfo"></span><span class="sp"></span>
+      <button class="btn danger" type="button" id="gDelSel" hidden>Удалить выбранные группы</button>
+      <button class="btn pri" type="button" id="gCreate">Создать группу</button>
+    </div>
+    <div id="groupsBody"></div>
+  </div>
+</div>
+
+<div class="selbar" id="selbar" hidden></div>
+<div class="scrim" id="scrim" hidden></div>
+<div class="tip" id="tip" hidden></div>
+<div class="pop" id="pop" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- добавить объявления -->
+<div class="modal wide" id="mAdd" role="dialog" aria-modal="true" aria-labelledby="aTitle" hidden>
+  <div class="m-h"><h2 id="aTitle">Добавить объявления</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <div class="m-b">
+    <div class="seg"><button type="button" class="on" data-atab="filter">Отобрать по фильтрам и поиску</button><button type="button" data-atab="list">Добавить списком</button></div>
+    <div class="grid2">
+      <div class="f"><label for="aAcc">Аккаунт Авито</label><select id="aAcc"></select></div>
+      <div class="f" id="aCityWrap"><label for="aCity">Город</label><select id="aCity"><option value="">Все города</option></select></div>
+    </div>
+    <div id="aFilter">
+      <input class="search" id="aQ" type="search" placeholder="Поиск по заголовку, номеру объявления или городу" style="width:100%">
+    </div>
+    <div id="aList" hidden>
+      <div class="f"><label for="aIds">Внесите номера объявлений списком</label><textarea id="aIds" placeholder="Номера через пробел, запятую, точку с запятой или с новой строки"></textarea></div>
+      <button class="btn" type="button" id="aFind">Найти</button>
+    </div>
+    <div class="note" id="aInfo"></div>
+    <div class="tbl-wrap" style="max-height:46vh;border:1px solid var(--line);border-radius:10px;background:var(--surface)"><table><thead><tr><th style="width:34px"><input type="checkbox" class="cb" id="aAll" aria-label="Выбрать все"></th><th>Объявление</th><th>Город</th><th class="r">Цена</th><th>Аккаунт</th></tr></thead><tbody id="aRows"></tbody></table></div>
+  </div>
+  <div class="m-f"><span class="note sp" id="aSel"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="button" id="aSave">Добавить</button></div>
+</div>
+
+<!-- отключение по метрике -->
+<div class="modal" id="mLim" role="dialog" aria-modal="true" aria-labelledby="lTitle" hidden>
+  <div class="m-h"><h2 id="lTitle">Отключение по метрике</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <form class="m-b" id="lForm" novalidate>
+    <div class="note">Пустое поле — ограничение не используется. Считаются сутки по Москве; если сработает любое из условий, объявление уйдёт на базовую ставку до следующих суток.</div>
+    <div class="grid2" id="lFields"></div>
+    <div class="err-box" id="lErr" hidden></div>
+  </form>
+  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="submit" form="lForm">Сохранить</button></div>
+</div>
+
+<!-- массовое редактирование -->
+<div class="modal" id="mBulk" role="dialog" aria-modal="true" aria-labelledby="bTitle" hidden>
+  <div class="m-h"><h2 id="bTitle">Массовое редактирование</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <div class="m-b">
+    <div class="note" id="bInfo"></div>
+    <div id="bRows"></div>
+    <div><button class="btn sm" type="button" id="bNoteBtn">Добавить заметку +</button></div>
+    <div class="f" id="bNoteWrap" hidden><label for="bNote">Заметка (появится в статистике объявлений)</label><input id="bNote" maxlength="300"></div>
+    <div class="err-box" id="bErr" hidden></div>
+    <div id="bPreview" hidden></div>
+  </div>
+  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn" type="button" id="bCheck">Проверить изменения</button><button class="btn pri" type="button" id="bApply">Применить</button></div>
+</div>
+
+<!-- столбцы -->
+<div class="modal" id="mCols" role="dialog" aria-modal="true" aria-labelledby="cTitle" hidden>
+  <div class="m-h"><h2 id="cTitle">Столбцы</h2><button class="btn" type="button" data-close>Готово</button></div>
+  <div class="m-b"><div id="cList"></div><div><button class="btn sm" type="button" id="cReset">Вернуть как было</button></div></div>
+</div>
+
+<!-- группа: название -->
+<div class="modal" id="mGroup" role="dialog" aria-modal="true" aria-labelledby="gTitle" hidden>
+  <div class="m-h"><h2 id="gTitle">Новая группа</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <form class="m-b" id="gForm" novalidate>
+    <div class="f"><label for="gName">Название группы</label><input id="gName" maxlength="50" placeholder="Например: Москва, английский"></div>
+    <div class="err-box" id="gErr" hidden></div>
+  </form>
+  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="submit" form="gForm">Сохранить</button></div>
+</div>
+
+<!-- добавить в группу из инструмента -->
+<div class="modal wide" id="mPick" role="dialog" aria-modal="true" aria-labelledby="pTitle" hidden>
+  <div class="m-h"><h2 id="pTitle">Добавить объявления в группу</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <div class="m-b">
+    <input class="search" id="pQ" type="search" placeholder="Поиск по заголовку, номеру, городу или аккаунту" style="width:100%">
+    <div class="tbl-wrap" style="max-height:52vh;border:1px solid var(--line);border-radius:10px;background:var(--surface)"><table><thead id="pHead"></thead><tbody id="pRows"></tbody></table></div>
+  </div>
+  <div class="m-f"><span class="note sp" id="pSel"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="button" id="pSave">Добавить</button></div>
+</div>
+
+<!-- инструкция -->
+<div class="modal" id="mHelp" role="dialog" aria-modal="true" aria-labelledby="hTitle" hidden>
+  <div class="m-h"><h2 id="hTitle">Как работает раздел</h2><button class="btn" type="button" data-close>Закрыть</button></div>
+  <div class="m-b help">
+    <h3>Запуск за 3 шага</h3>
+    <ol>
+      <li>«Добавить объявления» — выберите кабинет и отметьте объявления (или вставьте номера списком).</li>
+      <li>Укажите «Ставку» — целые рубли за просмотр. Ориентир — «Мин. ставка для продвижения».</li>
+      <li>Включите тумблер «Вкл / выкл». Добавление само продвижение не включает.</li>
+    </ol>
+    <h3>Что делает сервис</h3>
+    <p>Каждые 10 минут сверяет ставку на Авито с настройкой и ставит нужную. Вне графика, при сработавшем ограничении или когда в кабинете закончились деньги объявление уходит на <b>базовую ставку</b> (без продвижения), а когда причина уходит — сервис сам возвращает вашу ставку. Повторно одну и ту же ставку сервис отправляет не чаще раза в час.</p>
+    <h3>Ставки</h3>
+    <p><b>Базовая</b> — состояние без продвижения. <b>Мин. ставка для продвижения</b> — с неё продвижение уже работает. Диапазон задаёт Авито для каждого объявления; ставка вне его не ставится, в статусе будет ошибка. <b>Опережение конкурентов</b> — процент, который Авито отдаёт для текущей ставки.</p>
+    <h3>График и ограничения</h3>
+    <p>Время — московское. Каждый выбранный час — полный час (09:00 = 09:00–09:59). Ограничения (показы, просмотры, контакты, расходы, CPV, CPA) считаются за текущие сутки МСК и обнуляются в полночь. Достаточно сработать одному.</p>
+    <h3>Статусы</h3>
+    <p><b>Успешно</b> — всё в порядке. <b>Остановлено</b> — плановая остановка (по времени, бюджету, метрике, аванс). <b>Ошибка</b> — нужно что-то поправить. Наведите на статус — увидите причину.</p>
+    <h3>Много объявлений сразу</h3>
+    <p>Отметьте строки (или «Выбрать все» по текущему фильтру — например, по городу или кабинету) → «Массовое редактирование». Меняется только то, у чего включён левый тумблер; числа можно заменить, прибавить или вычесть.</p>
+    <p class="note">Удаление из раздела не удаляет объявление на Авито и не меняет его ставку.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// cantor.agency — статичный nginx, API в воркере; из РФ ходим через Яндекс-функцию с запасным прямым адресом.
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const API_PROXY_URL = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch';
+const ROUTES = location.hostname.endsWith('workers.dev')
+  ? [(p) => location.origin + p, (p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`]
+  : [(p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`, (p) => API_BASE + p];
+let route = 0;
+const PW_KEY = 'agency_dashboard_pw';
+const getPw = () => { try { return localStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } };
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+async function api(path, opts = {}, pw) {
+  for (let i = 0; i < ROUTES.length; i++) {
+    const idx = (route + i) % ROUTES.length;
+    try {
+      const res = await fetch(ROUTES[idx](path), { ...opts, headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw || getPw() }, signal: AbortSignal.timeout(90000) });
+      route = idx;
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, ok: res.ok, data };
+    } catch (e) { /* следующий маршрут */ }
+  }
+  return { status: 0, ok: false, data: { error: 'Нет связи с сервером, попробуйте ещё раз' } };
+}
+const post = (path, body) => api(path, { method: 'POST', body: JSON.stringify(body) });
+
+let tt;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 5000); }
+
+const rub = (v, d = 0) => v == null ? '—' : `${Number(v).toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d })} ₽`;
+const int = (v) => v == null ? '—' : Number(v).toLocaleString('ru-RU');
+const pct = (v) => v == null ? '—' : `${Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} %`;
+const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const hh = (h) => `${String(h).padStart(2, '0')}:00`;
+const mskToday = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+const dAdd = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const fmtAt = (ms) => ms ? new Date(ms).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }) : '—';
+
+function ranges(list, fmt) {
+  const out = [];
+  let s = null, p = null;
+  list.forEach((x) => { if (s == null) { s = p = x; } else if (x === p + 1) { p = x; } else { out.push([s, p]); s = p = x; } });
+  if (s != null) out.push([s, p]);
+  return out.map(([a, b]) => a === b ? fmt(a) : `${fmt(a)}–${fmt(b)}`).join(', ');
+}
+const hoursText = (h) => !h ? 'Весь день' : ranges(h, hh);
+const daysText = (d) => !d ? 'Вся неделя' : ranges(d, (x) => DAYS[x]);
+
+/* ── состояние ── */
+let S = { accounts: [], groups: {}, items: [], money: {} };
+let stats = {};           // key -> { i, v, c, s }
+let statsAt = null;
+const sel = new Set();
+const open = new Set();
+let tab = 'all';
+let curGroup = null;
+let sort = lsGet('mb_sort', null);
+let filt = lsGet('mb_filt', { acc: [], city: [], status: [], on: '', group: '' });
+let q = '';
+
+const COLS = [
+  { id: 'on', t: 'Вкл / выкл', sort: (x) => x.on ? 1 : 0, fixed: true },
+  { id: 'status', t: 'Статус', sort: (x) => ({ ok: 0, pending: 1, stop: 2, err: 3, off: 4 }[x.status] ?? 5) },
+  { id: 'bid', t: 'Ставка', sort: (x) => x.bid, r: true },
+  { id: 'now', t: 'Ставка сейчас', sort: (x) => x.now, r: true },
+  { id: 'cmp', t: 'Опережение конкурентов', sort: (x) => x.cmp, r: true },
+  { id: 'base', t: 'Базовая ставка', sort: (x) => x.base, r: true },
+  { id: 'minPromo', t: 'Мин. ставка для продвижения', sort: (x) => x.minPromo, r: true },
+  { id: 'sched', t: 'График продвижения' },
+  { id: 'lim', t: 'Отключение по метрике' },
+  { id: 'title', t: 'Объявление', sort: (x) => x.title.toLowerCase() },
+  { id: 'acc', t: 'Аккаунт', sort: (x) => x.accountName.toLowerCase() },
+  { id: 'city', t: 'Город', sort: (x) => x.city.toLowerCase() },
+  { id: 'i', t: 'Показы', sort: (x) => st(x).i, r: true },
+  { id: 'cv1', t: 'CV в просмотр', sort: (x) => cv(st(x).v, st(x).i), r: true },
+  { id: 'v', t: 'Просмотры', sort: (x) => st(x).v, r: true },
+  { id: 'cv2', t: 'CV в контакт', sort: (x) => cv(st(x).c, st(x).v), r: true },
+  { id: 'c', t: 'Контакты', sort: (x) => st(x).c, r: true },
+  { id: 's', t: 'Расходы', sort: (x) => st(x).s, r: true },
+  { id: 'cpv', t: 'CPV / 1 просмотр', sort: (x) => div(st(x).s, st(x).v), r: true },
+  { id: 'cpa', t: 'CPA / 1 контакт', sort: (x) => div(st(x).s, st(x).c), r: true },
+  { id: 'grp', t: 'Группы' },
+];
+const DEFAULT_COLS = COLS.map((c) => ({ id: c.id, on: c.id !== 'grp' && c.id !== 'cv1' && c.id !== 'cv2' }));
+let cols = lsGet('mb_cols', DEFAULT_COLS);
+COLS.forEach((c) => { if (!cols.find((x) => x.id === c.id)) cols.push({ id: c.id, on: false }); });
+cols = cols.filter((x) => COLS.find((c) => c.id === x.id));
+const colById = (id) => COLS.find((c) => c.id === id);
+
+const st = (x) => stats[x.key] || {};
+const cv = (a, b) => (a == null || !b ? null : (a / b) * 100);
+const div = (a, b) => (a == null || !b ? null : a / b);
+
+/* ── загрузка ── */
+async function load() {
+  const r = await api('/api/dashboard/mbids/state');
+  if (r.status === 401) return showGate();
+  if (!r.ok) { $('#rows').innerHTML = `<tr><td class="empty">${esc(r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
+  S = r.data;
+  const keys = new Set(S.items.map((x) => x.key));
+  [...sel].forEach((k) => { if (!keys.has(k)) sel.delete(k); });
+  render();
+}
+
+function period() {
+  const p = $('#period').value, t = mskToday();
+  if (p === 'today') return [t, t];
+  if (p === 'yesterday') return [dAdd(t, -1), dAdd(t, -1)];
+  if (p === 'custom') {
+    const a = $('#pFrom').value || t, b = $('#pTo').value || t;
+    return a <= b ? [a, b] : [b, a];
+  }
+  return [dAdd(t, -(Number(p) - 1)), t];
+}
+
+let statsSeq = 0;
+async function loadStats() {
+  const seq = ++statsSeq;
+  const [from, to] = period();
+  const accs = [...new Set(S.items.map((x) => x.accountId))];
+  $('#statInfo').textContent = accs.length ? 'загружаем статистику…' : '';
+  const next = {};
+  const errs = [];
+  for (const acc of accs) {
+    const r = await api(`/api/dashboard/mbids/stats?accountId=${encodeURIComponent(acc)}&from=${from}&to=${to}`);
+    if (seq !== statsSeq) return;
+    if (r.ok) Object.entries(r.data.stats || {}).forEach(([id, v]) => { next[`${acc}:${id}`] = v; });
+    else errs.push(r.data.error || 'ошибка');
+    stats = { ...next };
+    render();
+  }
+  // Нет строки в ответе Авито — значит, за период по объявлению ничего не было: нули, а не прочерк.
+  S.items.forEach((x) => { if (!next[x.key] && !errs.length) next[x.key] = { i: 0, v: 0, c: 0, s: 0 }; });
+  stats = next;
+  statsAt = Date.now();
+  $('#statInfo').textContent = errs.length ? `Не все кабинеты ответили: ${errs[0]}` : `обновлено ${fmtAt(statsAt)}`;
+  render();
+}
+
+/* ── отбор ── */
+function visible() {
+  let list = S.items;
+  if (curGroup) list = list.filter((x) => x.groups.includes(curGroup));
+  if (filt.acc.length) list = list.filter((x) => filt.acc.includes(x.accountId));
+  if (filt.city.length) list = list.filter((x) => filt.city.includes(x.city));
+  if (filt.status.length) list = list.filter((x) => filt.status.includes(x.status === 'pending' ? 'ok' : x.status));
+  if (filt.on) list = list.filter((x) => (filt.on === 'on') === x.on);
+  if (filt.group) list = list.filter((x) => x.groups.includes(filt.group));
+  const s = q.trim().toLowerCase();
+  if (s) list = list.filter((x) => x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.address.toLowerCase().includes(s));
+  if (sort) {
+    const c = colById(sort.id);
+    if (c && c.sort) {
+      const dir = sort.dir === 'desc' ? -1 : 1;
+      list = list.slice().sort((a, b) => {
+        const va = c.sort(a), vb = c.sort(b);
+        const na = va == null || Number.isNaN(va), nb = vb == null || Number.isNaN(vb);
+        if (na && nb) return 0;
+        if (na) return 1;
+        if (nb) return -1;
+        return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
+      });
+    }
+  }
+  return list;
+}
+
+/* ── отрисовка ── */
+function render() {
+  renderSum();
+  $('#tableCard').hidden = tab === 'groups' && !curGroup;
+  $('#kpis').hidden = tab === 'groups' && !curGroup;
+  $('#groupsCard').hidden = !(tab === 'groups' && !curGroup);
+  const gh = $('#groupHead');
+  gh.hidden = !curGroup;
+  if (curGroup && S.groups[curGroup]) gh.innerHTML = `<button class="btn sm" type="button" id="gBack">← Все группы</button> <b style="margin-left:6px">${esc(S.groups[curGroup].name)}</b> <button class="btn sm" type="button" id="gAddTo" style="margin-left:8px">Добавить объявления в группу</button>`;
+  if (tab === 'groups' && !curGroup) { renderGroups(); renderSelbar([]); return; }
+  const list = visible();
+  renderKpis(list);
+  renderChips();
+  renderTable(list);
+  renderSelbar(list);
+}
+
+function renderSum() {
+  const items = S.items;
+  const on = items.filter((x) => x.on).length;
+  const err = items.filter((x) => x.status === 'err').length;
+  const stop = items.filter((x) => x.status === 'stop').length;
+  const accs = [...new Set(items.map((x) => x.accountId))];
+  const runs = accs.map((a) => (S.money[a] || {}).runAt).filter(Boolean);
+  const low = accs.filter((a) => { const m = S.money[a]; return m && m.at && (m.advance ?? 0) + (m.wallet ?? 0) <= 0; });
+  $('#sum').innerHTML = `<span>Объявлений в работе: <b>${items.length}</b></span><span>Включено: <b>${on}</b></span><span>Остановлено: <b>${stop}</b></span><span>С ошибкой: <b style="color:${err ? 'var(--red)' : 'inherit'}">${err}</b></span><span>Кабинетов: <b>${accs.length}</b></span><span>Последняя проверка: <b>${runs.length ? fmtAt(Math.max(...runs)) : '—'}</b></span>${low.length ? `<span style="color:var(--red)">Нет денег на продвижение: ${low.map((a) => esc(accName(a))).join(', ')}</span>` : ''}`;
+}
+const accName = (id) => (S.accounts.find((a) => a.id === id) || {}).name || id;
+
+function renderKpis(list) {
+  let i = 0, v = 0, c = 0, s = 0, has = false, bidSum = 0, bidN = 0, cmpSum = 0, cmpN = 0;
+  list.forEach((x) => {
+    const t = stats[x.key];
+    if (t) { has = true; i += t.i; v += t.v; c += t.c; s += t.s; }
+    if (x.on && x.now != null) { bidSum += x.now; bidN++; }
+    if (x.on && x.cmp != null) { cmpSum += x.cmp; cmpN++; }
+  });
+  const kv = (l, val, cls = '') => `<div class="kv ${cls}"><div class="l">${l}</div><div class="v">${val}</div></div>`;
+  const n = (val, f) => has ? f(val) : '—';
+  $('#kpis').innerHTML = `
+    <div class="card kpi"><h3>Воронка</h3><div class="kpi-row">${kv('Показы', n(i, int))}${kv('CV в просмотр', has ? pct(cv(v, i)) : '—', 'cv')}${kv('Просмотры', n(v, int))}${kv('CV в контакт', has ? pct(cv(c, v)) : '—', 'cv')}${kv('Контакты', n(c, int))}</div></div>
+    <div class="card kpi"><h3>Экономика</h3><div class="kpi-row">${kv('Расходы', n(s, (x) => rub(x, 1)))}${kv('CPV / 1 просмотр', has ? rub(div(s, v), 1) : '—')}${kv('CPA / 1 контакт', has ? rub(div(s, c), 1) : '—')}${kv('Средняя ставка', bidN ? rub(bidSum / bidN, 1) : '—')}${kv('Среднее опережение', cmpN ? pct(cmpSum / cmpN) : '—')}</div></div>`;
+}
+
+function renderChips() {
+  const ch = [];
+  filt.acc.forEach((a) => ch.push([`Аккаунт: ${accName(a)}`, () => { filt.acc = filt.acc.filter((x) => x !== a); }]));
+  filt.city.forEach((c) => ch.push([`Город: ${c || 'не указан'}`, () => { filt.city = filt.city.filter((x) => x !== c); }]));
+  filt.status.forEach((s) => ch.push([`Статус: ${STATUS[s]}`, () => { filt.status = filt.status.filter((x) => x !== s); }]));
+  if (filt.on) ch.push([filt.on === 'on' ? 'Только включённые' : 'Только выключенные', () => { filt.on = ''; }]);
+  if (filt.group && S.groups[filt.group]) ch.push([`Группа: ${S.groups[filt.group].name}`, () => { filt.group = ''; }]);
+  chipFns = ch.map((x) => x[1]);
+  $('#chips').innerHTML = ch.map((x, k) => `<span class="chip">${esc(x[0])}<button type="button" data-chip="${k}" aria-label="Убрать фильтр">×</button></span>`).join('');
+}
+let chipFns = [];
+const STATUS = { ok: 'Успешно', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
+
+function statusPill(x) {
+  const map = { ok: ['p-ok', 'Успешно'], pending: ['p-ok', 'Успешно'], stop: ['p-stop', 'Остановлено'], err: ['p-err', 'Ошибка'], off: ['p-off', 'Остановлено'] };
+  const [cls, t] = map[x.status] || map.off;
+  let reason = x.reason || (x.status === 'pending' ? 'Ждёт первой проверки — до 10 минут' : '');
+  if (x.status === 'ok' && x.setAt && x.now !== x.bid) reason = 'Ставка отправлена в Авито, применение может занять время';
+  const checked = x.checkedAt ? `Проверено ${fmtAt(x.checkedAt)}` : '';
+  return `<span class="pill ${cls}" data-tip="${esc([reason, checked].filter(Boolean).join(' · '))}" tabindex="0">${t}</span>`;
+}
+
+function limText(x) {
+  const L = x.lim || {};
+  const parts = [];
+  if (L.imp != null) parts.push(`показы ${int(L.imp)}`);
+  if (L.views != null) parts.push(`просмотры ${int(L.views)}`);
+  if (L.contacts != null) parts.push(`контакты ${int(L.contacts)}`);
+  if (L.spend != null) parts.push(`расходы ${rub(L.spend)}`);
+  if (L.cpv != null) parts.push(`CPV ${rub(L.cpv)}`);
+  if (L.cpa != null) parts.push(`CPA ${rub(L.cpa)}`);
+  return parts;
+}
+
+function cell(id, x) {
+  const t = st(x);
+  const has = !!stats[x.key];
+  switch (id) {
+    case 'on': return `<td><label class="tg" title="Вкл / выкл"><input type="checkbox" data-on="${esc(x.key)}" ${x.on ? 'checked' : ''} aria-label="Включить ручное управление"><span></span></label></td>`;
+    case 'status': return `<td>${statusPill(x)}</td>`;
+    case 'bid': {
+      const bad = x.bid != null && ((x.minPromo != null && x.bid < x.minPromo) || (x.max != null && x.bid > x.max));
+      return `<td class="r"><input class="cell-in${bad ? ' bad' : ''}" inputmode="numeric" data-bid="${esc(x.key)}" value="${x.bid ?? ''}" placeholder="—" aria-label="Ставка, ₽" title="${x.minPromo != null ? `Допустимо: ${Math.ceil(x.minPromo)}–${Math.floor(x.max)} ₽` : 'Ставка, ₽ за просмотр'}"></td>`;
+    }
+    case 'now': return `<td class="r num">${x.now != null ? rub(x.now) : x.selectedType === 'auto' ? '<span class="sub" title="На Авито включена автостратегия">авто</span>' : '<span class="dash">—</span>'}</td>`;
+    case 'cmp': return `<td class="r num">${pct(x.cmp)}</td>`;
+    case 'base': return `<td class="r num">${rub(x.base)}</td>`;
+    case 'minPromo': return `<td class="r num">${rub(x.minPromo)}</td>`;
+    case 'sched': return `<td><div class="sched"><button class="lnkb" type="button" data-hours="${esc(x.key)}">Часы: ${esc(hoursText(x.hours))}</button><button class="lnkb" type="button" data-days="${esc(x.key)}">Дни: ${esc(daysText(x.days))}</button></div></td>`;
+    case 'lim': { const p = limText(x); return `<td><button class="lnkb" type="button" data-lim="${esc(x.key)}">${p.length ? esc(p.join(', ')) : 'Настроить'}</button></td>`; }
+    case 'title': return `<td class="td-ttl"><a class="ttl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title || 'Без названия')}</a><div class="sub">№ ${esc(x.id)} · ${esc(x.address)}</div></td>`;
+    case 'acc': return `<td class="sub">${esc(x.accountName)}</td>`;
+    case 'city': return `<td class="sub">${esc(x.city)}</td>`;
+    case 'i': return `<td class="r num">${has ? int(t.i) : '—'}</td>`;
+    case 'cv1': return `<td class="r num">${has ? pct(cv(t.v, t.i)) : '—'}</td>`;
+    case 'v': return `<td class="r num">${has ? int(t.v) : '—'}</td>`;
+    case 'cv2': return `<td class="r num">${has ? pct(cv(t.c, t.v)) : '—'}</td>`;
+    case 'c': return `<td class="r num">${has ? int(t.c) : '—'}</td>`;
+    case 's': return `<td class="r num">${has ? rub(t.s, 1) : '—'}</td>`;
+    case 'cpv': return `<td class="r num">${has ? rub(div(t.s, t.v), 1) : '—'}</td>`;
+    case 'cpa': return `<td class="r num">${has ? rub(div(t.s, t.c), 1) : '—'}</td>`;
+    case 'grp': return `<td class="sub">${x.groups.map((g) => S.groups[g] ? esc(S.groups[g].name) : '').filter(Boolean).join(', ') || '—'}</td>`;
+  }
+  return '<td></td>';
+}
+
+function renderTable(list) {
+  const shown = cols.filter((c) => c.on).map((c) => colById(c.id));
+  if (!shown.length) {
+    $('#thead').innerHTML = '';
+    $('#rows').innerHTML = '<tr><td class="empty">Не выбраны столбцы для работы с таблицей</td></tr>';
+    return;
+  }
+  const allSel = list.length && list.every((x) => sel.has(x.key));
+  $('#thead').innerHTML = `<tr><th style="width:34px"><input type="checkbox" class="cb" id="selAllPage" ${allSel ? 'checked' : ''} aria-label="Выбрать все"></th><th style="width:30px"></th>${shown.map((c) => {
+    const ar = sort && sort.id === c.id ? `<span class="ar">${sort.dir === 'desc' ? '↓' : '↑'}</span>` : '';
+    return `<th class="${c.sort ? 'sortable' : ''} ${c.r ? 'r' : ''}" ${c.sort ? `data-sort="${c.id}"` : ''}>${esc(c.t)}${ar}</th>`;
+  }).join('')}</tr>`;
+  const span = shown.length + 2;
+  if (!S.items.length) { $('#rows').innerHTML = `<tr><td colspan="${span}" class="empty">Объявлений пока нет. Нажмите «Добавить объявления».</td></tr>`; return; }
+  if (!list.length) { $('#rows').innerHTML = `<tr><td colspan="${span}" class="empty">По выбранным фильтрам / поиску ничего не найдено</td></tr>`; return; }
+  const MAX = 600;
+  const html = list.slice(0, MAX).map((x) => {
+    const o = open.has(x.key);
+    return `<tr class="${sel.has(x.key) ? 'sel' : ''}"><td><input type="checkbox" class="cb" data-sel="${esc(x.key)}" ${sel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><button class="exp ${o ? 'open' : ''}" type="button" data-exp="${esc(x.key)}" aria-label="Статистика объявления" aria-expanded="${o}">▾</button></td>${shown.map((c) => cell(c.id, x)).join('')}</tr>${o ? `<tr class="det"><td colspan="${span}"><div class="det-in" id="det-${cssId(x.key)}">${detailHtml(x)}</div></td></tr>` : ''}`;
+  }).join('');
+  $('#rows').innerHTML = html + (list.length > MAX ? `<tr><td colspan="${span}" class="empty">Показаны первые ${MAX} из ${list.length}. Уточните поиск или фильтры.</td></tr>` : '');
+}
+const cssId = (k) => k.replace(/[^a-z0-9]/gi, '_');
+
+function renderSelbar(list) {
+  const bar = $('#selbar');
+  if (!sel.size) { bar.hidden = true; return; }
+  const notSel = list.filter((x) => !sel.has(x.key)).length;
+  bar.hidden = false;
+  const grpOpts = Object.entries(S.groups).map(([g, v]) => `<option value="${g}">${esc(v.name)}</option>`).join('');
+  bar.innerHTML = `<span>Выбрано: <b>${sel.size}</b></span>${notSel ? `<button class="btn sm" type="button" data-act="selall">Выбрать все (${list.length})</button>` : ''}<button class="btn sm" type="button" data-act="clear">Снять выбор</button>${curGroup ? '<button class="btn sm" type="button" data-act="ungroup">Убрать из группы</button>' : (grpOpts ? `<select class="btn sm" data-act="togroup" aria-label="Добавить в группу"><option value="">В группу…</option>${grpOpts}</select>` : '')}<button class="btn sm danger" type="button" data-act="del" style="color:#ff8b78">Удалить</button><button class="btn sm pri" type="button" data-act="bulk">Массовое редактирование</button>`;
+}
+
+/* ── группы ── */
+function renderGroups() {
+  const g = Object.entries(S.groups).sort((a, b) => a[1].name.localeCompare(b[1].name, 'ru'));
+  $('#gInfo').textContent = g.length ? `Групп: ${g.length}` : '';
+  $('#gDelSel').hidden = !gSel.size;
+  if (!g.length) {
+    $('#groupsBody').innerHTML = `<div class="empty">У вас пока нет групп<br><br><button class="btn pri" type="button" id="gFirst">Добавить первую группу</button></div>`;
+    return;
+  }
+  $('#groupsBody').innerHTML = `<div class="groups">${g.map(([id, v]) => {
+    const items = S.items.filter((x) => x.groups.includes(id));
+    return `<div class="gcard" data-gopen="${id}" tabindex="0" role="button"><div class="gn"><input type="checkbox" class="cb" data-gsel="${id}" ${gSel.has(id) ? 'checked' : ''} aria-label="Выбрать группу"><span style="flex:1">${esc(v.name)}</span><button class="ico" type="button" data-gren="${id}" title="Переименовать" aria-label="Переименовать">✎</button><button class="ico" type="button" data-gdel="${id}" title="Удалить группу" aria-label="Удалить группу">×</button></div><div class="gs"><span>Объявлений: <b>${items.length}</b></span><span>Включено: <b>${items.filter((x) => x.on).length}</b></span><span>С ошибкой: <b>${items.filter((x) => x.status === 'err').length}</b></span></div></div>`;
+  }).join('')}</div>`;
+}
+const gSel = new Set();
+
+/* ── подробная статистика объявления ── */
+const det = {}; // key -> { per, by, data, loading, metrics }
+const MET = [
+  { id: 'i', t: 'Показы', c: 'var(--blue)' }, { id: 'v', t: 'Просмотры', c: 'var(--green)' }, { id: 'c', t: 'Контакты', c: 'var(--accent)' },
+  { id: 's', t: 'Расходы', c: 'var(--amber)' }, { id: 'cpa', t: 'CPA', c: 'var(--red)' }, { id: 'b', t: 'Средняя ставка', c: 'var(--violet)' },
+  { id: 'cmp', t: 'Среднее опережение', c: 'var(--muted)' }, { id: 'set', t: 'Установленная ставка', c: 'var(--ink)' },
+];
+
+function detailHtml(x) {
+  const d = det[x.key] || (det[x.key] = { per: '7', by: 'day', data: null, loading: false, metrics: ['i', 'v', 'c', 'b'] });
+  if (!d.data && !d.loading) setTimeout(() => loadDetail(x.key), 0);
+  const top = `<div class="det-top"><b style="font-size:13px">Статистика объявления за:</b>
+    <select data-dper="${esc(x.key)}">${[['1', 'Сегодня'], ['7', '7 дней'], ['14', '14 дней'], ['30', '30 дней']].map(([v, t]) => `<option value="${v}" ${d.per === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    <div class="seg"><button type="button" data-dby="${esc(x.key)}:day" class="${d.by === 'day' ? 'on' : ''}">По дням</button><button type="button" data-dby="${esc(x.key)}:hour" class="${d.by === 'hour' ? 'on' : ''}">По часам</button></div>
+    <span class="sp"></span><button class="btn sm" type="button" data-note="${esc(x.key)}">Добавить заметку</button></div>`;
+  if (d.loading && !d.data) return top + '<div class="note">Загрузка…</div>';
+  if (!d.data) return top + '<div class="note">Не удалось загрузить статистику</div>';
+  const rows = d.by === 'hour' ? d.data.hours : d.data.days;
+  const tot = rows.reduce((a, r) => ({ i: a.i + r.i, v: a.v + r.v, c: a.c + r.c, s: a.s + r.s }), { i: 0, v: 0, c: 0, s: 0 });
+  const bs = rows.filter((r) => r.b != null), cs = rows.filter((r) => r.cmp != null);
+  const avgB = bs.length ? bs.reduce((a, r) => a + r.b, 0) / bs.length : null;
+  const avgC = cs.length ? cs.reduce((a, r) => a + r.cmp, 0) / cs.length : null;
+  const ln = (l, v) => `<div class="ln"><span>${l}</span><b>${v}</b></div>`;
+  const empty = !rows.length;
+  let html = top;
+  if (d.data.error) html += `<div class="err-box">${esc(d.data.error)}</div>`;
+  if (d.by === 'hour' && empty) html += '<div class="note">Почасовые данные копятся с момента включения объявления в сервисе (снимок раз в 10 минут).</div>';
+  else if (empty) html += '<div class="note">Нет данных за выбранный период</div>';
+  html += `<div class="det-k">
+    <div class="box"><h4>Воронка</h4>${ln('Показы', int(tot.i))}${ln('Просмотры', int(tot.v))}${ln('Контакты', int(tot.c))}${ln('Показ → просмотр', pct(cv(tot.v, tot.i)))}${ln('Просмотр → контакт', pct(cv(tot.c, tot.v)))}</div>
+    <div class="box"><h4>Расходы</h4>${ln('Расходы', rub(tot.s, 1))}${ln('CPV / 1 просмотр', rub(div(tot.s, tot.v), 1))}${ln('CPA / 1 контакт', rub(div(tot.s, tot.c), 1))}</div>
+    <div class="box"><h4>Ставка и опережение</h4>${ln('Средняя ставка', rub(avgB, 1))}${ln('Среднее опережение', pct(avgC))}${ln('Установленная ставка', rub(x.bid))}${ln('Рекомендует Авито', rub(x.rec))}</div>
+  </div>`;
+  if (!empty) html += chartHtml(x.key, rows, d);
+  const tod = d.data.tod || [];
+  const mx = Math.max(1, ...tod.map((t) => t.v));
+  if (tod.some((t) => t.i || t.v)) {
+    html += `<div class="chart"><b style="font-size:12.5px">Время суток — просмотры по часам (МСК), сумма за период</b><div class="tod" style="margin-top:8px">${tod.map((t) => `<div style="height:${(t.v / mx) * 100}%" title="${hh(t.h)}: показы ${t.i}, просмотры ${t.v}, контакты ${t.c}, расходы ${rub(t.s, 1)}"></div>`).join('')}</div><div class="tod-l">${tod.map((t) => `<span>${t.h}</span>`).join('')}</div></div>`;
+  }
+  if (x.scale && x.scale.length) {
+    const cur = x.now;
+    let curIdx = -1;
+    x.scale.forEach(([v], k) => { if (cur != null && v <= cur) curIdx = k; });
+    html += `<details><summary class="note" style="cursor:pointer">Шкала ставок Авито (ставка → опережение конкурентов)</summary><table class="scale"><tr><th>Ставка</th><th>Опережение</th></tr>${x.scale.map(([v, c], k) => `<tr class="${k === curIdx ? 'cur' : ''}"><td class="num">${rub(v)}${k === 0 ? ' · базовая' : ''}</td><td class="num">${c} %</td></tr>`).join('')}</table></details>`;
+  }
+  const notes = d.data.notes || [];
+  if (notes.length) html += `<div class="notes"><b style="font-size:12.5px">Заметки</b>${notes.slice().reverse().map((n) => `<div class="n"><time>${fmtAt(n.at)}</time><span>${esc(n.text)}</span><button class="lnkb" type="button" data-delnote="${esc(x.key)}|${n.at}" style="color:var(--muted)">удалить</button></div>`).join('')}</div>`;
+  return html;
+}
+
+function chartHtml(key, rows, d) {
+  const W = 1000, H = 220, P = 28;
+  const pts = rows.map((r) => ({ ...r, cpa: div(r.s, r.c) }));
+  const lines = MET.filter((m) => d.metrics.includes(m.id)).map((m) => {
+    const vals = pts.map((r) => r[m.id]);
+    const mx = Math.max(...vals.filter((v) => v != null), 0) || 1;
+    const xs = (k) => P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1));
+    let path = '';
+    vals.forEach((v, k) => { if (v == null) return; path += `${path ? 'L' : 'M'}${xs(k).toFixed(1)},${(H - P - (v / mx) * (H - 2 * P)).toFixed(1)}`; });
+    const dots = vals.map((v, k) => v == null ? '' : `<circle cx="${xs(k).toFixed(1)}" cy="${(H - P - (v / mx) * (H - 2 * P)).toFixed(1)}" r="2.5" fill="${m.c}"><title>${esc(pts[k].at || pts[k].date)} · ${m.t}: ${v}</title></circle>`).join('');
+    return `<path d="${path}" fill="none" stroke="${m.c}" stroke-width="2" vector-effect="non-scaling-stroke"/>${dots}`;
+  }).join('');
+  const label = (r) => (r.at || r.date || '').slice(d.by === 'hour' ? 5 : 5);
+  const step = Math.max(1, Math.ceil(pts.length / 8));
+  const xl = pts.map((r, k) => k % step ? '' : `<text x="${P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1))}" y="${H - 8}" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">${esc(label(r))}</text>`).join('');
+  const notes = (det[key].data.notes || []).map((n) => {
+    const day = new Date(n.at + 3 * 3600e3).toISOString().slice(0, 10);
+    const k = pts.findIndex((r) => (r.date || r.at || '').startsWith(day));
+    if (k < 0) return '';
+    const x = P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1));
+    return `<line x1="${x}" x2="${x}" y1="${P / 2}" y2="${H - P}" stroke="currentColor" stroke-dasharray="3 3" opacity=".35"/><text x="${x + 3}" y="${P / 2 + 8}" font-size="10" fill="currentColor" opacity=".7"><title>${esc(n.text)}</title>✎</text>`;
+  }).join('');
+  return `<div class="chart"><div class="legend">${MET.map((m) => `<label class="${d.metrics.includes(m.id) ? '' : 'offl'}"><input type="checkbox" data-met="${esc(key)}|${m.id}" ${d.metrics.includes(m.id) ? 'checked' : ''}><i style="background:${m.c}"></i>${m.t}</label>`).join('')}</div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="color:var(--muted)" role="img" aria-label="График показателей объявления">${notes}${lines}${xl}</svg><div class="note">Каждая линия — в своём масштабе (максимум линии = верх графика). Наведите на точку — значение.</div></div>`;
+}
+
+async function loadDetail(key) {
+  const x = S.items.find((i) => i.key === key);
+  const d = det[key];
+  if (!x || !d) return;
+  d.loading = true;
+  const to = mskToday(), from = dAdd(to, -(Number(d.per) - 1));
+  const r = await api(`/api/dashboard/mbids/item-stats?accountId=${encodeURIComponent(x.accountId)}&id=${x.id}&from=${from}&to=${to}&by=${d.by}`);
+  d.loading = false;
+  d.data = r.ok ? r.data : null;
+  const box = document.getElementById(`det-${cssId(key)}`);
+  if (box) box.innerHTML = detailHtml(x);
+}
+
+/* ── правки ── */
+async function update(keys, set, note, extra = {}) {
+  const r = await post('/api/dashboard/mbids/items/update', { refs: keys, set, note, ...extra });
+  if (!r.ok) { toast(r.data.error || 'Не сохранилось'); return null; }
+  keys.forEach((k) => {
+    const x = S.items.find((i) => i.key === k);
+    if (!x) return;
+    if (set.on !== undefined) x.on = !!set.on;
+    if (set.bid !== undefined && set.bid !== null && typeof set.bid !== 'object') x.bid = set.bid;
+    if (set.hours !== undefined) x.hours = set.hours && set.hours.length < 24 ? set.hours : null;
+    if (set.days !== undefined) x.days = set.days && set.days.length < 7 ? set.days : null;
+  });
+  render();
+  // Движок применяет правки в фоне — подтягиваем статусы чуть позже.
+  setTimeout(load, 7000);
+  setTimeout(load, 25000);
+  return r.data;
+}
+
+/* ── события таблицы ── */
+$('#rows').addEventListener('change', async (e) => {
+  const t = e.target;
+  if (t.dataset.sel) { t.checked ? sel.add(t.dataset.sel) : sel.delete(t.dataset.sel); t.closest('tr').classList.toggle('sel', t.checked); renderSelbar(visible()); return; }
+  if (t.dataset.on) {
+    const x = S.items.find((i) => i.key === t.dataset.on);
+    if (t.checked && x && x.bid == null) toast('Ставка не указана — статус будет «Ошибка», пока её не зададите');
+    await update([t.dataset.on], { on: t.checked });
+    return;
+  }
+  if (t.dataset.bid) {
+    const v = t.value.trim();
+    if (v !== '' && !/^\d+$/.test(v)) { toast('Ставка — целое число рублей'); t.classList.add('bad'); return; }
+    await update([t.dataset.bid], { bid: v === '' ? null : Number(v) });
+    return;
+  }
+  if (t.dataset.dper) { const d = det[t.dataset.dper]; d.per = t.value; d.data = null; loadDetail(t.dataset.dper); return; }
+  if (t.dataset.met) {
+    const [key, m] = t.dataset.met.split('|');
+    const d = det[key];
+    d.metrics = t.checked ? [...d.metrics, m] : d.metrics.filter((x) => x !== m);
+    const x = S.items.find((i) => i.key === key);
+    const box = document.getElementById(`det-${cssId(key)}`);
+    if (box && x) box.innerHTML = detailHtml(x);
+  }
+});
+$('#rows').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.bid) e.target.blur(); });
+$('#rows').addEventListener('click', async (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.exp) { open.has(b.dataset.exp) ? open.delete(b.dataset.exp) : open.add(b.dataset.exp); render(); return; }
+  if (b.dataset.hours) return schedPop(b, [b.dataset.hours], 'hours');
+  if (b.dataset.days) return schedPop(b, [b.dataset.days], 'days');
+  if (b.dataset.lim) return openLim([b.dataset.lim]);
+  if (b.dataset.dby) { const [acc, id, by] = b.dataset.dby.split(':'); const key = `${acc}:${id}`; det[key].by = by; det[key].data = null; loadDetail(key); return; }
+  if (b.dataset.note) {
+    const text = prompt('Заметка к объявлению (появится в статистике):');
+    if (!text || !text.trim()) return;
+    await update([b.dataset.note], {}, text.trim());
+    if (det[b.dataset.note]) { det[b.dataset.note].data = null; loadDetail(b.dataset.note); }
+    return;
+  }
+  if (b.dataset.delnote) {
+    const [key, at] = b.dataset.delnote.split('|');
+    await update([key], {}, '', { removeNoteAt: Number(at) });
+    det[key].data = null; loadDetail(key);
+  }
+});
+$('#thead').addEventListener('click', (e) => {
+  const cb = e.target.closest('#selAllPage');
+  if (cb) { const list = visible(); list.forEach((x) => cb.checked ? sel.add(x.key) : sel.delete(x.key)); render(); return; }
+  const th = e.target.closest('th[data-sort]');
+  if (!th) return;
+  const id = th.dataset.sort;
+  sort = !sort || sort.id !== id ? { id, dir: 'asc' } : sort.dir === 'asc' ? { id, dir: 'desc' } : null;
+  lsSet('mb_sort', sort);
+  render();
+});
+$('#chips').addEventListener('click', (e) => { const b = e.target.closest('[data-chip]'); if (!b) return; chipFns[Number(b.dataset.chip)](); lsSet('mb_filt', filt); render(); });
+
+$('#selbar').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'selall') { visible().forEach((x) => sel.add(x.key)); render(); }
+  else if (act === 'clear') { sel.clear(); render(); }
+  else if (act === 'bulk') openBulk();
+  else if (act === 'del') {
+    if (!confirm(`Убрать из раздела ${sel.size} объявл.? На Авито объявления и их ставки останутся как есть.`)) return;
+    const r = await post('/api/dashboard/mbids/items/delete', { refs: [...sel] });
+    if (!r.ok) return toast(r.data.error || 'Не удалилось');
+    toast(`Убрано: ${r.data.removed}`);
+    sel.clear(); await load(); loadStats();
+  } else if (act === 'ungroup') {
+    const r = await post('/api/dashboard/mbids/groups/members', { groupId: curGroup, refs: [...sel], action: 'remove' });
+    if (!r.ok) return toast(r.data.error || 'Не получилось');
+    toast(`Убрано из группы: ${r.data.changed}`); sel.clear(); load();
+  }
+});
+$('#selbar').addEventListener('change', async (e) => {
+  const s = e.target.closest('select[data-act="togroup"]');
+  if (!s || !s.value) return;
+  const r = await post('/api/dashboard/mbids/groups/members', { groupId: s.value, refs: [...sel], action: 'add' });
+  if (!r.ok) return toast(r.data.error || 'Не получилось');
+  toast(`Добавлено в группу «${S.groups[s.value].name}»: ${r.data.changed}`);
+  load();
+});
+
+/* ── всплывающий выбор часов / дней ── */
+let popCtx = null;
+function schedPop(anchor, keys, kind, onDone) {
+  const x = S.items.find((i) => i.key === keys[0]) || {};
+  const cur = kind === 'hours' ? (x.hours || [...Array(24).keys()]) : (x.days || [...Array(7).keys()]);
+  popCtx = { keys, kind, val: new Set(cur), onDone };
+  const p = $('#pop');
+  const n = kind === 'hours' ? 24 : 7;
+  p.innerHTML = `<b style="font-size:13px">${kind === 'hours' ? 'Часы (МСК)' : 'Дни недели'}</b>
+    <div class="q">${kind === 'hours' ? '<button class="btn sm" type="button" data-q="all">Включить на весь день</button><button class="btn sm" type="button" data-q="work">09–20</button><button class="btn sm" type="button" data-q="none">Снять все</button>' : '<button class="btn sm" type="button" data-q="all">Вся неделя</button><button class="btn sm" type="button" data-q="work">Будни</button><button class="btn sm" type="button" data-q="none">Снять все</button>'}</div>
+    <div class="${kind === 'hours' ? 'hgrid' : 'dgrid'}">${[...Array(n).keys()].map((k) => `<label class="${popCtx.val.has(k) ? 'on' : ''}"><input type="checkbox" value="${k}" ${popCtx.val.has(k) ? 'checked' : ''}>${kind === 'hours' ? hh(k).slice(0, 2) : DAYS[k]}</label>`).join('')}</div>
+    <div class="note" id="popErr"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" type="button" data-q="cancel">Отмена</button><button class="btn sm pri" type="button" data-q="save">Готово</button></div>`;
+  p.hidden = false;
+  const r = anchor.getBoundingClientRect();
+  const w = p.offsetWidth, h = p.offsetHeight;
+  p.style.left = `${Math.max(12, Math.min(r.left, innerWidth - w - 12))}px`;
+  p.style.top = `${r.bottom + 6 + h > innerHeight ? Math.max(12, r.top - h - 6) : r.bottom + 6}px`;
+}
+$('#pop').addEventListener('click', async (e) => {
+  if (!popCtx || popCtx.filters) return;
+  const lab = e.target.closest('label');
+  const n = popCtx.kind === 'hours' ? 24 : 7;
+  if (lab) {
+    e.preventDefault();
+    const k = Number(lab.querySelector('input').value);
+    popCtx.val.has(k) ? popCtx.val.delete(k) : popCtx.val.add(k);
+    lab.classList.toggle('on', popCtx.val.has(k));
+    return;
+  }
+  const b = e.target.closest('button[data-q]');
+  if (!b) return;
+  const qv = b.dataset.q;
+  if (qv === 'cancel') { $('#pop').hidden = true; return; }
+  if (qv === 'all' || qv === 'none' || qv === 'work') {
+    popCtx.val = new Set(qv === 'all' ? [...Array(n).keys()] : qv === 'none' ? [] : popCtx.kind === 'hours' ? [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] : [0, 1, 2, 3, 4]);
+    $$('#pop label').forEach((l) => l.classList.toggle('on', popCtx.val.has(Number(l.querySelector('input').value))));
+    return;
+  }
+  if (qv === 'save') {
+    const val = [...popCtx.val].sort((a, b) => a - b);
+    if (!val.length) { $('#popErr').textContent = popCtx.kind === 'hours' ? 'Выберите хотя бы один час' : 'Выберите хотя бы один день'; return; }
+    $('#pop').hidden = true;
+    if (popCtx.onDone) return popCtx.onDone(val);
+    await update(popCtx.keys, { [popCtx.kind]: val });
+  }
+});
+document.addEventListener('mousedown', (e) => { if (!$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('[data-hours],[data-days],[data-bsched]')) $('#pop').hidden = true; });
+
+/* ── подсказки статуса ── */
+document.addEventListener('mouseover', (e) => {
+  const el = e.target.closest('[data-tip]');
+  const tip = $('#tip');
+  if (!el || !el.dataset.tip) { tip.hidden = true; return; }
+  tip.textContent = el.dataset.tip;
+  tip.hidden = false;
+  const r = el.getBoundingClientRect();
+  tip.style.left = `${Math.min(r.left, innerWidth - tip.offsetWidth - 10)}px`;
+  tip.style.top = `${r.bottom + 6}px`;
+});
+document.addEventListener('focusin', (e) => { const el = e.target.closest('[data-tip]'); if (el) el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
+
+/* ── модалки ── */
+let openModal = null;
+function showModal(id) { openModal = $(id); $('#scrim').hidden = false; openModal.hidden = false; const f = openModal.querySelector('input:not([type=checkbox]),select,textarea'); if (f) setTimeout(() => f.focus(), 30); }
+function closeModal() { if (openModal) openModal.hidden = true; openModal = null; $('#scrim').hidden = true; }
+document.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target === $('#scrim')) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('#pop').hidden) $('#pop').hidden = true; else closeModal(); } });
+
+/* ── отключение по метрике ── */
+const LIMS = [['imp', 'По показам', 'шт.'], ['views', 'По просмотрам', 'шт.'], ['contacts', 'По контактам', 'шт.'], ['spend', 'По расходам', '₽ за сутки'], ['cpv', 'По стоимости CPV / 1 просмотр', '₽'], ['cpa', 'По стоимости CPA / 1 контакт', '₽']];
+let limKeys = [];
+function openLim(keys) {
+  limKeys = keys;
+  const x = S.items.find((i) => i.key === keys[0]) || { lim: {} };
+  $('#lTitle').textContent = keys.length > 1 ? `Отключение по метрике — ${keys.length} объявл.` : 'Отключение по метрике';
+  $('#lFields').innerHTML = LIMS.map(([k, t, u]) => `<div class="f"><label for="lim_${k}">${t}, ${u}</label><input id="lim_${k}" inputmode="decimal" value="${x.lim[k] ?? ''}" placeholder="не ограничено"></div>`).join('');
+  $('#lErr').hidden = true;
+  showModal('#mLim');
+}
+$('#lForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const lim = {};
+  for (const [k] of LIMS) {
+    const v = $(`#lim_${k}`).value.trim().replace(',', '.');
+    if (v !== '' && !(Number(v) >= 0)) { $('#lErr').textContent = 'Укажите неотрицательное число или оставьте поле пустым'; $('#lErr').hidden = false; return; }
+    lim[k] = v === '' ? null : Number(v);
+  }
+  const r = await update(limKeys, { lim });
+  if (r) {
+    limKeys.forEach((k) => { const x = S.items.find((i) => i.key === k); if (x) { x.lim = {}; Object.entries(lim).forEach(([a, b]) => { if (b != null) x.lim[a] = b; }); } });
+    closeModal(); render();
+  }
+});
+
+/* ── массовое редактирование ── */
+const BULK = [
+  { id: 'on', t: 'Вкл / выкл' },
+  { id: 'bid', t: 'Ставка', num: true },
+  ...LIMS.map(([k, t]) => ({ id: `lim_${k}`, t, num: true })),
+  { id: 'hours', t: 'График: часы' },
+  { id: 'days', t: 'График: дни недели' },
+];
+let bulkSched = { hours: [...Array(24).keys()], days: [...Array(7).keys()] };
+function openBulk() {
+  $('#bInfo').textContent = `Применится к ${sel.size} выбранным объявлениям. Изменятся только настройки с включённым левым тумблером.`;
+  bulkSched = { hours: [...Array(24).keys()], days: [...Array(7).keys()] };
+  $('#bRows').innerHTML = BULK.map((b) => {
+    let ctl = '';
+    if (b.id === 'on') ctl = `<label class="tg"><input type="checkbox" id="bv_on" checked aria-label="Состояние"><span></span></label><span class="note">включить / выключить</span>`;
+    else if (b.num) ctl = `<select id="bo_${b.id}" aria-label="Действие"><option value="set">Заменить на</option><option value="add">Прибавить</option><option value="sub">Вычесть</option></select><input type="number" min="0" step="${b.id === 'bid' ? 1 : 'any'}" id="bv_${b.id}" placeholder="${b.id === 'bid' ? '₽' : 'пусто — снять'}">${b.id === 'bid' ? '<label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="bv_bidmin" class="cb"> Установить минимальную ставку для продвижения</label>' : ''}`;
+    else ctl = `<button class="lnkb" type="button" data-bsched="${b.id}" id="bs_${b.id}">${b.id === 'hours' ? hoursText(null) : daysText(null)}</button>`;
+    return `<div class="be-row dis" data-brow="${b.id}"><label class="tg"><input type="checkbox" data-ben="${b.id}" aria-label="Изменять «${b.t}»"><span></span></label><div class="lbl">${b.t}</div><div class="ctl">${ctl}</div></div>`;
+  }).join('');
+  $('#bNoteWrap').hidden = true; $('#bNote').value = '';
+  $('#bErr').hidden = true; $('#bPreview').hidden = true;
+  showModal('#mBulk');
+}
+$('#bRows').addEventListener('change', (e) => {
+  const en = e.target.dataset.ben;
+  if (en) e.target.closest('.be-row').classList.toggle('dis', !e.target.checked);
+  if (e.target.id === 'bv_bidmin') { $('#bv_bid').disabled = e.target.checked; $('#bo_bid').disabled = e.target.checked; }
+});
+$('#bRows').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-bsched]');
+  if (!b) return;
+  const kind = b.dataset.bsched;
+  popCtx = null;
+  const fake = { key: '__bulk', hours: bulkSched.hours.length === 24 ? null : bulkSched.hours, days: bulkSched.days.length === 7 ? null : bulkSched.days };
+  S.items.push(fake);
+  schedPop(b, ['__bulk'], kind, (val) => { bulkSched[kind] = val; b.textContent = kind === 'hours' ? hoursText(val.length === 24 ? null : val) : daysText(val.length === 7 ? null : val); });
+  S.items.pop();
+});
+$('#bNoteBtn').addEventListener('click', () => { $('#bNoteWrap').hidden = false; $('#bNote').focus(); });
+function bulkSet() {
+  const set = {};
+  const on = (id) => $(`[data-ben="${id}"]`).checked;
+  if (on('on')) set.on = $('#bv_on').checked;
+  if (on('bid')) {
+    if ($('#bv_bidmin').checked) set.bid = { min: true };
+    else {
+      const v = $('#bv_bid').value.trim();
+      if (!/^\d+$/.test(v)) throw new Error('Ставка — целое число рублей');
+      set.bid = { op: $('#bo_bid').value, value: Number(v) };
+    }
+  }
+  const lim = {};
+  LIMS.forEach(([k]) => {
+    if (!on(`lim_${k}`)) return;
+    const v = $(`#bv_lim_${k}`).value.trim();
+    if (v !== '' && !(Number(v) >= 0)) throw new Error('Ограничения — неотрицательные числа');
+    lim[k] = v === '' ? null : { op: $(`#bo_lim_${k}`).value, value: Number(v) };
+  });
+  if (Object.keys(lim).length) set.lim = lim;
+  if (on('hours')) set.hours = bulkSched.hours;
+  if (on('days')) set.days = bulkSched.days;
+  return set;
+}
+function opText(o) { return o.min ? 'минимальная для продвижения' : `${{ set: '=', add: '+', sub: '−' }[o.op]} ${o.value}`; }
+$('#bCheck').addEventListener('click', () => {
+  $('#bErr').hidden = true;
+  let set;
+  try { set = bulkSet(); } catch (err) { $('#bErr').textContent = err.message; $('#bErr').hidden = false; return; }
+  const lines = [];
+  if (set.on !== undefined) lines.push(`Вкл / выкл → ${set.on ? 'включить' : 'выключить'}`);
+  if (set.bid) {
+    lines.push(`Ставка: ${opText(set.bid)}`);
+    const items = [...sel].map((k) => S.items.find((i) => i.key === k)).filter(Boolean);
+    const bad = items.filter((x) => {
+      if (set.bid.min) return x.minPromo == null;
+      const nv = set.bid.op === 'add' ? (x.bid || 0) + set.bid.value : set.bid.op === 'sub' ? (x.bid || 0) - set.bid.value : set.bid.value;
+      return x.minPromo != null && (nv < x.minPromo || nv > x.max);
+    });
+    if (bad.length) lines.push(`⚠ ${bad.length} объявл. получат ставку вне допустимого диапазона Авито (или Авито ещё не прислал диапазон) — у них будет «Ошибка»`);
+  }
+  if (set.lim) Object.entries(set.lim).forEach(([k, v]) => lines.push(`${LIMS.find((l) => l[0] === k)[1]}: ${v === null ? 'снять ограничение' : opText(v)}`));
+  if (set.hours) lines.push(`Часы: ${hoursText(set.hours.length === 24 ? null : set.hours)}`);
+  if (set.days) lines.push(`Дни: ${daysText(set.days.length === 7 ? null : set.days)}`);
+  if ($('#bNote').value.trim()) lines.push(`Заметка: ${$('#bNote').value.trim()}`);
+  $('#bPreview').innerHTML = lines.length ? `<div class="ok-box">Будет изменено у ${sel.size} объявл.:<ul style="margin:6px 0 0 18px;padding:0">${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>` : '<div class="note">Не включено ни одной настройки.</div>';
+  $('#bPreview').hidden = false;
+});
+$('#bApply').addEventListener('click', async () => {
+  $('#bErr').hidden = true;
+  let set;
+  try { set = bulkSet(); } catch (err) { $('#bErr').textContent = err.message; $('#bErr').hidden = false; return; }
+  const note = $('#bNote').value.trim();
+  if (!Object.keys(set).length && !note) { $('#bErr').textContent = 'Включите левый тумблер у настройки, которую нужно изменить'; $('#bErr').hidden = false; return; }
+  const btn = $('#bApply'); btn.disabled = true;
+  const r = await update([...sel], set, note);
+  btn.disabled = false;
+  if (!r) return;
+  closeModal();
+  toast(`Изменено объявлений: ${r.changed}${r.skipped && r.skipped.length ? `, пропущено: ${r.skipped.length} (${r.skipped[0].reason})` : ''}`);
+  load();
+});
+
+/* ── добавить объявления ── */
+let addTab = 'filter';
+let catalog = [];          // объявления выбранного кабинета (или найденные списком)
+const addSel = new Set();  // acc:id
+function openAdd() {
+  $('#aAcc').innerHTML = S.accounts.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+  const last = lsGet('mb_lastacc', '');
+  if (last && S.accounts.find((a) => a.id === last)) $('#aAcc').value = last;
+  addSel.clear(); catalog = [];
+  setAddTab('filter');
+  showModal('#mAdd');
+  loadCatalog();
+}
+function setAddTab(t) {
+  addTab = t;
+  $$('[data-atab]').forEach((b) => b.classList.toggle('on', b.dataset.atab === t));
+  $('#aFilter').hidden = t !== 'filter';
+  $('#aCityWrap').hidden = t !== 'filter';
+  $('#aList').hidden = t !== 'list';
+  if (t === 'list') { catalog = []; addSel.clear(); $('#aInfo').textContent = 'Найдём номера в выбранном кабинете.'; renderAdd(); }
+  else loadCatalog();
+}
+async function fetchCatalog(acc, refresh) {
+  const r = await api(`/api/dashboard/mbids/catalog?accountId=${encodeURIComponent(acc)}${refresh ? '&refresh=1' : ''}`);
+  if (!r.ok) throw new Error(r.data.error || 'Не удалось загрузить объявления');
+  return r.data.items.map((x) => ({ ...x, accountId: acc, key: `${acc}:${x.id}` }));
+}
+async function loadCatalog() {
+  const acc = $('#aAcc').value;
+  if (!acc) return;
+  lsSet('mb_lastacc', acc);
+  $('#aInfo').textContent = 'Загружаем объявления кабинета… (Авито может отвечать до минуты)';
+  $('#aRows').innerHTML = '';
+  try {
+    catalog = await fetchCatalog(acc);
+  } catch (e) { $('#aInfo').textContent = e.message; return; }
+  const cities = [...new Set(catalog.map((x) => x.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
+  $('#aCity').innerHTML = '<option value="">Все города</option>' + cities.map((c) => `<option>${esc(c)}</option>`).join('');
+  renderAdd();
+}
+function addVisible() {
+  if (addTab === 'list') return catalog;
+  const s = $('#aQ').value.trim().toLowerCase();
+  const city = $('#aCity').value;
+  return catalog.filter((x) => (!city || x.city === city) && (!s || x.title.toLowerCase().includes(s) || x.id.includes(s) || x.address.toLowerCase().includes(s)));
+}
+function renderAdd() {
+  const list = addVisible();
+  const free = list.filter((x) => !x.added);
+  $('#aAll').checked = free.length > 0 && free.every((x) => addSel.has(x.key));
+  if (addTab === 'filter' && catalog.length) $('#aInfo').textContent = `Активных объявлений в кабинете: ${catalog.length}, уже в разделе: ${catalog.filter((x) => x.added).length}. Можно менять поиск и фильтры — отмеченное сохраняется.`;
+  $('#aRows').innerHTML = list.slice(0, 1000).map((x) => `<tr><td><input type="checkbox" class="cb" data-asel="${esc(x.key)}" ${x.added ? 'disabled checked' : addSel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><a class="ttl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="sub">№ ${esc(x.id)} · ${esc(x.address)}${x.added ? ' · уже добавлено' : ''}</div></td><td class="sub">${esc(x.city)}</td><td class="r num">${x.price != null ? rub(x.price) : '—'}</td><td class="sub">${esc(accName(x.accountId))}</td></tr>`).join('') || `<tr><td colspan="5" class="empty">${addTab === 'list' ? 'Вставьте номера и нажмите «Найти»' : catalog.length ? 'По выбранным фильтрам / поиску ничего не найдено' : ''}</td></tr>`;
+  $('#aSel').textContent = addSel.size ? `Выбрано: ${addSel.size}${addSel.size > 500 ? ' — за раз можно добавить до 500' : ''}` : '';
+}
+$$('[data-atab]').forEach((b) => b.addEventListener('click', () => setAddTab(b.dataset.atab)));
+$('#aAcc').addEventListener('change', () => { addSel.clear(); if (addTab === 'filter') loadCatalog(); else { catalog = []; renderAdd(); } });
+$('#aCity').addEventListener('change', renderAdd);
+$('#aQ').addEventListener('input', renderAdd);
+$('#aAll').addEventListener('change', (e) => { addVisible().filter((x) => !x.added).forEach((x) => e.target.checked ? addSel.add(x.key) : addSel.delete(x.key)); renderAdd(); });
+$('#aRows').addEventListener('change', (e) => { const k = e.target.dataset.asel; if (k) { e.target.checked ? addSel.add(k) : addSel.delete(k); renderAdd(); } });
+$('#aFind').addEventListener('click', async () => {
+  const ids = [...new Set($('#aIds').value.split(/[\s,;]+/).map((s) => s.replace(/\D/g, '')).filter(Boolean))].slice(0, 500);
+  if (!ids.length) { $('#aInfo').textContent = 'Вставьте номера объявлений'; return; }
+  const acc = $('#aAcc').value;
+  $('#aInfo').textContent = 'Ищем…';
+  let all;
+  try { all = await fetchCatalog(acc); } catch (e) { $('#aInfo').textContent = e.message; return; }
+  const byId = new Map(all.map((x) => [x.id, x]));
+  catalog = ids.map((id) => byId.get(id)).filter(Boolean);
+  const missing = ids.filter((id) => !byId.has(id));
+  addSel.clear();
+  catalog.filter((x) => !x.added).forEach((x) => addSel.add(x.key));
+  $('#aInfo').textContent = `Найдено ${catalog.length} из ${ids.length}.${missing.length ? ` Не найдены среди активных объявлений кабинета «${accName(acc)}»: ${missing.slice(0, 15).join(', ')}${missing.length > 15 ? '…' : ''}` : ''}`;
+  renderAdd();
+});
+$('#aSave').addEventListener('click', async () => {
+  if (!addSel.size) return toast('Отметьте объявления');
+  if (addSel.size > 500) return toast('За раз можно добавить до 500 объявлений');
+  const acc = $('#aAcc').value;
+  const pool = new Map([...catalog].map((x) => [x.key, x]));
+  const items = [...addSel].map((k) => pool.get(k)).filter(Boolean).map((x) => ({ id: x.id, title: x.title, url: x.url, address: x.address }));
+  const btn = $('#aSave'); btn.disabled = true;
+  const r = await post('/api/dashboard/mbids/items', { accountId: acc, items });
+  btn.disabled = false;
+  if (!r.ok) return toast(r.data.error || 'Не добавилось');
+  closeModal();
+  toast(`Добавлено: ${r.data.added}. Ставки Авито подтянутся в течение пары минут. Укажите ставку и включите тумблер.`);
+  await load(); loadStats();
+  setTimeout(load, 20000); setTimeout(load, 60000);
+});
+
+/* ── группы: события ── */
+let gEdit = null;
+function openGroupForm(id) {
+  gEdit = id || null;
+  $('#gTitle').textContent = id ? 'Переименовать группу' : 'Новая группа';
+  $('#gName').value = id ? S.groups[id].name : '';
+  $('#gErr').hidden = true;
+  showModal('#mGroup');
+}
+$('#gCreate').addEventListener('click', () => openGroupForm());
+$('#gForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = $('#gName').value.trim();
+  const r = gEdit ? await api(`/api/dashboard/mbids/groups/${gEdit}`, { method: 'PUT', body: JSON.stringify({ name }) }) : await post('/api/dashboard/mbids/groups', { name });
+  if (!r.ok) { $('#gErr').textContent = r.data.error || 'Не сохранилось'; $('#gErr').hidden = false; return; }
+  S.groups = r.data.groups; closeModal(); render();
+});
+$('#groupsBody').addEventListener('click', async (e) => {
+  if (e.target.closest('#gFirst')) return openGroupForm();
+  const cb = e.target.closest('[data-gsel]');
+  if (cb) { e.stopPropagation(); cb.checked ? gSel.add(cb.dataset.gsel) : gSel.delete(cb.dataset.gsel); $('#gDelSel').hidden = !gSel.size; return; }
+  const ren = e.target.closest('[data-gren]');
+  if (ren) return openGroupForm(ren.dataset.gren);
+  const del = e.target.closest('[data-gdel]');
+  if (del) return delGroups([del.dataset.gdel]);
+  const card = e.target.closest('[data-gopen]');
+  if (card) { curGroup = card.dataset.gopen; sel.clear(); render(); }
+});
+$('#groupsBody').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.gopen) { curGroup = e.target.dataset.gopen; render(); } });
+$('#gDelSel').addEventListener('click', () => delGroups([...gSel]));
+async function delGroups(ids) {
+  if (!confirm(`Удалить ${ids.length > 1 ? `${ids.length} групп` : 'группу'}? Объявления останутся в разделе и на Авито.`)) return;
+  const r = await post('/api/dashboard/mbids/groups/delete', { ids });
+  if (!r.ok) return toast(r.data.error || 'Не удалилось');
+  ids.forEach((g) => gSel.delete(g));
+  await load();
+}
+$('#groupHead').addEventListener('click', (e) => {
+  if (e.target.closest('#gBack')) { curGroup = null; sel.clear(); render(); }
+  if (e.target.closest('#gAddTo')) openPick();
+});
+const pickSel = new Set();
+function openPick() {
+  pickSel.clear(); $('#pQ').value = '';
+  $('#pHead').innerHTML = '<tr><th style="width:34px"></th><th>Объявление</th><th>Аккаунт</th><th class="r">Ставка</th><th class="r">Ставка сейчас</th><th class="r">Опережение</th></tr>';
+  renderPick();
+  showModal('#mPick');
+}
+function renderPick() {
+  const s = $('#pQ').value.trim().toLowerCase();
+  const list = S.items.filter((x) => !x.groups.includes(curGroup) && (!s || x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.accountName.toLowerCase().includes(s)));
+  $('#pRows').innerHTML = list.slice(0, 1000).map((x) => `<tr><td><input type="checkbox" class="cb" data-psel="${esc(x.key)}" ${pickSel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><span class="ttl">${esc(x.title)}</span><div class="sub">№ ${esc(x.id)} · ${esc(x.city)}</div></td><td class="sub">${esc(x.accountName)}</td><td class="r num">${rub(x.bid)}</td><td class="r num">${rub(x.now)}</td><td class="r num">${pct(x.cmp)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Все объявления раздела уже в этой группе</td></tr>';
+  $('#pSel').textContent = pickSel.size ? `Выбрано: ${pickSel.size}` : '';
+}
+$('#pQ').addEventListener('input', renderPick);
+$('#pRows').addEventListener('change', (e) => { const k = e.target.dataset.psel; if (k) { e.target.checked ? pickSel.add(k) : pickSel.delete(k); $('#pSel').textContent = pickSel.size ? `Выбрано: ${pickSel.size}` : ''; } });
+$('#pSave').addEventListener('click', async () => {
+  if (!pickSel.size) return toast('Отметьте объявления');
+  const r = await post('/api/dashboard/mbids/groups/members', { groupId: curGroup, refs: [...pickSel], action: 'add' });
+  if (!r.ok) return toast(r.data.error || 'Не получилось');
+  closeModal(); toast(`Добавлено в группу: ${r.data.changed}`); load();
+});
+
+/* ── фильтры ── */
+$('#filtersBtn').addEventListener('click', (e) => {
+  const p = $('#pop');
+  const cities = [...new Set(S.items.map((x) => x.city))].sort((a, b) => a.localeCompare(b, 'ru'));
+  const accs = [...new Set(S.items.map((x) => x.accountId))];
+  const box = (name, val, label, on) => `<label style="display:flex;gap:6px;align-items:center;font-size:12.5px;border:0;justify-content:flex-start;padding:2px 0;background:none;cursor:pointer"><input type="checkbox" class="cb" style="display:inline-block" data-f="${name}" value="${esc(val)}" ${on ? 'checked' : ''}>${esc(label)}</label>`;
+  p.innerHTML = `<b style="font-size:13px">Фильтры</b>
+    <div><div class="sub">Аккаунт</div>${accs.map((a) => box('acc', a, accName(a), filt.acc.includes(a))).join('')}</div>
+    <div><div class="sub">Город</div><div style="max-height:150px;overflow:auto">${cities.map((c) => box('city', c, c || 'не указан', filt.city.includes(c))).join('')}</div></div>
+    <div><div class="sub">Статус</div>${Object.entries(STATUS).map(([k, t]) => box('status', k, t, filt.status.includes(k))).join('')}</div>
+    <div class="f"><label class="sub" for="fOn">Вкл / выкл</label><select id="fOn"><option value="">Все</option><option value="on" ${filt.on === 'on' ? 'selected' : ''}>Включённые</option><option value="off" ${filt.on === 'off' ? 'selected' : ''}>Выключенные</option></select></div>
+    <div class="f"><label class="sub" for="fGr">Группа</label><select id="fGr"><option value="">Все</option>${Object.entries(S.groups).map(([g, v]) => `<option value="${g}" ${filt.group === g ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" type="button" data-fq="reset">Сбросить</button><button class="btn sm pri" type="button" data-fq="ok">Готово</button></div>`;
+  p.hidden = false;
+  const r = e.target.getBoundingClientRect();
+  p.style.left = `${Math.max(12, Math.min(r.left, innerWidth - p.offsetWidth - 12))}px`;
+  p.style.top = `${Math.min(r.bottom + 6, innerHeight - p.offsetHeight - 12)}px`;
+  p.style.maxHeight = `${innerHeight - 24}px`; p.style.overflow = 'auto';
+  popCtx = { filters: true };
+});
+$('#pop').addEventListener('change', (e) => {
+  if (!popCtx || !popCtx.filters) return;
+  const t = e.target;
+  if (t.dataset.f) { const arr = filt[t.dataset.f]; const i = arr.indexOf(t.value); if (t.checked && i < 0) arr.push(t.value); if (!t.checked && i >= 0) arr.splice(i, 1); }
+  if (t.id === 'fOn') filt.on = t.value;
+  if (t.id === 'fGr') filt.group = t.value;
+  lsSet('mb_filt', filt); render();
+}, true);
+$('#pop').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-fq]');
+  if (!b) return;
+  e.stopImmediatePropagation();
+  if (b.dataset.fq === 'reset') { filt = { acc: [], city: [], status: [], on: '', group: '' }; lsSet('mb_filt', filt); render(); }
+  $('#pop').hidden = true;
+}, true);
+document.addEventListener('mousedown', (e) => { if (popCtx && popCtx.filters && !$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('#filtersBtn')) $('#pop').hidden = true; });
+
+/* ── столбцы ── */
+function renderCols() {
+  $('#cList').innerHTML = cols.map((c, k) => `<div class="colrow"><input type="checkbox" class="cb" data-col="${c.id}" ${c.on ? 'checked' : ''} id="col_${c.id}"><label for="col_${c.id}">${esc(colById(c.id).t)}</label><span class="sp"></span><button class="ico" type="button" data-up="${k}" aria-label="Выше" ${k ? '' : 'disabled'}>↑</button><button class="ico" type="button" data-down="${k}" aria-label="Ниже" ${k < cols.length - 1 ? '' : 'disabled'}>↓</button></div>`).join('');
+}
+$('#colsBtn').addEventListener('click', () => { renderCols(); showModal('#mCols'); });
+$('#cList').addEventListener('change', (e) => { const c = cols.find((x) => x.id === e.target.dataset.col); if (c) { c.on = e.target.checked; lsSet('mb_cols', cols); render(); } });
+$('#cList').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const k = Number(b.dataset.up ?? b.dataset.down);
+  const j = b.dataset.up != null ? k - 1 : k + 1;
+  [cols[k], cols[j]] = [cols[j], cols[k]];
+  lsSet('mb_cols', cols); renderCols(); render();
+});
+$('#cReset').addEventListener('click', () => { cols = DEFAULT_COLS.map((c) => ({ ...c })); lsSet('mb_cols', cols); renderCols(); render(); });
+
+/* ── прочее ── */
+$('#q').addEventListener('input', (e) => { q = e.target.value; render(); });
+$('#period').addEventListener('change', () => { $('#customPer').hidden = $('#period').value !== 'custom'; if ($('#period').value !== 'custom') loadStats(); });
+['#pFrom', '#pTo'].forEach((s) => $(s).addEventListener('change', loadStats));
+$('#addBtn').addEventListener('click', openAdd);
+$('#helpBtn').addEventListener('click', () => showModal('#mHelp'));
+$('#fullBtn').addEventListener('click', () => { $('#tableCard').classList.toggle('full'); });
+$('#refreshBtn').addEventListener('click', async () => {
+  const list = (sel.size ? [...sel] : visible().map((x) => x.key)).slice(0, 120);
+  if (!list.length) return;
+  const btn = $('#refreshBtn'); btn.disabled = true; btn.textContent = 'Обновляем…';
+  for (let i = 0; i < list.length; i += 40) {
+    const r = await post('/api/dashboard/mbids/refresh', { refs: list.slice(i, i + 40) });
+    if (!r.ok) { toast(r.data.error || 'Авито не ответил'); break; }
+  }
+  btn.disabled = false; btn.textContent = 'Обновить из Авито';
+  await load();
+  toast(`Ставки перечитаны: ${list.length} объявл.${list.length === 120 ? ' (за раз — до 120)' : ''}`);
+});
+$$('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+  tab = b.dataset.tab; curGroup = null; sel.clear();
+  $$('[data-tab]').forEach((x) => x.classList.toggle('on', x === b));
+  render();
+}));
+
+function showGate() { $('#app').hidden = true; $('#gate').hidden = false; $('#gatePw').focus(); }
+$('#gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = $('#gatePw').value;
+  const r = await api('/api/dashboard/mbids/state', {}, pw);
+  if (r.status === 401) { $('#gateErr').textContent = 'Неверный пароль'; return; }
+  try { localStorage.setItem(PW_KEY, pw); } catch (err) {}
+  $('#gate').hidden = true; $('#app').hidden = false;
+  S = r.data; render(); loadStats();
+});
+
+(async function init() {
+  if (!getPw()) return showGate();
+  $('#app').hidden = false;
+  await load();
+  if (!$('#gate').hidden) return;
+  loadStats();
+  // Статусы обновляем раз в минуту, статистику «Сегодня» — раз в 10 минут.
+  setInterval(() => { if (!openModal && $('#pop').hidden && !document.hidden) load(); }, 60000);
+  setInterval(() => { if (!document.hidden && $('#period').value === 'today') loadStats(); }, 600000);
+})();
+})();
+</script>
+</body>
+</html>
