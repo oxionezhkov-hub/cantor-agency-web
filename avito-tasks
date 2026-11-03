@@ -611,6 +611,52 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .ml-modal{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 24px));max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden;animation:fade .15s}
 @media (max-width:720px){.ml-modal{top:auto;bottom:0;transform:translateX(-50%);border-radius:20px 20px 0 0;width:100%;max-height:92vh}}
 .ml-form{padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+.ml-empty{font-size:13px;color:var(--muted);padding:6px 2px}
+.ml-sum{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ml-list-act{display:flex;gap:6px;flex-wrap:wrap}
+.ml-link{font-size:12.5px;font-weight:600;color:var(--accent);padding:2px 0}
+.ml-link:hover{text-decoration:underline}
+.ml-pick-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.ml-pick-head .label{margin:0}
+.ml-pick-n{font-size:12.5px;color:var(--muted);margin-left:auto}
+.ml-pick-head .ml-pick-n + .ml-link{margin-left:0}
+.ml-pick-head .label + .ml-link{margin-left:auto}
+.ml-pick-q{margin-bottom:8px}
+.ml-pick{display:flex;flex-wrap:wrap;gap:6px}
+.ml-pc{position:relative;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--text);transition:background .12s,border-color .12s}
+.ml-pc:hover{border-color:var(--faint)}
+.ml-pc.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-600)}
+.ml-pc .ic{width:14px;height:14px;stroke-width:2.4}
+.ml-pc small{font-weight:500;color:var(--muted);font-size:12px}
+.ml-pc.has{background:var(--sunken);border-color:transparent;color:var(--faint);cursor:default}
+.ml-pc.has small{color:var(--faint)}
+.ml-more{margin-top:8px}
+.ml-per{display:grid;gap:6px}
+.ml-per .ml-link{justify-self:start}
+.ml-per-row{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;font-size:13px;font-weight:600;color:var(--ink)}
+.ml-per-row .input{min-height:34px;padding:6px 10px}
+.ml-until{display:flex;align-items:center;gap:8px;margin-top:8px}
+.ml-until .label{margin:0}
+.ml-until .input{width:auto;min-height:34px;padding:6px 10px}
+.ml-rep button{font-size:12.5px;padding:0 6px}
+.ml-quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ml-qb{height:30px;padding:0 11px;border-radius:999px;background:var(--sunken);font-size:12.5px;font-weight:600;color:var(--text)}
+.ml-qb:hover{background:var(--line-2)}
+.ml-mini{border:1px solid var(--line);border-radius:14px;padding:8px}
+.ml-mini-head{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;color:var(--ink);margin-bottom:4px}
+.ml-mini-head .icon-btn{width:30px;height:30px}
+.ml-mini-head .icon-btn[disabled]{opacity:.3;pointer-events:none}
+.ml-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.ml-mini-grid .w{font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--faint);text-align:center;padding:2px 0}
+.ml-md{position:relative;height:34px;border-radius:10px;font-size:13px;font-weight:600;color:var(--text);background:var(--surface-2)}
+.ml-md:hover{background:var(--sunken)}
+.ml-md.wknd{color:var(--faint)}
+.ml-md.busy::after{content:'';position:absolute;bottom:4px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--faint)}
+.ml-md.on{background:var(--accent);color:#fff}
+.ml-md.on::after{background:#fff}
+.ml-md.src{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-bg);color:var(--accent-600)}
+.ml-md[disabled]:not(.src){opacity:.35;pointer-events:none}
+
 .ml-form .ml-item{margin:0}
 .ml-outcome{display:flex;flex-direction:column;gap:14px}
 .co-modal{width:min(560px,calc(100% - 24px))}
@@ -1383,7 +1429,7 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
           <h1>Рассылки</h1>
         </div>
         <div class="ml-top">
-          <select class="select ml-who" id="mlWho" hidden aria-label="Чьи клиенты"></select>
+          <span id="mlWhoWrap" hidden><select class="select ml-who" id="mlWho" aria-label="Чьи клиенты"></select></span>
           <div class="ml-nav"><button class="icon-btn" data-ml-step="-1" aria-label="Раньше"><svg class="ic ic-sm rot-l"><use href="#i-chev"/></svg></button><b id="mlMonth"></b><button class="icon-btn" data-ml-step="1" aria-label="Позже"><svg class="ic ic-sm rot-r"><use href="#i-chev"/></svg></button></div>
           <button class="btn btn-primary btn-sm" data-ml-new><svg class="ic ic-sm"><use href="#i-plus"/></svg>Рассылка</button>
         </div>
@@ -5367,8 +5413,10 @@ function mlModal(title, body, foot) {
 function mlDayTitle(d) { const x = mtDay(d); return `${x.day} ${MT_MONTHS[x.month]}, ${x.dow}`; }
 function mlOpenDay(d, owner) {
   const who = owner == null ? '' : owner ? first((userById(owner) || { name: '' }).name) : 'без ответственного';
-  mlModal(`${mlDayTitle(d)}${who ? ` · ${who}` : ''}`, `<div class="ml-form">${mlDaySorted(d, owner).map(mlRow).join('')}</div>`,
-    `<button class="btn btn-primary" type="button" data-ml-new="${d}">${ico('plus', 'ic-sm')}Рассылка</button>`);
+  const list = mlDaySorted(d, owner);
+  ML.dayOwner = owner;
+  mlModal(`${mlDayTitle(d)}${who ? ` · ${who}` : ''}`, `<div class="ml-form">${list.length ? list.map(mlRow).join('') : '<div class="ml-empty">В этот день рассылок нет</div>'}</div>`,
+    `${list.length ? `<button class="btn btn-ghost" type="button" data-ml-copy="${d}">${ico('copy', 'ic-sm')}Скопировать на другие дни</button>` : ''}<span style="flex:1"></span><button class="btn btn-primary" type="button" data-ml-new="${d}">${ico('plus', 'ic-sm')}Рассылка</button>`);
 }
 function renderMail() {
   if (!ML.month) ML.month = mtToday().slice(0, 7);
@@ -5378,7 +5426,7 @@ function renderMail() {
   // специалистам и стажёрам — по умолчанию только их клиенты, остальные кнопкой под календарём.
   const boss = isAdmin() || ['lead', 'manager'].includes(S.me.role);
   const who = $('mlWho');
-  who.hidden = !boss;
+  $('mlWhoWrap').hidden = !boss;
   if (boss) {
     const people = S.users.filter((u) => S.projects.some((p) => !p.inactive && p.ownerId === u.id)).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     who.innerHTML = `<option value="">Все специалисты</option>${people.map((u) => `<option value="${esc(u.id)}" ${ML.who === u.id ? 'selected' : ''}>${esc(first(u.name))}</option>`).join('')}<option value="-" ${ML.who === '-' ? 'selected' : ''}>Без ответственного</option>`;
@@ -5402,7 +5450,9 @@ function renderMail() {
     const list = (byDay[d] || []).slice().sort((a, b) => anBySurname(projectById(a.projectId) || { name: '' }, projectById(b.projectId) || { name: '' }));
     // Больше трёх рассылок в день — по плашке на специалиста («Альбина 5»), по нажатию — его список.
     const chips = list.length > ML_MAX_CHIPS && !mlNarrow()
-      ? mlGroups(list).map(([oid, its]) => `<button class="ml-chip ml-many ${its.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}" data-ml-owner="${esc(oid)}"><b>${esc(oid ? first((userById(oid) || { name: '?' }).name) : 'Без ответственного')}</b><span>${its.length}</span></button>`).join('')
+      ? (mlGroups(list).length === 1
+        ? `<button class="ml-chip ml-many ${list.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}"><b>${list.length} ${plural(list.length, 'рассылка', 'рассылки', 'рассылок')}</b></button>`
+        : mlGroups(list).map(([oid, its]) => `<button class="ml-chip ml-many ${its.some((it) => mlState(it) === 'wait') ? 'wait' : ''}" data-ml-list="${d}" data-ml-owner="${esc(oid)}"><b>${esc(oid ? first((userById(oid) || { name: '?' }).name) : 'Без ответственного')}</b><span>${its.length}</span></button>`).join(''))
       : list.map((it) => `<button class="ml-chip ${mlState(it)}" data-ml-item="${esc(it.id)}" title="${esc(mlTitle(it))}"><b>${esc(mlSurname(it.projectId))}</b><span>${mlChipNum(it)}</span></button>`).join('');
     cells += `<div class="ml-day ${d === today ? 'today' : ''} ${i % 7 > 4 ? 'wknd' : ''} ${ML.day === d && mlNarrow() ? 'sel' : ''}" data-ml-day="${d}"><span class="d">${n}</span>${chips}</div>`;
   }
@@ -5412,12 +5462,13 @@ function renderMail() {
     const x = mtDay(ML.day);
     list = `<div class="ml-list"><div class="mt-dlabel">${x.day} ${MT_MONTHS[x.month]}, ${x.dow}</div>
       ${dayItems.map(mlRow).join('')}
-      <button class="btn btn-ghost btn-sm" data-ml-new="${ML.day}">${ico('plus', 'ic-sm')}Рассылка</button></div>`;
+      <div class="ml-list-act"><button class="btn btn-primary btn-sm" data-ml-new="${ML.day}">${ico('plus', 'ic-sm')}Рассылка</button>${dayItems.length ? `<button class="btn btn-ghost btn-sm" data-ml-copy="${ML.day}">${ico('copy', 'ic-sm')}Скопировать на другие дни</button>` : ''}</div></div>`;
   }
   const others = mineIds || (!boss && prefs.others_mail) ? othersToggle('mail', raw.filter((it) => !keep(it)).length, 'рассылок') : '';
   $('mlBody').innerHTML = `${others ? `<div class="others-row">${others}</div>` : ''}<div class="ml-cal">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}${cells}</div>${list}`;
 }
 function mlOpen(it, date) {
+  if (!it) return mlOpenNew(date);
   const d = it || { date: date || mtToday(), projectId: '', budget: null, contacts: null, result: null, comment: '' };
   const projects = S.projects.filter((p) => !p.inactive || p.id === d.projectId).sort(anBySurname);
   const p = it && projectById(it.projectId);
@@ -5471,11 +5522,15 @@ $('view-mail').addEventListener('click', (e) => {
   if (nw) { mlOpen(null, nw.dataset.mlNew || (ML.month === mtToday().slice(0, 7) ? mtToday() : `${ML.month}-01`)); return; }
   const many = e.target.closest('[data-ml-list]');
   if (many) { mlOpenDay(many.dataset.mlList, many.dataset.mlOwner); return; }
+  const cpy = e.target.closest('[data-ml-copy]');
+  if (cpy) { ML.dayOwner = undefined; mlOpenCopy(cpy.dataset.mlCopy); return; }
   const chip = e.target.closest('[data-ml-item]');
   if (chip && !(mlNarrow() && chip.classList.contains('ml-chip'))) { const it = ML.items.find((x) => x.id === chip.dataset.mlItem); if (it) mlOpen(it); return; }
   const day = e.target.closest('[data-ml-day]');
   if (!day) return;
   if (mlNarrow()) { ML.day = day.dataset.mlDay; renderMail(); return; }
+  // День с рассылками — его список (там же «Скопировать на другие дни»), пустой — сразу новые рассылки.
+  if (mlDaySorted(day.dataset.mlDay).length) { mlOpenDay(day.dataset.mlDay); return; }
   mlOpen(null, day.dataset.mlDay);
 });
 $('drawerRoot').addEventListener('click', async (e) => {
@@ -5538,6 +5593,239 @@ $('drawerRoot').addEventListener('submit', async (e) => {
     if (r.data.month !== ML.month) { ML.month = r.data.month; ML.day = null; }
     mlApply(r.data);
   } catch (err) { btn.disabled = false; toast('Не сохранилось — нет связи'); }
+});
+
+// ── Новые рассылки: сразу несколько клиентов, один бюджет (или свой у каждого), повтор по дням ──
+// Всё, что набрано, живёт в черновике ML.draft (и в sessionStorage): окно закрылось — откройте тот же
+// день, и выбор вернётся. Enter в полях ничего не отправляет — только кнопка «Добавить».
+const ML_REPEAT = [['once', 'Один раз'], ['weekdays', 'По будням'], ['every2', 'Через день'], ['weekly', 'Раз в неделю']];
+const K_MLDRAFT = 'avitoTasks.mailDraft';
+ML.draft = (() => { try { return JSON.parse(sessionStorage.getItem(K_MLDRAFT) || 'null'); } catch (e) { return null; } })();
+function mlSaveDraft() { try { sessionStorage.setItem(K_MLDRAFT, JSON.stringify(ML.draft)); } catch (e) { /* не важно */ } }
+const mlMonthEnd = (d) => { const [y, m] = d.split('-').map(Number); return `${y}-${pad(m)}-${pad(new Date(Date.UTC(y, m, 0)).getUTCDate())}`; };
+const mlDow = (d) => new Date(`${d}T12:00:00Z`).getUTCDay();
+// Даты по правилу повтора: от start до until включительно.
+function mlRepeatDates(start, rule, until) {
+  if (rule === 'once' || !until || until < start) return [start];
+  const out = [];
+  for (let d = start, i = 0; d <= until && out.length < 62; d = mtAddDays(d, 1), i += 1) {
+    if (rule === 'weekdays' && mlDow(d) % 6 === 0) continue;
+    if (rule === 'every2' && i % 2) continue;
+    if (rule === 'weekly' && i % 7) continue;
+    out.push(d);
+  }
+  return out;
+}
+// Клиенты для выбора: свои (для специалиста) или выбранного в фильтре специалиста, остальные — по ссылке.
+function mlPickList(all) {
+  const act = S.projects.filter((p) => !p.inactive).sort(anBySurname);
+  if (all) return act;
+  const boss = isAdmin() || ['lead', 'manager'].includes(S.me.role);
+  if (!boss && myClientIds().size) return act.filter((p) => p.ownerId === S.me.id);
+  if (boss && ML.who) return act.filter((p) => (ML.who === '-' ? !p.ownerId : p.ownerId === ML.who));
+  return act;
+}
+function mlOpenNew(date) {
+  const start = date || mtToday();
+  if (!ML.draft || ML.draft.start !== start) ML.draft = { start, ids: [], budget: '', per: {}, perOn: false, rule: 'once', until: mlMonthEnd(start), all: false, q: '' };
+  mlSaveDraft();
+  mlModal('Новые рассылки', '<form class="ml-form" id="mlNew" autocomplete="off"></form>',
+    '<span class="ml-sum" id="mlNewSum"></span><span style="flex:1"></span><button class="btn btn-primary" type="submit" form="mlNew" id="mlNewBtn">Добавить</button>');
+  mlRenderNew();
+}
+function mlRenderNew() {
+  const f = $('mlNew');
+  if (!f) return;
+  const D = ML.draft;
+  const exists = new Set(ML.items.filter((it) => it.date === D.start).map((it) => it.projectId));
+  const list = mlPickList(D.all);
+  const q = D.q.toLowerCase().replace(/ё/g, 'е');
+  const shown = list.filter((p) => !q || p.name.toLowerCase().replace(/ё/g, 'е').includes(q));
+  const more = !D.all && list.length < S.projects.filter((p) => !p.inactive).length;
+  const picked = D.ids.map((id) => projectById(id)).filter(Boolean);
+  f.innerHTML = `
+    <div class="row2">
+      <div><label class="label" for="mlNDate">С даты</label><input class="input" type="date" id="mlNDate" value="${esc(D.start)}"></div>
+      <div><label class="label" for="mlNBudget">Бюджет на каждого, ₽</label><input class="input" type="number" inputmode="numeric" min="0" step="100" id="mlNBudget" value="${esc(D.budget)}" placeholder="—"></div>
+    </div>
+    <div>
+      <div class="ml-pick-head"><span class="label">Клиенты</span>${D.ids.length ? `<span class="ml-pick-n">выбрано ${D.ids.length}</span><button type="button" class="ml-link" data-mln="none">снять</button>` : `<button type="button" class="ml-link" data-mln="allshown">выбрать всех</button>`}</div>
+      ${list.length > 10 ? `<div class="search ml-pick-q">${ico('search', 'ic-sm')}<input class="input" id="mlNQ" type="search" placeholder="Поиск клиента" value="${esc(D.q)}"></div>` : ''}
+      <div class="ml-pick">${shown.map((p) => { const on = D.ids.includes(p.id); const has = exists.has(p.id); return `<button type="button" class="ml-pc ${on && !has ? 'on' : ''} ${has ? 'has' : ''}" data-mlpick="${esc(p.id)}" ${has ? 'disabled title="В этот день у клиента рассылка уже есть"' : ''}>${on && !has ? ico('check', 'ic-sm') : ''}<span>${esc(anSurnameKey(p.name))}</span>${has ? '<small>уже есть</small>' : ''}</button>`; }).join('') || '<div class="ml-empty">Никого не нашлось</div>'}</div>
+      ${more ? '<button type="button" class="ml-link ml-more" data-mln="all">Показать всех клиентов</button>' : ''}
+    </div>
+    ${picked.length > 1 || D.perOn ? `<div class="ml-per ${D.perOn ? 'open' : ''}">
+      <button type="button" class="ml-link" data-mln="per">${D.perOn ? 'Один бюджет на всех' : 'Задать бюджет каждому'}</button>
+      ${D.perOn ? picked.map((p) => `<label class="ml-per-row"><span>${esc(anSurnameKey(p.name))}</span><input class="input" type="number" inputmode="numeric" min="0" step="100" data-mlper="${esc(p.id)}" value="${esc(D.per[p.id] != null ? D.per[p.id] : '')}" placeholder="${esc(D.budget || '—')}"></label>`).join('') : ''}
+    </div>` : ''}
+    <div>
+      <span class="label">Повторять</span>
+      <div class="seg ml-res ml-rep">${ML_REPEAT.map(([k, l]) => `<button type="button" data-mlrep="${k}" class="${D.rule === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      ${D.rule !== 'once' ? `<div class="ml-until"><label class="label" for="mlNUntil">до</label><input class="input" type="date" id="mlNUntil" value="${esc(D.until)}" min="${esc(D.start)}"></div>` : ''}
+    </div>`;
+  mlNewSummary();
+}
+function mlNewPlan() {
+  const D = ML.draft;
+  const dates = mlRepeatDates(D.start, D.rule, D.until);
+  const items = [];
+  for (const d of dates) for (const id of D.ids) items.push({ date: d, projectId: id, budget: D.perOn && D.per[id] !== '' && D.per[id] != null ? D.per[id] : D.budget });
+  return { dates, items };
+}
+function mlNewSummary() {
+  const { dates, items } = mlNewPlan();
+  const sum = $('mlNewSum');
+  const btn = $('mlNewBtn');
+  if (!sum || !btn) return;
+  const n = items.length;
+  sum.textContent = n && dates.length > 1 ? `${ML.draft.ids.length} × ${dates.length} ${plural(dates.length, 'день', 'дня', 'дней')}` : '';
+  btn.textContent = n ? `Добавить ${n} ${plural(n, 'рассылку', 'рассылки', 'рассылок')}` : 'Добавить';
+  btn.disabled = !n;
+}
+
+// ── Копирование дня: рассылки этого дня (клиенты и бюджеты) — на выбранные дни, без статусов и итогов ──
+function mlOpenCopy(src) {
+  const list = mlDaySorted(src, ML.dayOwner);
+  ML.copy = { src, month: src.slice(0, 7), ids: list.map((it) => it.id), dates: [] };
+  mlModal(`Копировать с ${mlDayTitle(src)}`, '<div class="ml-form" id="mlCopy"></div>',
+    '<button class="btn btn-ghost" type="button" data-mlc="back">Назад</button><span style="flex:1"></span><button class="btn btn-primary" type="button" id="mlCopyBtn" data-mlc="go">Скопировать</button>');
+  mlRenderCopy();
+}
+function mlRenderCopy() {
+  const box = $('mlCopy');
+  if (!box) return;
+  const C = ML.copy;
+  const src = mlDaySorted(C.src, ML.dayOwner);
+  const [y, m] = C.month.split('-').map(Number);
+  const lead = (new Date(`${C.month}-01T12:00:00Z`).getUTCDay() + 6) % 7;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const today = mtToday();
+  const busy = new Set(ML.items.map((it) => it.date));
+  let cells = '';
+  for (let i = 0; i < Math.ceil((lead + days) / 7) * 7; i += 1) {
+    const n = i - lead + 1;
+    if (n < 1 || n > days) { cells += '<span></span>'; continue; }
+    const d = `${C.month}-${pad(n)}`;
+    const dis = d < today || d === C.src;
+    cells += `<button type="button" class="ml-md ${C.dates.includes(d) ? 'on' : ''} ${d === C.src ? 'src' : ''} ${busy.has(d) ? 'busy' : ''} ${i % 7 > 4 ? 'wknd' : ''}" data-mlcd="${d}" ${dis ? 'disabled' : ''}>${n}</button>`;
+  }
+  box.innerHTML = `
+    <div>
+      <span class="label">Что копируем</span>
+      <div class="ml-pick">${src.map((it) => { const on = C.ids.includes(it.id); return `<button type="button" class="ml-pc ${on ? 'on' : ''}" data-mlci="${esc(it.id)}">${on ? ico('check', 'ic-sm') : ''}<span>${esc(mlSurname(it.projectId))}</span>${it.budget != null ? `<small>${esc(mlMoney(it.budget))}</small>` : ''}</button>`; }).join('')}</div>
+    </div>
+    <div>
+      <div class="ml-pick-head"><span class="label">На какие дни</span>${C.dates.length ? `<span class="ml-pick-n">${C.dates.length} ${plural(C.dates.length, 'день', 'дня', 'дней')}</span><button type="button" class="ml-link" data-mlc="clear">снять</button>` : ''}</div>
+      <div class="ml-quick">${[['weekdays', 'Будни до конца месяца'], ['every2', 'Через день'], ['weekly', 'Раз в неделю']].map(([k, l]) => `<button type="button" class="ml-qb" data-mlq="${k}">${l}</button>`).join('')}</div>
+      <div class="ml-mini">
+        <div class="ml-mini-head"><button type="button" class="icon-btn" data-mlc="prev" aria-label="Раньше" ${C.month <= today.slice(0, 7) ? 'disabled' : ''}>${ico('chev', 'ic-sm rot-l')}</button><b>${AN_MONTHS[m - 1]} ${y}</b><button type="button" class="icon-btn" data-mlc="next" aria-label="Позже">${ico('chev', 'ic-sm rot-r')}</button></div>
+        <div class="ml-mini-grid">${['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((w) => `<span class="w">${w}</span>`).join('')}${cells}</div>
+      </div>
+    </div>`;
+  const n = C.ids.length * C.dates.length;
+  const btn = $('mlCopyBtn');
+  btn.textContent = n ? `Скопировать ${n} ${plural(n, 'рассылку', 'рассылки', 'рассылок')}` : 'Скопировать';
+  btn.disabled = !n;
+}
+async function mlAddMany(items, then) {
+  try {
+    const r = await api('mail-add', { items });
+    if (!r.ok) throw new Error();
+    const { created, skipped } = r.data;
+    toast(`${created ? `Добавлено ${created} ${plural(created, 'рассылка', 'рассылки', 'рассылок')}` : 'Ничего не добавлено'}${skipped ? ` · ${skipped} уже ${plural(skipped, 'была', 'были', 'были')}` : ''}`);
+    await loadMail();
+    if (then) then();
+    return true;
+  } catch (e) { toast('Не сохранилось — нет связи. Попробуйте ещё раз.'); return false; }
+}
+// Enter в полях окон рассылок ничего не отправляет (раньше окно молча сохранялось и закрывалось).
+$('drawerRoot').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.closest('.ml-modal') && e.target.tagName === 'INPUT') e.preventDefault();
+});
+$('drawerRoot').addEventListener('click', async (e) => {
+  if (!e.target.closest('.ml-modal')) return;
+  const cp = e.target.closest('[data-ml-copy]');
+  if (cp) { mlOpenCopy(cp.dataset.mlCopy); return; }
+  // новые рассылки
+  if ($('mlNew')) {
+    const D = ML.draft;
+    const pk = e.target.closest('[data-mlpick]');
+    if (pk) { const id = pk.dataset.mlpick; D.ids = D.ids.includes(id) ? D.ids.filter((x) => x !== id) : [...D.ids, id]; mlSaveDraft(); mlRenderNew(); return; }
+    const rp = e.target.closest('[data-mlrep]');
+    if (rp) { D.rule = rp.dataset.mlrep; if (D.until < D.start) D.until = mlMonthEnd(D.start); mlSaveDraft(); mlRenderNew(); return; }
+    const a = e.target.closest('[data-mln]');
+    if (a) {
+      const k = a.dataset.mln;
+      if (k === 'none') D.ids = [];
+      if (k === 'all') D.all = true;
+      if (k === 'per') D.perOn = !D.perOn;
+      if (k === 'allshown') {
+        const q = D.q.toLowerCase().replace(/ё/g, 'е');
+        const busy = D.rule === 'once' ? new Set(ML.items.filter((it) => it.date === D.start).map((it) => it.projectId)) : new Set();
+        D.ids = mlPickList(D.all).filter((p) => !busy.has(p.id) && (!q || p.name.toLowerCase().replace(/ё/g, 'е').includes(q))).map((p) => p.id);
+      }
+      mlSaveDraft(); mlRenderNew(); return;
+    }
+  }
+  // копирование
+  if ($('mlCopy')) {
+    const C = ML.copy;
+    const ci = e.target.closest('[data-mlci]');
+    if (ci) { const id = ci.dataset.mlci; C.ids = C.ids.includes(id) ? C.ids.filter((x) => x !== id) : [...C.ids, id]; mlRenderCopy(); return; }
+    const cd = e.target.closest('[data-mlcd]');
+    if (cd) { const d = cd.dataset.mlcd; C.dates = C.dates.includes(d) ? C.dates.filter((x) => x !== d) : [...C.dates, d].sort(); mlRenderCopy(); return; }
+    const q = e.target.closest('[data-mlq]');
+    if (q) { const from = mtAddDays(C.src, 1); C.dates = mlRepeatDates(from, q.dataset.mlq, mlMonthEnd(C.src)).filter((d) => d >= mtToday()); C.month = C.src.slice(0, 7); mlRenderCopy(); return; }
+    const c = e.target.closest('[data-mlc]');
+    if (c) {
+      const k = c.dataset.mlc;
+      if (k === 'clear') C.dates = [];
+      if (k === 'prev') C.month = mlShift(C.month, -1);
+      if (k === 'next') C.month = mlShift(C.month, 1);
+      if (k === 'back') { mlOpenDay(C.src, ML.dayOwner); return; }
+      if (k === 'go') {
+        const src = mlDaySorted(C.src, ML.dayOwner).filter((it) => C.ids.includes(it.id));
+        const items = C.dates.flatMap((d) => src.map((it) => ({ date: d, projectId: it.projectId, budget: it.budget })));
+        c.disabled = true;
+        if (await mlAddMany(items, () => { $('drawerRoot').innerHTML = ''; })) return;
+        c.disabled = false;
+        return;
+      }
+      mlRenderCopy();
+    }
+  }
+});
+$('drawerRoot').addEventListener('input', (e) => {
+  if (!$('mlNew') || !e.target.closest('#mlNew')) return;
+  const D = ML.draft;
+  if (e.target.id === 'mlNBudget') D.budget = e.target.value;
+  if (e.target.dataset.mlper) D.per[e.target.dataset.mlper] = e.target.value;
+  if (e.target.id === 'mlNQ') { D.q = e.target.value; mlSaveDraft(); const pos = e.target.selectionStart; mlRenderNew(); const qi = $('mlNQ'); if (qi) { qi.focus(); qi.setSelectionRange(pos, pos); } return; }
+  mlSaveDraft();
+  mlNewSummary();
+});
+$('drawerRoot').addEventListener('change', (e) => {
+  if (!$('mlNew') || !e.target.closest('#mlNew')) return;
+  const D = ML.draft;
+  if (e.target.id === 'mlNDate' && e.target.value) { D.start = e.target.value; if (D.until < D.start) D.until = mlMonthEnd(D.start); }
+  if (e.target.id === 'mlNUntil' && e.target.value) D.until = e.target.value;
+  mlSaveDraft();
+  if (e.target.id === 'mlNDate' || e.target.id === 'mlNUntil') mlRenderNew();
+});
+$('drawerRoot').addEventListener('submit', async (e) => {
+  if (e.target.id !== 'mlNew') return;
+  e.preventDefault();
+  const { items } = mlNewPlan();
+  if (!items.length) return;
+  const btn = $('mlNewBtn');
+  btn.disabled = true;
+  const start = ML.draft.start;
+  const ok = await mlAddMany(items, () => {
+    ML.draft = null; mlSaveDraft();
+    if (start.slice(0, 7) !== ML.month) { ML.month = start.slice(0, 7); loadMail(); }
+    mlOpenDay(start);
+  });
+  if (!ok) btn.disabled = false;
 });
 
 // ── ИИ-помощник: диалоги с ИИ (Workers AI в воркере) ──
