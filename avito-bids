@@ -4,351 +4,404 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Ставки Авито — Cantor Agency</title>
+<title>Авито — ставки и автозагрузка</title>
 <link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<script>try { const t = localStorage.getItem('avito.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <style>
 :root{
   --accent:#E8391D;--accent-600:#C42D13;--accent-bg:#FFF0EB;--accent-ring:rgba(232,57,29,.16);
   --bg:#F4F3F0;--surface:#fff;--surface-2:#FAF9F7;--sunken:#EFEDE9;--line:#E5E2DD;--line-2:#EEECE8;
   --ink:#151515;--text:#2A2927;--muted:#76716A;--faint:#A7A29B;
-  --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--red:#D5311A;--red-bg:#FDEBE7;--blue:#2563C9;--violet:#7A4CC2;
-  --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);--shadow-lg:0 18px 48px rgba(22,20,18,.16);--scrim:rgba(18,16,14,.38);
+  --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--blue:#2556C4;--blue-bg:#E9EFFC;--red:#D5311A;--red-bg:#FDEBE7;--violet:#7A4CC2;
+  --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);--shadow-lg:0 18px 48px rgba(22,20,18,.16);
+  --r:14px;--r-sm:10px;--top:60px;
   --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--display:'Unbounded','Geologica',sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root{
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
   --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;--line:#2E2C2A;--line-2:#282624;
   --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
-  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--red:#FF6F57;--red-bg:#3D1812;--blue:#6EA2FF;--violet:#B48CFF;
-  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);--scrim:rgba(0,0,0,.55);color-scheme:dark;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--blue:#7FA2F5;--blue-bg:#18264A;--red:#FF6F57;--red-bg:#3D1812;--violet:#B48CFF;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);color-scheme:dark;
 }}
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-html,body{margin:0}
-body{background:var(--bg);color:var(--text);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+:root[data-theme="dark"]{
+  --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+  --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;--line:#2E2C2A;--line-2:#282624;
+  --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--blue:#7FA2F5;--blue-bg:#18264A;--red:#FF6F57;--red-bg:#3D1812;--violet:#B48CFF;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
+body{font-family:var(--font);font-size:14px;line-height:1.5;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
-.wrap{max-width:1600px;margin:0 auto;padding:20px 20px 90px;display:grid;gap:14px}
-.wrap>*{min-width:0}
-.kpis>*{min-width:0}
-.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.bar h1{font:700 20px var(--display);color:var(--ink);margin:0;letter-spacing:-.01em}
-.sp{flex:1}
-.nav{display:flex;gap:4px}
-.nav a{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px}
-.nav a:hover{background:var(--sunken);color:var(--ink)}
-.nav a.cur{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.hide,[hidden]{display:none!important}
+.muted{color:var(--muted)}.faint{color:var(--faint)}.small{font-size:12.5px}
+.grow{flex:1}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ic{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic-sm{width:15px;height:15px}
+*{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--faint);background-clip:padding-box}
+
+/* кнопки и поля — как в Avito Tasks / ИИ-менеджере */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 15px;border-radius:999px;font-weight:600;font-size:13.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);transition:background .15s,border-color .15s,transform .08s;white-space:nowrap;text-decoration:none}
 .btn:hover{border-color:var(--faint)}
-.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.pri:hover{background:var(--accent-600)}
-.btn.danger{color:var(--red)}
-.btn.sm{padding:4px 9px;font-size:12px;border-radius:8px}
-.btn[disabled]{opacity:.55;cursor:wait}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
-.seg{display:inline-flex;background:var(--sunken);border-radius:11px;padding:3px;gap:2px}
-.seg button{border:0;background:transparent;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:500;font-size:13px;color:var(--muted)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-600);border-color:var(--accent-600)}
+.btn.warn{background:transparent;border-color:transparent;color:var(--red)}
+.btn.warn:hover{background:var(--red-bg)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--muted);padding:0 10px}
+.btn.quiet:hover{color:var(--ink);background:var(--sunken)}
+.btn.sm{min-height:32px;padding:0 12px;font-size:12.5px}
+.btn:disabled{opacity:.5;pointer-events:none}
+.icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted);position:relative;flex:none;text-decoration:none}
+.icon-btn:hover{background:var(--sunken);color:var(--ink)}
+.icon-btn.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border:1px solid var(--line)}
+.icon-btn.sm{width:30px;height:30px}
+.icon-btn:disabled{opacity:.45;pointer-events:none}
+.input,.select{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-size:13.5px;min-height:38px;transition:border-color .15s,box-shadow .15s;outline:none}
+.input:focus,.select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+textarea.input{resize:vertical;line-height:1.5;min-height:110px}
+.select{appearance:none;-webkit-appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2376716A' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;cursor:pointer;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.fsel{display:block;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;font-weight:600;color:var(--ink)}
+.fsel:hover{border-color:var(--faint)}
+label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px;letter-spacing:.01em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.chip.green{background:var(--green-bg);color:var(--green)}
+.chip.amber{background:var(--amber-bg);color:var(--amber)}
+.chip.red{background:var(--red-bg);color:var(--red)}
+.chip.accent{background:var(--accent-bg);color:var(--accent)}
+.chip .x{margin-right:-4px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:inherit}
+.chip .x:hover{background:rgba(0,0,0,.08)}
+.chip .x .ic{width:12px;height:12px}
+.mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12px;background:var(--sunken);padding:1px 6px;border-radius:6px;color:var(--ink);overflow-wrap:anywhere}
+
+/* свои чекбоксы и переключатели */
+.cb{appearance:none;-webkit-appearance:none;width:18px;height:18px;border:1.5px solid var(--faint);border-radius:6px;background:var(--surface);cursor:pointer;display:inline-grid;place-items:center;flex:none;vertical-align:middle;transition:background .12s,border-color .12s;margin:0}
+.cb:hover{border-color:var(--muted)}
+.cb:checked{background:var(--accent);border-color:var(--accent)}
+.cb:checked::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+.cb:disabled{opacity:.45;cursor:default}
+.switch{position:relative;width:40px;height:24px;display:inline-block;cursor:pointer;flex:none;vertical-align:middle}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch i{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.switch i::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.switch input:checked + i{background:var(--accent)}
+.switch input:checked + i::after{transform:translateX(16px)}
+.switch input:focus-visible + i{outline:2px solid var(--accent);outline-offset:2px}
+.switch input:disabled + i{opacity:.45}
+
+/* шапка */
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
+.top-in{max-width:1640px;margin:0 auto;height:var(--top);display:flex;align-items:center;gap:12px;padding:0 20px}
+.tabs{display:flex;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;gap:7px;border:1px solid transparent}
+.tab:hover{color:var(--ink);background:var(--sunken)}
+.tab.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow);border-color:var(--line)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:2px;flex:none}
+.sep{width:1px;height:22px;background:var(--line);margin:0 6px}
+.sync{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-right:4px;white-space:nowrap}
+.conn-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-bg);flex:none}
+.conn-dot.warn{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+
+main{max-width:1640px;margin:0 auto;padding:14px 16px 90px;display:grid;gap:12px}
+main>*{min-width:0}
+#pg-bids>*{min-width:0}
+
+/* панели статистики (иконки в шапке) */
+.panels{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.panel{padding:12px 16px}
+.panel h3{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.panel h3 .grow{flex:1}
+.kv-row{display:flex;gap:6px 22px;flex-wrap:wrap}
+.kv .l{font-size:11.5px;color:var(--muted);white-space:nowrap;cursor:help}
+.kv .v{font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.3}
+.kv .v.red{color:var(--red)}
+.kv.arrow{align-self:center;color:var(--faint);font-size:12px;font-weight:600;white-space:nowrap;text-align:center}
+.kv.arrow b{display:block;color:var(--accent);font-size:13px}
+.pop .kv-row{gap:6px 18px}
+
+/* инструменты списка */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line-2)}
+.seg{display:inline-flex;background:var(--sunken);border-radius:999px;padding:3px;gap:2px;flex:none}
+.seg button{height:30px;padding:0 13px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted)}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
-.sum{display:flex;gap:22px;flex-wrap:wrap;padding:12px 16px;font-size:13px;color:var(--muted)}
-.sum b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.kpis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px}
-.kpi{padding:12px 16px}
-.kpi h3{margin:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.kpi-row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
-.kv .l{font-size:11.5px;color:var(--muted);white-space:nowrap}
-.kv .v{font-size:19px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-.kv.cv .v{font-size:14px;color:var(--accent)}
-.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
-.search{flex:1;min-width:220px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 11px;font-size:13px}
-.search:focus,.f input:focus,.f select:focus,.f textarea:focus,.cell-in:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
-.per{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
-.per select,.per input{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;font-size:13px}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-bg);color:var(--accent);border-radius:999px;padding:2px 4px 2px 10px;font-size:12px;font-weight:500}
-.chip button{border:0;background:transparent;color:inherit;cursor:pointer;padding:0 6px;font-size:14px;line-height:1}
-.tbl-wrap{overflow:auto;max-height:calc(100vh - 140px)}
-.full .tbl-wrap{max-height:none}
+.search{position:relative;flex:1;min-width:200px}
+.search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);width:16px;height:16px}
+.search .input{padding-left:36px}
+.tools .select,.tools .fsel{width:auto;min-width:130px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}
+.chips:empty{display:none}
+.statline{font-size:12px;color:var(--faint);white-space:nowrap}
+
+/* таблица */
+.tbl-wrap{overflow:auto;max-height:calc(100vh - var(--top) - 150px)}
+.full .tbl-wrap{max-height:calc(100vh - 120px)}
 table{width:100%;border-collapse:separate;border-spacing:0}
-th{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0;z-index:2;line-height:1.25;vertical-align:bottom}
+th{font-size:11.5px;font-weight:600;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0;z-index:2;white-space:nowrap}
+th[data-tip]{cursor:help}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--ink)}
 th .ar{color:var(--accent);margin-left:3px}
-td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;font-size:13px}
-tr.sel td{background:var(--accent-bg)}
-tr.det td{background:var(--surface-2);padding:0}
+th .q{display:inline-block;width:13px;height:13px;border-radius:50%;border:1px solid var(--faint);color:var(--faint);font-size:9px;line-height:11px;text-align:center;margin-left:4px;vertical-align:1px}
+td{padding:7px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;font-size:13px}
+tbody tr:hover>td{background:var(--surface-2)}
+tr.sel>td{background:var(--sunken)!important}
+tr.det>td{background:var(--surface-2);padding:0}
 .num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .r{text-align:right}
-.td-ttl{min-width:260px}
-.ttl{font-weight:500;color:var(--ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:320px;line-height:1.3}
+th.r{text-align:right}
+.ttl{font-weight:500;color:var(--ink);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
 a.ttl:hover{color:var(--accent)}
-.sub{font-size:11.5px;color:var(--muted)}
+.td-ttl{min-width:220px;max-width:320px}
+.sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
 .dash{color:var(--faint)}
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;border:0;cursor:help}
-.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.p-ok{color:var(--green);background:var(--green-bg)}.p-stop{color:var(--amber);background:var(--amber-bg)}.p-err{color:var(--red);background:var(--red-bg)}.p-off{color:var(--muted);background:var(--sunken)}
-.tg{position:relative;width:36px;height:20px;flex:none;display:inline-block}
-.tg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
-.tg span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s}
-.tg span::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
-.tg input:checked+span{background:var(--accent)}
-.tg input:checked+span::after{left:18px}
-.tg input:disabled+span{opacity:.45}
-.tg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
-.cell-in{width:76px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 7px;font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.chip[data-tip]{cursor:help}
+.cell-in{width:72px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:5px 8px;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;outline:none}
+.cell-in:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
 .cell-in.bad{border-color:var(--red)}
-.cb{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;margin:0}
-.exp{border:0;background:transparent;cursor:pointer;color:var(--muted);padding:2px 4px;border-radius:6px;transition:transform .15s}
-.exp.open{transform:rotate(180deg)}
-.lnkb{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:0;font-weight:500;font-size:12.5px;text-align:left}
-.lnkb:hover{text-decoration:underline}
-.sched{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
-.sched .lnkb,td .lnkb{white-space:nowrap}
-.selbar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 10px 8px 16px;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow-lg);z-index:30;flex-wrap:wrap;max-width:calc(100% - 24px)}
-.selbar .btn{background:transparent;color:var(--bg);border-color:rgba(255,255,255,.25)}
-@media (prefers-color-scheme: dark){.selbar .btn{border-color:rgba(0,0,0,.25)}}
-.selbar .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.empty{padding:36px;text-align:center;color:var(--muted)}
-.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
-.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:41;width:min(620px,calc(100% - 32px));max-height:min(90vh,860px);display:flex;flex-direction:column;background:var(--bg);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden}
-.modal.wide{width:min(1100px,calc(100% - 32px))}
-.m-h{padding:14px 18px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center}
-.m-h h2{font-size:16px;font-weight:600;color:var(--ink);margin:0;flex:1}
-.m-b{padding:16px 18px;overflow:auto;display:grid;gap:12px}
-.m-f{padding:12px 18px;background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
-.f label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
-.f input,.f select,.f textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 10px;font-size:13.5px}
-.f textarea{min-height:110px;resize:vertical;font-family:inherit}
+.lnkb{color:var(--ink);font-weight:500;font-size:12.5px;text-align:left;white-space:nowrap;border-bottom:1px dashed var(--faint);line-height:1.3}
+.lnkb:hover{color:var(--accent);border-color:var(--accent)}
+.lnkb.muted{color:var(--muted)}
+.sched{display:grid;gap:4px;justify-items:start}
+.exp .ic{transition:transform .15s}
+.exp.open .ic{transform:rotate(180deg)}
+
+.empty{display:grid;place-items:center;align-content:center;gap:10px;color:var(--muted);text-align:center;padding:40px 20px;font-size:14px}
+.empty .e-ic{width:52px;height:52px;border-radius:16px;background:var(--sunken);display:grid;place-items:center;color:var(--faint)}
+.empty .e-ic .ic{width:24px;height:24px}
+
+/* нижняя панель выбора */
+.selbar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 18px;display:flex;gap:6px;align-items:center;box-shadow:var(--shadow-lg);z-index:31;flex-wrap:wrap;max-width:calc(100% - 24px);font-size:13px}
+.selbar b{color:var(--ink)}
+
+/* всплывашки, подсказки, модалки */
+.pop{position:fixed;z-index:70;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);padding:6px;min-width:200px;max-width:min(380px,92vw);max-height:76vh;overflow:auto;animation:fade .12s}
+.pop .mi{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:9px;font-size:13.5px;text-align:left;color:var(--text)}
+.pop .mi:hover{background:var(--sunken)}
+.pop .mi.on{color:var(--ink);font-weight:700}
+.pop .mi .ic{width:15px;height:15px;color:var(--accent);visibility:hidden}
+.pop .mi.on .ic{visibility:visible}
+.pop .pin{padding:10px 12px;display:grid;gap:10px}
+.pop .ph{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pop .ck{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:9px;font-size:13.5px;cursor:pointer}
+.pop .ck:hover{background:var(--sunken)}
+.pop .scroll{max-height:180px;overflow:auto}
+.tip{position:fixed;z-index:90;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.45;padding:7px 10px;border-radius:9px;max-width:300px;pointer-events:none;box-shadow:var(--shadow-lg)}
+@keyframes fade{from{opacity:0}}
+.modal-bg{position:fixed;inset:0;background:rgba(10,10,10,.28);z-index:60;display:grid;place-items:center;padding:16px;animation:fade .15s}
+.modal{width:min(620px,100%);max-height:90vh;display:flex;flex-direction:column;border-radius:20px;box-shadow:var(--shadow-lg);background:var(--surface);overflow:hidden}
+.modal.wide{width:min(1100px,100%)}
+.m-h{padding:18px 22px 10px;display:flex;align-items:center;gap:10px}
+.m-h h2{font-family:var(--display);font-size:16px;font-weight:700;color:var(--ink);flex:1;letter-spacing:-.01em}
+.m-b{padding:6px 22px 16px;overflow:auto;display:grid;gap:12px}
+.m-f{padding:12px 22px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line-2)}
 .note{font-size:12.5px;color:var(--muted)}
-.err-box{background:var(--red-bg);color:var(--red);border-radius:10px;padding:10px 12px;font-size:13px}
-.ok-box{background:var(--green-bg);color:var(--green);border-radius:10px;padding:10px 12px;font-size:13px}
+.err-box{background:var(--red-bg);color:var(--red);border-radius:12px;padding:10px 12px;font-size:13px}
+.ok-box{background:var(--green-bg);color:var(--green);border-radius:12px;padding:10px 12px;font-size:13px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.be-row{display:grid;grid-template-columns:40px 190px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.inner{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:48vh;background:var(--surface)}
+.be-row{display:grid;grid-template-columns:48px 170px minmax(0,1fr);gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2)}
 .be-row:last-child{border-bottom:0}
-.be-row .lbl{font-size:13px;font-weight:500;color:var(--ink)}
+.be-row .lbl{font-size:13.5px;font-weight:600;color:var(--ink)}
 .be-row.dis .ctl{opacity:.4;pointer-events:none}
 .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ctl select,.ctl input[type=number],.ctl input[type=text]{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-size:13px}
-.ctl input[type=number]{width:110px}
+.ctl .select,.ctl .fsel{width:auto;min-width:130px}
+.ctl .input{width:120px}
 .hgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.hgrid label,.dgrid label{display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;padding:5px 0;font-size:12px;cursor:pointer;background:var(--surface);user-select:none}
-.hgrid input,.dgrid input{display:none}
-.hgrid label.on,.dgrid label.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.pop{position:fixed;z-index:45;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px;width:min(340px,calc(100% - 24px));display:grid;gap:10px}
-.pop .q{display:flex;gap:6px;flex-wrap:wrap}
-.tip{position:fixed;z-index:60;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 10px;border-radius:8px;max-width:320px;pointer-events:none;box-shadow:var(--shadow-lg)}
-.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:13px;box-shadow:var(--shadow-lg);z-index:70;max-width:min(560px,calc(100% - 32px))}
-.gate{min-height:100vh;display:grid;place-items:center;padding:16px}
-.gate .card{padding:22px;width:min(360px,100%);display:grid;gap:12px}
-.det-in{padding:14px 16px 18px;display:grid;gap:14px;position:sticky;left:0;width:min(1560px,calc(100vw - 42px))}
-.full .det-in{width:calc(100vw - 4px)}
-.det-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.det-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.det-k .box{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.det-k h4{margin:0 0 6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.hgrid button,.dgrid button{height:32px;border:1px solid var(--line);border-radius:9px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface)}
+.hgrid button:hover,.dgrid button:hover{border-color:var(--faint)}
+.hgrid button.on,.dgrid button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;z-index:95;font-size:13.5px;box-shadow:var(--shadow-lg);max-width:min(560px,92vw);animation:fade .18s}
+
+/* вход */
+.center{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.gate{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:32px 26px;text-align:center;box-shadow:var(--shadow)}
+.gate h1{font-family:var(--display);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.gate p{color:var(--muted);font-size:14px;margin-bottom:18px}
+.gate form{display:grid;gap:10px}
+
+/* раскрытая строка */
+.det-in{padding:14px 16px 18px;display:grid;gap:12px;position:sticky;left:0;width:min(1600px,calc(100vw - 42px))}
+.full .det-in{width:calc(100vw - 8px)}
+.det-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.det-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.det-k .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.det-k h4{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .det-k .ln{display:flex;justify-content:space-between;gap:8px;font-size:12.5px}
 .det-k .ln b{color:var(--ink);font-variant-numeric:tabular-nums}
-.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.chart svg{display:block;width:100%;height:220px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.chart svg{display:block;width:100%;height:210px}
 .legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-.legend label{display:inline-flex;gap:5px;align-items:center;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer}
+.legend button{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:999px;height:26px;padding:0 10px;color:var(--text)}
+.legend button.off{opacity:.4}
 .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.legend input{display:none}
-.legend label.offl{opacity:.4}
-.tod{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:80px}
+.tod{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:72px;margin-top:8px}
 .tod div{background:var(--accent);border-radius:3px 3px 0 0;min-height:1px;opacity:.85}
 .tod-l{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;font-size:9.5px;color:var(--muted);text-align:center}
 .notes{display:grid;gap:6px}
 .notes .n{display:flex;gap:10px;font-size:12.5px;align-items:baseline}
 .notes .n time{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-.scale{font-size:12px;border-collapse:collapse;width:auto}
-.scale td,.scale th{padding:3px 10px;border-bottom:1px solid var(--line-2);position:static;background:transparent}
-.scale tr.cur td{color:var(--accent);font-weight:600}
+.scale{font-size:12px;border-collapse:collapse;width:auto;margin-top:6px}
+.scale td,.scale th{padding:3px 12px;border-bottom:1px solid var(--line-2);position:static;background:transparent}
+.scale tr.cur td{color:var(--accent);font-weight:700}
+details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600}
+
+/* группы */
 .groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;padding:14px}
-.gcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;background:var(--surface);cursor:pointer}
+.gcard{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px;background:var(--surface);cursor:pointer}
 .gcard:hover{border-color:var(--faint)}
-.gcard .gn{font-weight:600;color:var(--ink);display:flex;gap:8px;align-items:center}
+.gcard .gn{font-weight:600;color:var(--ink);display:flex;gap:6px;align-items:center}
 .gcard .gs{display:flex;gap:14px;font-size:12px;color:var(--muted)}
 .gcard .gs b{color:var(--ink)}
-.colrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-2);font-size:13px}
-.colrow .sp{flex:1}
-.ico{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted);padding:0}
-.ico:hover{color:var(--ink)}
-.full{position:fixed;inset:0;z-index:35;border-radius:0;overflow:auto}
-.help h3{margin:6px 0 2px;font-size:14px;color:var(--ink)}
-.help p,.help li{font-size:13px;margin:4px 0}
-@media (max-width:900px){.kpis{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:640px){.wrap{padding:14px 16px 90px}.be-row{grid-template-columns:36px minmax(0,1fr)}.be-row .ctl{grid-column:1/-1}.grid2{grid-template-columns:minmax(0,1fr)}}
+.colrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line-2);font-size:13.5px}
+.colrow label{flex:1;cursor:pointer}
+.full{position:fixed;inset:8px;z-index:35;overflow:auto}
+.help h3{font-size:14px;color:var(--ink);margin:10px 0 2px}
+.help p,.help li{font-size:13.5px;margin:4px 0}
+.help ol{padding-left:20px}
+
+/* автозагрузка */
+.prob{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.prob:last-child{border-bottom:0}
+.tabs-list{display:flex;flex-wrap:wrap;gap:6px}
+.tabs-list label{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+
+@media (max-width:760px){
+  .sync,.sep{display:none}
+  .top-in{padding:0 10px;gap:6px}
+  .tab{padding:0 11px}
+  .tab .lbl{display:none}
+  .be-row{grid-template-columns:44px minmax(0,1fr)}.be-row .ctl{grid-column:1/-1}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .selbar{border-radius:18px}
+}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-funnel" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M9 15v2c0 1.7 2.7 3 6 3s6-1.3 6-3v-5c0-1.7-2.7-3-6-3"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 1.8-2M4 12l1 1 1.8-2M4 18l1 1 1.8-2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 18a8 8 0 1116 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1.2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></symbol>
+  <symbol id="i-columns" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16M15 4v16"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1.5-1.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 01-12 0V8zM12 18v4"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4M8 9h8M8 13h5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4"/></symbol>
+</svg>
 
-<div class="gate" id="gate" hidden>
-  <form class="card" id="gateForm">
-    <div class="f"><label for="gatePw">Пароль дашборда</label><input id="gatePw" type="password" autocomplete="current-password"></div>
-    <div class="note" id="gateErr"></div>
-    <button class="btn pri" type="submit">Войти</button>
-  </form>
+<div class="center" id="gate" hidden>
+  <div class="gate">
+    <h1>Авито: ставки и автозагрузка</h1>
+    <p>Введите пароль дашборда</p>
+    <form id="gateForm"><input class="input" id="gatePw" type="password" autocomplete="current-password" placeholder="Пароль"><button class="btn primary" type="submit">Войти</button></form>
+    <div class="note" id="gateErr" style="margin-top:10px;color:var(--red)"></div>
+  </div>
 </div>
 
-<div class="wrap" id="app" hidden>
-  <div class="bar">
-    <h1>Ручное управление ставками</h1>
-    <button class="btn sm" type="button" id="helpBtn">Инструкция</button>
-    <span class="sp"></span>
-    <nav class="nav" aria-label="Разделы Авито"><a href="/avito-feeds">Автозагрузка</a><a class="cur" href="/avito-bids" aria-current="page">Ставки</a></nav>
-  </div>
-
-  <div class="card sum" id="sum"></div>
-
-  <div class="bar">
-    <div class="seg" role="tablist"><button type="button" class="on" data-tab="all" role="tab">Все объявления</button><button type="button" data-tab="groups" role="tab">Группы объявлений</button></div>
-    <span id="groupHead" hidden></span>
-  </div>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="card" id="tableCard">
-    <div class="tools">
-      <input class="search" id="q" type="search" placeholder="Поиск по объявлениям (заголовок, номер объявления, город)">
-      <button class="btn" type="button" id="filtersBtn">Фильтры ▾</button>
-      <button class="btn" type="button" id="colsBtn">Столбцы</button>
-      <button class="btn" type="button" id="fullBtn" title="Во весь экран" aria-label="Во весь экран">⛶</button>
-      <button class="btn" type="button" id="refreshBtn" title="Перечитать ставки из Авито для видимых объявлений">Обновить из Авито</button>
-      <button class="btn pri" type="button" id="addBtn">Добавить объявления</button>
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <nav class="tabs" aria-label="Разделы">
+        <button class="tab" data-page="bids" type="button"><svg class="ic ic-sm"><use href="#i-gauge"/></svg><span class="lbl">Ставки</span></button>
+        <button class="tab" data-page="feeds" type="button"><svg class="ic ic-sm"><use href="#i-upload"/></svg><span class="lbl">Автозагрузка</span></button>
+      </nav>
+      <div class="top-right" id="topBids">
+        <span class="sync" id="syncInfo" data-tip="Когда сервис последний раз проверял ставки (сам — каждые 10 минут)"><i class="conn-dot" id="connDot"></i><span id="syncText"></span></span>
+        <button class="icon-btn" type="button" data-panel="sum" data-tip="Сводка: сколько объявлений в работе, включено, остановлено, с ошибкой. Нажмите — закрепить" aria-label="Сводка"><svg class="ic"><use href="#i-list"/></svg></button>
+        <button class="icon-btn" type="button" data-panel="funnel" data-tip="Воронка за период: показы → просмотры → контакты. Нажмите — закрепить" aria-label="Воронка"><svg class="ic"><use href="#i-funnel"/></svg></button>
+        <button class="icon-btn" type="button" data-panel="econ" data-tip="Экономика за период: расходы, CPV, CPA, средняя ставка и опережение. Нажмите — закрепить" aria-label="Экономика"><svg class="ic"><use href="#i-coins"/></svg></button>
+        <span class="sep"></span>
+        <button class="icon-btn" type="button" id="helpBtn" data-tip="Как работает раздел" aria-label="Инструкция"><svg class="ic"><use href="#i-info"/></svg></button>
+        <button class="icon-btn" type="button" id="themeBtn" aria-label="Тема" data-tip="Светлая / тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
+      </div>
     </div>
-    <div class="per">
-      <span>Период статистики объявлений:</span>
-      <select id="period"><option value="today">Сегодня</option><option value="yesterday">Вчера</option><option value="7">7 дней</option><option value="30">30 дней</option><option value="custom">Свой период</option></select>
-      <span id="customPer" hidden><input type="date" id="pFrom"> — <input type="date" id="pTo"></span>
-      <span class="sub" id="statInfo"></span>
-      <span class="sp"></span>
-      <div class="chips" id="chips"></div>
-    </div>
-    <div class="tbl-wrap"><table><thead id="thead"></thead><tbody id="rows"><tr><td class="empty">Загрузка…</td></tr></tbody></table></div>
-  </div>
+  </header>
 
-  <div class="card" id="groupsCard" hidden>
-    <div class="tools">
-      <span class="note" id="gInfo"></span><span class="sp"></span>
-      <button class="btn danger" type="button" id="gDelSel" hidden>Удалить выбранные группы</button>
-      <button class="btn pri" type="button" id="gCreate">Создать группу</button>
-    </div>
-    <div id="groupsBody"></div>
-  </div>
+  <main>
+    <!-- ═══ Ставки ═══ -->
+    <section id="pg-bids" class="hide" style="display:grid;gap:12px">
+      <div class="panels" id="panels"></div>
+      <div class="card" id="tableCard">
+        <div class="tools">
+          <div class="seg" role="tablist"><button type="button" class="on" data-view="all">Все объявления</button><button type="button" data-view="groups">Группы</button></div>
+          <span id="groupHead" class="row hide"></span>
+          <div class="search" id="searchBox"><svg class="ic"><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Заголовок, номер или город"></div>
+          <button class="btn" type="button" id="filtersBtn" data-pop="1"><svg class="ic ic-sm"><use href="#i-filter"/></svg>Фильтры</button>
+          <select class="select" id="period" data-tip="Период статистики в таблице и в иконках сверху"><option value="today">Сегодня</option><option value="yesterday">Вчера</option><option value="7">7 дней</option><option value="30">30 дней</option><option value="custom">Свой период…</option></select>
+          <span id="customPer" class="row hide"><input class="input" style="width:auto" type="date" id="pFrom"><span class="muted">—</span><input class="input" style="width:auto" type="date" id="pTo"></span>
+          <button class="icon-btn" type="button" id="refreshBtn" data-tip="Перечитать ставки из Авито для видимых (или выбранных) объявлений" aria-label="Обновить из Авито"><svg class="ic"><use href="#i-refresh"/></svg></button>
+          <button class="icon-btn" type="button" id="colsBtn" data-tip="Столбцы: показать, скрыть, поменять порядок" aria-label="Столбцы"><svg class="ic"><use href="#i-columns"/></svg></button>
+          <button class="icon-btn" type="button" id="fullBtn" data-tip="Таблица во весь экран" aria-label="Во весь экран"><svg class="ic"><use href="#i-expand"/></svg></button>
+          <button class="btn primary" type="button" id="addBtn"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Добавить</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div id="bidsBody">
+          <div class="tbl-wrap"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+        </div>
+        <div id="groupsBody" class="hide"></div>
+      </div>
+    </section>
+
+    <!-- ═══ Автозагрузка ═══ -->
+    <section id="pg-feeds" class="hide">
+      <div class="card">
+        <div class="tools">
+          <span class="muted small grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час.</span>
+          <button class="icon-btn" type="button" id="fReload" data-tip="Обновить список" aria-label="Обновить список"><svg class="ic"><use href="#i-refresh"/></svg></button>
+          <button class="btn primary" type="button" id="fAdd"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Клиент</button>
+        </div>
+        <div class="tbl-wrap"><table><thead><tr><th>Клиент</th><th>Таблица</th><th>Вкладки</th><th class="r">Объявл.</th><th data-tip="Ошибки последней сборки XML — нажмите на число, чтобы посмотреть">Ошибки</th><th>XML обновлён</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
+      </div>
+    </section>
+  </main>
 </div>
 
-<div class="selbar" id="selbar" hidden></div>
-<div class="scrim" id="scrim" hidden></div>
-<div class="tip" id="tip" hidden></div>
-<div class="pop" id="pop" hidden></div>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-
-<!-- добавить объявления -->
-<div class="modal wide" id="mAdd" role="dialog" aria-modal="true" aria-labelledby="aTitle" hidden>
-  <div class="m-h"><h2 id="aTitle">Добавить объявления</h2><button class="btn" type="button" data-close>Закрыть</button></div>
-  <div class="m-b">
-    <div class="seg"><button type="button" class="on" data-atab="filter">Отобрать по фильтрам и поиску</button><button type="button" data-atab="list">Добавить списком</button></div>
-    <div class="grid2">
-      <div class="f"><label for="aAcc">Аккаунт Авито</label><select id="aAcc"></select></div>
-      <div class="f" id="aCityWrap"><label for="aCity">Город</label><select id="aCity"><option value="">Все города</option></select></div>
-    </div>
-    <div id="aFilter">
-      <input class="search" id="aQ" type="search" placeholder="Поиск по заголовку, номеру объявления или городу" style="width:100%">
-    </div>
-    <div id="aList" hidden>
-      <div class="f"><label for="aIds">Внесите номера объявлений списком</label><textarea id="aIds" placeholder="Номера через пробел, запятую, точку с запятой или с новой строки"></textarea></div>
-      <button class="btn" type="button" id="aFind">Найти</button>
-    </div>
-    <div class="note" id="aInfo"></div>
-    <div class="tbl-wrap" style="max-height:46vh;border:1px solid var(--line);border-radius:10px;background:var(--surface)"><table><thead><tr><th style="width:34px"><input type="checkbox" class="cb" id="aAll" aria-label="Выбрать все"></th><th>Объявление</th><th>Город</th><th class="r">Цена</th><th>Аккаунт</th></tr></thead><tbody id="aRows"></tbody></table></div>
-  </div>
-  <div class="m-f"><span class="note sp" id="aSel"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="button" id="aSave">Добавить</button></div>
-</div>
-
-<!-- отключение по метрике -->
-<div class="modal" id="mLim" role="dialog" aria-modal="true" aria-labelledby="lTitle" hidden>
-  <div class="m-h"><h2 id="lTitle">Отключение по метрике</h2><button class="btn" type="button" data-close>Закрыть</button></div>
-  <form class="m-b" id="lForm" novalidate>
-    <div class="note">Пустое поле — ограничение не используется. Считаются сутки по Москве; если сработает любое из условий, объявление уйдёт на базовую ставку до следующих суток.</div>
-    <div class="grid2" id="lFields"></div>
-    <div class="err-box" id="lErr" hidden></div>
-  </form>
-  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="submit" form="lForm">Сохранить</button></div>
-</div>
-
-<!-- массовое редактирование -->
-<div class="modal" id="mBulk" role="dialog" aria-modal="true" aria-labelledby="bTitle" hidden>
-  <div class="m-h"><h2 id="bTitle">Массовое редактирование</h2><button class="btn" type="button" data-close>Закрыть</button></div>
-  <div class="m-b">
-    <div class="note" id="bInfo"></div>
-    <div id="bRows"></div>
-    <div><button class="btn sm" type="button" id="bNoteBtn">Добавить заметку +</button></div>
-    <div class="f" id="bNoteWrap" hidden><label for="bNote">Заметка (появится в статистике объявлений)</label><input id="bNote" maxlength="300"></div>
-    <div class="err-box" id="bErr" hidden></div>
-    <div id="bPreview" hidden></div>
-  </div>
-  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn" type="button" id="bCheck">Проверить изменения</button><button class="btn pri" type="button" id="bApply">Применить</button></div>
-</div>
-
-<!-- столбцы -->
-<div class="modal" id="mCols" role="dialog" aria-modal="true" aria-labelledby="cTitle" hidden>
-  <div class="m-h"><h2 id="cTitle">Столбцы</h2><button class="btn" type="button" data-close>Готово</button></div>
-  <div class="m-b"><div id="cList"></div><div><button class="btn sm" type="button" id="cReset">Вернуть как было</button></div></div>
-</div>
-
-<!-- группа: название -->
-<div class="modal" id="mGroup" role="dialog" aria-modal="true" aria-labelledby="gTitle" hidden>
-  <div class="m-h"><h2 id="gTitle">Новая группа</h2><button class="btn" type="button" data-close>Закрыть</button></div>
-  <form class="m-b" id="gForm" novalidate>
-    <div class="f"><label for="gName">Название группы</label><input id="gName" maxlength="50" placeholder="Например: Москва, английский"></div>
-    <div class="err-box" id="gErr" hidden></div>
-  </form>
-  <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="submit" form="gForm">Сохранить</button></div>
-</div>
-
-<!-- добавить в группу из инструмента -->
-<div class="modal wide" id="mPick" role="dialog" aria-modal="true" aria-labelledby="pTitle" hidden>
-  <div class="m-h"><h2 id="pTitle">Добавить объявления в группу</h2><button class="btn" type="button" data-close>Закрыть</button></div>
-  <div class="m-b">
-    <input class="search" id="pQ" type="search" placeholder="Поиск по заголовку, номеру, городу или аккаунту" style="width:100%">
-    <div class="tbl-wrap" style="max-height:52vh;border:1px solid var(--line);border-radius:10px;background:var(--surface)"><table><thead id="pHead"></thead><tbody id="pRows"></tbody></table></div>
-  </div>
-  <div class="m-f"><span class="note sp" id="pSel"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn pri" type="button" id="pSave">Добавить</button></div>
-</div>
-
-<!-- инструкция -->
-<div class="modal" id="mHelp" role="dialog" aria-modal="true" aria-labelledby="hTitle" hidden>
-  <div class="m-h"><h2 id="hTitle">Как работает раздел</h2><button class="btn" type="button" data-close>Закрыть</button></div>
-  <div class="m-b help">
-    <h3>Запуск за 3 шага</h3>
-    <ol>
-      <li>«Добавить объявления» — выберите кабинет и отметьте объявления (или вставьте номера списком).</li>
-      <li>Укажите «Ставку» — целые рубли за просмотр. Ориентир — «Мин. ставка для продвижения».</li>
-      <li>Включите тумблер «Вкл / выкл». Добавление само продвижение не включает.</li>
-    </ol>
-    <h3>Что делает сервис</h3>
-    <p>Каждые 10 минут сверяет ставку на Авито с настройкой и ставит нужную. Вне графика, при сработавшем ограничении или когда в кабинете закончились деньги объявление уходит на <b>базовую ставку</b> (без продвижения), а когда причина уходит — сервис сам возвращает вашу ставку. Повторно одну и ту же ставку сервис отправляет не чаще раза в час.</p>
-    <h3>Ставки</h3>
-    <p><b>Базовая</b> — состояние без продвижения. <b>Мин. ставка для продвижения</b> — с неё продвижение уже работает. Диапазон задаёт Авито для каждого объявления; ставка вне его не ставится, в статусе будет ошибка. <b>Опережение конкурентов</b> — процент, который Авито отдаёт для текущей ставки.</p>
-    <h3>График и ограничения</h3>
-    <p>Время — московское. Каждый выбранный час — полный час (09:00 = 09:00–09:59). Ограничения (показы, просмотры, контакты, расходы, CPV, CPA) считаются за текущие сутки МСК и обнуляются в полночь. Достаточно сработать одному.</p>
-    <h3>Статусы</h3>
-    <p><b>Успешно</b> — всё в порядке. <b>Остановлено</b> — плановая остановка (по времени, бюджету, метрике, аванс). <b>Ошибка</b> — нужно что-то поправить. Наведите на статус — увидите причину.</p>
-    <h3>Много объявлений сразу</h3>
-    <p>Отметьте строки (или «Выбрать все» по текущему фильтру — например, по городу или кабинету) → «Массовое редактирование». Меняется только то, у чего включён левый тумблер; числа можно заменить, прибавить или вычесть.</p>
-    <p class="note">Удаление из раздела не удаляет объявление на Авито и не меняет его ставку.</p>
-  </div>
-</div>
+<div class="selbar hide" id="selbar"></div>
+<div class="tip hide" id="tip"></div>
+<div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+<div id="modals"></div>
 
 <script>
 (function () {
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const I = (n, c) => `<svg class="ic${c ? ' ' + c : ''}"><use href="#i-${n}"/></svg>`;
 
 // cantor.agency — статичный nginx, API в воркере; из РФ ходим через Яндекс-функцию с запасным прямым адресом.
 const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
@@ -375,81 +428,178 @@ async function api(path, opts = {}, pw) {
   return { status: 0, ok: false, data: { error: 'Нет связи с сервером, попробуйте ещё раз' } };
 }
 const post = (path, body) => api(path, { method: 'POST', body: JSON.stringify(body) });
+function toast(msg, ms) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), ms || 4500); }
+function emptyState(icon, title, sub) { return `<div class="empty"><div class="e-ic">${I(icon)}</div><div>${esc(title)}</div>${sub ? `<div class="small faint">${sub}</div>` : ''}</div>`; }
 
-let tt;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 5000); }
-
-const rub = (v, d = 0) => v == null ? '—' : `${Number(v).toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d })} ₽`;
+const rub = (v, d = 0) => v == null || Number.isNaN(v) ? '—' : `${Number(v).toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d })} ₽`;
 const int = (v) => v == null ? '—' : Number(v).toLocaleString('ru-RU');
-const pct = (v) => v == null ? '—' : `${Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} %`;
+const pct = (v) => v == null || Number.isNaN(v) ? '—' : `${Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} %`;
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const hh = (h) => `${String(h).padStart(2, '0')}:00`;
 const mskToday = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
 const dAdd = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 const fmtAt = (ms) => ms ? new Date(ms).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }) : '—';
-
+function ago(ms) { if (!ms) return '—'; const m = Math.round((Date.now() - ms) / 60000); if (m < 1) return 'только что'; if (m < 60) return `${m} мин назад`; return fmtAt(ms); }
 function ranges(list, fmt) {
-  const out = [];
-  let s = null, p = null;
+  const out = []; let s = null, p = null;
   list.forEach((x) => { if (s == null) { s = p = x; } else if (x === p + 1) { p = x; } else { out.push([s, p]); s = p = x; } });
   if (s != null) out.push([s, p]);
   return out.map(([a, b]) => a === b ? fmt(a) : `${fmt(a)}–${fmt(b)}`).join(', ');
 }
-const hoursText = (h) => !h ? 'Весь день' : ranges(h, hh);
+const hoursText = (h) => !h ? 'Весь день' : ranges(h, (x) => String(x).padStart(2, '0')) + (h.length === 1 ? ' ч' : '');
 const daysText = (d) => !d ? 'Вся неделя' : ranges(d, (x) => DAYS[x]);
+const cv = (a, b) => (a == null || !b ? null : (a / b) * 100);
+const div = (a, b) => (a == null || !b ? null : a / b);
 
-/* ── состояние ── */
-let S = { accounts: [], groups: {}, items: [], money: {} };
-let stats = {};           // key -> { i, v, c, s }
+/* ── тема ── */
+function themeIcon() { const dark = (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark'; $('#themeBtn').innerHTML = I(dark ? 'sun' : 'moon'); }
+$('#themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = next; try { localStorage.setItem('avito.theme', next); } catch (e) {} themeIcon();
+});
+themeIcon();
+
+/* ── всплывашки и подсказки ── */
+let popEl = null;
+function closePop() { if (popEl) { const cb = popEl._onClose; popEl.remove(); popEl = null; if (cb) cb(); } }
+function openPop(anchor, html, bind, onClose) {
+  closePop();
+  popEl = document.createElement('div'); popEl.className = 'pop'; popEl.innerHTML = html; document.body.appendChild(popEl);
+  const r = anchor.getBoundingClientRect();
+  if (anchor.classList.contains('fsel')) popEl.style.minWidth = r.width + 'px';
+  const w = popEl.offsetWidth, h = popEl.offsetHeight;
+  popEl.style.top = (r.bottom + 6 + h > innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+  popEl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  popEl.dataset.for = anchor.id || '';
+  popEl._onClose = onClose;
+  hideTip();
+  if (bind) bind(popEl);
+  return popEl;
+}
+document.addEventListener('mousedown', (e) => { if (popEl && !popEl.contains(e.target) && !e.target.closest('[data-pop]')) closePop(); });
+function menuPop(anchor, items, cur, onPick) {
+  if (popEl && popEl.dataset.for === anchor.id) return closePop();
+  openPop(anchor, items.map(([v, label]) => `<button class="mi${v === cur ? ' on' : ''}" type="button" data-v="${esc(v)}">${I('check')}${esc(label)}</button>`).join(''), (p) => {
+    $$('.mi', p).forEach((b) => b.onclick = () => { closePop(); onPick(b.dataset.v); });
+  });
+}
+// Системные выпадающие списки заменяем кнопкой с меню в стиле страницы; <select> остаётся скрытым — значение и change идут через него.
+let fselN = 0;
+function enhanceSelect(sel) {
+  if (sel._fancy) return;
+  sel._fancy = true;
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.id = sel.id ? `${sel.id}_fs` : `fsel${++fselN}`; btn.dataset.pop = '1';
+  btn.className = sel.className.replace(/\bhide\b/, '') + ' fsel';
+  btn.style.cssText = sel.style.cssText; if (sel.dataset.tip) btn.dataset.tip = sel.dataset.tip;
+  sel.style.display = 'none'; sel.after(btn);
+  const update = () => { const o = sel.options[sel.selectedIndex]; btn.textContent = o ? o.textContent : '—'; btn.disabled = sel.disabled; };
+  sel._fu = update;
+  btn.onclick = () => menuPop(btn, Array.from(sel.options).map((o) => [o.value, o.textContent]), sel.value, (v) => { sel.value = v; update(); sel.dispatchEvent(new Event('change', { bubbles: true })); });
+  new MutationObserver(update).observe(sel, { childList: true, subtree: true, attributes: true });
+  update();
+}
+const setSel = (sel, v) => { sel.value = v; if (sel._fu) sel._fu(); };
+new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType === 1) { if (n.matches('select.select')) enhanceSelect(n); else $$('select.select', n).forEach(enhanceSelect); } }))).observe(document.body, { childList: true, subtree: true });
+$$('select.select').forEach(enhanceSelect);
+
+const tipEl = $('#tip');
+function hideTip() { tipEl.classList.add('hide'); }
+document.addEventListener('mouseover', (e) => {
+  const el = e.target.closest('[data-tip]');
+  if (!el || !el.dataset.tip || popEl) { hideTip(); return; }
+  tipEl.textContent = el.dataset.tip; tipEl.classList.remove('hide');
+  const r = el.getBoundingClientRect();
+  const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  tipEl.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8))}px`;
+  tipEl.style.top = `${r.bottom + 6 + h > innerHeight ? r.top - h - 6 : r.bottom + 6}px`;
+});
+document.addEventListener('scroll', hideTip, true);
+
+/* ── модалки ── */
+let modalEl = null;
+function openModal(html, { wide = false, onClose } = {}) {
+  closeModal();
+  modalEl = document.createElement('div'); modalEl.className = 'modal-bg';
+  modalEl.innerHTML = `<div class="modal${wide ? ' wide' : ''}" role="dialog" aria-modal="true">${html}</div>`;
+  $('#modals').appendChild(modalEl);
+  modalEl._onClose = onClose;
+  modalEl.addEventListener('mousedown', (e) => { if (e.target === modalEl) closeModal(); });
+  $$('[data-close]', modalEl).forEach((b) => b.addEventListener('click', closeModal));
+  const f = modalEl.querySelector('input:not([type=checkbox]),textarea'); if (f) setTimeout(() => f.focus(), 30);
+  return modalEl;
+}
+function closeModal() { if (modalEl) { const cb = modalEl._onClose; modalEl.remove(); modalEl = null; if (cb) cb(); } }
+const mHead = (t) => `<div class="m-h"><h2>${esc(t)}</h2><button class="icon-btn sm" type="button" data-close aria-label="Закрыть">${I('x')}</button></div>`;
+document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (popEl) closePop(); else if (modalEl) closeModal(); else if ($('#tableCard').classList.contains('full')) $('#fullBtn').click(); });
+
+/* ═══════════════ Разделы ═══════════════ */
+let page = location.hash === '#feeds' ? 'feeds' : 'bids';
+function setPage(p) {
+  page = p;
+  $$('[data-page]').forEach((b) => b.classList.toggle('on', b.dataset.page === p));
+  $('#pg-bids').classList.toggle('hide', p !== 'bids');
+  $('#pg-feeds').classList.toggle('hide', p !== 'feeds');
+  $$('#topBids > :not(#themeBtn)').forEach((el) => el.classList.toggle('hide', p !== 'bids'));
+  history.replaceState(null, '', p === 'feeds' ? '#feeds' : '#bids');
+  document.title = p === 'feeds' ? 'Автозагрузка Авито' : 'Ставки Авито';
+  if (p === 'feeds' && !F.loaded) feedsLoad();
+  if (p === 'bids' && !B.loaded) bidsLoad().then(loadStats);
+  renderSelbar();
+}
+$$('[data-page]').forEach((b) => b.addEventListener('click', () => setPage(b.dataset.page)));
+
+/* ═══════════════ Ставки ═══════════════ */
+const B = { loaded: false, accounts: [], groups: {}, items: [], money: {} };
+let stats = {};
 let statsAt = null;
 const sel = new Set();
-const open = new Set();
-let tab = 'all';
+const openRows = new Set();
+let view = 'all';
 let curGroup = null;
 let sort = lsGet('mb_sort', null);
-let filt = lsGet('mb_filt', { acc: [], city: [], status: [], on: '', group: '' });
+let filt = Object.assign({ acc: [], city: [], status: [], on: '', group: '' }, lsGet('mb_filt', {}));
 let q = '';
+let panelsOn = lsGet('mb_panels', []);
 
 const COLS = [
-  { id: 'on', t: 'Вкл / выкл', sort: (x) => x.on ? 1 : 0, fixed: true },
-  { id: 'status', t: 'Статус', sort: (x) => ({ ok: 0, pending: 1, stop: 2, err: 3, off: 4 }[x.status] ?? 5) },
-  { id: 'bid', t: 'Ставка', sort: (x) => x.bid, r: true },
-  { id: 'now', t: 'Ставка сейчас', sort: (x) => x.now, r: true },
-  { id: 'cmp', t: 'Опережение конкурентов', sort: (x) => x.cmp, r: true },
-  { id: 'base', t: 'Базовая ставка', sort: (x) => x.base, r: true },
-  { id: 'minPromo', t: 'Мин. ставка для продвижения', sort: (x) => x.minPromo, r: true },
-  { id: 'sched', t: 'График продвижения' },
-  { id: 'lim', t: 'Отключение по метрике' },
+  { id: 'on', t: 'Вкл', tip: 'Ручное управление ставкой: включено / выключено. Выключенное объявление сервис не трогает.', sort: (x) => x.on ? 1 : 0 },
+  { id: 'status', t: 'Статус', tip: 'Успешно — ставка держится. Остановлено — плановая пауза (по графику, лимиту, нет денег). Ошибка — нужно поправить. Наведите на статус — увидите причину.', sort: (x) => ({ ok: 0, pending: 1, stop: 2, err: 3, off: 4 }[x.status] ?? 5) },
+  { id: 'bid', t: 'Ставка', tip: 'Ставка за просмотр, которую сервис держит в разрешённое время. Целые рубли.', sort: (x) => x.bid, r: true },
+  { id: 'now', t: 'Сейчас', tip: 'Ставка, которая фактически стоит на Авито сейчас. «авто» — на Авито включена автостратегия.', sort: (x) => x.now, r: true },
+  { id: 'cmp', t: 'Опереж.', tip: 'Опережение конкурентов — процент, который Авито даёт для текущей ставки.', sort: (x) => x.cmp, r: true },
+  { id: 'base', t: 'База', tip: 'Базовая ставка — состояние без продвижения. На неё объявление уходит вне графика и по лимитам.', sort: (x) => x.base, r: true },
+  { id: 'minPromo', t: 'Мин.', tip: 'Минимальная ставка для продвижения — с неё продвижение уже работает. Ставка ниже не применится.', sort: (x) => x.minPromo, r: true },
+  { id: 'sched', t: 'График', tip: 'Часы и дни недели (по Москве), когда держится ваша ставка. В остальное время — базовая.' },
+  { id: 'lim', t: 'Лимиты', tip: 'Отключение по метрике за сутки МСК: показы, просмотры, контакты, расходы, CPV, CPA. Сработал любой — базовая ставка до полуночи.' },
   { id: 'title', t: 'Объявление', sort: (x) => x.title.toLowerCase() },
   { id: 'acc', t: 'Аккаунт', sort: (x) => x.accountName.toLowerCase() },
   { id: 'city', t: 'Город', sort: (x) => x.city.toLowerCase() },
-  { id: 'i', t: 'Показы', sort: (x) => st(x).i, r: true },
-  { id: 'cv1', t: 'CV в просмотр', sort: (x) => cv(st(x).v, st(x).i), r: true },
-  { id: 'v', t: 'Просмотры', sort: (x) => st(x).v, r: true },
-  { id: 'cv2', t: 'CV в контакт', sort: (x) => cv(st(x).c, st(x).v), r: true },
-  { id: 'c', t: 'Контакты', sort: (x) => st(x).c, r: true },
-  { id: 's', t: 'Расходы', sort: (x) => st(x).s, r: true },
-  { id: 'cpv', t: 'CPV / 1 просмотр', sort: (x) => div(st(x).s, st(x).v), r: true },
-  { id: 'cpa', t: 'CPA / 1 контакт', sort: (x) => div(st(x).s, st(x).c), r: true },
-  { id: 'grp', t: 'Группы' },
+  { id: 'i', t: 'Показы', tip: 'Показы объявления в выдаче за период', sort: (x) => st(x).i, r: true },
+  { id: 'cv1', t: 'CV1', tip: 'Конверсия из показа в просмотр', sort: (x) => cv(st(x).v, st(x).i), r: true },
+  { id: 'v', t: 'Просм.', tip: 'Просмотры объявления за период', sort: (x) => st(x).v, r: true },
+  { id: 'cv2', t: 'CV2', tip: 'Конверсия из просмотра в контакт', sort: (x) => cv(st(x).c, st(x).v), r: true },
+  { id: 'c', t: 'Конт.', tip: 'Контакты за период: звонки, сообщения', sort: (x) => st(x).c, r: true },
+  { id: 's', t: 'Расход', tip: 'Расходы на объявление за период (размещение и продвижение)', sort: (x) => st(x).s, r: true },
+  { id: 'cpv', t: 'CPV', tip: 'Стоимость одного просмотра = расходы ÷ просмотры', sort: (x) => div(st(x).s, st(x).v), r: true },
+  { id: 'cpa', t: 'CPA', tip: 'Стоимость одного контакта = расходы ÷ контакты', sort: (x) => div(st(x).s, st(x).c), r: true },
+  { id: 'grp', t: 'Группы', tip: 'В каких группах раздела объявление' },
 ];
-const DEFAULT_COLS = COLS.map((c) => ({ id: c.id, on: c.id !== 'grp' && c.id !== 'cv1' && c.id !== 'cv2' }));
+const DEFAULT_COLS = COLS.map((c) => ({ id: c.id, on: !['grp', 'cv1', 'cv2'].includes(c.id) }));
 let cols = lsGet('mb_cols', DEFAULT_COLS);
 COLS.forEach((c) => { if (!cols.find((x) => x.id === c.id)) cols.push({ id: c.id, on: false }); });
 cols = cols.filter((x) => COLS.find((c) => c.id === x.id));
 const colById = (id) => COLS.find((c) => c.id === id);
-
 const st = (x) => stats[x.key] || {};
-const cv = (a, b) => (a == null || !b ? null : (a / b) * 100);
-const div = (a, b) => (a == null || !b ? null : a / b);
+const accName = (id) => (B.accounts.find((a) => a.id === id) || {}).name || id;
+const STATUS = { ok: 'Успешно', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
 
-/* ── загрузка ── */
-async function load() {
+async function bidsLoad() {
   const r = await api('/api/dashboard/mbids/state');
   if (r.status === 401) return showGate();
-  if (!r.ok) { $('#rows').innerHTML = `<tr><td class="empty">${esc(r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
-  S = r.data;
-  const keys = new Set(S.items.map((x) => x.key));
+  if (!r.ok) { $('#rows').innerHTML = `<tr><td>${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
+  Object.assign(B, r.data, { loaded: true });
+  const keys = new Set(B.items.map((x) => x.key));
   [...sel].forEach((k) => { if (!keys.has(k)) sel.delete(k); });
   render();
 }
@@ -458,19 +608,14 @@ function period() {
   const p = $('#period').value, t = mskToday();
   if (p === 'today') return [t, t];
   if (p === 'yesterday') return [dAdd(t, -1), dAdd(t, -1)];
-  if (p === 'custom') {
-    const a = $('#pFrom').value || t, b = $('#pTo').value || t;
-    return a <= b ? [a, b] : [b, a];
-  }
+  if (p === 'custom') { const a = $('#pFrom').value || t, b = $('#pTo').value || t; return a <= b ? [a, b] : [b, a]; }
   return [dAdd(t, -(Number(p) - 1)), t];
 }
-
-let statsSeq = 0;
+let statsSeq = 0, statsErr = '';
 async function loadStats() {
   const seq = ++statsSeq;
   const [from, to] = period();
-  const accs = [...new Set(S.items.map((x) => x.accountId))];
-  $('#statInfo').textContent = accs.length ? 'загружаем статистику…' : '';
+  const accs = [...new Set(B.items.map((x) => x.accountId))];
   const next = {};
   const errs = [];
   for (const acc of accs) {
@@ -478,20 +623,15 @@ async function loadStats() {
     if (seq !== statsSeq) return;
     if (r.ok) Object.entries(r.data.stats || {}).forEach(([id, v]) => { next[`${acc}:${id}`] = v; });
     else errs.push(r.data.error || 'ошибка');
-    stats = { ...next };
-    render();
   }
-  // Нет строки в ответе Авито — значит, за период по объявлению ничего не было: нули, а не прочерк.
-  S.items.forEach((x) => { if (!next[x.key] && !errs.length) next[x.key] = { i: 0, v: 0, c: 0, s: 0 }; });
-  stats = next;
-  statsAt = Date.now();
-  $('#statInfo').textContent = errs.length ? `Не все кабинеты ответили: ${errs[0]}` : `обновлено ${fmtAt(statsAt)}`;
+  // Нет строки в ответе Авито — за период по объявлению ничего не было: нули, а не прочерк.
+  if (!errs.length) B.items.forEach((x) => { if (!next[x.key]) next[x.key] = { i: 0, v: 0, c: 0, s: 0 }; });
+  stats = next; statsAt = Date.now(); statsErr = errs[0] || '';
   render();
 }
 
-/* ── отбор ── */
 function visible() {
-  let list = S.items;
+  let list = B.items;
   if (curGroup) list = list.filter((x) => x.groups.includes(curGroup));
   if (filt.acc.length) list = list.filter((x) => filt.acc.includes(x.accountId));
   if (filt.city.length) list = list.filter((x) => filt.city.includes(x.city));
@@ -507,9 +647,7 @@ function visible() {
       list = list.slice().sort((a, b) => {
         const va = c.sort(a), vb = c.sort(b);
         const na = va == null || Number.isNaN(va), nb = vb == null || Number.isNaN(vb);
-        if (na && nb) return 0;
-        if (na) return 1;
-        if (nb) return -1;
+        if (na && nb) return 0; if (na) return 1; if (nb) return -1;
         return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
       });
     }
@@ -517,49 +655,86 @@ function visible() {
   return list;
 }
 
-/* ── отрисовка ── */
 function render() {
-  renderSum();
-  $('#tableCard').hidden = tab === 'groups' && !curGroup;
-  $('#kpis').hidden = tab === 'groups' && !curGroup;
-  $('#groupsCard').hidden = !(tab === 'groups' && !curGroup);
+  if (!B.loaded) return;
+  renderTop();
+  const groupsView = view === 'groups' && !curGroup;
+  $$('[data-view]').forEach((b) => b.classList.toggle('on', b.dataset.view === (curGroup ? 'groups' : view)));
+  $('#bidsBody').classList.toggle('hide', groupsView);
+  $('#groupsBody').classList.toggle('hide', !groupsView);
+  ['#searchBox', '#filtersBtn', '#period_fs', '#refreshBtn', '#colsBtn', '#fullBtn'].forEach((s) => { const el = $(s); if (el) el.classList.toggle('hide', groupsView); });
+  $('#customPer').classList.toggle('hide', groupsView || $('#period').value !== 'custom');
+  $('#addBtn').innerHTML = groupsView ? `${I('plus', 'ic-sm')}Группа` : curGroup ? `${I('plus', 'ic-sm')}В группу` : `${I('plus', 'ic-sm')}Добавить`;
   const gh = $('#groupHead');
-  gh.hidden = !curGroup;
-  if (curGroup && S.groups[curGroup]) gh.innerHTML = `<button class="btn sm" type="button" id="gBack">← Все группы</button> <b style="margin-left:6px">${esc(S.groups[curGroup].name)}</b> <button class="btn sm" type="button" id="gAddTo" style="margin-left:8px">Добавить объявления в группу</button>`;
-  if (tab === 'groups' && !curGroup) { renderGroups(); renderSelbar([]); return; }
+  gh.classList.toggle('hide', !curGroup);
+  if (curGroup && B.groups[curGroup]) gh.innerHTML = `<button class="btn sm quiet" type="button" id="gBack">${I('back', 'ic-sm')}Группы</button><span class="chip accent">${I('folder', 'ic-sm')}${esc(B.groups[curGroup].name)}</span>`;
+  if (groupsView) { renderGroups(); $('#chips').innerHTML = ''; renderPanels([]); renderSelbar(); return; }
   const list = visible();
-  renderKpis(list);
+  renderPanels(list);
   renderChips();
   renderTable(list);
-  renderSelbar(list);
+  renderSelbar();
 }
 
-function renderSum() {
-  const items = S.items;
-  const on = items.filter((x) => x.on).length;
-  const err = items.filter((x) => x.status === 'err').length;
-  const stop = items.filter((x) => x.status === 'stop').length;
-  const accs = [...new Set(items.map((x) => x.accountId))];
-  const runs = accs.map((a) => (S.money[a] || {}).runAt).filter(Boolean);
-  const low = accs.filter((a) => { const m = S.money[a]; return m && m.at && (m.advance ?? 0) + (m.wallet ?? 0) <= 0; });
-  $('#sum').innerHTML = `<span>Объявлений в работе: <b>${items.length}</b></span><span>Включено: <b>${on}</b></span><span>Остановлено: <b>${stop}</b></span><span>С ошибкой: <b style="color:${err ? 'var(--red)' : 'inherit'}">${err}</b></span><span>Кабинетов: <b>${accs.length}</b></span><span>Последняя проверка: <b>${runs.length ? fmtAt(Math.max(...runs)) : '—'}</b></span>${low.length ? `<span style="color:var(--red)">Нет денег на продвижение: ${low.map((a) => esc(accName(a))).join(', ')}</span>` : ''}`;
+/* ── шапка: время проверки и панели ── */
+function renderTop() {
+  const accs = [...new Set(B.items.map((x) => x.accountId))];
+  const runs = accs.map((a) => (B.money[a] || {}).runAt).filter(Boolean);
+  const errs = B.items.filter((x) => x.status === 'err').length;
+  $('#syncText').textContent = runs.length ? `Проверено ${ago(Math.max(...runs))}` : B.items.length ? 'Ждёт первой проверки' : '';
+  $('#connDot').classList.toggle('warn', errs > 0);
+  $('#syncInfo').dataset.tip = errs ? `С ошибкой: ${errs} объявл. Сервис проверяет ставки сам каждые 10 минут.` : 'Сервис сам проверяет и ставит ставки каждые 10 минут';
+  $$('[data-panel]').forEach((b) => b.classList.toggle('on', panelsOn.includes(b.dataset.panel)));
 }
-const accName = (id) => (S.accounts.find((a) => a.id === id) || {}).name || id;
-
-function renderKpis(list) {
-  let i = 0, v = 0, c = 0, s = 0, has = false, bidSum = 0, bidN = 0, cmpSum = 0, cmpN = 0;
+const kv = (l, v, tip, cls = '') => `<div class="kv"><div class="l"${tip ? ` data-tip="${esc(tip)}"` : ''}>${l}</div><div class="v ${cls}">${v}</div></div>`;
+function panelHtml(id, list) {
+  if (id === 'sum') {
+    const items = B.items;
+    const accs = [...new Set(items.map((x) => x.accountId))];
+    const low = accs.filter((a) => { const m = B.money[a]; return m && m.at && (m.advance ?? 0) + (m.wallet ?? 0) <= 0; });
+    return { t: 'Сводка', body: `<div class="kv-row">${kv('В работе', int(items.length), 'Объявлений добавлено в раздел')}${kv('Включено', int(items.filter((x) => x.on).length), 'С включённым ручным управлением')}${kv('Остановлено', int(items.filter((x) => x.status === 'stop').length), 'Плановая пауза: вне графика, по лимиту или нет денег')}${kv('С ошибкой', int(items.filter((x) => x.status === 'err').length), 'Нужно поправить — наведите на статус в таблице', items.some((x) => x.status === 'err') ? 'red' : '')}${kv('Кабинетов', int(accs.length))}</div>${low.length ? `<div class="small" style="color:var(--red);margin-top:6px">Нет денег на продвижение: ${low.map((a) => esc(accName(a))).join(', ')}</div>` : ''}` };
+  }
+  let i = 0, v = 0, c = 0, s = 0, has = false, bS = 0, bN = 0, cS = 0, cN = 0;
   list.forEach((x) => {
     const t = stats[x.key];
     if (t) { has = true; i += t.i; v += t.v; c += t.c; s += t.s; }
-    if (x.on && x.now != null) { bidSum += x.now; bidN++; }
-    if (x.on && x.cmp != null) { cmpSum += x.cmp; cmpN++; }
+    if (x.on && x.now != null) { bS += x.now; bN++; }
+    if (x.on && x.cmp != null) { cS += x.cmp; cN++; }
   });
-  const kv = (l, val, cls = '') => `<div class="kv ${cls}"><div class="l">${l}</div><div class="v">${val}</div></div>`;
   const n = (val, f) => has ? f(val) : '—';
-  $('#kpis').innerHTML = `
-    <div class="card kpi"><h3>Воронка</h3><div class="kpi-row">${kv('Показы', n(i, int))}${kv('CV в просмотр', has ? pct(cv(v, i)) : '—', 'cv')}${kv('Просмотры', n(v, int))}${kv('CV в контакт', has ? pct(cv(c, v)) : '—', 'cv')}${kv('Контакты', n(c, int))}</div></div>
-    <div class="card kpi"><h3>Экономика</h3><div class="kpi-row">${kv('Расходы', n(s, (x) => rub(x, 1)))}${kv('CPV / 1 просмотр', has ? rub(div(s, v), 1) : '—')}${kv('CPA / 1 контакт', has ? rub(div(s, c), 1) : '—')}${kv('Средняя ставка', bidN ? rub(bidSum / bidN, 1) : '—')}${kv('Среднее опережение', cmpN ? pct(cmpSum / cmpN) : '—')}</div></div>`;
+  const arrow = (val, tip) => `<div class="kv arrow" data-tip="${esc(tip)}"><b>${has ? pct(val) : '—'}</b>→</div>`;
+  if (id === 'funnel') return { t: 'Воронка', body: `<div class="kv-row">${kv('Показы', n(i, int))}${arrow(cv(v, i), 'Конверсия из показа в просмотр')}${kv('Просмотры', n(v, int))}${arrow(cv(c, v), 'Конверсия из просмотра в контакт')}${kv('Контакты', n(c, int))}</div>` };
+  return { t: 'Экономика', body: `<div class="kv-row">${kv('Расходы', n(s, (x) => rub(x)))}${kv('CPV', has ? rub(div(s, v), 1) : '—', 'Стоимость одного просмотра')}${kv('CPA', has ? rub(div(s, c), 0) : '—', 'Стоимость одного контакта')}${kv('Ср. ставка', bN ? rub(bS / bN, 1) : '—', 'Средняя ставка сейчас по включённым объявлениям')}${kv('Ср. опереж.', cN ? pct(cS / cN) : '—', 'Среднее опережение конкурентов по включённым объявлениям')}</div>` };
 }
+const perLabel = () => { const o = $('#period').selectedOptions[0]; const [a, b] = period(); return $('#period').value === 'custom' ? `${a} — ${b}` : o.textContent.toLowerCase(); };
+function renderPanels(list) {
+  const box = $('#panels');
+  const ids = panelsOn.filter((p) => ['sum', 'funnel', 'econ'].includes(p));
+  if (!ids.length || (view === 'groups' && !curGroup)) { box.innerHTML = ''; box.classList.add('hide'); return; }
+  box.classList.remove('hide');
+  box.innerHTML = ids.map((id) => { const p = panelHtml(id, list); return `<div class="card panel"><h3>${p.t}${id !== 'sum' ? `<span class="faint" style="text-transform:none;letter-spacing:0;font-weight:500">· ${esc(perLabel())}</span>` : ''}<span class="grow"></span><button class="icon-btn sm" type="button" data-unpin="${id}" aria-label="Скрыть">${I('x')}</button></h3>${p.body}</div>`; }).join('');
+}
+$('#panels').addEventListener('click', (e) => { const b = e.target.closest('[data-unpin]'); if (b) { panelsOn = panelsOn.filter((p) => p !== b.dataset.unpin); lsSet('mb_panels', panelsOn); render(); } });
+// Наведение на иконку — показать, нажатие — закрепить над таблицей (повторное — убрать).
+let hoverPanelT = null;
+$$('[data-panel]').forEach((b) => {
+  b.addEventListener('click', () => {
+    const id = b.dataset.panel;
+    panelsOn = panelsOn.includes(id) ? panelsOn.filter((p) => p !== id) : [...panelsOn, id];
+    lsSet('mb_panels', panelsOn); closePop(); render();
+  });
+  b.addEventListener('mouseenter', () => {
+    clearTimeout(hoverPanelT);
+    if (panelsOn.includes(b.dataset.panel) || !B.loaded) return;
+    hoverPanelT = setTimeout(() => {
+      const p = panelHtml(b.dataset.panel, visible());
+      openPop(b, `<div class="pin"><div class="ph">${p.t}${b.dataset.panel !== 'sum' ? ` · ${esc(perLabel())}` : ''}</div>${p.body}<div class="small faint">Нажмите на иконку — панель закрепится над таблицей</div></div>`);
+      popEl.style.maxWidth = 'min(560px,92vw)';
+      popEl.dataset.hover = '1';
+    }, 120);
+  });
+  b.addEventListener('mouseleave', () => { clearTimeout(hoverPanelT); setTimeout(() => { if (popEl && popEl.dataset.hover && !popEl.matches(':hover')) closePop(); }, 120); });
+});
 
 function renderChips() {
   const ch = [];
@@ -567,130 +742,117 @@ function renderChips() {
   filt.city.forEach((c) => ch.push([`Город: ${c || 'не указан'}`, () => { filt.city = filt.city.filter((x) => x !== c); }]));
   filt.status.forEach((s) => ch.push([`Статус: ${STATUS[s]}`, () => { filt.status = filt.status.filter((x) => x !== s); }]));
   if (filt.on) ch.push([filt.on === 'on' ? 'Только включённые' : 'Только выключенные', () => { filt.on = ''; }]);
-  if (filt.group && S.groups[filt.group]) ch.push([`Группа: ${S.groups[filt.group].name}`, () => { filt.group = ''; }]);
+  if (filt.group && B.groups[filt.group]) ch.push([`Группа: ${B.groups[filt.group].name}`, () => { filt.group = ''; }]);
   chipFns = ch.map((x) => x[1]);
-  $('#chips').innerHTML = ch.map((x, k) => `<span class="chip">${esc(x[0])}<button type="button" data-chip="${k}" aria-label="Убрать фильтр">×</button></span>`).join('');
+  const info = `<span class="statline" style="align-self:center;margin-left:auto">${statsErr ? `<span style="color:var(--red)">Статистика: ${esc(statsErr)}</span>` : statsAt ? `Статистика за ${esc(perLabel())} · ${fmtAt(statsAt)}` : 'Загружаем статистику…'}</span>`;
+  $('#chips').innerHTML = ch.map((x, k) => `<span class="chip accent">${esc(x[0])}<button class="x" type="button" data-chip="${k}" aria-label="Убрать фильтр">${I('x')}</button></span>`).join('') + (B.items.length ? info : '');
+  $('#filtersBtn').classList.toggle('on', ch.length > 0);
+  $('#filtersBtn').innerHTML = `${I('filter', 'ic-sm')}Фильтры${ch.length ? ` <span class="chip accent" style="height:20px;padding:0 7px">${ch.length}</span>` : ''}`;
 }
 let chipFns = [];
-const STATUS = { ok: 'Успешно', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
+$('#chips').addEventListener('click', (e) => { const b = e.target.closest('[data-chip]'); if (!b) return; chipFns[Number(b.dataset.chip)](); lsSet('mb_filt', filt); render(); });
 
-function statusPill(x) {
-  const map = { ok: ['p-ok', 'Успешно'], pending: ['p-ok', 'Успешно'], stop: ['p-stop', 'Остановлено'], err: ['p-err', 'Ошибка'], off: ['p-off', 'Остановлено'] };
+function statusChip(x) {
+  const map = { ok: ['green', 'Успешно'], pending: ['green', 'Успешно'], stop: ['amber', 'Остановлено'], err: ['red', 'Ошибка'], off: ['', 'Выключено'] };
   const [cls, t] = map[x.status] || map.off;
   let reason = x.reason || (x.status === 'pending' ? 'Ждёт первой проверки — до 10 минут' : '');
-  if (x.status === 'ok' && x.setAt && x.now !== x.bid) reason = 'Ставка отправлена в Авито, применение может занять время';
-  const checked = x.checkedAt ? `Проверено ${fmtAt(x.checkedAt)}` : '';
-  return `<span class="pill ${cls}" data-tip="${esc([reason, checked].filter(Boolean).join(' · '))}" tabindex="0">${t}</span>`;
+  if (x.status === 'off') reason = 'Ручное управление выключено — включите тумблер';
+  if (x.status === 'ok' && x.now !== x.bid && x.setAt) reason = 'Ставка отправлена в Авито, применение может занять время';
+  return `<span class="chip ${cls}" data-tip="${esc([reason, x.checkedAt ? `Проверено ${fmtAt(x.checkedAt)}` : ''].filter(Boolean).join(' · '))}" tabindex="0">${t}</span>`;
 }
-
-function limText(x) {
-  const L = x.lim || {};
-  const parts = [];
-  if (L.imp != null) parts.push(`показы ${int(L.imp)}`);
-  if (L.views != null) parts.push(`просмотры ${int(L.views)}`);
-  if (L.contacts != null) parts.push(`контакты ${int(L.contacts)}`);
-  if (L.spend != null) parts.push(`расходы ${rub(L.spend)}`);
-  if (L.cpv != null) parts.push(`CPV ${rub(L.cpv)}`);
-  if (L.cpa != null) parts.push(`CPA ${rub(L.cpa)}`);
-  return parts;
+function limParts(x) {
+  const L = x.lim || {}, p = [];
+  if (L.imp != null) p.push(`показы ${int(L.imp)}`);
+  if (L.views != null) p.push(`просм. ${int(L.views)}`);
+  if (L.contacts != null) p.push(`конт. ${int(L.contacts)}`);
+  if (L.spend != null) p.push(`расход ${rub(L.spend)}`);
+  if (L.cpv != null) p.push(`CPV ${rub(L.cpv)}`);
+  if (L.cpa != null) p.push(`CPA ${rub(L.cpa)}`);
+  return p;
 }
-
 function cell(id, x) {
-  const t = st(x);
-  const has = !!stats[x.key];
+  const t = st(x), has = !!stats[x.key];
   switch (id) {
-    case 'on': return `<td><label class="tg" title="Вкл / выкл"><input type="checkbox" data-on="${esc(x.key)}" ${x.on ? 'checked' : ''} aria-label="Включить ручное управление"><span></span></label></td>`;
-    case 'status': return `<td>${statusPill(x)}</td>`;
+    case 'on': return `<td><label class="switch" data-tip="${x.on ? 'Выключить' : 'Включить'} ручное управление"><input type="checkbox" data-on="${esc(x.key)}" ${x.on ? 'checked' : ''} aria-label="Ручное управление"><i></i></label></td>`;
+    case 'status': return `<td>${statusChip(x)}</td>`;
     case 'bid': {
       const bad = x.bid != null && ((x.minPromo != null && x.bid < x.minPromo) || (x.max != null && x.bid > x.max));
-      return `<td class="r"><input class="cell-in${bad ? ' bad' : ''}" inputmode="numeric" data-bid="${esc(x.key)}" value="${x.bid ?? ''}" placeholder="—" aria-label="Ставка, ₽" title="${x.minPromo != null ? `Допустимо: ${Math.ceil(x.minPromo)}–${Math.floor(x.max)} ₽` : 'Ставка, ₽ за просмотр'}"></td>`;
+      return `<td class="r"><input class="cell-in${bad ? ' bad' : ''}" inputmode="numeric" data-bid="${esc(x.key)}" value="${x.bid ?? ''}" placeholder="—" aria-label="Ставка, ₽" data-tip="${x.minPromo != null ? `Можно от ${Math.ceil(x.minPromo)} до ${Math.floor(x.max)} ₽. Enter — сохранить` : 'Ставка, ₽ за просмотр. Enter — сохранить'}"></td>`;
     }
-    case 'now': return `<td class="r num">${x.now != null ? rub(x.now) : x.selectedType === 'auto' ? '<span class="sub" title="На Авито включена автостратегия">авто</span>' : '<span class="dash">—</span>'}</td>`;
+    case 'now': return `<td class="r num">${x.now != null ? rub(x.now) : x.selectedType === 'auto' ? '<span class="muted" data-tip="На Авито сейчас автостратегия">авто</span>' : '<span class="dash">—</span>'}</td>`;
     case 'cmp': return `<td class="r num">${pct(x.cmp)}</td>`;
     case 'base': return `<td class="r num">${rub(x.base)}</td>`;
     case 'minPromo': return `<td class="r num">${rub(x.minPromo)}</td>`;
-    case 'sched': return `<td><div class="sched"><button class="lnkb" type="button" data-hours="${esc(x.key)}">Часы: ${esc(hoursText(x.hours))}</button><button class="lnkb" type="button" data-days="${esc(x.key)}">Дни: ${esc(daysText(x.days))}</button></div></td>`;
-    case 'lim': { const p = limText(x); return `<td><button class="lnkb" type="button" data-lim="${esc(x.key)}">${p.length ? esc(p.join(', ')) : 'Настроить'}</button></td>`; }
-    case 'title': return `<td class="td-ttl"><a class="ttl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title || 'Без названия')}</a><div class="sub">№ ${esc(x.id)} · ${esc(x.address)}</div></td>`;
-    case 'acc': return `<td class="sub">${esc(x.accountName)}</td>`;
-    case 'city': return `<td class="sub">${esc(x.city)}</td>`;
+    case 'sched': return `<td><div class="sched"><button class="lnkb${x.hours ? '' : ' muted'}" type="button" data-hours="${esc(x.key)}" data-pop="1" data-tip="Часы работы (МСК)">${esc(hoursText(x.hours))}</button><button class="lnkb${x.days ? '' : ' muted'}" type="button" data-days="${esc(x.key)}" data-pop="1" data-tip="Дни недели">${esc(daysText(x.days))}</button></div></td>`;
+    case 'lim': { const p = limParts(x); return `<td><button class="lnkb${p.length ? '' : ' muted'}" type="button" data-lim="${esc(x.key)}" data-tip="${p.length ? esc(p.join(', ')) : 'Отключение по метрике не задано'}">${p.length ? (p.length > 1 ? `${esc(p[0])} +${p.length - 1}` : esc(p[0])) : 'Нет'}</button></td>`; }
+    case 'title': return `<td class="td-ttl"><a class="ttl" href="${esc(x.url)}" target="_blank" rel="noopener" data-tip="${esc(x.title)}">${esc(x.title || 'Без названия')}</a><div class="sub">№ ${esc(x.id)}</div></td>`;
+    case 'acc': return `<td><div class="sub" style="max-width:160px" data-tip="${esc(x.accountName)}">${esc(x.accountName)}</div></td>`;
+    case 'city': return `<td><div class="sub" style="max-width:140px" data-tip="${esc(x.address)}">${esc(x.city)}</div></td>`;
     case 'i': return `<td class="r num">${has ? int(t.i) : '—'}</td>`;
     case 'cv1': return `<td class="r num">${has ? pct(cv(t.v, t.i)) : '—'}</td>`;
     case 'v': return `<td class="r num">${has ? int(t.v) : '—'}</td>`;
     case 'cv2': return `<td class="r num">${has ? pct(cv(t.c, t.v)) : '—'}</td>`;
     case 'c': return `<td class="r num">${has ? int(t.c) : '—'}</td>`;
-    case 's': return `<td class="r num">${has ? rub(t.s, 1) : '—'}</td>`;
+    case 's': return `<td class="r num">${has ? rub(t.s) : '—'}</td>`;
     case 'cpv': return `<td class="r num">${has ? rub(div(t.s, t.v), 1) : '—'}</td>`;
-    case 'cpa': return `<td class="r num">${has ? rub(div(t.s, t.c), 1) : '—'}</td>`;
-    case 'grp': return `<td class="sub">${x.groups.map((g) => S.groups[g] ? esc(S.groups[g].name) : '').filter(Boolean).join(', ') || '—'}</td>`;
+    case 'cpa': return `<td class="r num">${has ? rub(div(t.s, t.c)) : '—'}</td>`;
+    case 'grp': return `<td><div class="sub" style="max-width:160px">${x.groups.map((g) => B.groups[g] ? esc(B.groups[g].name) : '').filter(Boolean).join(', ') || '—'}</div></td>`;
   }
   return '<td></td>';
 }
-
+const cssId = (k) => k.replace(/[^a-z0-9]/gi, '_');
 function renderTable(list) {
   const shown = cols.filter((c) => c.on).map((c) => colById(c.id));
-  if (!shown.length) {
-    $('#thead').innerHTML = '';
-    $('#rows').innerHTML = '<tr><td class="empty">Не выбраны столбцы для работы с таблицей</td></tr>';
-    return;
-  }
+  if (!shown.length) { $('#thead').innerHTML = ''; $('#rows').innerHTML = `<tr><td>${emptyState('columns', 'Не выбраны столбцы для работы с таблицей')}</td></tr>`; return; }
   const allSel = list.length && list.every((x) => sel.has(x.key));
-  $('#thead').innerHTML = `<tr><th style="width:34px"><input type="checkbox" class="cb" id="selAllPage" ${allSel ? 'checked' : ''} aria-label="Выбрать все"></th><th style="width:30px"></th>${shown.map((c) => {
+  $('#thead').innerHTML = `<tr><th style="width:36px"><input type="checkbox" class="cb" id="selAllPage" ${allSel ? 'checked' : ''} aria-label="Выбрать все" data-tip="Выбрать все строки списка"></th><th style="width:36px"></th>${shown.map((c) => {
     const ar = sort && sort.id === c.id ? `<span class="ar">${sort.dir === 'desc' ? '↓' : '↑'}</span>` : '';
-    return `<th class="${c.sort ? 'sortable' : ''} ${c.r ? 'r' : ''}" ${c.sort ? `data-sort="${c.id}"` : ''}>${esc(c.t)}${ar}</th>`;
+    return `<th class="${c.sort ? 'sortable' : ''} ${c.r ? 'r' : ''}" ${c.sort ? `data-sort="${c.id}"` : ''} ${c.tip ? `data-tip="${esc(c.tip)}"` : ''}>${esc(c.t)}${ar}</th>`;
   }).join('')}</tr>`;
   const span = shown.length + 2;
-  if (!S.items.length) { $('#rows').innerHTML = `<tr><td colspan="${span}" class="empty">Объявлений пока нет. Нажмите «Добавить объявления».</td></tr>`; return; }
-  if (!list.length) { $('#rows').innerHTML = `<tr><td colspan="${span}" class="empty">По выбранным фильтрам / поиску ничего не найдено</td></tr>`; return; }
+  if (!B.items.length) { $('#rows').innerHTML = `<tr><td colspan="${span}">${emptyState('gauge', 'Объявлений пока нет', 'Нажмите «Добавить», выберите кабинет и объявления')}</td></tr>`; return; }
+  if (!list.length) { $('#rows').innerHTML = `<tr><td colspan="${span}">${emptyState('search', 'По выбранным фильтрам / поиску ничего не найдено')}</td></tr>`; return; }
   const MAX = 600;
-  const html = list.slice(0, MAX).map((x) => {
-    const o = open.has(x.key);
-    return `<tr class="${sel.has(x.key) ? 'sel' : ''}"><td><input type="checkbox" class="cb" data-sel="${esc(x.key)}" ${sel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><button class="exp ${o ? 'open' : ''}" type="button" data-exp="${esc(x.key)}" aria-label="Статистика объявления" aria-expanded="${o}">▾</button></td>${shown.map((c) => cell(c.id, x)).join('')}</tr>${o ? `<tr class="det"><td colspan="${span}"><div class="det-in" id="det-${cssId(x.key)}">${detailHtml(x)}</div></td></tr>` : ''}`;
-  }).join('');
-  $('#rows').innerHTML = html + (list.length > MAX ? `<tr><td colspan="${span}" class="empty">Показаны первые ${MAX} из ${list.length}. Уточните поиск или фильтры.</td></tr>` : '');
+  $('#rows').innerHTML = list.slice(0, MAX).map((x) => {
+    const o = openRows.has(x.key);
+    return `<tr class="${sel.has(x.key) ? 'sel' : ''}"><td><input type="checkbox" class="cb" data-sel="${esc(x.key)}" ${sel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><button class="icon-btn sm exp ${o ? 'open' : ''}" type="button" data-exp="${esc(x.key)}" aria-label="Статистика объявления" aria-expanded="${o}" data-tip="${o ? 'Свернуть' : 'Статистика и график объявления'}">${I('chev', 'ic-sm')}</button></td>${shown.map((c) => cell(c.id, x)).join('')}</tr>${o ? `<tr class="det"><td colspan="${span}"><div class="det-in" id="det-${cssId(x.key)}">${detailHtml(x)}</div></td></tr>` : ''}`;
+  }).join('') + (list.length > MAX ? `<tr><td colspan="${span}" class="muted small" style="text-align:center;padding:14px">Показаны первые ${MAX} из ${list.length}. Уточните поиск или фильтры.</td></tr>` : '');
 }
-const cssId = (k) => k.replace(/[^a-z0-9]/gi, '_');
 
-function renderSelbar(list) {
+function renderSelbar() {
   const bar = $('#selbar');
-  if (!sel.size) { bar.hidden = true; return; }
+  if (page !== 'bids' || !sel.size || (view === 'groups' && !curGroup)) { bar.classList.add('hide'); return; }
+  const list = visible();
   const notSel = list.filter((x) => !sel.has(x.key)).length;
-  bar.hidden = false;
-  const grpOpts = Object.entries(S.groups).map(([g, v]) => `<option value="${g}">${esc(v.name)}</option>`).join('');
-  bar.innerHTML = `<span>Выбрано: <b>${sel.size}</b></span>${notSel ? `<button class="btn sm" type="button" data-act="selall">Выбрать все (${list.length})</button>` : ''}<button class="btn sm" type="button" data-act="clear">Снять выбор</button>${curGroup ? '<button class="btn sm" type="button" data-act="ungroup">Убрать из группы</button>' : (grpOpts ? `<select class="btn sm" data-act="togroup" aria-label="Добавить в группу"><option value="">В группу…</option>${grpOpts}</select>` : '')}<button class="btn sm danger" type="button" data-act="del" style="color:#ff8b78">Удалить</button><button class="btn sm pri" type="button" data-act="bulk">Массовое редактирование</button>`;
+  bar.classList.remove('hide');
+  bar.innerHTML = `<span>Выбрано: <b>${sel.size}</b></span>${notSel ? `<button class="btn sm quiet" type="button" data-act="selall" data-tip="Выбрать все объявления текущего списка (с учётом фильтров и поиска)">Выбрать все ${list.length}</button>` : ''}<button class="btn sm quiet" type="button" data-act="clear">Снять</button>${curGroup ? '<button class="btn sm" type="button" data-act="ungroup">Убрать из группы</button>' : (Object.keys(B.groups).length ? `<button class="btn sm" type="button" data-act="togroup" id="toGroupBtn" data-pop="1">${I('folder', 'ic-sm')}В группу</button>` : '')}<button class="btn sm warn" type="button" data-act="del">${I('trash', 'ic-sm')}Удалить</button><button class="btn sm primary" type="button" data-act="bulk">${I('sliders', 'ic-sm')}Массовое редактирование</button>`;
 }
 
 /* ── группы ── */
+const gSel = new Set();
 function renderGroups() {
-  const g = Object.entries(S.groups).sort((a, b) => a[1].name.localeCompare(b[1].name, 'ru'));
-  $('#gInfo').textContent = g.length ? `Групп: ${g.length}` : '';
-  $('#gDelSel').hidden = !gSel.size;
-  if (!g.length) {
-    $('#groupsBody').innerHTML = `<div class="empty">У вас пока нет групп<br><br><button class="btn pri" type="button" id="gFirst">Добавить первую группу</button></div>`;
-    return;
-  }
-  $('#groupsBody').innerHTML = `<div class="groups">${g.map(([id, v]) => {
-    const items = S.items.filter((x) => x.groups.includes(id));
-    return `<div class="gcard" data-gopen="${id}" tabindex="0" role="button"><div class="gn"><input type="checkbox" class="cb" data-gsel="${id}" ${gSel.has(id) ? 'checked' : ''} aria-label="Выбрать группу"><span style="flex:1">${esc(v.name)}</span><button class="ico" type="button" data-gren="${id}" title="Переименовать" aria-label="Переименовать">✎</button><button class="ico" type="button" data-gdel="${id}" title="Удалить группу" aria-label="Удалить группу">×</button></div><div class="gs"><span>Объявлений: <b>${items.length}</b></span><span>Включено: <b>${items.filter((x) => x.on).length}</b></span><span>С ошибкой: <b>${items.filter((x) => x.status === 'err').length}</b></span></div></div>`;
+  const g = Object.entries(B.groups).sort((a, b) => a[1].name.localeCompare(b[1].name, 'ru'));
+  if (!g.length) { $('#groupsBody').innerHTML = `${emptyState('folder', 'У вас пока нет групп', 'Группы — для удобства: по городам, клиентам, направлениям')}<div style="text-align:center;padding-bottom:30px"><button class="btn primary" type="button" id="gFirst">${I('plus', 'ic-sm')}Добавить первую группу</button></div>`; return; }
+  $('#groupsBody').innerHTML = `${gSel.size ? `<div class="row" style="padding:12px 14px 0"><button class="btn sm warn" type="button" id="gDelSel">${I('trash', 'ic-sm')}Удалить выбранные группы (${gSel.size})</button></div>` : ''}<div class="groups">${g.map(([id, v]) => {
+    const items = B.items.filter((x) => x.groups.includes(id));
+    return `<div class="gcard" data-gopen="${id}" tabindex="0" role="button"><div class="gn"><input type="checkbox" class="cb" data-gsel="${id}" ${gSel.has(id) ? 'checked' : ''} aria-label="Выбрать группу"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(v.name)}</span><button class="icon-btn sm" type="button" data-gren="${id}" data-tip="Переименовать" aria-label="Переименовать">${I('edit', 'ic-sm')}</button><button class="icon-btn sm" type="button" data-gdel="${id}" data-tip="Удалить группу (объявления останутся)" aria-label="Удалить группу">${I('trash', 'ic-sm')}</button></div><div class="gs"><span>Объявлений <b>${items.length}</b></span><span>Включено <b>${items.filter((x) => x.on).length}</b></span><span>С ошибкой <b>${items.filter((x) => x.status === 'err').length}</b></span></div></div>`;
   }).join('')}</div>`;
 }
-const gSel = new Set();
 
 /* ── подробная статистика объявления ── */
-const det = {}; // key -> { per, by, data, loading, metrics }
+const det = {};
 const MET = [
   { id: 'i', t: 'Показы', c: 'var(--blue)' }, { id: 'v', t: 'Просмотры', c: 'var(--green)' }, { id: 'c', t: 'Контакты', c: 'var(--accent)' },
-  { id: 's', t: 'Расходы', c: 'var(--amber)' }, { id: 'cpa', t: 'CPA', c: 'var(--red)' }, { id: 'b', t: 'Средняя ставка', c: 'var(--violet)' },
-  { id: 'cmp', t: 'Среднее опережение', c: 'var(--muted)' }, { id: 'set', t: 'Установленная ставка', c: 'var(--ink)' },
+  { id: 's', t: 'Расходы', c: 'var(--amber)' }, { id: 'cpa', t: 'CPA', c: 'var(--red)' }, { id: 'b', t: 'Ср. ставка', c: 'var(--violet)' },
+  { id: 'cmp', t: 'Опережение', c: 'var(--muted)' }, { id: 'set', t: 'Установленная', c: 'var(--ink)' },
 ];
-
 function detailHtml(x) {
   const d = det[x.key] || (det[x.key] = { per: '7', by: 'day', data: null, loading: false, metrics: ['i', 'v', 'c', 'b'] });
   if (!d.data && !d.loading) setTimeout(() => loadDetail(x.key), 0);
-  const top = `<div class="det-top"><b style="font-size:13px">Статистика объявления за:</b>
-    <select data-dper="${esc(x.key)}">${[['1', 'Сегодня'], ['7', '7 дней'], ['14', '14 дней'], ['30', '30 дней']].map(([v, t]) => `<option value="${v}" ${d.per === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
-    <div class="seg"><button type="button" data-dby="${esc(x.key)}:day" class="${d.by === 'day' ? 'on' : ''}">По дням</button><button type="button" data-dby="${esc(x.key)}:hour" class="${d.by === 'hour' ? 'on' : ''}">По часам</button></div>
-    <span class="sp"></span><button class="btn sm" type="button" data-note="${esc(x.key)}">Добавить заметку</button></div>`;
+  const top = `<div class="det-top"><b style="font-size:13px">${esc(x.title)}</b><a class="icon-btn sm" href="${esc(x.url)}" target="_blank" rel="noopener" data-tip="Открыть на Авито">${I('ext', 'ic-sm')}</a><span class="grow"></span>
+    <div class="seg">${[['1', 'Сегодня'], ['7', '7 дн.'], ['14', '14 дн.'], ['30', '30 дн.']].map(([v, t]) => `<button type="button" data-dper="${esc(x.key)}|${v}" class="${d.per === v ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <div class="seg"><button type="button" data-dby="${esc(x.key)}|day" class="${d.by === 'day' ? 'on' : ''}">По дням</button><button type="button" data-dby="${esc(x.key)}|hour" class="${d.by === 'hour' ? 'on' : ''}">По часам</button></div>
+    <button class="btn sm" type="button" data-note="${esc(x.key)}">${I('note', 'ic-sm')}Заметка</button></div>`;
   if (d.loading && !d.data) return top + '<div class="note">Загрузка…</div>';
   if (!d.data) return top + '<div class="note">Не удалось загрузить статистику</div>';
   const rows = d.by === 'hour' ? d.data.hours : d.data.days;
@@ -698,150 +860,113 @@ function detailHtml(x) {
   const bs = rows.filter((r) => r.b != null), cs = rows.filter((r) => r.cmp != null);
   const avgB = bs.length ? bs.reduce((a, r) => a + r.b, 0) / bs.length : null;
   const avgC = cs.length ? cs.reduce((a, r) => a + r.cmp, 0) / cs.length : null;
-  const ln = (l, v) => `<div class="ln"><span>${l}</span><b>${v}</b></div>`;
-  const empty = !rows.length;
+  const ln = (l, v, tip) => `<div class="ln"><span${tip ? ` data-tip="${esc(tip)}" style="cursor:help"` : ''}>${l}</span><b>${v}</b></div>`;
   let html = top;
   if (d.data.error) html += `<div class="err-box">${esc(d.data.error)}</div>`;
-  if (d.by === 'hour' && empty) html += '<div class="note">Почасовые данные копятся с момента включения объявления в сервисе (снимок раз в 10 минут).</div>';
-  else if (empty) html += '<div class="note">Нет данных за выбранный период</div>';
+  if (!rows.length) html += `<div class="note">${d.by === 'hour' ? 'Почасовые данные копятся с момента, как объявление включено в сервисе (снимок раз в 10 минут).' : 'Нет данных за выбранный период'}</div>`;
   html += `<div class="det-k">
-    <div class="box"><h4>Воронка</h4>${ln('Показы', int(tot.i))}${ln('Просмотры', int(tot.v))}${ln('Контакты', int(tot.c))}${ln('Показ → просмотр', pct(cv(tot.v, tot.i)))}${ln('Просмотр → контакт', pct(cv(tot.c, tot.v)))}</div>
-    <div class="box"><h4>Расходы</h4>${ln('Расходы', rub(tot.s, 1))}${ln('CPV / 1 просмотр', rub(div(tot.s, tot.v), 1))}${ln('CPA / 1 контакт', rub(div(tot.s, tot.c), 1))}</div>
-    <div class="box"><h4>Ставка и опережение</h4>${ln('Средняя ставка', rub(avgB, 1))}${ln('Среднее опережение', pct(avgC))}${ln('Установленная ставка', rub(x.bid))}${ln('Рекомендует Авито', rub(x.rec))}</div>
+    <div class="box"><h4>Воронка</h4>${ln('Показы', int(tot.i))}${ln('Просмотры', int(tot.v))}${ln('Контакты', int(tot.c))}${ln('CV1', pct(cv(tot.v, tot.i)), 'Из показа в просмотр')}${ln('CV2', pct(cv(tot.c, tot.v)), 'Из просмотра в контакт')}</div>
+    <div class="box"><h4>Расходы</h4>${ln('Расходы', rub(tot.s))}${ln('CPV', rub(div(tot.s, tot.v), 1), 'Стоимость просмотра')}${ln('CPA', rub(div(tot.s, tot.c)), 'Стоимость контакта')}</div>
+    <div class="box"><h4>Ставка</h4>${ln('Средняя', rub(avgB, 1), 'Средняя фактическая ставка за период (по снимкам сервиса)')}${ln('Ср. опережение', pct(avgC))}${ln('Установлена', rub(x.bid))}${ln('Советует Авито', rub(x.rec), 'Рекомендованная ставка из Авито')}</div>
   </div>`;
-  if (!empty) html += chartHtml(x.key, rows, d);
+  if (rows.length) html += chartHtml(x.key, rows, d);
   const tod = d.data.tod || [];
   const mx = Math.max(1, ...tod.map((t) => t.v));
-  if (tod.some((t) => t.i || t.v)) {
-    html += `<div class="chart"><b style="font-size:12.5px">Время суток — просмотры по часам (МСК), сумма за период</b><div class="tod" style="margin-top:8px">${tod.map((t) => `<div style="height:${(t.v / mx) * 100}%" title="${hh(t.h)}: показы ${t.i}, просмотры ${t.v}, контакты ${t.c}, расходы ${rub(t.s, 1)}"></div>`).join('')}</div><div class="tod-l">${tod.map((t) => `<span>${t.h}</span>`).join('')}</div></div>`;
-  }
+  if (tod.some((t) => t.i || t.v)) html += `<div class="chart"><b class="small">Время суток — просмотры по часам МСК за период</b><div class="tod">${tod.map((t) => `<div style="height:${(t.v / mx) * 100}%" data-tip="${hh(t.h)}: показы ${t.i}, просмотры ${t.v}, контакты ${t.c}, расходы ${rub(t.s)}"></div>`).join('')}</div><div class="tod-l">${tod.map((t) => `<span>${t.h}</span>`).join('')}</div></div>`;
   if (x.scale && x.scale.length) {
-    const cur = x.now;
-    let curIdx = -1;
-    x.scale.forEach(([v], k) => { if (cur != null && v <= cur) curIdx = k; });
-    html += `<details><summary class="note" style="cursor:pointer">Шкала ставок Авито (ставка → опережение конкурентов)</summary><table class="scale"><tr><th>Ставка</th><th>Опережение</th></tr>${x.scale.map(([v, c], k) => `<tr class="${k === curIdx ? 'cur' : ''}"><td class="num">${rub(v)}${k === 0 ? ' · базовая' : ''}</td><td class="num">${c} %</td></tr>`).join('')}</table></details>`;
+    let curIdx = -1; x.scale.forEach(([v], k) => { if (x.now != null && v <= x.now) curIdx = k; });
+    html += `<details><summary>Шкала ставок Авито: ставка → опережение конкурентов</summary><table class="scale"><tr><th>Ставка</th><th>Опережение</th></tr>${x.scale.map(([v, c], k) => `<tr class="${k === curIdx ? 'cur' : ''}"><td class="num">${rub(v)}${k === 0 ? ' · базовая' : ''}</td><td class="num">${c} %</td></tr>`).join('')}</table></details>`;
   }
   const notes = d.data.notes || [];
-  if (notes.length) html += `<div class="notes"><b style="font-size:12.5px">Заметки</b>${notes.slice().reverse().map((n) => `<div class="n"><time>${fmtAt(n.at)}</time><span>${esc(n.text)}</span><button class="lnkb" type="button" data-delnote="${esc(x.key)}|${n.at}" style="color:var(--muted)">удалить</button></div>`).join('')}</div>`;
+  if (notes.length) html += `<div class="notes"><b class="small">Заметки</b>${notes.slice().reverse().map((n) => `<div class="n"><time>${fmtAt(n.at)}</time><span>${esc(n.text)}</span><button class="icon-btn sm" type="button" data-delnote="${esc(x.key)}|${n.at}" aria-label="Удалить заметку" data-tip="Удалить заметку">${I('x', 'ic-sm')}</button></div>`).join('')}</div>`;
   return html;
 }
-
 function chartHtml(key, rows, d) {
-  const W = 1000, H = 220, P = 28;
+  const W = 1000, H = 210, P = 26;
   const pts = rows.map((r) => ({ ...r, cpa: div(r.s, r.c) }));
+  const xs = (k) => P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1));
   const lines = MET.filter((m) => d.metrics.includes(m.id)).map((m) => {
     const vals = pts.map((r) => r[m.id]);
     const mx = Math.max(...vals.filter((v) => v != null), 0) || 1;
-    const xs = (k) => P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1));
+    const y = (v) => (H - P - (v / mx) * (H - 2 * P)).toFixed(1);
     let path = '';
-    vals.forEach((v, k) => { if (v == null) return; path += `${path ? 'L' : 'M'}${xs(k).toFixed(1)},${(H - P - (v / mx) * (H - 2 * P)).toFixed(1)}`; });
-    const dots = vals.map((v, k) => v == null ? '' : `<circle cx="${xs(k).toFixed(1)}" cy="${(H - P - (v / mx) * (H - 2 * P)).toFixed(1)}" r="2.5" fill="${m.c}"><title>${esc(pts[k].at || pts[k].date)} · ${m.t}: ${v}</title></circle>`).join('');
-    return `<path d="${path}" fill="none" stroke="${m.c}" stroke-width="2" vector-effect="non-scaling-stroke"/>${dots}`;
+    vals.forEach((v, k) => { if (v != null) path += `${path ? 'L' : 'M'}${xs(k).toFixed(1)},${y(v)}`; });
+    return `<path d="${path}" fill="none" stroke="${m.c}" stroke-width="2" vector-effect="non-scaling-stroke"/>${vals.map((v, k) => v == null ? '' : `<circle cx="${xs(k).toFixed(1)}" cy="${y(v)}" r="3" fill="${m.c}"><title>${esc(pts[k].at || pts[k].date)} · ${m.t}: ${v}</title></circle>`).join('')}`;
   }).join('');
-  const label = (r) => (r.at || r.date || '').slice(d.by === 'hour' ? 5 : 5);
   const step = Math.max(1, Math.ceil(pts.length / 8));
-  const xl = pts.map((r, k) => k % step ? '' : `<text x="${P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1))}" y="${H - 8}" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">${esc(label(r))}</text>`).join('');
+  const xl = pts.map((r, k) => k % step ? '' : `<text x="${xs(k)}" y="${H - 6}" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">${esc((r.at || r.date || '').slice(5))}</text>`).join('');
   const notes = (det[key].data.notes || []).map((n) => {
     const day = new Date(n.at + 3 * 3600e3).toISOString().slice(0, 10);
     const k = pts.findIndex((r) => (r.date || r.at || '').startsWith(day));
-    if (k < 0) return '';
-    const x = P + (pts.length === 1 ? (W - 2 * P) / 2 : (k * (W - 2 * P)) / (pts.length - 1));
-    return `<line x1="${x}" x2="${x}" y1="${P / 2}" y2="${H - P}" stroke="currentColor" stroke-dasharray="3 3" opacity=".35"/><text x="${x + 3}" y="${P / 2 + 8}" font-size="10" fill="currentColor" opacity=".7"><title>${esc(n.text)}</title>✎</text>`;
+    return k < 0 ? '' : `<line x1="${xs(k)}" x2="${xs(k)}" y1="6" y2="${H - P}" stroke="currentColor" stroke-dasharray="3 3" opacity=".35"><title>${esc(n.text)}</title></line>`;
   }).join('');
-  return `<div class="chart"><div class="legend">${MET.map((m) => `<label class="${d.metrics.includes(m.id) ? '' : 'offl'}"><input type="checkbox" data-met="${esc(key)}|${m.id}" ${d.metrics.includes(m.id) ? 'checked' : ''}><i style="background:${m.c}"></i>${m.t}</label>`).join('')}</div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="color:var(--muted)" role="img" aria-label="График показателей объявления">${notes}${lines}${xl}</svg><div class="note">Каждая линия — в своём масштабе (максимум линии = верх графика). Наведите на точку — значение.</div></div>`;
+  return `<div class="chart"><div class="legend">${MET.map((m) => `<button type="button" class="${d.metrics.includes(m.id) ? '' : 'off'}" data-met="${esc(key)}|${m.id}"><i style="background:${m.c}"></i>${m.t}</button>`).join('')}</div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="color:var(--muted)" role="img" aria-label="График объявления">${notes}${lines}${xl}</svg><div class="small faint">Каждая линия в своём масштабе. Наведите на точку — значение; пунктир — заметка.</div></div>`;
 }
-
 async function loadDetail(key) {
-  const x = S.items.find((i) => i.key === key);
-  const d = det[key];
+  const x = B.items.find((i) => i.key === key), d = det[key];
   if (!x || !d) return;
   d.loading = true;
   const to = mskToday(), from = dAdd(to, -(Number(d.per) - 1));
   const r = await api(`/api/dashboard/mbids/item-stats?accountId=${encodeURIComponent(x.accountId)}&id=${x.id}&from=${from}&to=${to}&by=${d.by}`);
-  d.loading = false;
-  d.data = r.ok ? r.data : null;
-  const box = document.getElementById(`det-${cssId(key)}`);
-  if (box) box.innerHTML = detailHtml(x);
+  d.loading = false; d.data = r.ok ? r.data : null;
+  redrawDetail(key);
 }
+function redrawDetail(key) { const x = B.items.find((i) => i.key === key); const box = document.getElementById(`det-${cssId(key)}`); if (box && x) box.innerHTML = detailHtml(x); }
 
 /* ── правки ── */
 async function update(keys, set, note, extra = {}) {
   const r = await post('/api/dashboard/mbids/items/update', { refs: keys, set, note, ...extra });
   if (!r.ok) { toast(r.data.error || 'Не сохранилось'); return null; }
   keys.forEach((k) => {
-    const x = S.items.find((i) => i.key === k);
+    const x = B.items.find((i) => i.key === k);
     if (!x) return;
-    if (set.on !== undefined) x.on = !!set.on;
-    if (set.bid !== undefined && set.bid !== null && typeof set.bid !== 'object') x.bid = set.bid;
+    if (set.on !== undefined) { x.on = !!set.on; x.status = x.on ? 'pending' : 'off'; x.reason = ''; }
+    if (set.bid !== undefined && (set.bid === null || typeof set.bid !== 'object')) x.bid = set.bid;
     if (set.hours !== undefined) x.hours = set.hours && set.hours.length < 24 ? set.hours : null;
     if (set.days !== undefined) x.days = set.days && set.days.length < 7 ? set.days : null;
   });
   render();
-  // Движок применяет правки в фоне — подтягиваем статусы чуть позже.
-  setTimeout(load, 7000);
-  setTimeout(load, 25000);
+  setTimeout(bidsLoad, 7000); setTimeout(bidsLoad, 25000); // движок применяет правки в фоне
   return r.data;
 }
 
-/* ── события таблицы ── */
 $('#rows').addEventListener('change', async (e) => {
   const t = e.target;
-  if (t.dataset.sel) { t.checked ? sel.add(t.dataset.sel) : sel.delete(t.dataset.sel); t.closest('tr').classList.toggle('sel', t.checked); renderSelbar(visible()); return; }
+  if (t.dataset.sel) { t.checked ? sel.add(t.dataset.sel) : sel.delete(t.dataset.sel); t.closest('tr').classList.toggle('sel', t.checked); renderSelbar(); return; }
   if (t.dataset.on) {
-    const x = S.items.find((i) => i.key === t.dataset.on);
+    const x = B.items.find((i) => i.key === t.dataset.on);
     if (t.checked && x && x.bid == null) toast('Ставка не указана — статус будет «Ошибка», пока её не зададите');
-    await update([t.dataset.on], { on: t.checked });
-    return;
+    await update([t.dataset.on], { on: t.checked }); return;
   }
   if (t.dataset.bid) {
     const v = t.value.trim();
     if (v !== '' && !/^\d+$/.test(v)) { toast('Ставка — целое число рублей'); t.classList.add('bad'); return; }
     await update([t.dataset.bid], { bid: v === '' ? null : Number(v) });
-    return;
-  }
-  if (t.dataset.dper) { const d = det[t.dataset.dper]; d.per = t.value; d.data = null; loadDetail(t.dataset.dper); return; }
-  if (t.dataset.met) {
-    const [key, m] = t.dataset.met.split('|');
-    const d = det[key];
-    d.metrics = t.checked ? [...d.metrics, m] : d.metrics.filter((x) => x !== m);
-    const x = S.items.find((i) => i.key === key);
-    const box = document.getElementById(`det-${cssId(key)}`);
-    if (box && x) box.innerHTML = detailHtml(x);
   }
 });
 $('#rows').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.bid) e.target.blur(); });
 $('#rows').addEventListener('click', async (e) => {
   const b = e.target.closest('button');
   if (!b) return;
-  if (b.dataset.exp) { open.has(b.dataset.exp) ? open.delete(b.dataset.exp) : open.add(b.dataset.exp); render(); return; }
+  if (b.dataset.exp) { openRows.has(b.dataset.exp) ? openRows.delete(b.dataset.exp) : openRows.add(b.dataset.exp); hideTip(); render(); return; }
   if (b.dataset.hours) return schedPop(b, [b.dataset.hours], 'hours');
   if (b.dataset.days) return schedPop(b, [b.dataset.days], 'days');
   if (b.dataset.lim) return openLim([b.dataset.lim]);
-  if (b.dataset.dby) { const [acc, id, by] = b.dataset.dby.split(':'); const key = `${acc}:${id}`; det[key].by = by; det[key].data = null; loadDetail(key); return; }
-  if (b.dataset.note) {
-    const text = prompt('Заметка к объявлению (появится в статистике):');
-    if (!text || !text.trim()) return;
-    await update([b.dataset.note], {}, text.trim());
-    if (det[b.dataset.note]) { det[b.dataset.note].data = null; loadDetail(b.dataset.note); }
-    return;
-  }
-  if (b.dataset.delnote) {
-    const [key, at] = b.dataset.delnote.split('|');
-    await update([key], {}, '', { removeNoteAt: Number(at) });
-    det[key].data = null; loadDetail(key);
-  }
+  if (b.dataset.dper) { const [key, v] = b.dataset.dper.split('|'); det[key].per = v; det[key].data = null; loadDetail(key); return; }
+  if (b.dataset.dby) { const [key, v] = b.dataset.dby.split('|'); det[key].by = v; det[key].data = null; loadDetail(key); return; }
+  if (b.dataset.met) { const [key, m] = b.dataset.met.split('|'); const d = det[key]; d.metrics = d.metrics.includes(m) ? d.metrics.filter((x) => x !== m) : [...d.metrics, m]; redrawDetail(key); return; }
+  if (b.dataset.note) return openNote([b.dataset.note]);
+  if (b.dataset.delnote) { const [key, at] = b.dataset.delnote.split('|'); await update([key], {}, '', { removeNoteAt: Number(at) }); det[key].data = null; loadDetail(key); }
 });
 $('#thead').addEventListener('click', (e) => {
   const cb = e.target.closest('#selAllPage');
-  if (cb) { const list = visible(); list.forEach((x) => cb.checked ? sel.add(x.key) : sel.delete(x.key)); render(); return; }
+  if (cb) { visible().forEach((x) => cb.checked ? sel.add(x.key) : sel.delete(x.key)); render(); return; }
   const th = e.target.closest('th[data-sort]');
   if (!th) return;
   const id = th.dataset.sort;
   sort = !sort || sort.id !== id ? { id, dir: 'asc' } : sort.dir === 'asc' ? { id, dir: 'desc' } : null;
-  lsSet('mb_sort', sort);
-  render();
+  lsSet('mb_sort', sort); render();
 });
-$('#chips').addEventListener('click', (e) => { const b = e.target.closest('[data-chip]'); if (!b) return; chipFns[Number(b.dataset.chip)](); lsSet('mb_filt', filt); render(); });
 
 $('#selbar').addEventListener('click', async (e) => {
   const b = e.target.closest('button[data-act]');
@@ -850,457 +975,504 @@ $('#selbar').addEventListener('click', async (e) => {
   if (act === 'selall') { visible().forEach((x) => sel.add(x.key)); render(); }
   else if (act === 'clear') { sel.clear(); render(); }
   else if (act === 'bulk') openBulk();
-  else if (act === 'del') {
-    if (!confirm(`Убрать из раздела ${sel.size} объявл.? На Авито объявления и их ставки останутся как есть.`)) return;
-    const r = await post('/api/dashboard/mbids/items/delete', { refs: [...sel] });
-    if (!r.ok) return toast(r.data.error || 'Не удалилось');
-    toast(`Убрано: ${r.data.removed}`);
-    sel.clear(); await load(); loadStats();
+  else if (act === 'togroup') {
+    menuPop(b, Object.entries(B.groups).map(([g, v]) => [g, v.name]), '', async (g) => {
+      const r = await post('/api/dashboard/mbids/groups/members', { groupId: g, refs: [...sel], action: 'add' });
+      if (!r.ok) return toast(r.data.error || 'Не получилось');
+      toast(`Добавлено в группу «${B.groups[g].name}»: ${r.data.changed}`); bidsLoad();
+    });
+  } else if (act === 'del') {
+    openModal(`${mHead('Убрать из раздела?')}<div class="m-b"><p>${sel.size} объявл. перестанут управляться сервисом. На Авито объявления и их текущие ставки останутся как есть.</p></div><div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="button" id="delOk">Убрать</button></div>`);
+    $('#delOk').onclick = async () => {
+      const r = await post('/api/dashboard/mbids/items/delete', { refs: [...sel] });
+      if (!r.ok) return toast(r.data.error || 'Не удалилось');
+      closeModal(); toast(`Убрано: ${r.data.removed}`); sel.clear(); await bidsLoad(); loadStats();
+    };
   } else if (act === 'ungroup') {
     const r = await post('/api/dashboard/mbids/groups/members', { groupId: curGroup, refs: [...sel], action: 'remove' });
     if (!r.ok) return toast(r.data.error || 'Не получилось');
-    toast(`Убрано из группы: ${r.data.changed}`); sel.clear(); load();
+    toast(`Убрано из группы: ${r.data.changed}`); sel.clear(); bidsLoad();
   }
 });
-$('#selbar').addEventListener('change', async (e) => {
-  const s = e.target.closest('select[data-act="togroup"]');
-  if (!s || !s.value) return;
-  const r = await post('/api/dashboard/mbids/groups/members', { groupId: s.value, refs: [...sel], action: 'add' });
-  if (!r.ok) return toast(r.data.error || 'Не получилось');
-  toast(`Добавлено в группу «${S.groups[s.value].name}»: ${r.data.changed}`);
-  load();
-});
 
-/* ── всплывающий выбор часов / дней ── */
-let popCtx = null;
-function schedPop(anchor, keys, kind, onDone) {
-  const x = S.items.find((i) => i.key === keys[0]) || {};
-  const cur = kind === 'hours' ? (x.hours || [...Array(24).keys()]) : (x.days || [...Array(7).keys()]);
-  popCtx = { keys, kind, val: new Set(cur), onDone };
-  const p = $('#pop');
+/* ── часы / дни ── */
+function schedPop(anchor, keys, kind, onDone, curVal) {
+  const x = B.items.find((i) => i.key === keys[0]) || {};
   const n = kind === 'hours' ? 24 : 7;
-  p.innerHTML = `<b style="font-size:13px">${kind === 'hours' ? 'Часы (МСК)' : 'Дни недели'}</b>
-    <div class="q">${kind === 'hours' ? '<button class="btn sm" type="button" data-q="all">Включить на весь день</button><button class="btn sm" type="button" data-q="work">09–20</button><button class="btn sm" type="button" data-q="none">Снять все</button>' : '<button class="btn sm" type="button" data-q="all">Вся неделя</button><button class="btn sm" type="button" data-q="work">Будни</button><button class="btn sm" type="button" data-q="none">Снять все</button>'}</div>
-    <div class="${kind === 'hours' ? 'hgrid' : 'dgrid'}">${[...Array(n).keys()].map((k) => `<label class="${popCtx.val.has(k) ? 'on' : ''}"><input type="checkbox" value="${k}" ${popCtx.val.has(k) ? 'checked' : ''}>${kind === 'hours' ? hh(k).slice(0, 2) : DAYS[k]}</label>`).join('')}</div>
-    <div class="note" id="popErr"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" type="button" data-q="cancel">Отмена</button><button class="btn sm pri" type="button" data-q="save">Готово</button></div>`;
-  p.hidden = false;
-  const r = anchor.getBoundingClientRect();
-  const w = p.offsetWidth, h = p.offsetHeight;
-  p.style.left = `${Math.max(12, Math.min(r.left, innerWidth - w - 12))}px`;
-  p.style.top = `${r.bottom + 6 + h > innerHeight ? Math.max(12, r.top - h - 6) : r.bottom + 6}px`;
-}
-$('#pop').addEventListener('click', async (e) => {
-  if (!popCtx || popCtx.filters) return;
-  const lab = e.target.closest('label');
-  const n = popCtx.kind === 'hours' ? 24 : 7;
-  if (lab) {
-    e.preventDefault();
-    const k = Number(lab.querySelector('input').value);
-    popCtx.val.has(k) ? popCtx.val.delete(k) : popCtx.val.add(k);
-    lab.classList.toggle('on', popCtx.val.has(k));
-    return;
-  }
-  const b = e.target.closest('button[data-q]');
-  if (!b) return;
-  const qv = b.dataset.q;
-  if (qv === 'cancel') { $('#pop').hidden = true; return; }
-  if (qv === 'all' || qv === 'none' || qv === 'work') {
-    popCtx.val = new Set(qv === 'all' ? [...Array(n).keys()] : qv === 'none' ? [] : popCtx.kind === 'hours' ? [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] : [0, 1, 2, 3, 4]);
-    $$('#pop label').forEach((l) => l.classList.toggle('on', popCtx.val.has(Number(l.querySelector('input').value))));
-    return;
-  }
-  if (qv === 'save') {
-    const val = [...popCtx.val].sort((a, b) => a - b);
-    if (!val.length) { $('#popErr').textContent = popCtx.kind === 'hours' ? 'Выберите хотя бы один час' : 'Выберите хотя бы один день'; return; }
-    $('#pop').hidden = true;
-    if (popCtx.onDone) return popCtx.onDone(val);
-    await update(popCtx.keys, { [popCtx.kind]: val });
-  }
-});
-document.addEventListener('mousedown', (e) => { if (!$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('[data-hours],[data-days],[data-bsched]')) $('#pop').hidden = true; });
-
-/* ── подсказки статуса ── */
-document.addEventListener('mouseover', (e) => {
-  const el = e.target.closest('[data-tip]');
-  const tip = $('#tip');
-  if (!el || !el.dataset.tip) { tip.hidden = true; return; }
-  tip.textContent = el.dataset.tip;
-  tip.hidden = false;
-  const r = el.getBoundingClientRect();
-  tip.style.left = `${Math.min(r.left, innerWidth - tip.offsetWidth - 10)}px`;
-  tip.style.top = `${r.bottom + 6}px`;
-});
-document.addEventListener('focusin', (e) => { const el = e.target.closest('[data-tip]'); if (el) el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); });
-
-/* ── модалки ── */
-let openModal = null;
-function showModal(id) { openModal = $(id); $('#scrim').hidden = false; openModal.hidden = false; const f = openModal.querySelector('input:not([type=checkbox]),select,textarea'); if (f) setTimeout(() => f.focus(), 30); }
-function closeModal() { if (openModal) openModal.hidden = true; openModal = null; $('#scrim').hidden = true; }
-document.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target === $('#scrim')) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!$('#pop').hidden) $('#pop').hidden = true; else closeModal(); } });
-
-/* ── отключение по метрике ── */
-const LIMS = [['imp', 'По показам', 'шт.'], ['views', 'По просмотрам', 'шт.'], ['contacts', 'По контактам', 'шт.'], ['spend', 'По расходам', '₽ за сутки'], ['cpv', 'По стоимости CPV / 1 просмотр', '₽'], ['cpa', 'По стоимости CPA / 1 контакт', '₽']];
-let limKeys = [];
-function openLim(keys) {
-  limKeys = keys;
-  const x = S.items.find((i) => i.key === keys[0]) || { lim: {} };
-  $('#lTitle').textContent = keys.length > 1 ? `Отключение по метрике — ${keys.length} объявл.` : 'Отключение по метрике';
-  $('#lFields').innerHTML = LIMS.map(([k, t, u]) => `<div class="f"><label for="lim_${k}">${t}, ${u}</label><input id="lim_${k}" inputmode="decimal" value="${x.lim[k] ?? ''}" placeholder="не ограничено"></div>`).join('');
-  $('#lErr').hidden = true;
-  showModal('#mLim');
-}
-$('#lForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const lim = {};
-  for (const [k] of LIMS) {
-    const v = $(`#lim_${k}`).value.trim().replace(',', '.');
-    if (v !== '' && !(Number(v) >= 0)) { $('#lErr').textContent = 'Укажите неотрицательное число или оставьте поле пустым'; $('#lErr').hidden = false; return; }
-    lim[k] = v === '' ? null : Number(v);
-  }
-  const r = await update(limKeys, { lim });
-  if (r) {
-    limKeys.forEach((k) => { const x = S.items.find((i) => i.key === k); if (x) { x.lim = {}; Object.entries(lim).forEach(([a, b]) => { if (b != null) x.lim[a] = b; }); } });
-    closeModal(); render();
-  }
-});
-
-/* ── массовое редактирование ── */
-const BULK = [
-  { id: 'on', t: 'Вкл / выкл' },
-  { id: 'bid', t: 'Ставка', num: true },
-  ...LIMS.map(([k, t]) => ({ id: `lim_${k}`, t, num: true })),
-  { id: 'hours', t: 'График: часы' },
-  { id: 'days', t: 'График: дни недели' },
-];
-let bulkSched = { hours: [...Array(24).keys()], days: [...Array(7).keys()] };
-function openBulk() {
-  $('#bInfo').textContent = `Применится к ${sel.size} выбранным объявлениям. Изменятся только настройки с включённым левым тумблером.`;
-  bulkSched = { hours: [...Array(24).keys()], days: [...Array(7).keys()] };
-  $('#bRows').innerHTML = BULK.map((b) => {
-    let ctl = '';
-    if (b.id === 'on') ctl = `<label class="tg"><input type="checkbox" id="bv_on" checked aria-label="Состояние"><span></span></label><span class="note">включить / выключить</span>`;
-    else if (b.num) ctl = `<select id="bo_${b.id}" aria-label="Действие"><option value="set">Заменить на</option><option value="add">Прибавить</option><option value="sub">Вычесть</option></select><input type="number" min="0" step="${b.id === 'bid' ? 1 : 'any'}" id="bv_${b.id}" placeholder="${b.id === 'bid' ? '₽' : 'пусто — снять'}">${b.id === 'bid' ? '<label class="note" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="bv_bidmin" class="cb"> Установить минимальную ставку для продвижения</label>' : ''}`;
-    else ctl = `<button class="lnkb" type="button" data-bsched="${b.id}" id="bs_${b.id}">${b.id === 'hours' ? hoursText(null) : daysText(null)}</button>`;
-    return `<div class="be-row dis" data-brow="${b.id}"><label class="tg"><input type="checkbox" data-ben="${b.id}" aria-label="Изменять «${b.t}»"><span></span></label><div class="lbl">${b.t}</div><div class="ctl">${ctl}</div></div>`;
-  }).join('');
-  $('#bNoteWrap').hidden = true; $('#bNote').value = '';
-  $('#bErr').hidden = true; $('#bPreview').hidden = true;
-  showModal('#mBulk');
-}
-$('#bRows').addEventListener('change', (e) => {
-  const en = e.target.dataset.ben;
-  if (en) e.target.closest('.be-row').classList.toggle('dis', !e.target.checked);
-  if (e.target.id === 'bv_bidmin') { $('#bv_bid').disabled = e.target.checked; $('#bo_bid').disabled = e.target.checked; }
-});
-$('#bRows').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-bsched]');
-  if (!b) return;
-  const kind = b.dataset.bsched;
-  popCtx = null;
-  const fake = { key: '__bulk', hours: bulkSched.hours.length === 24 ? null : bulkSched.hours, days: bulkSched.days.length === 7 ? null : bulkSched.days };
-  S.items.push(fake);
-  schedPop(b, ['__bulk'], kind, (val) => { bulkSched[kind] = val; b.textContent = kind === 'hours' ? hoursText(val.length === 24 ? null : val) : daysText(val.length === 7 ? null : val); });
-  S.items.pop();
-});
-$('#bNoteBtn').addEventListener('click', () => { $('#bNoteWrap').hidden = false; $('#bNote').focus(); });
-function bulkSet() {
-  const set = {};
-  const on = (id) => $(`[data-ben="${id}"]`).checked;
-  if (on('on')) set.on = $('#bv_on').checked;
-  if (on('bid')) {
-    if ($('#bv_bidmin').checked) set.bid = { min: true };
-    else {
-      const v = $('#bv_bid').value.trim();
-      if (!/^\d+$/.test(v)) throw new Error('Ставка — целое число рублей');
-      set.bid = { op: $('#bo_bid').value, value: Number(v) };
-    }
-  }
-  const lim = {};
-  LIMS.forEach(([k]) => {
-    if (!on(`lim_${k}`)) return;
-    const v = $(`#bv_lim_${k}`).value.trim();
-    if (v !== '' && !(Number(v) >= 0)) throw new Error('Ограничения — неотрицательные числа');
-    lim[k] = v === '' ? null : { op: $(`#bo_lim_${k}`).value, value: Number(v) };
-  });
-  if (Object.keys(lim).length) set.lim = lim;
-  if (on('hours')) set.hours = bulkSched.hours;
-  if (on('days')) set.days = bulkSched.days;
-  return set;
-}
-function opText(o) { return o.min ? 'минимальная для продвижения' : `${{ set: '=', add: '+', sub: '−' }[o.op]} ${o.value}`; }
-$('#bCheck').addEventListener('click', () => {
-  $('#bErr').hidden = true;
-  let set;
-  try { set = bulkSet(); } catch (err) { $('#bErr').textContent = err.message; $('#bErr').hidden = false; return; }
-  const lines = [];
-  if (set.on !== undefined) lines.push(`Вкл / выкл → ${set.on ? 'включить' : 'выключить'}`);
-  if (set.bid) {
-    lines.push(`Ставка: ${opText(set.bid)}`);
-    const items = [...sel].map((k) => S.items.find((i) => i.key === k)).filter(Boolean);
-    const bad = items.filter((x) => {
-      if (set.bid.min) return x.minPromo == null;
-      const nv = set.bid.op === 'add' ? (x.bid || 0) + set.bid.value : set.bid.op === 'sub' ? (x.bid || 0) - set.bid.value : set.bid.value;
-      return x.minPromo != null && (nv < x.minPromo || nv > x.max);
+  const val = new Set(curVal || (kind === 'hours' ? (x.hours || [...Array(24).keys()]) : (x.days || [...Array(7).keys()])));
+  const quick = kind === 'hours' ? [['all', 'Весь день'], ['work', '09–20'], ['none', 'Снять все']] : [['all', 'Вся неделя'], ['work', 'Будни'], ['none', 'Снять все']];
+  openPop(anchor, `<div class="pin" style="width:min(320px,86vw)"><div class="ph">${kind === 'hours' ? 'Часы работы, МСК' : 'Дни недели'}</div>
+    <div class="row">${quick.map(([v, t]) => `<button class="btn sm" type="button" data-q="${v}">${t}</button>`).join('')}</div>
+    <div class="${kind === 'hours' ? 'hgrid' : 'dgrid'}">${[...Array(n).keys()].map((k) => `<button type="button" data-k="${k}" class="${val.has(k) ? 'on' : ''}">${kind === 'hours' ? String(k).padStart(2, '0') : DAYS[k]}</button>`).join('')}</div>
+    <div class="small" id="schErr" style="color:var(--red)"></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn sm quiet" type="button" data-q="cancel">Отмена</button><button class="btn sm primary" type="button" data-q="save">Готово</button></div></div>`, (p) => {
+    const paint = () => $$('[data-k]', p).forEach((b) => b.classList.toggle('on', val.has(Number(b.dataset.k))));
+    p.addEventListener('click', async (e) => {
+      const kb = e.target.closest('[data-k]');
+      if (kb) { const k = Number(kb.dataset.k); val.has(k) ? val.delete(k) : val.add(k); paint(); return; }
+      const qb = e.target.closest('[data-q]');
+      if (!qb) return;
+      const qv = qb.dataset.q;
+      if (qv === 'cancel') return closePop();
+      if (qv === 'all') { [...Array(n).keys()].forEach((k) => val.add(k)); paint(); return; }
+      if (qv === 'none') { val.clear(); paint(); return; }
+      if (qv === 'work') { val.clear(); (kind === 'hours' ? [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] : [0, 1, 2, 3, 4]).forEach((k) => val.add(k)); paint(); return; }
+      if (qv === 'save') {
+        const arr = [...val].sort((a, b) => a - b);
+        if (!arr.length) { $('#schErr', p).textContent = kind === 'hours' ? 'Выберите хотя бы один час' : 'Выберите хотя бы один день'; return; }
+        closePop();
+        if (onDone) onDone(arr); else await update(keys, { [kind]: arr });
+      }
     });
-    if (bad.length) lines.push(`⚠ ${bad.length} объявл. получат ставку вне допустимого диапазона Авито (или Авито ещё не прислал диапазон) — у них будет «Ошибка»`);
-  }
-  if (set.lim) Object.entries(set.lim).forEach(([k, v]) => lines.push(`${LIMS.find((l) => l[0] === k)[1]}: ${v === null ? 'снять ограничение' : opText(v)}`));
-  if (set.hours) lines.push(`Часы: ${hoursText(set.hours.length === 24 ? null : set.hours)}`);
-  if (set.days) lines.push(`Дни: ${daysText(set.days.length === 7 ? null : set.days)}`);
-  if ($('#bNote').value.trim()) lines.push(`Заметка: ${$('#bNote').value.trim()}`);
-  $('#bPreview').innerHTML = lines.length ? `<div class="ok-box">Будет изменено у ${sel.size} объявл.:<ul style="margin:6px 0 0 18px;padding:0">${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>` : '<div class="note">Не включено ни одной настройки.</div>';
-  $('#bPreview').hidden = false;
-});
-$('#bApply').addEventListener('click', async () => {
-  $('#bErr').hidden = true;
-  let set;
-  try { set = bulkSet(); } catch (err) { $('#bErr').textContent = err.message; $('#bErr').hidden = false; return; }
-  const note = $('#bNote').value.trim();
-  if (!Object.keys(set).length && !note) { $('#bErr').textContent = 'Включите левый тумблер у настройки, которую нужно изменить'; $('#bErr').hidden = false; return; }
-  const btn = $('#bApply'); btn.disabled = true;
-  const r = await update([...sel], set, note);
-  btn.disabled = false;
-  if (!r) return;
-  closeModal();
-  toast(`Изменено объявлений: ${r.changed}${r.skipped && r.skipped.length ? `, пропущено: ${r.skipped.length} (${r.skipped[0].reason})` : ''}`);
-  load();
-});
-
-/* ── добавить объявления ── */
-let addTab = 'filter';
-let catalog = [];          // объявления выбранного кабинета (или найденные списком)
-const addSel = new Set();  // acc:id
-function openAdd() {
-  $('#aAcc').innerHTML = S.accounts.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
-  const last = lsGet('mb_lastacc', '');
-  if (last && S.accounts.find((a) => a.id === last)) $('#aAcc').value = last;
-  addSel.clear(); catalog = [];
-  setAddTab('filter');
-  showModal('#mAdd');
-  loadCatalog();
+  });
 }
-function setAddTab(t) {
-  addTab = t;
-  $$('[data-atab]').forEach((b) => b.classList.toggle('on', b.dataset.atab === t));
-  $('#aFilter').hidden = t !== 'filter';
-  $('#aCityWrap').hidden = t !== 'filter';
-  $('#aList').hidden = t !== 'list';
-  if (t === 'list') { catalog = []; addSel.clear(); $('#aInfo').textContent = 'Найдём номера в выбранном кабинете.'; renderAdd(); }
-  else loadCatalog();
-}
-async function fetchCatalog(acc, refresh) {
-  const r = await api(`/api/dashboard/mbids/catalog?accountId=${encodeURIComponent(acc)}${refresh ? '&refresh=1' : ''}`);
-  if (!r.ok) throw new Error(r.data.error || 'Не удалось загрузить объявления');
-  return r.data.items.map((x) => ({ ...x, accountId: acc, key: `${acc}:${x.id}` }));
-}
-async function loadCatalog() {
-  const acc = $('#aAcc').value;
-  if (!acc) return;
-  lsSet('mb_lastacc', acc);
-  $('#aInfo').textContent = 'Загружаем объявления кабинета… (Авито может отвечать до минуты)';
-  $('#aRows').innerHTML = '';
-  try {
-    catalog = await fetchCatalog(acc);
-  } catch (e) { $('#aInfo').textContent = e.message; return; }
-  const cities = [...new Set(catalog.map((x) => x.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
-  $('#aCity').innerHTML = '<option value="">Все города</option>' + cities.map((c) => `<option>${esc(c)}</option>`).join('');
-  renderAdd();
-}
-function addVisible() {
-  if (addTab === 'list') return catalog;
-  const s = $('#aQ').value.trim().toLowerCase();
-  const city = $('#aCity').value;
-  return catalog.filter((x) => (!city || x.city === city) && (!s || x.title.toLowerCase().includes(s) || x.id.includes(s) || x.address.toLowerCase().includes(s)));
-}
-function renderAdd() {
-  const list = addVisible();
-  const free = list.filter((x) => !x.added);
-  $('#aAll').checked = free.length > 0 && free.every((x) => addSel.has(x.key));
-  if (addTab === 'filter' && catalog.length) $('#aInfo').textContent = `Активных объявлений в кабинете: ${catalog.length}, уже в разделе: ${catalog.filter((x) => x.added).length}. Можно менять поиск и фильтры — отмеченное сохраняется.`;
-  $('#aRows').innerHTML = list.slice(0, 1000).map((x) => `<tr><td><input type="checkbox" class="cb" data-asel="${esc(x.key)}" ${x.added ? 'disabled checked' : addSel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><a class="ttl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="sub">№ ${esc(x.id)} · ${esc(x.address)}${x.added ? ' · уже добавлено' : ''}</div></td><td class="sub">${esc(x.city)}</td><td class="r num">${x.price != null ? rub(x.price) : '—'}</td><td class="sub">${esc(accName(x.accountId))}</td></tr>`).join('') || `<tr><td colspan="5" class="empty">${addTab === 'list' ? 'Вставьте номера и нажмите «Найти»' : catalog.length ? 'По выбранным фильтрам / поиску ничего не найдено' : ''}</td></tr>`;
-  $('#aSel').textContent = addSel.size ? `Выбрано: ${addSel.size}${addSel.size > 500 ? ' — за раз можно добавить до 500' : ''}` : '';
-}
-$$('[data-atab]').forEach((b) => b.addEventListener('click', () => setAddTab(b.dataset.atab)));
-$('#aAcc').addEventListener('change', () => { addSel.clear(); if (addTab === 'filter') loadCatalog(); else { catalog = []; renderAdd(); } });
-$('#aCity').addEventListener('change', renderAdd);
-$('#aQ').addEventListener('input', renderAdd);
-$('#aAll').addEventListener('change', (e) => { addVisible().filter((x) => !x.added).forEach((x) => e.target.checked ? addSel.add(x.key) : addSel.delete(x.key)); renderAdd(); });
-$('#aRows').addEventListener('change', (e) => { const k = e.target.dataset.asel; if (k) { e.target.checked ? addSel.add(k) : addSel.delete(k); renderAdd(); } });
-$('#aFind').addEventListener('click', async () => {
-  const ids = [...new Set($('#aIds').value.split(/[\s,;]+/).map((s) => s.replace(/\D/g, '')).filter(Boolean))].slice(0, 500);
-  if (!ids.length) { $('#aInfo').textContent = 'Вставьте номера объявлений'; return; }
-  const acc = $('#aAcc').value;
-  $('#aInfo').textContent = 'Ищем…';
-  let all;
-  try { all = await fetchCatalog(acc); } catch (e) { $('#aInfo').textContent = e.message; return; }
-  const byId = new Map(all.map((x) => [x.id, x]));
-  catalog = ids.map((id) => byId.get(id)).filter(Boolean);
-  const missing = ids.filter((id) => !byId.has(id));
-  addSel.clear();
-  catalog.filter((x) => !x.added).forEach((x) => addSel.add(x.key));
-  $('#aInfo').textContent = `Найдено ${catalog.length} из ${ids.length}.${missing.length ? ` Не найдены среди активных объявлений кабинета «${accName(acc)}»: ${missing.slice(0, 15).join(', ')}${missing.length > 15 ? '…' : ''}` : ''}`;
-  renderAdd();
-});
-$('#aSave').addEventListener('click', async () => {
-  if (!addSel.size) return toast('Отметьте объявления');
-  if (addSel.size > 500) return toast('За раз можно добавить до 500 объявлений');
-  const acc = $('#aAcc').value;
-  const pool = new Map([...catalog].map((x) => [x.key, x]));
-  const items = [...addSel].map((k) => pool.get(k)).filter(Boolean).map((x) => ({ id: x.id, title: x.title, url: x.url, address: x.address }));
-  const btn = $('#aSave'); btn.disabled = true;
-  const r = await post('/api/dashboard/mbids/items', { accountId: acc, items });
-  btn.disabled = false;
-  if (!r.ok) return toast(r.data.error || 'Не добавилось');
-  closeModal();
-  toast(`Добавлено: ${r.data.added}. Ставки Авито подтянутся в течение пары минут. Укажите ставку и включите тумблер.`);
-  await load(); loadStats();
-  setTimeout(load, 20000); setTimeout(load, 60000);
-});
-
-/* ── группы: события ── */
-let gEdit = null;
-function openGroupForm(id) {
-  gEdit = id || null;
-  $('#gTitle').textContent = id ? 'Переименовать группу' : 'Новая группа';
-  $('#gName').value = id ? S.groups[id].name : '';
-  $('#gErr').hidden = true;
-  showModal('#mGroup');
-}
-$('#gCreate').addEventListener('click', () => openGroupForm());
-$('#gForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name = $('#gName').value.trim();
-  const r = gEdit ? await api(`/api/dashboard/mbids/groups/${gEdit}`, { method: 'PUT', body: JSON.stringify({ name }) }) : await post('/api/dashboard/mbids/groups', { name });
-  if (!r.ok) { $('#gErr').textContent = r.data.error || 'Не сохранилось'; $('#gErr').hidden = false; return; }
-  S.groups = r.data.groups; closeModal(); render();
-});
-$('#groupsBody').addEventListener('click', async (e) => {
-  if (e.target.closest('#gFirst')) return openGroupForm();
-  const cb = e.target.closest('[data-gsel]');
-  if (cb) { e.stopPropagation(); cb.checked ? gSel.add(cb.dataset.gsel) : gSel.delete(cb.dataset.gsel); $('#gDelSel').hidden = !gSel.size; return; }
-  const ren = e.target.closest('[data-gren]');
-  if (ren) return openGroupForm(ren.dataset.gren);
-  const del = e.target.closest('[data-gdel]');
-  if (del) return delGroups([del.dataset.gdel]);
-  const card = e.target.closest('[data-gopen]');
-  if (card) { curGroup = card.dataset.gopen; sel.clear(); render(); }
-});
-$('#groupsBody').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.gopen) { curGroup = e.target.dataset.gopen; render(); } });
-$('#gDelSel').addEventListener('click', () => delGroups([...gSel]));
-async function delGroups(ids) {
-  if (!confirm(`Удалить ${ids.length > 1 ? `${ids.length} групп` : 'группу'}? Объявления останутся в разделе и на Авито.`)) return;
-  const r = await post('/api/dashboard/mbids/groups/delete', { ids });
-  if (!r.ok) return toast(r.data.error || 'Не удалилось');
-  ids.forEach((g) => gSel.delete(g));
-  await load();
-}
-$('#groupHead').addEventListener('click', (e) => {
-  if (e.target.closest('#gBack')) { curGroup = null; sel.clear(); render(); }
-  if (e.target.closest('#gAddTo')) openPick();
-});
-const pickSel = new Set();
-function openPick() {
-  pickSel.clear(); $('#pQ').value = '';
-  $('#pHead').innerHTML = '<tr><th style="width:34px"></th><th>Объявление</th><th>Аккаунт</th><th class="r">Ставка</th><th class="r">Ставка сейчас</th><th class="r">Опережение</th></tr>';
-  renderPick();
-  showModal('#mPick');
-}
-function renderPick() {
-  const s = $('#pQ').value.trim().toLowerCase();
-  const list = S.items.filter((x) => !x.groups.includes(curGroup) && (!s || x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.accountName.toLowerCase().includes(s)));
-  $('#pRows').innerHTML = list.slice(0, 1000).map((x) => `<tr><td><input type="checkbox" class="cb" data-psel="${esc(x.key)}" ${pickSel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td><span class="ttl">${esc(x.title)}</span><div class="sub">№ ${esc(x.id)} · ${esc(x.city)}</div></td><td class="sub">${esc(x.accountName)}</td><td class="r num">${rub(x.bid)}</td><td class="r num">${rub(x.now)}</td><td class="r num">${pct(x.cmp)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">Все объявления раздела уже в этой группе</td></tr>';
-  $('#pSel').textContent = pickSel.size ? `Выбрано: ${pickSel.size}` : '';
-}
-$('#pQ').addEventListener('input', renderPick);
-$('#pRows').addEventListener('change', (e) => { const k = e.target.dataset.psel; if (k) { e.target.checked ? pickSel.add(k) : pickSel.delete(k); $('#pSel').textContent = pickSel.size ? `Выбрано: ${pickSel.size}` : ''; } });
-$('#pSave').addEventListener('click', async () => {
-  if (!pickSel.size) return toast('Отметьте объявления');
-  const r = await post('/api/dashboard/mbids/groups/members', { groupId: curGroup, refs: [...pickSel], action: 'add' });
-  if (!r.ok) return toast(r.data.error || 'Не получилось');
-  closeModal(); toast(`Добавлено в группу: ${r.data.changed}`); load();
-});
 
 /* ── фильтры ── */
 $('#filtersBtn').addEventListener('click', (e) => {
-  const p = $('#pop');
-  const cities = [...new Set(S.items.map((x) => x.city))].sort((a, b) => a.localeCompare(b, 'ru'));
-  const accs = [...new Set(S.items.map((x) => x.accountId))];
-  const box = (name, val, label, on) => `<label style="display:flex;gap:6px;align-items:center;font-size:12.5px;border:0;justify-content:flex-start;padding:2px 0;background:none;cursor:pointer"><input type="checkbox" class="cb" style="display:inline-block" data-f="${name}" value="${esc(val)}" ${on ? 'checked' : ''}>${esc(label)}</label>`;
-  p.innerHTML = `<b style="font-size:13px">Фильтры</b>
-    <div><div class="sub">Аккаунт</div>${accs.map((a) => box('acc', a, accName(a), filt.acc.includes(a))).join('')}</div>
-    <div><div class="sub">Город</div><div style="max-height:150px;overflow:auto">${cities.map((c) => box('city', c, c || 'не указан', filt.city.includes(c))).join('')}</div></div>
-    <div><div class="sub">Статус</div>${Object.entries(STATUS).map(([k, t]) => box('status', k, t, filt.status.includes(k))).join('')}</div>
-    <div class="f"><label class="sub" for="fOn">Вкл / выкл</label><select id="fOn"><option value="">Все</option><option value="on" ${filt.on === 'on' ? 'selected' : ''}>Включённые</option><option value="off" ${filt.on === 'off' ? 'selected' : ''}>Выключенные</option></select></div>
-    <div class="f"><label class="sub" for="fGr">Группа</label><select id="fGr"><option value="">Все</option>${Object.entries(S.groups).map(([g, v]) => `<option value="${g}" ${filt.group === g ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn sm" type="button" data-fq="reset">Сбросить</button><button class="btn sm pri" type="button" data-fq="ok">Готово</button></div>`;
-  p.hidden = false;
-  const r = e.target.getBoundingClientRect();
-  p.style.left = `${Math.max(12, Math.min(r.left, innerWidth - p.offsetWidth - 12))}px`;
-  p.style.top = `${Math.min(r.bottom + 6, innerHeight - p.offsetHeight - 12)}px`;
-  p.style.maxHeight = `${innerHeight - 24}px`; p.style.overflow = 'auto';
-  popCtx = { filters: true };
+  if (popEl && popEl.dataset.for === 'filtersBtn') return closePop();
+  const cities = [...new Set(B.items.map((x) => x.city))].sort((a, b) => a.localeCompare(b, 'ru'));
+  const accs = [...new Set(B.items.map((x) => x.accountId))];
+  const ck = (name, val, label, on) => `<label class="ck"><input type="checkbox" class="cb" data-f="${name}" value="${esc(val)}" ${on ? 'checked' : ''}>${esc(label)}</label>`;
+  const radio = (name, opts, cur) => `<div class="seg">${opts.map(([v, t]) => `<button type="button" data-fr="${name}" data-v="${esc(v)}" class="${cur === v ? 'on' : ''}">${esc(t)}</button>`).join('')}</div>`;
+  openPop(e.currentTarget, `<div class="pin" style="width:min(320px,86vw)">
+    <div class="ph">Вкл / выкл</div>${radio('on', [['', 'Все'], ['on', 'Включённые'], ['off', 'Выключенные']], filt.on)}
+    <div class="ph">Статус</div><div>${Object.entries(STATUS).map(([k, t]) => ck('status', k, t, filt.status.includes(k))).join('')}</div>
+    ${accs.length > 1 ? `<div class="ph">Аккаунт</div><div class="scroll">${accs.map((a) => ck('acc', a, accName(a), filt.acc.includes(a))).join('')}</div>` : ''}
+    <div class="ph">Город</div><div class="scroll">${cities.map((c) => ck('city', c, c || 'не указан', filt.city.includes(c))).join('') || '<span class="small muted">—</span>'}</div>
+    ${Object.keys(B.groups).length ? `<div class="ph">Группа</div><div class="scroll">${[['', 'Все'], ...Object.entries(B.groups).map(([g, v]) => [g, v.name])].map(([g, t]) => `<button class="mi${filt.group === g ? ' on' : ''}" type="button" data-fg="${g}">${I('check')}${esc(t)}</button>`).join('')}</div>` : ''}
+    <div class="row" style="justify-content:space-between"><button class="btn sm quiet" type="button" data-freset>Сбросить</button><button class="btn sm primary" type="button" data-fok>Готово</button></div></div>`, (p) => {
+    p.addEventListener('change', (ev) => { const t = ev.target; if (!t.dataset.f) return; const arr = filt[t.dataset.f]; const i = arr.indexOf(t.value); if (t.checked && i < 0) arr.push(t.value); if (!t.checked && i >= 0) arr.splice(i, 1); lsSet('mb_filt', filt); render(); });
+    p.addEventListener('click', (ev) => {
+      const r = ev.target.closest('[data-fr]');
+      if (r) { filt[r.dataset.fr] = r.dataset.v; $$(`[data-fr="${r.dataset.fr}"]`, p).forEach((x) => x.classList.toggle('on', x === r)); }
+      const g = ev.target.closest('[data-fg]');
+      if (g) { filt.group = g.dataset.fg; $$('[data-fg]', p).forEach((x) => x.classList.toggle('on', x === g)); }
+      if (ev.target.closest('[data-freset]')) { filt = { acc: [], city: [], status: [], on: '', group: '' }; $$('.cb', p).forEach((c) => { c.checked = false; }); $$('[data-fr]', p).forEach((x) => x.classList.toggle('on', x.dataset.v === '')); }
+      if (r || g || ev.target.closest('[data-freset]')) { lsSet('mb_filt', filt); render(); }
+      if (ev.target.closest('[data-fok]')) closePop();
+    });
+  });
+  popEl.dataset.for = 'filtersBtn';
 });
-$('#pop').addEventListener('change', (e) => {
-  if (!popCtx || !popCtx.filters) return;
-  const t = e.target;
-  if (t.dataset.f) { const arr = filt[t.dataset.f]; const i = arr.indexOf(t.value); if (t.checked && i < 0) arr.push(t.value); if (!t.checked && i >= 0) arr.splice(i, 1); }
-  if (t.id === 'fOn') filt.on = t.value;
-  if (t.id === 'fGr') filt.group = t.value;
-  lsSet('mb_filt', filt); render();
-}, true);
-$('#pop').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-fq]');
-  if (!b) return;
-  e.stopImmediatePropagation();
-  if (b.dataset.fq === 'reset') { filt = { acc: [], city: [], status: [], on: '', group: '' }; lsSet('mb_filt', filt); render(); }
-  $('#pop').hidden = true;
-}, true);
-document.addEventListener('mousedown', (e) => { if (popCtx && popCtx.filters && !$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('#filtersBtn')) $('#pop').hidden = true; });
+
+/* ── отключение по метрике ── */
+const LIMS = [['imp', 'Показы', 'шт.', 'По показам за сутки'], ['views', 'Просмотры', 'шт.', 'По просмотрам за сутки'], ['contacts', 'Контакты', 'шт.', 'По контактам за сутки'], ['spend', 'Расходы', '₽', 'По расходам за сутки (дневной бюджет)'], ['cpv', 'CPV', '₽', 'По стоимости одного просмотра'], ['cpa', 'CPA', '₽', 'По стоимости одного контакта']];
+function openLim(keys) {
+  const x = B.items.find((i) => i.key === keys[0]) || { lim: {} };
+  const m = openModal(`${mHead(keys.length > 1 ? `Лимиты — ${keys.length} объявл.` : 'Отключение по метрике')}<form class="m-b" id="lForm" novalidate>
+    <div class="note">Пустое поле — без ограничения. Считается за текущие сутки по Москве; сработает любое — объявление уйдёт на базовую ставку до полуночи.</div>
+    <div class="grid2">${LIMS.map(([k, t, u, tip]) => `<div><label class="f" for="lim_${k}" data-tip="${esc(tip)}">${t}, ${u}</label><input class="input" id="lim_${k}" inputmode="decimal" value="${x.lim[k] ?? ''}" placeholder="без ограничения"></div>`).join('')}</div>
+    <div class="err-box hide" id="lErr"></div></form>
+    <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="lForm">Сохранить</button></div>`);
+  $('#lForm', m).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lim = {};
+    for (const [k] of LIMS) {
+      const v = $(`#lim_${k}`).value.trim().replace(',', '.');
+      if (v !== '' && !(Number(v) >= 0)) { $('#lErr').textContent = 'Укажите неотрицательное число или оставьте поле пустым'; $('#lErr').classList.remove('hide'); return; }
+      lim[k] = v === '' ? null : Number(v);
+    }
+    if (await update(keys, { lim })) {
+      keys.forEach((k) => { const it = B.items.find((i) => i.key === k); if (it) { it.lim = {}; Object.entries(lim).forEach(([a, b]) => { if (b != null) it.lim[a] = b; }); } });
+      closeModal(); render();
+    }
+  });
+}
+
+function openNote(keys) {
+  const m = openModal(`${mHead('Заметка')}<form class="m-b" id="nForm"><div class="note">Появится в статистике и на графике объявления — удобно отмечать смену ставки или графика.</div><input class="input" id="nText" maxlength="300" placeholder="Например: подняли ставку до 60 ₽"></form><div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="nForm">Сохранить</button></div>`);
+  $('#nForm', m).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = $('#nText').value.trim(); if (!text) return;
+    if (await update(keys, {}, text)) { closeModal(); keys.forEach((k) => { if (det[k]) { det[k].data = null; loadDetail(k); } }); }
+  });
+}
+
+/* ── массовое редактирование ── */
+const BULK = [{ id: 'on', t: 'Вкл / выкл' }, { id: 'bid', t: 'Ставка', num: true }, ...LIMS.map(([k, t, u, tip]) => ({ id: `lim_${k}`, t: `${t}, ${u}`, num: true, tip })), { id: 'hours', t: 'Часы' }, { id: 'days', t: 'Дни недели' }];
+function openBulk() {
+  const sch = { hours: [...Array(24).keys()], days: [...Array(7).keys()] };
+  const m = openModal(`${mHead('Массовое редактирование')}<div class="m-b">
+    <div class="note">Применится к <b>${sel.size}</b> выбранным объявлениям. Меняется только то, у чего включён левый переключатель.</div>
+    <div>${BULK.map((b) => {
+      let ctl;
+      if (b.id === 'on') ctl = `<label class="switch"><input type="checkbox" id="bv_on" checked aria-label="Состояние"><i></i></label><span class="small muted" id="bv_on_t">включить</span>`;
+      else if (b.num) ctl = `<select class="select" id="bo_${b.id}"><option value="set">Заменить на</option><option value="add">Прибавить</option><option value="sub">Вычесть</option></select><input class="input" inputmode="decimal" id="bv_${b.id}" placeholder="${b.id === 'bid' ? '₽' : 'пусто — снять'}">${b.id === 'bid' ? `<label class="ck small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" class="cb" id="bv_bidmin">Минимальная для продвижения</label>` : ''}`;
+      else ctl = `<button class="lnkb" type="button" data-bsched="${b.id}" id="bs_${b.id}" data-pop="1">${b.id === 'hours' ? 'Весь день' : 'Вся неделя'}</button>`;
+      return `<div class="be-row dis"><label class="switch"><input type="checkbox" data-ben="${b.id}" aria-label="Изменять «${esc(b.t)}»"><i></i></label><div class="lbl"${b.tip ? ` data-tip="${esc(b.tip)}"` : ''}>${b.t}</div><div class="ctl">${ctl}</div></div>`;
+    }).join('')}</div>
+    <div class="row"><button class="btn sm" type="button" id="bNoteBtn">${I('note', 'ic-sm')}Добавить заметку</button></div>
+    <input class="input hide" id="bNote" maxlength="300" placeholder="Заметка появится в статистике объявлений">
+    <div class="err-box hide" id="bErr"></div><div id="bPreview" class="hide"></div></div>
+    <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn" type="button" id="bCheck">Проверить</button><button class="btn primary" type="button" id="bApply">Применить</button></div>`);
+  m.addEventListener('change', (e) => {
+    if (e.target.dataset.ben) e.target.closest('.be-row').classList.toggle('dis', !e.target.checked);
+    if (e.target.id === 'bv_bidmin') { $('#bv_bid').disabled = e.target.checked; }
+    if (e.target.id === 'bv_on') $('#bv_on_t').textContent = e.target.checked ? 'включить' : 'выключить';
+  });
+  m.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-bsched]');
+    if (!b) return;
+    const kind = b.dataset.bsched;
+    schedPop(b, [], kind, (val) => { sch[kind] = val; b.textContent = kind === 'hours' ? hoursText(val.length === 24 ? null : val) : daysText(val.length === 7 ? null : val); }, sch[kind]);
+  });
+  $('#bNoteBtn').onclick = () => { $('#bNote').classList.remove('hide'); $('#bNote').focus(); };
+  const err = (t) => { $('#bErr').textContent = t; $('#bErr').classList.toggle('hide', !t); };
+  const build = () => {
+    const set = {};
+    const on = (id) => $(`[data-ben="${id}"]`).checked;
+    if (on('on')) set.on = $('#bv_on').checked;
+    if (on('bid')) {
+      if ($('#bv_bidmin').checked) set.bid = { min: true };
+      else { const v = $('#bv_bid').value.trim(); if (!/^\d+$/.test(v)) throw new Error('Ставка — целое число рублей'); set.bid = { op: $('#bo_bid').value, value: Number(v) }; }
+    }
+    const lim = {};
+    LIMS.forEach(([k]) => {
+      if (!on(`lim_${k}`)) return;
+      const v = $(`#bv_lim_${k}`).value.trim().replace(',', '.');
+      if (v !== '' && !(Number(v) >= 0)) throw new Error('Лимиты — неотрицательные числа');
+      lim[k] = v === '' ? null : { op: $(`#bo_lim_${k}`).value, value: Number(v) };
+    });
+    if (Object.keys(lim).length) set.lim = lim;
+    if (on('hours')) set.hours = sch.hours;
+    if (on('days')) set.days = sch.days;
+    return set;
+  };
+  const opText = (o) => o.min ? 'минимальная для продвижения' : `${{ set: '=', add: '+', sub: '−' }[o.op]} ${o.value}`;
+  $('#bCheck').onclick = () => {
+    err('');
+    let set; try { set = build(); } catch (ex) { return err(ex.message); }
+    const lines = [];
+    if (set.on !== undefined) lines.push(`Вкл / выкл → ${set.on ? 'включить' : 'выключить'}`);
+    if (set.bid) {
+      lines.push(`Ставка: ${opText(set.bid)}`);
+      const bad = [...sel].map((k) => B.items.find((i) => i.key === k)).filter(Boolean).filter((x) => {
+        if (set.bid.min) return x.minPromo == null;
+        const nv = set.bid.op === 'add' ? (x.bid || 0) + set.bid.value : set.bid.op === 'sub' ? (x.bid || 0) - set.bid.value : set.bid.value;
+        return x.minPromo != null && (nv < x.minPromo || nv > x.max);
+      });
+      if (bad.length) lines.push(`⚠ У ${bad.length} объявл. ставка выйдет за диапазон Авито — у них будет «Ошибка»`);
+    }
+    if (set.lim) Object.entries(set.lim).forEach(([k, v]) => lines.push(`${LIMS.find((l) => l[0] === k)[1]}: ${v === null ? 'снять ограничение' : opText(v)}`));
+    if (set.hours) lines.push(`Часы: ${hoursText(set.hours.length === 24 ? null : set.hours)}`);
+    if (set.days) lines.push(`Дни: ${daysText(set.days.length === 7 ? null : set.days)}`);
+    if ($('#bNote').value.trim()) lines.push(`Заметка: ${$('#bNote').value.trim()}`);
+    $('#bPreview').innerHTML = lines.length ? `<div class="ok-box">Изменится у ${sel.size} объявл.:<ul style="margin:6px 0 0 18px">${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></div>` : '<div class="note">Не включено ни одной настройки.</div>';
+    $('#bPreview').classList.remove('hide');
+  };
+  $('#bApply').onclick = async () => {
+    err('');
+    let set; try { set = build(); } catch (ex) { return err(ex.message); }
+    const note = $('#bNote').value.trim();
+    if (!Object.keys(set).length && !note) return err('Включите левый переключатель у настройки, которую нужно изменить');
+    $('#bApply').disabled = true;
+    const r = await update([...sel], set, note);
+    if ($('#bApply')) $('#bApply').disabled = false;
+    if (!r) return;
+    closeModal();
+    toast(`Изменено: ${r.changed}${r.skipped && r.skipped.length ? `, пропущено: ${r.skipped.length} (${r.skipped[0].reason})` : ''}`);
+    bidsLoad();
+  };
+}
+
+/* ── добавить объявления ── */
+function openAdd() {
+  let tab = 'filter', catalog = [];
+  const addSel = new Set();
+  const last = lsGet('mb_lastacc', '');
+  const accOpts = B.accounts.map((a) => `<option value="${esc(a.id)}" ${a.id === last ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const m = openModal(`${mHead('Добавить объявления')}<div class="m-b">
+    <div class="row"><div class="seg"><button type="button" class="on" data-atab="filter">По фильтрам и поиску</button><button type="button" data-atab="list">Списком номеров</button></div></div>
+    <div class="grid2"><div><label class="f">Аккаунт Авито</label><select class="select" id="aAcc">${accOpts}</select></div><div id="aCityWrap"><label class="f">Город</label><select class="select" id="aCity"><option value="">Все города</option></select></div></div>
+    <div id="aFilter" class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input" id="aQ" type="search" placeholder="Заголовок, номер или город"></div>
+    <div id="aList" class="hide" style="display:grid;gap:8px"><textarea class="input" id="aIds" placeholder="Номера объявлений через пробел, запятую, точку с запятой или с новой строки"></textarea><div><button class="btn" type="button" id="aFind">${I('search', 'ic-sm')}Найти</button></div></div>
+    <div class="note" id="aInfo"></div>
+    <div class="inner"><table><thead><tr><th style="width:36px"><input type="checkbox" class="cb" id="aAll" aria-label="Выбрать все"></th><th>Объявление</th><th>Город</th><th class="r">Цена</th></tr></thead><tbody id="aRows"></tbody></table></div></div>
+    <div class="m-f"><span class="note grow" id="aSel"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="button" id="aSave">Добавить</button></div>`, { wide: true });
+  const fetchCatalog = async (acc) => {
+    const r = await api(`/api/dashboard/mbids/catalog?accountId=${encodeURIComponent(acc)}`);
+    if (!r.ok) throw new Error(r.data.error || 'Не удалось загрузить объявления');
+    return r.data.items.map((x) => ({ ...x, key: `${acc}:${x.id}` }));
+  };
+  const visibleAdd = () => {
+    if (tab === 'list') return catalog;
+    const s = $('#aQ').value.trim().toLowerCase(), city = $('#aCity').value;
+    return catalog.filter((x) => (!city || x.city === city) && (!s || x.title.toLowerCase().includes(s) || x.id.includes(s) || x.address.toLowerCase().includes(s)));
+  };
+  const draw = () => {
+    const list = visibleAdd(), free = list.filter((x) => !x.added);
+    $('#aAll').checked = free.length > 0 && free.every((x) => addSel.has(x.key));
+    if (tab === 'filter' && catalog.length) $('#aInfo').textContent = `Активных объявлений: ${catalog.length}, уже в разделе: ${catalog.filter((x) => x.added).length}. Отмеченное сохраняется при смене поиска и фильтра.`;
+    $('#aRows').innerHTML = list.slice(0, 1000).map((x) => `<tr><td><input type="checkbox" class="cb" data-asel="${esc(x.key)}" ${x.added ? 'disabled checked' : addSel.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td class="td-ttl"><a class="ttl" href="${esc(x.url)}" target="_blank" rel="noopener" data-tip="${esc(x.title)}">${esc(x.title)}</a><div class="sub">№ ${esc(x.id)}${x.added ? ' · уже в разделе' : ''}</div></td><td><div class="sub" data-tip="${esc(x.address)}">${esc(x.city)}</div></td><td class="r num">${x.price != null ? rub(x.price) : '—'}</td></tr>`).join('') || `<tr><td colspan="4">${emptyState('search', tab === 'list' ? 'Вставьте номера и нажмите «Найти»' : catalog.length ? 'Ничего не найдено' : 'Загрузка…')}</td></tr>`;
+    $('#aSel').textContent = addSel.size ? `Выбрано: ${addSel.size}${addSel.size > 500 ? ' — за раз можно до 500' : ''}` : '';
+  };
+  const loadCat = async () => {
+    const acc = $('#aAcc').value; if (!acc) return;
+    lsSet('mb_lastacc', acc);
+    catalog = []; draw();
+    $('#aInfo').textContent = 'Загружаем объявления кабинета… Авито может отвечать до минуты';
+    try { catalog = await fetchCatalog(acc); } catch (e) { $('#aInfo').textContent = e.message; return; }
+    if (!modalEl) return;
+    const cities = [...new Set(catalog.map((x) => x.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'));
+    $('#aCity').innerHTML = '<option value="">Все города</option>' + cities.map((c) => `<option>${esc(c)}</option>`).join('');
+    draw();
+  };
+  $$('[data-atab]', m).forEach((b) => b.addEventListener('click', () => {
+    tab = b.dataset.atab; $$('[data-atab]', m).forEach((x) => x.classList.toggle('on', x === b));
+    $('#aFilter').classList.toggle('hide', tab !== 'filter'); $('#aCityWrap').classList.toggle('hide', tab !== 'filter'); $('#aList').classList.toggle('hide', tab !== 'list');
+    addSel.clear();
+    if (tab === 'list') { catalog = []; $('#aInfo').textContent = 'Найдём номера в выбранном кабинете.'; draw(); } else loadCat();
+  }));
+  $('#aAcc').addEventListener('change', () => { addSel.clear(); if (tab === 'filter') loadCat(); else { catalog = []; draw(); } });
+  $('#aCity').addEventListener('change', draw);
+  $('#aQ').addEventListener('input', draw);
+  $('#aAll').addEventListener('change', (e) => { visibleAdd().filter((x) => !x.added).forEach((x) => e.target.checked ? addSel.add(x.key) : addSel.delete(x.key)); draw(); });
+  $('#aRows').addEventListener('change', (e) => { const k = e.target.dataset.asel; if (k) { e.target.checked ? addSel.add(k) : addSel.delete(k); $('#aSel').textContent = addSel.size ? `Выбрано: ${addSel.size}` : ''; } });
+  $('#aFind').addEventListener('click', async () => {
+    const ids = [...new Set($('#aIds').value.split(/[\s,;]+/).map((s) => s.replace(/\D/g, '')).filter(Boolean))].slice(0, 500);
+    if (!ids.length) { $('#aInfo').textContent = 'Вставьте номера объявлений'; return; }
+    const acc = $('#aAcc').value;
+    $('#aInfo').textContent = 'Ищем…';
+    let all; try { all = await fetchCatalog(acc); } catch (e) { $('#aInfo').textContent = e.message; return; }
+    const byId = new Map(all.map((x) => [x.id, x]));
+    catalog = ids.map((id) => byId.get(id)).filter(Boolean);
+    const missing = ids.filter((id) => !byId.has(id));
+    addSel.clear(); catalog.filter((x) => !x.added).forEach((x) => addSel.add(x.key));
+    $('#aInfo').textContent = `Найдено ${catalog.length} из ${ids.length}.${missing.length ? ` Не найдены среди активных объявлений «${accName(acc)}»: ${missing.slice(0, 15).join(', ')}${missing.length > 15 ? '…' : ''}` : ''}`;
+    draw();
+  });
+  $('#aSave').addEventListener('click', async () => {
+    if (!addSel.size) return toast('Отметьте объявления');
+    if (addSel.size > 500) return toast('За раз можно добавить до 500 объявлений');
+    const pool = new Map(catalog.map((x) => [x.key, x]));
+    const items = [...addSel].map((k) => pool.get(k)).filter(Boolean).map((x) => ({ id: x.id, title: x.title, url: x.url, address: x.address }));
+    $('#aSave').disabled = true;
+    const r = await post('/api/dashboard/mbids/items', { accountId: $('#aAcc').value, items });
+    if ($('#aSave')) $('#aSave').disabled = false;
+    if (!r.ok) return toast(r.data.error || 'Не добавилось');
+    closeModal();
+    toast(`Добавлено: ${r.data.added}. Ставки Авито подтянутся за пару минут — укажите ставку и включите переключатель.`, 7000);
+    await bidsLoad(); loadStats();
+    setTimeout(bidsLoad, 20000); setTimeout(bidsLoad, 60000);
+  });
+  loadCat();
+}
+
+/* ── группы: события ── */
+function openGroupForm(id) {
+  const m = openModal(`${mHead(id ? 'Переименовать группу' : 'Новая группа')}<form class="m-b" id="gForm" novalidate><div><label class="f" for="gName">Название</label><input class="input" id="gName" maxlength="50" value="${id ? esc(B.groups[id].name) : ''}" placeholder="Например: Москва, английский"></div><div class="err-box hide" id="gErr"></div></form><div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="gForm">Сохранить</button></div>`);
+  $('#gForm', m).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $('#gName').value.trim();
+    const r = id ? await api(`/api/dashboard/mbids/groups/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }) : await post('/api/dashboard/mbids/groups', { name });
+    if (!r.ok) { $('#gErr').textContent = r.data.error || 'Не сохранилось'; $('#gErr').classList.remove('hide'); return; }
+    B.groups = r.data.groups; closeModal(); render();
+  });
+}
+function delGroups(ids) {
+  openModal(`${mHead(ids.length > 1 ? `Удалить ${ids.length} групп?` : 'Удалить группу?')}<div class="m-b"><p>Объявления останутся в разделе и на Авито — удалится только группа.</p></div><div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="button" id="gDelOk">Удалить</button></div>`);
+  $('#gDelOk').onclick = async () => {
+    const r = await post('/api/dashboard/mbids/groups/delete', { ids });
+    if (!r.ok) return toast(r.data.error || 'Не удалилось');
+    ids.forEach((g) => gSel.delete(g)); closeModal(); await bidsLoad();
+  };
+}
+$('#groupsBody').addEventListener('click', (e) => {
+  if (e.target.closest('#gFirst')) return openGroupForm();
+  if (e.target.closest('#gDelSel')) return delGroups([...gSel]);
+  const cb = e.target.closest('[data-gsel]');
+  if (cb) { cb.checked ? gSel.add(cb.dataset.gsel) : gSel.delete(cb.dataset.gsel); renderGroups(); return; }
+  const ren = e.target.closest('[data-gren]'); if (ren) return openGroupForm(ren.dataset.gren);
+  const del = e.target.closest('[data-gdel]'); if (del) return delGroups([del.dataset.gdel]);
+  const card = e.target.closest('[data-gopen]'); if (card) { curGroup = card.dataset.gopen; sel.clear(); render(); }
+});
+$('#groupsBody').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.gopen) { curGroup = e.target.dataset.gopen; render(); } });
+$('#groupHead').addEventListener('click', (e) => { if (e.target.closest('#gBack')) { curGroup = null; view = 'groups'; sel.clear(); render(); } });
+function openPick() {
+  const pick = new Set();
+  const m = openModal(`${mHead(`Добавить в группу «${B.groups[curGroup].name}»`)}<div class="m-b"><div class="search"><svg class="ic"><use href="#i-search"/></svg><input class="input" id="pQ" type="search" placeholder="Заголовок, номер, город или аккаунт"></div><div class="inner"><table><thead><tr><th style="width:36px"></th><th>Объявление</th><th>Аккаунт</th><th class="r">Ставка</th><th class="r">Сейчас</th><th class="r">Опереж.</th></tr></thead><tbody id="pRows"></tbody></table></div></div><div class="m-f"><span class="note grow" id="pSel"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="button" id="pSave">Добавить</button></div>`, { wide: true });
+  const draw = () => {
+    const s = $('#pQ').value.trim().toLowerCase();
+    const list = B.items.filter((x) => !x.groups.includes(curGroup) && (!s || x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.accountName.toLowerCase().includes(s)));
+    $('#pRows').innerHTML = list.slice(0, 1000).map((x) => `<tr><td><input type="checkbox" class="cb" data-psel="${esc(x.key)}" ${pick.has(x.key) ? 'checked' : ''} aria-label="Выбрать"></td><td class="td-ttl"><span class="ttl">${esc(x.title)}</span><div class="sub">№ ${esc(x.id)} · ${esc(x.city)}</div></td><td><div class="sub">${esc(x.accountName)}</div></td><td class="r num">${rub(x.bid)}</td><td class="r num">${rub(x.now)}</td><td class="r num">${pct(x.cmp)}</td></tr>`).join('') || `<tr><td colspan="6">${emptyState('folder', 'Все объявления раздела уже в этой группе')}</td></tr>`;
+  };
+  $('#pQ', m).addEventListener('input', draw);
+  $('#pRows', m).addEventListener('change', (e) => { const k = e.target.dataset.psel; if (k) { e.target.checked ? pick.add(k) : pick.delete(k); $('#pSel').textContent = pick.size ? `Выбрано: ${pick.size}` : ''; } });
+  $('#pSave', m).addEventListener('click', async () => {
+    if (!pick.size) return toast('Отметьте объявления');
+    const r = await post('/api/dashboard/mbids/groups/members', { groupId: curGroup, refs: [...pick], action: 'add' });
+    if (!r.ok) return toast(r.data.error || 'Не получилось');
+    closeModal(); toast(`Добавлено в группу: ${r.data.changed}`); bidsLoad();
+  });
+  draw();
+}
 
 /* ── столбцы ── */
-function renderCols() {
-  $('#cList').innerHTML = cols.map((c, k) => `<div class="colrow"><input type="checkbox" class="cb" data-col="${c.id}" ${c.on ? 'checked' : ''} id="col_${c.id}"><label for="col_${c.id}">${esc(colById(c.id).t)}</label><span class="sp"></span><button class="ico" type="button" data-up="${k}" aria-label="Выше" ${k ? '' : 'disabled'}>↑</button><button class="ico" type="button" data-down="${k}" aria-label="Ниже" ${k < cols.length - 1 ? '' : 'disabled'}>↓</button></div>`).join('');
+function openCols() {
+  const m = openModal(`${mHead('Столбцы')}<div class="m-b"><div id="cList"></div></div><div class="m-f"><button class="btn quiet" type="button" id="cReset">Как было</button><span class="grow"></span><button class="btn primary" type="button" data-close>Готово</button></div>`);
+  const draw = () => { $('#cList').innerHTML = cols.map((c, k) => { const d = colById(c.id); return `<div class="colrow"><input type="checkbox" class="cb" data-col="${c.id}" ${c.on ? 'checked' : ''} id="col_${c.id}"><label for="col_${c.id}">${esc(d.t)}${d.tip ? ` <span class="small faint">— ${esc(d.tip.split('.')[0])}</span>` : ''}</label><button class="icon-btn sm" type="button" data-up="${k}" aria-label="Выше" ${k ? '' : 'disabled'}><svg class="ic ic-sm" style="transform:rotate(180deg)"><use href="#i-chev"/></svg></button><button class="icon-btn sm" type="button" data-down="${k}" aria-label="Ниже" ${k < cols.length - 1 ? '' : 'disabled'}>${I('chev', 'ic-sm')}</button></div>`; }).join(''); };
+  m.addEventListener('change', (e) => { const c = cols.find((x) => x.id === e.target.dataset.col); if (c) { c.on = e.target.checked; lsSet('mb_cols', cols); render(); } });
+  m.addEventListener('click', (e) => {
+    if (e.target.closest('#cReset')) { cols = DEFAULT_COLS.map((c) => ({ ...c })); lsSet('mb_cols', cols); draw(); render(); return; }
+    const b = e.target.closest('[data-up],[data-down]'); if (!b) return;
+    const k = Number(b.dataset.up ?? b.dataset.down), j = b.dataset.up != null ? k - 1 : k + 1;
+    [cols[k], cols[j]] = [cols[j], cols[k]]; lsSet('mb_cols', cols); draw(); render();
+  });
+  draw();
 }
-$('#colsBtn').addEventListener('click', () => { renderCols(); showModal('#mCols'); });
-$('#cList').addEventListener('change', (e) => { const c = cols.find((x) => x.id === e.target.dataset.col); if (c) { c.on = e.target.checked; lsSet('mb_cols', cols); render(); } });
-$('#cList').addEventListener('click', (e) => {
-  const b = e.target.closest('button');
-  if (!b) return;
-  const k = Number(b.dataset.up ?? b.dataset.down);
-  const j = b.dataset.up != null ? k - 1 : k + 1;
-  [cols[k], cols[j]] = [cols[j], cols[k]];
-  lsSet('mb_cols', cols); renderCols(); render();
-});
-$('#cReset').addEventListener('click', () => { cols = DEFAULT_COLS.map((c) => ({ ...c })); lsSet('mb_cols', cols); renderCols(); render(); });
 
-/* ── прочее ── */
+/* ── инструкция ── */
+function openHelp() {
+  openModal(`${mHead('Как работают ставки')}<div class="m-b help">
+    <h3>Запуск за 3 шага</h3><ol><li>«Добавить» — выберите кабинет и отметьте объявления (или вставьте номера списком).</li><li>Укажите «Ставку» — целые рубли за просмотр. Ориентир — «Мин.» (минимальная для продвижения).</li><li>Включите переключатель «Вкл». Добавление само продвижение не включает.</li></ol>
+    <h3>Что делает сервис</h3><p>Каждые 10 минут сверяет ставку на Авито с настройкой. Вне графика, по лимиту или когда в кабинете нет денег — ставит <b>базовую</b> (без продвижения), а когда причина уходит — возвращает вашу. Ту же ставку повторно отправляет не чаще раза в час.</p>
+    <h3>Столбцы</h3><p><b>Сейчас</b> — ставка на Авито прямо сейчас. <b>Опереж.</b> — опережение конкурентов от Авито. <b>База</b> — без продвижения. <b>Мин.</b> — минимальная для продвижения. Наведите на заголовок любого столбца — будет пояснение.</p>
+    <h3>График и лимиты</h3><p>Время московское; час 09 — это 09:00–09:59. Лимиты считаются за сутки МСК и обнуляются в полночь; достаточно сработать одному.</p>
+    <h3>Много объявлений сразу</h3><p>Отметьте строки или «Выбрать все» по фильтру (например, город или кабинет) → «Массовое редактирование». Меняется только то, у чего включён левый переключатель; числа можно заменить, прибавить или вычесть.</p>
+    <h3>Статистика</h3><p>Иконки справа вверху — сводка, воронка и экономика за выбранный период. Наведите — посмотреть, нажмите — закрепить над таблицей.</p>
+    <p class="note">Удаление из раздела не удаляет объявление на Авито и не меняет его ставку.</p></div>`);
+}
+
+/* ── прочие кнопки ── */
 $('#q').addEventListener('input', (e) => { q = e.target.value; render(); });
-$('#period').addEventListener('change', () => { $('#customPer').hidden = $('#period').value !== 'custom'; if ($('#period').value !== 'custom') loadStats(); });
+$('#period').addEventListener('change', () => { $('#customPer').classList.toggle('hide', $('#period').value !== 'custom'); statsAt = null; render(); if ($('#period').value !== 'custom') loadStats(); });
 ['#pFrom', '#pTo'].forEach((s) => $(s).addEventListener('change', loadStats));
-$('#addBtn').addEventListener('click', openAdd);
-$('#helpBtn').addEventListener('click', () => showModal('#mHelp'));
-$('#fullBtn').addEventListener('click', () => { $('#tableCard').classList.toggle('full'); });
+$('#addBtn').addEventListener('click', () => { if (view === 'groups' && !curGroup) openGroupForm(); else if (curGroup) openPick(); else openAdd(); });
+$('#helpBtn').addEventListener('click', openHelp);
+$('#colsBtn').addEventListener('click', openCols);
+$('#fullBtn').addEventListener('click', () => { const on = $('#tableCard').classList.toggle('full'); $('#fullBtn').innerHTML = I(on ? 'x' : 'expand'); $('#fullBtn').dataset.tip = on ? 'Свернуть (Esc)' : 'Таблица во весь экран'; });
 $('#refreshBtn').addEventListener('click', async () => {
   const list = (sel.size ? [...sel] : visible().map((x) => x.key)).slice(0, 120);
   if (!list.length) return;
-  const btn = $('#refreshBtn'); btn.disabled = true; btn.textContent = 'Обновляем…';
-  for (let i = 0; i < list.length; i += 40) {
-    const r = await post('/api/dashboard/mbids/refresh', { refs: list.slice(i, i + 40) });
-    if (!r.ok) { toast(r.data.error || 'Авито не ответил'); break; }
-  }
-  btn.disabled = false; btn.textContent = 'Обновить из Авито';
-  await load();
+  const btn = $('#refreshBtn'); btn.disabled = true;
+  for (let i = 0; i < list.length; i += 40) { const r = await post('/api/dashboard/mbids/refresh', { refs: list.slice(i, i + 40) }); if (!r.ok) { toast(r.data.error || 'Авито не ответил'); break; } }
+  btn.disabled = false; await bidsLoad();
   toast(`Ставки перечитаны: ${list.length} объявл.${list.length === 120 ? ' (за раз — до 120)' : ''}`);
 });
-$$('[data-tab]').forEach((b) => b.addEventListener('click', () => {
-  tab = b.dataset.tab; curGroup = null; sel.clear();
-  $$('[data-tab]').forEach((x) => x.classList.toggle('on', x === b));
-  render();
-}));
+$$('[data-view]').forEach((b) => b.addEventListener('click', () => { view = b.dataset.view; curGroup = null; sel.clear(); render(); }));
 
-function showGate() { $('#app').hidden = true; $('#gate').hidden = false; $('#gatePw').focus(); }
+/* ═══════════════ Автозагрузка ═══════════════ */
+const F = { loaded: false, feeds: [], accounts: [], serviceAccount: null };
+async function feedsLoad() {
+  const r = await api('/api/dashboard/feeds');
+  if (r.status === 401) return showGate();
+  if (!r.ok) { $('#fRows').innerHTML = `<tr><td colspan="7">${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
+  Object.assign(F, r.data, { loaded: true });
+  feedsRender();
+}
+function feedsRender() {
+  $('#fRows').innerHTML = F.feeds.map((f) => {
+    const s = f.stat;
+    const n = s ? (s.error ? 1 : 0) + (s.tabs ? s.tabs.filter((t) => t.error).length : 0) + (s.problems || []).length : 0;
+    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
+    return `<tr><td><b style="color:var(--ink);font-weight:600">${esc(f.name)}</b>${f.enabled ? '' : '<div class="sub">автообновление выключено</div>'}</td>
+      <td><a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a></td>
+      <td><div class="sub" style="white-space:normal">${f.tabs.map(esc).join(', ')}</div></td>
+      <td class="r num">${s && !s.error ? int(s.ads) : '—'}</td><td>${pill}</td>
+      <td class="num small muted" data-tip="${esc(s && s.builtAt || '')}">${s && s.builtAt ? ago(Date.parse(s.builtAt)) : '—'}</td>
+      <td><div class="row" style="gap:2px;flex-wrap:nowrap;justify-content:flex-end">
+        <button class="icon-btn sm" type="button" data-copy="${f.slug}" data-tip="Скопировать ссылку на XML для Авито" aria-label="Скопировать ссылку">${I('link', 'ic-sm')}</button>
+        <button class="icon-btn sm" type="button" data-build="${f.slug}" data-tip="Пересобрать XML сейчас" aria-label="Пересобрать XML">${I('refresh', 'ic-sm')}</button>
+        <button class="icon-btn sm" type="button" data-upload="${f.slug}" data-tip="Обновить в Авито сейчас (не чаще раза в час)" aria-label="Обновить в Авито">${I('send', 'ic-sm')}</button>
+        <button class="icon-btn sm" type="button" data-connect="${f.slug}" data-tip="Подключить фид в кабинете Авито" aria-label="Подключить на Авито">${I('plug', 'ic-sm')}</button>
+        <button class="icon-btn sm" type="button" data-edit="${f.slug}" data-tip="Редактировать" aria-label="Редактировать">${I('edit', 'ic-sm')}</button></div></td></tr>`;
+  }).join('') || `<tr><td colspan="7">${emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
+}
+const feedBy = (slug) => F.feeds.find((f) => f.slug === slug);
+function replaceFeed(f) { const i = F.feeds.findIndex((x) => x.slug === f.slug); if (i >= 0) F.feeds[i] = f; else F.feeds.push(f); feedsRender(); }
+$('#fRows').addEventListener('click', async (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.copy) { const url = feedBy(b.dataset.copy).feedUrl; try { await navigator.clipboard.writeText(url); toast('Ссылка на XML скопирована'); } catch (err) { toast(url); } }
+  else if (b.dataset.build) {
+    b.disabled = true; const r = await post(`/api/dashboard/feeds/${b.dataset.build}/build`); b.disabled = false;
+    if (!r.ok) return toast(r.data.error || 'Не удалось собрать XML');
+    replaceFeed(r.data.feed); const s = r.data.feed.stat;
+    toast(s.error ? 'XML не собран: ' + s.error : `XML собран: ${s.ads} объявлений`);
+  } else if (b.dataset.upload) {
+    b.disabled = true; const r = await post(`/api/dashboard/feeds/${b.dataset.upload}/avito-upload`); b.disabled = false;
+    toast(r.ok ? 'Авито начал загрузку. Результат будет в отчёте автозагрузки через 10–30 минут.' : (r.data.error || 'Авито не принял запрос'));
+  } else if (b.dataset.connect) feedConnect(b.dataset.connect);
+  else if (b.dataset.edit) feedEdit(b.dataset.edit);
+  else if (b.dataset.probs) feedProbs(b.dataset.probs);
+});
+$('#fAdd').addEventListener('click', () => feedEdit(null));
+$('#fReload').addEventListener('click', feedsLoad);
+const SKIP_TABS = /справк|файл из авито|уникализац|дубли|сюда выгрузка|яндекс\.диск|тексты|позиции/i;
+function feedEdit(slug) {
+  const ed = slug ? feedBy(slug) : null;
+  const m = openModal(`${mHead(ed ? ed.name : 'Новый клиент')}<form class="m-b" id="eForm" novalidate>
+    <div><label class="f" for="eName">Имя клиента</label><input class="input" id="eName" maxlength="60" value="${esc(ed ? ed.name : '')}"></div>
+    <div><label class="f" for="eSheet">Ссылка на Google Таблицу</label><div class="row" style="flex-wrap:nowrap"><input class="input" id="eSheet" inputmode="url" value="${esc(ed ? ed.sheetUrl : '')}"><button class="btn" type="button" id="eLoadTabs">Вкладки</button></div>
+      <div class="note" style="margin-top:6px">${F.serviceAccount ? `Дайте доступ к таблице на чтение адресу <span class="mono">${esc(F.serviceAccount)}</span>` : 'В таблице: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».'}</div></div>
+    <div><label class="f">Вкладки с объявлениями</label><div class="tabs-list" id="eTabs"></div></div>
+    <div><label class="f">Аккаунт Авито</label><select class="select" id="eAccount"><option value="">— не привязан —</option>${F.accounts.map((a) => `<option value="${esc(a.id)}" ${ed && ed.avitoAccountId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
+    <label class="row" style="cursor:pointer;flex-wrap:nowrap"><label class="switch"><input type="checkbox" id="eEnabled" ${!ed || ed.enabled ? 'checked' : ''}><i></i></label>Пересобирать XML каждый час</label>
+    <div class="err-box hide" id="eErr"></div></form>
+    <div class="m-f">${ed ? '<button class="btn warn" type="button" id="eDelete">Удалить клиента</button>' : ''}<span class="grow"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="eForm" id="eSave">Сохранить</button></div>`);
+  const tabs = (all, checked) => { $('#eTabs').innerHTML = all.length ? all.map((t) => `<label><input type="checkbox" class="cb" value="${esc(t)}" ${checked.includes(t) ? 'checked' : ''}>${esc(t)}</label>`).join('') : '<span class="note">Нажмите «Вкладки», чтобы загрузить их из таблицы</span>'; };
+  tabs(ed ? ed.tabs : [], ed ? ed.tabs : []);
+  const err = (t) => { $('#eErr').textContent = t; $('#eErr').classList.toggle('hide', !t); };
+  $('#eLoadTabs').onclick = async () => {
+    const sheet = $('#eSheet').value.trim(); if (!sheet) return $('#eSheet').focus();
+    $('#eLoadTabs').disabled = true;
+    const r = await api('/api/dashboard/feeds/tabs?sheet=' + encodeURIComponent(sheet));
+    if ($('#eLoadTabs')) $('#eLoadTabs').disabled = false;
+    if (!r.ok) return err(r.data.error || 'Не удалось открыть таблицу');
+    err('');
+    const cur = $$('#eTabs input:checked').map((i) => i.value);
+    tabs(r.data.tabs, cur.length ? cur : r.data.tabs.filter((t) => !SKIP_TABS.test(t)));
+  };
+  $('#eForm', m).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = { name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAccount').value, enabled: $('#eEnabled').checked };
+    const b = $('#eSave'); b.disabled = true; b.textContent = ed ? 'Сохраняю…' : 'Собираю XML…';
+    const r = ed ? await api('/api/dashboard/feeds/' + ed.slug, { method: 'PUT', body: JSON.stringify(body) }) : await post('/api/dashboard/feeds', body);
+    if ($('#eSave')) { b.disabled = false; b.textContent = 'Сохранить'; }
+    if (!r.ok) return err(r.data.error || 'Не удалось сохранить');
+    replaceFeed(r.data.feed); closeModal();
+    const s = r.data.feed.stat;
+    toast(ed ? 'Сохранено' : (s && s.error ? 'Клиент добавлен, но XML не собран: ' + s.error : `Клиент добавлен, в XML ${s ? s.ads : 0} объявлений`));
+  });
+  if (ed) $('#eDelete').onclick = async () => {
+    const b = $('#eDelete');
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Точно удалить? Ссылка на XML перестанет работать'; return; }
+    const r = await api('/api/dashboard/feeds/' + ed.slug, { method: 'DELETE' });
+    if (!r.ok) return toast(r.data.error || 'Не удалось удалить');
+    F.feeds = F.feeds.filter((f) => f.slug !== ed.slug); feedsRender(); closeModal(); toast('Клиент удалён');
+  };
+}
+function feedProbs(slug) {
+  const f = feedBy(slug), s = f.stat || {};
+  const items = [];
+  if (s.error) items.push(['Таблица', s.error]);
+  (s.tabs || []).filter((t) => t.error).forEach((t) => items.push([`Вкладка «${t.name}»`, t.error]));
+  (s.problems || []).forEach((p) => items.push([[p.tab && `«${p.tab}»`, p.row && `строка ${p.row}`, p.id && `id ${p.id}`].filter(Boolean).join(', ') || 'Таблица', p.msg]));
+  openModal(`${mHead('Ошибки — ' + f.name)}<div class="m-b">${items.map(([w, msg]) => `<div class="prob"><div class="small muted">${esc(w)}</div><div>${esc(msg)}</div></div>`).join('') || '<div class="note">Ошибок нет</div>'}</div>`, { wide: true });
+}
+function feedConnect(slug) {
+  const f = feedBy(slug);
+  const acc = F.accounts.find((a) => a.id === f.avitoAccountId);
+  const m = openModal(`${mHead('Подключить на Авито')}<form class="m-b" id="cForm" novalidate>
+    <div class="note">${acc ? `В настройки автозагрузки кабинета «${esc(acc.name)}» запишется ссылка на наш XML вместо текущей (например, BananLab). Объявления не удалятся: у них те же id.` : 'Сначала привяжите аккаунт Авито в «Редактировать».'}</div>
+    <div><label class="f" for="cEmail">Почта для отчётов автозагрузки</label><input class="input" id="cEmail" type="email" placeholder="если пусто — оставим ту, что уже в Авито"></div>
+    <div class="err-box hide" id="cErr"></div><div id="cDone" class="hide"></div></form>
+    <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="cForm" id="cSave" ${acc ? '' : 'disabled'}>Подключить</button></div>`);
+  $('#cForm', m).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('#cSave').disabled = true;
+    const r = await post(`/api/dashboard/feeds/${f.slug}/avito-connect`, { reportEmail: $('#cEmail').value.trim() });
+    if (!$('#cSave')) return;
+    $('#cSave').disabled = false;
+    if (!r.ok) { $('#cErr').textContent = r.data.error || 'Авито не принял настройки'; $('#cErr').classList.remove('hide'); return; }
+    const prev = (r.data.previousFeeds || []).map((p) => p.feed_url).filter(Boolean);
+    $('#cDone').innerHTML = `<div class="ok-box">Готово. Авито заберёт наш XML при следующей загрузке.${prev.length ? ` Раньше стояло: ${prev.map((u) => `<span class="mono">${esc(u)}</span>`).join(', ')} — сохраните, если понадобится вернуть.` : ''}</div>`;
+    $('#cDone').classList.remove('hide'); $('#cErr').classList.add('hide');
+  });
+}
+
+/* ═══════════════ Вход и запуск ═══════════════ */
+function showGate() { $('#app').hidden = true; $('#gate').hidden = false; setTimeout(() => $('#gatePw').focus(), 30); }
 $('#gateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const pw = $('#gatePw').value;
@@ -1308,19 +1480,17 @@ $('#gateForm').addEventListener('submit', async (e) => {
   if (r.status === 401) { $('#gateErr').textContent = 'Неверный пароль'; return; }
   try { localStorage.setItem(PW_KEY, pw); } catch (err) {}
   $('#gate').hidden = true; $('#app').hidden = false;
-  S = r.data; render(); loadStats();
+  if (r.ok) { Object.assign(B, r.data, { loaded: true }); }
+  start();
 });
-
-(async function init() {
-  if (!getPw()) return showGate();
-  $('#app').hidden = false;
-  await load();
-  if (!$('#gate').hidden) return;
-  loadStats();
-  // Статусы обновляем раз в минуту, статистику «Сегодня» — раз в 10 минут.
-  setInterval(() => { if (!openModal && $('#pop').hidden && !document.hidden) load(); }, 60000);
-  setInterval(() => { if (!document.hidden && $('#period').value === 'today') loadStats(); }, 600000);
-})();
+function start() {
+  setPage(page);
+  if (B.loaded) { render(); loadStats(); }
+  setInterval(() => { if (page === 'bids' && !modalEl && !popEl && !document.hidden) bidsLoad(); }, 60000);
+  setInterval(() => { if (page === 'bids' && !document.hidden && $('#period').value === 'today') loadStats(); }, 600000);
+}
+window.addEventListener('hashchange', () => setPage(location.hash === '#feeds' ? 'feeds' : 'bids'));
+if (!getPw()) showGate(); else { $('#app').hidden = false; start(); }
 })();
 </script>
 </body>
