@@ -7581,6 +7581,8 @@ const REFL_LEGACY_ROLES = { manager: 'От менеджера', specialist: 'О�
 //   mail       { month }                 -> { month, items }
 //   mail-save  { item: { id?, from?, … } } -> { month, items, item }  (from — the date it had, to move it)
 //   mail-del   { id, date }               -> { month, items }
+//   mail-add   { items: [{ date, projectId, budget, comment? }] } -> { created, skipped }  many at once (several
+//              clients, a repeat, a copied day); a client that already has a mailing that day is skipped
 const MAIL_RESULTS = ['good', 'ok', 'bad'];
 const MAIL_STATUSES = ['launched', 'results'];
 async function atMailApi(env, me, action, body, nowMs) {
@@ -7589,6 +7591,7 @@ async function atMailApi(env, me, action, body, nowMs) {
   const read = async (month) => ((await kv.get(`mail:${month}`, 'json')) || {}).items || [];
   const write = (month, items) => kv.put(`mail:${month}`, JSON.stringify({ items }));
   const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const num = (v) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Math.min(1e9, Math.max(0, Math.round(Number(v)))));
 
   if (action === 'mail') {
     const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(body.month || '')) ? body.month : botMsk(nowMs).date.slice(0, 7);
@@ -7600,7 +7603,6 @@ async function atMailApi(env, me, action, body, nowMs) {
     if (!isDay(it.date)) return { error: 'bad_date', status: 400 };
     const projectId = atClean(it.projectId, 80);
     if (!projectId) return { error: 'no_client', status: 400 };
-    const num = (v) => (v === '' || v == null || !Number.isFinite(Number(v)) ? null : Math.min(1e9, Math.max(0, Math.round(Number(v)))));
     const month = it.date.slice(0, 7);
     const iso = new Date(nowMs).toISOString();
     let items = await read(month);
@@ -7629,6 +7631,32 @@ async function atMailApi(env, me, action, body, nowMs) {
     items = items.filter((x) => x.id !== rec.id).concat(rec).sort(byDate);
     await write(month, items);
     return { month, items, item: rec };
+  }
+
+  if (action === 'mail-add') {
+    const byMonth = {};
+    for (const it of (Array.isArray(body.items) ? body.items : []).slice(0, 500)) {
+      const projectId = atClean(it && it.projectId, 80);
+      if (!isDay(it && it.date) || !projectId) continue;
+      (byMonth[it.date.slice(0, 7)] = byMonth[it.date.slice(0, 7)] || []).push({ ...it, projectId });
+    }
+    const iso = new Date(nowMs).toISOString();
+    let created = 0;
+    let skipped = 0;
+    for (const [month, list] of Object.entries(byMonth)) {
+      const items = await read(month);
+      for (const it of list) {
+        if (items.some((x) => x.date === it.date && x.projectId === it.projectId)) { skipped += 1; continue; }
+        items.push({
+          id: `ml${crypto.randomUUID().replace(/-/g, '').slice(0, 10)}`, by: me.name, at: iso, date: it.date, projectId: it.projectId,
+          budget: num(it.budget), contacts: null, result: null, status: null, comment: String(it.comment || '').trim().slice(0, 2000),
+          updatedBy: me.name, updatedAt: iso,
+        });
+        created += 1;
+      }
+      await write(month, items.sort(byDate));
+    }
+    return { created, skipped };
   }
 
   if (action === 'mail-del') {
