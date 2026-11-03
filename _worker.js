@@ -1895,29 +1895,49 @@ const AVITO_READ_POSTS = [
   /^\/calltracking\/v1\/getCalls\/?$/,
 ];
 
-// Avito answers /tariff/info/1 with the current tariff and the scheduled next one; times come in
-// unix seconds. Kept raw too — the field set isn't documented in full.
+// Avito's /tariff/info/1 only knows the «Транспорт» tariffs («Тариф должен принадлежать к категории
+// "Транспорт"» for everyone else), so a services cabinet's subscription is read off its operations
+// history: «Подписка (набор услуг)» charges (serviceType tariff, 3000 руб a month). The last charge
+// starts a month — paidUntil is the same day a month later. «Покупка …» is Avito renewing it on its own
+// from the wallet, «Изменение …» — paid by hand. A charge refunded the same day doesn't count.
 async function fetchAvitoTariff(env, account) {
-  const out = { accountId: account.id, name: account.name, active: null, tariff: null, startsAt: null, endsAt: null, daysLeft: null, scheduled: null, raw: null, error: null };
+  const out = { accountId: account.id, name: account.name, active: null, lastPaidAt: null, paidUntil: null, daysLeft: null, autoRenew: null, amount: null, charges: [], error: null };
   try {
     const token = await avitoGetToken(env, account);
-    const data = await avitoJson(token, '/tariff/info/1');
-    out.raw = data;
-    const toIso = (v) => {
-      const n = Number(v);
-      if (!v || !Number.isFinite(n) || n <= 0) return null;
-      return new Date(n < 1e12 ? n * 1000 : n).toISOString();
-    };
-    const cur = data && data.current;
-    if (cur) {
-      out.active = cur.isActive != null ? Boolean(cur.isActive) : null;
-      out.tariff = cur.level || cur.name || null;
-      out.startsAt = toIso(cur.startTime);
-      out.endsAt = toIso(cur.closeTime);
-      if (out.endsAt) out.daysLeft = Math.floor((Date.parse(out.endsAt) - Date.now()) / 86400000);
+    const now = new Date();
+    const from = new Date(now.getTime() - 120 * 86400000);
+    const fmt = (d) => d.toISOString().slice(0, 19);
+    const data = await avitoJson(token, '/core/v1/accounts/operations_history/', {
+      method: 'POST',
+      body: JSON.stringify({ dateTimeFrom: fmt(from), dateTimeTo: fmt(new Date(now.getTime() + 86400000)) }),
+    });
+    const ops = (data && data.result && data.result.operations) || [];
+    const tariffOps = ops.filter((o) => o.serviceType === 'tariff')
+      .sort((x, y) => String(x.updatedAt).localeCompare(String(y.updatedAt)));
+    const charges = [];
+    for (const o of tariffOps) {
+      const day = String(o.updatedAt).slice(0, 10);
+      if (/^резерв/i.test(o.operationType || '')) charges.push({ date: day, amount: o.amountTotal, name: o.operationName });
+      else if (/^возврат/i.test(o.operationType || '')) {
+        const same = charges.findLastIndex((c) => c.date === day && !c.refunded);
+        if (same >= 0 && Number(o.amountTotal) >= Number(charges[same].amount)) charges[same].refunded = true;
+      }
     }
-    const next = data && data.scheduled;
-    if (next) out.scheduled = { tariff: next.level || next.name || null, startsAt: toIso(next.startTime), endsAt: toIso(next.closeTime) };
+    out.charges = charges;
+    const last = charges.filter((c) => !c.refunded).pop();
+    if (last) {
+      const [y, m, d] = last.date.split('-').map(Number);
+      const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      const until = new Date(Date.UTC(y, m, Math.min(d, lastDay)));
+      out.lastPaidAt = last.date;
+      out.paidUntil = until.toISOString().slice(0, 10);
+      out.amount = last.amount;
+      out.autoRenew = /^Покупка/i.test(last.name || '');
+      out.daysLeft = Math.floor((until.getTime() - Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())) / 86400000);
+      out.active = out.daysLeft > 0;
+    } else {
+      out.active = false;
+    }
   } catch (e) {
     out.error = String(e && e.message).slice(0, 300);
   }
