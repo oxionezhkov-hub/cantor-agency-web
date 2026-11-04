@@ -381,7 +381,8 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
     <section id="pg-feeds" class="hide">
       <div class="card">
         <div class="tools">
-          <span class="muted small grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час.</span>
+          <span class="muted small grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час. Новые кабинеты Авито появляются здесь сами.</span>
+          <button class="btn" type="button" id="fImport"><svg class="ic ic-sm"><use href="#i-upload"/></svg>Импорт из BananLab</button>
           <button class="icon-btn" type="button" id="fReload" data-tip="Обновить список" aria-label="Обновить список"><svg class="ic"><use href="#i-refresh"/></svg></button>
           <button class="btn primary" type="button" id="fAdd"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Клиент</button>
         </div>
@@ -1360,23 +1361,32 @@ async function feedsLoad() {
   Object.assign(F, r.data, { loaded: true });
   feedsRender();
 }
+const feedAccName = (id) => { const a = F.accounts.find((x) => x.id === id); return a ? a.name : ''; };
 function feedsRender() {
+  // Кабинеты Авито без фида — сразу в списке, чтобы новые клиенты не терялись.
+  const linked = new Set(F.feeds.map((f) => f.avitoAccountId).filter(Boolean));
+  const free = F.accounts.filter((a) => !linked.has(a.id)).sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
   $('#fRows').innerHTML = F.feeds.map((f) => {
     const s = f.stat;
-    const n = s ? (s.error ? 1 : 0) + (s.tabs ? s.tabs.filter((t) => t.error).length : 0) + (s.problems || []).length : 0;
+    const n = s ? (s.error ? 1 : 0) + (s.s3Error ? 1 : 0) + (s.tabs ? s.tabs.filter((t) => t.error).length : 0) + (s.problems || []).length : 0;
     const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
-    return `<tr><td><b style="color:var(--ink);font-weight:600">${esc(f.name)}</b>${f.enabled ? '' : '<div class="sub">автообновление выключено</div>'}</td>
+    const acc = feedAccName(f.avitoAccountId);
+    return `<tr><td><b style="color:var(--ink);font-weight:600">${esc(f.name)}</b><div class="sub">${acc ? (acc !== f.name ? 'кабинет: ' + esc(acc) : '') : '<span style="color:var(--amber,#b7791f)">кабинет Авито не привязан</span>'}</div>${f.enabled ? '' : '<div class="sub">автообновление выключено</div>'}</td>
       <td><a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a></td>
-      <td><div class="sub" style="white-space:normal">${f.tabs.map(esc).join(', ')}</div></td>
+      <td><div class="sub" style="white-space:normal">${f.tabs.length ? f.tabs.map(esc).join(', ') : '— не выбраны —'}</div></td>
       <td class="r num">${s && !s.error ? int(s.ads) : '—'}</td><td>${pill}</td>
       <td class="num small muted" data-tip="${esc(s && s.builtAt || '')}">${s && s.builtAt ? ago(Date.parse(s.builtAt)) : '—'}</td>
       <td><div class="row" style="gap:2px;flex-wrap:nowrap;justify-content:flex-end">
+        ${f.bananlabXml ? `<button class="icon-btn sm" type="button" data-cmp="${f.slug}" data-tip="Сравнить наш XML с XML BananLab" aria-label="Сравнить с BananLab">${I('info', 'ic-sm')}</button>` : ''}
         <button class="icon-btn sm" type="button" data-copy="${f.slug}" data-tip="Скопировать ссылку на XML для Авито" aria-label="Скопировать ссылку">${I('link', 'ic-sm')}</button>
         <button class="icon-btn sm" type="button" data-build="${f.slug}" data-tip="Пересобрать XML сейчас" aria-label="Пересобрать XML">${I('refresh', 'ic-sm')}</button>
         <button class="icon-btn sm" type="button" data-upload="${f.slug}" data-tip="Обновить в Авито сейчас (не чаще раза в час)" aria-label="Обновить в Авито">${I('send', 'ic-sm')}</button>
         <button class="icon-btn sm" type="button" data-connect="${f.slug}" data-tip="Подключить фид в кабинете Авито" aria-label="Подключить на Авито">${I('plug', 'ic-sm')}</button>
         <button class="icon-btn sm" type="button" data-edit="${f.slug}" data-tip="Редактировать" aria-label="Редактировать">${I('edit', 'ic-sm')}</button></div></td></tr>`;
-  }).join('') || `<tr><td colspan="7">${emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
+  }).join('') + free.map((a) => `<tr><td><b style="color:var(--ink);font-weight:600">${esc(a.name)}</b><div class="sub">кабинет Авито без таблицы</div></td>
+      <td colspan="5"><span class="chip">нет таблицы</span></td>
+      <td><div class="row" style="justify-content:flex-end"><button class="btn sm" type="button" data-newacc="${esc(a.id)}">${I('plus', 'ic-sm')}Таблица</button></div></td></tr>`).join('')
+    || `<tr><td colspan="7">${emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
 }
 const feedBy = (slug) => F.feeds.find((f) => f.slug === slug);
 function replaceFeed(f) { const i = F.feeds.findIndex((x) => x.slug === f.slug); if (i >= 0) F.feeds[i] = f; else F.feeds.push(f); feedsRender(); }
@@ -1394,19 +1404,23 @@ $('#fRows').addEventListener('click', async (e) => {
     toast(r.ok ? 'Авито начал загрузку. Результат будет в отчёте автозагрузки через 10–30 минут.' : (r.data.error || 'Авито не принял запрос'));
   } else if (b.dataset.connect) feedConnect(b.dataset.connect);
   else if (b.dataset.edit) feedEdit(b.dataset.edit);
+  else if (b.dataset.newacc) { const a = F.accounts.find((x) => x.id === b.dataset.newacc); feedEdit(null, { name: a ? a.name : '', avitoAccountId: b.dataset.newacc }); }
+  else if (b.dataset.cmp) feedCompare(b.dataset.cmp);
   else if (b.dataset.probs) feedProbs(b.dataset.probs);
 });
 $('#fAdd').addEventListener('click', () => feedEdit(null));
+$('#fImport').addEventListener('click', feedImport);
 $('#fReload').addEventListener('click', feedsLoad);
 const SKIP_TABS = /справк|файл из авито|уникализац|дубли|сюда выгрузка|яндекс\.диск|тексты|позиции/i;
-function feedEdit(slug) {
+function feedEdit(slug, preset) {
   const ed = slug ? feedBy(slug) : null;
+  const pre = preset || {};
   const m = openModal(`${mHead(ed ? ed.name : 'Новый клиент')}<form class="m-b" id="eForm" novalidate>
-    <div><label class="f" for="eName">Имя клиента</label><input class="input" id="eName" maxlength="60" value="${esc(ed ? ed.name : '')}"></div>
+    <div><label class="f" for="eName">Имя клиента</label><input class="input" id="eName" maxlength="60" value="${esc(ed ? ed.name : pre.name || '')}"></div>
     <div><label class="f" for="eSheet">Ссылка на Google Таблицу</label><div class="row" style="flex-wrap:nowrap"><input class="input" id="eSheet" inputmode="url" value="${esc(ed ? ed.sheetUrl : '')}"><button class="btn" type="button" id="eLoadTabs">Вкладки</button></div>
       <div class="note" style="margin-top:6px">${F.serviceAccount ? `Дайте доступ к таблице на чтение адресу <span class="mono">${esc(F.serviceAccount)}</span>` : 'В таблице: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».'}</div></div>
     <div><label class="f">Вкладки с объявлениями</label><div class="tabs-list" id="eTabs"></div></div>
-    <div><label class="f">Аккаунт Авито</label><select class="select" id="eAccount"><option value="">— не привязан —</option>${F.accounts.map((a) => `<option value="${esc(a.id)}" ${ed && ed.avitoAccountId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
+    <div><label class="f">Аккаунт Авито</label><select class="select" id="eAccount"><option value="">— не привязан —</option>${F.accounts.map((a) => `<option value="${esc(a.id)}" ${(ed ? ed.avitoAccountId : pre.avitoAccountId) === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
     <label class="row" style="cursor:pointer;flex-wrap:nowrap"><label class="switch"><input type="checkbox" id="eEnabled" ${!ed || ed.enabled ? 'checked' : ''}><i></i></label>Пересобирать XML каждый час</label>
     <div class="err-box hide" id="eErr"></div></form>
     <div class="m-f">${ed ? '<button class="btn warn" type="button" id="eDelete">Удалить клиента</button>' : ''}<span class="grow"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="eForm" id="eSave">Сохранить</button></div>`);
@@ -1446,15 +1460,53 @@ function feedProbs(slug) {
   const f = feedBy(slug), s = f.stat || {};
   const items = [];
   if (s.error) items.push(['Таблица', s.error]);
+  if (s.s3Error) items.push(['Object Storage', 'XML не выложен в Яндекс: ' + s.s3Error]);
   (s.tabs || []).filter((t) => t.error).forEach((t) => items.push([`Вкладка «${t.name}»`, t.error]));
   (s.problems || []).forEach((p) => items.push([[p.tab && `«${p.tab}»`, p.row && `строка ${p.row}`, p.id && `id ${p.id}`].filter(Boolean).join(', ') || 'Таблица', p.msg]));
   openModal(`${mHead('Ошибки — ' + f.name)}<div class="m-b">${items.map(([w, msg]) => `<div class="prob"><div class="small muted">${esc(w)}</div><div>${esc(msg)}</div></div>`).join('') || '<div class="note">Ошибок нет</div>'}</div>`, { wide: true });
+}
+function feedImport() {
+  const m = openModal(`${mHead('Импорт из BananLab')}<form class="m-b" id="iForm" novalidate>
+    <div class="note">Вставьте JSON-список клиентов, собранный в BananLab: <span class="mono">[{"client":"5899_elena_kiseleva","active":true,"sheetUrl":"…","xmlUrl":"…","dataSource":"Авито_выгрузка / …"}]</span>. Вкладки возьмутся из таблицы, кабинет Авито подберётся по фамилии. Клиенты, которые уже есть, пропускаются. В кабинетах Авито ничего не меняется — XML соберётся в течение часа.</div>
+    <textarea class="input" id="iJson" rows="10" style="font-family:var(--mono,monospace);font-size:12px" placeholder='[{"client":"…","sheetUrl":"https://docs.google.com/spreadsheets/d/…"}]'></textarea>
+    <div class="err-box hide" id="iErr"></div><div id="iDone"></div></form>
+    <div class="m-f"><span class="grow"></span><button class="btn" type="button" data-close>Закрыть</button><button class="btn primary" type="submit" form="iForm" id="iSave">Импортировать</button></div>`, { wide: true });
+  $('#iForm', m).addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = (t) => { $('#iErr').textContent = t; $('#iErr').classList.toggle('hide', !t); };
+    let items;
+    try { const txt = $('#iJson').value.trim().replace(/^```\w*|```$/g, ''); items = JSON.parse(txt); } catch (x) { return err('Это не JSON — вставьте список целиком, от [ до ]'); }
+    err(''); const b = $('#iSave'); b.disabled = true; b.textContent = 'Импортирую…';
+    const r = await post('/api/dashboard/feeds/import', { items });
+    if (!$('#iSave')) return;
+    b.disabled = false; b.textContent = 'Импортировать';
+    if (!r.ok) return err(r.data.error || 'Не удалось импортировать');
+    const label = { created: 'добавлен', exists: 'уже есть', skipped: 'пропущен' };
+    $('#iDone').innerHTML = `<div class="ok-box">Добавлено клиентов: ${r.data.created}.</div>` + r.data.results.map((x) => `<div class="prob"><div class="small muted">${esc(x.client)}</div><div>${esc(label[x.status] || x.status)}${x.account ? ` · кабинет «${esc(x.account)}»` : x.status === 'created' ? ' · <b>кабинет не найден — выберите в «Редактировать»</b>' : ''}${x.tabs && x.tabs.length ? ` · вкладки: ${x.tabs.map(esc).join(', ')}` : ''}${x.note ? ` · ${esc(x.note)}` : ''}</div></div>`).join('');
+    feedsLoad();
+  });
+}
+async function feedCompare(slug) {
+  const f = feedBy(slug);
+  const m = openModal(`${mHead('Сравнение с BananLab — ' + f.name)}<div class="m-b" id="cmpBody"><div class="note">Сравниваю наш XML с XML BananLab…</div></div>`, { wide: true });
+  const r = await api(`/api/dashboard/feeds/${slug}/compare`);
+  if (!$('#cmpBody')) return;
+  if (!r.ok) { $('#cmpBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Не удалось сравнить')}</div>`; return; }
+  const d = r.data, names = { Title: 'Заголовок', Price: 'Цена', Address: 'Адрес', Category: 'Категория', Description: 'Описание', images: 'Число фото' };
+  const diffF = Object.entries(d.fieldDiffs).filter(([, n]) => n);
+  const same = !d.onlyOursCount && !d.onlyTheirsCount && !diffF.length && d.ours === d.theirs;
+  $('#cmpBody').innerHTML = `<div class="${same ? 'ok-box' : 'note'}">${same ? 'Совпадает полностью: можно переключать кабинет на наш XML.' : 'Есть расхождения — посмотрите перед переключением.'}</div>
+    <div class="prob"><div class="small muted">Объявлений</div><div>у нас ${int(d.ours)}, в BananLab ${int(d.theirs)}, общих ${int(d.same)}</div></div>
+    ${d.onlyOursCount ? `<div class="prob"><div class="small muted">Только у нас</div><div class="mono small">${d.onlyOursCount}: ${d.onlyOurs.map(esc).join(', ')}</div></div>` : ''}
+    ${d.onlyTheirsCount ? `<div class="prob"><div class="small muted">Только в BananLab</div><div class="mono small">${d.onlyTheirsCount}: ${d.onlyTheirs.map(esc).join(', ')}</div></div>` : ''}
+    ${diffF.length ? `<div class="prob"><div class="small muted">Отличаются поля</div><div>${diffF.map(([k, n]) => `${names[k] || k}: ${n}`).join(' · ')}</div></div>` : ''}
+    ${d.diffs.slice(0, 15).map((x) => `<div class="prob"><div class="small muted mono">${esc(x.id)}</div><div>${x.fields.map((g) => `<div><b>${esc(names[g.field] || g.field)}</b>: у нас «${esc(g.ours)}» — в BananLab «${esc(g.theirs)}»</div>`).join('')}</div></div>`).join('')}`;
 }
 function feedConnect(slug) {
   const f = feedBy(slug);
   const acc = F.accounts.find((a) => a.id === f.avitoAccountId);
   const m = openModal(`${mHead('Подключить на Авито')}<form class="m-b" id="cForm" novalidate>
-    <div class="note">${acc ? `В настройки автозагрузки кабинета «${esc(acc.name)}» запишется ссылка на наш XML вместо текущей (например, BananLab). Объявления не удалятся: у них те же id.` : 'Сначала привяжите аккаунт Авито в «Редактировать».'}</div>
+    <div class="note">${acc ? `В настройки автозагрузки кабинета «${esc(acc.name)}» запишется ссылка на наш XML вместо текущей (например, BananLab)${f.bananlabXml ? ' — перед этим проверьте «Сравнить с BananLab»' : ''}. Объявления не удалятся: у них те же id.` : 'Сначала привяжите аккаунт Авито в «Редактировать».'}</div>
     <div><label class="f" for="cEmail">Почта для отчётов автозагрузки</label><input class="input" id="cEmail" type="email" placeholder="если пусто — оставим ту, что уже в Авито"></div>
     <div class="err-box hide" id="cErr"></div><div id="cDone" class="hide"></div></form>
     <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="cForm" id="cSave" ${acc ? '' : 'disabled'}>Подключить</button></div>`);

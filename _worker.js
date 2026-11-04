@@ -13494,7 +13494,7 @@ async function handleMbidsApi(request, env, url, ctx) {
  * Several tabs of one sheet merge into one feed. Rows with «Товар доступен?» = «Нет» are skipped.
  * Russian-named service columns (Папка на Яндекс Диск, Переразмещаем как новые?, …) never reach the XML.
  *
- * Photos: the Images cell holds one link per line. Links copied from the Yandex.Disk web app
+ * Photos: the Images cell holds links one per line or split by « | ». Links copied from the Yandex.Disk web app
  * (disk.yandex.ru/client/disk/…, private) are fetched with the OAuth token the sheet already keeps in
  * cell A2 of its «Яндекс.Диск.Доступ» tab; public links (disk.yandex.ru/i/…, yadi.sk) need no token;
  * any other http(s) link goes into the XML as is. Yandex links become /feed/<slug>/img/<sig>/<src>.<ext>
@@ -13520,9 +13520,20 @@ async function handleMbidsApi(request, env, url, ctx) {
  * (FEEDS_PASSWORD secret, else the dashboard password). It sits under /api/dashboard/ so the page also
  * works through the Yandex Cloud proxy from Russia without a VPN.
  *
- * *.workers.dev is throttled by some Russian ISPs. If Avito's autoload report says it can't download the
- * feed or photos, set the FEEDS_PROXY_URL variable to the yc-dashboard-api-proxy function URL: every feed
- * and photo link is then given as <proxy>?p=/feed/… (the proxy passes GET /feed/* through).
+ * *.workers.dev is throttled by some Russian ISPs and Avito's servers reach it badly. Two ways around it:
+ *  - Photos: FEEDS_PROXY_URL (the yc-dashboard-api-proxy function URL, set in wrangler.jsonc) — photo links
+ *    become <proxy>?p=/feed/…/img/… (the proxy passes GET /feed/* through to the worker).
+ *  - XML: the function can't return more than ~3.5 MB and big feeds are 5+ MB, so — like BananLab — every
+ *    build is also put into Yandex Object Storage when FEEDS_S3_BUCKET (var) + FEEDS_S3_KEY_ID and
+ *    FEEDS_S3_SECRET (secrets: a static access key of a service account with storage.uploader on the
+ *    bucket) are set. The bucket must allow public reading of objects. Once a feed's first upload worked,
+ *    its link for Avito is https://storage.yandexcloud.net/<bucket>/feeds/<slug>/avito.xml; until then
+ *    (and without the bucket) it is the worker's own /feed/<slug>/avito.xml.
+ *
+ * BananLab import (POST /api/dashboard/feeds/import): the client list collected from BananLab
+ * ([{ client, active, sheetUrl, xmlUrl, dataSource }]) becomes feeds in one go — tabs are picked from the
+ * sheet, Avito cabinets are matched by name; feeds are built by the cron. Cabinets without a feed are
+ * listed on the page as «нет таблицы». GET …/<slug>/compare diffs our XML with BananLab's (xmlUrl).
  */
 
 const FEEDS_BASE_URL = 'https://mainweb.oxion-ezhkov.workers.dev';
@@ -13549,11 +13560,55 @@ function feedsSheetId(input) {
   return /^[A-Za-z0-9_-]{20,}$/.test(s) ? s : '';
 }
 
+const FEEDS_TR = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
+const feedsTranslit = (s) => String(s || '').toLowerCase().split('').map((c) => (FEEDS_TR[c] !== undefined ? FEEDS_TR[c] : c)).join('');
+
 function feedsSlug(name) {
-  const map = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ы: 'y', э: 'e', ю: 'yu', я: 'ya' };
-  const base = String(name || '').toLowerCase().split('').map((c) => (map[c] !== undefined ? map[c] : c)).join('')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'client';
+  const base = feedsTranslit(name).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'client';
   return base + '-' + randomHex(3);
+}
+
+/* ── Yandex Object Storage (S3 API, SigV4) ── */
+
+function feedsS3(env) {
+  return env.FEEDS_S3_BUCKET && env.FEEDS_S3_KEY_ID && env.FEEDS_S3_SECRET
+    ? { bucket: String(env.FEEDS_S3_BUCKET).trim(), id: env.FEEDS_S3_KEY_ID, secret: env.FEEDS_S3_SECRET } : null;
+}
+const feedsS3Key = (slug) => `feeds/${slug}/avito.xml`;
+
+async function feedsS3Put(env, key, body, contentType) {
+  const s3 = feedsS3(env);
+  const enc = new TextEncoder();
+  const data = typeof body === 'string' ? enc.encode(body) : body;
+  const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const hmac = async (k, msg) => new Uint8Array(await crypto.subtle.sign('HMAC', await crypto.subtle.importKey('raw', k, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']), enc.encode(msg)));
+  const host = 'storage.yandexcloud.net', region = 'ru-central1';
+  const amzDate = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const day = amzDate.slice(0, 8);
+  const hash = hex(await crypto.subtle.digest('SHA-256', data));
+  const path = '/' + [s3.bucket, ...key.split('/')].map(encodeURIComponent).join('/');
+  const signed = 'content-type;host;x-amz-content-sha256;x-amz-date';
+  const canonical = ['PUT', path, '', `content-type:${contentType}\nhost:${host}\nx-amz-content-sha256:${hash}\nx-amz-date:${amzDate}\n`, signed, hash].join('\n');
+  const scope = `${day}/${region}/s3/aws4_request`;
+  const toSign = ['AWS4-HMAC-SHA256', amzDate, scope, hex(await crypto.subtle.digest('SHA-256', enc.encode(canonical)))].join('\n');
+  let k = await hmac(enc.encode('AWS4' + s3.secret), day);
+  for (const part of [region, 's3', 'aws4_request']) k = await hmac(k, part);
+  const res = await fetch(`https://${host}${path}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType, 'x-amz-content-sha256': hash, 'x-amz-date': amzDate,
+      Authorization: `AWS4-HMAC-SHA256 Credential=${s3.id}/${scope}, SignedHeaders=${signed}, Signature=${hex(await hmac(k, toSign))}`,
+    },
+    body: data,
+  });
+  if (!res.ok) throw new Error(`Object Storage ${res.status}: ${(await res.text()).replace(/\s+/g, ' ').slice(0, 200)}`);
+}
+
+// The link Avito should load: Object Storage once this feed is there, else the worker itself.
+function feedsXmlUrl(env, slug, stat) {
+  const s3 = feedsS3(env);
+  if (s3 && stat && stat.s3At) return `https://storage.yandexcloud.net/${s3.bucket}/${feedsS3Key(slug)}`;
+  return String(env.FEEDS_BASE_URL || FEEDS_BASE_URL).replace(/\/+$/, '') + `/feed/${slug}/avito.xml`;
 }
 
 function randomHex(bytes) {
@@ -13685,10 +13740,11 @@ async function feedsReadTabs(env, sheetId, names) {
 function feedsParseTab(rows) {
   const tags = rows[1] || [], marks = rows[2] || [], types = rows[3] || [];
   const cols = [];
-  let idCol = -1, availCol = -1;
+  let idCol = -1, availCol = -1, folderCol = -1;
   for (let i = 0; i < tags.length; i++) {
     const tag = String(tags[i] || '').trim();
     if (/^id$/i.test(tag) && idCol < 0) idCol = i;
+    if (tag === 'Папка на Яндекс Диск') folderCol = i;
     if (tag === 'Товар доступен?') availCol = i;
     if (String(marks[i] || '').trim().toLowerCase() !== 'грузим в xml') continue;
     if (FEEDS_SERVICE_COLS.has(tag) || !/^[A-Za-z][A-Za-z0-9]*$/.test(tag)) continue;
@@ -13709,7 +13765,8 @@ function feedsParseTab(rows) {
       const raw = String(row[c.i] == null ? '' : row[c.i]);
       if (raw.trim()) fields.push({ tag: c.tag, multi: c.multi, value: raw });
     }
-    ads.push({ row: r + 1, id, fields });
+    const folder = folderCol >= 0 ? String(row[folderCol] || '').trim() : '';
+    ads.push({ row: r + 1, id, fields, folder: /^https?:\/\//i.test(folder) ? folder : '' });
   }
   return { ads, problems };
 }
@@ -13736,7 +13793,10 @@ function feedsValue(tag, v) {
   return s;
 }
 
-const feedsLines = (v) => String(v).split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+// Photo links: one per line, or on one line split by « | » / spaces (as BananLab sheets have them).
+const feedsLines = (v) => String(v).split(/\s*\|\s*|\r?\n|\s+(?=https?:\/\/)/).map((s) => s.trim()).filter(Boolean);
+// A bare file name («A_01.png») is taken from the row's «Папка на Яндекс Диск» folder, as BananLab does.
+const feedsImageSrc = (src, folder) => (/^https?:\/\//i.test(src) || !folder ? src : folder.replace(/\/+$/, '') + '/' + src.replace(/^\/+/, ''));
 const feedsOptions = (v) => String(v).split(/\s*\|\s*|\r?\n/).map((s) => s.trim()).filter(Boolean);
 
 // imageUrl(src) → URL for the XML, or null when the link isn't understood.
@@ -13750,7 +13810,7 @@ function feedsBuildXml(ads, imageUrl) {
       if (t === 'Images') {
         const urls = [];
         for (const src of feedsLines(f.value)) {
-          const u = imageUrl(src);
+          const u = imageUrl(feedsImageSrc(src, ad.folder));
           if (u) urls.push(u);
           else problems.push({ tab: ad.tab, row: ad.row, id: ad.id, msg: 'Не понятна ссылка на фото: ' + src.slice(0, 120) });
         }
@@ -13759,7 +13819,8 @@ function feedsBuildXml(ads, imageUrl) {
         for (const u of urls.slice(0, 30)) out.push(`      <Image url="${feedsXmlText(u)}"/>`);
         out.push('    </Images>');
       } else if (t === 'Description') {
-        out.push(`    <Description><![CDATA[${String(f.value).replace(/]]>/g, ']]]]><![CDATA[>')}]]></Description>`);
+        // Line breaks become <br /> (as BananLab does), otherwise Avito glues the lines together.
+        out.push(`    <Description><![CDATA[${String(f.value).replace(/\n/g, '<br />').replace(/]]>/g, ']]]]><![CDATA[>')}]]></Description>`);
       } else if (f.multi) {
         out.push(`    <${t}>`);
         for (const o of feedsOptions(f.value)) out.push(`      <Option>${feedsXmlText(o)}</Option>`);
@@ -13781,7 +13842,11 @@ function feedsYandexSource(src) {
   let u;
   try { u = new URL(src.trim()); } catch { return null; }
   if (!/(^|\.)disk\.yandex\.(ru|com)$|^disk\.360\.yandex\.ru$|^yadi\.sk$/.test(u.hostname)) return null;
-  if (u.hostname === 'yadi.sk' || /^\/(i|d)\//.test(u.pathname)) return { kind: 'u', key: u.origin + u.pathname };
+  if (u.hostname === 'yadi.sk' || /^\/(i|d)\//.test(u.pathname)) {
+    // A file inside a public folder: /d/<key>/<path…> → public_key …/d/<key> + path.
+    const m = u.pathname.match(/^(\/d\/[^/]+)(\/.+)$/);
+    return m ? { kind: 'u', key: u.origin + m[1], path: decodeURIComponent(m[2]) } : { kind: 'u', key: u.origin + u.pathname };
+  }
   const dlg = u.searchParams.get('idDialog');
   if (dlg && dlg.startsWith('/disk/')) return { kind: 'p', path: 'disk:' + dlg.slice(5) };
   const m = decodeURIComponent(u.pathname).match(/^\/client\/disk(\/.+\.[A-Za-z0-9]{2,5})$/);
@@ -13794,7 +13859,10 @@ async function feedsBuild(env, feed) {
   const kv = env.AVITO_KV;
   const stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], yandexToken: false };
   let ads = [];
+  const prev = await kv.get('feedstat:' + feed.slug, 'json');
+  if (prev && prev.s3At) stat.s3At = prev.s3At;
   try {
+    if (!feed.tabs.length) throw new Error('Не выбраны вкладки с объявлениями — откройте «Редактировать» и отметьте их');
     const { tabs, missing, allTabs } = await feedsReadTabs(env, feed.sheetId, [...feed.tabs, FEEDS_YD_TAB]);
     for (const name of feed.tabs) {
       if (missing.includes(name)) {
@@ -13820,26 +13888,25 @@ async function feedsBuild(env, feed) {
     return stat;
   }
 
-  const seen = new Map();
+  // A repeated id: the last row wins, as in BananLab (so switching from it doesn't change the ad).
+  const last = new Map();
+  ads.forEach((a) => last.set(a.id, a));
   ads = ads.filter((a) => {
-    if (seen.has(a.id)) {
-      const first = seen.get(a.id);
-      stat.problems.push({ tab: a.tab, row: a.row, id: a.id, msg: `Повтор id — уже есть на вкладке «${first.tab}», строка ${first.row}. Строка пропущена.` });
-      return false;
-    }
-    seen.set(a.id, a);
-    return true;
+    const keep = last.get(a.id);
+    if (keep === a) return true;
+    stat.problems.push({ tab: a.tab, row: a.row, id: a.id, msg: `Повтор id — он же на вкладке «${keep.tab}», строка ${keep.row}; в XML идёт та строка, эта пропущена.` });
+    return false;
   });
 
   // Sign every Yandex link up front (crypto is async), then build the XML synchronously.
   const signed = new Map();
   for (const a of ads) for (const f of a.fields) if (f.tag === 'Images') {
-    for (const src of feedsLines(f.value)) {
+    for (const src of feedsLines(f.value).map((x) => feedsImageSrc(x, a.folder))) {
       if (signed.has(src)) continue;
       const y = feedsYandexSource(src);
       if (!y) { signed.set(src, /^https?:\/\//i.test(src) ? src : null); continue; }
       if (y.kind === 'p' && !stat.yandexToken) { signed.set(src, null); continue; }
-      const enc = feedsB64url(y.kind === 'p' ? 'p:' + y.path : 'u:' + y.key);
+      const enc = feedsB64url(y.kind === 'p' ? 'p:' + y.path : 'u:' + y.key + (y.path ? '\n' + y.path : ''));
       const name = (y.path || y.key).split('/').pop();
       const ext = ((name.match(/\.(jpe?g|png|webp|heic)$/i) || [])[1] || 'jpg').toLowerCase();
       signed.set(src, feedsPublicUrl(env, `/feed/${feed.slug}/img/${await feedsSign(feed.secret, enc)}/${enc}.${ext}`));
@@ -13853,6 +13920,15 @@ async function feedsBuild(env, feed) {
   stat.ads = ads.length;
   stat.ms = Date.now() - t0;
   await kv.put('feedxml:' + feed.slug, xml);
+  if (feedsS3(env)) {
+    try {
+      await feedsS3Put(env, feedsS3Key(feed.slug), xml, 'application/xml; charset=utf-8');
+      stat.s3At = new Date().toISOString();
+    } catch (err) {
+      stat.s3Error = String(err && err.message || err);
+    }
+  }
+  stat.ms = Date.now() - t0;
   await kv.put('feedstat:' + feed.slug, JSON.stringify(stat));
   return stat;
 }
@@ -13886,7 +13962,8 @@ async function handleFeedPublic(request, env, url) {
     headers.Authorization = 'OAuth ' + tok;
     api = 'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(src.slice(2));
   } else {
-    api = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(src.slice(2));
+    const [key, path] = src.slice(2).split('\n');
+    api = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=' + encodeURIComponent(key) + (path ? '&path=' + encodeURIComponent(path) : '');
   }
   const link = await fetch(api, { headers });
   const data = await link.json().catch(() => ({}));
@@ -13902,7 +13979,7 @@ async function handleFeedPublic(request, env, url) {
 
 function feedsPublicView(env, feed, stat) {
   const { secret, ...rest } = feed;
-  return { ...rest, feedUrl: feedsPublicUrl(env, `/feed/${feed.slug}/avito.xml`), sheetUrl: `https://docs.google.com/spreadsheets/d/${feed.sheetId}/edit`, stat: stat || null };
+  return { ...rest, feedUrl: feedsXmlUrl(env, feed.slug, stat), sheetUrl: `https://docs.google.com/spreadsheets/d/${feed.sheetId}/edit`, stat: stat || null };
 }
 
 function feedsCleanTabs(tabs) {
@@ -13942,6 +14019,8 @@ async function handleFeedsApi(request, env, url) {
     }
     return json({ feeds, accounts, serviceAccount: feedsServiceEmail(env) || null });
   }
+
+  if (parts[0] === 'import' && request.method === 'POST') return feedsImport(env, await readJson(request));
 
   if (parts[0] === 'tabs' && request.method === 'GET') {
     const sheetId = feedsSheetId(url.searchParams.get('sheet'));
@@ -14002,6 +14081,14 @@ async function handleFeedsApi(request, env, url) {
     return json({ feed: feedsPublicView(env, feed, stat) });
   }
 
+  if (parts[1] === 'compare' && request.method === 'GET') {
+    try {
+      return json(await feedsCompare(env, feed));
+    } catch (err) {
+      return json({ error: String(err.message || err) }, 400);
+    }
+  }
+
   if (parts[1] === 'avito-upload' && request.method === 'POST') {
     try {
       const { token } = await feedsAvitoAccount(env, feed);
@@ -14021,7 +14108,9 @@ async function handleFeedsApi(request, env, url) {
       const before = await avitoJson(token, '/autoload/v2/profile').catch(() => null);
       const reportEmail = String(input.reportEmail || (before && before.report_email) || '').trim();
       if (!isValidEmail(reportEmail)) return json({ error: 'Укажите почту, на которую Авито будет присылать отчёты автозагрузки' }, 400);
-      const feedUrl = feedsPublicUrl(env, `/feed/${feed.slug}/avito.xml`);
+      const stat = await kv.get('feedstat:' + feed.slug, 'json');
+      if (feedsS3(env) && !(stat && stat.s3At)) return json({ error: 'XML ещё не выложен в Yandex Object Storage. Нажмите «Пересобрать XML» и проверьте ошибки.' }, 400);
+      const feedUrl = feedsXmlUrl(env, feed.slug, stat);
       const body = {
         autoload_enabled: true,
         report_email: reportEmail,
@@ -14040,6 +14129,119 @@ async function handleFeedsApi(request, env, url) {
   }
 
   return json({ error: 'not_found' }, 404);
+}
+
+/* ── BananLab import and comparison ── */
+
+const FEEDS_SKIP_TABS = /справк|файл из авито|уникализац|дубли|сюда выгрузка|яндекс\.диск|тексты|позиции/i;
+
+// Pairs import items with Avito cabinets by name: «5899_elena_kiseleva» ↔ «Киселева Елена». A name part
+// counts only if it fits exactly one item (so «Елена» alone links nothing); each cabinet goes to the item
+// its longest such part fits, and an item claimed by several cabinets goes to the one with the longest part.
+function feedsMatchAccounts(items, accounts) {
+  const skel = (t) => t.replace(/[aeiouy]/g, '');
+  const fits = (t, item) => item.tokens.some((b) => b === t || (t.length >= 5 && b.length >= 5 && skel(b) === skel(t)))
+    || (t.length >= 6 && item.flat.includes(t));
+  const claims = new Map(); // item index -> [{ account, score }]
+  for (const a of accounts) {
+    let best = null;
+    for (const t of feedsTranslit(a.name).split(/[^a-z]+/).filter((x) => x.length >= 4)) {
+      const hit = items.map((it, i) => (fits(t, it) ? i : -1)).filter((i) => i >= 0);
+      if (hit.length !== 1) continue;
+      if (!best || t.length > best.score) best = { i: hit[0], score: t.length };
+      else if (t.length === best.score && hit[0] !== best.i) best = { i: -1, score: t.length };
+    }
+    if (best && best.i >= 0) claims.set(best.i, [...(claims.get(best.i) || []), { account: a, score: best.score }]);
+  }
+  const out = new Map(); // item index -> account
+  for (const [i, list] of claims) {
+    list.sort((x, y) => y.score - x.score);
+    if (list.length === 1 || list[0].score > list[1].score) out.set(i, list[0].account);
+  }
+  return out;
+}
+
+async function feedsImport(env, body) {
+  const kv = env.AVITO_KV;
+  const list = (Array.isArray(body) ? body : body && body.items) || [];
+  if (!Array.isArray(list) || !list.length) return json({ error: 'Вставьте JSON-список клиентов из BananLab' }, 400);
+  if (list.length > 100) return json({ error: 'Не больше 100 клиентов за раз' }, 400);
+  const feeds = await listByPrefix(kv, 'feed:');
+  const accounts = (await listByPrefix(kv, 'account:')).filter((a) => a && a.id);
+  const taken = new Set(feeds.map((f) => f.avitoAccountId).filter(Boolean));
+  const results = [];
+  const items = [];
+  for (const raw of list) {
+    const client = String((raw && (raw.client || raw.name)) || '').trim().slice(0, 60);
+    const sheetId = feedsSheetId(raw && raw.sheetUrl);
+    if (!client || !sheetId) { results.push({ client: client || '?', status: 'skipped', note: 'нет имени или ссылки на таблицу' }); continue; }
+    const dup = feeds.find((f) => f.sheetId === sheetId || (f.bananlab && f.bananlab === client)) || items.find((x) => x.sheetId === sheetId);
+    if (dup) { results.push({ client, status: 'exists', note: `уже есть: ${dup.name || dup.client}` }); continue; }
+    const flat = feedsTranslit(client).replace(/[^a-z]+/g, '');
+    items.push({
+      client, sheetId, flat, tokens: feedsTranslit(client).split(/[^a-z]+/).filter((t) => t.length >= 4),
+      enabled: raw.active !== false,
+      xmlUrl: /^https:\/\/storage\.yandexcloud\.net\//.test(String(raw.xmlUrl || '')) ? String(raw.xmlUrl) : null,
+      tab: String(raw.dataSource || '').split(' / ')[0].trim(),
+    });
+  }
+  const links = feedsMatchAccounts(items, accounts.filter((a) => !taken.has(a.id)));
+  for (let i = 0; i < items.length; i += 6) {
+    await Promise.all(items.slice(i, i + 6).map(async (it, j) => {
+      const account = links.get(i + j) || null;
+      let tabs = [], note = '';
+      try {
+        const all = (await feedsListTabs(env, it.sheetId)).map((t) => t.name);
+        tabs = it.tab && all.includes(it.tab) ? [it.tab] : all.filter((t) => !FEEDS_SKIP_TABS.test(t)).slice(0, FEEDS_MAX_TABS);
+        if (!tabs.length) note = 'в таблице не нашлось вкладки с объявлениями';
+      } catch (err) {
+        note = String(err.message || err);
+      }
+      const now = new Date().toISOString();
+      const feed = {
+        slug: feedsSlug(it.client.replace(/^\d+_/, '')), name: account ? account.name : it.client, sheetId: it.sheetId, tabs,
+        enabled: it.enabled, avitoAccountId: account ? account.id : null, secret: randomHex(16),
+        bananlab: it.client, bananlabXml: it.xmlUrl, createdAt: now, updatedAt: now,
+      };
+      await kv.put('feed:' + feed.slug, JSON.stringify(feed));
+      results.push({ client: it.client, status: 'created', slug: feed.slug, account: account ? account.name : null, tabs, note });
+    }));
+  }
+  return json({ results, created: results.filter((r) => r.status === 'created').length });
+}
+
+// { id -> { Title, Price, Address, Category, Description, images } } from an autoload XML.
+function feedsAdsIndex(xml) {
+  const dec = (s) => String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  const out = new Map();
+  for (const chunk of String(xml).split(/<Ad>/).slice(1)) {
+    const tag = (t) => { const m = chunk.match(new RegExp(`<${t}>([\\s\\S]*?)</${t}>`)); return m ? dec(m[1]) : ''; };
+    const id = tag('id');
+    if (!id) continue;
+    out.set(id, { Title: tag('Title'), Price: tag('Price'), Address: tag('Address'), Category: tag('Category'), Description: tag('Description'), images: (chunk.match(/<Image\s/g) || []).length });
+  }
+  return out;
+}
+
+async function feedsCompare(env, feed) {
+  if (!feed.bananlabXml) throw new Error('У клиента нет ссылки на XML BananLab — он заведён не импортом');
+  const ours = await env.AVITO_KV.get('feedxml:' + feed.slug);
+  if (ours == null) throw new Error('Наш XML ещё не собран — нажмите «Пересобрать XML»');
+  const res = await fetch(feed.bananlabXml);
+  if (!res.ok) throw new Error(`XML BananLab не открылся (${res.status})`);
+  const a = feedsAdsIndex(ours), b = feedsAdsIndex(await res.text());
+  const onlyOurs = [...a.keys()].filter((id) => !b.has(id));
+  const onlyTheirs = [...b.keys()].filter((id) => !a.has(id));
+  const fields = { Title: 0, Price: 0, Address: 0, Category: 0, Description: 0, images: 0 };
+  const diffs = [];
+  for (const [id, x] of a) {
+    const y = b.get(id);
+    if (!y) continue;
+    const d = Object.keys(fields).filter((f) => String(x[f]) !== String(y[f]));
+    d.forEach((f) => { fields[f]++; });
+    if (d.length && diffs.length < 40) diffs.push({ id, fields: d.map((f) => ({ field: f, ours: String(x[f]).slice(0, 160), theirs: String(y[f]).slice(0, 160) })) });
+  }
+  return { ours: a.size, theirs: b.size, same: [...a.keys()].filter((id) => b.has(id)).length, onlyOurs: onlyOurs.slice(0, 60), onlyTheirs: onlyTheirs.slice(0, 60), onlyOursCount: onlyOurs.length, onlyTheirsCount: onlyTheirs.length, fieldDiffs: fields, diffs };
 }
 
 // Rebuilds enabled feeds older than ~an hour, a few per tick so one run stays well inside the limits.
