@@ -276,6 +276,47 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
 .help ol{padding-left:20px}
 
 /* автозагрузка */
+.fwrap{flex:1;min-height:0;overflow:auto}
+main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
+#pg-feeds:not(.hide){display:flex;flex-direction:column;height:calc(100vh - var(--top) - 24px);min-height:420px}
+.ftbl th{background:var(--bg);border-bottom-color:var(--line)}
+.ftbl td{padding:8px 10px;background:transparent}
+.ftbl tbody tr:hover td{background:var(--surface)}
+.ftbl tr.off td{opacity:.55}
+.ftbl td.fname{width:1%;white-space:nowrap}
+.ftbl td.fname b{color:var(--ink);font-weight:600;margin-right:6px}
+.ftbl td.fname .chip{height:20px;padding:0 8px;font-size:11px;margin-right:4px;vertical-align:1px}
+.fact{display:flex;gap:4px;justify-content:flex-end;flex-wrap:nowrap}
+.fbtn{height:30px;padding:0 10px;border-radius:9px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--muted);white-space:nowrap;border:1px solid var(--line-2);background:var(--surface)}
+.fbtn:hover{color:var(--ink);border-color:var(--line);box-shadow:var(--shadow)}
+.fbtn.accent{color:var(--accent);border-color:var(--accent-ring)}
+.fbtn:disabled{opacity:.5}
+@media (max-width:1560px){.fbtn .lbl{display:none}.fbtn{padding:0 8px}.fbtn.accent .lbl{display:inline}}
+.fnote{display:flex;gap:12px;align-items:center;padding:8px 4px 0;font-size:11.5px;color:var(--faint)}
+.fnote .lnkb{font-size:11.5px}
+.warn-box{background:var(--amber-bg);color:var(--amber);border-radius:12px;padding:10px 12px;font-size:13px;word-break:break-word}
+.ok-box .ic{vertical-align:-2px}
+.psum{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.psum .big{font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.psum .big.red{color:var(--red)}.psum .big.amber{color:var(--amber)}
+.pcard{border:1px solid var(--line-2);border-left:3px solid var(--amber);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.pcard.err{border-left-color:var(--red)}
+.pc-h{display:flex;gap:10px;align-items:flex-start}
+.pc-ic{flex:none;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--amber-bg);color:var(--amber)}
+.pcard.err .pc-ic{background:var(--red-bg);color:var(--red)}
+.pc-t{flex:1;font-size:13.5px;color:var(--ink);line-height:1.45;word-break:break-word}
+.pc-w{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 0 34px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--sunken);color:var(--muted);font-variant-numeric:tabular-nums}
+.pill b{color:var(--ink);font-weight:600}.pill a{color:var(--accent)}
+.tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.tile{border-radius:14px;padding:12px 14px;background:var(--sunken)}
+.tile .t-v{font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .t-l{font-size:12.5px;font-weight:600;margin-top:2px}
+.tile .t-s{font-size:11.5px;color:var(--muted);margin-top:3px}
+.tile.green{background:var(--green-bg)}.tile.green .t-v,.tile.green .t-l{color:var(--green)}
+.tile.amber{background:var(--amber-bg)}.tile.amber .t-v,.tile.amber .t-l{color:var(--amber)}
+.tile.red{background:var(--red-bg)}.tile.red .t-v,.tile.red .t-l{color:var(--red)}
+.ph2{font-size:13px;font-weight:700;color:var(--ink);margin-top:4px}
 .prob{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13px}
 .prob:last-child{border-bottom:0}
 .tabs-list{display:flex;flex-wrap:wrap;gap:6px}
@@ -345,6 +386,9 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
         <button class="icon-btn" type="button" data-panel="sum" data-tip="Сводка: сколько объявлений в работе, включено, остановлено, с ошибкой. Нажмите — закрепить" aria-label="Сводка"><svg class="ic"><use href="#i-list"/></svg></button>
         <button class="icon-btn" type="button" data-panel="funnel" data-tip="Воронка за период: показы → просмотры → контакты. Нажмите — закрепить" aria-label="Воронка"><svg class="ic"><use href="#i-funnel"/></svg></button>
         <button class="icon-btn" type="button" data-panel="econ" data-tip="Экономика за период: расходы, CPV, CPA, средняя ставка и опережение. Нажмите — закрепить" aria-label="Экономика"><svg class="ic"><use href="#i-coins"/></svg></button>
+        <button class="icon-btn fonly" type="button" id="fReload" data-tip="Обновить список" aria-label="Обновить список"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        <button class="btn fonly" type="button" id="fImport"><svg class="ic ic-sm"><use href="#i-upload"/></svg>Импорт из BananLab</button>
+        <button class="btn primary fonly" type="button" id="fAdd" style="margin-left:6px"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Клиент</button>
         <span class="sep"></span>
         <button class="icon-btn" type="button" id="helpBtn" data-tip="Как работает раздел" aria-label="Инструкция"><svg class="ic"><use href="#i-info"/></svg></button>
         <button class="icon-btn" type="button" id="themeBtn" aria-label="Тема" data-tip="Светлая / тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
@@ -379,15 +423,8 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
 
     <!-- ═══ Автозагрузка ═══ -->
     <section id="pg-feeds" class="hide">
-      <div class="card">
-        <div class="tools">
-          <span class="muted small grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час. Новые кабинеты Авито появляются здесь сами.</span>
-          <button class="btn" type="button" id="fImport"><svg class="ic ic-sm"><use href="#i-upload"/></svg>Импорт из BananLab</button>
-          <button class="icon-btn" type="button" id="fReload" data-tip="Обновить список" aria-label="Обновить список"><svg class="ic"><use href="#i-refresh"/></svg></button>
-          <button class="btn primary" type="button" id="fAdd"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Клиент</button>
-        </div>
-        <div class="tbl-wrap"><table><thead><tr><th>Клиент</th><th>Таблица</th><th>Вкладки</th><th class="r">Объявл.</th><th data-tip="Ошибки последней сборки XML — нажмите на число, чтобы посмотреть">Ошибки</th><th>XML обновлён</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
-      </div>
+      <div class="fwrap"><table class="ftbl"><thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th data-tip="Замечания при сборке XML из таблицы — нажмите на число">Ошибки</th><th>XML обновлён</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
+      <div class="fnote"><span class="grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час и лежит в Яндексе. Новые кабинеты Авито появляются здесь сами.</span><button class="lnkb muted hide" type="button" id="fOffBtn"></button></div>
     </section>
   </main>
 </div>
@@ -421,8 +458,10 @@ async function api(path, opts = {}, pw) {
     const idx = (route + i) % ROUTES.length;
     try {
       const res = await fetch(ROUTES[idx](path), { ...opts, headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw || getPw() }, signal: AbortSignal.timeout(90000) });
-      route = idx;
       const data = await res.json().catch(() => ({}));
+      // Яндекс-функция не дождалась воркера (долгий запрос) — пробуем напрямую.
+      if ((res.status === 502 || res.status === 504) && data.error === 'upstream_failed' && i < ROUTES.length - 1) continue;
+      route = idx;
       return { status: res.status, ok: res.ok, data };
     } catch (e) { /* следующий маршрут */ }
   }
@@ -541,7 +580,8 @@ function setPage(p) {
   $$('[data-page]').forEach((b) => b.classList.toggle('on', b.dataset.page === p));
   $('#pg-bids').classList.toggle('hide', p !== 'bids');
   $('#pg-feeds').classList.toggle('hide', p !== 'feeds');
-  $$('#topBids > :not(#themeBtn)').forEach((el) => el.classList.toggle('hide', p !== 'bids'));
+  $$('#topBids > *').forEach((el) => { if (el.id === 'themeBtn' || el.id === 'helpBtn' || el.classList.contains('sep')) return; el.classList.toggle('hide', el.classList.contains('fonly') ? p !== 'feeds' : p !== 'bids'); });
+  $('#helpBtn').dataset.tip = p === 'feeds' ? 'Инструкция: как работать с автозагрузкой' : 'Как работает раздел';
   history.replaceState(null, '', p === 'feeds' ? '#feeds' : '#bids');
   document.title = p === 'feeds' ? 'Автозагрузка Авито' : 'Ставки Авито';
   if (p === 'feeds' && !F.loaded) feedsLoad();
@@ -1339,7 +1379,7 @@ $('#q').addEventListener('input', (e) => { q = e.target.value; render(); });
 $('#period').addEventListener('change', () => { $('#customPer').classList.toggle('hide', $('#period').value !== 'custom'); statsAt = null; render(); if ($('#period').value !== 'custom') loadStats(); });
 ['#pFrom', '#pTo'].forEach((s) => $(s).addEventListener('change', loadStats));
 $('#addBtn').addEventListener('click', () => { if (view === 'groups' && !curGroup) openGroupForm(); else if (curGroup) openPick(); else openAdd(); });
-$('#helpBtn').addEventListener('click', openHelp);
+$('#helpBtn').addEventListener('click', () => (page === 'feeds' ? feedsHelp() : openHelp()));
 $('#colsBtn').addEventListener('click', openCols);
 $('#fullBtn').addEventListener('click', () => { const on = $('#tableCard').classList.toggle('full'); $('#fullBtn').innerHTML = I(on ? 'x' : 'expand'); $('#fullBtn').dataset.tip = on ? 'Свернуть (Esc)' : 'Таблица во весь экран'; });
 $('#refreshBtn').addEventListener('click', async () => {
@@ -1353,40 +1393,46 @@ $('#refreshBtn').addEventListener('click', async () => {
 $$('[data-view]').forEach((b) => b.addEventListener('click', () => { view = b.dataset.view; curGroup = null; sel.clear(); render(); }));
 
 /* ═══════════════ Автозагрузка ═══════════════ */
-const F = { loaded: false, feeds: [], accounts: [], serviceAccount: null };
+const F = { loaded: false, feeds: [], accounts: [], serviceAccount: null, showOff: false };
 async function feedsLoad() {
   const r = await api('/api/dashboard/feeds');
   if (r.status === 401) return showGate();
-  if (!r.ok) { $('#fRows').innerHTML = `<tr><td colspan="7">${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
+  if (!r.ok) { $('#fRows').innerHTML = `<tr><td colspan="6">${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
   Object.assign(F, r.data, { loaded: true });
   feedsRender();
 }
 const feedAccName = (id) => { const a = F.accounts.find((x) => x.id === id); return a ? a.name : ''; };
+// Кнопка строки: иконка + подпись (подпись прячется, когда экран узкий).
+const fb = (attr, slug, icon, label, tip, cls) => `<button class="fbtn${cls ? ' ' + cls : ''}" type="button" ${attr}="${esc(slug)}" data-tip="${esc(tip)}" aria-label="${esc(label)}">${I(icon, 'ic-sm')}<span class="lbl">${esc(label)}</span></button>`;
+function feedErrCount(s) { return s ? (s.error ? 1 : 0) + (s.s3Error ? 1 : 0) + (s.tabs ? s.tabs.filter((t) => t.error).length : 0) + (s.problems || []).length : 0; }
 function feedsRender() {
   // Кабинеты Авито без фида — сразу в списке, чтобы новые клиенты не терялись.
   const linked = new Set(F.feeds.map((f) => f.avitoAccountId).filter(Boolean));
   const free = F.accounts.filter((a) => !linked.has(a.id)).sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
-  $('#fRows').innerHTML = F.feeds.map((f) => {
-    const s = f.stat;
-    const n = s ? (s.error ? 1 : 0) + (s.s3Error ? 1 : 0) + (s.tabs ? s.tabs.filter((t) => t.error).length : 0) + (s.problems || []).length : 0;
+  const off = F.feeds.filter((f) => !f.enabled);
+  const list = F.feeds.filter((f) => f.enabled || F.showOff);
+  $('#fRows').innerHTML = list.map((f) => {
+    const s = f.stat, n = feedErrCount(s);
     const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
     const acc = feedAccName(f.avitoAccountId);
-    return `<tr><td><b style="color:var(--ink);font-weight:600">${esc(f.name)}</b><div class="sub">${acc ? (acc !== f.name ? 'кабинет: ' + esc(acc) : '') : '<span style="color:var(--amber,#b7791f)">кабинет Авито не привязан</span>'}</div>${f.enabled ? '' : '<div class="sub">автообновление выключено</div>'}</td>
+    const tags = [!acc && '<span class="chip amber" data-tip="Выберите кабинет в «Изменить»">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>'].filter(Boolean).join('');
+    return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname" title="${esc(acc && acc !== f.name ? 'Кабинет: ' + acc : '')}"><b>${esc(f.name)}</b>${tags}</td>
       <td><a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a></td>
-      <td><div class="sub" style="white-space:normal">${f.tabs.length ? f.tabs.map(esc).join(', ') : '— не выбраны —'}</div></td>
       <td class="r num">${s && !s.error ? int(s.ads) : '—'}</td><td>${pill}</td>
       <td class="num small muted" data-tip="${esc(s && s.builtAt || '')}">${s && s.builtAt ? ago(Date.parse(s.builtAt)) : '—'}</td>
-      <td><div class="row" style="gap:2px;flex-wrap:nowrap;justify-content:flex-end">
-        ${f.bananlabXml ? `<button class="icon-btn sm" type="button" data-cmp="${f.slug}" data-tip="Сравнить наш XML с XML BananLab" aria-label="Сравнить с BananLab">${I('info', 'ic-sm')}</button>` : ''}
-        <button class="icon-btn sm" type="button" data-copy="${f.slug}" data-tip="Скопировать ссылку на XML для Авито" aria-label="Скопировать ссылку">${I('link', 'ic-sm')}</button>
-        <button class="icon-btn sm" type="button" data-build="${f.slug}" data-tip="Пересобрать XML сейчас" aria-label="Пересобрать XML">${I('refresh', 'ic-sm')}</button>
-        <button class="icon-btn sm" type="button" data-upload="${f.slug}" data-tip="Обновить в Авито сейчас (не чаще раза в час)" aria-label="Обновить в Авито">${I('send', 'ic-sm')}</button>
-        <button class="icon-btn sm" type="button" data-connect="${f.slug}" data-tip="Подключить фид в кабинете Авито" aria-label="Подключить на Авито">${I('plug', 'ic-sm')}</button>
-        <button class="icon-btn sm" type="button" data-edit="${f.slug}" data-tip="Редактировать" aria-label="Редактировать">${I('edit', 'ic-sm')}</button></div></td></tr>`;
-  }).join('') + free.map((a) => `<tr><td><b style="color:var(--ink);font-weight:600">${esc(a.name)}</b><div class="sub">кабинет Авито без таблицы</div></td>
-      <td colspan="5"><span class="chip">нет таблицы</span></td>
-      <td><div class="row" style="justify-content:flex-end"><button class="btn sm" type="button" data-newacc="${esc(a.id)}">${I('plus', 'ic-sm')}Таблица</button></div></td></tr>`).join('')
-    || `<tr><td colspan="7">${emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
+      <td><div class="fact">
+        ${acc ? fb('data-report', f.slug, 'list', 'Отчёт Авито', 'Последний отчёт автозагрузки Авито и файл ошибок') : ''}
+        ${f.bananlabXml ? fb('data-cmp', f.slug, 'info', 'Сравнить', 'Сравнить наш XML с XML BananLab') : ''}
+        ${fb('data-copy', f.slug, 'link', 'Ссылка', 'Скопировать ссылку на XML для Авито')}
+        ${fb('data-build', f.slug, 'refresh', 'Пересобрать', 'Пересобрать XML из таблицы сейчас')}
+        ${fb('data-upload', f.slug, 'send', 'В Авито', 'Попросить Авито забрать XML сейчас (не чаще раза в час)')}
+        ${fb('data-connect', f.slug, 'plug', 'Подключить', 'Записать ссылку на наш XML в кабинет Авито')}
+        ${fb('data-edit', f.slug, 'edit', 'Изменить', 'Таблица, вкладки, кабинет, автообновление')}</div></td></tr>`;
+  }).join('') + free.map((a) => `<tr><td class="fname"><b>${esc(a.name)}</b><span class="chip">нет таблицы</span></td><td colspan="4"></td>
+      <td><div class="fact">${fb('data-newacc', a.id, 'plus', 'Добавить таблицу', 'Подключить Google Таблицу к этому кабинету', 'accent')}</div></td></tr>`).join('')
+    || `<tr><td colspan="6">${emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
+  $('#fOffBtn').classList.toggle('hide', !off.length);
+  $('#fOffBtn').textContent = F.showOff ? 'Скрыть выключенные' : `Показать выключенные (${off.length})`;
 }
 const feedBy = (slug) => F.feeds.find((f) => f.slug === slug);
 function replaceFeed(f) { const i = F.feeds.findIndex((x) => x.slug === f.slug); if (i >= 0) F.feeds[i] = f; else F.feeds.push(f); feedsRender(); }
@@ -1401,16 +1447,112 @@ $('#fRows').addEventListener('click', async (e) => {
     toast(s.error ? 'XML не собран: ' + s.error : `XML собран: ${s.ads} объявлений`);
   } else if (b.dataset.upload) {
     b.disabled = true; const r = await post(`/api/dashboard/feeds/${b.dataset.upload}/avito-upload`); b.disabled = false;
-    toast(r.ok ? 'Авито начал загрузку. Результат будет в отчёте автозагрузки через 10–30 минут.' : (r.data.error || 'Авито не принял запрос'));
+    toast(r.ok ? 'Авито начал загрузку. Результат — в «Отчёт Авито» через 10–60 минут.' : (r.data.error || 'Авито не принял запрос'));
   } else if (b.dataset.connect) feedConnect(b.dataset.connect);
   else if (b.dataset.edit) feedEdit(b.dataset.edit);
+  else if (b.dataset.probs) feedProbs(b.dataset.probs);
+  else if (b.dataset.report) feedReport(b.dataset.report);
   else if (b.dataset.newacc) { const a = F.accounts.find((x) => x.id === b.dataset.newacc); feedEdit(null, { name: a ? a.name : '', avitoAccountId: b.dataset.newacc }); }
   else if (b.dataset.cmp) feedCompare(b.dataset.cmp);
-  else if (b.dataset.probs) feedProbs(b.dataset.probs);
 });
 $('#fAdd').addEventListener('click', () => feedEdit(null));
 $('#fImport').addEventListener('click', feedImport);
 $('#fReload').addEventListener('click', feedsLoad);
+$('#fOffBtn').addEventListener('click', () => { F.showOff = !F.showOff; feedsRender(); });
+
+/* ── Ошибки: группируем одинаковые, показываем где ── */
+// [{ msg, where }] → карточки «текст ошибки · N раз» со списком мест.
+function probGroups(items) {
+  const g = new Map();
+  for (const it of items) {
+    const key = it.msg.replace(/«[^»]*»|\d{3,}|https?:\/\/\S+|:\s.*$/g, '…').slice(0, 140);
+    if (!g.has(key)) g.set(key, { msg: it.msg, kind: it.kind, items: [] });
+    g.get(key).items.push(it);
+  }
+  // Если тексты в группе разные («…фото: A_01.png», «…фото: A_02.png») — общий заголовок, детали — в метках.
+  return [...g.values()].map((x) => {
+    const same = x.items.every((it) => it.msg === x.msg);
+    const m = !same && x.msg.match(/^([^:]{6,}):\s(.+)$/);
+    return { kind: x.kind, msg: m ? m[1] : x.msg, where: x.items.map((it) => { const d = m && it.msg.slice(m[1].length + 1).trim(); return [it.where, d && esc(d.slice(0, 60))].filter(Boolean).join(' · '); }) };
+  }).sort((a, b) => b.where.length - a.where.length);
+}
+function probCards(groups) {
+  return groups.map((g) => `<div class="pcard ${g.kind || 'warn'}"><div class="pc-h"><span class="pc-ic">${I(g.kind === 'err' ? 'x' : 'info', 'ic-sm')}</span><div class="pc-t">${esc(g.msg)}</div>${g.where.length > 1 ? `<span class="chip">${g.where.length}</span>` : ''}</div>
+    ${g.where.filter(Boolean).length ? `<div class="pc-w">${g.where.filter(Boolean).slice(0, 40).map((w) => `<span class="pill">${w}</span>`).join('')}${g.where.length > 40 ? `<span class="pill muted">ещё ${g.where.length - 40}</span>` : ''}</div>` : ''}</div>`).join('');
+}
+function feedProbs(slug) {
+  const f = feedBy(slug), s = f.stat || {};
+  const items = [];
+  if (s.error) items.push({ kind: 'err', msg: s.error, where: '' });
+  if (s.s3Error) items.push({ kind: 'err', msg: 'XML не выложен в Yandex Object Storage: ' + s.s3Error, where: '' });
+  (s.tabs || []).filter((t) => t.error).forEach((t) => items.push({ kind: 'err', msg: t.error, where: esc(`вкладка «${t.name}»`) }));
+  (s.problems || []).forEach((p) => items.push({ kind: 'warn', msg: p.msg, where: [p.row && `стр. ${p.row}`, p.id && `<b>${esc(p.id)}</b>`].filter(Boolean).join(' · ') }));
+  const groups = probGroups(items);
+  openModal(`${mHead('Ошибки XML — ' + f.name)}<div class="m-b">
+    <div class="psum">${items.length ? `<div><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${items.some((x) => x.kind === 'err') ? 'XML не собран — исправьте таблицу' : 'строк с замечаниями — эти строки или фото не попали в XML'}</div></div>` : '<div class="ok-box">Ошибок нет</div>'}
+      ${s.builtAt ? `<div class="note">Сборка ${esc(ago(Date.parse(s.builtAt)))} · в XML ${int(s.ads)} объявлений</div>` : ''}</div>
+    ${probCards(groups)}
+    <div class="note">Это ошибки сборки XML из Google Таблицы. Что Авито сделал с объявлениями — в «Отчёт Авито».</div></div>`, { wide: true });
+}
+
+/* ── Отчёт автозагрузки Авито ── */
+const R = {};
+function reportCsv(rows) {
+  const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const lines = [['ID в файле', 'ID на Авито', 'Раздел отчёта', 'Статус на Авито', 'Тип', 'Код', 'Сообщение', 'Ссылка'].map(q).join(';')];
+  rows.forEach((it) => (it.messages.length ? it.messages : [{}]).forEach((m) => lines.push([it.adId, it.avitoId, it.section, it.avitoStatus, m.type, m.code, m.text, it.url].map(q).join(';'))));
+  return '﻿' + lines.join('\r\n');
+}
+function downloadFile(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+async function feedReport(slug) {
+  const f = feedBy(slug);
+  openModal(`${mHead('Отчёт Авито — ' + f.name)}<div class="m-b" id="repBody"><div class="note">Запрашиваю отчёт автозагрузки у Авито… Большие кабинеты — до минуты.</div></div>
+    <div class="m-f"><button class="btn" type="button" id="repRe">${I('refresh', 'ic-sm')}Обновить</button><span class="grow"></span><button class="btn primary" type="button" id="repCsv" disabled>${I('upload', 'ic-sm')}Скачать файл ошибок</button></div>`, { wide: true });
+  const load = async () => {
+    $('#repCsv').disabled = true;
+    const r = await api(`/api/dashboard/feeds/${slug}/report`);
+    if (!$('#repBody')) return;
+    if (!r.ok) { $('#repBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Авито не отдал отчёт')}</div>`; return; }
+    R[slug] = r.data; renderReport(slug);
+  };
+  $('#repRe').onclick = () => { $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; load(); };
+  $('#repCsv').onclick = () => { const d = R[slug]; if (d) downloadFile(`Oshibki_avtozagruzki_${f.slug}_${(d.summary.finishedAt || '').slice(0, 10) || 'last'}.csv`, reportCsv(d.problems), 'text/csv;charset=utf-8'); };
+  load();
+}
+function renderReport(slug) {
+  const d = R[slug], s = d.summary || {}, src = d.source;
+  const secs = s.sectionStats && Array.isArray(s.sectionStats.sections) ? s.sectionStats.sections : [];
+  const tone = (slug2) => /^success|successful/.test(slug2) ? 'green' : /error|fail/.test(slug2) ? 'red' : 'amber';
+  const srcBox = !src ? '' : src.kind === 'cantor' ? `<div class="ok-box">${I('check', 'ic-sm')} Кабинет грузится из нашего XML${src.enabled ? '' : ' — но автозагрузка в кабинете выключена'}</div>`
+    : `<div class="warn-box">${src.kind === 'bananlab' ? 'Кабинет пока грузится из BananLab' : src.kind === 'none' ? 'В кабинете не указана ссылка на фид' : 'Кабинет грузится из другой ссылки'}${src.urls.length ? `: <span class="mono">${esc(src.urls[0])}</span>` : ''}. Наш XML начнёт работать после «Подключить».</div>`;
+  const items = [];
+  d.problems.forEach((it) => {
+    const bad = it.messages.filter((m) => m.type === 'error' || m.type === 'alarm');
+    const ms = bad.length ? bad : it.messages.filter((m) => m.type !== 'info');
+    (ms.length ? ms : [{ text: it.section }]).forEach((m) => items.push({ kind: bad.length ? 'err' : 'warn', msg: m.text || it.section, where: it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.adId || it.avitoId)}</a>` : esc(it.adId || it.avitoId) }));
+  });
+  $('#repCsv').disabled = !d.problems.length;
+  $('#repBody').innerHTML = `${srcBox}
+    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.items)} объявлений</div>
+    <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div>${(x.sections || []).filter((y) => y.count).map((y) => `<div class="t-s">${esc(y.title)} — ${int(y.count)}</div>`).join('')}</div>`).join('')}</div>
+    ${items.length ? `<h3 class="ph2">Что не так — ${d.problems.length} объявлений</h3>${probCards(probGroups(items))}` : '<div class="ok-box">Проблемных объявлений нет</div>'}`;
+}
+
+/* ── Инструкция раздела ── */
+function feedsHelp() {
+  openModal(`${mHead('Автозагрузка: как работать')}<div class="m-b help">
+    <h3>Как это устроено</h3><p>Объявления клиента живут в его <b>Google Таблице</b> (шаблон BananLab). Каждый час сервис собирает из неё XML и кладёт его в Яндекс (<span class="mono">storage.yandexcloud.net/cantor-feeds</span>). Авито сам забирает XML по расписанию кабинета. Правите таблицу — через 1–2 часа изменения на Авито.</p>
+    <h3>Новый клиент</h3><ol><li>Добавьте кабинет Авито в дашборде — он сам появится здесь строкой «нет таблицы».</li><li>Таблица клиента: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».</li><li>«Добавить таблицу» → вставьте ссылку → «Вкладки» → отметьте вкладку с объявлениями (обычно «Авито_выгрузка») → «Сохранить». XML соберётся сразу.</li><li>«Подключить» → почта для отчётов → «Подключить». Ссылка на наш XML запишется в кабинет Авито.</li><li>«В Авито» — чтобы Авито забрал XML сейчас, а не по расписанию.</li><li>Через час — «Отчёт Авито»: всё ли опубликовалось.</li></ol>
+    <h3>Каждый день</h3><p><b>Ошибки</b> — замечания при сборке XML из таблицы: непонятная ссылка на фото, повтор id, закрытая таблица. Такие строки не попадают в XML. <b>Отчёт Авито</b> — что Авито сделал с объявлениями: опубликовано, с проблемами, отклонено; там же «Скачать файл ошибок».</p>
+    <h3>Фото</h3><p>В колонке Images — ссылки с Яндекс.Диска, по одной на строку или через « | ». Личные ссылки (disk.yandex.ru/client/disk/…) работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен; публичные (disk.yandex.ru/i/…) — без токена. Можно писать только имена файлов, если заполнена «Папка на Яндекс Диск».</p>
+    <h3>Если что-то не так</h3><ol><li>Изменения не появились — «Пересобрать», затем «В Авито» (Авито разрешает не чаще раза в час).</li><li>Объявление не вышло — «Отчёт Авито», там причина от Авито.</li><li>Кабинет перестал грузить совсем — проверьте подписку Авито (без неё автозагрузка останавливается) и что в «Отчёт Авито» стоит «грузится из нашего XML».</li></ol>
+    <h3>Кнопки</h3><p><b>Сравнить</b> — сверка с XML BananLab (для клиентов из импорта) · <b>Ссылка</b> — скопировать ссылку на XML · <b>Изменить</b> — таблица, вкладки, кабинет, выключить автообновление. «Импорт из BananLab» и «Клиент» — вверху справа.</p></div>`, { wide: true });
+}
 const SKIP_TABS = /справк|файл из авито|уникализац|дубли|сюда выгрузка|яндекс\.диск|тексты|позиции/i;
 function feedEdit(slug, preset) {
   const ed = slug ? feedBy(slug) : null;
@@ -1455,15 +1597,6 @@ function feedEdit(slug, preset) {
     if (!r.ok) return toast(r.data.error || 'Не удалось удалить');
     F.feeds = F.feeds.filter((f) => f.slug !== ed.slug); feedsRender(); closeModal(); toast('Клиент удалён');
   };
-}
-function feedProbs(slug) {
-  const f = feedBy(slug), s = f.stat || {};
-  const items = [];
-  if (s.error) items.push(['Таблица', s.error]);
-  if (s.s3Error) items.push(['Object Storage', 'XML не выложен в Яндекс: ' + s.s3Error]);
-  (s.tabs || []).filter((t) => t.error).forEach((t) => items.push([`Вкладка «${t.name}»`, t.error]));
-  (s.problems || []).forEach((p) => items.push([[p.tab && `«${p.tab}»`, p.row && `строка ${p.row}`, p.id && `id ${p.id}`].filter(Boolean).join(', ') || 'Таблица', p.msg]));
-  openModal(`${mHead('Ошибки — ' + f.name)}<div class="m-b">${items.map(([w, msg]) => `<div class="prob"><div class="small muted">${esc(w)}</div><div>${esc(msg)}</div></div>`).join('') || '<div class="note">Ошибок нет</div>'}</div>`, { wide: true });
 }
 function feedImport() {
   const m = openModal(`${mHead('Импорт из BananLab')}<form class="m-b" id="iForm" novalidate>
