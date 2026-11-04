@@ -14139,7 +14139,7 @@ const FEEDS_SKIP_TABS = /справк|файл из авито|уникализ�
 // counts only if it fits exactly one item (so «Елена» alone links nothing); each cabinet goes to the item
 // its longest such part fits, and an item claimed by several cabinets goes to the one with the longest part.
 function feedsMatchAccounts(items, accounts) {
-  const skel = (t) => t.replace(/[aeiouy]/g, '');
+  const skel = (t) => t.replace(/[aeiouy]/g, '').replace(/(.)\1+/g, '$1'); // Валиуллова ≈ valiulova
   const fits = (t, item) => item.tokens.some((b) => b === t || (t.length >= 5 && b.length >= 5 && skel(b) === skel(t)))
     || (t.length >= 6 && item.flat.includes(t));
   const claims = new Map(); // item index -> [{ account, score }]
