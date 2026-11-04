@@ -277,6 +277,15 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:6
 
 /* автозагрузка */
 .fwrap{flex:1;min-height:0;overflow:auto}
+.me{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px 0 4px;border-radius:999px;background:var(--sunken);font-size:12.5px;font-weight:600;color:var(--ink);margin:0 4px;cursor:help;white-space:nowrap}
+.av{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;background:var(--accent);color:#fff;font-size:11px;font-weight:700;flex:none}
+.av.pw{background:var(--faint)}
+.lg{display:grid}
+.lg-day{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:14px 0 6px;border-bottom:1px solid var(--line-2)}
+.lg-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.lg-t{width:42px;flex:none;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:3px}
+.lg-m{flex:1;min-width:0}.lg-m .chip{height:20px;font-size:11px;padding:0 8px;margin-left:4px}
+@media (max-width:1100px){.me .lbl{display:none}.me{padding:0 4px}}
 main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
 #pg-feeds:not(.hide){display:flex;flex-direction:column;height:calc(100vh - var(--top) - 24px);min-height:420px}
 .ftbl th{background:var(--bg);border-bottom-color:var(--line)}
@@ -368,7 +377,9 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
 <div class="center" id="gate" hidden>
   <div class="gate">
     <h1>Авито: ставки и автозагрузка</h1>
-    <p>Введите пароль дашборда</p>
+    <p>Войдите в <a href="/avito-tasks" style="color:var(--accent);font-weight:600">трекер задач</a> по своей ссылке — после этого страница откроется сама, а ваши действия будут подписаны вашим именем.</p>
+    <p class="note" id="gateAt" hidden style="color:var(--red)">Вход трекера на этом устройстве устарел — откройте свою ссылку на трекер ещё раз.</p>
+    <p style="margin-top:14px">Или введите пароль дашборда</p>
     <form id="gateForm"><input class="input" id="gatePw" type="password" autocomplete="current-password" placeholder="Пароль"><button class="btn primary" type="submit">Войти</button></form>
     <div class="note" id="gateErr" style="margin-top:10px;color:var(--red)"></div>
   </div>
@@ -390,7 +401,9 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
         <button class="btn fonly" type="button" id="fImport"><svg class="ic ic-sm"><use href="#i-upload"/></svg>Импорт из BananLab</button>
         <button class="btn primary fonly" type="button" id="fAdd" style="margin-left:6px"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Клиент</button>
         <span class="sep"></span>
+        <button class="icon-btn" type="button" id="logBtn" data-tip="Журнал: кто, что и когда менял" aria-label="Журнал"><svg class="ic"><use href="#i-note"/></svg></button>
         <button class="icon-btn" type="button" id="helpBtn" data-tip="Как работает раздел" aria-label="Инструкция"><svg class="ic"><use href="#i-info"/></svg></button>
+        <span class="me hide" id="meChip"></span>
         <button class="icon-btn" type="button" id="themeBtn" aria-label="Тема" data-tip="Светлая / тёмная тема"><svg class="ic"><use href="#i-moon"/></svg></button>
       </div>
     </div>
@@ -449,7 +462,17 @@ const ROUTES = location.hostname.endsWith('workers.dev')
   : [(p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`, (p) => API_BASE + p];
 let route = 0;
 const PW_KEY = 'agency_dashboard_pw';
-const getPw = () => { try { return localStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } };
+// Вход: пароль дашборда или вход в трекере задач (/avito-tasks на том же сайте) — его токен уходит как «at:<token>».
+const AT_KEY = 'avitoTasks.token';
+const getPw = () => { try { return localStorage.getItem(PW_KEY) || (localStorage.getItem(AT_KEY) ? 'at:' + localStorage.getItem(AT_KEY) : ''); } catch (e) { return ''; } };
+let ME = null;
+function setMe(me) {
+  if (!me) return;
+  ME = me;
+  $('#meChip').innerHTML = `<span class="av ${me.id ? '' : 'pw'}">${esc(String(me.name || '?').trim().charAt(0).toUpperCase())}</span><span class="lbl">${esc(me.name)}</span>`;
+  $('#meChip').dataset.tip = me.id ? 'Вы вошли через трекер задач — ваши действия записываются в журнал под этим именем' : 'Вход по паролю — действия пишутся в журнал как «по паролю». Войдите через трекер задач, чтобы они были под вашим именем';
+  $('#meChip').classList.remove('hide');
+}
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
@@ -580,7 +603,7 @@ function setPage(p) {
   $$('[data-page]').forEach((b) => b.classList.toggle('on', b.dataset.page === p));
   $('#pg-bids').classList.toggle('hide', p !== 'bids');
   $('#pg-feeds').classList.toggle('hide', p !== 'feeds');
-  $$('#topBids > *').forEach((el) => { if (el.id === 'themeBtn' || el.id === 'helpBtn' || el.classList.contains('sep')) return; el.classList.toggle('hide', el.classList.contains('fonly') ? p !== 'feeds' : p !== 'bids'); });
+  $$('#topBids > *').forEach((el) => { if (['themeBtn', 'helpBtn', 'logBtn', 'meChip'].includes(el.id) || el.classList.contains('sep')) return; el.classList.toggle('hide', el.classList.contains('fonly') ? p !== 'feeds' : p !== 'bids'); });
   $('#helpBtn').dataset.tip = p === 'feeds' ? 'Инструкция: как работать с автозагрузкой' : 'Как работает раздел';
   history.replaceState(null, '', p === 'feeds' ? '#feeds' : '#bids');
   document.title = p === 'feeds' ? 'Автозагрузка Авито' : 'Ставки Авито';
@@ -640,6 +663,7 @@ async function bidsLoad() {
   if (r.status === 401) return showGate();
   if (!r.ok) { $('#rows').innerHTML = `<tr><td>${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
   Object.assign(B, r.data, { loaded: true });
+  setMe(r.data.me);
   const keys = new Set(B.items.map((x) => x.key));
   [...sel].forEach((k) => { if (!keys.has(k)) sel.delete(k); });
   render();
@@ -1399,6 +1423,7 @@ async function feedsLoad() {
   if (r.status === 401) return showGate();
   if (!r.ok) { $('#fRows').innerHTML = `<tr><td colspan="6">${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
   Object.assign(F, r.data, { loaded: true });
+  setMe(r.data.me);
   feedsRender();
 }
 const feedAccName = (id) => { const a = F.accounts.find((x) => x.id === id); return a ? a.name : ''; };
@@ -1656,8 +1681,52 @@ function feedConnect(slug) {
   });
 }
 
+/* ═══════════════ Журнал действий ═══════════════ */
+const LOG = { month: mskToday().slice(0, 7), area: '', by: '' };
+function openLog() {
+  openModal(`${mHead('Журнал действий')}<div class="m-b" id="logBody"><div class="note">Загружаю…</div></div>`, { wide: true });
+  LOG.reload = async () => {
+    const r = await api('/api/dashboard/feeds/log?month=' + LOG.month);
+    if (!$('#logBody')) return;
+    if (!r.ok) { $('#logBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Не удалось загрузить журнал')}</div>`; return; }
+    LOG.data = r.data; renderLog();
+  };
+  LOG.reload();
+}
+function renderLog() {
+  const d = LOG.data, people = [...new Set(d.entries.map((e) => e.by))].sort((a, b) => String(a).localeCompare(String(b), 'ru'));
+  const list = d.entries.filter((e) => (!LOG.area || e.area === LOG.area) && (!LOG.by || e.by === LOG.by));
+  const months = []; for (let i = 0; i < 6; i++) { const x = new Date(); x.setUTCDate(1); x.setUTCMonth(x.getUTCMonth() - i); months.push(x.toISOString().slice(0, 7)); }
+  const day = (t) => new Date(t + 3 * 3600e3).toISOString().slice(0, 10);
+  const accs = (ids) => (ids || []).filter(Boolean).map((id) => d.accounts[id] || id).join(', ');
+  let cur = '';
+  const rows = list.map((e) => {
+    const dd = day(e.t), head = dd !== cur ? `<div class="lg-day">${esc(new Date(dd + 'T12:00:00Z').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }))}</div>` : '';
+    cur = dd;
+    const who = String(e.by || '?');
+    const obj = [e.name, accs(e.acc)].filter((x, i, a) => x && a.indexOf(x) === i).join(' · ');
+    return `${head}<div class="lg-row"><span class="lg-t">${new Date(e.t).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' })}</span><span class="av ${e.byId ? '' : 'pw'}" title="${esc(who)}">${esc(who.charAt(0).toUpperCase())}</span>
+      <div class="lg-m"><div><b>${esc(who)}</b> · ${esc(e.act)}${e.n != null ? ` <span class="chip">${int(e.n)}</span>` : ''} <span class="chip ${e.area === 'feeds' ? 'accent' : ''}">${e.area === 'feeds' ? 'Автозагрузка' : 'Ставки'}</span></div>${obj || e.detail ? `<div class="note">${esc([obj, e.detail].filter(Boolean).join(' — '))}</div>` : ''}</div></div>`;
+  }).join('');
+  $('#logBody').innerHTML = `<div class="row" style="gap:8px;flex-wrap:wrap">
+      <select class="select" id="lgMonth" style="width:auto">${months.map((x) => `<option value="${x}" ${x === LOG.month ? 'selected' : ''}>${new Date(x + '-15T00:00:00Z').toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}</option>`).join('')}</select>
+      <select class="select" id="lgArea" style="width:auto"><option value="">Все разделы</option><option value="feeds" ${LOG.area === 'feeds' ? 'selected' : ''}>Автозагрузка</option><option value="bids" ${LOG.area === 'bids' ? 'selected' : ''}>Ставки</option></select>
+      <select class="select" id="lgBy" style="width:auto"><option value="">Все сотрудники</option>${people.map((x) => `<option ${x === LOG.by ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+      <span class="note">${int(list.length)} действий</span></div>
+    <div class="lg">${rows || emptyState('note', 'За этот месяц действий нет', 'Здесь появятся изменения ставок и автозагрузки с именами сотрудников')}</div>`;
+  $('#lgMonth').onchange = (e) => { LOG.month = e.target.value; $('#logBody').innerHTML = '<div class="note">Загружаю…</div>'; LOG.reload(); };
+  $('#lgArea').onchange = (e) => { LOG.area = e.target.value; renderLog(); };
+  $('#lgBy').onchange = (e) => { LOG.by = e.target.value; renderLog(); };
+}
+$('#logBtn').addEventListener('click', openLog);
+
 /* ═══════════════ Вход и запуск ═══════════════ */
-function showGate() { $('#app').hidden = true; $('#gate').hidden = false; setTimeout(() => $('#gatePw').focus(), 30); }
+function showGate() {
+  let at = false, pw = false;
+  try { at = !!localStorage.getItem(AT_KEY); pw = !!localStorage.getItem(PW_KEY); } catch (e) {}
+  $('#gateAt').hidden = !(at && !pw);
+  $('#app').hidden = true; $('#gate').hidden = false; setTimeout(() => $('#gatePw').focus(), 30);
+}
 $('#gateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const pw = $('#gatePw').value;
@@ -1665,7 +1734,7 @@ $('#gateForm').addEventListener('submit', async (e) => {
   if (r.status === 401) { $('#gateErr').textContent = 'Неверный пароль'; return; }
   try { localStorage.setItem(PW_KEY, pw); } catch (err) {}
   $('#gate').hidden = true; $('#app').hidden = false;
-  if (r.ok) { Object.assign(B, r.data, { loaded: true }); }
+  if (r.ok) { Object.assign(B, r.data, { loaded: true }); setMe(r.data.me); }
   start();
 });
 function start() {
