@@ -12871,6 +12871,58 @@ function mbidsAuth(request, env) {
   return !!pw && (pw === DASHBOARD_PASSWORD || (env.AVITO_API_PASSWORD && pw === env.AVITO_API_PASSWORD));
 }
 
+/* ── /avito-bids (Ставки + Автозагрузка): who is acting, and the action log ──
+ * Anyone signed in to the task tracker (/avito-tasks) gets in without a password: the page sends the
+ * tracker's token from localStorage as `x-dashboard-password: at:<token>` (the Yandex Cloud proxy only
+ * forwards that header). The dashboard password still works and is logged as «по паролю».
+ * Every change on the page is written to the log with the person's name:
+ *   avlog:<YYYY-MM> -> [{ t, by, byId, area: 'feeds'|'bids', act, name?, slug?, acc?, n?, detail? }] (newest last, ≤ 3000)
+ * GET /api/dashboard/feeds/log?month=YYYY-MM reads it (newest first). */
+async function avitoPageAuth(request, env, passwordOk) {
+  const pw = request.headers.get('x-dashboard-password') || '';
+  if (pw.startsWith('at:')) {
+    if (!env.AGENCY_DASHBOARD_KV) return null;
+    const auth = await atAuth(await atGetTeam(env), pw.slice(3));
+    return auth.user ? { id: auth.user.id, name: auth.user.name, role: auth.user.role } : null;
+  }
+  return passwordOk(request, env) ? { id: null, name: 'по паролю', role: null } : null;
+}
+
+async function avLog(env, who, entry) {
+  try {
+    const kv = env.AVITO_KV;
+    const key = 'avlog:' + new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7);
+    const list = (await kv.get(key, 'json')) || [];
+    list.push({ t: Date.now(), by: (who && who.name) || '?', byId: (who && who.id) || null, ...entry });
+    await kv.put(key, JSON.stringify(list.slice(-3000)));
+  } catch (err) {
+    console.error('avlog failed', err && err.stack);
+  }
+}
+
+// What a /mbids change did, in words, for the log.
+function mbidsLogEntry(route, body, res) {
+  const accs = (refs) => [...new Set((Array.isArray(refs) ? refs : []).map((r) => String(typeof r === 'string' ? r : `${r.accountId}:${r.id}`).split(':')[0]))];
+  const set = body.set || {};
+  if (route === 'POST items') return { act: 'Добавил объявления в ставки', n: res.added, acc: [String(body.accountId || '')] };
+  if (route === 'POST items/delete') return { act: 'Убрал объявления из ставок', n: res.removed, acc: accs(body.refs) };
+  if (route === 'POST items/update') {
+    const what = [];
+    if (set.on !== undefined) what.push(set.on ? 'включил' : 'выключил');
+    if (set.bid !== undefined) what.push(set.bid && set.bid.min ? 'ставка = минимальная' : `ставка ${typeof set.bid === 'object' ? `${set.bid.op || ''}${set.bid.value ?? ''}` : set.bid}`);
+    if (set.hours !== undefined) what.push(set.hours ? `часы ${set.hours.length}` : 'часы — все');
+    if (set.days !== undefined) what.push(set.days ? `дни ${set.days.length}` : 'дни — все');
+    if (set.lim) what.push('лимиты: ' + Object.keys(set.lim).join(', '));
+    if (body.note) what.push(`заметка «${String(body.note).slice(0, 80)}»`);
+    if (body.removeNoteAt) what.push('удалил заметку');
+    return { act: 'Изменил ставки', n: res.changed, acc: accs(body.refs), detail: what.join(', ') };
+  }
+  if (route === 'POST groups') return { act: body.id ? 'Переименовал группу' : 'Создал группу', name: String(body.name || '') };
+  if (route === 'POST groups/delete') return { act: 'Удалил группы', n: (body.ids || []).length };
+  if (route === 'POST groups/members') return { act: body.action === 'remove' ? 'Убрал из группы' : 'Добавил в группу', n: (body.refs || []).length, acc: accs(body.refs) };
+  return null;
+}
+
 // МСК без перехода на летнее время: UTC+3.
 function mbidsMsk(ms = Date.now()) {
   const d = new Date(ms + 3 * 3600 * 1000);
@@ -13196,11 +13248,29 @@ function mbidsOp(cur, edit, opts) {
 }
 
 async function handleMbidsApi(request, env, url, ctx) {
-  if (!mbidsAuth(request, env)) return json({ error: 'unauthorized' }, 401);
+  const who = await avitoPageAuth(request, env, mbidsAuth);
+  if (!who) return json({ error: 'unauthorized' }, 401);
+  const res = await handleMbidsRoutes(request, env, url, ctx, who);
+  // The page shows who is signed in — add it to the state it loads first.
+  if (request.method === 'GET' && res.ok && /\/mbids\/state$/.test(url.pathname)) {
+    const data = await res.json().catch(() => null);
+    if (data) return json({ ...data, me: { id: who.id, name: who.name } });
+  }
+  if (request.method === 'POST' && res.ok && env.AVITO_KV) {
+    const route = `POST ${url.pathname.replace(/^\/api\/dashboard\/mbids\/?/, '')}`;
+    const data = await res.clone().json().catch(() => ({}));
+    const entry = mbidsLogEntry(route, who.body || {}, data);
+    if (entry) await avLog(env, who, { area: 'bids', ...entry });
+  }
+  return res;
+}
+
+async function handleMbidsRoutes(request, env, url, ctx, who) {
   const kv = env.AVITO_KV;
   const parts = url.pathname.replace(/^\/api\/dashboard\/mbids\/?/, '').split('/').filter(Boolean);
   const route = `${request.method} ${parts.join('/')}`;
   const body = request.method === 'POST' || request.method === 'PUT' ? (await readJson(request)) || {} : {};
+  who.body = body;
   const later = (p) => (ctx && ctx.waitUntil ? ctx.waitUntil(p.catch((e) => console.error('mbids', e && e.stack))) : p);
   const byAccount = (refs) => {
     const m = {};
@@ -13317,7 +13387,8 @@ async function handleMbidsApi(request, env, url, ctx) {
             if (v === null) delete c.lim[k]; else c.lim[k] = v;
           }
         }
-        if (note) c.notes = [...(c.notes || []), { at: Date.now(), text: note }].slice(-100);
+        if (note) c.notes = [...(c.notes || []), { at: Date.now(), text: note, by: who.name }].slice(-100);
+        c.by = who.name; c.byAt = Date.now();
         if (body.removeNoteAt) c.notes = (c.notes || []).filter((n) => n.at !== body.removeNoteAt);
         changed++;
       }
@@ -13549,7 +13620,7 @@ function feedsPublicUrl(env, path) {
   return String(env.FEEDS_BASE_URL || FEEDS_BASE_URL).replace(/\/+$/, '') + path;
 }
 
-function feedsAuth(request, env) {
+function feedsPasswordOk(request, env) {
   return request.headers.get('x-dashboard-password') === (env.FEEDS_PASSWORD || DASHBOARD_PASSWORD);
 }
 
@@ -14038,9 +14109,19 @@ async function feedsAvitoAccount(env, feed) {
 }
 
 async function handleFeedsApi(request, env, url) {
-  if (!feedsAuth(request, env)) return json({ error: 'unauthorized' }, 401);
+  const who = await avitoPageAuth(request, env, feedsPasswordOk);
+  if (!who) return json({ error: 'unauthorized' }, 401);
   const kv = env.AVITO_KV;
   const parts = url.pathname.replace(/^\/api\/dashboard\/feeds\/?/, '').split('/').filter(Boolean);
+  const log = (entry) => avLog(env, who, { area: 'feeds', ...entry });
+
+  if (parts[0] === 'log' && request.method === 'GET') {
+    const month = /^\d{4}-\d{2}$/.test(url.searchParams.get('month') || '') ? url.searchParams.get('month') : new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7);
+    const list = ((await kv.get('avlog:' + month, 'json')) || []).slice().reverse();
+    const accounts = {};
+    (await listByPrefix(kv, 'account:')).forEach((a) => { if (a && a.id) accounts[a.id] = a.name; });
+    return json({ month, entries: list, accounts, me: { id: who.id, name: who.name } });
+  }
 
   if (!parts.length && request.method === 'GET') {
     const feeds = [];
@@ -14060,10 +14141,15 @@ async function handleFeedsApi(request, env, url) {
       const a = await kv.get(k.name, 'json');
       if (a) accounts.push({ id: a.id, name: a.name });
     }
-    return json({ feeds, accounts, serviceAccount: feedsServiceEmail(env) || null });
+    return json({ feeds, accounts, serviceAccount: feedsServiceEmail(env) || null, me: { id: who.id, name: who.name } });
   }
 
-  if (parts[0] === 'import' && request.method === 'POST') return feedsImport(env, await readJson(request));
+  if (parts[0] === 'import' && request.method === 'POST') {
+    const res = await feedsImport(env, await readJson(request), who);
+    const data = await res.clone().json().catch(() => ({}));
+    if (data.created) await log({ act: 'Импортировал клиентов из BananLab', n: data.created });
+    return res;
+  }
 
   if (parts[0] === 'tabs' && request.method === 'GET') {
     const sheetId = feedsSheetId(url.searchParams.get('sheet'));
@@ -14084,8 +14170,9 @@ async function handleFeedsApi(request, env, url) {
     if (!sheetId) return json({ error: 'Вставьте ссылку на Google Таблицу из адресной строки' }, 400);
     if (!tabs.length) return json({ error: 'Укажите хотя бы одну вкладку с объявлениями' }, 400);
     const now = new Date().toISOString();
-    const feed = { slug: feedsSlug(name), name, sheetId, tabs, enabled: true, avitoAccountId: String(body.avitoAccountId || '') || null, secret: randomHex(16), createdAt: now, updatedAt: now };
+    const feed = { slug: feedsSlug(name), name, sheetId, tabs, enabled: true, avitoAccountId: String(body.avitoAccountId || '') || null, secret: randomHex(16), createdAt: now, updatedAt: now, createdBy: who.name, updatedBy: who.name };
     await kv.put('feed:' + feed.slug, JSON.stringify(feed));
+    await log({ act: 'Добавил клиента', name, slug: feed.slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined, detail: 'вкладки: ' + tabs.join(', ') });
     const stat = await feedsBuild(env, feed);
     return json({ feed: feedsPublicView(env, feed, stat) });
   }
@@ -14096,6 +14183,8 @@ async function handleFeedsApi(request, env, url) {
 
   if (parts.length === 1 && request.method === 'PUT') {
     const body = (await readJson(request)) || {};
+    const before = JSON.stringify([feed.name, feed.sheetId, feed.tabs, feed.enabled, feed.avitoAccountId]);
+    const was = { ...feed };
     if (body.name !== undefined) feed.name = String(body.name).trim().slice(0, 60) || feed.name;
     if (body.sheetUrl !== undefined) {
       const id = feedsSheetId(body.sheetUrl);
@@ -14110,17 +14199,29 @@ async function handleFeedsApi(request, env, url) {
     if (body.enabled !== undefined) feed.enabled = !!body.enabled;
     if (body.avitoAccountId !== undefined) feed.avitoAccountId = String(body.avitoAccountId || '') || null;
     feed.updatedAt = new Date().toISOString();
+    feed.updatedBy = who.name;
     await kv.put('feed:' + slug, JSON.stringify(feed));
+    if (JSON.stringify([feed.name, feed.sheetId, feed.tabs, feed.enabled, feed.avitoAccountId]) !== before) {
+      const what = [];
+      if (was.name !== feed.name) what.push(`имя «${was.name}» → «${feed.name}»`);
+      if (was.sheetId !== feed.sheetId) what.push('другая таблица');
+      if (JSON.stringify(was.tabs) !== JSON.stringify(feed.tabs)) what.push('вкладки: ' + feed.tabs.join(', '));
+      if (was.enabled !== feed.enabled) what.push(feed.enabled ? 'включил автообновление' : 'выключил автообновление');
+      if (was.avitoAccountId !== feed.avitoAccountId) what.push('другой кабинет');
+      await log({ act: 'Изменил клиента', name: feed.name, slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined, detail: what.join(', ') });
+    }
     return json({ feed: feedsPublicView(env, feed, await kv.get('feedstat:' + slug, 'json')) });
   }
 
   if (parts.length === 1 && request.method === 'DELETE') {
     await Promise.all(['feed:', 'feedxml:', 'feedstat:', 'feedytok:'].map((p) => kv.delete(p + slug)));
+    await log({ act: 'Удалил клиента', name: feed.name, slug });
     return json({ ok: true });
   }
 
   if (parts[1] === 'build' && request.method === 'POST') {
     const stat = await feedsBuild(env, feed);
+    await log({ act: 'Пересобрал XML', name: feed.name, slug, detail: stat.error ? 'не собран: ' + String(stat.error).slice(0, 120) : `${stat.ads} объявлений` });
     return json({ feed: feedsPublicView(env, feed, stat) });
   }
 
@@ -14160,6 +14261,7 @@ async function handleFeedsApi(request, env, url) {
       const res = await avitoRequest(token, '/autoload/v1/upload', { method: 'POST' });
       const text = await res.text();
       if (!res.ok) return json({ error: `Авито не запустил загрузку (${res.status}). Обновлять можно не чаще раза в час. ${text.slice(0, 200)}` }, 400);
+      await log({ act: 'Отправил XML в Авито', name: feed.name, slug, acc: [feed.avitoAccountId] });
       return json({ ok: true });
     } catch (err) {
       return json({ error: String(err.message || err) }, 400);
@@ -14187,6 +14289,10 @@ async function handleFeedsApi(request, env, url) {
       const res = await avitoRequest(token, '/autoload/v2/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const text = await res.text();
       if (!res.ok) return json({ error: `Авито не сохранил настройки автозагрузки (${res.status}): ${text.slice(0, 300)}` }, 400);
+      const prevUrls = ((before && before.feeds_data) || []).map((f) => f.feed_url).filter(Boolean);
+      feed.connectedAt = new Date().toISOString(); feed.connectedBy = who.name; feed.previousFeedUrls = prevUrls;
+      await kv.put('feed:' + slug, JSON.stringify(feed));
+      await log({ act: 'Подключил кабинет к нашему XML', name: feed.name, slug, acc: [feed.avitoAccountId], detail: `почта ${reportEmail}${prevUrls.length ? '; было: ' + prevUrls.join(', ') : ''}` });
       return json({ ok: true, feedUrl, previousFeeds: (before && before.feeds_data) || (before && before.upload_url ? [{ feed_url: before.upload_url }] : []) });
     } catch (err) {
       return json({ error: String(err.message || err) }, 400);
@@ -14226,7 +14332,7 @@ function feedsMatchAccounts(items, accounts) {
   return out;
 }
 
-async function feedsImport(env, body) {
+async function feedsImport(env, body, who) {
   const kv = env.AVITO_KV;
   const list = (Array.isArray(body) ? body : body && body.items) || [];
   if (!Array.isArray(list) || !list.length) return json({ error: 'Вставьте JSON-список клиентов из BananLab' }, 400);
@@ -14266,7 +14372,7 @@ async function feedsImport(env, body) {
       const feed = {
         slug: feedsSlug(it.client.replace(/^\d+_/, '')), name: account ? account.name : it.client, sheetId: it.sheetId, tabs,
         enabled: it.enabled, avitoAccountId: account ? account.id : null, secret: randomHex(16),
-        bananlab: it.client, bananlabXml: it.xmlUrl, createdAt: now, updatedAt: now,
+        bananlab: it.client, bananlabXml: it.xmlUrl, createdAt: now, updatedAt: now, createdBy: who ? who.name : null,
       };
       await kv.put('feed:' + feed.slug, JSON.stringify(feed));
       results.push({ client: it.client, status: 'created', slug: feed.slug, account: account ? account.name : null, tabs, note });
