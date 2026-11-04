@@ -41,9 +41,10 @@
     "CONTROL_BOT_OWNER_IDS": "1326867567",
     // Avito autoload feeds (/avito-bids#feeds): photo links go through the Yandex Cloud function, which
     // Avito reaches from Russia (workers.dev it reaches badly). The XML itself goes to Yandex Object
-    // Storage once FEEDS_S3_BUCKET (plain var here) and the FEEDS_S3_KEY_ID / FEEDS_S3_SECRET secrets are
+    // Storage (bucket FEEDS_S3_BUCKET below) with the FEEDS_S3_KEY_ID / FEEDS_S3_SECRET secrets are
     // set — see "Avito feeds" in _worker.js.
-    "FEEDS_PROXY_URL": "https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch"
+    "FEEDS_PROXY_URL": "https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch",
+    "FEEDS_S3_BUCKET": "cantor-feeds"
     // Avito → Telegram notifier bots (AVITO_NOTIFY_BOTS in _worker.js): one token secret per bot,
     // e.g. AVITO_BOT_TOKEN_CANTOR (dashboard -> Variables and Secrets, "Encrypt"); one bot can
     // serve several cabinets.
