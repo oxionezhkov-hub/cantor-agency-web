@@ -1492,7 +1492,7 @@ async function feedCompare(slug) {
   const r = await api(`/api/dashboard/feeds/${slug}/compare`);
   if (!$('#cmpBody')) return;
   if (!r.ok) { $('#cmpBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Не удалось сравнить')}</div>`; return; }
-  const d = r.data, names = { Title: 'Заголовок', Price: 'Цена', Address: 'Адрес', Category: 'Категория', Description: 'Описание', images: 'Число фото' };
+  const d = r.data, names = { Title: 'Заголовок', Price: 'Цена', Address: 'Адрес', Category: 'Категория', Description: 'Описание', Images: 'Число фото', PriceList: 'Прайс', PromoAutoOptions: 'Автопродвижение', PromoManualOptions: 'Ручное продвижение' };
   const diffF = Object.entries(d.fieldDiffs).filter(([, n]) => n);
   const same = !d.onlyOursCount && !d.onlyTheirsCount && !diffF.length && d.ours === d.theirs;
   $('#cmpBody').innerHTML = `<div class="${same ? 'ok-box' : 'note'}">${same ? 'Совпадает полностью: можно переключать кабинет на наш XML.' : 'Есть расхождения — посмотрите перед переключением.'}</div>

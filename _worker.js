@@ -13747,8 +13747,9 @@ function feedsParseTab(rows) {
     if (tag === 'Папка на Яндекс Диск') folderCol = i;
     if (tag === 'Товар доступен?') availCol = i;
     if (String(marks[i] || '').trim().toLowerCase() !== 'грузим в xml') continue;
-    if (FEEDS_SERVICE_COLS.has(tag) || !/^[A-Za-z][A-Za-z0-9]*$/.test(tag)) continue;
-    cols.push({ i, tag, multi: /нескольк|много значений|option/i.test(String(types[i] || '')) });
+    if (FEEDS_SERVICE_COLS.has(tag) || !/^[A-Za-z][A-Za-z0-9]*$|^Promo(Auto|Manual)Options [A-Za-z]+$/.test(tag)) continue;
+    // «Много значений» without «Option» goes out as plain text with line breaks — as BananLab does.
+    cols.push({ i, tag, multi: /нескольк|option/i.test(String(types[i] || '')) });
   }
   const ads = [], problems = [];
   if (idCol < 0) {
@@ -13763,7 +13764,9 @@ function feedsParseTab(rows) {
     const fields = [];
     for (const c of cols) {
       const raw = String(row[c.i] == null ? '' : row[c.i]);
-      if (raw.trim()) fields.push({ tag: c.tag, multi: c.multi, value: raw });
+      // BananLab skips «-» and keeps an empty <Price></Price>.
+      if (raw.trim() === '-') continue;
+      if (raw.trim() || c.tag === 'Price') fields.push({ tag: c.tag, multi: c.multi, value: raw });
     }
     const folder = folderCol >= 0 ? String(row[folderCol] || '').trim() : '';
     ads.push({ row: r + 1, id, fields, folder: /^https?:\/\//i.test(folder) ? folder : '' });
@@ -13800,13 +13803,53 @@ const feedsImageSrc = (src, folder) => (/^https?:\/\//i.test(src) || !folder ? s
 const feedsOptions = (v) => String(v).split(/\s*\|\s*|\r?\n/).map((s) => s.trim()).filter(Boolean);
 
 // imageUrl(src) → URL for the XML, or null when the link isn't understood.
+// Columns that Avito wants nested: one sheet line = one <Service> / <Item>, lines matched by position.
+const FEEDS_PRICE_LIST = ['ServiceName', 'ServiceTitle', 'ServicePrice', 'ServiceStartingPrice', 'ServicePriceType', 'ServiceDiagnosticPrice', 'ServiceDiagnosticPriceWithRepair'];
+const FEEDS_PROMO = { PromoAutoOptions: ['Region', 'Budget'], PromoManualOptions: ['Region', 'Bid', 'DailyLimit'] };
+
+function feedsNested(fields, wrap, item, tags, tagOf) {
+  const lines = {};
+  for (const f of fields) {
+    const t = tagOf(f.tag);
+    if (tags.includes(t)) lines[t] = String(f.value).split(/\r?\n/).map((x) => x.trim());
+  }
+  const n = Math.max(0, ...Object.values(lines).map((l) => l.length));
+  // ServiceTitle names «Своя услуга» only. As in BananLab, the j-th «Своя услуга» takes the j-th title line
+  // (falling back to the title on its own line).
+  const titles = lines.ServiceTitle;
+  delete lines.ServiceTitle;
+  let own = 0;
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    const row = {};
+    for (const t of tags) if (lines[t] && lines[t][k]) row[t] = lines[t][k];
+    if (titles && /^своя услуга$/i.test(row.ServiceName || '')) { const tt = titles[own++] || titles[k]; if (tt) row.ServiceTitle = tt; }
+    const parts = tags.filter((t) => row[t]).map((t) => `        <${t}>${feedsXmlText(row[t])}</${t}>`);
+    if (parts.length) out.push(`      <${item}>`, ...parts, `      </${item}>`);
+  }
+  return out.length ? [`    <${wrap}>`, ...out, `    </${wrap}>`] : [];
+}
+
 function feedsBuildXml(ads, imageUrl) {
   const out = ['<?xml version="1.0" encoding="UTF-8"?>', '<Ads formatVersion="3" target="Avito.ru">'];
   const problems = [];
   for (const ad of ads) {
     out.push('  <Ad>');
+    const done = new Set();
     for (const f of ad.fields) {
       const t = f.tag;
+      if (FEEDS_PRICE_LIST.includes(t)) {
+        if (!done.has('PriceList')) { done.add('PriceList'); out.push(...feedsNested(ad.fields, 'PriceList', 'Service', FEEDS_PRICE_LIST, (x) => x)); }
+        continue;
+      }
+      const promo = t.match(/^(Promo(?:Auto|Manual)Options) ([A-Za-z]+)$/);
+      if (promo) {
+        if (!done.has(promo[1])) {
+          done.add(promo[1]);
+          out.push(...feedsNested(ad.fields.filter((g) => g.tag.startsWith(promo[1] + ' ')), promo[1], 'Item', FEEDS_PROMO[promo[1]], (x) => x.split(' ')[1]));
+        }
+        continue;
+      }
       if (t === 'Images') {
         const urls = [];
         for (const src of feedsLines(f.value)) {
@@ -14210,15 +14253,21 @@ async function feedsImport(env, body) {
   return json({ results, created: results.filter((r) => r.status === 'created').length });
 }
 
-// { id -> { Title, Price, Address, Category, Description, images } } from an autoload XML.
+// { id -> { tag -> normalized value } } from an autoload XML: every top-level tag of each <Ad>; nested
+// ones (PriceList, PromoAutoOptions, Option lists…) compared as text with whitespace between tags dropped,
+// Images as the number of photos (the links themselves always differ).
 function feedsAdsIndex(xml) {
-  const dec = (s) => String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  const dec = (s) => String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;|&#34;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&amp;/g, '&').replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim();
   const out = new Map();
   for (const chunk of String(xml).split(/<Ad>/).slice(1)) {
-    const tag = (t) => { const m = chunk.match(new RegExp(`<${t}>([\\s\\S]*?)</${t}>`)); return m ? dec(m[1]) : ''; };
-    const id = tag('id');
-    if (!id) continue;
-    out.set(id, { Title: tag('Title'), Price: tag('Price'), Address: tag('Address'), Category: tag('Category'), Description: tag('Description'), images: (chunk.match(/<Image\s/g) || []).length });
+    const body = chunk.split('</Ad>')[0];
+    const tags = {};
+    for (const m of body.matchAll(/<([A-Za-z]+)>([\s\S]*?)<\/\1>|<([A-Za-z]+)\/>/g)) {
+      const t = m[1] || m[3];
+      tags[t] = t === 'Images' ? String((String(m[2]).match(/<Image\s/g) || []).length) : dec(m[2]);
+    }
+    if (tags.id) out.set(tags.id, tags);
   }
   return out;
 }
@@ -14232,14 +14281,14 @@ async function feedsCompare(env, feed) {
   const a = feedsAdsIndex(ours), b = feedsAdsIndex(await res.text());
   const onlyOurs = [...a.keys()].filter((id) => !b.has(id));
   const onlyTheirs = [...b.keys()].filter((id) => !a.has(id));
-  const fields = { Title: 0, Price: 0, Address: 0, Category: 0, Description: 0, images: 0 };
+  const fields = {};
   const diffs = [];
   for (const [id, x] of a) {
     const y = b.get(id);
     if (!y) continue;
-    const d = Object.keys(fields).filter((f) => String(x[f]) !== String(y[f]));
-    d.forEach((f) => { fields[f]++; });
-    if (d.length && diffs.length < 40) diffs.push({ id, fields: d.map((f) => ({ field: f, ours: String(x[f]).slice(0, 160), theirs: String(y[f]).slice(0, 160) })) });
+    const d = [...new Set([...Object.keys(x), ...Object.keys(y)])].filter((f) => (x[f] || '') !== (y[f] || ''));
+    d.forEach((f) => { fields[f] = (fields[f] || 0) + 1; });
+    if (d.length && diffs.length < 40) diffs.push({ id, fields: d.map((f) => ({ field: f, ours: x[f] == null ? '—' : String(x[f]).slice(0, 200), theirs: y[f] == null ? '—' : String(y[f]).slice(0, 200) })) });
   }
   return { ours: a.size, theirs: b.size, same: [...a.keys()].filter((id) => b.has(id)).length, onlyOurs: onlyOurs.slice(0, 60), onlyTheirs: onlyTheirs.slice(0, 60), onlyOursCount: onlyOurs.length, onlyTheirsCount: onlyTheirs.length, fieldDiffs: fields, diffs };
 }
