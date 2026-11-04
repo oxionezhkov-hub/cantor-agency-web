@@ -14132,6 +14132,28 @@ async function handleFeedsApi(request, env, url) {
     }
   }
 
+  // The cabinet's last completed autoload report: summary, problem listings (for the «файл ошибок»)
+  // and where the cabinet loads from right now (our XML, BananLab or something else).
+  if (parts[1] === 'report' && request.method === 'GET') {
+    try {
+      const { account, token } = await feedsAvitoAccount(env, feed);
+      const [result, profile] = await Promise.all([
+        fetchAvitoAutoloadReport(env, account, null),
+        avitoJson(token, '/autoload/v2/profile').catch(() => null),
+      ]);
+      const urls = profile ? ((profile.feeds_data || []).map((f) => f.feed_url).concat(profile.upload_url || [])).filter(Boolean) : [];
+      const ours = urls.some((u) => u.includes(`/feeds/${feed.slug}/`) || u.includes(`/feed/${feed.slug}/`));
+      return json({
+        account: account.name,
+        summary: result.summary,
+        problems: result.items.filter((it) => it.problem),
+        source: !profile ? null : { urls, kind: ours ? 'cantor' : urls.some((u) => /server1\/avito\/clients|bananlab/i.test(u)) ? 'bananlab' : urls.length ? 'other' : 'none', enabled: profile.autoload_enabled !== false },
+      });
+    } catch (err) {
+      return json({ error: String(err.message || err).slice(0, 400) }, 400);
+    }
+  }
+
   if (parts[1] === 'avito-upload' && request.method === 'POST') {
     try {
       const { token } = await feedsAvitoAccount(env, feed);
