@@ -1190,8 +1190,10 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .cc-adv.low em{color:var(--amber);font-weight:500}
 .cc-tariff{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--muted)}
 .cc-tariff .ic{width:16px;height:16px}
-.cc-tariff b{color:var(--ink);font-size:14px;margin-left:auto;font-variant-numeric:tabular-nums}
-.cc-tariff em{flex-basis:100%;font-style:normal;font-size:12.5px;padding-left:24px}
+.cc-tariff b{color:var(--ink);font-size:14.5px;margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cc-tariff span{display:inline-flex;align-items:center;gap:8px}
+.cc-tariff em{flex-basis:100%;font-style:normal;font-size:12.5px;padding-left:24px;color:var(--muted)}
+.cc-tariff.warn em,.cc-tariff.bad em{color:inherit}
 .cc-tariff.warn{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
 .cc-tariff.bad{background:var(--red-bg);border-color:transparent;color:var(--red)}
 .cc-tariff.warn b,.cc-tariff.bad b{color:inherit}
@@ -5124,21 +5126,21 @@ function clientsRefreshLabel() {
 function clientTariff(m, now) {
   const t = m && m.tariff;
   if (!t) return null;
-  if (!t.paidUntil) return t.error ? { tone: 'off', label: 'нет данных', note: '' } : { tone: 'bad', label: 'не оплачена', note: 'за 120 дней не было оплат подписки — без неё не работает автозагрузка' };
+  if (!t.paidUntil) return t.error ? { tone: 'off', label: 'нет данных', note: '' } : { tone: 'bad', label: 'не оплачена', note: 'За 120 дней не было оплат — без подписки не работает автозагрузка' };
   const today = Date.UTC(msk(now).y, msk(now).m, msk(now).d);
   const [y, mo, d] = t.paidUntil.split('-').map(Number);
   const days = Math.round((Date.UTC(y, mo - 1, d) - today) / 86400000);
   const until = `до ${pad(d)}.${pad(mo)}`;
-  if (days <= 0) return { tone: 'bad', days, label: days === 0 ? 'заканчивается сегодня' : `закончилась ${pad(d)}.${pad(mo)}`, note: 'автозагрузка и новые объявления встали — попросите клиента оплатить' };
+  if (days <= 0) return { tone: 'bad', days, label: days === 0 ? 'кончается сегодня' : 'закончилась', note: `${days === 0 ? 'Сегодня последний день' : `Не оплачена с ${pad(d)}.${pad(mo)}`}: автозагрузка и новые объявления встают — попросите клиента оплатить` };
   const left = `${until} · ${days} ${plural(days, 'день', 'дня', 'дней')}`;
-  if (days <= 5 && !t.autoRenew) return { tone: 'warn', days, label: left, note: 'автопродления нет — напомните клиенту оплатить заранее' };
-  return { tone: '', days, label: left + (t.autoRenew ? ' · продлится сама' : ''), note: '' };
+  if (days <= 5 && !t.autoRenew) return { tone: 'warn', days, label: left, note: 'Автопродления нет — напомните клиенту оплатить заранее' };
+  return { tone: '', days, label: left, note: t.autoRenew ? 'Продлится сама из кошелька' : '' };
 }
 function clientTariffHtml(p, m, now) {
   if (p.inactive || !CM.data || !m || !m.linked) return '';
   const st = clientTariff(m, now);
-  if (!st) return `<div class="cc-tariff">${ico('cal')}<span>Подписка Авито</span><b>—</b><em>проверится при «Обновить»</em></div>`;
-  return `<div class="cc-tariff ${st.tone === 'off' ? '' : st.tone}" title="${m.tariff.at ? `Проверено ${esc(fmtDay(Date.parse(m.tariff.at), now))} в ${esc(fmtTime(Date.parse(m.tariff.at)))}` : ''}">${ico('cal')}<span>Подписка Авито</span><b>${esc(st.label)}</b>${st.note ? `<em>${esc(st.note)}</em>` : ''}</div>`;
+  if (!st) return `<div class="cc-tariff"><span>${ico('cal')}Подписка Авито</span><b>—</b><em>Проверится по кнопке «Обновить»</em></div>`;
+  return `<div class="cc-tariff ${st.tone === 'off' ? '' : st.tone}" title="${m.tariff.at ? `Проверено ${esc(fmtDay(Date.parse(m.tariff.at), now))} в ${esc(fmtTime(Date.parse(m.tariff.at)))}` : ''}"><span>${ico('cal')}Подписка Авито</span><b>${esc(st.label)}</b>${st.note ? `<em>${esc(st.note)}</em>` : ''}</div>`;
 }
 function clientTodo(p, i, m, now) {
   const out = [];
