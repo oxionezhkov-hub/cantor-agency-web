@@ -5482,6 +5482,11 @@ const BOT_EXTRACT_SYSTEM = [
   'taken — кто-то взял задачу или назвал срок; done — из сообщений команды ясно, что работа сделана («готово», «поправила», «загрузили», «запустили», «сделано», скрин результата); informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
+  'НЕ задачи и тоже не заводи: статус человека о своей работе («проверяю», «разбираюсь», «вернусь в 12:00», «сегодня доделаю»);',
+  'план дня, который специалист пишет сам себе (список «сегодня сделаю …» без тега другого человека) — это его план, а не новые задачи;',
+  'ежедневный отчёт и любой отчёт с цифрами («ЕЖЕДНЕВНЫЙ ОТЧЕТ», «Бюджет: … Просмотров: …», «Что сделано: …»);',
+  'реплика клиента, которая сообщает или разрешает что-то, но ни о чём не просит («также можно использовать фото …», «согласна»).',
+  'Одна просьба = одна задача: не дроби одно сообщение на несколько задач и не повторяй один пункт разными словами.',
   'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если КМ или Олег уже ответили клиенту',
   'по задаче вида «ответить на вопрос клиента» — это informed. Если событий нет — {"events":[]}.',
 ].join('\n');
@@ -5760,6 +5765,16 @@ function botTaskPriority(fromAi, text, dueMs) {
   return p;
 }
 const BOT_DUE_HINT_RE = /\d{1,2}[.:/]\d{2}|\d{1,2}\s*(час|ч\b)|сегодня|завтра|послезавтра|понедельник|вторник|сред[ау]|четверг|пятниц|суббот|воскресен|до\s+(конца|вечера|утра|обеда|ночи)|через\s+\d|через\s+(час|день|неделю)|срок|дедлайн|к\s+\d|утром|вечером|asap|срочно|сейчас/i;
+// Who leads each client in the tracker: { projectId: userId }, read once per cron run.
+let BOT_OWNERS = null;
+async function botClientOwners(kv) {
+  if (BOT_OWNERS && Date.now() - BOT_OWNERS.at < 60000) return BOT_OWNERS.map;
+  const owners = await atLoadOwners(kv);
+  const map = {};
+  Object.entries(owners || {}).forEach(([pid, o]) => { if (o && o.userId) map[pid] = o.userId; });
+  BOT_OWNERS = { at: Date.now(), map };
+  return map;
+}
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -5820,8 +5835,16 @@ async function botApplyEvents(env, events, ctx) {
         createdAt: nowIso,
         updatedAt: nowIso,
       };
-      const who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
-      if (who && botNamedIn(src, who)) Object.assign(task, { assigneeId: who.id, owner: who.name });
+      let who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
+      if (who && !botNamedIn(src, who)) who = null;
+      // The lead (Евгений) sets and checks work, he doesn't do it: a chat task named on him, or on nobody,
+      // goes to the specialist who leads this client («Клиенты → Настройки»).
+      if (!who || who.role === 'lead') {
+        const ownerId = ctx.topic.projectId && (await botClientOwners(kv))[ctx.topic.projectId];
+        const lead = ownerId && users.find((u) => u.id === ownerId && u.active !== false && u.role !== 'lead');
+        who = lead || (who && who.role === 'lead' ? null : who);
+      }
+      if (who) Object.assign(task, { assigneeId: who.id, owner: who.name });
       await kv.put(`task:${id}`, JSON.stringify(task));
       openById.set(id, task);
       ctx.openTasks.push(task);
