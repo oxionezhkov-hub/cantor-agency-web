@@ -7860,7 +7860,7 @@ async function atReflectionCron(env, team, nowMs) {
     const now = new Date(nowMs).toISOString();
     const task = {
       id, text: `Заполнить рефлексию по клиентам (неделя с ${week.slice(8, 10)}.${week.slice(5, 7)})`,
-      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому своему клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
+      note: 'Вкладка «Рефлексия» в трекере: по каждому своему клиенту оценка 1–10 и ответ на вопрос «Как дойти до 10?» — чего не хватает и какой шаг сделаете на этой неделе. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
       status: 'open', priority: 'normal', source: 'tracker', origin: 'tracker', author: 'Бот', createdById: null,
       assigneeId: u.id, owner: u.name, due: botIsoMsk(due), link: `${AT_PAGE_URL}#reflection`, startedAt: now,
       notified: {}, activity: [{ t: nowMs, by: 'Бот', what: 'поставил задачу на рефлексию' }], createdAt: now, updatedAt: now,
