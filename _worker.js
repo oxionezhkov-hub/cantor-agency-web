@@ -3283,6 +3283,15 @@ async function handleDashboardApi(request, env, url, ctx) {
   // ── Reflection (read-only): the weekly «Рефлексия» — each employee's 1–10 score and comment per client ──
   // GET /api/dashboard/reflection                    -> { current, results, history } for the current week
   // GET /api/dashboard/reflection?week=YYYY-MM-DD    -> the same for the week starting on that Wednesday
+  // The tracker's «Рассылки» calendar, read-only: GET /api/dashboard/mailings?month=YYYY-MM (default —
+  // the current month by Moscow time). Items as the tracker keeps them: date, projectId, budget,
+  // status (null = запланирована, launched, results), contacts, result, comment.
+  if (pathname === '/api/dashboard/mailings' && request.method === 'GET') {
+    const m = url.searchParams.get('month');
+    const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(m || '')) ? m : botMsk(Date.now()).date.slice(0, 7);
+    const rec = await env.AGENCY_DASHBOARD_KV.get(`mail:${month}`, 'json');
+    return json({ month, items: ((rec && rec.items) || []).slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)) });
+  }
   if (pathname === '/api/dashboard/reflection' && request.method === 'GET') {
     const current = reflWeek(Date.now());
     const asked = url.searchParams.get('week');
@@ -3686,18 +3695,35 @@ async function atRefreshAvitoMoney(env) {
       const p = queue.shift();
       const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
       if (!account) { rows[p.id] = { advance: null, wallet: null, error: 'кабинет не найден' }; continue; }
-      try {
-        const m = await fetchAvitoMoney(env, account);
-        rows[p.id] = { advance: m.advance, wallet: m.wallet, error: m.advance == null && m.wallet == null ? m.errors[0] || 'нет данных' : null };
-      } catch (e) {
-        rows[p.id] = { advance: null, wallet: null, error: String(e && e.message).slice(0, 160) };
-      }
+      // The Avito subscription is read alongside the money: when it lapses, autoload stops and new
+      // listings aren't published, so the «Клиенты» tab flags it on every «Обновить».
+      const [money, tariff] = await Promise.all([
+        fetchAvitoMoney(env, account).catch((e) => ({ advance: null, wallet: null, errors: [String(e && e.message).slice(0, 160)] })),
+        fetchAvitoTariff(env, account),
+      ]);
+      rows[p.id] = { advance: money.advance, wallet: money.wallet, error: money.advance == null && money.wallet == null ? money.errors[0] || 'нет данных' : null };
+      tariffs[p.id] = atTariffRow(tariff);
     }
   };
+  const tariffs = {};
   await Promise.all(Array.from({ length: 4 }, worker));
-  const rec = { at: new Date().toISOString(), rows };
+  const at = new Date().toISOString();
+  const rec = { at, rows };
   await kv.put('at:avitoMoney', JSON.stringify(rec));
+  // Kept on its own so the last known subscription survives a newer morning pull of the money.
+  const prev = (await kv.get('at:avitoTariff', 'json')) || { rows: {} };
+  Object.entries(tariffs).forEach(([id, t]) => {
+    // Avito failed for this cabinet just now: keep what was known before rather than blanking it.
+    if (t.error && prev.rows[id] && prev.rows[id].paidUntil) prev.rows[id] = { ...prev.rows[id], error: t.error };
+    else prev.rows[id] = { ...t, at };
+  });
+  await kv.put('at:avitoTariff', JSON.stringify({ at, rows: prev.rows }));
   return rec;
+}
+// The part of fetchAvitoTariff the tracker needs. daysLeft is recounted in the browser from
+// paidUntil, so a value saved days ago still reads right.
+function atTariffRow(t) {
+  return { paidUntil: t.paidUntil, lastPaidAt: t.lastPaidAt, autoRenew: t.autoRenew, error: t.error };
 }
 
 /* ── Background Avito pull (one KV record per day, results for every linked cabinet) ── */
@@ -3828,6 +3854,16 @@ function reportMonthStart(projectId, dateTo) {
   return prevLast.endsWith('-31') ? prevLast : first;
 }
 
+const MONTHS_RU_NOMINATIVE = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+// «Суммарно с 1 по 4 ноября» — the days the month block really covers, so a short start of a month
+// doesn't read as the whole month.
+function reportMonthLabel(monthFrom, dateTo) {
+  const [, m1, d1] = monthFrom.split('-').map(Number);
+  const [, m2, d2] = dateTo.split('-').map(Number);
+  if (m1 !== m2) return `Суммарно с ${d1} ${MONTHS_RU_GENITIVE[m1 - 1]} по ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+  if (d1 === d2) return `Суммарно за ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+  return `Суммарно с ${d1} по ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+}
 function reportPeriodLabel(dateFrom, dateTo) {
   const [, m1, d1] = dateFrom.split('-').map(Number);
   const [, m2, d2] = dateTo.split('-').map(Number);
@@ -3855,22 +3891,22 @@ function fmtRuPct(n) {
 
 // Rule-based "Текущие наблюдения" — Workers AI rewrites it in natural wording, and this
 // is also what the file falls back to if the AI isn't configured or hasn't answered.
-function draftObservation(month, last3) {
+function draftObservation(month, last3, basis) {
   const parts = [];
   if (month.contacts > 0 && month.views > 0) {
     const conv = (month.contacts / month.views) * 100;
-    let convLabel = 'в целевом диапазоне';
-    if (conv > 12) convLabel = 'выше целевого диапазона';
-    else if (conv < 8) convLabel = 'ниже целевой';
-    else if (conv < 10) convLabel = 'чуть ниже целевой';
-    parts.push(`Конверсия ${fmtRuPct(conv)}% — ${convLabel} (10–12%)`);
+    let convLabel = 'в целевом диапазоне (10–12%)';
+    if (conv > 12) convLabel = 'выше цели 10–12%, это хорошо';
+    else if (conv < 8) convLabel = 'ниже целевой (10–12%)';
+    else if (conv < 10) convLabel = 'чуть ниже целевой (10–12%)';
+    parts.push(`${basis ? `${basis[0].toUpperCase()}${basis.slice(1)}: к` : 'К'}онверсия ${fmtRuPct(conv)}% — ${convLabel}`);
     const cpl = month.budget / month.contacts;
-    let cplLabel = 'в пределах целевого диапазона';
-    if (cpl > 1500) cplLabel = 'выше целевого диапазона';
-    else if (cpl < 1000) cplLabel = 'ниже целевого';
-    parts.push(`CPL ${fmtRuInt(cpl)} руб — ${cplLabel} (1000–1500 руб)`);
+    let cplLabel = 'в пределах целевого диапазона (1000–1500 руб)';
+    if (cpl > 1500) cplLabel = 'выше целевого диапазона (1000–1500 руб)';
+    else if (cpl < 1000) cplLabel = 'дешевле цели 1000–1500 руб, это хорошо';
+    parts.push(`CPL ${fmtRuInt(cpl)} руб — ${cplLabel}`);
   } else {
-    parts.push('Контактов за месяц пока нет, конверсия и CPL не считаются');
+    parts.push(`Контактов ${basis ? 'за этот период' : 'за месяц'} пока нет, конверсия и CPL не считаются`);
   }
   const v = last3.map((d) => d.views);
   let trend = 'колеблются';
@@ -3904,17 +3940,38 @@ async function buildDailyReportData(kv, dateFrom, dateTo) {
     if (!lastDay || !lastDay.budget) {
       warnings.push(`${p.name}: за ${dateTo.split('-').reverse().join('.')} бюджет пустой — возможно, данные ещё не внесены`);
     }
-    const conversionPct = month.views > 0 ? Math.round((month.contacts / month.views) * 1000) / 10 : null;
-    const cpl = month.contacts > 0 ? Math.round(month.budget / month.contacts) : null;
-    const cac = month.sales > 0 ? Math.round(month.budget / month.sales) : null;
+    const withRates = (s) => ({
+      ...s,
+      conversionPct: s.views > 0 ? Math.round((s.contacts / s.views) * 1000) / 10 : null,
+      cpl: s.contacts > 0 ? Math.round(s.budget / s.contacts) : null,
+      cac: s.sales > 0 ? Math.round(s.budget / s.sales) : null,
+    });
+    // The first days of a month: «с начала месяца» is a day or three, so it can come out smaller
+    // than the period above it and its rates swing on one contact. Then the report also shows the
+    // whole previous month, and the observation is drawn from the last 14 days instead.
+    const monthDays = Math.round((Date.parse(`${dateTo}T00:00:00Z`) - Date.parse(`${monthFrom}T00:00:00Z`)) / 86400000) + 1;
+    const early = monthDays < 7;
+    let prevMonth = null;
+    if (early) {
+      const prevTo = avitoAddDays(monthFrom, -1);
+      const prevFrom = reportMonthStart(p.id, prevTo);
+      const prev = sumDaily(rows, prevFrom, prevTo);
+      if (prev.budget > 0) prevMonth = { ...withRates(prev), label: MONTHS_RU_NOMINATIVE[Number(prevTo.slice(5, 7)) - 1] };
+    }
+    const obsFrom = early ? avitoAddDays(dateTo, -13) : monthFrom;
+    const obsBase = early ? sumDaily(rows, obsFrom, dateTo) : month;
     clients.push({
       projectId: p.id,
       name: p.name,
       monthFrom,
+      monthLabel: reportMonthLabel(monthFrom, dateTo),
       period: { budget: period.budget, views: period.views, contacts: period.contacts },
-      month: { ...month, conversionPct, cpl, cac },
+      month: withRates(month),
+      prevMonth,
+      obsBase: withRates(obsBase),
+      obsBasis: early ? 'за последние 14 дней' : null,
       last3,
-      draftObservation: draftObservation(month, last3),
+      draftObservation: draftObservation(obsBase, last3, early ? 'за последние 14 дней' : null),
     });
   }
   return { dateFrom, dateTo, periodLabel: reportPeriodLabel(dateFrom, dateTo), clients, warnings };
@@ -4006,11 +4063,6 @@ function buildDailyReportDocx(report, observations) {
   report.clients.forEach((c, i) => {
     const m = c.month;
     const obs = String((observations && observations[c.projectId]) || c.draftObservation).trim();
-    let contactsLine = `Контактов: ${n(m.contacts)}`;
-    const extras = [];
-    if (m.conversionPct != null) extras.push(`конверсия ${fmtRuPct(m.conversionPct)}%`);
-    if (m.cpl != null) extras.push(`CPL ${n(m.cpl)} руб`);
-    if (extras.length) contactsLine += ` (${extras.join(', ')})`;
 
     paras.push(docxParagraph([c.name], { style: 'Heading1', pageBreakBefore: i > 0 }));
     paras.push(docxParagraph([{ text: 'ЕЖЕДНЕВНЫЙ ОТЧЕТ', bold: true, size: 28 }]));
@@ -4019,12 +4071,21 @@ function buildDailyReportDocx(report, observations) {
     paras.push(docxParagraph([`Просмотров: ${n(c.period.views)}`]));
     paras.push(docxParagraph([`Контактов: ${n(c.period.contacts)}`]));
     paras.push(docxParagraph([{ text: 'Текущие наблюдения:', bold: true }, { text: obs, br: true }]));
-    paras.push(docxParagraph([{ text: 'Суммарно за месяц', bold: true }]));
-    paras.push(docxParagraph([`Бюджет: ${n(m.budget)} руб`]));
-    paras.push(docxParagraph([`Просмотров: ${n(m.views)}`]));
-    paras.push(docxParagraph([contactsLine]));
-    paras.push(docxParagraph([`Диагностик: ${n(m.diagnostics)}`]));
-    paras.push(docxParagraph([`Продаж: ${n(m.sales)}${m.cac != null ? ` (CAC ${n(m.cac)} руб)` : ''}`]));
+    const block = (title, s) => {
+      let line = `Контактов: ${n(s.contacts)}`;
+      const ex = [];
+      if (s.conversionPct != null) ex.push(`конверсия ${fmtRuPct(s.conversionPct)}%`);
+      if (s.cpl != null) ex.push(`CPL ${n(s.cpl)} руб`);
+      if (ex.length) line += ` (${ex.join(', ')})`;
+      paras.push(docxParagraph([{ text: title, bold: true }]));
+      paras.push(docxParagraph([`Бюджет: ${n(s.budget)} руб`]));
+      paras.push(docxParagraph([`Просмотров: ${n(s.views)}`]));
+      paras.push(docxParagraph([line]));
+      paras.push(docxParagraph([`Диагностик: ${n(s.diagnostics)}`]));
+      paras.push(docxParagraph([`Продаж: ${n(s.sales)}${s.cac != null ? ` (CAC ${n(s.cac)} руб)` : ''}`]));
+    };
+    block(c.monthLabel || 'Суммарно за месяц', m);
+    if (c.prevMonth) block(`Итого за ${c.prevMonth.label}`, c.prevMonth);
   });
   if (!report.clients.length) paras.push(docxParagraph(['Нет клиентов с бюджетом за этот месяц.']));
 
@@ -4709,6 +4770,28 @@ async function ensureClientsSeedV2(env) {
 }
 
 // ── message log ──
+// Telegram voice → text through Workers AI Whisper. Up to 10 minutes (Telegram hands the bot files up to
+// 20 MB; a 10-minute voice is ~2–5 MB). Any failure just leaves «[голосовое]» in the log.
+const BOT_VOICE_MAX_SEC = 600;
+const BOT_VOICE_MODEL = '@cf/openai/whisper-large-v3-turbo';
+async function botTranscribeVoice(env, voice) {
+  if (!env.AI || !voice || !voice.file_id || (voice.duration || 0) > BOT_VOICE_MAX_SEC) return null;
+  try {
+    const file = await botApi(env, 'getFile', { file_id: voice.file_id });
+    if (!file || !file.ok || !file.result || !file.result.file_path) return null;
+    const res = await fetch(`https://api.telegram.org/file/bot${env.CONTROL_BOT_TOKEN}/${file.result.file_path}`, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const out = await env.AI.run(BOT_VOICE_MODEL, { audio: btoa(bin), language: 'ru' });
+    const heard = String((out && out.text) || '').trim();
+    return heard || null;
+  } catch (err) {
+    console.error('voice transcription failed', err && err.message);
+    return null;
+  }
+}
 function botMessageText(msg) {
   let text = msg.text || msg.caption || '';
   const media = msg.photo ? '[фото]' : msg.video ? '[видео]' : msg.voice ? '[голосовое]' : msg.video_note ? '[кружок]'
@@ -4884,6 +4967,16 @@ async function botOnMessage(env, msg, edited) {
   await botAppendLog(kv, chat.id, threadId, {
     id: msg.message_id, t, from: botUserName(msg.from), fromId, team: isTeam, text: botRedactSecrets(text).slice(0, 4000), reply: replyTo, edited: edited || undefined,
   }, t);
+  // A voice message is logged as «[голосовое]» first, then its transcript replaces that entry, so the
+  // log (and the AI that reads it for tasks and Q&A) holds what was actually said.
+  let logText = text;
+  if (msg.voice && !edited) {
+    const heard = await botTranscribeVoice(env, msg.voice);
+    if (heard) {
+      logText = `[голосовое, расшифровка] ${heard}${msg.caption ? `\n${msg.caption}` : ''}`;
+      await botAppendLog(kv, chat.id, threadId, { id: msg.message_id, text: botRedactSecrets(logText).slice(0, 4000) }, t);
+    }
+  }
   const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
   if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
   if (isTeam) await botSaveStaffLink(env, chatRec, threadId, text);
@@ -5398,6 +5491,11 @@ const BOT_EXTRACT_SYSTEM = [
   'taken — кто-то взял задачу или назвал срок; done — из сообщений команды ясно, что работа сделана («готово», «поправила», «загрузили», «запустили», «сделано», скрин результата); informed — КМ/Олег сообщили клиенту результат;',
   'cancelled — задача больше не нужна. Сроки переводи в абсолютные дату и время по Москве («до завтра» = завтра 18:00,',
   '«сегодня» = сегодня 18:00, «через час» = время сообщения + 1 час). Не выдумывай: если срока нет — null.',
+  'НЕ задачи и тоже не заводи: статус человека о своей работе («проверяю», «разбираюсь», «вернусь в 12:00», «сегодня доделаю»);',
+  'план дня, который специалист пишет сам себе (список «сегодня сделаю …» без тега другого человека) — это его план, а не новые задачи;',
+  'ежедневный отчёт и любой отчёт с цифрами («ЕЖЕДНЕВНЫЙ ОТЧЕТ», «Бюджет: … Просмотров: …», «Что сделано: …»);',
+  'реплика клиента, которая сообщает или разрешает что-то, но ни о чём не просит («также можно использовать фото …», «согласна»).',
+  'Одна просьба = одна задача: не дроби одно сообщение на несколько задач и не повторяй один пункт разными словами.',
   'Если сообщение продолжает уже известную задачу — используй update, а не new_task. Если КМ или Олег уже ответили клиенту',
   'по задаче вида «ответить на вопрос клиента» — это informed. Если событий нет — {"events":[]}.',
 ].join('\n');
@@ -5676,6 +5774,16 @@ function botTaskPriority(fromAi, text, dueMs) {
   return p;
 }
 const BOT_DUE_HINT_RE = /\d{1,2}[.:/]\d{2}|\d{1,2}\s*(час|ч\b)|сегодня|завтра|послезавтра|понедельник|вторник|сред[ау]|четверг|пятниц|суббот|воскресен|до\s+(конца|вечера|утра|обеда|ночи)|через\s+\d|через\s+(час|день|неделю)|срок|дедлайн|к\s+\d|утром|вечером|asap|срочно|сейчас/i;
+// Who leads each client in the tracker: { projectId: userId }, read once per cron run.
+let BOT_OWNERS = null;
+async function botClientOwners(kv) {
+  if (BOT_OWNERS && Date.now() - BOT_OWNERS.at < 60000) return BOT_OWNERS.map;
+  const owners = await atLoadOwners(kv);
+  const map = {};
+  Object.entries(owners || {}).forEach(([pid, o]) => { if (o && o.userId) map[pid] = o.userId; });
+  BOT_OWNERS = { at: Date.now(), map };
+  return map;
+}
 async function botApplyEvents(env, events, ctx) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const byMsg = new Map(ctx.fresh.map((e) => [e.id, e]));
@@ -5736,8 +5844,16 @@ async function botApplyEvents(env, events, ctx) {
         createdAt: nowIso,
         updatedAt: nowIso,
       };
-      const who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
-      if (who && botNamedIn(src, who)) Object.assign(task, { assigneeId: who.id, owner: who.name });
+      let who = ev.assignee && ev.assignee !== 'null' ? atMatchUser(String(ev.assignee), users) : null;
+      if (who && !botNamedIn(src, who)) who = null;
+      // The lead (Евгений) sets and checks work, he doesn't do it: a chat task named on him, or on nobody,
+      // goes to the specialist who leads this client («Клиенты → Настройки»).
+      if (!who || who.role === 'lead') {
+        const ownerId = ctx.topic.projectId && (await botClientOwners(kv))[ctx.topic.projectId];
+        const lead = ownerId && users.find((u) => u.id === ownerId && u.active !== false && u.role !== 'lead');
+        who = lead || (who && who.role === 'lead' ? null : who);
+      }
+      if (who) Object.assign(task, { assigneeId: who.id, owner: who.name });
       await kv.put(`task:${id}`, JSON.stringify(task));
       openById.set(id, task);
       ctx.openTasks.push(task);
@@ -7811,7 +7927,7 @@ async function atReflectionCron(env, team, nowMs) {
     const now = new Date(nowMs).toISOString();
     const task = {
       id, text: `Заполнить рефлексию по клиентам (неделя с ${week.slice(8, 10)}.${week.slice(5, 7)})`,
-      note: 'Вкладка «Рефлексия» в трекере: оценка 1–10 и пара предложений по каждому своему клиенту. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
+      note: 'Вкладка «Рефлексия» в трекере: по каждому своему клиенту оценка 1–10 и ответ на вопрос «Как дойти до 10?» — чего не хватает и какой шаг сделаете на этой неделе. Можно выйти и продолжить потом — задача закроется сама, когда всё будет заполнено.',
       status: 'open', priority: 'normal', source: 'tracker', origin: 'tracker', author: 'Бот', createdById: null,
       assigneeId: u.id, owner: u.name, due: botIsoMsk(due), link: `${AT_PAGE_URL}#reflection`, startedAt: now,
       notified: {}, activity: [{ t: nowMs, by: 'Бот', what: 'поставил задачу на рефлексию' }], createdAt: now, updatedAt: now,
@@ -8092,7 +8208,7 @@ async function atLatestPull(kv) {
 }
 async function atClientsMetrics(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const [projects, rows, pull, live] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv), kv.get('at:avitoMoney', 'json')]);
+  const [projects, rows, pull, live, tariffs] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv), kv.get('at:avitoMoney', 'json'), kv.get('at:avitoTariff', 'json')]);
   const pullAt = pull ? Date.parse(pull.finishedAt || pull.startedAt || 0) || 0 : 0;
   const liveAt = live ? Date.parse(live.at) || 0 : 0;
   const y = mskYesterday();
@@ -8101,7 +8217,7 @@ async function atClientsMetrics(env) {
   const out = {};
   for (const p of projects) {
     if (p.inactive) continue;
-    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null, wallet: null, moneyAt: null };
+    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null, wallet: null, moneyAt: null, tariff: (p.avitoAccountId && tariffs && tariffs.rows && tariffs.rows[p.id]) || null };
     // Advance and wallet: from the «Обновить с Авито» button if it is newer than the morning pull.
     const lr = live && live.rows && live.rows[p.id];
     const r = pull && pull.results && pull.results[p.id];
@@ -9179,7 +9295,8 @@ function waiChunks(text, max) {
 // ── the daily report: «Текущие наблюдения» for every client ──
 const WAI_REPORT_SYSTEM = [
   'Ты аналитик агентства Cantor Agency (продвижение репетиторов и онлайн-школ на Авито). Пишешь блок «Текущие наблюдения» ежедневного отчёта, который менеджер перешлёт клиенту.',
-  'Для каждого клиента — одно-два предложения по-русски: конверсия из просмотра в контакт за месяц (month.conversionPct, цель 10–12%), стоимость контакта (month.cpl, цель 1000–1500 ₽) и динамика просмотров за последние 3 дня (last3).',
+  'Для каждого клиента — одно-два предложения по-русски: конверсия из просмотра в контакт (month.conversionPct, цель 10–12%), стоимость контакта (month.cpl, цель 1000–1500 ₽) и динамика просмотров за последние 3 дня (last3). За какой период посчитаны month — в basis; если это не «с начала месяца», назови период.',
+  'Конверсия выше цели и CPL дешевле цели — это хорошо для клиента: так и подавай, а не как отклонение.',
   'draft — механический черновик с верными цифрами: перепиши его живым деловым языком, но цифры и выводы (выше/ниже цели, растут/снижаются) не меняй и ничего не добавляй от себя.',
   'Тон спокойный и конкретный, без воды, обещаний, эмодзи и markdown. Если контактов за месяц нет — так и скажи, без конверсии и CPL.',
   'Ответ — только JSON-объект {"<id клиента>": "<наблюдение>", …} для всех клиентов из запроса.',
@@ -9194,7 +9311,8 @@ async function waiReportStep(env, job) {
     const rows = todo.map((c) => ({
       id: c.projectId,
       name: c.name,
-      month: { budget: c.month.budget, views: c.month.views, contacts: c.month.contacts, conversionPct: c.month.conversionPct, cpl: c.month.cpl },
+      month: { budget: c.obsBase.budget, views: c.obsBase.views, contacts: c.obsBase.contacts, conversionPct: c.obsBase.conversionPct, cpl: c.obsBase.cpl },
+      basis: c.obsBasis || 'с начала месяца',
       last3: c.last3.map((d) => d.views),
       draft: c.draftObservation,
     }));

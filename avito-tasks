@@ -1188,6 +1188,14 @@ button.mt-slot:hover{border-color:var(--green);background:var(--green-bg)}
 .cc-adv em{flex-basis:100%;font-style:normal;font-size:12.5px;color:var(--muted);padding-left:24px}
 .cc-adv.low{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
 .cc-adv.low em{color:var(--amber);font-weight:500}
+.cc-tariff{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--muted)}
+.cc-tariff .ic{width:16px;height:16px}
+.cc-tariff b{color:var(--ink);font-size:14px;margin-left:auto;font-variant-numeric:tabular-nums}
+.cc-tariff em{flex-basis:100%;font-style:normal;font-size:12.5px;padding-left:24px}
+.cc-tariff.warn{background:var(--amber-bg);border-color:transparent;color:var(--amber)}
+.cc-tariff.bad{background:var(--red-bg);border-color:transparent;color:var(--red)}
+.cc-tariff.warn b,.cc-tariff.bad b{color:inherit}
+.cc-tariff.warn em,.cc-tariff.bad em{font-weight:500}
 .c-refresh .c-when{font-weight:500;color:var(--muted);padding-left:8px;margin-left:2px;border-left:1px solid var(--line)}
 .cc-adv.off em{flex-basis:auto;margin-left:auto;padding:0}
 .cc-adv:not(.off){display:grid;gap:4px}
@@ -3384,9 +3392,9 @@ function renderReflection() {
     </div>
     <div class="rf-verdict" style="color:${d.score ? rfColor(d.score) : 'var(--faint)'}">${d.score ? RF_WORDS[d.score] : 'Выберите оценку'}</div>
     <div>
-      <label class="label" for="rfComment">Почему такая оценка</label>
-      <textarea class="textarea rf-comment" id="rfComment" maxlength="400" placeholder="1–2 предложения: что получилось, что мешает, что дальше">${esc(d.comment)}</textarea>
-      <div class="rf-hint"><span>Коротко — одно-два предложения</span><span id="rfCount">${d.comment.length}/400</span></div>
+      <label class="label" for="rfComment">Как дойти до 10?</label>
+      <textarea class="textarea rf-comment" id="rfComment" maxlength="400" placeholder="Чего не хватает до 10 и какой конкретный шаг вы сделаете на этой неделе">${esc(d.comment)}</textarea>
+      <div class="rf-hint"><span>Не «всё стабильно», а что мешает и что сделаете</span><span id="rfCount">${d.comment.length}/400</span></div>
     </div>
     <div class="rf-actions">
       <button class="btn btn-ghost btn-sm" data-rf-prev ${RF.idx === 0 ? 'disabled' : ''}>← Назад</button>
@@ -5092,7 +5100,9 @@ $('clientsRefresh').addEventListener('click', async () => {
     const res = await api('clients-refresh');
     if (!res.ok) throw new Error();
     CM.data = res.data.clients; CM.loadedAt = Date.now();
-    toast('Аванс и кошелёк обновлены по всем клиентам');
+    const now = Date.now();
+    const lapsed = Object.values(CM.data || {}).filter((m) => { const t = clientTariff(m, now); return t && (t.tone === 'bad' || t.tone === 'warn'); }).length;
+    toast(lapsed ? `Аванс, кошелёк и подписки обновлены — подписка Авито требует внимания: ${lapsed}` : 'Аванс, кошелёк и подписки Авито обновлены по всем клиентам');
   } catch (e) { toast('Не получилось обновить — попробуйте ещё раз'); }
   b.classList.remove('busy');
   clientsRefreshLabel();
@@ -5106,7 +5116,29 @@ function clientsRefreshLabel() {
   const now = Date.now();
   const when = !at ? '' : fmtDay(at, now) === fmtDay(now, now) ? fmtTime(at) : `${pad(msk(at).d)}.${pad(msk(at).m + 1)}`;
   b.querySelector('span').innerHTML = when ? `Обновить <span class="c-when">${esc(when)}</span>` : 'Обновить с Авито';
-  b.title = at ? `Аванс и кошелёк обновлены ${fmtDay(at, now)} в ${fmtTime(at)}. Нажмите, чтобы подтянуть сейчас по всем клиентам` : 'Подтянуть аванс и кошелёк по всем клиентам прямо сейчас';
+  b.title = at ? `Аванс и кошелёк обновлены ${fmtDay(at, now)} в ${fmtTime(at)}. Нажмите, чтобы подтянуть сейчас аванс, кошелёк и подписку Авито по всем клиентам` : 'Подтянуть аванс, кошелёк и подписку Авито по всем клиентам прямо сейчас';
+}
+// Подписка Авито («Подписка (набор услуг)»): когда кончится, считаем от paidUntil по московскому дню.
+// Без неё автозагрузка встаёт и новые объявления не выходят — поэтому красное, когда закончилась,
+// и жёлтое за 5 дней до конца, если Авито не продлевает её сам из кошелька.
+function clientTariff(m, now) {
+  const t = m && m.tariff;
+  if (!t) return null;
+  if (!t.paidUntil) return t.error ? { tone: 'off', label: 'нет данных', note: '' } : { tone: 'bad', label: 'не оплачена', note: 'за 120 дней не было оплат подписки — без неё не работает автозагрузка' };
+  const today = Date.UTC(msk(now).y, msk(now).m, msk(now).d);
+  const [y, mo, d] = t.paidUntil.split('-').map(Number);
+  const days = Math.round((Date.UTC(y, mo - 1, d) - today) / 86400000);
+  const until = `до ${pad(d)}.${pad(mo)}`;
+  if (days <= 0) return { tone: 'bad', days, label: days === 0 ? 'заканчивается сегодня' : `закончилась ${pad(d)}.${pad(mo)}`, note: 'автозагрузка и новые объявления встали — попросите клиента оплатить' };
+  const left = `${until} · ${days} ${plural(days, 'день', 'дня', 'дней')}`;
+  if (days <= 5 && !t.autoRenew) return { tone: 'warn', days, label: left, note: 'автопродления нет — напомните клиенту оплатить заранее' };
+  return { tone: '', days, label: left + (t.autoRenew ? ' · продлится сама' : ''), note: '' };
+}
+function clientTariffHtml(p, m, now) {
+  if (p.inactive || !CM.data || !m || !m.linked) return '';
+  const st = clientTariff(m, now);
+  if (!st) return `<div class="cc-tariff">${ico('cal')}<span>Подписка Авито</span><b>—</b><em>проверится при «Обновить»</em></div>`;
+  return `<div class="cc-tariff ${st.tone === 'off' ? '' : st.tone}" title="${m.tariff.at ? `Проверено ${esc(fmtDay(Date.parse(m.tariff.at), now))} в ${esc(fmtTime(Date.parse(m.tariff.at)))}` : ''}">${ico('cal')}<span>Подписка Авито</span><b>${esc(st.label)}</b>${st.note ? `<em>${esc(st.note)}</em>` : ''}</div>`;
 }
 function clientTodo(p, i, m, now) {
   const out = [];
@@ -5115,6 +5147,8 @@ function clientTodo(p, i, m, now) {
   if (i.inform.length) out.push({ kind: 'inform', tone: 'amber', html: `${ico('check')}<div><b>Сделано — расскажите клиенту</b><div class="cc-tasks">${i.inform.slice(0, 3).map((t) => `<button data-open="${esc(t.id)}">${esc(t.text)}</button>`).join('')}${i.inform.length > 3 ? `<button data-filter>…и ещё ${i.inform.length - 3}</button>` : ''}</div></div>` });
   const money = clientMoney(m);
   const daysLeft = money != null && m.perDay > 0 ? Math.floor(money / m.perDay) : null;
+  const tar = clientTariff(m, now);
+  if (tar && (tar.tone === 'bad' || tar.tone === 'warn')) out.push({ kind: 'tariff', tone: tar.tone === 'bad' ? 'red' : 'amber', html: '' });
   if (money != null && money < 1500) out.push({ kind: 'money', tone: 'amber', html: `${ico('wallet')}<div><b>Заканчиваются деньги в кабинете: ${anMoney(money)}</b><div class="cc-sub2">${daysLeft < 1 ? 'хватит меньше чем на день' : `хватит примерно на ${daysLeft} ${plural(daysLeft, 'день', 'дня', 'дней')}`} — попросите пополнить</div></div>` });
   return out;
 }
@@ -5167,6 +5201,7 @@ function renderClients() {
     stat('silent', has('silent'), 'Давно не писали', 'var(--red)'),
     stat('inform', has('inform'), 'Рассказать о сделанном', 'var(--amber)'),
     stat('money', has('money'), 'Кончается аванс', 'var(--amber)'),
+    stat('tariff', has('tariff'), 'Подписка Авито', 'var(--red)'),
   ].join('');
   const filtering = !!(CF.q || CF.show);
   const shown = (r) => {
@@ -5175,7 +5210,7 @@ function renderClients() {
     if (CF.show) return r.todo.some((t) => t.kind === CF.show);
     return true;
   };
-  const weight = { waiting: 1000, silent: 400, money: 300, overdue: 200, inform: 150 };
+  const weight = { waiting: 1000, tariff: 500, silent: 400, money: 300, overdue: 200, inform: 150 };
   // наверх — клиенты с уведомлениями (сначала самые срочные), остальные ниже по алфавиту
   const score = (r) => r.todo.reduce((s, t) => s + (weight[t.kind] || 0), 0);
   const rows = all.filter((r) => (prefs.showInactive || filtering || !r.p.inactive) && shown(r))
@@ -5190,7 +5225,8 @@ function renderClients() {
           ${p.inactive ? '<span class="cc-state st-off">неактивный</span>' : ''}</div>
         ${clientMetricsHtml(p, m)}
         ${clientAdvanceHtml(p, m)}
-        ${p.inactive ? '' : todo.some((t) => t.kind !== 'money') ? `<div class="cc-todo">${todo.filter((t) => t.kind !== 'money').map((t) => `<div class="cc-do ${t.tone}">${t.html}</div>`).join('')}</div>` : ''}
+        ${clientTariffHtml(p, m, now)}
+        ${p.inactive ? '' : todo.some((t) => t.kind !== 'money' && t.kind !== 'tariff') ? `<div class="cc-todo">${todo.filter((t) => t.kind !== 'money' && t.kind !== 'tariff').map((t) => `<div class="cc-do ${t.tone}">${t.html}</div>`).join('')}</div>` : ''}
         ${p.inactive ? '' : goalHtml(p)}
         ${linksOpen === p.id ? linksHtml(p) : ''}
         <div class="cc-foot">
