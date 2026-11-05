@@ -3845,6 +3845,16 @@ function reportMonthStart(projectId, dateTo) {
   return prevLast.endsWith('-31') ? prevLast : first;
 }
 
+const MONTHS_RU_NOMINATIVE = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+// «Суммарно с 1 по 4 ноября» — the days the month block really covers, so a short start of a month
+// doesn't read as the whole month.
+function reportMonthLabel(monthFrom, dateTo) {
+  const [, m1, d1] = monthFrom.split('-').map(Number);
+  const [, m2, d2] = dateTo.split('-').map(Number);
+  if (m1 !== m2) return `Суммарно с ${d1} ${MONTHS_RU_GENITIVE[m1 - 1]} по ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+  if (d1 === d2) return `Суммарно за ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+  return `Суммарно с ${d1} по ${d2} ${MONTHS_RU_GENITIVE[m2 - 1]}`;
+}
 function reportPeriodLabel(dateFrom, dateTo) {
   const [, m1, d1] = dateFrom.split('-').map(Number);
   const [, m2, d2] = dateTo.split('-').map(Number);
@@ -3872,22 +3882,22 @@ function fmtRuPct(n) {
 
 // Rule-based "Текущие наблюдения" — Workers AI rewrites it in natural wording, and this
 // is also what the file falls back to if the AI isn't configured or hasn't answered.
-function draftObservation(month, last3) {
+function draftObservation(month, last3, basis) {
   const parts = [];
   if (month.contacts > 0 && month.views > 0) {
     const conv = (month.contacts / month.views) * 100;
-    let convLabel = 'в целевом диапазоне';
-    if (conv > 12) convLabel = 'выше целевого диапазона';
-    else if (conv < 8) convLabel = 'ниже целевой';
-    else if (conv < 10) convLabel = 'чуть ниже целевой';
-    parts.push(`Конверсия ${fmtRuPct(conv)}% — ${convLabel} (10–12%)`);
+    let convLabel = 'в целевом диапазоне (10–12%)';
+    if (conv > 12) convLabel = 'выше цели 10–12%, это хорошо';
+    else if (conv < 8) convLabel = 'ниже целевой (10–12%)';
+    else if (conv < 10) convLabel = 'чуть ниже целевой (10–12%)';
+    parts.push(`${basis ? `${basis[0].toUpperCase()}${basis.slice(1)}: к` : 'К'}онверсия ${fmtRuPct(conv)}% — ${convLabel}`);
     const cpl = month.budget / month.contacts;
-    let cplLabel = 'в пределах целевого диапазона';
-    if (cpl > 1500) cplLabel = 'выше целевого диапазона';
-    else if (cpl < 1000) cplLabel = 'ниже целевого';
-    parts.push(`CPL ${fmtRuInt(cpl)} руб — ${cplLabel} (1000–1500 руб)`);
+    let cplLabel = 'в пределах целевого диапазона (1000–1500 руб)';
+    if (cpl > 1500) cplLabel = 'выше целевого диапазона (1000–1500 руб)';
+    else if (cpl < 1000) cplLabel = 'дешевле цели 1000–1500 руб, это хорошо';
+    parts.push(`CPL ${fmtRuInt(cpl)} руб — ${cplLabel}`);
   } else {
-    parts.push('Контактов за месяц пока нет, конверсия и CPL не считаются');
+    parts.push(`Контактов ${basis ? 'за этот период' : 'за месяц'} пока нет, конверсия и CPL не считаются`);
   }
   const v = last3.map((d) => d.views);
   let trend = 'колеблются';
@@ -3921,17 +3931,38 @@ async function buildDailyReportData(kv, dateFrom, dateTo) {
     if (!lastDay || !lastDay.budget) {
       warnings.push(`${p.name}: за ${dateTo.split('-').reverse().join('.')} бюджет пустой — возможно, данные ещё не внесены`);
     }
-    const conversionPct = month.views > 0 ? Math.round((month.contacts / month.views) * 1000) / 10 : null;
-    const cpl = month.contacts > 0 ? Math.round(month.budget / month.contacts) : null;
-    const cac = month.sales > 0 ? Math.round(month.budget / month.sales) : null;
+    const withRates = (s) => ({
+      ...s,
+      conversionPct: s.views > 0 ? Math.round((s.contacts / s.views) * 1000) / 10 : null,
+      cpl: s.contacts > 0 ? Math.round(s.budget / s.contacts) : null,
+      cac: s.sales > 0 ? Math.round(s.budget / s.sales) : null,
+    });
+    // The first days of a month: «с начала месяца» is a day or three, so it can come out smaller
+    // than the period above it and its rates swing on one contact. Then the report also shows the
+    // whole previous month, and the observation is drawn from the last 14 days instead.
+    const monthDays = Math.round((Date.parse(`${dateTo}T00:00:00Z`) - Date.parse(`${monthFrom}T00:00:00Z`)) / 86400000) + 1;
+    const early = monthDays < 7;
+    let prevMonth = null;
+    if (early) {
+      const prevTo = avitoAddDays(monthFrom, -1);
+      const prevFrom = reportMonthStart(p.id, prevTo);
+      const prev = sumDaily(rows, prevFrom, prevTo);
+      if (prev.budget > 0) prevMonth = { ...withRates(prev), label: MONTHS_RU_NOMINATIVE[Number(prevTo.slice(5, 7)) - 1] };
+    }
+    const obsFrom = early ? avitoAddDays(dateTo, -13) : monthFrom;
+    const obsBase = early ? sumDaily(rows, obsFrom, dateTo) : month;
     clients.push({
       projectId: p.id,
       name: p.name,
       monthFrom,
+      monthLabel: reportMonthLabel(monthFrom, dateTo),
       period: { budget: period.budget, views: period.views, contacts: period.contacts },
-      month: { ...month, conversionPct, cpl, cac },
+      month: withRates(month),
+      prevMonth,
+      obsBase: withRates(obsBase),
+      obsBasis: early ? 'за последние 14 дней' : null,
       last3,
-      draftObservation: draftObservation(month, last3),
+      draftObservation: draftObservation(obsBase, last3, early ? 'за последние 14 дней' : null),
     });
   }
   return { dateFrom, dateTo, periodLabel: reportPeriodLabel(dateFrom, dateTo), clients, warnings };
@@ -4023,11 +4054,6 @@ function buildDailyReportDocx(report, observations) {
   report.clients.forEach((c, i) => {
     const m = c.month;
     const obs = String((observations && observations[c.projectId]) || c.draftObservation).trim();
-    let contactsLine = `Контактов: ${n(m.contacts)}`;
-    const extras = [];
-    if (m.conversionPct != null) extras.push(`конверсия ${fmtRuPct(m.conversionPct)}%`);
-    if (m.cpl != null) extras.push(`CPL ${n(m.cpl)} руб`);
-    if (extras.length) contactsLine += ` (${extras.join(', ')})`;
 
     paras.push(docxParagraph([c.name], { style: 'Heading1', pageBreakBefore: i > 0 }));
     paras.push(docxParagraph([{ text: 'ЕЖЕДНЕВНЫЙ ОТЧЕТ', bold: true, size: 28 }]));
@@ -4036,12 +4062,21 @@ function buildDailyReportDocx(report, observations) {
     paras.push(docxParagraph([`Просмотров: ${n(c.period.views)}`]));
     paras.push(docxParagraph([`Контактов: ${n(c.period.contacts)}`]));
     paras.push(docxParagraph([{ text: 'Текущие наблюдения:', bold: true }, { text: obs, br: true }]));
-    paras.push(docxParagraph([{ text: 'Суммарно за месяц', bold: true }]));
-    paras.push(docxParagraph([`Бюджет: ${n(m.budget)} руб`]));
-    paras.push(docxParagraph([`Просмотров: ${n(m.views)}`]));
-    paras.push(docxParagraph([contactsLine]));
-    paras.push(docxParagraph([`Диагностик: ${n(m.diagnostics)}`]));
-    paras.push(docxParagraph([`Продаж: ${n(m.sales)}${m.cac != null ? ` (CAC ${n(m.cac)} руб)` : ''}`]));
+    const block = (title, s) => {
+      let line = `Контактов: ${n(s.contacts)}`;
+      const ex = [];
+      if (s.conversionPct != null) ex.push(`конверсия ${fmtRuPct(s.conversionPct)}%`);
+      if (s.cpl != null) ex.push(`CPL ${n(s.cpl)} руб`);
+      if (ex.length) line += ` (${ex.join(', ')})`;
+      paras.push(docxParagraph([{ text: title, bold: true }]));
+      paras.push(docxParagraph([`Бюджет: ${n(s.budget)} руб`]));
+      paras.push(docxParagraph([`Просмотров: ${n(s.views)}`]));
+      paras.push(docxParagraph([line]));
+      paras.push(docxParagraph([`Диагностик: ${n(s.diagnostics)}`]));
+      paras.push(docxParagraph([`Продаж: ${n(s.sales)}${s.cac != null ? ` (CAC ${n(s.cac)} руб)` : ''}`]));
+    };
+    block(c.monthLabel || 'Суммарно за месяц', m);
+    if (c.prevMonth) block(`Итого за ${c.prevMonth.label}`, c.prevMonth);
   });
   if (!report.clients.length) paras.push(docxParagraph(['Нет клиентов с бюджетом за этот месяц.']));
 
@@ -9228,7 +9263,8 @@ function waiChunks(text, max) {
 // ── the daily report: «Текущие наблюдения» for every client ──
 const WAI_REPORT_SYSTEM = [
   'Ты аналитик агентства Cantor Agency (продвижение репетиторов и онлайн-школ на Авито). Пишешь блок «Текущие наблюдения» ежедневного отчёта, который менеджер перешлёт клиенту.',
-  'Для каждого клиента — одно-два предложения по-русски: конверсия из просмотра в контакт за месяц (month.conversionPct, цель 10–12%), стоимость контакта (month.cpl, цель 1000–1500 ₽) и динамика просмотров за последние 3 дня (last3).',
+  'Для каждого клиента — одно-два предложения по-русски: конверсия из просмотра в контакт (month.conversionPct, цель 10–12%), стоимость контакта (month.cpl, цель 1000–1500 ₽) и динамика просмотров за последние 3 дня (last3). За какой период посчитаны month — в basis; если это не «с начала месяца», назови период.',
+  'Конверсия выше цели и CPL дешевле цели — это хорошо для клиента: так и подавай, а не как отклонение.',
   'draft — механический черновик с верными цифрами: перепиши его живым деловым языком, но цифры и выводы (выше/ниже цели, растут/снижаются) не меняй и ничего не добавляй от себя.',
   'Тон спокойный и конкретный, без воды, обещаний, эмодзи и markdown. Если контактов за месяц нет — так и скажи, без конверсии и CPL.',
   'Ответ — только JSON-объект {"<id клиента>": "<наблюдение>", …} для всех клиентов из запроса.',
@@ -9243,7 +9279,8 @@ async function waiReportStep(env, job) {
     const rows = todo.map((c) => ({
       id: c.projectId,
       name: c.name,
-      month: { budget: c.month.budget, views: c.month.views, contacts: c.month.contacts, conversionPct: c.month.conversionPct, cpl: c.month.cpl },
+      month: { budget: c.obsBase.budget, views: c.obsBase.views, contacts: c.obsBase.contacts, conversionPct: c.obsBase.conversionPct, cpl: c.obsBase.cpl },
+      basis: c.obsBasis || 'с начала месяца',
       last3: c.last3.map((d) => d.views),
       draft: c.draftObservation,
     }));
