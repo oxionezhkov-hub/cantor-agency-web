@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Иван Хлебников</title>
+<meta name="description" content="Руковожу школой гитары и укулеле «Амиго» и школой подготовки к ОГЭ и ЕГЭ «105 баллов». 15 лет был юристом, а теперь строю образовательные бизнесы, в которых учитель занят только учениками, а всё остальное работает по системе.">
+<meta name="theme-color" content="#0C1322">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: тёмная «аудитория» — кинематографичный портрет, академическая антиква, золотые линейки как в дипломе; светлая бумажная вставка для учебников */
+:root {
+  --night:   #0C1322;
+  --night-2: #111B30;
+  --night-3: #18243D;
+  --parch:   #EEE6D4;
+  --parch-2: rgba(238, 230, 212, .7);
+  --parch-3: rgba(238, 230, 212, .45);
+  --gold:    #CFAA5E;
+  --gold-2:  #E8CD8F;
+  --line:    rgba(238, 230, 212, .13);
+  --paper:   #EFE8D8;
+  --paper-ink: #111B30;
+  --paper-ink-2: #4A5268;
+  --danger:  #F08A7A;
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+
+  --f-display: 'Old Standard TT', 'Times New Roman', Georgia, serif;
+  --f-body:    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono:    'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+  --wrap: 1280px;
+  --gut: clamp(16px, 4.5vw, 56px);
+  --ease: cubic-bezier(.16, .84, .24, 1);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; font-family: var(--f-body); font-weight: 300; font-size: 17px; line-height: 1.7;
+  color: var(--parch); background: var(--night); overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+body.menu-open, body.lb-open { overflow: hidden; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+::selection { background: var(--gold); color: var(--night); }
+
+.wrap { width: 100%; max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
+.mono { font-family: var(--f-mono); font-size: 12px; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; }
+.gold { color: var(--gold); }
+.sec { padding-block: clamp(80px, 11vw, 150px); position: relative; }
+.eyebrow { display: flex; align-items: center; gap: 16px; color: var(--gold); margin-bottom: 24px; }
+.eyebrow::after { content: ''; flex: 0 0 64px; height: 1px; background: currentColor; opacity: .6; }
+.sec-title { font-size: clamp(38px, 5.6vw, 76px); line-height: 1.02; letter-spacing: -.01em; }
+.sec-title em { color: var(--gold-2); }
+.sec-lead { color: var(--parch-2); max-width: 52ch; margin-top: 20px; }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rv { animation: rv linear both; animation-timeline: view(); animation-range: entry 5% cover 28%; }
+    @keyframes rv { from { transform: translateY(40px); } to { transform: none; } }
+  }
+}
+
+/* ── Buttons ── */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 54px; padding: 0 30px; font-family: var(--f-mono); font-size: 13px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; overflow: hidden; transition: color .35s var(--ease), border-color .35s, transform .35s var(--ease); white-space: nowrap; isolation: isolate; }
+.btn::before { content: ''; position: absolute; inset: 0; z-index: -1; transform: scaleX(0); transform-origin: 100% 50%; transition: transform .5s var(--ease); }
+.btn:hover::before { transform: scaleX(1); transform-origin: 0 50%; }
+.btn-gold { background: var(--gold); color: var(--night); }
+.btn-gold::before { background: var(--parch); }
+.btn-line { border: 1px solid rgba(238, 230, 212, .35); color: var(--parch); }
+.btn-line::before { background: var(--parch); }
+.btn-line:hover { color: var(--night); border-color: var(--parch); }
+.btn svg { transition: transform .35s var(--ease); }
+.btn:hover svg { transform: translateX(4px); }
+
+/* ── Header ── */
+.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
+.hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.hdr.is-solid { background: rgba(12, 19, 34, .82); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom-color: var(--line); }
+.hdr.is-away { transform: translateY(-110%); }
+.hdr.is-away { pointer-events: none; }
+.hdr-in { display: flex; align-items: center; gap: 32px; height: 80px; }
+.logo { font-family: var(--f-display); font-size: 22px; color: var(--parch); }
+.nav { display: flex; gap: 28px; margin-left: auto; }
+.nav a { position: relative; font-size: 14px; font-weight: 400; color: var(--parch-2); padding-block: 6px; transition: color .25s; }
+.nav a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--gold); transform: scaleX(0); transform-origin: 100% 50%; transition: transform .4s var(--ease); }
+.nav a:hover, .nav a.is-active { color: var(--parch); }
+.nav a:hover::after, .nav a.is-active::after { transform: scaleX(1); transform-origin: 0 50%; }
+.hdr-cta { min-height: 44px; padding: 0 20px; font-size: 12px; }
+.burger { display: none; margin-left: auto; width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 50%; position: relative; }
+.burger span { position: absolute; left: 14px; right: 14px; height: 1.5px; background: var(--parch); transition: transform .4s var(--ease), opacity .2s; }
+.burger span:nth-child(1) { top: 18px; }
+.burger span:nth-child(2) { top: 23px; right: 20px; background: var(--gold); }
+.burger span:nth-child(3) { top: 28px; }
+.burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(5px) rotate(45deg); }
+.burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+.mnav { position: fixed; inset: 0; z-index: 290; background: var(--night); padding: calc(110px + env(safe-area-inset-top, 0px)) var(--gut) calc(32px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; visibility: hidden; opacity: 0; transition: opacity .4s, visibility .4s; }
+.mnav.is-open { visibility: visible; opacity: 1; }
+.mnav a:not(.btn) { font-family: var(--f-display); font-size: clamp(34px, 9vw, 48px); line-height: 1.25; padding-block: 6px; opacity: 0; transform: translateY(20px); transition: opacity .5s var(--ease), transform .5s var(--ease), color .2s; }
+.mnav a:not(.btn):nth-child(even) { font-style: italic; color: var(--gold-2); }
+.mnav.is-open a:not(.btn) { opacity: 1; transform: none; }
+.mnav.is-open a:nth-child(2) { transition-delay: .05s; }
+.mnav.is-open a:nth-child(3) { transition-delay: .1s; }
+.mnav.is-open a:nth-child(4) { transition-delay: .15s; }
+.mnav.is-open a:nth-child(5) { transition-delay: .2s; }
+.mnav .btn { margin-top: auto; }
+
+/* ── Hero ── */
+.hero { position: relative; overflow: hidden; min-height: min(860px, 100svh); display: flex; align-items: center; padding-top: calc(40px + env(safe-area-inset-top, 0px)); padding-bottom: 40px; background: radial-gradient(120% 90% at 78% 30%, #1d2a44 0%, var(--night) 62%); }
+.hero-photo { position: absolute; top: 0; bottom: 0; right: 0; width: min(58%, 820px); }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; filter: saturate(.9) contrast(1.02); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 34%, #000 82%, transparent 100%), linear-gradient(0deg, transparent 0%, #000 22%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 34%, #000 82%, transparent 100%), linear-gradient(0deg, transparent 0%, #000 22%); mask-composite: intersect; animation: portrait 2.2s var(--ease) both; }
+.hero-in { position: relative; z-index: 2; width: 100%; }
+.hero-kicker { color: var(--gold); display: flex; flex-wrap: wrap; gap: 10px 18px; animation: fadeUp 1s .15s var(--ease) both; }
+.hero-kicker span + span::before { content: '·'; margin-right: 18px; color: var(--parch-3); }
+.hero-name { margin-top: 0; font-size: clamp(64px, 11.5vw, 184px); line-height: .86; letter-spacing: -.02em; }
+.hero-name .ln { display: block; overflow: hidden; padding-bottom: .08em; }
+.hero-name .ln > span { display: block; animation: rise 1.3s var(--ease) both; }
+.hero-name .ln:nth-child(1) > span { font-style: italic; color: var(--gold-2); animation-delay: .1s; }
+.hero-name .ln:nth-child(2) > span { animation-delay: .22s; padding-left: .45em; }
+.hero-rule { height: 1px; margin: clamp(28px, 4vw, 44px) 0; background: linear-gradient(90deg, var(--gold), transparent 70%); transform-origin: 0 50%; animation: draw 1.6s .4s var(--ease) both; max-width: 720px; }
+.hero-row { display: grid; grid-template-columns: minmax(0, 520px) auto; gap: 32px 56px; align-items: end; }
+.hero-desc { font-size: clamp(17px, 1.5vw, 20px); color: var(--parch-2); animation: fadeUp 1s .5s var(--ease) both; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; animation: fadeUp 1s .6s var(--ease) both; }
+.creds { display: flex; gap: 0; animation: fadeUp 1s .75s var(--ease) both; }
+.cred { padding: 4px 28px; border-left: 1px solid var(--line); }
+.cred:first-child { padding-left: 0; border-left: 0; }
+.cred-v { font-family: var(--f-display); font-size: clamp(30px, 3vw, 44px); line-height: 1; color: var(--parch); }
+.cred-l { margin-top: 8px; color: var(--parch-3); font-size: 11px; }
+.scroll-cue { position: absolute; right: var(--gut); bottom: 32px; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--parch-3); writing-mode: vertical-rl; }
+.scroll-cue::after { content: ''; width: 1px; height: 56px; background: linear-gradient(var(--gold), transparent); animation: cue 2.4s var(--ease) infinite; }
+
+/* ── Projects ── */
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); margin-top: clamp(40px, 5vw, 64px); }
+.proj { position: relative; padding: clamp(32px, 4vw, 56px) clamp(0px, 4vw, 56px) clamp(32px, 4vw, 56px) 0; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.proj + .proj { border-left: 1px solid var(--line); padding-left: clamp(24px, 4vw, 56px); padding-right: 0; }
+.proj::before { content: ''; position: absolute; top: -1px; left: 0; height: 1px; width: 100%; background: var(--gold); transform: scaleX(0); transform-origin: 0 50%; transition: transform .8s var(--ease); }
+.proj:hover::before { transform: scaleX(1); }
+.proj-tag { color: var(--gold); }
+.proj h3 { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.05; }
+.proj p { color: var(--parch-2); }
+.proj-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--parch-3); font-size: 14px; }
+.proj-list li::before { content: '—'; margin-right: 8px; color: var(--gold); }
+.proj-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: auto; padding-top: 28px; border-top: 1px solid var(--line); }
+.ps-num { font-family: var(--f-display); font-size: clamp(36px, 3.6vw, 54px); line-height: 1; color: var(--gold-2); font-variant-numeric: lining-nums tabular-nums; }
+.ps-label { margin-top: 8px; font-size: 13px; color: var(--parch-3); line-height: 1.4; }
+.link { margin-top: -8px; display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; color: var(--parch); font-size: 15px; padding-bottom: 4px; background: linear-gradient(var(--gold), var(--gold)) 0 100% / 100% 1px no-repeat; transition: background-size .5s var(--ease), color .2s; }
+.link:hover { color: var(--gold-2); background-size: 30% 1px; }
+
+/* ── About ── */
+.about-wide { position: relative; border-radius: 2px; overflow: hidden; aspect-ratio: 21 / 9; max-height: 620px; width: 100%; }
+.about-wide img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 32%; }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .about-wide img { animation: parallax linear both; animation-timeline: view(); scale: 1.18; }
+    @keyframes parallax { from { transform: translateY(-7%); } to { transform: translateY(7%); } }
+  }
+}
+.about-wide figcaption { position: absolute; left: 24px; bottom: 20px; color: var(--parch-2); }
+.about { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(40px, 6vw, 96px); margin-top: clamp(48px, 6vw, 80px); }
+.quote { font-family: var(--f-display); font-size: clamp(30px, 3.6vw, 52px); line-height: 1.12; letter-spacing: -.01em; }
+.quote em { color: var(--gold-2); }
+.quote::before { content: '«'; display: block; font-size: 1.6em; line-height: .6; color: var(--gold); margin-bottom: 12px; }
+.about-body { color: var(--parch-2); margin-top: 28px; max-width: 58ch; }
+.about-body + .about-body { margin-top: 16px; }
+.cv { list-style: none; margin: 0; padding: 0; }
+.cv li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 18px; padding: 20px 0; border-top: 1px solid var(--line); }
+.cv li:last-child { border-bottom: 1px solid var(--line); }
+.cv-y { color: var(--gold); padding-top: 4px; }
+.cv strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 21px; line-height: 1.2; color: var(--parch); }
+.cv span { display: block; color: var(--parch-3); font-size: 14px; margin-top: 4px; }
+
+/* ── Results ── */
+.results { background: var(--night-2); }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: clamp(40px, 5vw, 64px); border-top: 1px solid var(--line); }
+.num { padding: 36px 28px 8px 0; min-width: 0; }
+.num + .num { border-left: 1px solid var(--line); padding-left: 28px; }
+.num-v { font-family: var(--f-display); font-size: clamp(52px, 6.4vw, 104px); line-height: .9; color: var(--parch); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.02em; }
+.num p { margin-top: 18px; color: var(--parch-2); font-size: 15px; line-height: 1.5; max-width: 26ch; }
+.olymp { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px 40px; align-items: center; padding: 28px 32px; border: 1px solid var(--line); background: linear-gradient(90deg, rgba(207, 170, 94, .08), transparent 60%); }
+.olymp-v { font-family: var(--f-display); font-size: clamp(56px, 6vw, 88px); line-height: .9; color: var(--parch); }
+.olymp p { color: var(--parch-2); }
+.olymp strong { color: var(--parch); font-weight: 500; }
+
+/* ── Reviews ── */
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; }
+.car-ctrl { display: flex; gap: 10px; }
+.car-btn { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; border: 1px solid rgba(238, 230, 212, .3); transition: background-color .3s, color .3s, border-color .3s, opacity .3s; }
+.car-btn:hover:not(:disabled) { background: var(--gold); border-color: var(--gold); color: var(--night); }
+.car-btn:disabled { opacity: .3; cursor: default; }
+.is-static .car-ctrl, .is-static .car-bar { display: none; }
+.car-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-inline: max(var(--gut), calc((100vw - var(--wrap)) / 2 + var(--gut))); padding-block: clamp(40px, 5vw, 56px) 28px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; }
+.car-track::-webkit-scrollbar { display: none; }
+.car-track.is-dragging { cursor: grabbing; scroll-snap-type: none; }
+.car-track.is-dragging * { pointer-events: none; }
+.car-bar { max-width: var(--wrap); margin-inline: auto; padding-inline: var(--gut); }
+.car-bar > div { height: 1px; background: var(--line); }
+.car-thumb { display: block; height: 1px; background: var(--gold); transition: transform .12s linear; }
+.rev { scroll-snap-align: start; flex: 0 0 min(440px, 84vw); display: flex; flex-direction: column; gap: 24px; padding: clamp(28px, 3vw, 40px); background: var(--night-2); border: 1px solid var(--line); }
+.rev-mark { font-family: var(--f-display); font-size: 72px; line-height: .5; height: 28px; color: var(--gold); }
+.rev blockquote { margin: 0; font-family: var(--f-display); font-size: clamp(19px, 1.6vw, 22px); line-height: 1.45; color: var(--parch); }
+.rev-foot { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: end; }
+.rev-foot strong { font-weight: 500; font-size: 15px; }
+.rev-foot span { color: var(--parch-3); font-size: 13px; }
+.grade { grid-row: span 2; text-align: right; }
+.grade b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1; color: var(--gold-2); }
+.grade small { display: block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--parch-3); margin-top: 4px; }
+.orig { justify-self: start; color: var(--parch-3); font-size: 13px; border-bottom: 1px solid var(--line); transition: color .2s, border-color .2s; }
+.orig:hover { color: var(--gold); border-color: var(--gold); }
+
+/* ── Books (paper band) ── */
+.paper { background: var(--paper); color: var(--paper-ink); }
+.paper .eyebrow { color: #8A6A28; }
+.paper .sec-title em { color: #8A6A28; }
+.paper .sec-lead { color: var(--paper-ink-2); }
+.books { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 3vw, 44px); margin-top: clamp(40px, 5vw, 64px); perspective: 1400px; }
+.book { display: flex; flex-direction: column; gap: 18px; }
+.book-cover { position: relative; display: block; aspect-ratio: 594 / 850; border-radius: 2px 6px 6px 2px; overflow: hidden; background: #d9d0bc; box-shadow: 0 1px 0 rgba(0, 0, 0, .08), 0 34px 40px -26px rgba(17, 27, 48, .55); transform-origin: 0 50%; transition: transform .7s var(--ease), box-shadow .7s var(--ease); }
+.book-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .25), rgba(255, 255, 255, .2) 2.5%, transparent 7%); pointer-events: none; }
+.book-cover img { width: 100%; height: 100%; object-fit: cover; }
+.book:hover .book-cover { transform: rotateY(-18deg); box-shadow: 22px 34px 44px -24px rgba(17, 27, 48, .6); }
+.book-t { font-family: var(--f-display); font-size: 22px; line-height: 1.15; }
+.book-m { font-size: 14px; color: var(--paper-ink-2); }
+
+/* ── Media ── */
+.media { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 80px); align-items: end; }
+.video { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #070b14; }
+.video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; opacity: .72; transition: transform 1.2s var(--ease), opacity .6s; }
+.video:hover img { transform: scale(1.05); opacity: .85; }
+.video-play { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 8px; padding: clamp(20px, 3vw, 36px); text-align: left; background: linear-gradient(180deg, transparent 35%, rgba(7, 11, 20, .9)); }
+.pbtn { position: absolute; top: clamp(18px, 3vw, 32px); right: clamp(18px, 3vw, 32px); width: 88px; height: 88px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; color: var(--gold); transition: background-color .4s, color .4s, transform .5s var(--ease); }
+.pbtn::after { content: ''; position: absolute; inset: 8px; border-radius: 50%; border: 1px solid rgba(207, 170, 94, .35); }
+.video-play:hover .pbtn { background: var(--gold); color: var(--night); transform: scale(1.06); }
+.video-play strong { font-family: var(--f-display); font-weight: 400; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.15; max-width: 24ch; }
+.video-play span:not(.pbtn) { color: var(--parch-2); font-size: 14px; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 3; }
+.video.is-playing .video-play, .video.is-playing img { display: none; }
+.video-alt { display: inline-block; margin-top: 14px; color: var(--parch-3); font-size: 14px; }
+.video-alt:hover { color: var(--gold); }
+.socials { display: grid; margin-top: 36px; border-top: 1px solid var(--line); }
+.social { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line); transition: padding .4s var(--ease), color .3s; }
+.social:hover { padding-left: 12px; color: var(--gold-2); }
+.social-ic { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--gold); }
+.social strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 24px; line-height: 1.1; }
+.social span { font-size: 13px; color: var(--parch-3); word-break: break-word; }
+
+/* ── Contact ── */
+.contact { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(40px, 6vw, 110px); }
+.contact-photo { margin-top: 40px; position: relative; max-width: 380px; }
+.contact-photo img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 15%; filter: grayscale(.25); }
+.contact-photo::after { content: ''; position: absolute; inset: 14px -14px -14px 14px; border: 1px solid var(--gold); z-index: -1; }
+.form { display: grid; gap: 36px; }
+.form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 28px; }
+.field { position: relative; display: grid; gap: 6px; }
+.field label, .field-label { color: var(--gold); font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.field input, .field select, .field textarea { width: 100%; font: inherit; font-size: 18px; font-weight: 300; color: var(--parch); padding: 12px 0; background: transparent; border: 0; border-bottom: 1px solid rgba(238, 230, 212, .3); border-radius: 0; outline: none; transition: border-color .3s; -webkit-appearance: none; appearance: none; }
+.field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CFAA5E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center; padding-right: 28px; }
+.field select option { background: var(--night-2); color: var(--parch); }
+.field textarea { min-height: 100px; resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--parch-3); }
+.field input:focus, .field select:focus, .field textarea:focus { border-bottom-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+.field-err { position: absolute; left: 0; top: calc(100% + 6px); display: none; font-size: 13px; line-height: 1.2; color: var(--danger); }
+.field.is-error input { border-bottom-color: var(--danger); }
+.field.is-error .field-err { display: block; }
+.form-foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.form-note { font-size: 13px; color: var(--parch-3); max-width: 36ch; }
+.form-note a { color: var(--parch-2); text-decoration: underline; text-underline-offset: 3px; }
+.form-note a:hover { color: var(--gold-2); }
+.dd { position: relative; }
+.dd-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(238, 230, 212, .3); font-size: 18px; font-weight: 300; text-align: left; color: var(--parch); transition: border-color .3s; }
+.dd-btn:hover { border-bottom-color: rgba(238, 230, 212, .55); }
+.dd.is-open .dd-btn, .dd-btn:focus-visible { outline: none; border-bottom-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+.dd-chev { color: var(--gold); flex-shrink: 0; transition: transform .4s var(--ease); }
+.dd.is-open .dd-chev { transform: rotate(180deg); }
+.dd-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 10px); margin: 0; padding: 8px 0; list-style: none; max-height: 300px; overflow-y: auto; background: var(--night-3); border: 1px solid rgba(207, 170, 94, .35); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6); opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .25s, transform .3s var(--ease), visibility .25s; outline: none; }
+.dd.is-open .dd-list { opacity: 1; visibility: visible; transform: none; }
+.dd-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; font-size: 16px; color: var(--parch-2); cursor: pointer; transition: color .15s, background-color .15s; }
+.dd-list li.is-active { background: rgba(207, 170, 94, .1); color: var(--parch); }
+.dd-list li[aria-selected="true"] { color: var(--gold-2); }
+.dd-list li[aria-selected="true"]::after { content: ''; width: 15px; height: 15px; flex-shrink: 0; background: var(--gold); -webkit-mask: var(--tick) center / contain no-repeat; mask: var(--tick) center / contain no-repeat; }
+.btn.is-loading { opacity: .6; pointer-events: none; }
+.success { padding: 44px 36px; border: 1px solid var(--gold); outline: none; }
+.success-check { width: 76px; height: 76px; margin-bottom: 22px; display: block; animation: pop .6s var(--ease) both; }
+.success-check circle { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 208; stroke-dashoffset: 208; animation: draw .8s .1s var(--ease) forwards; }
+.success-check path { fill: none; stroke: var(--gold-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw .5s .6s var(--ease) forwards; }
+.success h3 { font-size: 36px; font-style: italic; color: var(--gold-2); animation: fadeUp .7s .55s var(--ease) both; }
+.success p { color: var(--parch-2); margin-top: 8px; animation: fadeUp .7s .65s var(--ease) both; }
+
+/* ── Policy dialog ── */
+.dlg { width: min(720px, calc(100% - 32px)); max-height: min(86vh, 900px); padding: 0; border: 1px solid rgba(207, 170, 94, .4); background: var(--night-2); color: var(--parch); box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .8); }
+.dlg::backdrop { background: rgba(5, 8, 15, .75); }
+.dlg[open] { animation: fadeUp .4s var(--ease) both; }
+.dlg-in { position: relative; padding: clamp(28px, 4vw, 52px); }
+.dlg h2 { font-size: clamp(26px, 3vw, 36px); line-height: 1.1; padding-right: 52px; margin-bottom: 20px; }
+.dlg h3 { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin: 26px 0 8px; }
+.dlg p { color: var(--parch-2); font-size: 15px; }
+.dlg-close { position: absolute; top: 20px; right: 20px; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line); transition: background-color .2s, color .2s; }
+.dlg-close:hover { background: var(--gold); color: var(--night); }
+.foot-bottom a { color: var(--parch-2); text-decoration: underline; text-underline-offset: 3px; }
+.foot-bottom a:hover { color: var(--gold-2); }
+
+/* ── Footer ── */
+.foot { border-top: 1px solid var(--line); padding-block: 56px calc(36px + env(safe-area-inset-bottom, 0px)); }
+.foot-big { font-family: var(--f-display); font-size: clamp(56px, 12vw, 200px); line-height: .85; letter-spacing: -.02em; color: var(--night-3); -webkit-text-stroke: 1px rgba(207, 170, 94, .35); white-space: nowrap; overflow: hidden; }
+.foot-big i { color: transparent; }
+.foot-in { display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); gap: 32px; }
+.foot p { color: var(--parch-3); font-size: 14px; max-width: 44ch; }
+.foot h4 { margin: 0 0 14px; color: var(--gold); }
+.foot-col a { display: block; padding: 4px 0; color: var(--parch-2); font-size: 15px; transition: color .2s; }
+.foot-col a:hover { color: var(--gold-2); }
+.foot-bottom { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--parch-3); font-size: 13px; }
+
+/* ── Lightbox ── */
+.lb { position: fixed; inset: 0; z-index: 500; display: grid; grid-template-columns: 72px minmax(0, 1fr) 72px; align-items: center; gap: 8px; padding: calc(64px + env(safe-area-inset-top, 0px)) 12px calc(56px + env(safe-area-inset-bottom, 0px)); background: rgba(7, 11, 20, .95); opacity: 0; transition: opacity .26s; }
+.lb.is-open { opacity: 1; }
+.lb-fig { margin: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-width: 0; }
+.lb-img { max-width: 100%; max-height: calc(100% - 44px); object-fit: contain; box-shadow: 0 40px 90px rgba(0, 0, 0, .6); opacity: 0; transform: scale(.97); transition: opacity .35s, transform .5s var(--ease); }
+.lb-img.is-in { opacity: 1; transform: none; }
+.lb-cap { color: var(--parch-2); font-size: 14px; text-align: center; max-width: 60ch; }
+.lb-btn { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgba(238, 230, 212, .3); color: var(--parch); transition: background-color .2s, color .2s; }
+.lb-btn:hover { background: var(--gold); color: var(--night); border-color: var(--gold); }
+.lb-close { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; }
+.lb-count { position: absolute; top: calc(30px + env(safe-area-inset-top, 0px)); left: 24px; color: var(--gold); font-family: var(--f-mono); font-size: 13px; letter-spacing: .1em; }
+
+/* ── Keyframes ── */
+@keyframes rise { from { transform: translateY(110%); } to { transform: none; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes draw { from { transform: scaleX(0); } to { transform: none; } }
+@keyframes portrait { from { opacity: 0; transform: scale(1.08) translateX(3%); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(.5); } 60% { transform: scale(1.06); } 100% { transform: none; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes cue { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .nav { gap: 18px; }
+  .nums { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .num:nth-child(3) { border-left: 0; padding-left: 0; }
+  .num:nth-child(n+3) { border-top: 1px solid var(--line); margin-top: 28px; }
+}
+@media (max-width: 980px) {
+  .nav, .hdr-cta { display: none; }
+  .burger { display: block; }
+  .hero { display: block; min-height: 0; padding-top: 0; }
+  .hero-photo { position: relative; width: 100%; height: min(118vw, 620px); }
+  .hero-photo img { -webkit-mask-image: linear-gradient(0deg, transparent 0%, #000 34%); mask-image: linear-gradient(0deg, transparent 0%, #000 34%); -webkit-mask-composite: source-over; mask-composite: add; object-position: 50% 12%; }
+  .hero-in { margin-top: -28vw; }
+  .hero-row { grid-template-columns: 1fr; }
+  .scroll-cue { display: none; }
+  .projects { grid-template-columns: 1fr; }
+  .proj, .proj + .proj { padding: 36px 0; border-left: 0; }
+  .proj + .proj { border-top: 1px solid var(--line); }
+  .about { grid-template-columns: 1fr; }
+  .about-wide { aspect-ratio: 4 / 3; }
+  .books { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media { grid-template-columns: 1fr; }
+  .contact { grid-template-columns: 1fr; }
+  .contact-photo { display: none; }
+  .foot-in { grid-template-columns: 1fr 1fr; }
+  .foot-in > :first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .hdr-in { height: 68px; }
+  .hero-in { margin-top: -20vw; }
+  .pbtn { width: 60px; height: 60px; top: 14px; right: 14px; }
+  .pbtn::after { inset: 5px; }
+  .video-play strong { font-size: 18px; }
+  .pbtn svg { width: 22px; height: 22px; }
+  .hero-name .ln:nth-child(2) > span { padding-left: .25em; }
+  .hero-actions .btn { flex: 1 1 100%; }
+  .creds { flex-wrap: wrap; row-gap: 20px; }
+  .cred { padding: 0 18px; }
+  .cred:nth-child(3) { border-left: 0; padding-left: 0; }
+  .sec-head { grid-template-columns: 1fr; }
+  .sec-head .car-ctrl { display: none; }
+  .proj-stats { gap: 10px; }
+  .ps-label { font-size: 12px; }
+  .cv li { grid-template-columns: 1fr; gap: 4px; }
+  .nums { grid-template-columns: 1fr; }
+  .num, .num + .num { border-left: 0; padding: 28px 0 0; }
+  .num + .num { border-top: 1px solid var(--line); margin-top: 28px; }
+  .olymp { grid-template-columns: 1fr; padding: 24px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-foot .btn { width: 100%; }
+  .lb { grid-template-columns: minmax(0, 1fr); padding-inline: 8px; }
+  .lb-prev, .lb-next { position: absolute; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .lb-prev { left: calc(50% - 66px); }
+  .lb-next { right: calc(50% - 66px); }
+  .foot-in { grid-template-columns: 1fr; }
+}
+
+.x-mb{margin-bottom:clamp(28px,4vw,48px)}
+.x-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;margin-top:clamp(28px,4vw,48px)}
+.x-card{display:flex;flex-direction:column;gap:10px;padding:clamp(22px,2.6vw,32px);background:var(--x-surface);border:1px solid var(--x-line);border-radius:var(--x-r);min-width:0}
+.x-card h3{margin:0;font-family:var(--f-display);font-size:clamp(19px,1.7vw,23px);line-height:1.25;font-weight:600;color:var(--x-ink);text-wrap:balance}
+.x-card .x-p,.x-p{margin:0;color:var(--x-muted)}
+.x-card .x-p+.x-p{margin-top:8px}
+.x-meta{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--x-accent);font-weight:600}
+.x-res{margin-top:auto;padding-top:12px;border-top:1px solid var(--x-line);font-weight:600;color:var(--x-ink)}
+.x-more{margin-top:auto;display:inline-flex;gap:6px;align-items:center;color:var(--x-accent);font-weight:600}
+.x-text{max-width:70ch;margin-top:20px;display:grid;gap:12px}
+.x-lead{margin-bottom:0}
+.x-h3{font-family:var(--f-display);font-size:clamp(21px,2vw,27px);line-height:1.2;margin:clamp(32px,4vw,48px) 0 0;font-weight:600;color:var(--x-ink)}
+.x-steps-wrap{margin-top:clamp(28px,4vw,48px)}
+.x-steps{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px}
+.x-steps li{display:flex;gap:14px;align-items:flex-start;padding:20px;border-top:2px solid var(--x-accent);background:var(--x-surface);border-radius:0 0 var(--x-r) var(--x-r);min-width:0}
+.x-steps .x-n{font-family:var(--f-display);font-size:26px;line-height:1;color:var(--x-accent);font-weight:600}
+.x-steps strong{display:block;color:var(--x-ink);margin-bottom:4px}
+.x-steps span{color:var(--x-muted);font-size:15.5px}
+.x-list{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px;max-width:72ch}
+.x-list li{position:relative;padding-left:26px;color:var(--x-muted)}
+.x-list li::before{content:"";position:absolute;left:4px;top:.6em;width:9px;height:9px;border-radius:50%;background:var(--x-accent)}
+.x-minis{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.x-minis li{color:var(--x-muted)}.x-minis strong{color:var(--x-ink)}
+.x-quote{margin:clamp(28px,4vw,40px) 0 0;padding:4px 0 4px 22px;border-left:3px solid var(--x-accent)}
+.x-quote p{margin:0;font-family:var(--f-display);font-size:clamp(20px,2vw,26px);line-height:1.35;color:var(--x-ink);font-style:italic}
+.x-quote cite{display:block;margin-top:10px;font-style:normal;font-size:14px;color:var(--x-muted)}
+.x-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:14px;margin-top:clamp(28px,4vw,40px)}
+.x-shot{display:flex;flex-direction:column;gap:8px;min-width:0}
+.x-shot img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--x-r);border:1px solid var(--x-line);background:var(--x-surface)}
+.x-docs .x-shot img{object-fit:contain;padding:8px}
+.x-shot span{font-size:14px;color:var(--x-muted);line-height:1.4}
+.x-logos{display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(24px,3vw,36px)}
+.x-logo{display:flex;align-items:center;justify-content:center;width:150px;height:96px;padding:12px;background:#fff;border:1px solid var(--x-line);border-radius:var(--x-r)}
+.x-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.x-plogo{display:flex;width:84px;height:56px;padding:6px;background:#fff;border-radius:calc(var(--x-r) / 2)}
+.x-plogo img{max-width:100%;max-height:100%;object-fit:contain}
+.x-plinks{display:flex;flex-wrap:wrap;gap:8px 18px}
+.x-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;margin-top:clamp(28px,4vw,40px)}
+.x-stat{padding:26px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.x-stat p{margin:0}
+.x-nums{margin-top:clamp(28px,4vw,48px)}
+.x-pods{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));margin-top:clamp(24px,3vw,36px)}
+.x-pods-1{grid-template-columns:minmax(0,820px)}
+.x-pod{min-width:0}.x-pod .video{aspect-ratio:16/9}
+.x-podcap{margin:10px 0 0;color:var(--x-muted);font-size:15px}
+.x-msoc{margin-top:clamp(32px,4vw,48px)}.x-msoc .x-h3{margin-top:0}
+.x-msoc .socials{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));column-gap:24px}
+.x-rev{padding:14px}
+.x-revimg{display:block;border-radius:calc(var(--x-r) - 4px);overflow:hidden;background:#fff}
+.x-revimg img{width:100%;height:auto;max-height:520px;object-fit:contain;object-position:top}
+.x-cphoto{margin:clamp(24px,3vw,36px) 0 0;max-width:420px}
+.x-cphoto img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:var(--x-r)}
+.x-req{display:flex;flex-wrap:wrap;gap:4px 16px}
+.x-contacts{margin-top:24px}
+.x-leadp{font-size:1.12em;color:var(--x-ink)}
+.x-long{font-size:clamp(20px,2vw,26px)!important;line-height:1.15!important;overflow-wrap:anywhere;hyphens:auto}
+.cred-v,.fact-num,.fact dt{overflow-wrap:anywhere}
+.x-quote+.about-body,.x-quote+p{margin-top:24px}
+.x-quote{margin-bottom:8px}
+@media (max-width:760px){.x-steps{grid-template-columns:1fr}.x-logo{width:calc(50% - 7px)}}
+:root{--x-surface:var(--night-2);--x-line:var(--line);--x-ink:var(--parch);--x-muted:var(--parch-2);--x-accent:var(--gold);--x-r:2px}
+.x-alt{background:var(--night-2)}.x-alt .x-card,.x-alt .x-steps li{background:var(--night-3)}
+.x-logo,.x-plogo{background:var(--parch)}
+.x-revimg{background:var(--parch)}
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"></div>
+
+<header class="hdr" data-reveal>
+  <div class="wrap hdr-in">
+    <a href="#top" class="logo">Иван Хлебников</a>
+    <nav class="nav" aria-label="Разделы"><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a></nav>
+    <a href="#contact" class="btn btn-line hdr-cta">Связаться</a>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="mnav" id="mnav" aria-hidden="true">
+  <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a>
+  <a href="#contact" class="btn btn-gold">Связаться</a>
+</div>
+
+<main>
+
+<section class="hero" id="top">
+  
+  <div class="wrap hero-in">
+    <h1 class="hero-name"><span class="ln"><span>Иван</span></span><span class="ln"><span>Хлебников</span></span></h1>
+    <div class="hero-rule"></div>
+    <div class="hero-row">
+      <div>
+        <p class="hero-desc">Руковожу школой гитары и укулеле «Амиго» и школой подготовки к ОГЭ и ЕГЭ «105 баллов». 15 лет был юристом, а теперь строю образовательные бизнесы, в которых учитель занят только учениками, а всё остальное работает по системе.</p>
+        <div class="hero-actions">
+          <a href="#projects" class="btn btn-gold">Мои проекты <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a href="#contact" class="btn btn-line">Связаться</a>
+        </div>
+      </div>
+      <div class="creds"><div class="cred"><div class="cred-v">3000+</div><div class="cred-l mono">учеников прошли через школу «Амиго»</div></div><div class="cred"><div class="cred-v">с 2014</div><div class="cred-l mono">работает «Амиго» — ни одной задержки зарплаты</div></div><div class="cred"><div class="cred-v">2</div><div class="cred-l mono">школы: музыка в Екатеринбурге и онлайн-подготовка к экзаменам</div></div></div>
+    </div>
+  </div>
+  <div class="scroll-cue mono" aria-hidden="true">Листайте</div>
+</section>
+
+<section class="sec" id="projects">
+  <div class="wrap">
+    <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
+    <div class="projects"><article class="proj rv"><h3>Школа гитары и укулеле «Амиго»</h3><p class="x-p">Школа гитары и укулеле в Екатеринбурге: два филиала, онлайн-формат и записанные курсы. Её основала моя жена Екатерина в 2014 году, я пришёл в 2019-м. Вместе мы разобрали её авторский подход на шаги и превратили в методику, которую можно передать другому преподавателю. Сейчас найм, адаптация и обучение полностью описаны и работают без моего постоянного участия.</p><a class="link" href="https://amigomusic.ru" target="_blank" rel="noopener">amigomusic.ru <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">6</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num">3000+</div><div class="ps-label">учеников за всё время</div></div><div><div class="ps-num">≈30%</div><div class="ps-label">новых учеников приходят по рекомендации</div></div></div></article><article class="proj rv"><h3>Школа подготовки «105 баллов»</h3><p class="x-p">Онлайн-школа по школьным предметам, открыта в 2025 году: подтягиваем успеваемость в 5–8 классах и целенаправленно готовим к ОГЭ и ЕГЭ. Администрирование и подход к преподаванию перенесли из «Амиго», а маркетинг для онлайна строили заново. Учитель работает на своём уровне мастерства, без навязанного шаблона, а вся организация — на команде.</p><a class="link" href="https://105ballov.ru" target="_blank" rel="noopener">105ballov.ru <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">12</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num">30+</div><div class="ps-label">концепций подачи школы протестировали за первые 8 месяцев</div></div><div><div class="ps-num">5–8</div><div class="ps-label">классы — подтягиваем успеваемость, плюс подготовка к ОГЭ и ЕГЭ</div></div></div></article><article class="proj rv"><h3>Юридическая компания «Хлебников и Партнёры»</h3><p class="x-p">15 лет я работал юристом и основал свою компанию. С нуля построил отдел продаж: скрипты звонков, бесплатная диагностика документов, обучил два отдела и руководителя — дальше система работала сама. В 2019 году, на пике, продал свою долю партнёрам и ушёл в образование.</p><p class="x-p">Ко мне часто приходят руководители других школ — обсудить бизнес, отделы, найм. Готовых советов я обычно не даю: задаю вопросы, чтобы человек сам увидел решение, которое у него уже есть.</p></article><article class="proj rv"><h3>Вин Чун</h3><p class="x-p">7 лет был инструктором — вёл тренировки по боевому искусству Вин Чун. Имею инструкторскую степень и вымпел на открытие школы.</p></article><article class="proj rv"><h3>Schoolsmart и обучение предпринимателей</h3><p class="x-p">Участник Schoolsmart. С 2022 по 2024 год входил в мастер-группу сообщества «Ближний круг Ксении Акушевой» в Екатеринбурге. Регулярно консультировался по ведению бизнеса с Дмитрием Черезовым, руководителем юридической компании, и с Максимом Симуковым, основателем сети школ гитары из Ульяновска.</p></article></div>
+  </div>
+</section>
+
+<section class="sec" id="about">
+  <div class="wrap">
+    <h2 class="sec-title x-mb">Обо мне</h2>
+    
+    <div class="about">
+      <div>
+        <p class="quote">Юрист по образованию, гитарист по училищу, предприниматель в образовании — с 2019 года.</p>
+        <p class="about-body">Мечта о своей школе гитары появилась у меня раньше, чем юридическая карьера: в музыкальное училище я пошёл, чтобы поднять уровень игры и однажды открыть школу. Но жизнь повернулась иначе — 15 лет я проработал юристом, построил компанию и выигрывал процессы.</p><p class="about-body">В 2019 году я продал долю партнёрам и пришёл в школу гитары, которую жена вела одна с 2014 года. После судебной юриспруденции школа ощущалась тёплым, добрым, но настоящим бизнесом — с очень похожими процессами. Через год я понял, что мне больше не снятся суды. В 2025-м мы открыли второе направление — «105 баллов».</p><p class="about-body">Я уверен: само обучение не может быть бизнесом — это личный процесс на эмпатии. А всё, что вокруг него, должно быть описано, эффективно и рентабельно. Тогда ученики платят, преподаватели зарабатывают, а у школы есть ресурс расти.</p><blockquote class="x-quote"><p>Внимание к человеку — это лицо бренда. Системность, надёжность и честность — фундамент под ним</p><cite>Иван Хлебников</cite></blockquote><p class="about-body">У меня жена и пятеро детей — я не смотрю на детское образование со стороны, а каждый день решаю ту же задачу, что и родители моих учеников. То, что не работает для моих детей, не попадает в мои школы.</p><p class="about-body">В 10–11 классе я учился в одной из сильнейших школ Екатеринбурга. За 15 минут первого урока литературы она стала моим любимым предметом: учительница ни разу не повысила голос, но была настолько требовательной, что сделала из середнячков одних из лучших абитуриентов города. Любимая книга — «Дух римского права» Рудольфа Иеринга, любимый сериал — «Секретные материалы»: два профессионала, которые обожают свою работу.</p>
+      </div>
+      <ol class="cv rv"><li><span class="cv-y mono">2005</span><div><strong>Юридическая академия</strong><span>Первое высшее образование.</span></div></li><li><span class="cv-y mono">2007–2009</span><div><strong>Российская школа частного права</strong><span>Магистр частного права. Параллельно — Музыкальное училище им. Чайковского, класс гитары.</span></div></li><li><span class="cv-y mono">2014</span><div><strong>«Амиго»</strong><span>Екатерина открывает школу гитары — сначала один ученик у нас дома.</span></div></li><li><span class="cv-y mono">2019</span><div><strong>Из права в образование</strong><span>Продал долю в «Хлебников и Партнёры» и пришёл в «Амиго».</span></div></li><li><span class="cv-y mono">2025</span><div><strong>«105 баллов»</strong><span>Второе направление — онлайн-подготовка по школьным предметам.</span></div></li></ol>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="system">
+  <div class="wrap">
+    <div class="sec-head"><div><h2 class="sec-title">Система школ</h2></div></div>
+    <p class="sec-lead x-lead">Если описать наши школы одним словом, это будет «поддержка». Требовательность — да, критика за ошибку — нет.</p><div class="x-text"><p class="x-p">Двадцать лет назад Екатерина была на летней школе классической гитары в Италии. Урок там начинался с беседы о настроении и жизни, учитель играл вместе с ней — и за весь урок не сделал ни одного замечания. Этот интуитивный подход мы разложили на шаги и превратили в систему. Если ученик ошибся, мы не говорим «ты ошибся», а говорим «вот здесь ты сыграл хорошо — давай так же тут». Так у ученика складывается привязка к хорошему результату, а не страх ошибиться.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как я строю систему</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Разобрать</strong><span>задаю вопросы лучшему преподавателю: что говорит, что делает ученик и почему</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Найти логику</strong><span>нахожу закономерности, из которых складывается яркий урок без ошибок</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Описать</strong><span>собираю понятную методику — например, авторскую систему из пяти шагов для групповых уроков музыки</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Обучить</strong><span>видеокурсы и сопровождение: даже без опыта за два месяца можно стать сильным педагогом</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Контролировать качество</strong><span>еженедельный методический разбор уроков и экзамены по уровням гитары</span></div></li></ol></div><div class="x-cards"><article class="x-card rv"><h3>Учитель только учит</h3><p class="x-p">Расписание, переносы, отработки, оплаты, пробные уроки — всё берёт на себя отдел администрирования.</p></article><article class="x-card rv"><h3>Свобода внутри системы</h3><p class="x-p">Как танцор в переходе метро: маршрут задан, а как объяснить дроби — десятками способов — выбирает сам преподаватель.</p></article><article class="x-card rv"><h3>Карта пробелов</h3><p class="x-p">В «105 баллов» у каждого ученика есть карта пробелов и план на год под критерии экзамена.</p></article><article class="x-card rv"><h3>Выходные — неприкосновенны</h3><p class="x-p">Свободное время преподавателя — закон. Зарплата — всегда вовремя и в том размере, о котором договорились.</p></article><article class="x-card rv"><h3>Регламенты и показатели</h3><p class="x-p">Отток, отработки, финансовый план. Еженедельные созвоны с администраторами и разбор каждого пробного урока.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Пять шагов разучивания песни на групповом уроке</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Ритм</strong><span>проговариваем слова песни и отмечаем правой рукой сильные доли</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Ритм на струнах</strong><span>проговариваем слова и отмечаем сильные доли уже по струнам</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Аккорды</strong><span>ставим аккорд — проговариваем слова до следующего аккорда — ставим следующий</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Каркас песни</strong><span>проговариваем слова и играем аккорды боем «однёрка»: правая и левая рука собраны, ученик уже «в структуре музыки»</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Аккомпанемент</strong><span>добавляем любой аккомпанемент по желанию</span></div></li></ol></div>
+  </div>
+</section>
+
+<section class="sec results" id="results">
+  <div class="wrap">
+    <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
+    <div class="x-cards"><article class="x-card rv"><span class="x-meta">«105 баллов» · физика · 8 класс</span><h3>От двоек к лучшим в классе</h3><p class="x-p">Ученик пришёл с твёрдой двойкой и уже записал себя в двоечники. Преподаватель с первого урока говорил с ним как с уверенным хорошистом: «Я знаю, что ты знаешь. Давай посмотрим на тему». Ребёнок поверил в себя.</p><span class="x-res">один из лучших в классе</span></article><article class="x-card rv"><span class="x-meta">«Амиго» · концертные группы</span><h3>Элита школы — на сцене</h3><p class="x-p">Четыре концертные группы занимаются больше остальных, оттачивают номера, выступают на отчётных концертах и конкурсах.</p><span class="x-res">4 группы</span></article></div>
+  </div>
+</section>
+
+<section class="sec" id="media">
+  <div class="wrap">
+    <div class="sec-head"><div><h2 class="sec-title">Подкасты</h2></div></div>
+    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1221159992?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/ivan-hlebnikov/pod-1221159992.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226954909?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/ivan-hlebnikov/pod-1226954909.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div></div>
+    <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://vk.com/ivan.khlebnikov" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>vk.com/ivan.khlebnikov</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://amigomusic.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>«Амиго»</strong><span>amigomusic.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://105ballov.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>«105 баллов»</strong><span>105ballov.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
+  </div>
+</section>
+
+<section class="sec" id="contact" style="background:var(--night-2)">
+  <div class="wrap contact">
+    <div>
+      <h2 class="sec-title">Связаться с Иваном</h2>
+      <p class="sec-lead">Партнёрство, обмен опытом или вопрос о школах — напишите на почту, администратор передаст мне.</p>
+      
+      
+    </div>
+    <div><div class="socials x-contacts"><a class="social" href="mailto:gitar-class@mail.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>gitar-class@mail.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://amigomusic.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Школа гитары «Амиго»</strong><span>amigomusic.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://105ballov.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Школа «105 баллов»</strong><span>105ballov.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-in">
+      <div><p>Руководитель школы гитары и укулеле «Амиго» и школы подготовки к ОГЭ и ЕГЭ «105 баллов».</p></div>
+      <div class="foot-col"><h4 class="mono">Разделы</h4><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a><a href="#contact">Контакты</a></div>
+      <div class="foot-col"><h4 class="mono">Ссылки</h4><a href="https://vk.com/ivan.khlebnikov" target="_blank" rel="noopener">ВКонтакте</a><a href="https://amigomusic.ru" target="_blank" rel="noopener">«Амиго»</a><a href="https://105ballov.ru" target="_blank" rel="noopener">«105 баллов»</a></div>
+    </div>
+    <div class="foot-bottom"><span>© <span data-year>2026</span> Иван Хлебников</span><span class="x-req"><span>ИП Хлебников Иван Андреевич</span><span>ИНН 667116979738</span></span></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const ICON_L = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ICON_R = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
+
+  $$('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
+
+  /* ── Header: solid after the first scroll, hides while scrolling down ── */
+  const hdr = $('.hdr');
+  const progress = $('.progress');
+  const revealHdr = hdr && hdr.hasAttribute('data-reveal');
+  function onScroll() {
+    const y = window.scrollY;
+    if (hdr) {
+      hdr.classList.toggle('is-solid', y > 24);
+      if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
+    }
+    if (progress) {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  /* ── Mobile menu ── */
+  const burger = $('.burger');
+  const menu = $('.mnav');
+  function setMenu(open) {
+    if (!burger || !menu) return;
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
+    menu.classList.toggle('is-open', open);
+    menu.setAttribute('aria-hidden', String(!open));
+    document.body.classList.toggle('menu-open', open);
+  }
+  if (burger && menu) {
+    burger.addEventListener('click', () => setMenu(burger.getAttribute('aria-expanded') !== 'true'));
+    $$('a', menu).forEach(a => a.addEventListener('click', () => setMenu(false)));
+    window.addEventListener('resize', () => { if (window.innerWidth > 980) setMenu(false); });
+  }
+
+  /* ── Active section in the nav ── */
+  const navLinks = $$('.nav a[href^="#"]');
+  if ('IntersectionObserver' in window && navLinks.length) {
+    const map = new Map();
+    navLinks.forEach(a => {
+      const s = document.getElementById(a.getAttribute('href').slice(1));
+      if (s) map.set(s, a);
+    });
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        navLinks.forEach(a => a.classList.remove('is-active'));
+        map.get(e.target).classList.add('is-active');
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    map.forEach((a, s) => io.observe(s));
+  }
+
+  /* ── Count-up numbers (the final value is in the markup, so the page reads right without JS) ── */
+  const fmt = n => n.toLocaleString('ru-RU');
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      const el = e.target;
+      const to = Number(el.dataset.count);
+      const t0 = performance.now();
+      const dur = 1500;
+      const step = now => {
+        const p = Math.min(1, (now - t0) / dur);
+        el.textContent = fmt(Math.round(to * (1 - Math.pow(1 - p, 4))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }), { threshold: 0.5 });
+    $$('[data-count]').forEach(el => io.observe(el));
+  }
+
+  /* ── Carousels: scroll-snap track + arrows + progress thumb + mouse drag ── */
+  $$('[data-carousel]').forEach(root => {
+    const track = $('.car-track', root);
+    const prev = $('[data-prev]', root);
+    const next = $('[data-next]', root);
+    const thumb = $('.car-thumb', root);
+    const stepSize = () => {
+      const it = track.children[0];
+      if (!it) return track.clientWidth;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      return it.getBoundingClientRect().width + gap;
+    };
+    function update() {
+      const max = track.scrollWidth - track.clientWidth;
+      if (prev) prev.disabled = track.scrollLeft <= 2;
+      if (next) next.disabled = track.scrollLeft >= max - 2;
+      if (thumb) {
+        const ratio = Math.min(1, track.clientWidth / track.scrollWidth);
+        thumb.style.width = (ratio * 100) + '%';
+        thumb.style.transform = 'translateX(' + (max > 0 ? (track.scrollLeft / max) * (1 / ratio - 1) * 100 : 0) + '%)';
+      }
+      root.classList.toggle('is-static', max <= 2);
+    }
+    const go = dir => track.scrollBy({ left: dir * stepSize(), behavior: reduce ? 'auto' : 'smooth' });
+    if (prev) prev.addEventListener('click', () => go(-1));
+    if (next) next.addEventListener('click', () => go(1));
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+
+    let down = false, sx = 0, sl = 0, moved = false;
+    track.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      down = true; moved = false; sx = e.clientX; sl = track.scrollLeft;
+    });
+    window.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - sx;
+      if (!moved && Math.abs(dx) > 6) { moved = true; track.classList.add('is-dragging'); }
+      if (moved) track.scrollLeft = sl - dx;
+    });
+    window.addEventListener('pointerup', () => {
+      if (!down) return;
+      down = false;
+      track.classList.remove('is-dragging');
+    });
+    track.addEventListener('click', e => {
+      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+    }, true);
+    $$('img', track).forEach(img => img.setAttribute('draggable', 'false'));
+  });
+
+  /* ── Lightbox for review originals and book covers ── */
+  const lbLinks = $$('[data-lb]');
+  let lbOpen = false;
+  let lbClose = () => {};
+  let lbStep = () => {};
+  if (lbLinks.length) {
+    const lb = document.createElement('div');
+    lb.className = 'lb';
+    lb.hidden = true;
+    lb.setAttribute('role', 'dialog');
+    lb.setAttribute('aria-modal', 'true');
+    lb.setAttribute('aria-label', 'Просмотр изображения');
+    lb.innerHTML =
+      '<button class="lb-btn lb-close" type="button" aria-label="Закрыть">' + ICON_X + '</button>' +
+      '<button class="lb-btn lb-prev" type="button" aria-label="Предыдущее">' + ICON_L + '</button>' +
+      '<figure class="lb-fig"><img class="lb-img" alt=""><figcaption class="lb-cap"></figcaption></figure>' +
+      '<button class="lb-btn lb-next" type="button" aria-label="Следующее">' + ICON_R + '</button>' +
+      '<div class="lb-count" aria-live="polite"></div>';
+    document.body.appendChild(lb);
+    const img = $('.lb-img', lb), cap = $('.lb-cap', lb), count = $('.lb-count', lb);
+    const bClose = $('.lb-close', lb), bPrev = $('.lb-prev', lb), bNext = $('.lb-next', lb);
+    let group = [], idx = 0, lastFocus = null;
+
+    function show(i) {
+      idx = (i + group.length) % group.length;
+      const a = group[idx];
+      img.classList.remove('is-in');
+      img.src = a.getAttribute('href');
+      img.alt = a.dataset.caption || '';
+      cap.textContent = a.dataset.caption || '';
+      count.textContent = group.length > 1 ? (idx + 1) + ' / ' + group.length : '';
+      bPrev.hidden = bNext.hidden = group.length < 2;
+    }
+    img.addEventListener('load', () => img.classList.add('is-in'));
+    function open(a) {
+      group = lbLinks.filter(x => x.dataset.lb === a.dataset.lb);
+      lastFocus = document.activeElement;
+      show(group.indexOf(a));
+      lb.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => lb.classList.add('is-open')));
+      document.body.classList.add('lb-open');
+      lbOpen = true;
+      bClose.focus();
+    }
+    lbClose = () => {
+      if (!lbOpen) return;
+      lbOpen = false;
+      lb.classList.remove('is-open');
+      document.body.classList.remove('lb-open');
+      setTimeout(() => { lb.hidden = true; img.removeAttribute('src'); }, reduce ? 0 : 260);
+      if (lastFocus) lastFocus.focus();
+    };
+    lbStep = d => show(idx + d);
+    lbLinks.forEach(a => a.addEventListener('click', e => { e.preventDefault(); open(a); }));
+    bClose.addEventListener('click', lbClose);
+    bPrev.addEventListener('click', () => lbStep(-1));
+    bNext.addEventListener('click', () => lbStep(1));
+    lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('lb-fig')) lbClose(); });
+    let tx = 0, ty = 0;
+    lb.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - tx;
+      const dy = e.changedTouches[0].clientY - ty;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) lbStep(dx < 0 ? 1 : -1);
+      else if (dy > 90) lbClose();
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (lbOpen) {
+      if (e.key === 'Escape') lbClose();
+      if (e.key === 'ArrowRight') lbStep(1);
+      if (e.key === 'ArrowLeft') lbStep(-1);
+      return;
+    }
+    if (e.key === 'Escape') setMenu(false);
+  });
+
+  /* ── Video: poster first, the player loads on click ── */
+  $$('[data-video]').forEach(box => {
+    const btn = $('.video-play', box);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const f = document.createElement('iframe');
+      f.src = box.dataset.video;
+      f.title = box.dataset.title || 'Видео';
+      f.allow = 'autoplay; fullscreen; picture-in-picture';
+      f.allowFullscreen = true;
+      box.appendChild(f);
+      box.classList.add('is-playing');
+    });
+  });
+
+  /* ── Dropdowns in the site's own style ── */
+  $$('[data-dd]').forEach((dd, n) => {
+    const btn = $('.dd-btn', dd);
+    const list = $('.dd-list', dd);
+    const val = $('.dd-val', dd);
+    const input = $('input[type="hidden"]', dd);
+    const opts = $$('[role="option"]', list);
+    let active = Math.max(0, opts.findIndex(o => o.getAttribute('aria-selected') === 'true'));
+    opts.forEach((o, i) => { if (!o.id) o.id = 'dd' + n + '-' + i; });
+    const setActive = (i, scroll) => {
+      active = (i + opts.length) % opts.length;
+      opts.forEach((o, k) => o.classList.toggle('is-active', k === active));
+      list.setAttribute('aria-activedescendant', opts[active].id);
+      if (scroll) opts[active].scrollIntoView({ block: 'nearest' });
+    };
+    const open = () => {
+      dd.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      setActive(active, true);
+      list.focus({ preventScroll: true });
+    };
+    const close = focusBtn => {
+      if (!dd.classList.contains('is-open')) return;
+      dd.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (focusBtn) btn.focus({ preventScroll: true });
+    };
+    const choose = i => {
+      opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === i)));
+      val.textContent = opts[i].textContent.trim();
+      if (input) input.value = opts[i].dataset.value || opts[i].textContent.trim();
+      active = i;
+      close(true);
+    };
+    btn.addEventListener('click', () => (dd.classList.contains('is-open') ? close(true) : open()));
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); }
+    });
+    opts.forEach((o, i) => {
+      o.addEventListener('click', () => choose(i));
+      o.addEventListener('mousemove', () => { if (active !== i) setActive(i, false); });
+    });
+    list.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1, true); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1, true); }
+      else if (e.key === 'Home') { e.preventDefault(); setActive(0, true); }
+      else if (e.key === 'End') { e.preventDefault(); setActive(opts.length - 1, true); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+      else if (e.key === 'Tab') close(false);
+    });
+    document.addEventListener('click', e => { if (!dd.contains(e.target)) close(false); });
+  });
+
+  /* ── Privacy policy dialog ── */
+  $$('[data-dialog]').forEach(a => a.addEventListener('click', e => {
+    const d = document.getElementById(a.dataset.dialog);
+    if (!d || typeof d.showModal !== 'function') return;
+    e.preventDefault();
+    d.showModal();
+    document.body.classList.add('lb-open');
+  }));
+  $$('dialog').forEach(d => {
+    d.addEventListener('close', () => document.body.classList.remove('lb-open'));
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+  });
+
+  /* ── Contact form ── */
+  const form = $('#contactForm');
+  if (form) {
+    const phone = $('#inp-phone');
+    const name = $('#inp-name');
+    const success = $('#formSuccess');
+    phone.addEventListener('input', e => {
+      if (e.inputType && e.inputType.indexOf('delete') === 0) return;
+      let d = phone.value.replace(/\D/g, '');
+      if (!d) { phone.value = ''; return; }
+      if (d[0] === '8') d = '7' + d.slice(1);
+      if (d[0] !== '7') d = '7' + d;
+      d = d.slice(0, 11);
+      let out = '+7';
+      if (d.length > 1) out += ' (' + d.slice(1, 4);
+      if (d.length >= 4) out += ')';
+      if (d.length > 4) out += ' ' + d.slice(4, 7);
+      if (d.length > 7) out += '-' + d.slice(7, 9);
+      if (d.length > 9) out += '-' + d.slice(9, 11);
+      phone.value = out;
+    });
+    const mark = (input, bad) => {
+      input.closest('.field').classList.toggle('is-error', bad);
+      input.setAttribute('aria-invalid', String(bad));
+    };
+    name.addEventListener('input', () => mark(name, false));
+    phone.addEventListener('input', () => mark(phone, false));
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const badName = !name.value.trim();
+      const badPhone = phone.value.replace(/\D/g, '').length < 11;
+      mark(name, badName);
+      mark(phone, badPhone);
+      if (badName || badPhone) { (badName ? name : phone).focus(); return; }
+      const btn = $('button[type="submit"]', form);
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      setTimeout(() => {
+        form.hidden = true;
+        success.hidden = false;
+        success.focus();
+      }, 700);
+    });
+  }
+})();
+</script>
+</body>
+</html>

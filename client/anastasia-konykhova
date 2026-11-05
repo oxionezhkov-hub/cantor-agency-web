@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Анастасия Коныхова — образование, перевод, культура</title>
+<title>Анастасия Коныхова</title>
 <meta name="description" content="Анастасия Коныхова — основатель онлайн-школы «Высшая Лига Знаний», сооснователь агентства «Переводы Про», синхронный переводчик, психолог и культуролог.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238D2342'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='28' fill='%23F6F1E8' text-anchor='middle'%3EАК%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -739,7 +739,7 @@ footer details p { margin-top: 12px; font-size: 13px; max-width: 900px; line-hei
     </div>
     <div class="pods">
       <article class="pod rv">
-        <div class="pod-video"><img src="images/anastasia-konykhova/library-cream.jpg" alt=""><span class="soon-badge">Видео скоро</span></div>
+        <div class="pod-video"><iframe src="https://player.vimeo.com/video/1224091980?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" title="Анастасия Коныхова — подкаст 1" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe></div>
         <div class="pod-body"><span class="tag">Подкаст 1</span><h3>Для партнёров</h3><p>Пять направлений, творческая семья и путь из вузов в своё дело.</p></div>
       </article>
       <article class="pod rv">
@@ -778,29 +778,7 @@ footer details p { margin-top: 12px; font-size: 13px; max-width: 900px; line-hei
     <div class="rv">
       <span class="eyebrow">Связаться</span>
       <h2 style="margin:18px 0 20px">Напишите мне</h2>
-      <p class="muted">Партнёрство, перевод, лекции, интервью или обучение — оставьте контакты и выберите тему, я отвечу.</p>
-      <form id="leadForm" novalidate>
-        <label class="fld">Имя<input name="name" autocomplete="name" required></label>
-        <label class="fld">Телефон или Telegram<input name="phone" autocomplete="tel" required></label>
-        <label class="fld">Тема обращения
-          <select name="topic">
-            <option>Онлайн-школа «Высшая Лига Знаний»</option>
-            <option>Синхронный перевод — «Переводы Про»</option>
-            <option>Международная коммуникация — Ethos</option>
-            <option>Бренд — лаборатория «Собственный язык»</option>
-            <option>Консультация психолога</option>
-            <option>Клуб «Жизнь как чудо» и лекции</option>
-            <option>Партнёрство и совместные проекты</option>
-            <option>Интервью и выступления</option>
-            <option>Работа в команде</option>
-            <option>Другой вопрос</option>
-          </select>
-        </label>
-        <label class="fld">Комментарий<textarea name="comment"></textarea></label>
-        <label class="consent"><input type="checkbox" name="consent" required> <span>Согласна(ен) на обработку персональных данных в соответствии с <a href="#policy">политикой</a></span></label>
-        <button class="btn btn-primary" type="submit">Отправить</button>
-        <div class="form-msg" id="formMsg" role="status"></div>
-      </form>
+      <p class="muted">Партнёрство, перевод, лекции, интервью или обучение — напишите в Telegram, WhatsApp или на почту, я отвечу.</p>
       <div class="contact-direct">
         <a href="https://t.me/assakonikhova" target="_blank" rel="noopener"><span>Telegram</span><span>@assakonikhova</span></a>
         <a href="https://wa.me/79150395677" target="_blank" rel="noopener"><span>WhatsApp</span><span>+7 915 039-56-77</span></a>
@@ -866,46 +844,6 @@ footer details p { margin-top: 12px; font-size: 13px; max-width: 900px; line-hei
     items.forEach(el => el.classList.add('in'));
   }
 
-  // Lead form → mainweb worker /api/leads/notify (source "anastasia-konykhova")
-  const API_URL = 'https://mainweb.oxion-ezhkov.workers.dev/api/leads/notify';
-  const form = document.getElementById('leadForm');
-  const msg = document.getElementById('formMsg');
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const f = form.elements;
-    if (!f.name.value.trim() || !f.phone.value.trim()) {
-      msg.className = 'form-msg err'; msg.textContent = 'Пожалуйста, укажите имя и телефон или Telegram.'; return;
-    }
-    if (!f.consent.checked) {
-      msg.className = 'form-msg err'; msg.textContent = 'Нужно согласие на обработку персональных данных.'; return;
-    }
-    const btn = form.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    msg.className = 'form-msg'; msg.textContent = 'Отправляем…';
-    fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        source: 'anastasia-konykhova',
-        fields: {
-          'Имя': f.name.value.trim(),
-          'Телефон / Telegram': f.phone.value.trim(),
-          'Тема': f.topic.value,
-          'Комментарий': f.comment.value.trim(),
-        },
-      }),
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('request_failed');
-        form.reset();
-        msg.className = 'form-msg ok'; msg.textContent = 'Спасибо! Заявка отправлена, я свяжусь с вами.';
-      })
-      .catch(() => {
-        msg.className = 'form-msg err';
-        msg.innerHTML = 'Не удалось отправить. Напишите, пожалуйста, в <a href="https://t.me/assakonikhova" target="_blank" rel="noopener">Telegram</a> или <a href="https://wa.me/79150395677" target="_blank" rel="noopener">WhatsApp</a>.';
-      })
-      .finally(() => { btn.disabled = false; });
-  });
 })();
 </script>
 </body>
