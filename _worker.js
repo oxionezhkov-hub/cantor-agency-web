@@ -8229,9 +8229,15 @@ async function atClientsMetrics(env) {
     if (!m || !r.date || r.date > y) continue;
     if (r.date === y) atAddMetric(m.day, r);
     if (r.date.startsWith(monthKey)) atAddMetric(m.month, r);
-    if (r.date >= weekFrom) atAddMetric(m.week, r);
+    if (r.date >= weekFrom) {
+      atAddMetric(m.week, r);
+      if (Number(r.budget) > 0) m.spendDays = (m.spendDays || 0) + 1;
+    }
   }
-  Object.values(out).forEach((m) => { m.perDay = m.week.budget / 7; delete m.week; });
+  // Spend per day: the week's budget over the days that actually had spend. A cabinet that started
+  // three days ago (or stood two days without money) would otherwise look three times cheaper per day,
+  // and «хватит на ~8 дней» would really be two or three.
+  Object.values(out).forEach((m) => { m.perDay = m.spendDays ? m.week.budget / m.spendDays : 0; delete m.week; delete m.spendDays; });
   return out;
 }
 // The Avito pull for a day in the shape the tracker's «Подтянуть» window shows.
