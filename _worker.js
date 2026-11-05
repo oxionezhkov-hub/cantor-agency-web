@@ -3283,6 +3283,15 @@ async function handleDashboardApi(request, env, url, ctx) {
   // ── Reflection (read-only): the weekly «Рефлексия» — each employee's 1–10 score and comment per client ──
   // GET /api/dashboard/reflection                    -> { current, results, history } for the current week
   // GET /api/dashboard/reflection?week=YYYY-MM-DD    -> the same for the week starting on that Wednesday
+  // The tracker's «Рассылки» calendar, read-only: GET /api/dashboard/mailings?month=YYYY-MM (default —
+  // the current month by Moscow time). Items as the tracker keeps them: date, projectId, budget,
+  // status (null = запланирована, launched, results), contacts, result, comment.
+  if (pathname === '/api/dashboard/mailings' && request.method === 'GET') {
+    const m = url.searchParams.get('month');
+    const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(String(m || '')) ? m : botMsk(Date.now()).date.slice(0, 7);
+    const rec = await env.AGENCY_DASHBOARD_KV.get(`mail:${month}`, 'json');
+    return json({ month, items: ((rec && rec.items) || []).slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)) });
+  }
   if (pathname === '/api/dashboard/reflection' && request.method === 'GET') {
     const current = reflWeek(Date.now());
     const asked = url.searchParams.get('week');
