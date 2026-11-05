@@ -239,7 +239,11 @@ tr.edit .input,tr.edit .select{min-height:34px}
 .tbtn.out{background:var(--red-bg);color:var(--red)}.tbtn.out .up{display:none}
 .rl{cursor:text;border-radius:6px;padding:1px 4px;margin:-1px -4px}
 .rl:hover{background:var(--sunken);color:var(--ink)}
-.rl-in{min-height:30px;padding:4px 8px;width:min(260px,100%)}
+.rl-in{min-height:0;height:auto;font:inherit;line-height:inherit;padding:1px 5px;margin:-2px -6px;max-width:100%}
+.drag{display:inline-block;width:14px;margin-left:-6px;cursor:grab;touch-action:none;user-select:none;color:var(--muted);opacity:0;font-size:14px;font-weight:700;letter-spacing:-3px}
+tr:hover>td>.drag,.drag:focus{opacity:1}
+@media (hover:none){.drag{opacity:1}}
+tr.dragging{background:var(--sunken)}tr.dragging .drag{cursor:grabbing}
 .grp-in{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .grp-add{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:16px;font-weight:600;line-height:1;color:var(--muted)}
 .grp-add:hover{background:var(--surface);color:var(--accent)}
@@ -290,7 +294,8 @@ tr.newrow:hover td{color:var(--accent);background:var(--surface-2)}
 .addm:hover{color:var(--accent);border-color:var(--accent)}
 .fe{cursor:pointer;border-radius:5px}.fe:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .pe{cursor:text;border-radius:5px;padding:0 3px;margin:0 -3px}.pe:hover{background:var(--sunken);color:var(--ink)}
-.rl-in.pe-in{width:110px;min-height:26px;padding:2px 6px;text-align:right;font-size:12.5px;justify-self:end}
+.pf .rl-in{font-size:11.5px;line-height:1.25}
+.rl-in.pe-in{min-height:0;padding:1px 5px;text-align:right;justify-self:end}
 .chip{height:36px;padding:0 12px;border-radius:999px;background:var(--accent-bg);color:var(--accent);font-weight:600;font-size:13px}
 .cal-clear{width:100%;margin-top:8px;height:32px;border-radius:9px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
 .cal-clear:hover{color:var(--ink);border-color:var(--faint)}
@@ -620,19 +625,23 @@ V.cf=()=>{
   const fm=x=>x==null?'—':rub(x);
   const pair=(a,p,cls='',m,ed)=>{const fa=ed&&a!=null?` data-fm="${m}" data-fc="${esc(ed.k)}"`:'', pa=ed?` data-cpm="${m}" data-cs="${ed.s}" data-ck="${esc(ed.k)}"`:'';
     return `<td class="n${cls}"><div class="pf"><span class="${a!=null&&Math.round(a)===0?'zero ':''}${fa?'fe':''}"${fa}>${fm(a)}</span><span class="p${pa?' pe':''}"${pa}>${fm(p)}</span></div></td>`};
-  const row=(label,g,cls='',sign=1,ed)=>`<tr class="${cls}"><td>${label}</td>${cols.map(m=>pair(F[m]?sign*(g(F[m])||0):null,PL[m]||ed?sign*(PL[m]?g(PL[m])||0:0):null,m===CUR?' cur':'',m,ed)).join('')}${pair(sign*fc(g),sign*pt(g))}</tr>`;
+  const row=(label,g,cls='',sign=1,ed)=>`<tr class="${cls}"${ed?` data-cfs="${ed.s}" data-cfk="${esc(ed.k)}"`:''}><td>${label}</td>${cols.map(m=>pair(F[m]?sign*(g(F[m])||0):null,PL[m]||ed?sign*(PL[m]?g(PL[m])||0:0):null,m===CUR?' cur':'',m,ed)).join('')}${pair(sign*fc(g),sign*pt(g))}</tr>`;
   const used=(side,c)=>cols.some(m=>(F[m]&&F[m][side][c])||(PL[m]&&PL[m][side][c]));
   const grp=(t,g)=>`<tr class="grp"><td colspan="${cols.length+2}"><div class="grp-in"><span>${t}</span><button class="grp-add" data-addcat="${g}" title="Добавить статью" aria-label="Добавить статью">+ Статья</button></div></td></tr>`;
+  // Порядок строк — перетаскиванием за ручку, хранится в CFG.cfOrder; новые статьи — в конец.
+  const ord=(side,list)=>{const o=(CFG.cfOrder||{})[side]||[],at=c=>{const i=o.indexOf(c);return i<0?1e6+list.indexOf(c):i};return list.slice().sort((a,b)=>at(a)-at(b))};
+  const outKey=c=>LBL['cogs:'+c]!=null?'cogs:'+c:LBL['opex:'+c]!=null?'opex:'+c:(COGS_KEYS().includes(c)?'cogs:':'opex:')+c;
+  const lab=(side,c,key,text)=>`<span class="drag" data-drag="${side}" title="Перетащите, чтобы поменять порядок" aria-hidden="true">⋮⋮</span><span class="rl" data-rk="${esc(key)}" title="Переименовать">${esc(text)}</span>`;
   const cn={'Авито':'ЗП специалистов Авито','Профи':'ЗП специалистов Профи','Блогеры':'ЗП специалистов Блогеры','Сайты-визитки':'ЗП специалистов Сайты','MBA Личный бренд':'ЗП команды MBA','Яндекс Директ':'ЗП специалистов Яндекс Директ','ТБ Авито':'Тестовые балансы Авито','ТБ Профи':'Тестовые балансы Профи'};
   return `
   <section class="panel"><div class="panel-b tw" style="padding-top:12px"><table data-tk="cf">
     <thead><tr><th></th>${cols.map(m=>`<th class="n${m===CUR?' cur':''}">${MN[m]}</th>`).join('')}<th class="n"><button class="addm" data-addmonth title="Добавить месяц" aria-label="Добавить месяц">+</button>Итого</th></tr></thead><tbody>
     <tr class="key"><td>Остаток на начало</td>${cols.map(m=>pair(bal[m].fs,bal[m].ps,m===CUR?' cur':'')).join('')}${pair(0,0)}</tr>
     ${grp('Поступления','rev')}
-    ${IN.filter(c=>EXTRA.rev.includes(c)||used('in',c)).map(c=>row(esc(lblOf('rev',c,c)),o=>o.in[c],'',1,{s:'in',k:c})).join('')}
+    ${ord('in',IN.filter(c=>EXTRA.rev.includes(c)||used('in',c))).map(c=>row(lab('in',c,'rev:'+c,lblOf('rev',c,c)),o=>o.in[c],'',1,{s:'in',k:c})).join('')}
     ${row('Всего поступлений',tIn,'tot')}
     ${grp('Списания','opex')}
-    ${OUT.filter(c=>EXTRA.cogs.includes(c)||EXTRA.opex.includes(c)||used('out',c)).map(c=>row(esc(LBL['cogs:'+c]||LBL['opex:'+c]||cn[c]||c),o=>o.out[c],'',-1,{s:'out',k:c})).join('')}
+    ${ord('out',OUT.filter(c=>EXTRA.cogs.includes(c)||EXTRA.opex.includes(c)||used('out',c))).map(c=>row(lab('out',c,outKey(c),LBL['cogs:'+c]||LBL['opex:'+c]||cn[c]||c),o=>o.out[c],'',-1,{s:'out',k:c})).join('')}
     ${row('Всего списаний',tOut,'tot',-1)}
     ${row('Денежный поток',o=>tIn(o)-tOut(o),'key')}
     <tr class="tot"><td>Остаток на конец</td>${cols.map(m=>pair(bal[m].fe,bal[m].pe,m===CUR?' cur':'')).join('')}${pair(bal[CUR].fe,fcEnd)}</tr>
@@ -978,11 +987,22 @@ function openAmt(inp){
 
 // ── переименование и добавление статей ──
 function inlineInput(host,val,onSave){
-  const inp=document.createElement('input');inp.className='input rl-in';inp.value=val;host.replaceWith(inp);inp.focus();inp.select();
+  const inp=document.createElement('input');inp.className='input rl-in';inp.value=val;
+  // Поле того же размера, что и текст, — строка не прыгает.
+  const w=host.getBoundingClientRect().width;inp.style.width=Math.max(w+12,host.classList.contains('pe')?96:160)+'px';
+  host.replaceWith(inp);inp.focus();inp.select();
   let done=false;const fin=save=>{if(done)return;done=true;const v=inp.value.trim();if(save&&v)onSave(v);else render()};
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fin(true)}if(e.key==='Escape')fin(false)});
   inp.addEventListener('blur',()=>fin(true));
 }
+// ── порядок строк CF ──
+document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('[data-drag]');if(!h)return;e.preventDefault();
+  const tr=h.closest('tr'),side=h.dataset.drag,tb=tr.parentNode,rows=()=>[...tb.querySelectorAll(`tr[data-cfs="${side}"]`)];
+  tr.classList.add('dragging');
+  const mv=ev=>{for(const r of rows()){if(r===tr)continue;const b=r.getBoundingClientRect();if(ev.clientY>b.top&&ev.clientY<b.bottom){ev.clientY<b.top+b.height/2?r.before(tr):r.after(tr);break}}};
+  const up=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+    CFG.cfOrder=Object.assign({},CFG.cfOrder,{[side]:rows().map(r=>r.dataset.cfk)});render()};
+  document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up)});
 function renameRow(el){const k=el.dataset.rk;inlineInput(el,el.textContent,v=>{LBL[k]=v;savePC();render()})}
 function addCat(btn){
   const g=btn.dataset.addcat, tr=btn.closest('tr'), row=document.createElement('tr');row.className='addrow';
