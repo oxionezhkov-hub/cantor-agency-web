@@ -401,7 +401,7 @@ function classify(o){
   o.amt=o.inc||-o.out;
   if(o.inc){
     if(n.startsWith('зп ')){o.kind='fin';o.cat='Финансирование от партнёра';return o}
-    o.kind='rev';o.cat=n.includes('mba')?'MBA Личный бренд':n.startsWith('авито')?(n.includes('продлен')?'Авито продления':'Авито первичные'):n.startsWith('профи')?'Профи':n.startsWith('блогер')?'Блогеры':n.startsWith('сайт')?'Сайты-визитки':'Прочее';
+    o.kind='rev';o.cat=n.includes('mba')?'MBA Личный бренд':n.startsWith('авито')?(n.includes('продлен')?'Авито продления':'Авито первичные'):n.startsWith('профи')?'Профи':n.startsWith('блогер')?'Блогеры':n.startsWith('сайт')?'Сайты-визитки':/^ии[\s-]*менедж/.test(n)?(n.includes('продлен')?'ИИ-менеджер продления':'ИИ-менеджер'):'Прочее';
     o.renew=n.includes('продлен');
     const h=o.n.match(/@[\w.]+/);o.client=h?h[0]:(n.includes('schoolsmart')?'Schoolsmart':'');
     return o}
@@ -433,8 +433,8 @@ const cell=(v,cls='')=>`<td class="n ${cls}${Math.round(v)===0?' zero':''}">${ru
 let LBL={}, EXTRA={rev:[],cogs:[],opex:[]};
 const savePC=()=>persist();
 const OPEX_BASE=['Руководитель','Клиентские менеджеры','Ассистент','Сервисы и админ','Комиссии банка'];
-const REV_KEYS=()=>['Авито первичные','Авито продления',...DIRS.filter(d=>d!=='Авито'),...EXTRA.rev], COGS_KEYS=()=>[...DIRS,'ТБ Авито','ТБ Профи',...EXTRA.cogs], OPEX_KEYS=()=>[...OPEX_BASE,...EXTRA.opex];
-const kindForCat=c=>(EXTRA.rev.includes(c)||c==='Авито первичные'||c==='Авито продления')?'rev':EXTRA.cogs.includes(c)?'cogs':EXTRA.opex.includes(c)?'opex':null;
+const REV_KEYS=()=>['Авито первичные','Авито продления',...DIRS.filter(d=>d!=='Авито'),'ИИ-менеджер',...EXTRA.rev.filter(c=>c!=='ИИ-менеджер')], COGS_KEYS=()=>[...DIRS,'ТБ Авито','ТБ Профи',...EXTRA.cogs], OPEX_KEYS=()=>[...OPEX_BASE,...EXTRA.opex];
+const kindForCat=c=>(EXTRA.rev.includes(c)||c==='Авито первичные'||c==='Авито продления'||c==='ИИ-менеджер')?'rev':EXTRA.cogs.includes(c)?'cogs':EXTRA.opex.includes(c)?'opex':null;
 const lblOf=(kind,cat,def)=>LBL[kind+':'+cat]||def||cat;
 // Выручка в P&L — только подтверждённая: оплата с подписанным актом, в месяце акта.
 // Расходы, возвраты и всё в CF — по дате денег.
@@ -618,7 +618,7 @@ function agg(list){const add=k=>{const o={};list.forEach(p=>Object.entries(p[k])
 
 V.cf=()=>{
   const cols=MONTHS.slice();
-  const IN=[...REV_KEYS(),'ИИ-менеджер','Финансирование от партнёра'], OUT=[...EXTRA.cogs,...EXTRA.opex,'Авито','Профи','Блогеры','Сайты-визитки','MBA Личный бренд','ТБ Авито','ТБ Профи','Руководитель','Клиентские менеджеры','Ассистент','Сервисы и админ','Комиссии банка','Возвраты клиентам','Дивиденды'];
+  const IN=[...REV_KEYS(),'Финансирование от партнёра'], OUT=[...EXTRA.cogs,...EXTRA.opex,'Авито','Профи','Блогеры','Сайты-визитки','MBA Личный бренд','ТБ Авито','ТБ Профи','Руководитель','Клиентские менеджеры','Ассистент','Сервисы и админ','Комиссии банка','Возвраты клиентам','Дивиденды'];
   const fact=m=>{const o={in:{},out:{}};OPS.filter(x=>mOf(x)===m).forEach(x=>{const s=x.amt>0?o.in:o.out;s[x.cat]=(s[x.cat]||0)+Math.abs(x.amt)});return o};
   const F={},PL={};cols.forEach(m=>{F[m]=m<=CUR?fact(m):null;PL[m]=CFP[m]||null});
   const tIn=o=>o&&sum(Object.values(o.in)), tOut=o=>o&&sum(Object.values(o.out));
@@ -872,10 +872,16 @@ function applyTS(tb){
 function markCur(){
   document.querySelectorAll('.curcol').forEach(x=>x.remove());
   document.querySelectorAll('.tw table').forEach(tb=>{const th=tb.querySelector('thead th.cur');if(!th||th.hidden)return;
+    if(curRO&&!tb._curObs){tb._curObs=1;curRO.observe(tb)}
+    if(curRO&&!th._curObs){th._curObs=1;curRO.observe(th);curThs.forEach(x=>{if(!x.isConnected){curRO.unobserve(x);curThs.delete(x)}});curThs.add(th)}
     const w=tb.parentNode,o=document.createElement('div');o.className='curcol';
     o.style.left=(tb.offsetLeft+th.offsetLeft)+'px';o.style.top=tb.offsetTop+'px';o.style.width=th.offsetWidth+'px';o.style.height=tb.offsetHeight+'px';w.appendChild(o)})
 }
 window.addEventListener('resize',()=>markCur());
+// Таблица меняет ширину и после отрисовки (догрузился шрифт, поменялись данные) — рамку пересчитываем вслед за ней.
+let curRaf=0;const curThs=new Set();const curLater=()=>{cancelAnimationFrame(curRaf);curRaf=requestAnimationFrame(markCur)};
+const curRO=typeof ResizeObserver==='function'?new ResizeObserver(curLater):null;
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(curLater);
 function closeTS(){document.querySelectorAll('.tsp').forEach(p=>p.remove());document.querySelectorAll('.gear.on').forEach(b=>b.classList.remove('on'))}
 function openTS(btn){
   const key=btn.dataset.gear, tb=document.querySelector(`table[data-tk="${key}"]`), st=tsOf(key);
