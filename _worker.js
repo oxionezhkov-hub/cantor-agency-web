@@ -4726,6 +4726,28 @@ async function ensureClientsSeedV2(env) {
 }
 
 // ── message log ──
+// Telegram voice → text through Workers AI Whisper. Up to 10 minutes (Telegram hands the bot files up to
+// 20 MB; a 10-minute voice is ~2–5 MB). Any failure just leaves «[голосовое]» in the log.
+const BOT_VOICE_MAX_SEC = 600;
+const BOT_VOICE_MODEL = '@cf/openai/whisper-large-v3-turbo';
+async function botTranscribeVoice(env, voice) {
+  if (!env.AI || !voice || !voice.file_id || (voice.duration || 0) > BOT_VOICE_MAX_SEC) return null;
+  try {
+    const file = await botApi(env, 'getFile', { file_id: voice.file_id });
+    if (!file || !file.ok || !file.result || !file.result.file_path) return null;
+    const res = await fetch(`https://api.telegram.org/file/bot${env.CONTROL_BOT_TOKEN}/${file.result.file_path}`, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const out = await env.AI.run(BOT_VOICE_MODEL, { audio: btoa(bin), language: 'ru' });
+    const heard = String((out && out.text) || '').trim();
+    return heard || null;
+  } catch (err) {
+    console.error('voice transcription failed', err && err.message);
+    return null;
+  }
+}
 function botMessageText(msg) {
   let text = msg.text || msg.caption || '';
   const media = msg.photo ? '[фото]' : msg.video ? '[видео]' : msg.voice ? '[голосовое]' : msg.video_note ? '[кружок]'
@@ -4901,6 +4923,16 @@ async function botOnMessage(env, msg, edited) {
   await botAppendLog(kv, chat.id, threadId, {
     id: msg.message_id, t, from: botUserName(msg.from), fromId, team: isTeam, text: botRedactSecrets(text).slice(0, 4000), reply: replyTo, edited: edited || undefined,
   }, t);
+  // A voice message is logged as «[голосовое]» first, then its transcript replaces that entry, so the
+  // log (and the AI that reads it for tasks and Q&A) holds what was actually said.
+  let logText = text;
+  if (msg.voice && !edited) {
+    const heard = await botTranscribeVoice(env, msg.voice);
+    if (heard) {
+      logText = `[голосовое, расшифровка] ${heard}${msg.caption ? `\n${msg.caption}` : ''}`;
+      await botAppendLog(kv, chat.id, threadId, { id: msg.message_id, text: botRedactSecrets(logText).slice(0, 4000) }, t);
+    }
+  }
   const dirtyKey = `bot:dirty:${chat.id}:${threadId}`;
   if (!edited && !(await kv.get(dirtyKey))) await kv.put(dirtyKey, '1');
   if (isTeam) await botSaveStaffLink(env, chatRec, threadId, text);
