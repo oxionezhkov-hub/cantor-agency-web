@@ -310,6 +310,7 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
 .psum .big.red{color:var(--red)}.psum .big.amber{color:var(--amber)}
 .pcard{border:1px solid var(--line-2);border-left:3px solid var(--amber);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
 .pcard.err{border-left-color:var(--red)}
+.pcard.fix{border-left-color:var(--green)}.pcard.fix .pc-ic{background:var(--green-bg);color:var(--green)}
 .pc-h{display:flex;gap:10px;align-items:flex-start}
 .pc-ic{flex:none;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--amber-bg);color:var(--amber)}
 .pcard.err .pc-ic{background:var(--red-bg);color:var(--red)}
@@ -1438,7 +1439,8 @@ function feedsRender() {
   const list = F.feeds.filter((f) => f.enabled || F.showOff);
   $('#fRows').innerHTML = list.map((f) => {
     const s = f.stat, n = feedErrCount(s);
-    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
+    const fx = s && s.fixes ? s.fixes.reduce((t, x) => t + x.n, 0) : 0;
+    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : fx ? `<button class="chip green" data-probs="${f.slug}" type="button" data-tip="Ошибок нет; сервис сам поправил значения, которые Авито не принимает — нажмите, чтобы посмотреть">нет · испр.</button>` : '<span class="chip green">нет</span>';
     const acc = feedAccName(f.avitoAccountId);
     const tags = [!acc && '<span class="chip amber" data-tip="Выберите кабинет в «Изменить»">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>'].filter(Boolean).join('');
     return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname" title="${esc(acc && acc !== f.name ? 'Кабинет: ' + acc : '')}"><b>${esc(f.name)}</b>${tags}</td>
@@ -1511,12 +1513,21 @@ function feedProbs(slug) {
   if (s.error) items.push({ kind: 'err', msg: s.error, where: '' });
   if (s.s3Error) items.push({ kind: 'err', msg: 'XML не выложен в Yandex Object Storage: ' + s.s3Error, where: '' });
   (s.tabs || []).filter((t) => t.error).forEach((t) => items.push({ kind: 'err', msg: t.error, where: esc(`вкладка «${t.name}»`) }));
-  (s.problems || []).forEach((p) => items.push({ kind: 'warn', msg: p.msg, where: [p.row && `стр. ${p.row}`, p.id && `<b>${esc(p.id)}</b>`].filter(Boolean).join(' · ') }));
-  const groups = probGroups(items);
+  const multi = [];
+  (s.problems || []).forEach((p) => {
+    if (p.ids && p.ids.length > 1) { multi.push({ kind: 'warn', msg: p.msg, where: p.ids.map((id) => `<b>${esc(id)}</b>`) }); return; }
+    items.push({ kind: 'warn', msg: p.msg, where: [p.row && `стр. ${p.row}`, p.id && `<b>${esc(p.id)}</b>`].filter(Boolean).join(' · ') });
+  });
+  const groups = multi.concat(probGroups(items));
+  const tagRu = { SubjectOrSpecialty: 'Предмет', ServiceSubtype: 'Тип услуги', WorkExperience: 'Опыт работы', TargetAudience: 'Целевая аудитория', WorkTimeFrom: 'Время работы, с', WorkTimeTo: 'Время работы, до', Images: 'Фото', Teacher: 'Преподаватель', Format: 'Формат', Place: 'Место', Level: 'Уровень', Classes: 'Занятия', ForWhom: 'Для кого' };
+  const fixCard = (x) => `<div class="pcard fix"><div class="pc-h"><span class="pc-ic">${I('check', 'ic-sm')}</span><div class="pc-t"><b>${esc(tagRu[x.tag] || x.tag)}</b>: «${esc(x.from)}» → «${esc(x.to)}»</div><span class="chip">${int(x.n)}</span></div>`
+    + `<div class="pc-w">${x.ids.slice(0, 20).map((id) => `<span class="pill"><b>${esc(id)}</b></span>`).join('')}${x.n > 20 ? `<span class="pill">ещё ${int(x.n - 20)}</span>` : ''}</div></div>`;
+  const fixes = (s.fixes || []).map(fixCard).join('');
   openModal(`${mHead('Ошибки XML — ' + f.name)}<div class="m-b">
     <div class="psum">${items.length ? `<div><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${items.some((x) => x.kind === 'err') ? 'XML не собран — исправьте таблицу' : 'строк с замечаниями — эти строки или фото не попали в XML'}</div></div>` : '<div class="ok-box">Ошибок нет</div>'}
       ${s.builtAt ? `<div class="note">Сборка ${esc(ago(Date.parse(s.builtAt)))} · в XML ${int(s.ads)} объявлений</div>` : ''}</div>
     ${probCards(groups)}
+    ${fixes ? `<h3 class="ph2">Исправлено автоматически — Авито не принимает эти значения</h3><div class="note">Сервис сверил таблицу со справочником Авито и в XML поставил правильные значения. Таблица не меняется — поправьте её так же, чтобы не путаться (номера — id объявлений).</div>${fixes}` : ''}
     <div class="note">Это ошибки сборки XML из Google Таблицы. Что Авито сделал с объявлениями — в «Отчёт Авито».</div></div>`, { wide: true });
 }
 
@@ -1573,7 +1584,7 @@ function feedsHelp() {
   openModal(`${mHead('Автозагрузка: как работать')}<div class="m-b help">
     <h3>Как это устроено</h3><p>Объявления клиента живут в его <b>Google Таблице</b> (шаблон BananLab). Каждый час сервис собирает из неё XML и кладёт его в Яндекс (<span class="mono">storage.yandexcloud.net/cantor-feeds</span>). Авито сам забирает XML по расписанию кабинета. Правите таблицу — через 1–2 часа изменения на Авито.</p>
     <h3>Новый клиент</h3><ol><li>Добавьте кабинет Авито в дашборде — он сам появится здесь строкой «нет таблицы».</li><li>Таблица клиента: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».</li><li>«Добавить таблицу» → вставьте ссылку → «Вкладки» → отметьте вкладку с объявлениями (обычно «Авито_выгрузка») → «Сохранить». XML соберётся сразу.</li><li>«Подключить» → почта для отчётов → «Подключить». Ссылка на наш XML запишется в кабинет Авито.</li><li>«В Авито» — чтобы Авито забрал XML сейчас, а не по расписанию.</li><li>Через час — «Отчёт Авито»: всё ли опубликовалось.</li></ol>
-    <h3>Каждый день</h3><p><b>Ошибки</b> — замечания при сборке XML из таблицы: непонятная ссылка на фото, повтор id, закрытая таблица. Такие строки не попадают в XML. <b>Отчёт Авито</b> — что Авито сделал с объявлениями: опубликовано, с проблемами, отклонено; там же «Скачать файл ошибок».</p>
+    <h3>Каждый день</h3><p><b>Ошибки</b> — замечания при сборке XML из таблицы: непонятная ссылка на фото, повтор id, закрытая таблица. Такие строки не попадают в XML. Ещё сервис сверяет значения со справочником Авито (предмет, опыт, аудитория, время работы) и сам ставит правильные, если ответ однозначный, — они в том же окне, в блоке «Исправлено автоматически». <b>Отчёт Авито</b> — что Авито сделал с объявлениями: опубликовано, с проблемами, отклонено; там же «Скачать файл ошибок».</p>
     <h3>Фото</h3><p>В колонке Images — ссылки с Яндекс.Диска, по одной на строку или через « | ». Личные ссылки (disk.yandex.ru/client/disk/…) работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен; публичные (disk.yandex.ru/i/…) — без токена. Можно писать только имена файлов, если заполнена «Папка на Яндекс Диск».</p>
     <h3>Если что-то не так</h3><ol><li>Изменения не появились — «Пересобрать», затем «В Авито» (Авито разрешает не чаще раза в час).</li><li>Объявление не вышло — «Отчёт Авито», там причина от Авито.</li><li>Кабинет перестал грузить совсем — проверьте подписку Авито (без неё автозагрузка останавливается) и что в «Отчёт Авито» стоит «грузится из нашего XML».</li></ol>
     <h3>Кнопки</h3><p><b>Сравнить</b> — сверка с XML BananLab (для клиентов из импорта) · <b>Ссылка</b> — скопировать ссылку на XML · <b>Изменить</b> — таблица, вкладки, кабинет, выключить автообновление. «Импорт из BananLab» и «Клиент» — вверху справа.</p></div>`, { wide: true });

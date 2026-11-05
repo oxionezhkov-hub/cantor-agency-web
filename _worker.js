@@ -13930,7 +13930,7 @@ function feedsBuildXml(ads, imageUrl) {
         }
         if (!urls.length) continue;
         out.push('    <Images>');
-        for (const u of urls.slice(0, 30)) out.push(`      <Image url="${feedsXmlText(u)}"/>`);
+        for (const u of [...new Set(urls)].slice(0, 30)) out.push(`      <Image url="${feedsXmlText(u)}"/>`);
         out.push('    </Images>');
       } else if (t === 'Description') {
         // Line breaks become <br /> (as BananLab does), otherwise Avito glues the lines together.
@@ -14012,6 +14012,28 @@ async function feedsBuild(env, feed) {
     return false;
   });
 
+  // Values Avito doesn't know (subject, experience, time…) — checked against Avito's own catalog.
+  try {
+    await feedsValidate(env, feed, ads, stat);
+  } catch (err) {
+    stat.catalogError = String(err && err.message || err).slice(0, 300);
+  }
+
+  // Private Disk links whose file was moved: find it by name (see feedsDiskResolve).
+  let disk = null;
+  if (stat.yandexToken) {
+    try {
+      const all = await feedsDiskIndex(await kv.get('feedytok:' + feed.slug));
+      const lower = new Map();
+      all.forEach((x) => { const k = x.toLowerCase(); lower.set(k, [...(lower.get(k) || []), x]); });
+      disk = { all, exact: new Set(all), lower };
+    } catch (err) {
+      stat.diskError = String(err && err.message || err).slice(0, 200);
+    }
+  }
+  const moved = new Map(); // old folder -> { from, to, n }
+  const lost = new Map(); // path -> { path, n, ids }
+
   // Sign every Yandex link up front (crypto is async), then build the XML synchronously.
   const signed = new Map();
   for (const a of ads) for (const f of a.fields) if (f.tag === 'Images') {
@@ -14020,12 +14042,27 @@ async function feedsBuild(env, feed) {
       const y = feedsYandexSource(src);
       if (!y) { signed.set(src, /^https?:\/\//i.test(src) ? src : null); continue; }
       if (y.kind === 'p' && !stat.yandexToken) { signed.set(src, null); continue; }
+      if (y.kind === 'p' && disk) {
+        const real = feedsDiskResolve(disk, y.path);
+        if (!real) {
+          const x = lost.get(y.path) || { path: y.path, n: 0, ids: [] };
+          x.n++; if (x.ids.length < 10) x.ids.push(a.id); lost.set(y.path, x);
+        } else if (real !== y.path) {
+          const from = y.path.replace(/\/[^/]+$/, ''), to = real.replace(/\/[^/]+$/, '');
+          const k = from + '>' + to;
+          const x = moved.get(k) || { tag: 'Images', from: from.replace(/^disk:/, '') + '/…', to: to.replace(/^disk:/, '') + '/…', n: 0, ids: [] };
+          x.n++; if (x.ids.length < 30) x.ids.push(a.id); moved.set(k, x);
+          y.path = real;
+        }
+      }
       const enc = feedsB64url(y.kind === 'p' ? 'p:' + y.path : 'u:' + y.key + (y.path ? '\n' + y.path : ''));
       const name = (y.path || y.key).split('/').pop();
       const ext = ((name.match(/\.(jpe?g|png|webp|heic)$/i) || [])[1] || 'jpg').toLowerCase();
       signed.set(src, feedsPublicUrl(env, `/feed/${feed.slug}/img/${await feedsSign(feed.secret, enc)}/${enc}.${ext}`));
     }
   }
+  stat.fixes = (stat.fixes || []).concat([...moved.values()]);
+  for (const x of lost.values()) stat.problems.push({ id: x.ids[0], ids: x.ids, n: x.n, tag: 'Images', msg: `Фото нет на Яндекс.Диске: ${x.path.replace(/^disk:/, '')} — файл удалён или переименован` });
   const { xml, problems } = feedsBuildXml(ads, (src) => signed.get(src) || null);
   if (!stat.yandexToken && [...signed.entries()].some(([src, u]) => !u && feedsYandexSource(src))) {
     stat.problems.unshift({ msg: `Ссылки на закрытые файлы Яндекс.Диска есть, а токена нет: вставьте его в ячейку A2 вкладки «${FEEDS_YD_TAB}».` });
@@ -14045,6 +14082,228 @@ async function feedsBuild(env, feed) {
   stat.ms = Date.now() - t0;
   await kv.put('feedstat:' + feed.slug, JSON.stringify(stat));
   return stat;
+}
+
+/* ── Avito's own field catalog: check the sheet's values, fix the obvious ones ──
+ * Avito publishes, per category, which tags it takes and which values a select / checkbox field
+ * accepts (GET /autoload/v1/user-docs/tree → node slug → /node/<slug>/fields → values-json links).
+ * Each build looks up the node of every ad (Category → ServiceType → ServiceSubtype), checks the
+ * values and fixes what has one clear answer, so an ad doesn't fail on «Значение не найдено»:
+ *   - a subject that belongs to a sibling subtype («Английский язык» under «Предметы школы и вуза»)
+ *     moves the ad to that subtype («Иностранные языки»); tags the new subtype doesn't have are dropped;
+ *   - time «07:15» → «07:00» (Avito takes :00 / :30 only);
+ *   - experience «3–5 лет» → the Avito range that holds its lower bound («1–3 года»);
+ *   - «Ученики 1—5 классов» → the grades Avito lists that the range covers;
+ *   - the same value spelled differently (case, ё, dashes, spaces) → Avito's spelling.
+ * What can't be fixed goes to the build's problems with the allowed values. Fixes are listed in
+ * stat.fixes (grouped), so the team can correct the sheet too. The catalog is cached in KV for a week:
+ *   avcat:tree, avcat:node:<slug>, avcat:vals:<node>:<field id>. */
+const FEEDS_CAT_TTL = 7 * 24 * 3600;
+// Fields common to every category: Avito's list for them is incomplete (it takes «В сообщениях» in
+// ContactMethod though the list lacks it), so only the category's own parameters are checked.
+const FEEDS_CAT_SKIP = new Set(['Category', 'ServiceType', 'ContactMethod', 'ListingFee', 'AdStatus', 'InternetCalls', 'CallsDevices', 'Promo', 'ManagerName', 'ContactPhone', 'EMail', 'CompanyName', 'Condition']);
+const feedsNorm = (s) => String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[‐-―−-]/g, '-').replace(/\s+/g, ' ').trim();
+
+async function feedsCatalog(env, feed) {
+  const kv = env.AVITO_KV;
+  let token = null;
+  const getToken = async () => {
+    if (token) return token;
+    let account = feed.avitoAccountId ? await kv.get('account:' + feed.avitoAccountId, 'json') : null;
+    if (!account) account = (await listByPrefix(kv, 'account:')).find((a) => a && a.id);
+    if (!account) throw new Error('нет ни одного кабинета Авито');
+    token = await avitoGetToken(env, account);
+    return token;
+  };
+  const cached = async (key, path) => {
+    const hit = await kv.get(key, 'json');
+    if (hit) return hit;
+    const data = await avitoJson(await getToken(), path);
+    await kv.put(key, JSON.stringify(data), { expirationTtl: FEEDS_CAT_TTL });
+    return data;
+  };
+  const tree = await cached('avcat:tree', '/autoload/v1/user-docs/tree');
+  const nodes = new Map();
+  const node = async (slug) => {
+    if (nodes.has(slug)) return nodes.get(slug);
+    const data = await cached('avcat:node:' + slug, `/autoload/v1/user-docs/node/${encodeURIComponent(slug)}/fields`);
+    const fields = new Map();
+    for (const f of data.fields || []) {
+      const c = (f.content || [])[0] || {};
+      let values = (c.values || []).map((v) => v.value);
+      const link = c.values_link_json && String(c.values_link_json).match(/\/autoload\/v1\/user-docs\/node\/[^/]+\/field\/(\d+)\/values-json/);
+      if (!values.length && link) {
+        const v = await cached(`avcat:vals:${slug}:${link[1]}`, link[0]).catch(() => null);
+        values = ((v && v.values) || []).map((x) => x.value);
+      }
+      fields.set(f.tag, { type: c.field_type, required: !!c.required, values });
+    }
+    nodes.set(slug, fields);
+    return fields;
+  };
+  // Category → ServiceType → ServiceSubtype, by name, anywhere in the tree.
+  const find = (list, name) => (list || []).find((n) => feedsNorm(n.name) === feedsNorm(name));
+  const findDeep = (list, name) => {
+    for (const n of list || []) {
+      if (feedsNorm(n.name) === feedsNorm(name)) return n;
+      const d = findDeep(n.nested, name);
+      if (d) return d;
+    }
+    return null;
+  };
+  const resolve = (category, type, subtype) => {
+    const cat = findDeep(tree.categories, category);
+    if (!cat) return null;
+    const t = type ? find(cat.nested, type) : null;
+    const st = t && subtype ? find(t.nested, subtype) : null;
+    return { cat, type: t, sub: st, node: st || t || cat };
+  };
+  return { node, resolve };
+}
+
+const feedsFirst = (v) => String(v || '').split(/\r?\n/)[0].trim();
+function feedsFieldValues(f) { return f.multi ? feedsOptions(f.value) : [String(f.value).trim()]; }
+
+// One value Avito doesn't know → the value it should be, or null.
+function feedsFixValue(tag, value, allowed) {
+  const n = feedsNorm(value);
+  const same = allowed.filter((a) => feedsNorm(a) === n);
+  if (same.length === 1) return [same[0]];
+  if (/^WorkTime(From|To)$/.test(tag)) {
+    const m = String(value).match(/^(\d{1,2})[:.](\d{2})/);
+    if (m) {
+      const t = `${m[1].padStart(2, '0')}:${Number(m[2]) >= 30 ? '30' : '00'}`;
+      if (allowed.includes(t)) return [t];
+    }
+  }
+  if (tag === 'WorkExperience') {
+    const m = n.match(/(\d+)/);
+    if (/меньше|до года|менее/.test(n)) return allowed.filter((a) => /меньше/i.test(a)).slice(0, 1);
+    if (m) {
+      const x = Number(m[1]);
+      const hit = allowed.find((a) => { const r = feedsNorm(a).match(/(\d+)\D+(\d+)/); return r && x >= Number(r[1]) && x <= Number(r[2]); })
+        || (x >= 10 ? allowed.find((a) => /больше/i.test(a)) : null);
+      if (hit) return [hit];
+    }
+  }
+  if (tag === 'TargetAudience') {
+    const m = n.match(/(\d+)\s*-\s*(\d+)\s*класс/);
+    if (m) {
+      const [lo, hi] = [Number(m[1]), Number(m[2])];
+      const out = allowed.filter((a) => {
+        const an = feedsNorm(a);
+        if (/начальн/.test(an)) return lo <= 4;
+        const r = an.match(/(\d+)\s*-\s*(\d+)/);
+        return r && Number(r[1]) <= hi && Number(r[2]) >= lo;
+      });
+      if (out.length) return out;
+    }
+  }
+  return null;
+}
+
+async function feedsValidate(env, feed, ads, stat) {
+  const cat = await feedsCatalog(env, feed);
+  const fixes = new Map(); // tag|from|to -> { tag, from, to, n, ids }
+  // Grouped by field and the value put in: «11 лет и больше», «12 лет…» → one line «… → 10 лет и больше».
+  const fix = (ad, tag, from, to) => {
+    if (/^WorkTime(From|To)$/.test(tag)) { from = 'время не на :00 / :30'; to = 'округлено вниз до :00 / :30'; }
+    const k = `${tag}|${to}`;
+    if (!fixes.has(k)) fixes.set(k, { tag, to, froms: [], n: 0, ids: [] });
+    const x = fixes.get(k); x.n++; if (x.ids.length < 30) x.ids.push(ad.id);
+    if (!x.froms.includes(from)) x.froms.push(from);
+  };
+  const bad = new Map(); // tag|value -> problem
+  const problem = (ad, tag, value, allowed) => {
+    const k = `${tag}|${value}`;
+    if (!bad.has(k)) bad.set(k, { tag, value, allowed: allowed.slice(0, 40), n: 0, ids: [], rows: [] });
+    const x = bad.get(k); x.n++; if (x.ids.length < 30) { x.ids.push(ad.id); x.rows.push(ad.row); }
+  };
+  const get = (ad, tag) => ad.fields.find((f) => f.tag === tag);
+  let failed = 0;
+  for (const ad of ads) {
+    try { await check(ad); } catch (err) { if (!failed++) stat.catalogError = String(err && err.message || err).slice(0, 200); }
+  }
+  async function check(ad) {
+    const category = get(ad, 'Category');
+    if (!category) return; // Avito reports a missing category itself
+    let where = cat.resolve(feedsFirst(category.value), feedsFirst((get(ad, 'ServiceType') || {}).value), feedsFirst((get(ad, 'ServiceSubtype') || {}).value));
+    if (!where || !where.node.slug) return;
+    let fields = await cat.node(where.node.slug);
+    // A subject Avito keeps under a sibling subtype: move the ad there.
+    const subj = get(ad, 'SubjectOrSpecialty');
+    const subF = fields.get('SubjectOrSpecialty');
+    if (subj && subF && subF.values.length && where.type && where.sub) {
+      const v = feedsFirst(subj.value);
+      if (!subF.values.some((a) => feedsNorm(a) === feedsNorm(v))) {
+        const homes = [];
+        for (const sib of where.type.nested || []) {
+          if (sib === where.sub || !sib.slug) continue;
+          const sf = (await cat.node(sib.slug)).get('SubjectOrSpecialty');
+          if (sf && sf.values.some((a) => feedsNorm(a) === feedsNorm(v))) homes.push(sib);
+        }
+        if (homes.length === 1) {
+          const st = get(ad, 'ServiceSubtype');
+          fix(ad, 'ServiceSubtype', feedsFirst(st.value), homes[0].name);
+          st.value = homes[0].name;
+          where = { ...where, sub: homes[0], node: homes[0] };
+          fields = await cat.node(homes[0].slug);
+          // Only the old subtype's own parameters that the new one lacks (TargetAudience…), not common tags.
+          const dropped = ad.fields.filter((f) => !['Id', 'id'].includes(f.tag) && !fields.has(f.tag) && !FEEDS_CAT_SKIP.has(f.tag) && !/^Promo(Auto|Manual)Options /.test(f.tag) && !FEEDS_PRICE_LIST.includes(f.tag));
+          dropped.forEach((f) => fix(ad, f.tag, 'нет в разделе «' + homes[0].name + '»', 'убрано'));
+          ad.fields = ad.fields.filter((f) => !dropped.includes(f));
+        }
+      }
+    }
+    for (const f of ad.fields) {
+      if (FEEDS_CAT_SKIP.has(f.tag)) continue;
+      const spec = fields.get(f.tag);
+      if (!spec || !spec.values.length || !['select', 'checkbox', 'radio'].includes(spec.type)) continue;
+      const vals = feedsFieldValues(f);
+      const out = [];
+      let changed = false, broken = false;
+      for (const v of vals) {
+        if (spec.values.includes(v)) { out.push(v); continue; }
+        const to = feedsFixValue(f.tag, v, spec.values);
+        if (to && to.length) { fix(ad, f.tag, v, to.join(', ')); out.push(...to); changed = true; } else { problem(ad, f.tag, v, spec.values); broken = true; out.push(v); }
+      }
+      if (changed) f.value = f.multi ? [...new Set(out)].join('\n') : out[0];
+    }
+  }
+  stat.fixes = [...fixes.values()].sort((a, b) => b.n - a.n).slice(0, 60)
+    .map(({ froms, ...x }) => ({ ...x, from: froms.length > 3 ? `${froms.slice(0, 3).join('», «')}» и ещё ${froms.length - 3}` : froms.join('», «') }));
+  for (const b of [...bad.values()].sort((x, y) => y.n - x.n).slice(0, 40)) {
+    stat.problems.push({ row: b.rows[0], id: b.ids[0], tag: b.tag, n: b.n, ids: b.ids, msg: `${b.tag}: Авито не знает значение «${b.value}» (${b.n} объявл.). Можно: ${b.allowed.join(' · ')}` });
+  }
+}
+
+/* ── Photos moved on Yandex.Disk ──
+ * Private links point at a path; when the client later moves files into subfolders (or the folder
+ * name differs in case), the path stops working. Each build lists the Disk's files once and maps a
+ * missing path to the one file it must be: same path ignoring case, else the only file ending with the
+ * same «folder/name», else the only file with that name. */
+async function feedsDiskIndex(token) {
+  const paths = [];
+  for (let offset = 0; offset < 20000; offset += 1000) {
+    const res = await fetch(`https://cloud-api.yandex.net/v1/disk/resources/files?limit=1000&offset=${offset}&fields=items.path`, { headers: { Authorization: 'OAuth ' + token } });
+    if (!res.ok) throw new Error('Яндекс.Диск не отдал список файлов: ' + res.status);
+    const items = ((await res.json()).items || []).map((x) => x.path);
+    paths.push(...items);
+    if (items.length < 1000) break;
+  }
+  return paths;
+}
+function feedsDiskResolve(index, path) {
+  if (index.exact.has(path)) return path;
+  const lc = path.toLowerCase();
+  if (index.lower.get(lc) && index.lower.get(lc).length === 1) return index.lower.get(lc)[0];
+  const parts = lc.split('/');
+  const tail2 = parts.slice(-2).join('/');
+  const byTail = index.all.filter((p) => p.toLowerCase().endsWith('/' + tail2));
+  if (byTail.length === 1) return byTail[0];
+  const byName = index.all.filter((p) => p.toLowerCase().endsWith('/' + parts[parts.length - 1]));
+  if (byName.length === 1) return byName[0];
+  return null;
 }
 
 /* ── Public endpoints: the feed and its photos ── */
