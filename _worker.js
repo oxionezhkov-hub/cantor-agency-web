@@ -3686,18 +3686,35 @@ async function atRefreshAvitoMoney(env) {
       const p = queue.shift();
       const account = await env.AVITO_KV.get(`account:${p.avitoAccountId}`, 'json');
       if (!account) { rows[p.id] = { advance: null, wallet: null, error: 'кабинет не найден' }; continue; }
-      try {
-        const m = await fetchAvitoMoney(env, account);
-        rows[p.id] = { advance: m.advance, wallet: m.wallet, error: m.advance == null && m.wallet == null ? m.errors[0] || 'нет данных' : null };
-      } catch (e) {
-        rows[p.id] = { advance: null, wallet: null, error: String(e && e.message).slice(0, 160) };
-      }
+      // The Avito subscription is read alongside the money: when it lapses, autoload stops and new
+      // listings aren't published, so the «Клиенты» tab flags it on every «Обновить».
+      const [money, tariff] = await Promise.all([
+        fetchAvitoMoney(env, account).catch((e) => ({ advance: null, wallet: null, errors: [String(e && e.message).slice(0, 160)] })),
+        fetchAvitoTariff(env, account),
+      ]);
+      rows[p.id] = { advance: money.advance, wallet: money.wallet, error: money.advance == null && money.wallet == null ? money.errors[0] || 'нет данных' : null };
+      tariffs[p.id] = atTariffRow(tariff);
     }
   };
+  const tariffs = {};
   await Promise.all(Array.from({ length: 4 }, worker));
-  const rec = { at: new Date().toISOString(), rows };
+  const at = new Date().toISOString();
+  const rec = { at, rows };
   await kv.put('at:avitoMoney', JSON.stringify(rec));
+  // Kept on its own so the last known subscription survives a newer morning pull of the money.
+  const prev = (await kv.get('at:avitoTariff', 'json')) || { rows: {} };
+  Object.entries(tariffs).forEach(([id, t]) => {
+    // Avito failed for this cabinet just now: keep what was known before rather than blanking it.
+    if (t.error && prev.rows[id] && prev.rows[id].paidUntil) prev.rows[id] = { ...prev.rows[id], error: t.error };
+    else prev.rows[id] = { ...t, at };
+  });
+  await kv.put('at:avitoTariff', JSON.stringify({ at, rows: prev.rows }));
   return rec;
+}
+// The part of fetchAvitoTariff the tracker needs. daysLeft is recounted in the browser from
+// paidUntil, so a value saved days ago still reads right.
+function atTariffRow(t) {
+  return { paidUntil: t.paidUntil, lastPaidAt: t.lastPaidAt, autoRenew: t.autoRenew, error: t.error };
 }
 
 /* ── Background Avito pull (one KV record per day, results for every linked cabinet) ── */
@@ -8092,7 +8109,7 @@ async function atLatestPull(kv) {
 }
 async function atClientsMetrics(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
-  const [projects, rows, pull, live] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv), kv.get('at:avitoMoney', 'json')]);
+  const [projects, rows, pull, live, tariffs] = await Promise.all([listByPrefix(kv, 'project:'), atDailyMetrics(kv), atLatestPull(kv), kv.get('at:avitoMoney', 'json'), kv.get('at:avitoTariff', 'json')]);
   const pullAt = pull ? Date.parse(pull.finishedAt || pull.startedAt || 0) || 0 : 0;
   const liveAt = live ? Date.parse(live.at) || 0 : 0;
   const y = mskYesterday();
@@ -8101,7 +8118,7 @@ async function atClientsMetrics(env) {
   const out = {};
   for (const p of projects) {
     if (p.inactive) continue;
-    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null, wallet: null, moneyAt: null };
+    out[p.id] = { day: atZeroMetric(), month: atZeroMetric(), monthKey, week: atZeroMetric(), perDay: 0, linked: !!p.avitoAccountId, advance: null, wallet: null, moneyAt: null, tariff: (p.avitoAccountId && tariffs && tariffs.rows && tariffs.rows[p.id]) || null };
     // Advance and wallet: from the «Обновить с Авито» button if it is newer than the morning pull.
     const lr = live && live.rows && live.rows[p.id];
     const r = pull && pull.results && pull.results[p.id];
