@@ -872,10 +872,16 @@ function applyTS(tb){
 function markCur(){
   document.querySelectorAll('.curcol').forEach(x=>x.remove());
   document.querySelectorAll('.tw table').forEach(tb=>{const th=tb.querySelector('thead th.cur');if(!th||th.hidden)return;
+    if(curRO&&!tb._curObs){tb._curObs=1;curRO.observe(tb)}
+    if(curRO&&!th._curObs){th._curObs=1;curRO.observe(th);curThs.forEach(x=>{if(!x.isConnected){curRO.unobserve(x);curThs.delete(x)}});curThs.add(th)}
     const w=tb.parentNode,o=document.createElement('div');o.className='curcol';
     o.style.left=(tb.offsetLeft+th.offsetLeft)+'px';o.style.top=tb.offsetTop+'px';o.style.width=th.offsetWidth+'px';o.style.height=tb.offsetHeight+'px';w.appendChild(o)})
 }
 window.addEventListener('resize',()=>markCur());
+// Таблица меняет ширину и после отрисовки (догрузился шрифт, поменялись данные) — рамку пересчитываем вслед за ней.
+let curRaf=0;const curThs=new Set();const curLater=()=>{cancelAnimationFrame(curRaf);curRaf=requestAnimationFrame(markCur)};
+const curRO=typeof ResizeObserver==='function'?new ResizeObserver(curLater):null;
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(curLater);
 function closeTS(){document.querySelectorAll('.tsp').forEach(p=>p.remove());document.querySelectorAll('.gear.on').forEach(b=>b.classList.remove('on'))}
 function openTS(btn){
   const key=btn.dataset.gear, tb=document.querySelector(`table[data-tk="${key}"]`), st=tsOf(key);
