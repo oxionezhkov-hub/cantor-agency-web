@@ -201,6 +201,12 @@ tr.edit .input,tr.edit .select{min-height:34px}
 .cal.on{color:var(--ink);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
 .cal input{position:absolute;inset:0;opacity:0;pointer-events:none;width:100%}
 .tsp-add{display:flex;gap:6px;padding:6px 8px 2px}
+.sheet-t{margin:0;padding:4px 8px 0;font-size:13.5px;color:var(--muted)}
+.sheet-sa{display:flex;gap:8px;align-items:center;padding:0 8px;min-width:0}
+.sheet-sa code{flex:1;min-width:0;overflow-wrap:anywhere;font-size:12.5px;background:var(--sunken);border-radius:8px;padding:6px 8px;color:var(--ink)}
+.sheet-st{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:0 8px;font-size:13px}
+.sheet-st a{color:var(--accent);font-weight:600}
+.sheet-run{padding:2px 8px 0}
 .tsp-add .input{flex:1}
 @media (max-width:900px){.opbar{flex-wrap:wrap}.opbar .grow{flex-basis:100%}}
 .dd-btn{display:inline-flex;align-items:center;justify-content:space-between;gap:6px;text-align:left;cursor:pointer;white-space:nowrap}
@@ -330,6 +336,7 @@ tr.noact td{font-style:italic}
   <div class="top-ic">
   <a class="icon-btn" href="/avito-tasks" title="Таск-трекер" aria-label="Таск-трекер"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg></a>
   <a class="icon-btn" href="/sales-crm" title="CRM продаж" aria-label="CRM продаж"><svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.3-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.7.8 2.8 2.6 3 5.2"/></svg></a>
+  <button class="icon-btn" id="sheetBtn" data-sheet title="Google-таблица" aria-label="Google-таблица" hidden><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></button>
   <button class="icon-btn" id="exportBtn" title="Скачать копию данных" aria-label="Скачать копию данных" hidden><svg class="ic" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
   <button class="icon-btn" id="theme" title="Сменить тему" aria-label="Сменить тему"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
   </div>
@@ -1081,6 +1088,7 @@ document.addEventListener('click',e=>{
   const rl=e.target.closest('.rl');if(rl){renameRow(rl);return}
   const ac=e.target.closest('[data-addcat]');if(ac){addCat(ac);return}
   const cg=e.target.closest('[data-opcfg]');if(cg){const was=cg.classList.contains('on');closeTS();if(!was)openCfg(cg);return}
+  const sh=e.target.closest('[data-sheet]');if(sh){const was=document.querySelector('.sheet-pop');closeTS();if(!was)openSheet(sh);return}
   const g=e.target.closest('[data-gear]');if(g){const was=g.classList.contains('on');closeTS();if(!was)openTS(g);return}
   if(!e.target.closest('.tsp'))closeTS();
   const t=e.target.closest('[data-tab],[data-go]');if(!t)return;
@@ -1101,7 +1109,7 @@ function persist(){if(!loaded)return;clearTimeout(saveTimer);saveTimer=setTimeou
 async function doSave(){
   const snap=snapshot();if(snap===lastSaved||saving)return;saving=true;
   try{const r=await api('save',{data:JSON.parse(snap),rev:REV});
-    if(r.ok){REV=r.data.rev;lastSaved=snap}
+    if(r.ok){REV=r.data.rev;lastSaved=snap;pushExport()}
     else if(r.status===409){toast('Данные изменились в другой вкладке — открыта свежая версия');if(r.data.data)applyData(r.data.data);render()}
     else if(r.status===401||r.status===403){toast('Сессия закончилась — войдите заново');showGate()}
     else toast('Не удалось сохранить — попробую ещё раз');
@@ -1115,8 +1123,48 @@ document.getElementById('exportBtn').addEventListener('click',()=>{
   const blob=new Blob([snapshot()],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download=`cantor-finance-${NOW}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});
 
+// ── выгрузка в Google-таблицу ──
+// Страница отдаёт воркеру операции, P&L и CF так, как показывает их сама (факт и план — соседними столбцами);
+// раз в день воркер переписывает ими листы таблицы из CFG.sheet. SHEET — почта сервисного аккаунта и итог последней выгрузки.
+let SHEET={}, lastExport='';
+const cellVal=t=>{const s=String(t).replace(/[\s\u00a0\u202f]|₽/g,'').replace(/−/g,'-');if(s===''||s==='—')return '';
+  if(/^-?\d+(,\d+)?%$/.test(s))return s;const n=Number(s.replace(',','.'));return isFinite(n)&&/\d/.test(s)?n:String(t).trim()};
+function tableRows(html){
+  const t=new DOMParser().parseFromString(html,'text/html').querySelector('table');if(!t)return [];
+  const txt=el=>{const c=el.cloneNode(true);c.querySelectorAll('.drag,button,.info').forEach(x=>x.remove());return c.textContent.replace(/\s+/g,' ').trim()};
+  const hs=[...t.querySelectorAll('thead th')].map(txt), rows=[[hs[0]||'Статья']];
+  hs.slice(1).forEach(h=>rows[0].push(h+' · факт',h+' · план'));
+  t.querySelectorAll('tbody tr').forEach(tr=>{const tds=[...tr.cells];if(tds.length<2){rows.push([txt(tds[0])]);return}
+    const r=[txt(tds[0])];tds.slice(1).forEach(td=>{const sp=td.querySelectorAll('.pf>span');sp.length>=2?r.push(cellVal(sp[0].textContent),cellVal(sp[1].textContent)):r.push(cellVal(txt(td)),'')});rows.push(r)});
+  return rows}
+function buildExport(){const K={rev:'Выручка',cogs:'Себестоимость',opex:'Операционные расходы'};
+  const ops=[['Дата','Назначение','Счёт','Сумма','Статья','Тип','Клиент','Сотрудник','Акт']].concat(OPS.slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.id-b.id)
+    .map(o=>[o.d,o.n||'',o.acc||'',o.amt,o.cat||'',K[o.kind]||o.kind||'',o.client||'',o.emp||'',o.act===true?'да':o.act||'']));
+  return {ops,pnl:tableRows(V.pnl()),cf:tableRows(V.cf())}}
+async function pushExport(){try{const e=JSON.stringify(buildExport());if(e===lastExport)return true;
+  const r=await api('export',{export:JSON.parse(e)});if(r.ok)lastExport=e;return r.ok}catch(err){return false}}
+const dtime=iso=>{const d=new Date(Date.parse(iso)+3*3600e3).toISOString();return `${d.slice(8,10)}.${d.slice(5,7)} в ${d.slice(11,16)}`};
+function openSheet(btn){
+  const pop=document.createElement('div');pop.className='tsp sheet-pop';
+  const draw=(busy)=>{const s=SHEET||{};pop.innerHTML=`<div class="tsp-h"><b>Google-таблица</b></div><div class="tsp-b">
+    <p class="sheet-t">Раз в день сюда выгружаются листы «Операции», «P&amp;L» и «CF».</p>
+    <form class="tsp-add" data-sheetset><input class="input" id="sheet-url" placeholder="Ссылка на таблицу" aria-label="Ссылка на таблицу" value="${esc(CFG.sheet||'')}"><button class="btn btn-ghost btn-sm" type="submit">Сохранить</button></form>
+    <div><div class="tsp-l">Доступ «Редактор» для</div><div class="sheet-sa">${s.serviceAccount?`<code id="sheet-sa">${esc(s.serviceAccount)}</code><button class="btn btn-ghost btn-sm" type="button" data-sacopy>Копировать</button>`:'<span class="muted">Сервисный аккаунт Google в воркере не настроен</span>'}</div></div>
+    <div class="sheet-st">${s.at?(s.error?`<span class="st off">Ошибка</span> <span>${esc(s.error)}</span>`:`<span class="st on">Выгружено ${dtime(s.at)}</span>`):'<span class="muted">Ещё не выгружалось</span>'}${s.url?` <a href="${esc(s.url)}" target="_blank" rel="noopener">Открыть таблицу</a>`:''}</div>
+    <div class="sheet-run"><button class="btn btn-primary btn-sm" type="button" data-sheetrun${CFG.sheet&&!busy?'':' disabled'}>${busy?'Выгружаю…':'Выгрузить сейчас'}</button></div></div>`};
+  draw();document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect(),w=pop.offsetWidth;
+  pop.style.top=(r.bottom+window.scrollY+6)+'px';pop.style.left=Math.max(16,Math.min(r.right+window.scrollX-w,window.scrollX+document.documentElement.clientWidth-w-16))+'px';
+  pop.addEventListener('submit',e=>{e.preventDefault();CFG.sheet=pop.querySelector('#sheet-url').value.trim();persist();draw()});
+  pop.addEventListener('click',async e=>{e.stopPropagation();
+    if(e.target.closest('[data-sacopy]')){const t=SHEET.serviceAccount;try{await navigator.clipboard.writeText(t);toast('Почта скопирована')}catch(err){const c=pop.querySelector('#sheet-sa');const g=document.createRange();g.selectNodeContents(c);const sel=getSelection();sel.removeAllRanges();sel.addRange(g)}return}
+    if(e.target.closest('[data-sheetrun]')){draw(true);clearTimeout(saveTimer);await doSave();lastExport='';await pushExport();
+      try{const res=await api('sheet-sync',{});SHEET=Object.assign({},SHEET,res.data);toast(res.ok?'Выгружено в Google-таблицу':'Не удалось выгрузить')}catch(err){toast('Нет связи с сервером')}
+      draw()}});
+}
+
 // ── вход и загрузка ──
-function gateShell(inner){document.getElementById('tabs').innerHTML='';document.getElementById('exportBtn').hidden=true;
+function gateShell(inner){document.getElementById('tabs').innerHTML='';document.getElementById('exportBtn').hidden=true;document.getElementById('sheetBtn').hidden=true;
   document.getElementById('app').innerHTML=`<div class="gate"><div class="gate-ic"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>${inner}</div>`}
 function showGate(err){
   loaded=false;TOKEN=null;
@@ -1145,7 +1193,7 @@ function showImport(){
     <label class="btn btn-primary btn-block" style="cursor:pointer">Выбрать файл<input type="file" id="gFile" accept="application/json,.json" hidden></label><p class="gate-err" id="gErr"></p>`);
   document.getElementById('gFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;
     try{const d=JSON.parse(await f.text());if(!Array.isArray(d.ops))throw new Error('bad');
-      applyData(Object.assign(d,{rev:0}));lastSaved='';loaded=true;document.getElementById('exportBtn').hidden=false;render();await doSave()}
+      applyData(Object.assign(d,{rev:0}));lastSaved='';loaded=true;document.getElementById('exportBtn').hidden=false;document.getElementById('sheetBtn').hidden=false;render();await doSave()}
     catch(err){document.getElementById('gErr').textContent='Это не тот файл'}})
 }
 async function load(){
@@ -1158,9 +1206,10 @@ async function load(){
       return showGate(r.data.error==='forbidden'?'Этот раздел только для руководителя':'')}
     if(!r.ok)return showGate('Сервер не ответил, попробуйте ещё раз');
     if(!r.data.data)return showImport();
-    applyData(r.data.data);const synced=syncClients(r.data.projects,r.data.crm);loaded=true;if(synced)lastSaved='';document.getElementById('exportBtn').hidden=false;
+    applyData(r.data.data);const synced=syncClients(r.data.projects,r.data.crm);loaded=true;if(synced)lastSaved='';document.getElementById('exportBtn').hidden=false;document.getElementById('sheetBtn').hidden=false;
+    SHEET=r.data.sheet||{};
     const t=lsGet('fin.tab');if(t&&TABS.some(x=>x[0]===t))tab=t;
-    render()
+    render();pushExport()
   }catch(e){showGate('Нет связи с сервером')}
 }
 TOKEN=lsGet(K_AT_TOKEN)||lsGet(K_TOKEN);

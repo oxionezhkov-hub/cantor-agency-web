@@ -8065,7 +8065,8 @@ async function handleFinanceApi(request, env, url) {
     const crm = env.AVITO_KV ? (await listByPrefix(env.AVITO_KV, 'salescrm:client:'))
       .filter((c) => c && c.name && c.telegram)
       .map((c) => ({ name: c.name, telegram: salesCrmNormalizeTg(c.telegram), status: c.status || '' })) : [];
-    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, projects, crm, me: atPublicUser(auth.user) });
+    const sheet = Object.assign({ serviceAccount: feedsServiceEmail(env) || null }, (await kv.get(FIN_SHEET_STATUS_KEY, 'json')) || {});
+    return json({ data: (await kv.get(FIN_KEY, 'json')) || null, projects, crm, sheet, me: atPublicUser(auth.user) });
   }
   if (action === 'save') {
     const data = body.data;
@@ -8079,7 +8080,77 @@ async function handleFinanceApi(request, env, url) {
     await kv.put(FIN_KEY, raw);
     return json({ ok: true, rev: next.rev, savedAt: next.savedAt });
   }
+  // Таблицы операций / P&L / CF в том виде, как их показывает страница, — для выгрузки в Google-таблицу.
+  if (action === 'export') {
+    const exp = body.export;
+    if (!exp || typeof exp !== 'object' || !FIN_SHEET_TABS.every(([k]) => Array.isArray(exp[k]))) return json({ error: 'bad_data' }, 400);
+    const raw = JSON.stringify({ ops: exp.ops, pnl: exp.pnl, cf: exp.cf });
+    if (raw.length > FIN_MAX_BYTES) return json({ error: 'too_big' }, 413);
+    await kv.put(FIN_EXPORT_KEY, raw);
+    return json({ ok: true });
+  }
+  if (action === 'sheet-sync') {
+    const status = await finSheetExport(env);
+    return json(status, status.error ? 400 : 200);
+  }
   return json({ error: 'not_found' }, 404);
+}
+
+// Daily export to Google Sheets (cron, once a day after 07:00 MSK; «Выгрузить сейчас» on the page):
+// the sheet set on the page (cfg.sheet) gets three tabs — «Операции», «P&L», «CF» — rewritten whole from
+// fin:export, the tables the page saved with its last save. The service account (GOOGLE_SERVICE_ACCOUNT_JSON)
+// must be an editor of the sheet.
+//   fin:export -> { ops: [[…]], pnl: [[…]], cf: [[…]] }
+//   fin:sheet -> { at, error, url }   last export result, shown on the page
+const FIN_EXPORT_KEY = 'fin:export';
+const FIN_SHEET_STATUS_KEY = 'fin:sheet';
+const FIN_SHEET_TABS = [['ops', 'Операции'], ['pnl', 'P&L'], ['cf', 'CF']];
+async function finSheetExport(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const data = (await kv.get(FIN_KEY, 'json')) || {};
+  const id = feedsSheetId(data.cfg && data.cfg.sheet);
+  const done = async (status) => {
+    const out = Object.assign({ at: new Date().toISOString(), url: id ? `https://docs.google.com/spreadsheets/d/${id}` : '' }, status);
+    await kv.put(FIN_SHEET_STATUS_KEY, JSON.stringify(out));
+    return Object.assign({ serviceAccount: feedsServiceEmail(env) || null }, out);
+  };
+  if (!id) return done({ error: 'Не указана ссылка на Google-таблицу' });
+  if (!env.GOOGLE_SERVICE_ACCOUNT_JSON) return done({ error: 'В воркере нет сервисного аккаунта Google (GOOGLE_SERVICE_ACCOUNT_JSON)' });
+  const exp = await kv.get(FIN_EXPORT_KEY, 'json');
+  if (!exp) return done({ error: 'Нет данных для выгрузки — откройте /finance, страница сохранит таблицы' });
+  try {
+    const token = await feedsGoogleToken(env, 'https://www.googleapis.com/auth/spreadsheets');
+    const base = `https://sheets.googleapis.com/v4/spreadsheets/${id}`;
+    const call = async (path, method = 'GET', payload) => {
+      const res = await fetch(base + path, { method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: payload ? JSON.stringify(payload) : undefined });
+      const out = await res.json().catch(() => ({}));
+      if (res.status === 403 || res.status === 404) throw new Error(`Нет доступа к таблице. Добавьте ${feedsServiceEmail(env)} в «Настройки доступа» как редактора.`);
+      if (!res.ok) throw new Error('Google Sheets: ' + ((out.error && out.error.message) || res.status));
+      return out;
+    };
+    const meta = await call('?fields=sheets.properties.title');
+    const have = new Set((meta.sheets || []).map((x) => x.properties.title));
+    const add = FIN_SHEET_TABS.filter(([, t]) => !have.has(t)).map(([, title]) => ({ addSheet: { properties: { title } } }));
+    if (add.length) await call(':batchUpdate', 'POST', { requests: add });
+    await call('/values:batchClear', 'POST', { ranges: FIN_SHEET_TABS.map(([, t]) => `'${t}'`) });
+    const ranges = FIN_SHEET_TABS.map(([k, t]) => ({ range: `'${t}'!A1`, values: (Array.isArray(exp[k]) ? exp[k] : []).map((r) => (Array.isArray(r) ? r : [])) }));
+    await call('/values:batchUpdate', 'POST', { valueInputOption: 'RAW', data: ranges });
+    return done({ error: '' });
+  } catch (err) {
+    return done({ error: String((err && err.message) || err) });
+  }
+}
+async function finSheetCron(env) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  if (!kv) return;
+  const nowMsk = new Date(Date.now() + 3 * 3600e3);
+  if (nowMsk.getUTCHours() < 7) return;
+  const today = mskToday();
+  if (await kv.get(`fin:sheet:${today}`)) return;
+  const data = await kv.get(FIN_KEY, 'json');
+  if (!data || !feedsSheetId(data.cfg && data.cfg.sheet)) return;
+  await kv.put(`fin:sheet:${today}`, '1', { expirationTtl: 3 * 86400 });
+  await finSheetExport(env);
 }
 
 // Reminders to the owner from the control bot (cron, once a day after 10:00 MSK):
@@ -13830,16 +13901,18 @@ async function feedsSign(secret, data) {
 
 /* ── Reading the sheet ── */
 
-let feedsGoogleTokenCache = null;
+const feedsGoogleTokenCache = {};
 
-async function feedsGoogleToken(env) {
+// scope: read-only for the feeds; the finance export (/finance → Google-таблица) asks for write access.
+async function feedsGoogleToken(env, scope = 'https://www.googleapis.com/auth/spreadsheets.readonly') {
   if (!env.GOOGLE_SERVICE_ACCOUNT_JSON) return null;
-  if (feedsGoogleTokenCache && feedsGoogleTokenCache.exp > Date.now() + 60000) return feedsGoogleTokenCache.token;
+  const cached = feedsGoogleTokenCache[scope];
+  if (cached && cached.exp > Date.now() + 60000) return cached.token;
   const sa = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON);
   const now = Math.floor(Date.now() / 1000);
   const enc = (obj) => feedsB64url(JSON.stringify(obj));
   const unsigned = enc({ alg: 'RS256', typ: 'JWT' }) + '.' + enc({
-    iss: sa.client_email, scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+    iss: sa.client_email, scope,
     aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600,
   });
   const der = Uint8Array.from(atob(String(sa.private_key).replace(/-----[^-]+-----/g, '').replace(/\s+/g, '')), (c) => c.charCodeAt(0));
@@ -13855,7 +13928,7 @@ async function feedsGoogleToken(env) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.access_token) throw new Error('Google не выдал токен сервисного аккаунта: ' + (data.error_description || data.error || res.status));
-  feedsGoogleTokenCache = { token: data.access_token, exp: Date.now() + (data.expires_in || 3600) * 1000 };
+  feedsGoogleTokenCache[scope] = { token: data.access_token, exp: Date.now() + (data.expires_in || 3600) * 1000 };
   return data.access_token;
 }
 
@@ -14642,6 +14715,7 @@ export default {
     ctx.waitUntil(feedsCron(env).catch((err) => console.error('avito feeds cron failed', err && err.stack)));
     ctx.waitUntil(mbidsCron(env).catch((err) => console.error('avito bids cron failed', err && err.stack)));
     ctx.waitUntil(finRemindCron(env).catch((err) => console.error('finance reminders cron failed', err && err.stack)));
+    ctx.waitUntil(finSheetCron(env).catch((err) => console.error('finance sheet export cron failed', err && err.stack)));
     ctx.waitUntil(aiSalesCron(env).catch((err) => console.error('ai-sales cron failed', err && err.stack)));
   },
 };
