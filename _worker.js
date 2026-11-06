@@ -1209,11 +1209,13 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
   return (data && (data.voices_urls || data.urls)) || data || {};
 }
 
-// ── Autoload reports ──
-// Avito keeps one report per autoload run. /autoload/v3 (falling back to v2) gives the report
-// itself; /autoload/v2/reports/{id}/items pages through every listing of that run with its
-// Avito id/url, section (success / error / problem …) and the messages explaining a failure.
+// ── Autoload uploads (API v4) ──
+// The v2/v3 report endpoints are deprecated. v4 exposes the latest completed upload
+// and its items separately; it does not expose items for an arbitrary historical upload.
 async function fetchAvitoAutoloadReport(env, account, reportId) {
+  if (reportId) {
+    throw new Error('autoload v4 only supports the latest successful upload; historical report IDs are unavailable');
+  }
   const token = await avitoGetToken(env, account);
   const tried = [];
   const get = async (path) => {
@@ -1221,40 +1223,59 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
     const text = await res.text().catch(() => '');
     let data = null;
     try { data = JSON.parse(text); } catch (e) { /* not JSON */ }
-    tried.push(`${path} → ${res.status}${res.ok ? '' : ` ${text.slice(0, 160)}`}`);
-    return { ok: res.ok, data };
+    // Never include upstream response bodies here: they may contain account or listing data.
+    tried.push(`${path} → ${res.status}`);
+    return { ok: res.ok, status: res.status, data };
   };
-  let report = null;
-  for (const v of ['v3', 'v2']) {
-    const r = await get(reportId ? `/autoload/${v}/reports/${encodeURIComponent(reportId)}` : `/autoload/${v}/reports/last_completed_report`);
-    if (r.ok && r.data) { report = r.data; break; }
+
+  const uploadResult = await get('/autoload/v4/uploads/last_successful');
+  if (!uploadResult.ok || !uploadResult.data) {
+    const authFailed = uploadResult.status === 401 || uploadResult.status === 403;
+    const advice = authFailed
+      ? ' Проверьте OAuth-доступ кабинета и scope autoload:reports для приложения.'
+      : '';
+    throw new Error(`autoload report unavailable: ${tried.join(' | ')}.${advice}`);
   }
-  if (!report) throw new Error(`autoload report unavailable: ${tried.join(' | ')}`);
-  const id = report.report_id || report.id;
+
+  const upload = uploadResult.data;
   const items = [];
-  for (let page = 0; id && page < 60; page += 1) {
-    const r = await get(`/autoload/v2/reports/${encodeURIComponent(id)}/items?per_page=200&page=${page}`);
-    if (!r.ok || !r.data) break;
-    const batch = r.data.items || r.data.result || [];
+  const perPage = 50; // v4 caps perPage at 50; pages start at 1.
+  for (let page = 1; page <= 60; page += 1) {
+    const path = `/autoload/v4/uploads/last_successful/items?perPage=${perPage}&page=${page}`;
+    const result = await get(path);
+    if (!result.ok || !result.data) {
+      const authFailed = result.status === 401 || result.status === 403;
+      const advice = authFailed
+        ? ' Проверьте OAuth-доступ кабинета и scope autoload:reports для приложения.'
+        : '';
+      throw new Error(`autoload items unavailable: ${tried.join(' | ')}.${advice}`);
+    }
+    const batch = Array.isArray(result.data.items) ? result.data.items : [];
     items.push(...batch.map(normalizeAutoloadItem));
-    const pages = r.data.meta && Number(r.data.meta.pages);
-    if (!batch.length || (pages && page + 1 >= pages)) break;
+    const pages = Number(
+      result.data.meta && result.data.meta.pages
+      || result.data.pagination && (result.data.pagination.totalPages || result.data.pagination.pages)
+      || result.data.pages
+      || 0
+    );
+    if (!batch.length || (pages ? page >= pages : batch.length < perPage)) break;
   }
+
   const bySection = {};
   items.forEach((it) => { bySection[it.section || '—'] = (bySection[it.section || '—'] || 0) + 1; });
   return {
     summary: {
-      reportId: id || null,
-      status: report.status || null,
-      startedAt: report.started_at || report.startedAt || null,
-      finishedAt: report.finished_at || report.finishedAt || null,
-      sectionStats: report.section_stats || report.sectionStats || null,
+      reportId: upload.upload_id || upload.report_id || upload.id || null,
+      status: upload.status || null,
+      startedAt: upload.started_at || upload.startedAt || null,
+      finishedAt: upload.finished_at || upload.finishedAt || null,
+      sectionStats: upload.sections_stats || upload.section_stats || upload.sectionStats || null,
       items: items.length,
       problems: items.filter((it) => it.problem).length,
       bySection,
     },
     items,
-    report,
+    report: upload,
     tried,
   };
 }
