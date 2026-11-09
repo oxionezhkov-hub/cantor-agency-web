@@ -1,10 +1,31 @@
-# Заявки со Светланы Идрисовой → Google Таблица
+# Заявки со Светланы Идрисовой → почта, Telegram, Google Таблица
 
 Функция принимает POST с формы `client/svetlana-idrisova`
-(«Записаться на пробное занятие») и дописывает строку в Google Таблицу —
-сделано по образцу функции для сайта Анны Дейнеги (Sheets-часть), с тем же
-сервисным аккаунтом Google, но новой таблицей. Без отправки писем — Светлане
-нужна только таблица.
+(«Записаться на пробное занятие») и рассылает заявку по трём каналам —
+как на других сайтах преподавателей:
+
+- **письмо** на `kotenok8595@mail.ru` (через Resend — как у Юлии Янсон);
+- **сообщение в Telegram** от бота Светлане (её id `1761494459`);
+- **строку в Google Таблицу** (если заданы переменные таблицы).
+
+Каналы работают независимо: если какой-то не настроен — он пропускается, если
+упал — остальные всё равно отправляются. Форма показывает «заявка
+отправлена», если заявка дошла хотя бы по одному каналу.
+
+Сайт менять не нужно: адрес функции уже стоит в `API_BASE`
+(`https://functions.yandexcloud.net/d4efkkp6c9hf55k82qrf`) — достаточно
+выпустить новую версию функции `svetlana-idrisova-form` с этим кодом и
+переменными ниже.
+
+## 0. Почта и Telegram
+
+**Telegram.** Светлана должна один раз открыть бота (по токену которого
+шлём) и нажать **«Старт»** — без этого Telegram не даёт боту писать ей
+первым, и сообщения не придут.
+
+**Почта.** Письма уходят через Resend — тот же ключ и тот же адрес
+отправителя, что в функции `yulia-yanson-api` (её переменная `RESEND_API_KEY`,
+адрес `from` — в её коде). Свой почтовый ящик не нужен.
 
 ## 1. Google Таблица
 
@@ -41,8 +62,13 @@ yc serverless function version create \
   --runtime=nodejs18 \
   --entrypoint=index.handler \
   --memory=128m \
-  --execution-timeout=10s \
   --source-path=. \
+  --execution-timeout=15s \
+  --environment RESEND_API_KEY='<ключ Resend из функции yulia-yanson-api>' \
+  --environment ADMIN_EMAIL='kotenok8595@mail.ru' \
+  --environment MAIL_FROM='<адрес from из функции yulia-yanson-api>' \
+  --environment TELEGRAM_BOT_TOKEN='<токен бота>' \
+  --environment TELEGRAM_CHAT_ID='1761494459' \
   --environment GOOGLE_SERVICE_ACCOUNT_KEY='<весь JSON-ключ сервисного аккаунта одной строкой>' \
   --environment SPREADSHEET_ID='<ID таблицы с шага 1.4>' \
   --environment SHEET_NAME='Заявки'
@@ -55,6 +81,11 @@ yc serverless function allow-unauthenticated-invoke --name=svetlana-idrisova-for
 
 | Переменная | Что это | Откуда взять |
 |---|---|---|
+| `RESEND_API_KEY` | Ключ Resend | Скопировать из функции `yulia-yanson-api` |
+| `ADMIN_EMAIL` | Кому письма | `kotenok8595@mail.ru` (несколько — через запятую) |
+| `MAIL_FROM` | От кого | Адрес `from` из кода `yulia-yanson-api` (домен должен быть подтверждён в Resend) |
+| `TELEGRAM_BOT_TOKEN` | Токен бота | От @BotFather — **только в переменные функции, не в репозиторий** |
+| `TELEGRAM_CHAT_ID` | Кому в Telegram | `1761494459` (несколько — через запятую) |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | JSON-ключ сервисного аккаунта, **целиком, в одну строку** | Тот же, что уже используется в функции Анны Дейнеги — скопируйте оттуда же (из настроек её функции в Yandex Cloud Console, вкладка «Переменные окружения», значение уже там) |
 | `SPREADSHEET_ID` | ID **новой** таблицы Светланы | Из ссылки на таблицу, шаг 1.4 выше |
 | `SHEET_NAME` | Название листа | `Заявки` (если назвали лист иначе — впишите так же) |
@@ -68,11 +99,22 @@ yc serverless function allow-unauthenticated-invoke --name=svetlana-idrisova-for
 консоли: **Cloud Functions → svetlana-idrisova-form → Обзор →
 HTTP-адрес**, вида `https://functions.yandexcloud.net/xxxxxxxxxxxxxxxxxxxx`).
 
-## 3. Подключите адрес к сайту
+Переменные таблицы необязательны: без них функция просто не пишет в таблицу,
+а почта и Telegram работают.
 
-Пришлите мне этот HTTP-адрес — я подставлю его в константу `API_BASE`
-рядом с функцией `submitForm()` в `client/svetlana-idrisova` и запушу.
-После этого заявки с формы начнут появляться строками в таблице.
+## 3. Проверка
+
+Функция уже подключена к сайту (`API_BASE` в `client/svetlana-idrisova`).
+После выпуска версии отправьте тестовую заявку с сайта или так:
+
+```bash
+curl -s -X POST https://functions.yandexcloud.net/d4efkkp6c9hf55k82qrf \
+  -H 'Content-Type: application/json' \
+  -d '{"fields":{"Имя ученика":"Тест","Телефон":"+70000000000"}}'
+```
+
+В ответе `result` показывает каждый канал: `sent` — отправлено, `skipped` —
+не настроен, `failed` — ошибка (подробности — в логах функции).
 
 ## Обновление функции
 
