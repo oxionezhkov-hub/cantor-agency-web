@@ -1,20 +1,17 @@
 'use strict';
 
 const { google } = require('googleapis');
-const nodemailer = require('nodemailer');
 
 // ── env vars you set in Yandex Cloud Console → your function → Редактор → Переменные окружения ──
 // Таблица (необязательно — если не заданы, строка в таблицу не пишется):
 //   GOOGLE_SERVICE_ACCOUNT_KEY  — весь JSON-ключ сервисного аккаунта, в одну строку (тот же, что у Анны Дейнеги)
 //   SPREADSHEET_ID              — ID таблицы Светланы (из её ссылки, между /d/ и /edit)
 //   SHEET_NAME                  — название листа, по умолчанию "Заявки"
-// Письмо:
-//   SMTP_HOST                   — SMTP-сервер ящика-отправителя, по умолчанию smtp.yandex.ru
-//   SMTP_PORT                   — порт, по умолчанию 465 (SSL)
-//   SMTP_USER                   — логин ящика-отправителя (полный адрес)
-//   SMTP_PASS                   — пароль приложения этого ящика
-//   MAIL_FROM                   — от кого, по умолчанию SMTP_USER
-//   MAIL_TO                     — кому (можно несколько через запятую), для Светланы kotenok8595@mail.ru
+// Письмо (через Resend, как у Юлии Янсон):
+//   RESEND_API_KEY              — ключ Resend (тот же, что в функции yulia-yanson-api)
+//   ADMIN_EMAIL                 — кому (можно несколько через запятую), для Светланы kotenok8595@mail.ru
+//   MAIL_FROM                   — от кого; адрес на домене, подтверждённом в Resend
+//                                 (тот же, что в функции yulia-yanson-api)
 // Telegram:
 //   TELEGRAM_BOT_TOKEN          — токен бота (от @BotFather)
 //   TELEGRAM_CHAT_ID            — кому слать (можно несколько через запятую), для Светланы 1761494459
@@ -110,21 +107,9 @@ async function appendToSheet(fields) {
 }
 
 async function sendEmail(fields) {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const to = list(process.env.MAIL_TO);
-  if (!user || !pass || !to.length) return 'skipped';
-
-  const port = Number(process.env.SMTP_PORT || 465);
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.yandex.ru',
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-    connectionTimeout: 7000,
-    greetingTimeout: 7000,
-    socketTimeout: 8000,
-  });
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = list(process.env.ADMIN_EMAIL);
+  if (!apiKey || !to.length) return 'skipped';
 
   const entries = orderedEntries(fields);
   const name = [fields['Имя ученика'], fields['Фамилия ученика']].filter(Boolean).join(' ');
@@ -136,14 +121,26 @@ async function sendEmail(fields) {
       + `<td style="white-space:pre-wrap">${escapeHtml(v)}</td></tr>`).join('')
     + '</table>';
 
-  await transporter.sendMail({
-    from: { name: 'Заявки с сайта', address: process.env.MAIL_FROM || user },
-    to,
-    replyTo: fields['Email'] || undefined,
-    subject: `Новая заявка на пробное занятие${name ? ` — ${name}` : ''}`,
-    text,
-    html,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 7000);
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: process.env.MAIL_FROM || 'onboarding@resend.dev',
+        to,
+        ...(fields['Email'] ? { reply_to: fields['Email'] } : {}),
+        subject: `Новая заявка на пробное занятие${name ? ` — ${name}` : ''}`,
+        text,
+        html,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`resend ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  } finally {
+    clearTimeout(timer);
+  }
   return 'sent';
 }
 

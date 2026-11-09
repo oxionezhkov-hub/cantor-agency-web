@@ -4,7 +4,7 @@
 («Записаться на пробное занятие») и рассылает заявку по трём каналам —
 как на других сайтах преподавателей:
 
-- **письмо** на `kotenok8595@mail.ru` (через SMTP ящика-отправителя);
+- **письмо** на `kotenok8595@mail.ru` (через Resend — как у Юлии Янсон);
 - **сообщение в Telegram** от бота Светлане (её id `1761494459`);
 - **строку в Google Таблицу** (если заданы переменные таблицы).
 
@@ -23,11 +23,9 @@
 шлём) и нажать **«Старт»** — без этого Telegram не даёт боту писать ей
 первым, и сообщения не придут.
 
-**Почта.** Письма уходят с ящика-отправителя по SMTP — тот же ящик, что и у
-других сайтов (например, Яндекс-почта: `smtp.yandex.ru`, порт `465`). Для
-Яндекса нужен **пароль приложения** (Яндекс ID → Безопасность → Пароли
-приложений → Почта), обычный пароль не подойдёт. Для mail.ru-ящика:
-`smtp.mail.ru`, порт `465`, тоже пароль для внешнего приложения.
+**Почта.** Письма уходят через Resend — тот же ключ и тот же адрес
+отправителя, что в функции `yulia-yanson-api` (её переменная `RESEND_API_KEY`,
+адрес `from` — в её коде). Свой почтовый ящик не нужен.
 
 ## 1. Google Таблица
 
@@ -66,11 +64,9 @@ yc serverless function version create \
   --memory=128m \
   --source-path=. \
   --execution-timeout=15s \
-  --environment SMTP_HOST='smtp.yandex.ru' \
-  --environment SMTP_PORT='465' \
-  --environment SMTP_USER='<ящик-отправитель>' \
-  --environment SMTP_PASS='<пароль приложения>' \
-  --environment MAIL_TO='kotenok8595@mail.ru' \
+  --environment RESEND_API_KEY='<ключ Resend из функции yulia-yanson-api>' \
+  --environment ADMIN_EMAIL='kotenok8595@mail.ru' \
+  --environment MAIL_FROM='<адрес from из функции yulia-yanson-api>' \
   --environment TELEGRAM_BOT_TOKEN='<токен бота>' \
   --environment TELEGRAM_CHAT_ID='1761494459' \
   --environment GOOGLE_SERVICE_ACCOUNT_KEY='<весь JSON-ключ сервисного аккаунта одной строкой>' \
@@ -85,11 +81,9 @@ yc serverless function allow-unauthenticated-invoke --name=svetlana-idrisova-for
 
 | Переменная | Что это | Откуда взять |
 |---|---|---|
-| `SMTP_HOST` / `SMTP_PORT` | SMTP ящика-отправителя | `smtp.yandex.ru` / `465` (или `smtp.mail.ru` / `465`) |
-| `SMTP_USER` | Ящик-отправитель, полный адрес | Тот же, что в функциях других сайтов |
-| `SMTP_PASS` | Пароль приложения этого ящика | Настройки безопасности ящика (см. шаг 0) |
-| `MAIL_FROM` | От кого (необязательно) | По умолчанию — `SMTP_USER` |
-| `MAIL_TO` | Кому письма | `kotenok8595@mail.ru` (несколько — через запятую) |
+| `RESEND_API_KEY` | Ключ Resend | Скопировать из функции `yulia-yanson-api` |
+| `ADMIN_EMAIL` | Кому письма | `kotenok8595@mail.ru` (несколько — через запятую) |
+| `MAIL_FROM` | От кого | Адрес `from` из кода `yulia-yanson-api` (домен должен быть подтверждён в Resend) |
 | `TELEGRAM_BOT_TOKEN` | Токен бота | От @BotFather — **только в переменные функции, не в репозиторий** |
 | `TELEGRAM_CHAT_ID` | Кому в Telegram | `1761494459` (несколько — через запятую) |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | JSON-ключ сервисного аккаунта, **целиком, в одну строку** | Тот же, что уже используется в функции Анны Дейнеги — скопируйте оттуда же (из настроек её функции в Yandex Cloud Console, вкладка «Переменные окружения», значение уже там) |
