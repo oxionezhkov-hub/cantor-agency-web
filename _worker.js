@@ -13080,6 +13080,7 @@ const MBIDS_REASONS = {
   auth: 'Не удалось авторизовать аккаунт',
   unavailable: 'Продвижение за ставку недоступно',
   setfail: 'Не удалось изменить ставку',
+  wait: 'Ждём от Авито шкалу ставок — повторим в течение 10 минут',
 };
 
 function mbidsAuth(request, env) {
@@ -13272,10 +13273,36 @@ async function mbidsCatalog(env, account, force) {
   return out;
 }
 
+// Шкала ставок объявления (GET /cpxpromo/1/getBids) → st. Авито часто отвечает 429 (слишком много запросов)
+// или 5xx — это временно: пробуем ещё пару раз с паузой, а если не вышло, не ставим bidsAt, чтобы следующий
+// тик cron (через 10 минут) спросил снова, а не через час. Старая шкала, если была, остаётся в силе.
+async function mbidsLoadBids(token, id, st) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
+    try {
+      const res = await avitoRequest(token, `/cpxpromo/1/getBids/${encodeURIComponent(id)}`);
+      const text = await res.text();
+      if (res.ok) {
+        const p = mbidsParseBids(JSON.parse(text || '{}'));
+        if (p) { Object.assign(st, p); st.unavailable = false; st.bidsError = null; } else st.unavailable = true;
+        st.bidsTemp = false; st.bidsAt = Date.now();
+        return true;
+      }
+      if (res.status === 401 || res.status === 403) { st.bidsError = MBIDS_REASONS.auth; st.bidsTemp = false; st.bidsAt = Date.now(); return false; }
+      if (res.status === 400 || res.status === 404) { st.unavailable = true; st.bidsError = `${MBIDS_REASONS.unavailable}: ${text.slice(0, 120)}`; st.bidsTemp = false; st.bidsAt = Date.now(); return false; }
+      st.bidsError = `Авито не ответил (${res.status})`;
+    } catch (e) { st.bidsError = `Авито не ответил: ${String(e.message).slice(0, 100)}`; }
+    st.bidsTemp = true;
+  }
+  return false;
+}
+
 // Какая ставка должна стоять сейчас и почему. Возвращает { status, reason, wantPenny } (wantPenny null — не трогать).
 function mbidsDecide(c, st, ctx) {
   if (!c.on) return { status: 'off', reason: MBIDS_REASONS.off, wantPenny: null };
   if (ctx.active && !ctx.active.has(String(c.id))) return { status: 'err', reason: MBIDS_REASONS.inactive, wantPenny: null };
+  // Шкалы ещё нет, а Авито временно не ответил — это не ошибка настроек: ждём следующей проверки.
+  if (st.basePenny == null && st.bidsTemp) return { status: 'pending', reason: `${MBIDS_REASONS.wait} (${st.bidsError || 'Авито не ответил'})`, wantPenny: null };
   if (c.bid == null) return { status: 'err', reason: MBIDS_REASONS.nobid, wantPenny: null };
   if (st.unavailable) return { status: 'err', reason: MBIDS_REASONS.unavailable, wantPenny: null };
   if (st.basePenny == null) return { status: 'err', reason: st.bidsError || MBIDS_REASONS.unavailable, wantPenny: null };
@@ -13373,19 +13400,7 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
     const c = { ...cfg.items[id], id };
     const st = { ...(state.items[id] || {}) };
     if (c.on || force) {
-      if (force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) {
-        try {
-          const res = await avitoRequest(token, `/cpxpromo/1/getBids/${encodeURIComponent(id)}`);
-          const text = await res.text();
-          if (res.ok) {
-            const p = mbidsParseBids(JSON.parse(text || '{}'));
-            if (p) { Object.assign(st, p); st.unavailable = false; st.bidsError = null; } else st.unavailable = true;
-          } else if (res.status === 401 || res.status === 403) st.bidsError = MBIDS_REASONS.auth;
-          else if (res.status === 400 || res.status === 404) { st.unavailable = true; st.bidsError = `${MBIDS_REASONS.unavailable}: ${text.slice(0, 120)}`; }
-          else st.bidsError = `Авито не ответил (${res.status})`;
-          st.bidsAt = Date.now();
-        } catch (e) { st.bidsError = `Авито не ответил: ${String(e.message).slice(0, 100)}`; }
-      }
+      if (force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) await mbidsLoadBids(token, id, st);
     }
     const d = mbidsDecide(c, st, { active, noMoney, now, today });
     st.status = d.status;
@@ -13577,15 +13592,32 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
     for (const [acc, ids] of Object.entries(m)) {
       const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
       const st = set.bid && set.bid.min ? await mbidsGet(kv, `mbids:state:${acc}`, { items: {} }) : null;
+      // «Минимальная ставка» для объявлений, чью шкалу движок ещё не читал (только что включили,
+      // или Авито ответил 429), — спрашиваем Авито сразу, а не пропускаем (иначе ставка остаётся пустой).
+      let minToken = null;
+      const minStarted = Date.now();
+      const minFor = async (id) => {
+        const s = (st.items || {})[id];
+        if (s && s.minPromoPenny != null) return s.minPromoPenny;
+        if (Date.now() - minStarted > 20000 || minToken === false) return null; // не держим запрос страницы дольше ~20 с
+        if (!minToken) {
+          const account = await kv.get(`account:${acc}`, 'json');
+          minToken = account ? await avitoGetToken(env, account).catch(() => false) : false;
+          if (!minToken) return null;
+        }
+        const fresh = {};
+        await mbidsLoadBids(minToken, id, fresh);
+        return fresh.minPromoPenny ?? null;
+      };
       for (const id of ids) {
         const c = cfg.items[id];
         if (!c) continue;
         if (set.on !== undefined) c.on = !!set.on;
         if (set.bid !== undefined) {
           if (set.bid && set.bid.min) {
-            const s = st.items[id];
-            if (s && s.minPromoPenny != null) c.bid = Math.ceil(s.minPromoPenny / 100);
-            else skipped.push({ key: `${acc}:${id}`, reason: 'Авито ещё не прислал минимальную ставку' });
+            const minPenny = await minFor(id);
+            if (minPenny != null) c.bid = Math.ceil(minPenny / 100);
+            else skipped.push({ key: `${acc}:${id}`, reason: 'Авито не прислал минимальную ставку — повторите через 10 минут' });
           } else {
             const v = mbidsOp(c.bid, set.bid, { int: true, min: 0 });
             if (v === undefined) return json({ error: 'Ставка — целое число рублей' }, 400);

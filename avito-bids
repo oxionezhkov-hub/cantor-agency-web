@@ -819,7 +819,7 @@ let chipFns = [];
 $('#chips').addEventListener('click', (e) => { const b = e.target.closest('[data-chip]'); if (!b) return; chipFns[Number(b.dataset.chip)](); lsSet('mb_filt', filt); render(); });
 
 function statusChip(x) {
-  const map = { ok: ['green', 'Успешно'], pending: ['green', 'Успешно'], stop: ['amber', 'Остановлено'], err: ['red', 'Ошибка'], off: ['', 'Выключено'] };
+  const map = { ok: ['green', 'Успешно'], pending: x.reason ? ['amber', 'Ждём Авито'] : ['green', 'Успешно'], stop: ['amber', 'Остановлено'], err: ['red', 'Ошибка'], off: ['', 'Выключено'] };
   const [cls, t] = map[x.status] || map.off;
   let reason = x.reason || (x.status === 'pending' ? 'Ждёт первой проверки — до 10 минут' : '');
   if (x.status === 'off') reason = 'Ручное управление выключено — включите тумблер';
