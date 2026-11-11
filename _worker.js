@@ -14695,6 +14695,24 @@ async function handleFeedsApi(request, env, url) {
       const a = await kv.get(k.name, 'json');
       if (a) accounts.push({ id: a.id, name: a.name });
     }
+    // Ответственный за клиента — из трекера задач (/avito-tasks: клиент → кабинет Авито → «Ответственный»).
+    // По нему вкладка «Мои клиенты». Нет трекера или связи — owner пустой, клиент виден только во «Всех».
+    try {
+      const dkv = env.AGENCY_DASHBOARD_KV;
+      if (dkv) {
+        const [projects, owners, team] = await Promise.all([listByPrefix(dkv, 'project:'), atLoadOwners(dkv), atGetTeam(env)]);
+        const users = Object.fromEntries(((team && team.users) || []).map((u) => [u.id, u.name]));
+        const byAcc = {};
+        projects.filter((p) => p.avitoAccountId && !p.inactive).forEach((p) => {
+          const uid = owners && owners[p.id] && owners[p.id].userId;
+          if (uid && !byAcc[p.avitoAccountId]) byAcc[p.avitoAccountId] = { ownerId: uid, ownerName: users[uid] || null };
+        });
+        feeds.forEach((f) => Object.assign(f, byAcc[f.avitoAccountId] || { ownerId: null, ownerName: null }));
+        accounts.forEach((a) => Object.assign(a, byAcc[a.id] || { ownerId: null, ownerName: null }));
+      }
+    } catch (err) {
+      console.error('feeds owners failed', err && err.stack);
+    }
     return json({ feeds, accounts, serviceAccount: feedsServiceEmail(env) || null, me: { id: who.id, name: who.name } });
   }
 
