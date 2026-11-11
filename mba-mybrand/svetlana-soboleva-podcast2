@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Светлана Соболева — материалы подкаста | Cantor Agency</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/Frame 1000011449.svg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8391D;
+  --red-dark:#C42D13;
+  --red-light:#FF6347;
+  --dark:#0F0F0F;
+  --dark2:#1A1A1A;
+  --text:#1C1C1C;
+  --muted:#787672;
+  --bg:#F6F5F2;
+  --white:#FFFFFF;
+  --border:#E2E0DC;
+  --accent-bg:#FFF3F0;
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:0 12px 40px rgba(0,0,0,0.1);
+  --r-sm:6px;
+  --r-md:10px;
+  --r-lg:16px;
+  --r-xl:20px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Geologica',sans-serif;color:var(--text);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+
+a{color:var(--red)}
+svg{display:block}
+
+/* INTRO / CHECKLIST */
+.intro{max-width:820px;margin:0 auto;padding:40px 24px 0}
+.intro-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px 36px;box-shadow:var(--shadow-sm)}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase}
+.intro-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--red-light)}
+.intro-card > p{font-size:15.5px;color:var(--text);margin-bottom:20px}
+.checklist-title{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--text)}
+.checklist li::before{content:"✓";flex:0 0 22px;height:22px;width:22px;border-radius:50%;background:var(--accent-bg);color:var(--red);font-weight:700;font-size:12px;line-height:22px;text-align:center;margin-top:1px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;padding:26px 24px 0}
+.faq h2{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:800;color:var(--dark);margin-bottom:12px;letter-spacing:-0.01em}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:8px;overflow:hidden}
+.faq-item summary{padding:15px 20px;font-size:14px;font-weight:700;color:var(--dark2);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-item summary::after{content:"+";color:var(--muted);font-size:18px;font-weight:400;flex:0 0 auto}
+.faq-item[open] summary::after{content:"–"}
+.faq-item p{padding:0 20px 16px;font-size:14px;color:var(--muted);line-height:1.7}
+.faq-item p + p{padding-top:0}
+.faq-item ol,.faq-item ul{margin:0 20px 16px 36px;padding:0;color:var(--muted);font-size:14px;line-height:1.7}
+.faq-item li{margin-bottom:6px}
+.faq-item strong{color:var(--dark2)}
+
+/* TABS */
+.tabs-wrap{position:sticky;top:0;background:var(--bg);z-index:40;border-bottom:1px solid var(--border);padding-top:28px;margin-top:8px}
+.tabs{max-width:1000px;margin:0 auto;display:flex;justify-content:center;gap:6px;overflow-x:auto;padding:0 20px 10px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.tab-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:'Geologica',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:var(--white);border:1px solid var(--border);padding:10px 18px;border-radius:100px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:var(--dark);border-color:#c9c6c0}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-btn svg{flex:0 0 auto}
+.tabs-row2 .tab-btn{font-size:12.5px;padding:8px 16px}
+
+/* CONTENT */
+.content{max-width:820px;margin:0 auto;padding:32px 24px 100px}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DOC TOPBAR (article / transcript) */
+.doc-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:14px 22px;border-radius:var(--r-lg);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.doc-topbar-name{color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.doc-topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.copy-btn,.dl-btn{font-family:'Geologica',sans-serif;font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:7px 14px;border-radius:100px;cursor:pointer;transition:.18s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.copy-btn:hover,.dl-btn:hover{background:rgba(255,255,255,.22)}
+.copy-btn.copied{background:var(--red);border-color:var(--red)}
+.dl-btn{background:var(--red);border-color:var(--red)}
+.dl-btn:hover{background:var(--red-dark);border-color:var(--red-dark)}
+.copy-btn.on-light{color:var(--red-dark);background:var(--accent-bg);border-color:#FFDDD3}
+.copy-btn.on-light:hover{background:#FFE4DC}
+.copy-btn.on-light.copied{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* PODCAST VIDEO */
+.podcast-dl-row{display:flex;align-items:center;gap:20px;margin-bottom:32px}
+.podcast-dl-btn{flex:1 1 0;justify-content:center;padding:15px 20px;font-size:14px}
+.podcast-dl-hint{flex:1 1 0;font-size:13px;color:var(--muted);line-height:1.6;margin:0}
+.podcast-video-block{margin-bottom:20px}
+.video-wrap{border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-md);background:#000}
+
+/* ARTICLE / DOC CARD / PODCAST KIT */
+.doc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px;box-shadow:var(--shadow-sm)}
+.doc-card h1.art-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;line-height:1.25;color:var(--dark);margin-bottom:28px;letter-spacing:-0.02em}
+.doc-card h2{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--dark);margin:34px 0 14px;letter-spacing:-0.01em}
+.doc-card h2:first-of-type{margin-top:8px}
+.doc-card p{font-size:16px;color:var(--text);margin-bottom:16px;white-space:pre-line}
+.doc-card p:last-child{margin-bottom:0}
+.doc-card blockquote{border-left:3px solid var(--red);background:var(--accent-bg);padding:14px 20px;border-radius:0 var(--r-md) var(--r-md) 0;font-size:16px;color:var(--dark2);font-weight:500;margin:20px 0}
+.art-signature{margin-top:36px;padding-top:24px;border-top:1px solid var(--border);font-size:15px;color:var(--muted);font-style:italic}
+
+.kit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 14px}
+.doc-card > .kit-head:first-child{margin-top:8px}
+.kit-head h3{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-0.01em;margin:0}
+
+/* TELEGRAM POSTS */
+.tg-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+.tg-topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark);padding:12px 20px;gap:10px}
+.tg-topbar-name{display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;font-weight:700}
+.tg-dot{width:8px;height:8px;border-radius:50%;background:var(--red-light);flex:0 0 auto}
+.tg-body{padding:30px 32px 34px}
+.tg-body h3{font-size:16.5px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.45}
+.tg-body h4{font-size:15.5px;font-weight:700;font-style:italic;color:var(--text);margin:18px 0 8px}
+.tg-body p{font-size:15.5px;color:var(--text);margin-bottom:12px;white-space:pre-line}
+.tg-body p:last-child{margin-bottom:0}
+.tg-body strong{font-weight:700}
+.tg-body em{font-style:italic}
+
+/* TRANSCRIPT */
+.tr-toc{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px 26px;margin-bottom:28px}
+.tr-toc-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:12px}
+.tr-toc ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.tr-toc a{font-size:13.5px;color:var(--dark2);text-decoration:none;font-weight:600;line-height:1.5}
+.tr-toc a:hover{color:var(--red)}
+.tr-toc a span{color:var(--muted);font-weight:400}
+.tr-section{background:var(--white);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 30px;margin-bottom:16px;scroll-margin-top:150px}
+.tr-section h3{font-family:'Unbounded',sans-serif;font-size:16.5px;font-weight:700;color:var(--red-dark);margin-bottom:16px;letter-spacing:-0.01em}
+.tr-line{display:flex;gap:14px;margin-bottom:14px}
+.tr-line:last-child{margin-bottom:0}
+.tr-who{flex:0 0 84px;font-size:12px;font-weight:700;padding-top:2px}
+.tr-who.host{color:var(--muted)}
+.tr-who.guest{color:var(--red-dark)}
+.tr-txt{font-size:15px;color:var(--text)}
+.tr-txt p{margin-bottom:10px}
+.tr-txt p:last-child{margin-bottom:0}
+
+@media(max-width:640px){
+  .intro{padding:24px 16px 0}
+  .intro-card{padding:24px 20px}
+  .faq{padding:20px 16px 0}
+  .doc-card{padding:26px 20px}
+  .doc-topbar{padding:12px 16px}
+  .copy-btn,.dl-btn{padding:8px 14px}
+  .kit-head{flex-wrap:wrap}
+  .tg-body{padding:24px 20px 28px}
+  .tr-section{padding:22px 18px}
+  .tr-toc ol{grid-template-columns:1fr}
+  .tr-line{flex-direction:column;gap:4px}
+  .tr-who{flex:none}
+  .tabs{justify-content:flex-start}
+  .tab-btn{padding:9px 15px;font-size:12.5px}
+  .podcast-dl-row{flex-direction:column;align-items:stretch;gap:12px}
+  .podcast-dl-btn{flex:none}
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="intro-card">
+    <div class="intro-badge"><span class="intro-badge-dot"></span>Материалы подкаста для будущих преподавателей</div>
+    <p>Мы смонтировали подкаст и на его основе сделали транскрибацию, статьи и посты. Что вам нужно сделать:</p>
+    <div class="checklist-title">Что вам нужно сделать</div>
+    <ul class="checklist">
+      <li>Скачать видео подкаста и выложить его в соц сети</li>
+      <li>Скачать транскрибацию подкаста и в вашем ИИ поставить задачу создания текстов на её основе</li>
+      <li>Скопировать пример статьи, отредактировать под себя и выложить на форумы</li>
+      <li>Скопировать посты, отредактировать под себя и выложить в соц сети</li>
+    </ul>
+  </div>
+</div>
+
+<div class="faq">
+  <h2>Частые вопросы</h2>
+  <details class="faq-item">
+    <summary>Куда выкладывать видео подкаста?</summary>
+    <p>Всё нужное для публикации собрано во вкладке «Подкаст» — сам видео-файл, готовое название, описание с местами под ссылки, ключевые слова и хэштеги.</p>
+    <p><strong>YouTube (основная площадка).</strong> Заходите в YouTube Studio под аккаунтом школы (или создайте канал, если его ещё нет) → «Создать» → «Загрузить видео». Подгружаете скачанный файл, вставляете название и описание из вкладки «Подкаст» — не забудьте заполнить ссылки вместо [ссылка]. Ключевые слова из соответствующего блока добавьте в поле «Теги» в настройках видео, категорию поставьте «Образование», обложку — статичный кадр или простой баннер с лицом и цитатой. Публикуете с доступом «Открытый для всех».</p>
+    <p><strong>VK Видео (вторая площадка).</strong> vk.com/video → «Добавить видео» — тот же файл, то же название и описание. Хэштеги можно вставить в конце описания или в отдельный пост со ссылкой на видео на стене сообщества.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Как использовать транскрибацию?</summary>
+    <p>Во вкладке «Транскрибация» — полный текст разговора с разбивкой по темам и оглавлением. Скачайте .docx кнопкой «Скачать .docx» и загрузите его в любой ИИ (ChatGPT, Claude, Gemini, YandexGPT) как файл или вставьте текстом.</p>
+    <p>Чтобы тексты получались в вашем голосе, а не «средним по больнице» стилем нейросети, ИИ важно сначала показать, как вы обычно пишете:</p>
+    <ol>
+      <li>Соберите 3–5 своих текстов — посты в соцсетях, переписку с учениками или родителями, старые интервью.</li>
+      <li>В начале диалога с ИИ напишите: «Вот примеры того, как я обычно пишу — сохраняй именно этот стиль во всех текстах ниже» — и вставьте эти примеры.</li>
+      <li>Опишите словами, что должно остаться: обращаетесь на «ты» или «вы», используете ли эмодзи и жаргон, короткие рубленые фразы или длинные развёрнутые, какие фирменные обороты у вас есть.</li>
+      <li>Только после этого добавляйте транскрибацию и ставьте конкретную задачу: «На основе этой транскрибации и примеров моего стиля выше — напиши пост для Telegram про [тему], сохраняя мой тон и лексику».</li>
+      <li>Просите 2–3 варианта и выбирайте или дорабатывайте лучший, а не первый попавшийся.</li>
+      <li>Если ваш ИИ поддерживает «системные» инструкции (Custom Instructions в ChatGPT, Project Instructions в Claude) — один раз сохраните туда описание стиля из пункта 3, чтобы не повторять его в каждом новом диалоге.</li>
+    </ol>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать статью?</summary>
+    <p>Во вкладке «Статья» — готовый текст-колонка. Перед публикацией обязательно перечитайте и отредактируйте под себя: замените обороты, которые вы никогда бы не сказали, где-то сократите, где-то добавьте свой пример — текст должен звучать как вы, а не как чужой копирайтер.</p>
+    <p><strong>Где регистрироваться и как оформить профиль:</strong></p>
+    <ul>
+      <li><strong>VC.ru</strong> — регистрация через почту или соцсеть; в профиле заполните фото, короткое «о себе» (кто вы и чем занимаетесь) и ссылку на школу — без этого профиль выглядит подозрительно, и первую публикацию могут дольше держать на модерации.</li>
+      <li><strong>Дзен (dzen.ru)</strong> — заводите канал через Яндекс ID, оформляете обложку и описание канала: 1–2 предложения о том, про что вы пишете.</li>
+      <li><strong>Профильные родительские группы и форумы</strong> (городские паблики ВКонтакте для родителей, тематические форумы) — сначала вступите и изучите правила: часто рекламные и экспертные посты нужно согласовывать с админом или публиковать в отдельный день.</li>
+    </ul>
+    <p><strong>Как выложить:</strong> вставляете заголовок и текст статьи, разбиваете на абзацы для читаемости — как в самой статье, добавляете 1–2 фото (свою фотографию или фото с занятий), в конце оставляете контакты или ссылку на школу.</p>
+    <p><strong>Что учесть после публикации:</strong> в первые несколько часов важно самому отвечать на комментарии — это поднимает пост в выдаче площадки. На критику отвечайте по существу, а не удаляйте — это работает на доверие. Через 3–5 дней посмотрите охваты: если формат зашёл, есть смысл повторить его на другой площадке, адаптировав тон под её аудиторию.</p>
+  </details>
+  <details class="faq-item">
+    <summary>Куда выкладывать посты?</summary>
+    <p>Каждый из пяти постов — во вкладках «Пост 1»–«Пост 5», у каждого своя тема. Перед публикацией пройдитесь по тексту и перепишите пару фраз своими словами — так пост не будет читаться как шаблон, а тон совпадёт с тем, как вы обычно общаетесь с аудиторией.</p>
+    <p>Публикуйте не все сразу, а по одному раз в 2–3 дня — так подписчики не устанут от темы школы, а вы получите пять отдельных поводов напомнить о себе.</p>
+    <p><strong>Telegram-канал школы</strong> — основная площадка: вставляете текст, оставляете форматирование (жирный, курсив), при желании добавляете фото. Тот же текст можно продублировать на стене сообщества <strong>ВКонтакте</strong>, добавив одно фото для привлечения внимания в ленте.</p>
+    <p><strong>После публикации</strong> первые 30–60 минут — самые важные: отвечайте на все комментарии и реакции, это увеличивает охват поста в лентах обеих площадок. Если пост зашёл особенно хорошо — закрепите его в Telegram-канале на сутки-двое.</p>
+  </details>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs tabs-row1" id="tabs">
+    <button class="tab-btn active" data-tab="podcast"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Подкаст</button>
+    <button class="tab-btn" data-tab="article"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Статья</button>
+    <button class="tab-btn" data-tab="transcript"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>Транскрибация</button>
+  </div>
+  <div class="tabs tabs-row2">
+    <button class="tab-btn" data-tab="post1">Пост 1</button>
+    <button class="tab-btn" data-tab="post2">Пост 2</button>
+    <button class="tab-btn" data-tab="post3">Пост 3</button>
+    <button class="tab-btn" data-tab="post4">Пост 4</button>
+    <button class="tab-btn" data-tab="post5">Пост 5</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- PODCAST (video + publishing kit) -->
+  <div class="panel active" id="podcast">
+
+    <!-- Аудитория этого выпуска — «для будущих преподавателей» (рекрутинговый подкаст), подписана в плашке в самом верху страницы. -->
+    <div class="podcast-video-block">
+      <div class="video-wrap" style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1245979435?title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Светлана Соболева - Подкаст 2"></iframe></div>
+      <script src="https://player.vimeo.com/api/player.js"></script>
+    </div>
+
+    <div class="podcast-dl-row">
+      <a class="dl-btn podcast-dl-btn" href="https://vimeo.com/1245979435" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать видео</a>
+      <p class="podcast-dl-hint">Нажмите на кнопку, перейдите на страницу видео на Vimeo и под видео нажмите на кнопку скачивания подкаста.</p>
+    </div>
+
+    <div class="doc-card">
+      <div class="kit-head"><h3>Название видео</h3><button class="copy-btn on-light" data-copy="kitTitle">Копировать</button></div>
+      <p id="kitTitle">Работа преподавателем в онлайн-школе «Результат тут»: кого Светлана Соболева берёт в команду</p>
+
+      <div class="kit-head"><h3>Описание</h3><button class="copy-btn on-light" data-copy="kitDescription">Копировать</button></div>
+      <p id="kitDescription">Светлана Соболева — преподаватель английского и основательница онлайн-школы «Результат тут» (английский, русский язык, математика и информатика для школьников с 1 по 11 класс и английский для взрослых) — честно рассказывает, каких преподавателей ищет в команду. В выпуске — почему безответственность перечёркивает любой профессионализм, когда даётся второй шанс, что такое методика Celta и почему она работает для любого предмета, нужно ли педагогическое образование, как регалии могут мешать ученику, куда расти внутри школы и как выглядит путь от собеседования до испытательного срока.
+
+🔗 Написать Светлане в Telegram: [ссылка]
+🔗 Сообщество ВКонтакте: [ссылка]
+🔗 Отправить резюме: [ссылка]</p>
+
+      <div class="kit-head"><h3>Ключевые слова</h3><button class="copy-btn on-light" data-copy="kitKeywords">Копировать</button></div>
+      <p id="kitKeywords">работа преподавателем, вакансия репетитора, онлайн-школа, найм преподавателей, преподаватель английского, методика Celta, испытательный срок, гибкий график, Светлана Соболева, Результат тут</p>
+
+      <div class="kit-head"><h3>Хэштеги</h3><button class="copy-btn on-light" data-copy="kitHashtags">Копировать</button></div>
+      <p id="kitHashtags">#подкаст #работапреподавателем #вакансия #репетитор #онлайншкола #английский #образование #команда</p>
+    </div>
+  </div>
+
+  <!-- ARTICLE -->
+  <div class="panel" id="article">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">📰 Статья</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="articleCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/svetlana-soboleva-podcast2-statya.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+    <div class="doc-card" id="articleCopy">
+      <h1 class="art-title">Не регалии, а ответственность: каких преподавателей я ищу в свою школу</h1>
+      <p>Меня зовут Светлана Соболева, я преподаватель английского языка и основательница онлайн-школы «Результат тут». Мы готовим школьников с первого по одиннадцатый класс по английскому, русскому языку, математике и информатике, а для взрослых у нас есть направления в английском. Сейчас в команде 10–15 человек, и я хочу честно рассказать, каких людей я ищу и что могу им предложить.</p>
+
+      <h2>Что я вынесла из двух закрытых проектов</h2>
+      <p>До нынешней школы у меня было два онлайн-проекта, которые закрылись. Из этого опыта я вынесла простую вещь и говорю её каждому, кто приходит в команду: для успешного проекта мне нужны ответственные люди. Люди, которые готовы взять инициативу в свои руки и сами обеспечивают исполнение своих задач, а не ждут, пока их проконтролируют.</p>
+      <p>Второе — открытость. Мы всегда готовы помочь друг другу в форс-мажорных обстоятельствах, но для этого нужно, чтобы человек не скрывал проблему, а сразу о ней говорил. Ответственность и открытость — по моему мнению, это главные факторы, которые влияют на успех.</p>
+
+      <h2>Кого я не возьму, даже если он прекрасный предметник</h2>
+      <p>Я не возьму в команду безответственного человека — того, кто может сорвать занятие, не прийти на него или отменить. Для нас важна регулярность, и для школы, и для учеников. Поэтому даже если специалист классный, но безответственный, — к сожалению, нам не по пути.</p>
+      <p>При этом я понимаю, что жизнь бывает разной. Интернет пропал, проспал — если это случилось раз в год, мы рассматриваем такой вариант. У нас были ситуации, когда человек по техническим причинам не мог выйти на занятие, но заранее предупредил и прямо написал, что возможности нет. Если такое происходит раз в полгода или в год, мы идём навстречу и всё прекрасно понимаем.</p>
+
+      <h2>Сначала разговор, потом второй шанс</h2>
+      <p>Если преподаватель ошибся или сорвал занятие, первым делом мы разговариваем. Я смотрю, какие объяснения он даёт, как объясняет свою позицию, с какой стороны смотрит на ситуацию — оправдывается или объясняет. Дальше даётся второй шанс. Но если всё повторяется, мы расстаёмся.</p>
+
+      <h2>Что я обещаю команде</h2>
+      <p>Команде я обещаю стабильность: стабильную работу и стабильную заработную плату. И поддержку в коллективе: если случаются форс-мажорные обстоятельства, всегда есть люди, которые готовы пойти навстречу, прикрыть, помочь.</p>
+      <p>Тяжелее всего мне даётся момент, когда сотрудник совершает ошибку. Принять её должен не только руководитель — свою ошибку должен осознать сам сотрудник. И если он её не осознаёт, это самая тяжёлая часть работы.</p>
+
+      <h2>Celta — не страшная аббревиатура</h2>
+      <p>У нас единая структура урока по методике Celta — и на английском, и на математике, и на информатике. Новому преподавателю, который никогда о ней не слышал, я объясняю так. Celta — это сертификат в преподавании английского языка, но частью обучения на него является то, как мы должны учить наших учеников. Именно этот раздел применим к любому предмету: по сути, это международные стандарты преподавания.</p>
+      <p>Я уважаю знание предмета, то, как человек даёт материал, его уникальность и личность. Но чтобы правильно преподавать любой предмет — математику, информатику, русский язык, — нужно владеть определёнными техниками. Именно их я оцениваю и именно с ними помогаю своим преподавателям.</p>
+
+      <h2>Если у вас уже есть своя методика</h2>
+      <p>Если ко мне приходит педагог с опытом, со своим стилем и методологией, которая отличается от нашей, но судя по отзывам даёт хороший результат, — добро пожаловать, если он готов работать в нашей команде. Смотреть я буду на то, что от методологии не зависит: как он взаимодействует с учеником, как даёт материал, как получает ответы, как вовлекает ребёнка в занятие. Если у него есть эти навыки, проблем с его методологией не будет. Главное — чтобы его преподавание приносило результат.</p>
+
+      <h2>Педагогический диплом — не обязательное условие</h2>
+      <p>В своей жизни я встречала замечательного преподавателя без педагогического образования. Она приносила своим ученикам лучший результат, чем большинство преподавателей с дипломом, и ученики её любили. Поэтому я считаю, что это необязательный фактор: если человек знает свой предмет, может грамотно его преподнести и получить результат, педагогическое образование не нужно.</p>
+
+      <h2>Когда регалии мешают</h2>
+      <p>Бывает, что заслуженный педагог вызывает у ученика негативную реакцию. Думаю, дело во внутреннем ощущении: если у преподавателя куча регалий и он зазнался, он транслирует это ученику и заставляет его чувствовать себя на ступень ниже. Ученик это считывает, и ему автоматически становится некомфортно.</p>
+      <blockquote>Есть преподаватели, у которых куча регалий и сертификатов, а ученик даже не подозревает о них. Считывается не это — считывается комфортная атмосфера и то, что преподаватель взаимодействует с учеником на равных.</blockquote>
+
+      <h2>Какой он — хороший преподаватель</h2>
+      <p>Для меня хороший преподаватель идёт на одной волне со своими учениками. Он знает, в какой момент сменить активность, умеет подстроиться под ученика, поговорить на отвлечённые темы, быть наставником — и при всём этом довести ученика до нужного результата. Возможно, не прямым ходом, а окольными путями.</p>
+      <p>И главное: показать ученику, что это не преподаватель такой крутой и привёл его к результату, а он сам этого добился — с помощью преподавателя. Отдать бразды правления ученику и сделать так, чтобы он поверил, что добился всего сам.</p>
+      <p>Так было с девочкой, которую школьные учителя отговаривали от ЕГЭ, а она за два года дошла с нуля до 70 баллов. Её готовила я, и главным там была её собственная уверенность в своих силах. Если ученик хочет, он сможет добиться цели — но ему нужны верное руководство, наставничество и поддержка преподавателя.</p>
+
+      <h2>Что ценят преподаватели в нашей школе</h2>
+      <p>Во-первых, стабильность: при выполнении своих задач преподаватели получают стабильную зарплату и могут рассчитывать на стабильную работу. Во-вторых, гибкий график. Если в семье что-то случилось, любой сотрудник знает: главное — выполнить задачу в срок, а сделает он её сейчас или через два-три часа, неважно.</p>
+      <p>Расти у нас тоже есть куда: до методолога, до главного преподавателя, до преподавателя, который готовит к экзаменам. Всё зависит от того, как именно хочет вырасти сам человек.</p>
+
+      <h2>Молодой преподаватель — тоже вариант</h2>
+      <p>Сейчас у меня есть запрос: ученик отказывается готовиться с опытным преподавателем, даже не видя его, только потому, что тому за 35. Он просит молодого преподавателя, который качественно подготовит его к ОГЭ. И я думаю, что это возможно: если преподаватель сам сдавал экзамен и уже два-три года поработал — почему нет?</p>
+      <p>Молодой преподаватель у нас не остаётся один на один с учеником. За ним всегда стоит школа, более опытные коллеги, моя методическая поддержка. Даже если ученик этого не видит, результат будет обеспечен.</p>
+
+      <h2>Как попасть в команду</h2>
+      <p>Первый этап — собеседование. Потом пробный урок с одним из учеников нашей школы: мы смотрим его, оцениваем и разбираем. Если преподаватель нам подходит и готов учиться по нашей методике, мы берём его на испытательный срок — примерно месяц. В это время он подменяет коллег, работает с группами и индивидуальными учениками. Если он показывает себя с хорошей стороны — вовремя выходит на занятия, готовится, даёт обратную связь, — мы продолжаем работу.</p>
+
+      <h2>Кому стоит мне написать</h2>
+      <p>Тем, кто любит работать на результат и хочет, чтобы его ученики достигали целей. Ответственным преподавателям, которые готовы расти и, самое главное, учиться новой методике качественного преподавания. Если это про вас — напишите мне.</p>
+
+      <p class="art-signature">Светлана Соболева,<br>основатель онлайн-школы «Результат тут»</p>
+    </div>
+  </div>
+
+  <!-- POST 1 -->
+  <div class="panel" id="post1">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про то, кого мы не берём в команду</div>
+        <button class="copy-btn" data-copy="copy1">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy1">
+        <h3>🚫 Классный специалист, но нам не по пути. Объясняю почему</h3>
+        <p>Мне не важно, насколько блестяще вы знаете предмет, если вы можете не прийти на урок.</p>
+        <p>Я не возьму в команду человека, который способен сорвать занятие, не выйти на связь или отменить его в последний момент. Для нас важна регулярность — и для школы, и для учеников. Поэтому даже прекрасный, но безответственный специалист нам, к сожалению, не подходит.</p>
+        <h4>А как же форс-мажоры?</h4>
+        <p>Бывает всякое: пропал интернет, проспал. Если это случилось раз в год — мы всё понимаем. У нас были ситуации, когда преподаватель по техническим причинам не мог выйти на урок, но заранее честно об этом написал. Таким людям мы всегда идём навстречу.</p>
+        <p>Если что-то пошло не так, сначала будет разговор. Я смотрю, объясняет человек ситуацию или оправдывается. Потом — второй шанс. Но если история повторяется, мы расстаёмся.</p>
+        <p>✅ Ответственность и открытость — вот за что мы держимся друг за друга.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 2 -->
+  <div class="panel" id="post2">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про методику Celta</div>
+        <button class="copy-btn" data-copy="copy2">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy2">
+        <h3>📐 Одна методика для английского, математики и информатики. Как это работает?</h3>
+        <p>Celta — сертификат для преподавателей английского. Но то, чему там учат, работает для любого предмета.</p>
+        <p>Часть обучения на Celta посвящена тому, как учить: как давать материал, как задавать вопросы, как вовлекать ученика. По сути, это международные стандарты преподавания. Формулы по математике оттуда не возьмёшь — а вот структуру урока и технику объяснения можно перенести на что угодно.</p>
+        <h4>Что это значит для преподавателя</h4>
+        <p>Я уважаю ваше знание предмета, ваш стиль и вашу личность. Если у вас своя методика и она даёт результат — добро пожаловать. Я смотрю на другое: как вы взаимодействуете с учеником, как получаете от него ответы, как делаете так, чтобы ребёнку было интересно.</p>
+        <p>И с этими техниками я помогаю каждому преподавателю — неважно, ведёт он английский, русский или информатику.</p>
+        <p>💡 Бояться странной аббревиатуры не нужно. Это просто способ учить так, чтобы был результат.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 3 -->
+  <div class="panel" id="post3">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про регалии и педагогический диплом</div>
+        <button class="copy-btn" data-copy="copy3">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy3">
+        <h3>🎓 Нужен ли преподавателю педагогический диплом? Мой ответ — нет</h3>
+        <p>Лучший преподаватель, которого я встречала, не имела педагогического образования.</p>
+        <p>Её ученики показывали результат лучше, чем у большинства педагогов с дипломами, и очень её любили. Если человек знает предмет, умеет грамотно его подать и доводит учеников до результата — диплом не главное.</p>
+        <h4>Когда регалии мешают</h4>
+        <p>Бывает, что заслуженный педагог вызывает у ребёнка отторжение. Если преподаватель внутренне зазнался, ученик это считывает: он чувствует себя на ступень ниже, и ему некомфортно.</p>
+        <p>А есть преподаватели с кучей сертификатов, о которых ученик даже не подозревает. Потому что считываются не регалии, а атмосфера и общение на равных.</p>
+        <p>🤝 Хороший преподаватель не показывает, какой он крутой. Он показывает ученику, что тот добился всего сам.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 4 -->
+  <div class="panel" id="post4">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про то, что мы даём команде</div>
+        <button class="copy-btn" data-copy="copy4">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy4">
+        <h3>🧩 Что получает преподаватель в нашей школе</h3>
+        <p>Я спросила себя: за что преподаватели остаются в команде? Ответ получился простым.</p>
+        <h4>Стабильность</h4>
+        <p>Стабильная работа и стабильная зарплата. Выполняешь свои задачи — можешь на это рассчитывать.</p>
+        <h4>Гибкий график</h4>
+        <p>Если в семье что-то случилось, главное — сделать задачу в срок. Сделаете вы её сейчас или через два-три часа — неважно.</p>
+        <h4>Поддержка</h4>
+        <p>Форс-мажоры бывают у всех. У нас всегда есть коллеги, которые готовы подменить, прикрыть, помочь. А молодой преподаватель никогда не остаётся один на один с учеником: за ним стоят опытные коллеги и моя методическая поддержка.</p>
+        <h4>Рост</h4>
+        <p>Можно вырасти до методолога, до главного преподавателя или до преподавателя, который готовит к экзаменам. Всё зависит от того, куда хотите расти вы.</p>
+        <p>🌱 Мы не обещаем лёгкости. Мы обещаем опору.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST 5 -->
+  <div class="panel" id="post5">
+    <div class="tg-card">
+      <div class="tg-topbar">
+        <div class="tg-topbar-name"><span class="tg-dot"></span>Пост про путь в команду</div>
+        <button class="copy-btn" data-copy="copy5">Копировать текст</button>
+      </div>
+      <div class="tg-body" id="copy5">
+        <h3>📝 Собеседование, пробный урок, месяц испытательного срока. Как попасть к нам в команду</h3>
+        <p>Если вы дочитали до этого места и подумали «а может, мне к ним?» — вот как это устроено.</p>
+        <p>1️⃣ Собеседование. Знакомимся, рассказываем об условиях.</p>
+        <p>2️⃣ Пробный урок с одним из учеников нашей школы. Мы смотрим занятие, оцениваем его и вместе разбираем.</p>
+        <p>3️⃣ Испытательный срок — примерно месяц. Вы подменяете коллег, работаете с группами и индивидуальными учениками. Мы смотрим, вовремя ли вы выходите на занятия, готовитесь ли, даёте ли обратную связь.</p>
+        <p>Если всё складывается, продолжаем работать вместе.</p>
+        <h4>Кого мы ждём</h4>
+        <p>Преподавателей, которые любят работать на результат и радуются успехам своих учеников. Ответственных. Готовых расти и учиться новой методике качественного преподавания.</p>
+        <p>✉️ Узнали себя? Напишите мне — поговорим.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="transcript">
+    <div class="doc-topbar">
+      <div class="doc-topbar-name">🎙 Транскрибация</div>
+      <div class="doc-topbar-actions">
+        <button class="copy-btn" data-copy="transcriptCopy">Копировать текст</button>
+        <a class="dl-btn" href="/mba-mybrand/svetlana-soboleva-podcast2-transkript.docx" download><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>Скачать .docx</a>
+      </div>
+    </div>
+
+    <div class="tr-toc">
+      <div class="tr-toc-title">Содержание разговора</div>
+      <ol>
+        <li><a href="#t1">1. Кто вы и чем занимается школа</a></li>
+        <li><a href="#t2">2. Чему научили два закрытых проекта</a></li>
+        <li><a href="#t3">3. Кого я не возьму в команду</a></li>
+        <li><a href="#t4">4. Форс-мажоры и второй шанс</a></li>
+        <li><a href="#t5">5. Если преподаватель сорвал занятие</a></li>
+        <li><a href="#t6">6. Что я обещаю команде</a></li>
+        <li><a href="#t7">7. Методика Celta для любого предмета</a></li>
+        <li><a href="#t8">8. Опытный педагог со своей методикой</a></li>
+        <li><a href="#t9">9. Нужно ли педагогическое образование</a></li>
+        <li><a href="#t10">10. Когда регалии мешают</a></li>
+        <li><a href="#t11">11. Какой он — хороший преподаватель</a></li>
+        <li><a href="#t12">12. Что ценят преподаватели в команде</a></li>
+        <li><a href="#t13">13. Куда расти в школе</a></li>
+        <li><a href="#t14">14. С нуля до 70 баллов на ЕГЭ</a></li>
+        <li><a href="#t15">15. Видят ли ученики вовлечённого преподавателя</a></li>
+        <li><a href="#t16">16. Молодой преподаватель или «матёрый»</a></li>
+        <li><a href="#t17">17. Как попасть в команду</a></li>
+        <li><a href="#t18">18. Кому стоит написать</a></li>
+      </ol>
+    </div>
+
+    <div id="transcriptCopy">
+
+    <div class="tr-section" id="t1">
+      <h3>1. Кто вы и чем занимается школа</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Светлана, для тех, кто совсем вас не знает: если коротко, кто вы и чем занимается ваша школа?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Меня зовут Светлана Соболева. Я преподаватель английского языка, и моя школа — «Результат тут». Мы занимаемся подготовкой учеников с 1 по 11 класс: английский язык, русский язык, информатика и математика. Для взрослых у нас тоже есть направления в английском языке.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t2">
+      <h3>2. Чему научили два закрытых проекта</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Прежде чем построить нынешнюю школу, вы прошли через два закрытых онлайн-проекта. Что из тех неудач вы сегодня прямо говорите своей команде, чтобы люди понимали, у какого руководителя они работают?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Я говорю, что для успешного проекта мне нужны ответственные люди, которые готовы взять инициативу в свои руки и сами обеспечивают исполнение своих задач. Также мне важна открытость в людях. Мы готовы помочь друг другу в разных форс-мажорных обстоятельствах, но для этого необходима открытость. По моему мнению, это главные факторы, которые влияют на успех.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t3">
+      <h3>3. Кого я не возьму в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Ответственность, проактивность, честность, доброжелательность, оптимизм — вот ваши ценности при найме. А если совсем просто: какого человека вы точно не возьмёте, даже если он прекрасный предметник?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Если мы говорим про преподавателей, я не возьму в команду безответственного человека, который может сорвать занятие, не прийти на него, отменить его. Для нас важна регулярность — как для нас, так и для наших учеников. Поэтому даже если специалист классный, но безответственный, к сожалению, нам не по пути.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t4">
+      <h3>4. Форс-мажоры и второй шанс</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А вы даёте ему второй шанс?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Всякое бывает. Бывают разные форс-мажорные обстоятельства: интернет пропал, опоздал, забыл, проспал. Всё зависит от обстоятельств. Если человек проспал и это произошло раз в год, да, мы рассматриваем такой вариант. У нас были ситуации, когда человек по техническим причинам не мог выйти на занятие, но заранее нас предупредил, прямо написал, что возможности нет. Но это происходило раз в полгода или в год. В таких ситуациях мы идём навстречу, мы всё прекрасно понимаем.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t5">
+      <h3>5. Если преподаватель сорвал занятие</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А как вы сами себя ведёте, когда преподаватель ошибся или сорвал занятие? Что происходит дальше — разговор, штраф или второй шанс?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Сначала, конечно, разговор. Смотрю, какие объяснения мне даёт преподаватель, как он объясняет свою позицию, с какой стороны смотрит — оправдывается или объясняет. Далее даётся второй шанс. Но если всё повторяется, тогда нам не по пути, и мы расстаёмся.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t6">
+      <h3>6. Что я обещаю команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что вы как руководитель обещаете команде? И какое из этих обещаний вам тяжелее всего держать?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Команде я обещаю стабильность: стабильную работу, стабильную заработную плату. Поддержку в коллективе, поддержку в случае форс-мажорных обстоятельств — всегда есть люди, которые готовы пойти навстречу, прикрыть, помочь.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Тяжелее всего, наверное, взаимодействие, когда сотрудники совершают ошибки. Принять ошибку должен не только руководитель — свою ошибку должен осознать непосредственно сотрудник. И если сотрудник не осознаёт свои ошибки, это самая тяжёлая часть.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t7">
+      <h3>7. Методика Celta для любого предмета</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вы говорите, что у вас единая структура урока по методике Celta — и на английском, и на математике, и на информатике. Как вы объясняете это новому преподавателю, который никогда не слышал о Celta?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Я объясняю так: я уважаю знание предмета и то, как человек даёт материал, всё, что он использует, его уникальность, его личность. Но есть определённые стандарты, которые к самой Celta прямого отношения не имеют — они скорее относятся к международным стандартам преподавания любого предмета. Именно это я ценю, именно это оцениваю и с этим помогаю преподавателям вне зависимости от предмета: математика, информатика, русский язык. Чтобы правильно преподавать любой предмет, нужно владеть определёнными техниками. Именно с ними я и помогаю своим преподавателям.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть преподавателю не нужно бояться этой странной аббревиатуры?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это просто методология. Celta — это сертификат в преподавании английского языка, но частью обучения на этот сертификат является именно то, как мы должны учить наших учеников. И именно этот раздел применим ко всем предметам.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t8">
+      <h3>8. Опытный педагог со своей методикой</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если к вам приходит педагог с опытом, у него есть свой стиль и своя методология, которая отличается от вашей, но, судя по отзывам, тоже даёт хороший результат?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>В такой ситуации я посмотрю: если он готов работать с нами в нашей команде — добро пожаловать. Единственное, на что я буду смотреть, — это та часть, которая от методологии не зависит: как он взаимодействует с учеником, как даёт материал, как получает ответы, как вовлекает ребёнка в занятие. Если у него всё это получается и у него есть эти навыки, проблем с его методологией не будет.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть он может работать по своей методике под вашим руководством и контролем?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Да, всё верно.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Вам главное — результат, который приносит его преподавание?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Да, если его преподавание, его техники и методология приносят результат.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t9">
+      <h3>9. Нужно ли педагогическое образование</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы считаете, у преподавателя обязательно должно быть педагогическое образование?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Интересный вопрос, потому что в своей жизни я встречала замечательного преподавателя без педагогического образования. Но она была гораздо лучше большинства преподавателей с педагогическим образованием: приносила лучший результат своим ученикам, и ученики её любили. Поэтому я считаю, что это необязательный фактор. Если человек знает свой предмет, может грамотно его преподнести и получить результат, педагогическое образование необязательно.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t10">
+      <h3>10. Когда регалии мешают</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Недавно я наткнулась на мысль, что педагогические заслуги, опыт и регалии могут, наоборот, стать препятствием, заслоном между преподавателем и учеником. Почему так может получиться, что заслуженный педагог вызывает у ученика негативную реакцию?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Возможно, дело во внутренних моментах у преподавателя. Если у него есть все эти регалии, может быть, он зазнался и внутри транслирует это ученику — заставляет его чувствовать себя на ступень ниже. Ученик это считывает, и ему автоматически становится некомфортно. Есть же преподаватели, у которых куча регалий, сертификатов, а ученик даже не знает о них, просто не подозревает, потому что преподаватель постоянно об этом не говорит. Это не считывается. Считывается комфортная атмосфера и то, что преподаватель взаимодействует с учеником на равных. Я думаю, это ключевое.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Да, мне кажется, дети устают от регалий в школе — от заслуженных педагогов, которые замечательные, но часто просто не слышат их.</p></div></div>
+    </div>
+    <div class="tr-section" id="t11">
+      <h3>11. Какой он — хороший преподаватель</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А для вас хороший преподаватель — это какой преподаватель?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Это преподаватель, который идёт на одной волне со своими учениками, знает, в какой момент сменить ту или иную активность, может подстроиться под ученика, поговорить на отвлечённые темы, одновременно быть наставником — и при всём при этом довести ученика до нужного результата. Возможно, даже не прямым ходом, а окольными путями. Привести ученика к результату и показать, что это не я такой крутой и тебя туда привёл, а что он сам этого добился, но с твоей помощью. То есть отдать бразды правления своему ученику. Сделать так, чтобы ученик поверил, что добился всего сам.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t12">
+      <h3>12. Что ценят преподаватели в команде</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Сейчас у вас в команде 10–15 человек. Что, на ваш взгляд, преподаватели ценят в работе у вас больше всего? Стабильная зарплата, гибкий график, атмосфера, рост?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Я думаю, во-первых, стабильность: они получают стабильную зарплату и при выполнении своих задач могут рассчитывать на стабильную работу. Гибкий график тоже очень важен. Если в семье что-то случилось, любой из сотрудников знает: главное — выполнить задачу в срок, а выполнит он её сейчас или через 2–3 часа, неважно — если она будет выполнена, всё будет хорошо. Так что гибкий график, думаю, один из важных факторов.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t13">
+      <h3>13. Куда расти в школе</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А что происходит, если преподаватель подходит к вам и говорит: «Светлана, я хочу вырасти, хочу больше зарабатывать или хочу попробовать себя в другой роли»? Куда в вашей школе можно расти?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Можно расти до методолога, до главного преподавателя — возможности есть. Можно расти до преподавателя, который готовит к экзаменам. Всё зависит от того, как именно хочет вырасти преподаватель.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t14">
+      <h3>14. С нуля до 70 баллов на ЕГЭ</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>У вас была ситуация, когда девочка, которую школьные учителя отговаривали от ЕГЭ, дошла с нуля до 70 баллов за два года. Это отличный результат. Что в подходе преподавателя сделало его возможным — там, где школа сдалась?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Самый основной момент — эту девочку готовила именно я, она занималась со мной. И здесь главное — уверенность в себе, в своих силах. Прежде всего это была уверенность самой студентки, потому что то, что она сделала, могла сделать только она, если она этого хочет. Всё зависит от человека: если ученик хочет, он сможет добиться цели. Но главное — верное руководство, наставничество и поддержка со стороны преподавателя. Всё вместе дало такой результат.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t15">
+      <h3>15. Видят ли ученики вовлечённого преподавателя</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Как вы думаете, видят ли ученики разницу между педагогом, который просто отрабатывает своё время, пусть и качественно даёт информацию, и преподавателем, который действительно вовлечён и увлечён своим предметом?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Очень интересный вопрос. К сожалению, большинство родителей и учеников не понимают, почему где-то они достигают результата, а где-то нет, — потому что не понимают всей структуры, которая заложена внутри. Бывают ситуации, когда ребята отзанимались год, два, три, и родители видят отсутствие результата. Вот тогда они начинают задумываться. Когда ученик приходит на первое занятие, он, к сожалению, этой разницы не видит. Но в процессе, если начинает сравнивать, уже понимает — опять же, смотря какой преподаватель.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t16">
+      <h3>16. Молодой преподаватель или «матёрый»</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А если родители приходят с запросом: «Нам нужен матёрый преподаватель с регалиями, мы хотим подготовиться к экзамену на высокий балл», — но ребёнку он не нравится, не заходит его метод? Не сошлись, как сейчас говорят, вайбами.</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Такого момента не было. Но есть конкретная ситуация прямо сейчас. Ко мне поступил запрос: ребёнок отказывается готовиться с опытным преподавателем, даже не видя его, только потому, что ему за 35 лет. Ученик просит молодого преподавателя, который может качественно подготовить к ОГЭ.</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>А может ли молодой преподаватель качественно подготовить к ОГЭ?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Я думаю, может. Если он сам сдавал и уже два-три года поработал — почему нет?</p>
+      </div></div>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>То есть запрос ученика будет удовлетворён?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Да, потому что преподаватель не будет один на один с учеником. Всегда будет поддержка школы, поддержка более опытных преподавателей, которые стоят у него за спиной, в том числе моя методическая поддержка. И даже если ученик этого не увидит, результат в любом случае будет обеспечен.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t17">
+      <h3>17. Как попасть в команду</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Если человек хочет попробовать себя у вас преподавателем, как выглядит первый шаг? Собеседование, пробный урок, испытательный срок?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Первый этап — собеседование. После него у нас пробный урок с одним из учеников нашей школы. Мы смотрим этот урок, оцениваем его, разбираем. Если преподаватель нам подходит и готов учиться по нашей методике, мы берём его на испытательный срок, который длится примерно месяц. В это время преподаватель подменяет других преподавателей в случае необходимости, работает с группами, с индивидуальными учениками. Мы смотрим: если он показывает себя с хорошей стороны — вовремя выходит на занятия, готовится, даёт обратную связь, — тогда мы продолжаем с ним работу.</p>
+      </div></div>
+    </div>
+    <div class="tr-section" id="t18">
+      <h3>18. Кому стоит написать</h3>
+      <div class="tr-line"><div class="tr-who host">Ведущий</div><div class="tr-txt"><p>Кому точно стоит написать вам, если он посмотрел этот подкаст и задумался о работе преподавателем в вашей школе?</p></div></div>
+      <div class="tr-line"><div class="tr-who guest">Светлана</div><div class="tr-txt">
+        <p>Тем преподавателям, которые любят работать на результат, чтобы их ученики достигали результатов. Ответственным преподавателям, готовым расти и, самое главное, учиться новой методике качественного преподавания.</p>
+      </div></div>
+    </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var buttons = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.panel');
+  var tabsWrap = document.querySelector('.tabs-wrap');
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      tabsWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  document.querySelectorAll('.copy-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        var original = btn.textContent;
+        btn.textContent = 'Скопировано ✓';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
