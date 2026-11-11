@@ -13222,6 +13222,8 @@ function mbidsParseBids(data) {
     minPromoPenny: promo ? promo[0] : Number(m.minBidPenny ?? scale[0][0]),
     maxPenny: Number(m.maxBidPenny ?? scale[scale.length - 1][0]),
     recPenny: m.recBidPenny != null ? Number(m.recBidPenny) : null,
+    // Дневной лимит трат объявления (null — не установлен).
+    limitPenny: m.limitPenny != null ? Number(m.limitPenny) : null,
     scale,
   };
 }
@@ -13291,8 +13293,8 @@ async function mbidsCatalog(env, account, force) {
 // Шкала ставок объявления (GET /cpxpromo/1/getBids) → st. Авито часто отвечает 429 (слишком много запросов)
 // или 5xx — это временно: пробуем ещё пару раз с паузой, а если не вышло, не ставим bidsAt, чтобы следующий
 // тик cron (через 10 минут) спросил снова, а не через час. Старая шкала, если была, остаётся в силе.
-async function mbidsLoadBids(token, id, st) {
-  for (let attempt = 0; attempt < 3; attempt++) {
+async function mbidsLoadBids(token, id, st, tries = 3) {
+  for (let attempt = 0; attempt < tries; attempt++) {
     if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
     try {
       const res = await avitoRequest(token, `/cpxpromo/1/getBids/${encodeURIComponent(id)}`);
@@ -13414,22 +13416,38 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
   let queue = (ids ? ids.filter((id) => cfg.items[id]) : onIds).slice();
   queue.sort((a, b) => ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
   let processed = 0;
+  let refused = 0; // подряд временных отказов Авито на getBids
   const one = async (id) => {
     const c = { ...cfg.items[id], id };
     const st = { ...(state.items[id] || {}) };
     if (c.on || force) {
-      if (force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) await mbidsLoadBids(token, id, st);
+      // Авито подряд отвечает 429 — дальше в этом тике шкалы не спрашиваем (только хуже), старые остаются.
+      if ((force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) && refused < 5) {
+        await mbidsLoadBids(token, id, st);
+        refused = st.bidsTemp ? refused + 1 : 0;
+      }
     }
     const d = mbidsDecide(c, st, { active, noMoney, now, today });
     st.status = d.status;
     st.reason = d.reason;
     if (d.wantPenny != null && (st.nowPenny !== d.wantPenny || st.selectedType !== 'manual')) {
       const pending = st.setPenny === d.wantPenny && st.setAt && Date.now() - st.setAt < MBIDS_REAPPLY_MS;
+      // setManual без limitPenny снимает дневной лимит объявления, который поставили на Авито руками
+      // («Дневной лимит: не установлен»). Поэтому прямо перед записью читаем текущий лимит и передаём его
+      // обратно. Не удалось прочитать — ставку в этот тик не трогаем, чтобы не стереть лимит вслепую.
+      let limitPenny;
       if (!pending) {
+        const cur = {};
+        if (await mbidsLoadBids(token, id, cur, 1)) limitPenny = cur.limitPenny;
+        else { st.status = st.status === 'ok' ? 'pending' : st.status; st.reason = st.reason || `${MBIDS_REASONS.wait} (${cur.bidsError || 'Авито не ответил'})`; }
+      }
+      if (!pending && limitPenny !== undefined) {
         try {
+          const body = { itemID: Number(id), actionTypeID: st.actionTypeID || MBIDS_ACTION_TYPE, bidPenny: d.wantPenny };
+          if (limitPenny != null) body.limitPenny = limitPenny;
           const res = await avitoRequest(token, '/cpxpromo/1/setManual', {
             method: 'POST',
-            body: JSON.stringify({ itemID: Number(id), actionTypeID: st.actionTypeID || MBIDS_ACTION_TYPE, bidPenny: d.wantPenny }),
+            body: JSON.stringify(body),
           });
           const text = await res.text();
           if (res.ok) {
@@ -13447,7 +13465,7 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
     state.items[id] = st;
     processed++;
   };
-  const workers = Array.from({ length: 4 }, async () => {
+  const workers = Array.from({ length: 2 }, async () => {
     while (queue.length && Date.now() - started < budgetMs) await one(queue.shift());
   });
   await Promise.all(workers);

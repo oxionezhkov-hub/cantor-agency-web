@@ -629,7 +629,7 @@ let panelsOn = lsGet('mb_panels', []);
 
 const COLS = [
   { id: 'on', t: 'Вкл', tip: 'Ручное управление ставкой: включено / выключено. Выключенное объявление сервис не трогает.', sort: (x) => x.on ? 1 : 0 },
-  { id: 'status', t: 'Статус', tip: 'Успешно — ставка держится. Остановлено — плановая пауза (по графику, лимиту, нет денег). Ошибка — нужно поправить. Наведите на статус — увидите причину.', sort: (x) => ({ ok: 0, pending: 1, stop: 2, err: 3, off: 4 }[x.status] ?? 5) },
+  { id: 'status', t: 'Статус', tip: 'Успешно — ставка держится. Ждём Авито — Авито временно не ответил, сервис сам повторит в течение 10 минут, делать ничего не нужно. Остановлено — плановая пауза (по графику, лимиту, нет денег). Ошибка — нужно поправить. Наведите на статус — увидите причину.', sort: (x) => ({ ok: 0, wait: 1, stop: 2, err: 3, off: 4 }[stKey(x)] ?? 5) },
   { id: 'bid', t: 'Ставка', tip: 'Ставка за просмотр, которую сервис держит в разрешённое время. Целые рубли.', sort: (x) => x.bid, r: true },
   { id: 'now', t: 'Сейчас', tip: 'Ставка, которая фактически стоит на Авито сейчас. «авто» — на Авито включена автостратегия.', sort: (x) => x.now, r: true },
   { id: 'cmp', t: 'Опереж.', tip: 'Опережение конкурентов — процент, который Авито даёт для текущей ставки.', sort: (x) => x.cmp, r: true },
@@ -657,7 +657,9 @@ cols = cols.filter((x) => COLS.find((c) => c.id === x.id));
 const colById = (id) => COLS.find((c) => c.id === id);
 const st = (x) => stats[x.key] || {};
 const accName = (id) => (B.accounts.find((a) => a.id === id) || {}).name || id;
-const STATUS = { ok: 'Успешно', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
+const STATUS = { ok: 'Успешно', wait: 'Ждём Авито', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
+// «Ждём Авито» — pending с причиной (Авито временно не отдал шкалу ставок); pending без причины — первая проверка, считаем «Успешно».
+const stKey = (x) => (x.status === 'pending' ? (x.reason ? 'wait' : 'ok') : x.status);
 
 async function bidsLoad() {
   const r = await api('/api/dashboard/mbids/state');
@@ -701,7 +703,7 @@ function visible() {
   if (curGroup) list = list.filter((x) => x.groups.includes(curGroup));
   if (filt.acc.length) list = list.filter((x) => filt.acc.includes(x.accountId));
   if (filt.city.length) list = list.filter((x) => filt.city.includes(x.city));
-  if (filt.status.length) list = list.filter((x) => filt.status.includes(x.status === 'pending' ? 'ok' : x.status));
+  if (filt.status.length) list = list.filter((x) => filt.status.includes(stKey(x)));
   if (filt.on) list = list.filter((x) => (filt.on === 'on') === x.on);
   if (filt.group) list = list.filter((x) => x.groups.includes(filt.group));
   const s = q.trim().toLowerCase();
