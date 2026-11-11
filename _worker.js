@@ -13416,8 +13416,12 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
   let queue = (ids ? ids.filter((id) => cfg.items[id]) : onIds).slice();
   // Сначала объявления без шкалы («Ждём Авито», только что включённые) — им без Авито ничего не решить,
   // потом те, кого дольше не проверяли.
-  const noScale = (id) => ((state.items[id] || {}).basePenny == null ? 0 : 1);
-  queue.sort((a, b) => noScale(a) - noScale(b) || ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
+  const rank = (id) => {
+    const st = state.items[id] || {}, c = cfg.items[id] || {};
+    if (st.basePenny == null) return 0;
+    return c.byAt && (!st.checkedAt || c.byAt > st.checkedAt) ? 1 : 2; // правили после проверки — раньше остальных
+  };
+  queue.sort((a, b) => rank(a) - rank(b) || ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
   let processed = 0;
   let refused = 0; // подряд временных отказов Авито на getBids
   const one = async (id) => {
@@ -13474,8 +13478,10 @@ async function mbidsCron(env) {
   const accIds = await mbidsCfgAccountIds(env.AVITO_KV);
   const started = Date.now();
   for (const acc of accIds) {
-    if (Date.now() - started > 8 * 60 * 1000) break;
-    await mbidsProcess(env, acc).catch((e) => console.error('mbids process failed', acc, e && e.stack));
+    const left = 8 * 60 * 1000 - (Date.now() - started);
+    if (left <= 0) break;
+    // Маленькие кабинеты заканчивают за секунды; большому (880 объявлений) — остаток времени, до 3 минут.
+    await mbidsProcess(env, acc, { budgetMs: Math.max(30000, Math.min(180000, left - 15000)) }).catch((e) => console.error('mbids process failed', acc, e && e.stack));
   }
 }
 
@@ -13487,7 +13493,11 @@ function mbidsView(acc, accountName, id, c, st) {
     title: c.title || '', url: c.url || '', address: c.address || '', city: c.city || mbidsCity(c.address),
     on: !!c.on, bid: c.bid ?? null, hours: c.hours || null, days: c.days || null, lim: c.lim || {}, groups: c.groups || [], notes: c.notes || [],
     addedAt: c.addedAt || null,
-    status: st.status || (c.on ? 'pending' : 'off'), reason: st.reason || '',
+    // Настройки поменяли после последней проверки — старый статус (например, «ставка ниже минимальной»)
+    // уже неправда: показываем «В очереди», пока движок не дойдёт до объявления.
+    ...(c.on && c.byAt && (!st.checkedAt || c.byAt > st.checkedAt)
+      ? { status: 'queued', reason: 'Настройки изменены — сервис применит их при ближайшей проверке (каждые 10 минут)' }
+      : { status: st.status || (c.on ? 'pending' : 'off'), reason: st.reason || '' }),
     now: p(st.nowPenny), selectedType: st.selectedType || null, cmp: st.cmp ?? null,
     base: p(st.basePenny), minPromo: p(st.minPromoPenny), max: p(st.maxPenny), rec: p(st.recPenny),
     scale: (st.scale || []).map(([v, cmp]) => [v / 100, cmp]),

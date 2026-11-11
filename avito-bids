@@ -658,9 +658,9 @@ cols = cols.filter((x) => COLS.find((c) => c.id === x.id));
 const colById = (id) => COLS.find((c) => c.id === id);
 const st = (x) => stats[x.key] || {};
 const accName = (id) => (B.accounts.find((a) => a.id === id) || {}).name || id;
-const STATUS = { ok: 'Успешно', wait: 'Ждём Авито', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
+const STATUS = { ok: 'Успешно', wait: 'Ждём Авито / в очереди', stop: 'Остановлено', err: 'Ошибка', off: 'Выключено' };
 // «Ждём Авито» — pending с причиной (Авито временно не отдал шкалу ставок); pending без причины — первая проверка, считаем «Успешно».
-const stKey = (x) => (x.status === 'pending' ? (x.reason ? 'wait' : 'ok') : x.status);
+const stKey = (x) => (x.status === 'queued' ? 'wait' : x.status === 'pending' ? (x.reason ? 'wait' : 'ok') : x.status);
 
 async function bidsLoad() {
   const r = await api('/api/dashboard/mbids/state');
@@ -828,7 +828,7 @@ let chipFns = [];
 $('#chips').addEventListener('click', (e) => { const b = e.target.closest('[data-chip]'); if (!b) return; chipFns[Number(b.dataset.chip)](); lsSet('mb_filt', filt); render(); });
 
 function statusChip(x) {
-  const map = { ok: ['green', 'Успешно'], pending: x.reason ? ['amber', 'Ждём Авито'] : ['green', 'Успешно'], stop: ['amber', 'Остановлено'], err: ['red', 'Ошибка'], off: ['', 'Выключено'] };
+  const map = { ok: ['green', 'Успешно'], queued: ['amber', 'В очереди'], pending: x.reason ? ['amber', 'Ждём Авито'] : ['green', 'Успешно'], stop: ['amber', 'Остановлено'], err: ['red', 'Ошибка'], off: ['', 'Выключено'] };
   const [cls, t] = map[x.status] || map.off;
   let reason = x.reason || (x.status === 'pending' ? 'Ждёт первой проверки — до 10 минут' : '');
   if (x.status === 'off') reason = 'Ручное управление выключено — включите тумблер';
