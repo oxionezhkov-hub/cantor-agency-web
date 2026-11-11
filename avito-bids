@@ -418,7 +418,7 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
         <div class="tools">
           <div class="seg" role="tablist"><button type="button" class="on" data-view="all">Все объявления</button><button type="button" data-view="groups">Группы</button></div>
           <span id="groupHead" class="row hide"></span>
-          <div class="search" id="searchBox"><svg class="ic"><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Заголовок, номер или город"></div>
+          <div class="search" id="searchBox"><svg class="ic"><use href="#i-search"/></svg><input class="input" id="q" type="search" placeholder="Заголовок, город или номера через ;"></div>
           <button class="btn" type="button" id="filtersBtn" data-pop="1"><svg class="ic ic-sm"><use href="#i-filter"/></svg>Фильтры</button>
           <select class="select" id="period" data-tip="Период статистики в таблице и в иконках сверху"><option value="today">Сегодня</option><option value="yesterday">Вчера</option><option value="7">7 дней</option><option value="30">30 дней</option><option value="custom">Свой период…</option></select>
           <span id="customPer" class="row hide"><input class="input" style="width:auto" type="date" id="pFrom"><span class="muted">—</span><input class="input" style="width:auto" type="date" id="pTo"></span>
@@ -710,7 +710,10 @@ function visible() {
   // Ставка (настроенная, ₽) в диапазоне «от–до» включительно; объявления без ставки при этом не показываем.
   if (filt.bidFrom !== '' || filt.bidTo !== '') list = list.filter((x) => x.bid != null && (filt.bidFrom === '' || x.bid >= Number(filt.bidFrom)) && (filt.bidTo === '' || x.bid <= Number(filt.bidTo)));
   const s = q.trim().toLowerCase();
-  if (s) list = list.filter((x) => x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.address.toLowerCase().includes(s));
+  // Несколько номеров сразу, как на Авито: «4222080430; 4061599143» (годятся и запятые, пробелы, перенос строки).
+  const ids = s.split(/[;,\s]+/).filter(Boolean);
+  if (ids.length > 1 && ids.every((t) => /^\d+$/.test(t))) { const set = new Set(ids); list = list.filter((x) => set.has(x.id)); }
+  else if (s) list = list.filter((x) => x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.address.toLowerCase().includes(s));
   if (sort) {
     const c = colById(sort.id);
     if (c && c.sort) {
