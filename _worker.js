@@ -14291,10 +14291,11 @@ async function feedsBuild(env, feed) {
   let disk = null;
   if (stat.yandexToken) {
     try {
-      const all = await feedsDiskIndex(await kv.get('feedytok:' + feed.slug));
+      const token = await kv.get('feedytok:' + feed.slug);
+      const all = await feedsDiskIndex(token);
       const lower = new Map();
       all.forEach((x) => { const k = x.toLowerCase(); lower.set(k, [...(lower.get(k) || []), x]); });
-      disk = { all, exact: new Set(all), lower };
+      disk = { all, exact: new Set(all), lower, token, checked: new Map(), checks: 0 };
     } catch (err) {
       stat.diskError = String(err && err.message || err).slice(0, 200);
     }
@@ -14310,8 +14311,11 @@ async function feedsBuild(env, feed) {
       const y = feedsYandexSource(src);
       if (!y) { signed.set(src, /^https?:\/\//i.test(src) ? src : null); continue; }
       if (y.kind === 'p' && !stat.yandexToken) { signed.set(src, null); continue; }
-      if (y.kind === 'p' && disk) {
-        const real = feedsDiskResolve(disk, y.path);
+      if (y.kind === 'p' && disk && !disk.exact.has(y.path)) {
+        // Not in the list — but it may still open (shared folder): then the link is right as it is.
+        if (!disk.checked.has(y.path)) disk.checked.set(y.path, disk.checks++ < 300 ? await feedsDiskExists(disk.token, y.path).catch(() => null) : null);
+        const exists = disk.checked.get(y.path);
+        const real = exists === false ? feedsDiskResolve(disk, y.path) : y.path;
         if (!real) {
           const x = lost.get(y.path) || { path: y.path, n: 0, ids: [] };
           x.n++; if (x.ids.length < 10) x.ids.push(a.id); lost.set(y.path, x);
@@ -14549,7 +14553,18 @@ async function feedsValidate(env, feed, ads, stat) {
  * Private links point at a path; when the client later moves files into subfolders (or the folder
  * name differs in case), the path stops working. Each build lists the Disk's files once and maps a
  * missing path to the one file it must be: same path ignoring case, else the only file ending with the
- * same «folder/name», else the only file with that name. */
+ * same «folder/name», else the only file with that name inside the same top-level folder.
+ *
+ * The file list (/resources/files) does not include everything a link can open — files in a folder
+ * shared with this Disk are missing from it. So «not in the list» is checked against the file itself
+ * (feedsDiskExists) before any guess, and a name-only guess never leaves the link's own top-level folder:
+ * on a shared agency Disk «11.jpg» of one teacher used to be swapped for another teacher's «11.jpg». */
+async function feedsDiskExists(token, path) {
+  const res = await fetch('https://cloud-api.yandex.net/v1/disk/resources?fields=path&path=' + encodeURIComponent(path), { headers: { Authorization: 'OAuth ' + token } });
+  if (res.ok) return true;
+  if (res.status === 404) return false;
+  return null; // Yandex didn't say — don't guess either way
+}
 async function feedsDiskIndex(token) {
   const paths = [];
   for (let offset = 0; offset < 20000; offset += 1000) {
@@ -14569,7 +14584,8 @@ function feedsDiskResolve(index, path) {
   const tail2 = parts.slice(-2).join('/');
   const byTail = index.all.filter((p) => p.toLowerCase().endsWith('/' + tail2));
   if (byTail.length === 1) return byTail[0];
-  const byName = index.all.filter((p) => p.toLowerCase().endsWith('/' + parts[parts.length - 1]));
+  const top = (x) => x.toLowerCase().replace(/^disk:\//, '').split('/')[0];
+  const byName = index.all.filter((p) => p.toLowerCase().endsWith('/' + parts[parts.length - 1]) && top(p) === top(lc));
   if (byName.length === 1) return byName[0];
   return null;
 }
