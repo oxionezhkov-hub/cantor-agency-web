@@ -437,6 +437,7 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
 
     <!-- ═══ Автозагрузка ═══ -->
     <section id="pg-feeds" class="hide">
+      <div class="row hide" id="fScopeRow" style="margin-bottom:12px"><div class="seg" role="tablist" aria-label="Чьи клиенты"><button type="button" data-fscope="mine" role="tab">Мои клиенты</button><button type="button" data-fscope="all" role="tab">Все</button></div><span class="small muted" id="fScopeNote"></span></div>
       <div class="fwrap"><table class="ftbl"><thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th data-tip="Замечания при сборке XML из таблицы — нажмите на число">Ошибки</th><th>XML обновлён</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
       <div class="fnote"><span class="grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час и лежит в Яндексе. Новые кабинеты Авито появляются здесь сами.</span><button class="lnkb muted hide" type="button" id="fOffBtn"></button></div>
     </section>
@@ -623,7 +624,7 @@ const openRows = new Set();
 let view = 'all';
 let curGroup = null;
 let sort = lsGet('mb_sort', null);
-let filt = Object.assign({ acc: [], city: [], status: [], on: '', group: '' }, lsGet('mb_filt', {}));
+let filt = Object.assign({ acc: [], city: [], status: [], on: '', group: '', bidFrom: '', bidTo: '' }, lsGet('mb_filt', {}));
 let q = '';
 let panelsOn = lsGet('mb_panels', []);
 
@@ -706,6 +707,8 @@ function visible() {
   if (filt.status.length) list = list.filter((x) => filt.status.includes(stKey(x)));
   if (filt.on) list = list.filter((x) => (filt.on === 'on') === x.on);
   if (filt.group) list = list.filter((x) => x.groups.includes(filt.group));
+  // Ставка (настроенная, ₽) в диапазоне «от–до» включительно; объявления без ставки при этом не показываем.
+  if (filt.bidFrom !== '' || filt.bidTo !== '') list = list.filter((x) => x.bid != null && (filt.bidFrom === '' || x.bid >= Number(filt.bidFrom)) && (filt.bidTo === '' || x.bid <= Number(filt.bidTo)));
   const s = q.trim().toLowerCase();
   if (s) list = list.filter((x) => x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.address.toLowerCase().includes(s));
   if (sort) {
@@ -811,6 +814,7 @@ function renderChips() {
   filt.status.forEach((s) => ch.push([`Статус: ${STATUS[s]}`, () => { filt.status = filt.status.filter((x) => x !== s); }]));
   if (filt.on) ch.push([filt.on === 'on' ? 'Только включённые' : 'Только выключенные', () => { filt.on = ''; }]);
   if (filt.group && B.groups[filt.group]) ch.push([`Группа: ${B.groups[filt.group].name}`, () => { filt.group = ''; }]);
+  if (filt.bidFrom !== '' || filt.bidTo !== '') ch.push([`Ставка: ${filt.bidFrom !== '' ? `от ${filt.bidFrom} ` : ''}${filt.bidTo !== '' ? `до ${filt.bidTo} ` : ''}₽`, () => { filt.bidFrom = ''; filt.bidTo = ''; }]);
   chipFns = ch.map((x) => x[1]);
   const info = `<span class="statline" style="align-self:center;margin-left:auto">${statsErr ? `<span style="color:var(--red)">Статистика: ${esc(statsErr)}</span>` : statsAt ? `Статистика за ${esc(perLabel())} · ${fmtAt(statsAt)}` : 'Загружаем статистику…'}</span>`;
   $('#chips').innerHTML = ch.map((x, k) => `<span class="chip accent">${esc(x[0])}<button class="x" type="button" data-chip="${k}" aria-label="Убрать фильтр">${I('x')}</button></span>`).join('') + (B.items.length ? info : '');
@@ -1105,17 +1109,19 @@ $('#filtersBtn').addEventListener('click', (e) => {
   openPop(e.currentTarget, `<div class="pin" style="width:min(320px,86vw)">
     <div class="ph">Вкл / выкл</div>${radio('on', [['', 'Все'], ['on', 'Включённые'], ['off', 'Выключенные']], filt.on)}
     <div class="ph">Статус</div><div>${Object.entries(STATUS).map(([k, t]) => ck('status', k, t, filt.status.includes(k))).join('')}</div>
+    <div class="ph">Ставка, ₽</div><div class="row" style="flex-wrap:nowrap"><input class="input" data-fb="bidFrom" inputmode="numeric" placeholder="от" value="${esc(filt.bidFrom)}" aria-label="Ставка от, ₽"><span class="muted">—</span><input class="input" data-fb="bidTo" inputmode="numeric" placeholder="до" value="${esc(filt.bidTo)}" aria-label="Ставка до, ₽"></div>
     ${accs.length > 1 ? `<div class="ph">Аккаунт</div><div class="scroll">${accs.map((a) => ck('acc', a, accName(a), filt.acc.includes(a))).join('')}</div>` : ''}
     <div class="ph">Город</div><div class="scroll">${cities.map((c) => ck('city', c, c || 'не указан', filt.city.includes(c))).join('') || '<span class="small muted">—</span>'}</div>
     ${Object.keys(B.groups).length ? `<div class="ph">Группа</div><div class="scroll">${[['', 'Все'], ...Object.entries(B.groups).map(([g, v]) => [g, v.name])].map(([g, t]) => `<button class="mi${filt.group === g ? ' on' : ''}" type="button" data-fg="${g}">${I('check')}${esc(t)}</button>`).join('')}</div>` : ''}
     <div class="row" style="justify-content:space-between"><button class="btn sm quiet" type="button" data-freset>Сбросить</button><button class="btn sm primary" type="button" data-fok>Готово</button></div></div>`, (p) => {
+    p.addEventListener('input', (ev) => { const t = ev.target; if (!t.dataset.fb) return; const v = t.value.replace(/[^\d]/g, ''); if (v !== t.value) t.value = v; filt[t.dataset.fb] = v; lsSet('mb_filt', filt); render(); });
     p.addEventListener('change', (ev) => { const t = ev.target; if (!t.dataset.f) return; const arr = filt[t.dataset.f]; const i = arr.indexOf(t.value); if (t.checked && i < 0) arr.push(t.value); if (!t.checked && i >= 0) arr.splice(i, 1); lsSet('mb_filt', filt); render(); });
     p.addEventListener('click', (ev) => {
       const r = ev.target.closest('[data-fr]');
       if (r) { filt[r.dataset.fr] = r.dataset.v; $$(`[data-fr="${r.dataset.fr}"]`, p).forEach((x) => x.classList.toggle('on', x === r)); }
       const g = ev.target.closest('[data-fg]');
       if (g) { filt.group = g.dataset.fg; $$('[data-fg]', p).forEach((x) => x.classList.toggle('on', x === g)); }
-      if (ev.target.closest('[data-freset]')) { filt = { acc: [], city: [], status: [], on: '', group: '' }; $$('.cb', p).forEach((c) => { c.checked = false; }); $$('[data-fr]', p).forEach((x) => x.classList.toggle('on', x.dataset.v === '')); }
+      if (ev.target.closest('[data-freset]')) { filt = { acc: [], city: [], status: [], on: '', group: '', bidFrom: '', bidTo: '' }; $$('.cb', p).forEach((c) => { c.checked = false; }); $$('[data-fb]', p).forEach((c) => { c.value = ''; }); $$('[data-fr]', p).forEach((x) => x.classList.toggle('on', x.dataset.v === '')); }
       if (r || g || ev.target.closest('[data-freset]')) { lsSet('mb_filt', filt); render(); }
       if (ev.target.closest('[data-fok]')) closePop();
     });
@@ -1420,7 +1426,10 @@ $('#refreshBtn').addEventListener('click', async () => {
 $$('[data-view]').forEach((b) => b.addEventListener('click', () => { view = b.dataset.view; curGroup = null; sel.clear(); render(); }));
 
 /* ═══════════════ Автозагрузка ═══════════════ */
-const F = { loaded: false, feeds: [], accounts: [], serviceAccount: null, showOff: false };
+const F = { loaded: false, feeds: [], accounts: [], serviceAccount: null, showOff: false, scope: lsGet('mb_fscope', 'mine') };
+// «Мои клиенты» — ответственный в трекере задач = тот, кто вошёл через трекер. Вход по паролю — только «Все».
+const fMineOn = () => !!(ME && ME.id) && F.scope === 'mine';
+const fMine = (x) => !fMineOn() || x.ownerId === ME.id;
 async function feedsLoad() {
   const r = await api('/api/dashboard/feeds');
   if (r.status === 401) return showGate();
@@ -1436,15 +1445,19 @@ function feedErrCount(s) { return s ? (s.error ? 1 : 0) + (s.s3Error ? 1 : 0) + 
 function feedsRender() {
   // Кабинеты Авито без фида — сразу в списке, чтобы новые клиенты не терялись.
   const linked = new Set(F.feeds.map((f) => f.avitoAccountId).filter(Boolean));
-  const free = F.accounts.filter((a) => !linked.has(a.id)).sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
-  const off = F.feeds.filter((f) => !f.enabled);
-  const list = F.feeds.filter((f) => f.enabled || F.showOff);
+  const free = F.accounts.filter((a) => !linked.has(a.id) && fMine(a)).sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+  const off = F.feeds.filter((f) => !f.enabled && fMine(f));
+  const list = F.feeds.filter((f) => (f.enabled || F.showOff) && fMine(f));
+  const canMine = !!(ME && ME.id);
+  $('#fScopeRow').classList.toggle('hide', !canMine);
+  $$('[data-fscope]').forEach((b) => { const on = b.dataset.fscope === (fMineOn() ? 'mine' : 'all'); b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+  if (canMine) $('#fScopeNote').textContent = fMineOn() ? `Клиенты, где вы ответственный в трекере задач: ${list.length + free.length}` : '';
   $('#fRows').innerHTML = list.map((f) => {
     const s = f.stat, n = feedErrCount(s);
     const fx = s && s.fixes ? s.fixes.reduce((t, x) => t + x.n, 0) : 0;
     const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : fx ? `<button class="chip green" data-probs="${f.slug}" type="button" data-tip="Ошибок нет; сервис сам поправил значения, которые Авито не принимает — нажмите, чтобы посмотреть">нет · испр.</button>` : '<span class="chip green">нет</span>';
     const acc = feedAccName(f.avitoAccountId);
-    const tags = [!acc && '<span class="chip amber" data-tip="Выберите кабинет в «Изменить»">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>'].filter(Boolean).join('');
+    const tags = [!acc && '<span class="chip amber" data-tip="Выберите кабинет в «Изменить»">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>', !fMineOn() && f.ownerName && `<span class="small muted" data-tip="Ответственный в трекере задач">${esc(f.ownerName)}</span>`].filter(Boolean).join('');
     return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname" title="${esc(acc && acc !== f.name ? 'Кабинет: ' + acc : '')}"><b>${esc(f.name)}</b>${tags}</td>
       <td><a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a></td>
       <td class="r num">${s && !s.error ? int(s.ads) : '—'}</td><td>${pill}</td>
@@ -1459,7 +1472,7 @@ function feedsRender() {
         ${fb('data-edit', f.slug, 'edit', 'Изменить', 'Таблица, вкладки, кабинет, автообновление')}</div></td></tr>`;
   }).join('') + free.map((a) => `<tr><td class="fname"><b>${esc(a.name)}</b><span class="chip">нет таблицы</span></td><td colspan="4"></td>
       <td><div class="fact">${fb('data-newacc', a.id, 'plus', 'Добавить таблицу', 'Подключить Google Таблицу к этому кабинету', 'accent')}</div></td></tr>`).join('')
-    || `<tr><td colspan="6">${emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
+    || `<tr><td colspan="6">${fMineOn() ? emptyState('upload', 'Ваших клиентов нет', 'Ответственного за клиента назначают в трекере задач, во вкладке «Клиенты». Остальные — во «Все».') : emptyState('upload', 'Клиентов пока нет', 'Нажмите «Клиент» и вставьте ссылку на Google Таблицу')}</td></tr>`;
   $('#fOffBtn').classList.toggle('hide', !off.length);
   $('#fOffBtn').textContent = F.showOff ? 'Скрыть выключенные' : `Показать выключенные (${off.length})`;
 }
@@ -1488,6 +1501,7 @@ $('#fAdd').addEventListener('click', () => feedEdit(null));
 $('#fImport').addEventListener('click', feedImport);
 $('#fReload').addEventListener('click', feedsLoad);
 $('#fOffBtn').addEventListener('click', () => { F.showOff = !F.showOff; feedsRender(); });
+$('#fScopeRow').addEventListener('click', (e) => { const b = e.target.closest('[data-fscope]'); if (!b) return; F.scope = b.dataset.fscope; lsSet('mb_fscope', F.scope); feedsRender(); });
 
 /* ── Ошибки: группируем одинаковые, показываем где ── */
 // [{ msg, where }] → карточки «текст ошибки · N раз» со списком мест.
