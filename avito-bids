@@ -623,7 +623,7 @@ const openRows = new Set();
 let view = 'all';
 let curGroup = null;
 let sort = lsGet('mb_sort', null);
-let filt = Object.assign({ acc: [], city: [], status: [], on: '', group: '' }, lsGet('mb_filt', {}));
+let filt = Object.assign({ acc: [], city: [], status: [], on: '', group: '', bidFrom: '', bidTo: '' }, lsGet('mb_filt', {}));
 let q = '';
 let panelsOn = lsGet('mb_panels', []);
 
@@ -706,6 +706,8 @@ function visible() {
   if (filt.status.length) list = list.filter((x) => filt.status.includes(stKey(x)));
   if (filt.on) list = list.filter((x) => (filt.on === 'on') === x.on);
   if (filt.group) list = list.filter((x) => x.groups.includes(filt.group));
+  // Ставка (настроенная, ₽) в диапазоне «от–до» включительно; объявления без ставки при этом не показываем.
+  if (filt.bidFrom !== '' || filt.bidTo !== '') list = list.filter((x) => x.bid != null && (filt.bidFrom === '' || x.bid >= Number(filt.bidFrom)) && (filt.bidTo === '' || x.bid <= Number(filt.bidTo)));
   const s = q.trim().toLowerCase();
   if (s) list = list.filter((x) => x.title.toLowerCase().includes(s) || x.id.includes(s) || x.city.toLowerCase().includes(s) || x.address.toLowerCase().includes(s));
   if (sort) {
@@ -811,6 +813,7 @@ function renderChips() {
   filt.status.forEach((s) => ch.push([`Статус: ${STATUS[s]}`, () => { filt.status = filt.status.filter((x) => x !== s); }]));
   if (filt.on) ch.push([filt.on === 'on' ? 'Только включённые' : 'Только выключенные', () => { filt.on = ''; }]);
   if (filt.group && B.groups[filt.group]) ch.push([`Группа: ${B.groups[filt.group].name}`, () => { filt.group = ''; }]);
+  if (filt.bidFrom !== '' || filt.bidTo !== '') ch.push([`Ставка: ${filt.bidFrom !== '' ? `от ${filt.bidFrom} ` : ''}${filt.bidTo !== '' ? `до ${filt.bidTo} ` : ''}₽`, () => { filt.bidFrom = ''; filt.bidTo = ''; }]);
   chipFns = ch.map((x) => x[1]);
   const info = `<span class="statline" style="align-self:center;margin-left:auto">${statsErr ? `<span style="color:var(--red)">Статистика: ${esc(statsErr)}</span>` : statsAt ? `Статистика за ${esc(perLabel())} · ${fmtAt(statsAt)}` : 'Загружаем статистику…'}</span>`;
   $('#chips').innerHTML = ch.map((x, k) => `<span class="chip accent">${esc(x[0])}<button class="x" type="button" data-chip="${k}" aria-label="Убрать фильтр">${I('x')}</button></span>`).join('') + (B.items.length ? info : '');
@@ -1105,17 +1108,19 @@ $('#filtersBtn').addEventListener('click', (e) => {
   openPop(e.currentTarget, `<div class="pin" style="width:min(320px,86vw)">
     <div class="ph">Вкл / выкл</div>${radio('on', [['', 'Все'], ['on', 'Включённые'], ['off', 'Выключенные']], filt.on)}
     <div class="ph">Статус</div><div>${Object.entries(STATUS).map(([k, t]) => ck('status', k, t, filt.status.includes(k))).join('')}</div>
+    <div class="ph">Ставка, ₽</div><div class="row" style="flex-wrap:nowrap"><input class="input" data-fb="bidFrom" inputmode="numeric" placeholder="от" value="${esc(filt.bidFrom)}" aria-label="Ставка от, ₽"><span class="muted">—</span><input class="input" data-fb="bidTo" inputmode="numeric" placeholder="до" value="${esc(filt.bidTo)}" aria-label="Ставка до, ₽"></div>
     ${accs.length > 1 ? `<div class="ph">Аккаунт</div><div class="scroll">${accs.map((a) => ck('acc', a, accName(a), filt.acc.includes(a))).join('')}</div>` : ''}
     <div class="ph">Город</div><div class="scroll">${cities.map((c) => ck('city', c, c || 'не указан', filt.city.includes(c))).join('') || '<span class="small muted">—</span>'}</div>
     ${Object.keys(B.groups).length ? `<div class="ph">Группа</div><div class="scroll">${[['', 'Все'], ...Object.entries(B.groups).map(([g, v]) => [g, v.name])].map(([g, t]) => `<button class="mi${filt.group === g ? ' on' : ''}" type="button" data-fg="${g}">${I('check')}${esc(t)}</button>`).join('')}</div>` : ''}
     <div class="row" style="justify-content:space-between"><button class="btn sm quiet" type="button" data-freset>Сбросить</button><button class="btn sm primary" type="button" data-fok>Готово</button></div></div>`, (p) => {
+    p.addEventListener('input', (ev) => { const t = ev.target; if (!t.dataset.fb) return; const v = t.value.replace(/[^\d]/g, ''); if (v !== t.value) t.value = v; filt[t.dataset.fb] = v; lsSet('mb_filt', filt); render(); });
     p.addEventListener('change', (ev) => { const t = ev.target; if (!t.dataset.f) return; const arr = filt[t.dataset.f]; const i = arr.indexOf(t.value); if (t.checked && i < 0) arr.push(t.value); if (!t.checked && i >= 0) arr.splice(i, 1); lsSet('mb_filt', filt); render(); });
     p.addEventListener('click', (ev) => {
       const r = ev.target.closest('[data-fr]');
       if (r) { filt[r.dataset.fr] = r.dataset.v; $$(`[data-fr="${r.dataset.fr}"]`, p).forEach((x) => x.classList.toggle('on', x === r)); }
       const g = ev.target.closest('[data-fg]');
       if (g) { filt.group = g.dataset.fg; $$('[data-fg]', p).forEach((x) => x.classList.toggle('on', x === g)); }
-      if (ev.target.closest('[data-freset]')) { filt = { acc: [], city: [], status: [], on: '', group: '' }; $$('.cb', p).forEach((c) => { c.checked = false; }); $$('[data-fr]', p).forEach((x) => x.classList.toggle('on', x.dataset.v === '')); }
+      if (ev.target.closest('[data-freset]')) { filt = { acc: [], city: [], status: [], on: '', group: '', bidFrom: '', bidTo: '' }; $$('.cb', p).forEach((c) => { c.checked = false; }); $$('[data-fb]', p).forEach((c) => { c.value = ''; }); $$('[data-fr]', p).forEach((x) => x.classList.toggle('on', x.dataset.v === '')); }
       if (r || g || ev.target.closest('[data-freset]')) { lsSet('mb_filt', filt); render(); }
       if (ev.target.closest('[data-fok]')) closePop();
     });
