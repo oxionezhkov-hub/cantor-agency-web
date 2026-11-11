@@ -1232,7 +1232,7 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
   if (!uploadResult.ok || !uploadResult.data) {
     const authFailed = uploadResult.status === 401 || uploadResult.status === 403;
     const advice = authFailed
-      ? ' Проверьте OAuth-доступ кабинета и scope autoload:reports для приложения.'
+      ? ' Обычно это значит, что Авито не открыл кабинету автозагрузку: включите её в аккаунте на Авито (Профиль → Автозагрузка) и проверьте, что тариф активен.'
       : '';
     throw new Error(`autoload report unavailable: ${tried.join(' | ')}.${advice}`);
   }
@@ -1246,7 +1246,7 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
     if (!result.ok || !result.data) {
       const authFailed = result.status === 401 || result.status === 403;
       const advice = authFailed
-        ? ' Проверьте OAuth-доступ кабинета и scope autoload:reports для приложения.'
+        ? ' Обычно это значит, что Авито не открыл кабинету автозагрузку: включите её в аккаунте на Авито (Профиль → Автозагрузка) и проверьте, что тариф активен.'
         : '';
       throw new Error(`autoload items unavailable: ${tried.join(' | ')}.${advice}`);
     }
@@ -3614,6 +3614,26 @@ function collectAvitoNumbers(node, wanted, acc = {}) {
 // is exactly stats v2 allSpending + 100 руб for every client).
 const AVITO_DAILY_TARIFF_RUB = 100;
 
+// The cabinet's advance («аванс») in rubles: POST /cpa/v3/balanceInfo → { balance } in kopecks.
+// Only v3. /cpa/v2/balanceInfo used to be the fallback, but its `advance` is a different, stale number
+// (1 руб for cabinets that had 515 and 1583 руб in v3), so whenever v3 hiccuped (429, timeout) the
+// tracker showed «Аванс 1 ₽». Now v3 is retried, and if it still fails the caller gets an error —
+// never a wrong number.
+async function fetchAvitoAdvance(token) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
+    try {
+      const data = await avitoJson(token, '/cpa/v3/balanceInfo', { method: 'POST', body: '{}', headers: { 'X-Source': 'cantor-dashboard' } });
+      const n = collectAvitoNumbers(data, ['advance', 'balance']);
+      const kopecks = n.balance ?? n.advance;
+      if (kopecks == null) throw new Error('Авито не вернул баланс аванса');
+      return Math.round(kopecks / 100);
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
 async function fetchAvitoDaySummary(env, account, date) {
   const errors = [];
   const sources = {};
@@ -3659,16 +3679,12 @@ async function fetchAvitoDaySummary(env, account, date) {
     errors.push('Статистика v2: Авито не вернул расход за день');
   }
 
-  // 4) Advance ("аванс") — lives in the CPA balance; amounts there are in kopecks.
-  for (const version of ['v3', 'v2']) {
-    try {
-      const data = await avitoJson(token, `/cpa/${version}/balanceInfo`, { method: 'POST', body: '{}', headers: { 'X-Source': 'cantor-dashboard' } });
-      const n = collectAvitoNumbers(data, ['advance', 'balance']);
-      const kopecks = n.advance ?? n.balance;
-      if (kopecks != null) { out.advance = Math.round(kopecks / 100); sources.advance = `cpa_${version}_${n.advance != null ? 'advance' : 'balance'}`; break; }
-    } catch (e) {
-      if (version === 'v2') errors.push(`Аванс (CPA): ${String(e.message).slice(0, 160)}`);
-    }
+  // 4) Advance ("аванс") — the CPA balance, see fetchAvitoAdvance.
+  try {
+    out.advance = await fetchAvitoAdvance(token);
+    sources.advance = 'cpa_v3_balance';
+  } catch (e) {
+    errors.push(`Аванс (CPA): ${String(e.message).slice(0, 160)}`);
   }
 
   // 5) Plain wallet balance — shown when the cabinet has no CPA advance.
@@ -3687,15 +3703,10 @@ async function fetchAvitoDaySummary(env, account, date) {
 async function fetchAvitoMoney(env, account) {
   const out = { advance: null, wallet: null, errors: [] };
   const token = await avitoGetToken(env, account);
-  for (const version of ['v3', 'v2']) {
-    try {
-      const data = await avitoJson(token, `/cpa/${version}/balanceInfo`, { method: 'POST', body: '{}', headers: { 'X-Source': 'cantor-dashboard' } });
-      const n = collectAvitoNumbers(data, ['advance', 'balance']);
-      const kopecks = n.advance ?? n.balance;
-      if (kopecks != null) { out.advance = Math.round(kopecks / 100); break; }
-    } catch (e) {
-      if (version === 'v2') out.errors.push(`Аванс: ${String(e.message).slice(0, 120)}`);
-    }
+  try {
+    out.advance = await fetchAvitoAdvance(token);
+  } catch (e) {
+    out.errors.push(`Аванс: ${String(e.message).slice(0, 120)}`);
   }
   try {
     const bal = await fetchAvitoBalance(token, account.userId);
@@ -3710,6 +3721,7 @@ async function atRefreshAvitoMoney(env) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const projects = (await listByPrefix(kv, 'project:')).filter((p) => p.avitoAccountId && !p.inactive);
   const rows = {};
+  const prevMoney = (await kv.get('at:avitoMoney', 'json')) || { rows: {} };
   const queue = [...projects];
   const worker = async () => {
     while (queue.length) {
@@ -3722,7 +3734,10 @@ async function atRefreshAvitoMoney(env) {
         fetchAvitoMoney(env, account).catch((e) => ({ advance: null, wallet: null, errors: [String(e && e.message).slice(0, 160)] })),
         fetchAvitoTariff(env, account),
       ]);
-      rows[p.id] = { advance: money.advance, wallet: money.wallet, error: money.advance == null && money.wallet == null ? money.errors[0] || 'нет данных' : null };
+      // Avito failed for a number just now: keep the last known one (with its time) rather than blank it.
+      const was = (prevMoney.rows || {})[p.id] || {};
+      const keep = (k) => (money[k] != null ? { [k]: money[k] } : was[k] != null ? { [k]: was[k], [k + 'At']: was[k + 'At'] || prevMoney.at } : { [k]: null });
+      rows[p.id] = { ...keep('advance'), ...keep('wallet'), error: money.errors.length ? money.errors.join('; ') : null };
       tariffs[p.id] = atTariffRow(tariff);
     }
   };
@@ -13366,7 +13381,10 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
   if (onIds.length && (!state.money || Date.now() - state.money.at > 30 * 60 * 1000)) {
     try {
       const m = await fetchAvitoMoney(env, account);
-      if (m.advance != null || m.wallet != null) state.money = { advance: m.advance, wallet: m.wallet, at: Date.now() };
+      // Число, которое Авито сейчас не отдал, берём из прошлой проверки, а не считаем нулём
+      // (иначе пустой аванс выглядел бы как «Закончился аванс» и ставки уходили бы в паузу).
+      const was = state.money || {};
+      if (m.advance != null || m.wallet != null) state.money = { advance: m.advance ?? was.advance ?? null, wallet: m.wallet ?? was.wallet ?? null, at: Date.now() };
     } catch (e) { errors.push(`Баланс: ${String(e.message).slice(0, 120)}`); }
   }
   const noMoney = !!(state.money && (state.money.advance ?? 0) + (state.money.wallet ?? 0) <= 0);
@@ -14781,7 +14799,17 @@ async function handleFeedsApi(request, env, url) {
     try {
       const { token } = await feedsAvitoAccount(env, feed);
       const input = (await readJson(request)) || {};
-      const before = await avitoJson(token, '/autoload/v2/profile').catch(() => null);
+      // Авито отвечает 403 «Получение профиля недоступно», когда кабинету не открыта автозагрузка
+      // (не включена на сайте Авито или тариф её не даёт). Тогда и запись профиля падает с непонятным
+      // 400 «Запрос сформирован неправильно» — говорим причину сразу.
+      const profRes = await avitoRequest(token, '/autoload/v2/profile').catch(() => null);
+      const profText = profRes ? await profRes.text().catch(() => '') : '';
+      let before = null;
+      if (profRes && profRes.ok) { try { before = JSON.parse(profText); } catch (e) { before = null; } }
+      const noAutoload = !!(profRes && profRes.status === 403);
+      if (noAutoload) {
+        return json({ error: `Авито не открыл автозагрузку кабинету «${feed.name}». Войдите в этот аккаунт на Авито → Профиль → Автозагрузка: включите её и проверьте, что тариф («Профессиональный план») активен. Если тариф оплачен, а автозагрузка закрыта, — напишите в поддержку Авито. Потом нажмите «Подключить» ещё раз.` }, 400);
+      }
       const reportEmail = String(input.reportEmail || (before && before.report_email) || '').trim();
       if (!isValidEmail(reportEmail)) return json({ error: 'Укажите почту, на которую Авито будет присылать отчёты автозагрузки' }, 400);
       const stat = await kv.get('feedstat:' + feed.slug, 'json');
