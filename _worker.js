@@ -13054,7 +13054,7 @@ function withHtmlContentType(response) {
  * Первая ступень (compare 0, = minBidPenny) — «базовая ставка» (продвижения нет), следующая —
  * «минимальная ставка для продвижения», maxBidPenny — потолок. compare ступени, не превышающей
  * текущую ставку, — «опережение конкурентов» (процент от Авито, сами не считаем).
- * Шкала перечитывается не чаще раза в ~55 минут на объявление, ставка повторно ставится не чаще раза в час.
+ * Шкала перечитывается не чаще раза в 3 часа на объявление, ставка повторно ставится не чаще раза в час.
  *
  * Статистика — POST /stats/v2/accounts/{id}/items (impressions, views, contacts, allSpending в копейках):
  * grouping item — итоги за период по объявлениям, grouping day + filter.itemIDs — по дням. По часам Авито
@@ -13073,7 +13073,9 @@ function withHtmlContentType(response) {
  */
 
 const MBIDS_ACTION_TYPE = 5;
-const MBIDS_BIDS_TTL_MS = 55 * 60 * 1000;
+// Шкала ставок меняется медленно, а запрос к Авито дорогой (≈1,5 с, часто 429): в кабинете на 880 объявлений
+// при перечитывании раз в час тик успевал ~32 объявления и полный круг занимал 5–9 часов. Раз в 3 часа.
+const MBIDS_BIDS_TTL_MS = 3 * 60 * 60 * 1000;
 const MBIDS_REAPPLY_MS = 60 * 60 * 1000;
 const MBIDS_MAX_ITEMS = 2000;
 const MBIDS_LIMIT_KEYS = ['imp', 'views', 'contacts', 'spend', 'cpv', 'cpa'];
@@ -13412,13 +13414,17 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
 
   // Очередь: сначала явно переданные, потом те, кого дольше не проверяли.
   let queue = (ids ? ids.filter((id) => cfg.items[id]) : onIds).slice();
-  queue.sort((a, b) => ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
+  // Сначала объявления без шкалы («Ждём Авито», только что включённые) — им без Авито ничего не решить,
+  // потом те, кого дольше не проверяли.
+  const noScale = (id) => ((state.items[id] || {}).basePenny == null ? 0 : 1);
+  queue.sort((a, b) => noScale(a) - noScale(b) || ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
   let processed = 0;
   let refused = 0; // подряд временных отказов Авито на getBids
   const one = async (id) => {
     const c = { ...cfg.items[id], id };
     const st = { ...(state.items[id] || {}) };
-    if (c.on || force) {
+    // Снятое с публикации объявление получит «Объявление не активно» и без шкалы — не тратим на него запрос.
+    if ((c.on || force) && !(active && !active.has(String(id)))) {
       // Авито подряд отвечает 429 — дальше в этом тике шкалы не спрашиваем (только хуже), старые остаются.
       if ((force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) && refused < 5) {
         await mbidsLoadBids(token, id, st);
