@@ -13414,11 +13414,16 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
   let queue = (ids ? ids.filter((id) => cfg.items[id]) : onIds).slice();
   queue.sort((a, b) => ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
   let processed = 0;
+  let refused = 0; // подряд временных отказов Авито на getBids
   const one = async (id) => {
     const c = { ...cfg.items[id], id };
     const st = { ...(state.items[id] || {}) };
     if (c.on || force) {
-      if (force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) await mbidsLoadBids(token, id, st);
+      // Авито подряд отвечает 429 — дальше в этом тике шкалы не спрашиваем (только хуже), старые остаются.
+      if ((force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) && refused < 5) {
+        await mbidsLoadBids(token, id, st);
+        refused = st.bidsTemp ? refused + 1 : 0;
+      }
     }
     const d = mbidsDecide(c, st, { active, noMoney, now, today });
     st.status = d.status;
@@ -13447,7 +13452,7 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
     state.items[id] = st;
     processed++;
   };
-  const workers = Array.from({ length: 4 }, async () => {
+  const workers = Array.from({ length: 2 }, async () => {
     while (queue.length && Date.now() - started < budgetMs) await one(queue.shift());
   });
   await Promise.all(workers);
