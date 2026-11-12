@@ -1228,7 +1228,16 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
     return { ok: res.ok, status: res.status, data };
   };
 
-  const uploadResult = await get('/autoload/v4/uploads/last_successful');
+  let uploadResult = await get('/autoload/v4/uploads/last_successful');
+  // 404 — у кабинета ещё нет ни одной успешной загрузки (например, все объявления отклонены). Тогда берём
+  // последнюю завершённую загрузку из списка, а её объявления — из v2 /reports/{id}/items (v4 отдаёт
+  // объявления только для last_successful; v2 Авито держит до 2027-03-08).
+  let fallbackId = null;
+  if (uploadResult.status === 404) {
+    const list = await get('/autoload/v4/uploads?perPage=10');
+    const done = ((list.data && list.data.uploads) || []).find((u) => u && u.status && u.status !== 'processing');
+    if (done) { uploadResult = { ok: true, status: 200, data: done }; fallbackId = done.upload_id; }
+  }
   if (!uploadResult.ok || !uploadResult.data) {
     const authFailed = uploadResult.status === 401 || uploadResult.status === 403;
     const advice = authFailed
@@ -1241,7 +1250,10 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
   const items = [];
   const perPage = 50; // v4 caps perPage at 50; pages start at 1.
   for (let page = 1; page <= 60; page += 1) {
-    const path = `/autoload/v4/uploads/last_successful/items?perPage=${perPage}&page=${page}`;
+    // v2 считает страницы с 0 и берёт per_page до 100 — 50 подходит обоим.
+    const path = fallbackId
+      ? `/autoload/v2/reports/${fallbackId}/items?per_page=${perPage}&page=${page - 1}`
+      : `/autoload/v4/uploads/last_successful/items?perPage=${perPage}&page=${page}`;
     const result = await get(path);
     if (!result.ok || !result.data) {
       const authFailed = result.status === 401 || result.status === 403;
@@ -1254,6 +1266,7 @@ async function fetchAvitoAutoloadReport(env, account, reportId) {
     items.push(...batch.map(normalizeAutoloadItem));
     const pages = Number(
       result.data.meta && result.data.meta.pages
+      || result.data.meta && result.data.meta.pages === 0 && 1
       || result.data.pagination && (result.data.pagination.totalPages || result.data.pagination.pages)
       || result.data.pages
       || 0
@@ -14521,6 +14534,14 @@ async function feedsValidate(env, feed, ads, stat) {
     const category = get(ad, 'Category');
     if (!category) return; // Avito reports a missing category itself
     let where = cat.resolve(feedsFirst(category.value), feedsFirst((get(ad, 'ServiceType') || {}).value), feedsFirst((get(ad, 'ServiceSubtype') || {}).value));
+    // Раздел не доведён до конца дерева: нет (или не тот) «Вид услуги» / «Тип услуги». Авито такое объявление
+    // не опубликует («Неправильно заполнен обязательный параметр — Вид услуги»), а дальше проверять не по чему.
+    if (where && where.node.nested && where.node.nested.length) {
+      const tag = where.node === where.cat ? 'ServiceType' : 'ServiceSubtype';
+      const f = get(ad, tag);
+      problem(ad, tag, f && feedsFirst(f.value) ? feedsFirst(f.value) : '(пусто — колонки нет в XML или она «Не грузим»)', where.node.nested.map((n) => n.name));
+      return;
+    }
     if (!where || !where.node.slug) return;
     let fields = await cat.node(where.node.slug);
     // A subject Avito keeps under a sibling subtype: move the ad there.
@@ -14566,7 +14587,11 @@ async function feedsValidate(env, feed, ads, stat) {
   stat.fixes = [...fixes.values()].sort((a, b) => b.n - a.n).slice(0, 60)
     .map(({ froms, ...x }) => ({ ...x, from: froms.length > 3 ? `${froms.slice(0, 3).join('», «')}» и ещё ${froms.length - 3}` : froms.join('», «') }));
   for (const b of [...bad.values()].sort((x, y) => y.n - x.n).slice(0, 40)) {
-    stat.problems.push({ row: b.rows[0], id: b.ids[0], tag: b.tag, n: b.n, ids: b.ids, msg: `${b.tag}: Авито не знает значение «${b.value}» (${b.n} объявл.). Можно: ${b.allowed.join(' · ')}` });
+    const empty = String(b.value).startsWith('(пусто');
+    const label = { ServiceType: ' («Вид услуги»)', ServiceSubtype: ' («Тип услуги»)' }[b.tag] || '';
+    stat.problems.push({ row: b.rows[0], id: b.ids[0], tag: b.tag, n: b.n, ids: b.ids, msg: empty
+      ? `${b.tag}${label} не заполнен — колонки нет в XML или в строке 3 стоит «Не грузим» (${b.n} объявл.). Авито такие не опубликует. Можно: ${b.allowed.join(' · ')}`
+      : `${b.tag}${label}: Авито не знает значение «${b.value}» (${b.n} объявл.). Можно: ${b.allowed.join(' · ')}` });
   }
 }
 
