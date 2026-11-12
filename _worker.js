@@ -13478,10 +13478,10 @@ async function mbidsCron(env) {
   const accIds = await mbidsCfgAccountIds(env.AVITO_KV);
   const started = Date.now();
   for (const acc of accIds) {
-    const left = 8 * 60 * 1000 - (Date.now() - started);
-    if (left <= 0) break;
-    // Маленькие кабинеты заканчивают за секунды; большому (880 объявлений) — остаток времени, до 3 минут.
-    await mbidsProcess(env, acc, { budgetMs: Math.max(30000, Math.min(180000, left - 15000)) }).catch((e) => console.error('mbids process failed', acc, e && e.stack));
+    if (Date.now() - started > 8 * 60 * 1000) break;
+    // 50 с на кабинет. Пробовали до 3 минут на большой кабинет — тик обрывался на середине (11.11, 23:32),
+    // и кабинеты после него не проверялись.
+    await mbidsProcess(env, acc).catch((e) => console.error('mbids process failed', acc, e && e.stack));
   }
 }
 
