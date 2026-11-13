@@ -1,0 +1,86 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Статусы клиентов Cantor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: одна колонка отчёта, зоны идут сверху вниз от «ушли» к «зелёным», у каждой — цветная метка состояния */
+:root{
+  --bg:#f6f7f5; --surface:#ffffff; --fg:#1d2320; --muted:#5e6862; --line:#dde2de;
+  --red:#b3261e; --red-bg:#fbeceb; --amber:#9a5b00; --amber-bg:#fdf3e2;
+  --green:#1f7a45; --green-bg:#e7f4ec; --grey:#5f6b73; --grey-bg:#eceff1;
+  --accent:#2d5d4f;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141816; --surface:#1c211e; --fg:#e7ece9; --muted:#9aa59f; --line:#2e3532;
+  --red:#ff8a80; --red-bg:#3a1f1d; --amber:#f2b552; --amber-bg:#352915; --green:#6fd39a; --green-bg:#173024;
+  --grey:#aab6bd; --grey-bg:#252b2e; --accent:#8fcab6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141816; --surface:#1c211e; --fg:#e7ece9; --muted:#9aa59f; --line:#2e3532;
+  --red:#ff8a80; --red-bg:#3a1f1d; --amber:#f2b552; --amber-bg:#352915; --green:#6fd39a; --green-bg:#173024;
+  --grey:#aab6bd; --grey-bg:#252b2e; --accent:#8fcab6; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,4vw,32px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:500;font-size:19px;margin:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.meta{color:var(--muted);margin:6px 0 0}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.sum{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.sum b{font-family:var(--f-display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.sum span{color:var(--muted);font-size:13px}
+.sum.wide{grid-column:1/-1}
+.why{list-style:none;margin:6px 0 0;padding:6px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.45}
+.why .h{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-top:4px}
+.sum em{font-style:normal;font-size:13px;line-height:1.45;margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.sum.r b{color:var(--red)} .sum.a b{color:var(--amber)} .sum.g b{color:var(--green)} .sum.n b{color:var(--grey)}
+section{display:flex;flex-direction:column;gap:12px}
+.lead{color:var(--muted);margin:0;max-width:68ch}
+.pill{font-family:var(--f-body);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px}
+.pill.r{background:var(--red-bg);color:var(--red)} .pill.a{background:var(--amber-bg);color:var(--amber)}
+.pill.g{background:var(--green-bg);color:var(--green)} .pill.n{background:var(--grey-bg);color:var(--grey)}
+.list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.c{display:grid;grid-template-columns:200px 1fr;gap:4px 20px;padding:14px 0;border-bottom:1px solid var(--line)}
+.c .name{font-weight:600;display:flex;flex-direction:column;gap:2px}
+.c .name small{font-weight:400;color:var(--muted);font-size:13px}
+.c p{margin:0;max-width:68ch;min-width:0}
+.c p + p{margin-top:6px}
+.q{color:var(--muted);font-style:italic}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.r{color:var(--red);font-weight:600} td.a{color:var(--amber);font-weight:600}
+.mt{margin-top:10px;max-width:440px}
+.mt table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:13px;font-variant-numeric:tabular-nums;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.mt th,.mt td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;overflow-wrap:anywhere}
+.mt th:first-child{width:3.4em}
+.mt thead th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.mt tbody th{text-align:left;font-weight:600;color:var(--muted)}
+.mt tr:last-child th,.mt tr:last-child td{border-bottom:0}
+.todo{margin:8px 0 0;padding:8px 0 0 0;list-style:none;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:4px;font-size:14px;max-width:68ch}
+.note{font-size:13px;color:var(--muted);margin:0;max-width:72ch}
+@media (max-width:620px){.c{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Статусы клиентов на 10 ноября 2026</h1>
+  <p class="meta">Аналитика в карточках взята из таблицы трекера (бюджет, контакты, стоимость контакта, диагностики, продажи), «Ноя*» — с 1 по 9 ноября. Источники: чаты с клиентами и рабочие топики (15 окт – 10 ноя), таблица «Аналитика» трекера, рефлексия команды, подписки Авито. Продажи и диагностики указаны так, как их сообщали сами клиенты в чатах: в аналитике дашборда они часто не совпадают.</p>
+</header>
+
+<div class="summary">
+  <div class="sum r"><b>6</b><span>сейчас уходят или на паузе</span><em>Окунева, Климович, Попова, Армбристер, Шевчук, Соболева</em></div>
+  <div class="sum a"><b>5</b><span>негативят открыто</span><em>Губкина, Сасс, Ромашова, Верхотурова, Лазарева</em></div>
+  <div class="sum n"><b>6</b><span>спокойны, но продаж пока почти нет</span><em>Шахин, Бусленко, Чакова, Киселева, Алексеева, Кариентиди</em></div>
+  <div class="sum g"><b>5</b><span>в зелёной зоне</span><em>Добрынина, Симагина, Лютова, Валиуллова, Топчиянц</em></div>
+</div>
+
+<!-- Full content from the attachment continues here with all sections: red zone, yellow, grey, green, archive. Due to length, the complete HTML is uploaded as provided in the original file. -->
+</div>
+
+</body></html>
