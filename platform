@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F6F5F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0F0F" media="(prefers-color-scheme: dark)">
+<script>
+  try {
+    var t = localStorage.getItem("platform.theme");
+    if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+<title>Cantor — кабинет репетитора</title>
+<link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<style>
+:root{
+  --bg:#F6F5F2;--surface:#fff;--ink:#141414;--text:#2A2927;--muted:#6F6B66;--line:#E2E0DC;
+  --red:#E8391D;--red-bg:#FFF1EC;--ok:#2F7D4F;--ok-bg:#E8F3EC;--part:#9A6A12;--part-bg:#FBF1DC;
+  --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --display:'Unbounded','Arial Black',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F0F0F;--surface:#1A1A1A;--ink:#F3F1EC;--text:#E7E4DE;--muted:#A3A09B;--line:rgba(255,255,255,.12);
+    --red:#FF6347;--red-bg:rgba(255,99,71,.12);--ok:#6CC891;--ok-bg:rgba(108,200,145,.12);--part:#E2B455;--part-bg:rgba(226,180,85,.14);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F0F0F;--surface:#1A1A1A;--ink:#F3F1EC;--text:#E7E4DE;--muted:#A3A09B;--line:rgba(255,255,255,.12);
+  --red:#FF6347;--red-bg:rgba(255,99,71,.12);--ok:#6CC891;--ok-bg:rgba(108,200,145,.12);--part:#E2B455;--part-bg:rgba(226,180,85,.14);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);font-size:15px;line-height:1.5;background:var(--bg);color:var(--text);min-height:100vh}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.01em;margin:0;color:var(--ink)}
+h1{font-size:28px;line-height:1.15}
+h2{font-size:18px}
+p{margin:0}
+.app{min-height:100vh;display:grid;grid-template-rows:auto auto 1fr}
+.top{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.logo{font-family:var(--display);font-weight:700;font-size:16px;color:var(--red);text-decoration:none}
+.who{display:grid;min-width:0}
+.who b{font-size:14px;font-weight:600;color:var(--ink)}
+.who span{font-size:13px;color:var(--muted)}
+.theme{margin-left:auto;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px}
+.nav{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line);overflow-x:auto;background:var(--bg)}
+.nav button{height:36px;padding:0 14px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--muted);font-weight:600;white-space:nowrap}
+.nav button.on{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.nav .n{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:6px;padding:0 5px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-variant-numeric:tabular-nums}
+.view{display:none;padding:24px 20px 48px;max-width:1080px;width:100%}
+.view.on{display:grid;gap:18px;align-content:start}
+.lead{color:var(--muted);max-width:62ch}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;display:grid;gap:4px}
+.kpi b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
+.kpi span{font-size:12.5px;color:var(--muted)}
+.kpi em{font-style:normal;font-size:12px;font-weight:600}
+.bad{color:var(--red)}.good{color:var(--ok)}
+.jobs{display:grid;gap:8px}
+.job{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;text-align:left;width:100%}
+.job:hover{border-color:var(--muted)}
+.sev{width:8px;height:8px;border-radius:50%;background:var(--red)}
+.sev.mid{background:var(--part)}
+.job b{display:block;color:var(--ink);font-size:15px}
+.job small{color:var(--muted)}
+.go{font-weight:600;font-size:13px;color:var(--red);white-space:nowrap}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:12px}
+.block.headish{gap:6px}
+.funnel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.fs{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px;min-width:0;background:var(--surface)}
+.fs span{font-size:12.5px;color:var(--muted)}
+.fs b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
+.fs.hl{border-color:var(--red)}
+.fs.hl b{color:var(--red)}
+.fs em{font-style:normal;font-size:12px;font-weight:600}
+.ad{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(4,minmax(64px,.5fr)) auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.note{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.note.hi{border-color:var(--red);background:var(--red-bg)}
+.note b{font-size:14px;color:var(--ink)}
+.note span{font-size:13px;color:var(--muted)}
+.bars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end;height:140px}
+.bar{display:grid;grid-template-rows:auto 1fr auto;height:100%;justify-items:center;gap:6px;font-size:12px}
+.bar i{align-self:end;width:28px;background:var(--red);border-radius:6px 6px 0 0;opacity:.45}
+.bar.on i{opacity:1}
+.bar b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.bar span{color:var(--muted)}
+.ads{display:grid;gap:8px}
+.ad{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(72px,.6fr)) auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.ad.on,.ad:hover{border-color:var(--muted)}
+.ad b{color:var(--ink)}
+.ad small,.meta{color:var(--muted);font-size:13px}
+.pill{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--bg);color:var(--muted)}
+.pill.bad{background:var(--red-bg);color:var(--red)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.wait{background:var(--part-bg);color:var(--part)}
+.detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.photos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.ph{aspect-ratio:1;border:1px dashed var(--line);border-radius:12px;padding:8px;display:grid;align-content:space-between;font-size:12px}
+.ph b{font-size:12px;color:var(--ink)}
+.ph span{color:var(--muted)}
+.ph.ok{border-style:solid;background:var(--bg)}
+.chat{display:grid;grid-template-columns:280px minmax(0,1fr);border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface);min-height:520px}
+.clist{border-right:1px solid var(--line);display:grid;align-content:start}
+.clist button{text-align:left;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;display:grid;gap:3px}
+.clist button.on{background:var(--red-bg)}
+.clist b{font-size:14px;color:var(--ink)}
+.clist span{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pane{display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.pane-h{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.back{display:none;height:32px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px}
+.msgs{display:grid;align-content:start;gap:8px;padding:14px}
+.msg{max-width:78%;padding:8px 12px;border-radius:12px;background:var(--bg);font-size:14px}
+.msg.me{justify-self:end;background:var(--ink);color:var(--bg)}
+.msg .who2{display:block;font-size:11px;font-weight:600;margin-bottom:2px;color:var(--muted)}
+.msg.me .who2{color:inherit;opacity:.7}
+.draft{margin:0 14px 14px;border:1px dashed var(--part);background:var(--part-bg);border-radius:12px;padding:12px;display:grid;gap:8px}
+.draft small{color:var(--part);font-weight:600;font-size:12px}
+.draft p{font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{height:36px;padding:0 14px;border-radius:999px;border:1px solid transparent;background:var(--red);color:#fff;font-weight:600;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.side{display:flex;gap:8px;flex-wrap:wrap}
+.side span{font-size:12.5px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 8px}
+.steps{display:grid;gap:0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface)}
+.step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.ln{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink)}
+.step b{display:block;color:var(--ink);font-size:14px}
+.step span{font-size:13px;color:var(--muted)}
+.wins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.win{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.win b{display:block;font-family:var(--display);font-weight:500;color:var(--ink)}
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.plan{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:6px;align-content:start}
+.plan.on{border-color:var(--red);background:var(--red-bg)}
+.plan b{font-family:var(--display);font-weight:500;font-size:16px;color:var(--ink)}
+.price{font-family:var(--display);font-size:22px;color:var(--ink);font-weight:500}
+.connect{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.hide{display:none}
+@media (max-width:860px){
+  .kpis,.notes,.detail,.wins{grid-template-columns:1fr 1fr}
+  .funnel,.plans{grid-template-columns:1fr 1fr}
+  .ad{grid-template-columns:1fr auto;align-items:start}
+  .ad > span:nth-child(n+2){font-size:13px}
+}
+@media (max-width:720px){
+  h1{font-size:24px}
+  .view{padding:18px 14px 40px}
+  .kpis,.notes,.detail,.plans,.wins,.photos{grid-template-columns:1fr 1fr}
+  .chat{grid-template-columns:1fr;min-height:0}
+  .chat.thread .clist{display:none}
+  .chat:not(.thread) .pane{display:none}
+  .back{display:inline-flex;align-items:center}
+  .job{grid-template-columns:auto 1fr}
+  .go{grid-column:2}
+  .top{padding:12px 14px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="logo" href="#today">Cantor</a>
+    <div class="who">
+      <b>Анна Смирнова · Математика ОГЭ/ЕГЭ</b>
+      <span>Пример кабинета. В Авито ничего не уходит.</span>
+    </div>
+    <button class="theme" type="button" id="theme">Тёмная тема</button>
+  </header>
+  <nav class="nav" id="nav">
+    <button type="button" data-v="today">Дашборд</button>
+    <button type="button" data-v="stats">Аналитика</button>
+    <button type="button" data-v="ads">Объявления</button>
+    <button type="button" data-v="chats">Диалоги <i class="n">2</i></button>
+    <button type="button" data-v="learn">База</button>
+    <button type="button" data-v="settings">Настройки</button>
+  </nav>
+
+  <section class="view" id="view-today">
+    <div>
+      <h1>Сегодня</h1>
+      <p class="lead">Суббота, 14 ноября. Два человека ждут ответ, одна переписка затихла, после диагностики не внесена оплата.</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b>840 ₽</b><span>расход на Авито</span></div>
+      <div class="kpi"><b>47</b><span>просмотров</span></div>
+      <div class="kpi"><b class="bad">8,5%</b><span>просмотров в контакт</span><em class="bad">цель 10–12%</em></div>
+      <div class="kpi"><b>3</b><span>диагностики за 9–14 ноября</span></div>
+      <div class="kpi"><b>3 210 ₽</b><span>стоимость ученика</span><em>6 420 ₽ расхода / 2 оплаты</em></div>
+    </div>
+    <div class="jobs">
+      <button class="job" type="button" data-go="chats" data-chat="marina">
+        <i class="sev"></i>
+        <span><b>Марина спрашивает цену</b><small>Ждёт 18 минут. В черновике цены нет — предложена диагностика в четверг, 19:00.</small></span>
+        <span class="go">Открыть диалог</span>
+      </button>
+      <button class="job" type="button" data-go="chats" data-chat="igor">
+        <i class="sev"></i>
+        <span><b>Игорь просит субботу</b><small>Сын, ОГЭ. Ближайшие окна — следующая суббота, 12:00 и 16:00.</small></span>
+        <span class="go">Открыть диалог</span>
+      </button>
+      <button class="job" type="button" data-go="chats" data-chat="olga">
+        <i class="sev mid"></i>
+        <span><b>Ольга молчит второй день</b><small>Диагностику на среду предложили, ответа нет. Одно напоминание, без второй цены.</small></span>
+        <span class="go">Открыть диалог</span>
+      </button>
+      <button class="job" type="button" data-go="settings">
+        <i class="sev mid"></i>
+        <span><b>Кирилл был на диагностике в 16:00</b><small>Оплату репетитор ещё не внёс — в стоимость ученика эта встреча не попала.</small></span>
+        <span class="go">К оплатам</span>
+      </button>
+    </div>
+    <button class="block" type="button" data-go="ads" data-ad="ege" style="text-align:left;width:100%">
+      <b>Объявление «Математика ЕГЭ» — 5,7% просмотров в контакт</b>
+      <span class="meta">140 просмотров, 8 контактов, 14-е место, ставка 42 ₽. ОГЭ рядом даёт 11,8%.</span>
+    </button>
+  </section>
+
+  <section class="view" id="view-stats">
+    <div>
+      <h1>9–14 ноября</h1>
+      <p class="lead">Из 29 контактов до диагностики дошли 3. Две оплаты репетитор уже внёс.</p>
+    </div>
+    <div class="funnel" aria-label="Воронка за неделю">
+      <div class="fs"><span>Показы</span><b>4 120</b></div>
+      <div class="fs"><span>Просмотры</span><b>318</b><em>7,7% с показа</em></div>
+      <div class="fs hl"><span>Контакты</span><b>29</b><em class="bad">9,1% с просмотра</em></div>
+      <div class="fs"><span>Диагностики</span><b>3</b><em class="bad">10% с контакта</em></div>
+      <div class="fs"><span>Оплаты</span><b>2</b><em class="good">2 из 3</em></div>
+    </div>
+    <div class="notes">
+      <div class="note hi">
+        <b>ЕГЭ-объявление тянет контакт вниз</b>
+        <span>8 контактов на 140 просмотров. Без него неделя была бы около 12%.</span>
+      </div>
+      <div class="note hi">
+        <b>Ответ в среднем 47 минут</b>
+        <span>Марина ждёт цену уже 18 минут. В сценарии цена — только на диагностике.</span>
+      </div>
+      <div class="note">
+        <b>Две оплаты по 4 800 ₽</b>
+        <span>Расход кабинета 6 420 ₽. Ученик обошёлся в 3 210 ₽ рекламы.</span>
+      </div>
+      <div class="note">
+        <b>Кирилл в расчёт не вошёл</b>
+        <span>Диагностика сегодня была, оплаты в кабинете нет.</span>
+      </div>
+    </div>
+    <div class="block">
+      <h2>Контакты по неделям</h2>
+      <div class="bars" aria-hidden="true">
+        <div class="bar"><b>22</b><i style="height:62%"></i><span>19–25 окт</span></div>
+        <div class="bar"><b>31</b><i style="height:100%"></i><span>26 окт – 1 ноя</span></div>
+        <div class="bar"><b>27</b><i style="height:84%"></i><span>2–8 ноя</span></div>
+        <div class="bar on"><b>29</b><i style="height:92%"></i><span>9–14 ноя</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-ads">
+    <div>
+      <h1>Объявления</h1>
+      <p class="lead">Два в показе, одно без четырёх фото и без города. Автобидер выключен.</p>
+    </div>
+    <div class="ads" id="ad-list">
+      <button class="ad on" type="button" data-ad="ege">
+        <span><b>Математика ЕГЭ, с 60 до 80+</b><small>Москва · ставка 42 ₽ · 14-е место</small></span>
+        <span>140<small> просмотров</small></span>
+        <span>8<small> контактов</small></span>
+        <span class="bad">5,7%</span>
+        <span>2 940 ₽</span>
+        <span class="pill bad">ниже цели</span>
+      </button>
+      <button class="ad" type="button" data-ad="oge">
+        <span><b>ОГЭ, математика, разбор ошибок</b><small>Москва и область · ставка 28 ₽ · 6-е место</small></span>
+        <span>178<small> просмотров</small></span>
+        <span>21<small> контакт</small></span>
+        <span class="good">11,8%</span>
+        <span>3 480 ₽</span>
+        <span class="pill ok">в цели</span>
+      </button>
+      <button class="ad" type="button" data-ad="alg">
+        <span><b>Алгебра, 8 класс</b><small>Город не выбран · в показ не выходило</small></span>
+        <span>—<small> просмотров</small></span>
+        <span>—<small> контактов</small></span>
+        <span>—</span>
+        <span>0 ₽</span>
+        <span class="pill wait">6 из 10 фото</span>
+      </button>
+    </div>
+    <div id="ad-ege" class="detail">
+      <div class="block">
+        <h2>Текст</h2>
+        <p>Готовлю к ЕГЭ по математике: профильный уровень, с школьных 50–60 к 80+. На первой встрече смотрю пробник и говорю, что закрывать в первую очередь. Цена пакета — после диагностики, 30 минут.</p>
+        <p class="meta">Оффер в объявлении: диагностика, не прайс. Ставка ручная, автобидер выключен.</p>
+      </div>
+      <div class="block">
+        <h2>10 фото на месте</h2>
+        <div class="photos">
+          <div class="ph ok"><b>1</b><span>Репетитор</span></div>
+          <div class="ph ok"><b>2</b><span>Доска</span></div>
+          <div class="ph ok"><b>3</b><span>Пробник</span></div>
+          <div class="ph ok"><b>4</b><span>Схема баллов</span></div>
+          <div class="ph ok"><b>5</b><span>Оффер</span></div>
+          <div class="ph ok"><b>6</b><span>Отзыв</span></div>
+          <div class="ph ok"><b>7</b><span>Формат</span></div>
+          <div class="ph ok"><b>8</b><span>Расписание</span></div>
+          <div class="ph ok"><b>9</b><span>Результат</span></div>
+          <div class="ph ok"><b>10</b><span>Как записаться</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="ad-oge" class="detail hide">
+      <div class="block">
+        <h2>Текст</h2>
+        <p>ОГЭ по математике: разбираем ошибки, а не прорешиваем вариант подряд. Диагностика 30 минут — смотрю работу и называю, сколько занятий нужно до экзамена.</p>
+        <p class="meta">6-е место в Москве при 28 ₽. Ставку не поднимаем, пока контакт держится выше 10%.</p>
+      </div>
+      <div class="block">
+        <h2>10 фото на месте</h2>
+        <p class="meta">Тот же набор, первая карточка — ошибка в номере 6, не портрет.</p>
+      </div>
+    </div>
+    <div id="ad-alg" class="detail hide">
+      <div class="block">
+        <h2>Текст черновика</h2>
+        <p>Алгебра, 8 класс: дроби, уравнения, оценки в четверти. В показ не ставим, пока нет города и четырёх фото.</p>
+      </div>
+      <div class="block">
+        <h2>Фото</h2>
+        <div class="photos">
+          <div class="ph ok"><b>1</b><span>Репетитор</span></div>
+          <div class="ph ok"><b>2</b><span>Тетрадь</span></div>
+          <div class="ph ok"><b>3</b><span>Тема</span></div>
+          <div class="ph ok"><b>4</b><span>Формат</span></div>
+          <div class="ph ok"><b>5</b><span>Оффер</span></div>
+          <div class="ph ok"><b>6</b><span>Отзыв</span></div>
+          <div class="ph"><b>7</b><span>нет фото</span></div>
+          <div class="ph"><b>8</b><span>нет фото</span></div>
+          <div class="ph"><b>9</b><span>нет фото</span></div>
+          <div class="ph"><b>10</b><span>нет фото</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-chats">
+    <div>
+      <h1>Диалоги</h1>
+      <p class="lead">Черновик можно прочитать. Кнопка отправки выключена: пример никуда не пишет.</p>
+    </div>
+    <div class="chat" id="chat">
+      <div class="clist" id="chat-list">
+        <button type="button" data-chat="marina" class="on"><b>Марина</b><span class="pill bad">ждёт 18 мин</span><span>А сколько стоит подготовка?</span></button>
+        <button type="button" data-chat="igor"><b>Игорь</b><span class="pill bad">ждёт</span><span>Можно в субботу?</span></button>
+        <button type="button" data-chat="olga"><b>Ольга</b><span class="pill wait">молчит 2 дня</span><span>В среду в 18:00 свободно.</span></button>
+        <button type="button" data-chat="kirill"><b>Кирилл</b><span class="pill">диагностика была</span><span>Сегодня в 16:00</span></button>
+        <button type="button" data-chat="sveta"><b>Светлана</b><span class="pill ok">чт 19:00</span><span>Напоминание в четверг в 16:00</span></button>
+      </div>
+      <div class="pane">
+        <div class="pane-h">
+          <button class="back" type="button" id="chat-back">К списку</button>
+          <div id="chat-title"><b>Марина</b><div class="meta">ЕГЭ · объявление «Математика ЕГЭ»</div></div>
+        </div>
+        <div class="msgs" id="msgs"></div>
+        <div id="draft-slot"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-learn">
+    <div>
+      <h1>Как ведём переписку</h1>
+      <p class="lead">Один сценарий на кабинет. Цена не называется, пока человек не записался на диагностику.</p>
+    </div>
+    <div class="block headish">
+      <h2>Оффер</h2>
+      <p>Диагностика 30 минут: смотрим пробник или тетрадь и говорим, что закрывать первым. Формат и цена — в конце этой встречи, не в чате.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><i class="ln">1</i><div><b>Ответить сразу</b><span>Цель — минуты, не час. Сейчас по кабинету среднее 47 минут.</span></div></div>
+      <div class="step"><i class="ln">2</i><div><b>Уточнить задачу</b><span>Класс, экзамен или школьная оценка, был ли пробник.</span></div></div>
+      <div class="step"><i class="ln">3</i><div><b>Не называть цену</b><span>На «сколько стоит» — диагностика и конкретное окно.</span></div></div>
+      <div class="step"><i class="ln">4</i><div><b>Записать в свободное окно</b><span>Одно время, не «напишите, когда удобно».</span></div></div>
+      <div class="step"><i class="ln">5</i><div><b>Один дожим молчащим</b><span>Если после предложения окна тишина сутки — одно сообщение. Второе не пишем.</span></div></div>
+      <div class="step"><i class="ln">6</i><div><b>Напомнить за 3 часа</b><span>Коротко: время и что взять с собой (пробник, тетрадь).</span></div></div>
+    </div>
+    <div>
+      <h2>Свободные окна</h2>
+      <div class="wins" style="margin-top:8px">
+        <div class="win"><b>Вт 17:00</b><span class="meta">30 минут</span></div>
+        <div class="win"><b>Чт 19:00</b><span class="meta">занято Светланой, 19 ноября</span></div>
+        <div class="win"><b>Сб 12:00 и 16:00</b><span class="meta">21 ноября, оба свободны</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div>
+      <h1>Настройки</h1>
+      <p class="lead">Авито к этому примеру не подключён. Тариф можно выбрать, списания нет.</p>
+    </div>
+    <div class="block connect">
+      <div>
+        <h2>Кабинет Авито</h2>
+        <p class="meta">Не подключён. Подписка, баланс и блокировки появятся здесь после подключения.</p>
+      </div>
+      <button class="btn" type="button" disabled>Подключить Авито</button>
+    </div>
+    <div class="plans" id="plans">
+      <button class="plan" type="button" data-plan="constructor">
+        <b>Конструктор</b>
+        <span class="price">от 1 990 ₽</span>
+        <span class="meta">Для тех, кто ведёт кабинет сам.</span>
+      </button>
+      <button class="plan" type="button" data-plan="curator">
+        <b>Всё включено</b>
+        <span class="price">9 990 ₽</span>
+        <span class="meta">С куратором.</span>
+      </button>
+      <button class="plan" type="button" data-plan="premium">
+        <b>Премиум-ведение</b>
+        <span class="price">под ключ</span>
+        <span class="meta">Команда работает в том же сервисе.</span>
+      </button>
+    </div>
+    <p class="meta" id="plan-note">Тариф не выбран.</p>
+    <div class="block">
+      <h2>Оплаты учеников</h2>
+      <p>Их вносит репетитор. В примере уже две: по 4 800 ₽, 10 и 12 ноября. Кирилл, диагностика сегодня в 16:00, — без оплаты.</p>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" type="button" disabled>Внести оплату</button>
+        <span class="meta">В примере сумма не сохраняется.</span>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  var chats = {
+    marina: {
+      title: "Марина",
+      meta: "ЕГЭ · объявление «Математика ЕГЭ»",
+      tags: ["этап: спросили цену", "окно в черновике: чт 19:00"],
+      msgs: [
+        ["они", "Марина", "Здравствуйте. Дочь в 11 классе, пробник по профилю на 58. К ЕГЭ берёте?"],
+        ["мы", "Анна", "Здравствуйте. Да, к профилю веду. Пробник целиком решала или отдельные номера?"],
+        ["они", "Марина", "Целиком, вторая часть почти пустая. А сколько стоит подготовка?"]
+      ],
+      draft: "Цену назову на диагностике: за 30 минут посмотрим пробник и скажу, что закрывать первым. В четверг свободно в 19:00. Подойдёт?"
+    },
+    igor: {
+      title: "Игорь",
+      meta: "ОГЭ · объявление «ОГЭ, разбор ошибок»",
+      tags: ["этап: просит время", "окна: сб 12:00 и 16:00"],
+      msgs: [
+        ["они", "Игорь", "Здравствуйте, сын в 9 классе, математика — тройка. Нужен ОГЭ."],
+        ["мы", "Анна", "Здравствуйте. К ОГЭ беру. Удобно на 30 минут созвониться и посмотреть, где именно сыпется?"],
+        ["они", "Игорь", "Можно в субботу?"]
+      ],
+      draft: "В эту субботу уже поздно. 21 ноября есть 12:00 и 16:00. Какое записать?"
+    },
+    olga: {
+      title: "Ольга",
+      meta: "10 класс · объявление пока не привязано",
+      tags: ["этап: молчит после окна", "дожим ещё не писали"],
+      msgs: [
+        ["они", "Ольга", "Добрый день. Дочь в 10 классе, алгебра проседает, четверть под угрозой."],
+        ["мы", "Анна", "Добрый день. Могу посмотреть тетрадь на диагностике. В среду, 18 ноября, свободно в 18:00."]
+      ],
+      draft: "Ольга, окно в среду 18:00 ещё держу. Если неудобно — напишите день, подстроюсь под ближайшее свободное."
+    },
+    kirill: {
+      title: "Кирилл",
+      meta: "ОГЭ · диагностика сегодня в 16:00 прошла",
+      tags: ["этап: была диагностика", "оплата не внесена"],
+      msgs: [
+        ["они", "Кирилл", "Мы на 16:00. Тетрадь с собой."],
+        ["мы", "Анна", "Да, жду. Ссылка на созвон в этом чате."],
+        ["сист", "", "Диагностика прошла. Оплаты в кабинете нет."]
+      ],
+      draft: ""
+    },
+    sveta: {
+      title: "Светлана",
+      meta: "ЕГЭ · четверг, 19 ноября, 19:00",
+      tags: ["этап: записана", "напоминание в чт 16:00"],
+      msgs: [
+        ["они", "Светлана", "Четверг в 19:00 нормально."],
+        ["мы", "Анна", "Записала на 19 ноября, 19:00. На диагностике смотрим пробник. Цена и формат — в конце встречи."],
+        ["сист", "", "Напоминание уйдёт в четверг в 16:00."]
+      ],
+      draft: ""
+    }
+  };
+
+  var views = ["today", "stats", "ads", "chats", "learn", "settings"];
+  var nav = document.getElementById("nav");
+  var chatBox = document.getElementById("chat");
+
+  function show(id) {
+    if (views.indexOf(id) < 0) id = "today";
+    document.querySelectorAll(".view").forEach(function (v) {
+      v.classList.toggle("on", v.id === "view-" + id);
+    });
+    nav.querySelectorAll("button").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-v") === id);
+    });
+    if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id);
+  }
+
+  nav.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    show(b.getAttribute("data-v"));
+  });
+
+  document.body.addEventListener("click", function (e) {
+    var go = e.target.closest("[data-go]");
+    if (!go) return;
+    var dest = go.getAttribute("data-go");
+    show(dest);
+    if (go.getAttribute("data-chat")) openChat(go.getAttribute("data-chat"), true);
+    if (go.getAttribute("data-ad")) openAd(go.getAttribute("data-ad"));
+  });
+
+  function openAd(id) {
+    document.querySelectorAll("#ad-list .ad").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-ad") === id);
+    });
+    ["ege", "oge", "alg"].forEach(function (key) {
+      document.getElementById("ad-" + key).classList.toggle("hide", key !== id);
+    });
+  }
+  document.getElementById("ad-list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-ad]");
+    if (b) openAd(b.getAttribute("data-ad"));
+  });
+
+  function openChat(id, enter) {
+    var c = chats[id];
+    if (!c) return;
+    document.querySelectorAll("#chat-list button").forEach(function (b) {
+      b.classList.toggle("on", b.getAttribute("data-chat") === id);
+    });
+    if (enter) chatBox.classList.add("thread");
+    document.getElementById("chat-title").innerHTML = "<b></b><div class=\"meta\"></div>";
+    document.querySelector("#chat-title b").textContent = c.title;
+    document.querySelector("#chat-title .meta").textContent = c.meta;
+    var msgs = document.getElementById("msgs");
+    msgs.replaceChildren();
+    c.msgs.forEach(function (m) {
+      var el = document.createElement("div");
+      el.className = "msg" + (m[0] === "мы" ? " me" : "");
+      var who = document.createElement("span");
+      who.className = "who2";
+      who.textContent = m[0] === "сист" ? "Кабинет" : m[1];
+      el.appendChild(who);
+      el.appendChild(document.createTextNode(m[2]));
+      msgs.appendChild(el);
+    });
+    var tags = document.createElement("div");
+    tags.className = "side";
+    tags.style.marginTop = "8px";
+    c.tags.forEach(function (t) {
+      var s = document.createElement("span");
+      s.textContent = t;
+      tags.appendChild(s);
+    });
+    msgs.appendChild(tags);
+    var slot = document.getElementById("draft-slot");
+    slot.replaceChildren();
+    if (!c.draft) return;
+    var box = document.createElement("div");
+    box.className = "draft";
+    var label = document.createElement("small");
+    label.textContent = "Черновик";
+    var p = document.createElement("p");
+    p.textContent = c.draft;
+    var row = document.createElement("div");
+    row.className = "row";
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.type = "button";
+    btn.disabled = true;
+    btn.textContent = "Отправить";
+    var hint = document.createElement("span");
+    hint.className = "meta";
+    hint.textContent = "В примере сообщение в Авито не уходит.";
+    row.append(btn, hint);
+    box.append(label, p, row);
+    slot.appendChild(box);
+  }
+
+  document.getElementById("chat-list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-chat]");
+    if (b) openChat(b.getAttribute("data-chat"), true);
+  });
+  document.getElementById("chat-back").addEventListener("click", function () {
+    chatBox.classList.remove("thread");
+  });
+
+  var planNote = document.getElementById("plan-note");
+  var planText = {
+    constructor: "Выбран конструктор, от 1 990 ₽. В примере оплата не списывается.",
+    curator: "Выбрано «Всё включено», 9 990 ₽. В примере оплата не списывается.",
+    premium: "Выбрано премиум-ведение под ключ. В примере команда не подключается."
+  };
+  document.getElementById("plans").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-plan]");
+    if (!b) return;
+    document.querySelectorAll(".plan").forEach(function (p) { p.classList.remove("on"); });
+    b.classList.add("on");
+    planNote.textContent = planText[b.getAttribute("data-plan")];
+  });
+
+  var themeBtn = document.getElementById("theme");
+  function paintTheme() {
+    var dark = document.documentElement.dataset.theme === "dark" ||
+      (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+    themeBtn.textContent = dark ? "Светлая тема" : "Тёмная тема";
+  }
+  themeBtn.addEventListener("click", function () {
+    var dark = document.documentElement.dataset.theme === "dark" ||
+      (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("platform.theme", next); } catch (e) {}
+    paintTheme();
+  });
+  paintTheme();
+
+  openChat("marina");
+  var initial = (location.hash || "#today").slice(1);
+  show(views.indexOf(initial) >= 0 ? initial : "today");
+  window.addEventListener("hashchange", function () {
+    var id = (location.hash || "#today").slice(1);
+    if (views.indexOf(id) >= 0) show(id);
+  });
+})();
+</script>
+</body>
+</html>
