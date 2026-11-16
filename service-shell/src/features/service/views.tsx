@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import { sampleCabinet } from "@/features/cabinet/sample.ts";
-import { ads, dialogs, PHOTO_SLOTS, type Ad } from "./data.ts";
+import { ads, dialogs, PHOTO_SLOTS } from "./data.ts";
 import {
   PHOTO_TARGET,
   TOP_PLACE,
@@ -26,74 +26,7 @@ function Percent({ views, contacts }: { views: number; contacts: number }) {
   return <span className={tone}>{formatPercent(rate)}</span>;
 }
 
-export function AdsSection({ focus }: { focus?: string }) {
-  const [openId, setOpenId] = useState(ads[0]?.id ?? "");
-  const open = ads.find((ad) => ad.id === openId) ?? null;
-  useEffect(() => { if (focus && ads.some(ad => ad.id === focus)) setOpenId(focus); }, [focus]);
-  if (ads.length === 0) {
-    return (
-      <div>
-        <p className="text-muted">Объявлений нет.</p>
-      </div>
-    );
-  }
-  return (
-    <div>
-      <ul className="divide-y divide-line border-y border-line">
-        {ads.map((ad) => {
-          const missing = missingSlotNames(ad.photos, PHOTO_SLOTS);
-          const blocked = sampleCabinet.blocks.items.some((item) => item.title === ad.title);
-          return (
-            <li key={ad.id}>
-              <button
-                type="button"
-                className="flex min-h-11 w-full items-baseline justify-between gap-4 py-3 text-left"
-                onClick={() => setOpenId(ad.id)}
-                aria-expanded={ad.id === openId}
-              >
-                <span className="font-medium">{ad.title}</span>
-                <span className={missing.length > 0 || !ad.offerHasDiagnostic || blocked ? "text-red" : "text-muted"}>
-                  {PHOTO_TARGET - missing.length} из {PHOTO_TARGET} фото
-                  {ad.offerHasDiagnostic ? "" : " · нет оффера"}
-                  {blocked ? " · заблокировано" : ""}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      {open ? <AdDetail ad={open} /> : null}
-    </div>
-  );
-}
-
-function AdDetail({ ad }: { ad: Ad }) {
-  const filled = new Set(ad.photos);
-  const blocked = sampleCabinet.blocks.items.some((item) => item.title === ad.title);
-  return (
-    <div className="mt-6">
-      <p>{ad.text}</p>
-      <p className={`mt-3 ${ad.offerHasDiagnostic ? "text-ok" : "text-red"}`}>
-        {ad.offerHasDiagnostic ? "Оффер с диагностикой есть" : "Оффера с диагностикой нет"}
-      </p>
-      {blocked ? <p className="mt-1 text-red">Заблокировано</p> : null}
-      <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {PHOTO_SLOTS.map((name, index) => {
-          const has = filled.has(name);
-          return (
-            <li
-              key={name}
-              className={`rounded-2xl border px-3 py-3 text-sm ${has ? "border-line" : "border-red text-red"}`}
-            >
-              <span className="block text-muted">{index + 1}</span>
-              {name}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
+export { AdsWorkspace as AdsSection } from "./ads-workspace";
 
 export function ShowsSection() {
   const rows = ads.flatMap((ad) => ad.cities.map((city) => ({ ad, city })));
