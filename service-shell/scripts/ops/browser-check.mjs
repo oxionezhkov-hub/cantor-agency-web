@@ -23,10 +23,13 @@ try {
       await route.fulfill({ status: response.status, headers, body: Buffer.from(await response.arrayBuffer()) });
     });
   }
-  const page = await context.newPage(); const errors=[];
+  const page = await context.newPage(); const errors=[]; const diagnostics=[];
+  page.on("console", message => { if (message.type() === "error") diagnostics.push(message.text()); });
+  page.on("requestfailed", request => diagnostics.push(`${request.url()}: ${request.failure()?.errorText}`));
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(url, { waitUntil: "networkidle" });
-  await page.getByRole('heading',{level:1}).waitFor();
+  try { await page.getByRole('heading',{level:1}).waitFor(); }
+  catch (error) { await page.screenshot({path:`${output}/failed-${width}.png`,fullPage:true}); console.error(JSON.stringify({pageErrors:errors,diagnostics,body:await page.locator('body').innerText()})); throw error; }
   assert.match(await page.getByRole('note').innerText(),/Демонстрационные данные/);
   for(const label of ['Дашборд','Аналитика','Мои объявления','Мои диалоги','База знаний','Настройки']) {
    await page.getByRole('navigation',{name:'Разделы'}).getByRole('button',{name:new RegExp(label)}).click();

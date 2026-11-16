@@ -15,7 +15,7 @@ const indexRoute = createRoute({
   },
   component: Preview,
 });
-function Preview() {
+export function Preview() {
   const { section } = indexRoute.useSearch();
   return <Shell section={section ?? "today"} />;
 }

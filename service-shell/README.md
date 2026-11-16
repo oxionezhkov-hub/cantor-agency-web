@@ -6,6 +6,10 @@
 
 Полный документ владельца, разбор текущей реализации и доработанное ТЗ находятся в [docs/service](../docs/service/README.md). Начать разработку следует с границ релиза и модели данных: текущая оболочка не реализует рабочий путь от обращения до оплаты.
 
+## Облачное превью
+
+[Открыть текущую версию](https://cantor-service-preview.oxion-ezhkov.workers.dev). Отдельный Worker без производственных подключений; обновляется без мержа main. Сборка: `npm run build:preview`. Проверки и процесс публикации описаны в [WORKLOG](../docs/service/WORKLOG.md).
+
 ## Где смотреть
 
 - Меню и экраны: `src/features/service/Shell.tsx`, `src/features/service/sections.ts`
