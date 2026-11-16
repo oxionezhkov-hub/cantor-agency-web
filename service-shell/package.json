@@ -16,11 +16,12 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/app-data/readiness-schedule.test.ts src/lib/auth/gate-identity.test.ts src/lib/auth/sign-in-gate.test.ts src/lib/preview-path-prefix.test.ts src/features/service/*.test.ts src/features/cabinet/*.test.ts",
+    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/app-data/readiness-schedule.test.ts src/lib/auth/gate-identity.test.ts src/lib/auth/sign-in-gate.test.ts src/lib/preview-path-prefix.test.ts src/features/service/*.test.ts src/features/cabinet/*.test.ts src/features/service/server/*.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "build:preview": "node scripts/build-service-preview.mjs",
-    "test:service": "node --experimental-strip-types --test src/features/service/*.test.ts src/features/cabinet/*.test.ts"
+    "test:service": "node --experimental-strip-types --test src/features/service/*.test.ts src/features/cabinet/*.test.ts",
+    "test:service:server": "node --experimental-strip-types --test src/features/service/server/*.test.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",

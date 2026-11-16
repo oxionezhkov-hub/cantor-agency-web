@@ -56,10 +56,16 @@ test("non-.sql entries are dropped (readdir also yields the auth/ directory)", (
   assert.deepEqual(pendingMigrations(["auth", "README.md"], []), []);
 });
 
-test("the auth schema ships outside the globbed directory", () => {
-  const migrationsDir = join(projectRoot(), "migrations");
-  assert.deepEqual(pendingMigrations(readdirSync(migrationsDir), []), []);
-  assert.ok(readdirSync(join(migrationsDir, "auth")).includes("0001_auth.sql"));
+test("nested auth is not globbed while application migrations remain eligible", () => {
+  const root = mkdtempSync(join(tmpdir(), "migration-layout-"));
+  const migrationsDir = join(root, "migrations");
+  mkdirSync(join(migrationsDir, "auth"), { recursive: true });
+  writeFileSync(join(migrationsDir, "auth", AUTH_MIGRATION), "create table auth_user ();\n");
+  writeFileSync(join(migrationsDir, "0002_app.sql"), "create table app_data ();\n");
+  assert.deepEqual(pendingMigrations(readdirSync(migrationsDir), []), [
+    { name: "0002_app.sql", path: "0002_app.sql" },
+  ]);
+  assert.ok(readdirSync(join(migrationsDir, "auth")).includes(AUTH_MIGRATION));
 });
 
 test("this workspace's auth schema copy is byte-identical to its source", () => {

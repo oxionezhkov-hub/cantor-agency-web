@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiServiceCrmRouteImport } from './routes/api.service.crm'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiServiceCrmRoute = ApiServiceCrmRouteImport.update({
+  id: '/api/service/crm',
+  path: '/api/service/crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/service/crm': typeof ApiServiceCrmRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/service/crm': typeof ApiServiceCrmRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/service/crm': typeof ApiServiceCrmRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/service/crm'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/service/crm'
+  id: '__root__' | '/' | '/api/service/crm'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiServiceCrmRoute: typeof ApiServiceCrmRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/service/crm': {
+      id: '/api/service/crm'
+      path: '/api/service/crm'
+      fullPath: '/api/service/crm'
+      preLoaderRoute: typeof ApiServiceCrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiServiceCrmRoute: ApiServiceCrmRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
