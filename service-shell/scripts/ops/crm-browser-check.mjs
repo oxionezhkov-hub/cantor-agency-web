@@ -151,6 +151,13 @@ try {
     await context.close();
   }
   console.log(JSON.stringify({ ok: true, url, results }));
+} catch (error) {
+  for (const context of browser.contexts()) {
+    for (const page of context.pages()) {
+      console.error(JSON.stringify({ url: page.url(), body: (await page.locator("body").innerText()).slice(0, 12000) }));
+    }
+  }
+  throw error;
 } finally {
   await browser.close();
 }
