@@ -16,6 +16,7 @@ import {
   replyLate,
 } from "./rules.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
+import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
 
 function Percent({ views, contacts }: { views: number; contacts: number }) {
@@ -164,85 +165,7 @@ export function ContactSection() {
   );
 }
 
-export function DialogsSection({ focus }: { focus?: string }) {
-  const [now, setNow] = useState(() => Date.now());
-  const [openId, setOpenId] = useState(dialogs[0]?.id ?? "");
-  const [thread, setThread] = useState(false);
-  const [replies, setReplies] = useState(() => Object.fromEntries(dialogs.map((dialog) => [dialog.id, dialog.reply])));
-  const open = dialogs.find((dialog) => dialog.id === openId) ?? null;
-
-  useEffect(() => { if (focus && dialogs.some(dialog => dialog.id === focus)) { setOpenId(focus); setThread(true); } }, [focus]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 15_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return (
-    <div>
-      <div className="overflow-hidden rounded-2xl border border-line md:grid md:grid-cols-[240px_minmax(0,1fr)]">
-        <ul className={`md:border-r md:border-line ${thread ? "max-md:hidden" : ""}`}>
-          {dialogs.map((dialog) => {
-            const late = replyLate(dialog.waitingSince, now);
-            const nudge = nudgeReady(dialog, now);
-            return (
-              <li key={dialog.id} className="border-b border-line">
-                <button
-                  type="button"
-                  className={`min-h-11 w-full px-3 py-3 text-left ${dialog.id === openId ? "ring-1 ring-inset ring-line" : ""}`}
-                  onClick={() => {
-                    setOpenId(dialog.id);
-                    setThread(true);
-                  }}
-                >
-                  <span className="block font-medium">{dialog.name}</span>
-                  <span className={`block text-sm ${late || nudge ? "text-red" : "text-muted"}`}>
-                    {late ? "ждёт дольше 30 минут" : nudge ? "нужно повторное касание" : dialog.topic}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        {open ? (
-          <div className={`grid min-h-80 grid-rows-[auto_1fr_auto] ${thread ? "" : "max-md:hidden"}`}>
-            <div className="flex items-center gap-3 border-b border-line px-3 py-3">
-              <button type="button" className="font-medium text-red md:hidden" onClick={() => setThread(false)}>
-                Назад
-              </button>
-              <div>
-                <p className="font-medium">{open.name}</p>
-                <p className="text-sm text-muted">{open.topic}</p>
-              </div>
-            </div>
-            <div className="grid content-start gap-2 p-3">
-              {open.messages.map((message, index) => (
-                <p
-                  key={`${open.id}-${index}`}
-                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${message.author === "Анна" ? "justify-self-end bg-ink text-bg" : "border border-line bg-line text-ink"}`}
-                >
-                  <span className="mb-0.5 block text-xs opacity-70">{message.author}</span>
-                  {message.text}
-                </p>
-              ))}
-            </div>
-            <label className="border-t border-line p-3 text-sm text-muted">
-              Ответ
-              <textarea
-                className="mt-1 min-h-20 w-full resize-y rounded-xl border border-line bg-bg px-3 py-2 text-ink"
-                value={replies[open.id] ?? ""}
-                aria-label={`Ответ ${open.name}`}
-                onChange={(event) => setReplies((prev) => ({ ...prev, [open.id]: event.target.value }))}
-              />
-            </label>
-          </div>
-        ) : (
-          <p className="p-4 text-muted">Диалогов нет.</p>
-        )}
-      </div>
-    </div>
-  );
-}
+export { LeadWorkspace as DialogsSection } from "./lead-workspace.tsx";
 
 export { DiagnosticSection, PaymentsSection } from "./crm-ui.tsx";
 
@@ -377,7 +300,8 @@ export function DashboardSection() {
 
   const blockedTitles = new Set(sampleCabinet.blocks.items.map((item) => item.title));
   const recommendations: { id: string; title: string; text: string; section: "ads" | "stats" | "chats"; focus?: string; rank: number }[] = [];
-  const late = dialogs
+  const openDialogs = dialogs.filter(dialog => leadProgress(crm, dialog.id, now).stage === "new");
+  const late = openDialogs
     .filter((dialog) => replyLate(dialog.waitingSince, now))
     .sort((a, b) => Date.parse(a.waitingSince ?? "") - Date.parse(b.waitingSince ?? ""));
   for (const dialog of late) {
@@ -390,7 +314,7 @@ export function DashboardSection() {
       rank: 1,
     });
   }
-  for (const dialog of dialogs) {
+  for (const dialog of openDialogs) {
     if (!nudgeReady(dialog, now)) continue;
     recommendations.push({
       id: dialog.id,
@@ -435,13 +359,13 @@ export function DashboardSection() {
       rank: 3,
     });
   }
-  if (isDataMonth && !kirillPaid) {
+  if (isDataMonth && !kirillPaid && !crm.leads.find(l => l.id === "kirill")?.closedAt) {
     recommendations.push({
       id: "kirill",
       focus: "kirill",
       title: `Кирилл: не отмечена оплата после диагностики`,
       text: "Если ученик оплатил занятия — внесите оплату. Число диагностик не изменится.",
-      section: "stats",
+      section: "chats",
       rank: 4,
     });
   }

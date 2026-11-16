@@ -10,6 +10,9 @@ const leadSchema = z.object({
   name: z.string().min(1).max(120),
   adId: id.nullable(),
   createdAt: at,
+  draft: z.string().max(5000).optional(),
+  closedAt: at.optional(),
+  closeReason: z.string().min(1).max(300).optional(),
 });
 const appointmentSchema = z.object({
   id,
@@ -221,8 +224,9 @@ export function bookAppointment(
       throw new CrmError("Запись с этим идентификатором уже существует");
     return state;
   }
-  if (!state.leads.some((lead) => lead.id === appointment.leadId))
-    throw new CrmError("Заявка не найдена");
+  const lead = state.leads.find((lead) => lead.id === appointment.leadId);
+  if (!lead) throw new CrmError("Заявка не найдена");
+  if (lead.closedAt) throw new CrmError("Сначала верните обращение в работу");
   if (
     appointment.status !== "booked" ||
     Date.parse(appointment.endsAt) <= Date.parse(appointment.startsAt) ||

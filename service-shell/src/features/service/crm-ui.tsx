@@ -33,9 +33,16 @@ function problem(error: unknown) {
     : "Не удалось сохранить изменения. Проверьте доступ к хранилищу браузера.";
 }
 
-export function PaymentsSection({ focus }: { focus?: string }) {
+export function PaymentsSection({
+  focus,
+  studentScope,
+}: {
+  focus?: string;
+  studentScope?: string;
+}) {
   const { state, storageError } = useDemoCrm();
-  const [studentId, setStudentId] = useState("student-kirill");
+  const [selectedStudentId, setStudentId] = useState(studentScope ?? "student-kirill");
+  const studentId = studentScope ?? selectedStudentId;
   const [amount, setAmount] = useState("");
   const [paidDate, setPaidDate] = useState(todayMsk);
   const [error, setError] = useState("");
@@ -48,9 +55,9 @@ export function PaymentsSection({ focus }: { focus?: string }) {
   useEffect(() => {
     if (focusedStudentId) {
       setStudentId(focusedStudentId);
-      form.current?.scrollIntoView({ block: "center" });
+      if (!studentScope) form.current?.scrollIntoView({ block: "center" });
     }
-  }, [focusedStudentId]);
+  }, [focusedStudentId, studentScope]);
   const [from, to] = monthRangeMsk(2026, 10);
   const metrics = periodMetrics(state, from, to);
   const cost = studentCost(promotionSpend(ads), metrics.newStudents);
@@ -84,32 +91,38 @@ export function PaymentsSection({ focus }: { focus?: string }) {
       setError(problem(e));
     }
   }
-  const ledger = [...state.payments].sort((a, b) => Date.parse(b.paidAt) - Date.parse(a.paidAt));
+  const ledger = state.payments
+    .filter((p) => !studentScope || p.studentId === studentScope)
+    .sort((a, b) => Date.parse(b.paidAt) - Date.parse(a.paidAt));
   return (
     <section className="crm-panel" aria-label="Оплаты учеников">
-      <div className="crm-heading">
-        <div>
-          <h2>
-            <Wallet size={18} />
-            Оплаты учеников
-          </h2>
+      {!studentScope ? (
+        <div className="crm-heading">
+          <div>
+            <h2>
+              <Wallet size={18} />
+              Оплаты учеников
+            </h2>
+          </div>
+          <span className="crm-period">Ноябрь 2026 · МСК</span>
         </div>
-        <span className="crm-period">Ноябрь 2026 · МСК</span>
-      </div>
-      <dl className="crm-metrics">
-        <div>
-          <dt>Получено оплат</dt>
-          <dd data-testid="received-payments">{rub(metrics.receivedMinor)}</dd>
-        </div>
-        <div>
-          <dt>Новых учеников</dt>
-          <dd data-testid="paid-students">{metrics.newStudents}</dd>
-        </div>
-        <div>
-          <dt>Расходы на ученика</dt>
-          <dd>{cost === null ? "Не рассчитано" : `${cost.toLocaleString("ru-RU")} ₽`}</dd>
-        </div>
-      </dl>
+      ) : null}
+      {!studentScope ? (
+        <dl className="crm-metrics">
+          <div>
+            <dt>Получено оплат</dt>
+            <dd data-testid="received-payments">{rub(metrics.receivedMinor)}</dd>
+          </div>
+          <div>
+            <dt>Новых учеников</dt>
+            <dd data-testid="paid-students">{metrics.newStudents}</dd>
+          </div>
+          <div>
+            <dt>Расходы на ученика</dt>
+            <dd>{cost === null ? "Не рассчитано" : `${cost.toLocaleString("ru-RU")} ₽`}</dd>
+          </div>
+        </dl>
+      ) : null}
       {storageError ? (
         <p role="alert" className="crm-error">
           {storageError}
@@ -125,11 +138,13 @@ export function PaymentsSection({ focus }: { focus?: string }) {
               request.current = null;
             }}
           >
-            {state.students.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
+            {state.students
+              .filter((item) => !studentScope || item.id === studentScope)
+              .map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
           </select>
         </label>
         <label>
@@ -197,7 +212,7 @@ export function PaymentsSection({ focus }: { focus?: string }) {
           </tbody>
         </table>
       </div>
-      {metrics.unpaidStudentIds.length ? (
+      {!studentScope && metrics.unpaidStudentIds.length ? (
         <div className="crm-unpaid">
           <strong>После диагностики, без отмеченной оплаты</strong>
           <span>
@@ -211,9 +226,10 @@ export function PaymentsSection({ focus }: { focus?: string }) {
   );
 }
 
-export function DiagnosticSection({ focus }: { focus?: string }) {
+export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadScope?: string }) {
   const { state, storageError } = useDemoCrm();
-  const [leadId, setLeadId] = useState("igor");
+  const [selectedLeadId, setLeadId] = useState(leadScope ?? "igor");
+  const leadId = leadScope ?? selectedLeadId;
   const [slotId, setSlotId] = useState(windows[0].id);
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -237,9 +253,11 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
         Date.parse(start) < Date.parse(item.endsAt),
     );
   const active = state.appointments
-    .filter((item) => item.status === "booked")
+    .filter((item) => item.status === "booked" && (!leadScope || item.leadId === leadScope))
     .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
-  const completed = state.appointments.filter((item) => item.status === "completed");
+  const completed = state.appointments.filter(
+    (item) => item.status === "completed" && (!leadScope || item.leadId === leadScope),
+  );
   function book(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -271,11 +289,7 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
               Date.now(),
             ),
       );
-      setNotice(
-        editing
-          ? "Встреча перенесена. Старое окно освобождено."
-          : "Запись сохранена.",
-      );
+      setNotice(editing ? "Встреча перенесена. Старое окно освобождено." : "Запись сохранена.");
       setEditing(null);
       request.current = null;
     } catch (e) {
@@ -302,80 +316,101 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
   }
   return (
     <section className="crm-panel" aria-label="Расписание диагностик">
-      <div className="crm-heading">
-        <div>
-          <h2>
-            <CalendarDays size={18} />
-            Расписание диагностик
-          </h2>
+      {!leadScope ? (
+        <div className="crm-heading">
+          <div>
+            <h2>
+              <CalendarDays size={18} />
+              Расписание диагностик
+            </h2>
+          </div>
+          <span className="crm-period">Московское время</span>
         </div>
-        <span className="crm-period">Московское время</span>
-      </div>
+      ) : null}
       {storageError ? (
         <p role="alert" className="crm-error">
           {storageError}
         </p>
       ) : null}
-      <form
-        className="crm-form appointment-form"
-        onSubmit={book}
-        aria-label="Запись на диагностику"
-      >
-        <label>
-          Заявка
-          <select
-            value={leadId}
-            disabled={Boolean(editing)}
-            onChange={(e) => {
-              setLeadId(e.target.value);
-              request.current = null;
-            }}
-          >
-            {state.leads.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} ·{" "}
-                {state.students.find((student) => student.id === item.studentId)?.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Окно · 30 минут
-          <select
-            value={slotId}
-            onChange={(e) => {
-              setSlotId(e.target.value);
-              request.current = null;
-            }}
-          >
-            {windows.map((slot) => (
-              <option
-                key={slot.id}
-                value={slot.id}
-                disabled={busy(slot.startsAt) || Date.parse(slot.startsAt) <= now}
-              >
-                {dateLabel(slot.startsAt)}, {timeLabel(slot.startsAt)}
-                {busy(slot.startsAt) ? " · занято" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button className="crm-primary" type="submit" disabled={Boolean(storageError)}>
-          {editing ? "Сохранить перенос" : "Записать на диагностику"}
-        </button>
-        {editing ? (
+      {!leadScope || !active.length || editing ? (
+        <form
+          className="crm-form appointment-form"
+          onSubmit={book}
+          aria-label="Запись на диагностику"
+        >
+          <label>
+            Заявка
+            <select
+              value={leadId}
+              disabled={Boolean(editing)}
+              onChange={(e) => {
+                setLeadId(e.target.value);
+                request.current = null;
+              }}
+            >
+              {state.leads
+                .filter((item) => !item.closedAt && (!leadScope || item.id === leadScope))
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ·{" "}
+                    {state.students.find((student) => student.id === item.studentId)?.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label>
+            Окно · 30 минут, МСК
+            <select
+              value={slotId}
+              onChange={(e) => {
+                setSlotId(e.target.value);
+                request.current = null;
+              }}
+            >
+              {windows.map((slot) => (
+                <option
+                  key={slot.id}
+                  value={slot.id}
+                  disabled={busy(slot.startsAt) || Date.parse(slot.startsAt) <= now}
+                >
+                  {dateLabel(slot.startsAt)}, {timeLabel(slot.startsAt)}
+                  {Date.parse(slot.startsAt) <= now
+                    ? " · прошло"
+                    : busy(slot.startsAt)
+                      ? " · занято"
+                      : ""}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
-            type="button"
-            className="crm-secondary"
-            onClick={() => {
-              setEditing(null);
-              request.current = null;
-            }}
+            className="crm-primary"
+            type="submit"
+            disabled={
+              Boolean(storageError) ||
+              (!editing &&
+                windows.some(
+                  (slot) =>
+                    slot.id === slotId && (busy(slot.startsAt) || Date.parse(slot.startsAt) <= now),
+                ))
+            }
           >
-            Отменить перенос
+            {editing ? "Сохранить перенос" : "Записать на диагностику"}
           </button>
-        ) : null}
-      </form>
+          {editing ? (
+            <button
+              type="button"
+              className="crm-secondary"
+              onClick={() => {
+                setEditing(null);
+                request.current = null;
+              }}
+            >
+              Отменить перенос
+            </button>
+          ) : null}
+        </form>
+      ) : null}
       {error ? (
         <p role="alert" className="crm-error">
           {error}

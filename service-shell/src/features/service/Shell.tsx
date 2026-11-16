@@ -8,8 +8,9 @@ import { ads, dialogs, windows, PHOTO_SLOTS } from "./data.ts";
 import { attention } from "./rules.ts";
 import { SECTIONS, type SectionId } from "./sections.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
+import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
-import { AdsSection, ContactSection, DashboardSection, DiagnosticSection, DialogsSection, LearnSection, PaymentsSection, ShowsSection } from "./views.tsx";
+import { AdsSection, ContactSection, DashboardSection, DialogsSection, LearnSection, PaymentsSection, ShowsSection } from "./views.tsx";
 
 const ICONS = { today: LayoutDashboard, stats: ChartNoAxesCombined, ads: PanelTop, chats: MessageSquare, learn: BookOpen, acc: Settings2 };
 
@@ -29,7 +30,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
     const appointment = crm.appointments.find(item => item.startsAt === slot.startsAt && item.status === "booked");
     return { ...slot, takenBy: appointment ? crm.leads.find(item => item.id === appointment.leadId)?.name || null : null };
   });
-  const marks = attention({ ads, dialogs, windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.length, nowMs: now });
+  const marks = attention({ ads, dialogs: dialogs.filter(d => leadProgress(crm, d.id, now).stage === "new"), windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.filter(id => crm.leads.some(l => l.studentId === id && !l.closedAt)).length, nowMs: now });
   const cabinetShort = balanceRows(sampleCabinet.balance).some(row => row.label === "Хватит" && row.tone === "bad");
   marks.acc = (cabinetShort ? 1 : 0) + blockRows(sampleCabinet.blocks, now).filter(row => row.tone === "bad").length;
   marks.today = marks.stats + marks.ads + marks.chats;
@@ -57,7 +58,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
           {section === "today" ? <DashboardSection /> : null}
           {section === "stats" ? <div><ContactSection /><ShowsSection /><PaymentsSection focus={focus} /></div> : null}
           {section === "ads" ? <AdsSection focus={focus} /> : null}
-          {section === "chats" ? <div><DialogsSection focus={focus} /><DiagnosticSection focus={focus} /></div> : null}
+          {section === "chats" ? <DialogsSection focus={focus} /> : null}
           {section === "learn" ? <LearnSection /> : null}
           {section === "acc" ? <CabinetPage /> : null}
         </div>
