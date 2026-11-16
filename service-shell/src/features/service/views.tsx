@@ -476,12 +476,12 @@ export function DashboardSection() {
       </div>
 
       <div className="dashboard-overview">
-        <div><span>Поступления за период</span><strong data-testid="dashboard-revenue">{(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽</strong><small>Отмеченные оплаты за вычетом возвратов</small></div>
-        <div><span>Новых заявок в CRM</span><strong>{crmMetrics.newLeads}</strong><small>Уникальные заявки, а не контакты Авито</small></div>
-        <div><span>Встреч запланировано</span><strong>{crmMetrics.bookedAppointments}</strong><small>Записи ещё не считаются проведёнными</small></div>
+        <div><span>Поступления за период</span><strong data-testid="dashboard-revenue">{(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽</strong></div>
+        <div><span>Новых заявок в CRM</span><strong>{crmMetrics.newLeads}</strong></div>
+        <div><span>Встреч запланировано</span><strong>{crmMetrics.bookedAppointments}</strong></div>
       </div>
-      {[{ title: "Продвижение на Авито", source: "Статистика площадки", items: steps.slice(0, 3) }, { title: "Диагностики и ученики", source: "Учёт в CRM", items: steps.slice(3) }].map(group => <section key={group.title} className="dashboard-metric-group">
-        <div className="crm-heading"><h2>{group.title}</h2><span className="crm-period">{group.source}</span></div>
+      {[{ title: "Продвижение на Авито", items: steps.slice(0, 3) }, { title: "Диагностики и ученики", items: steps.slice(3) }].map(group => <section key={group.title} className="dashboard-metric-group">
+        <div className="crm-heading"><h2>{group.title}</h2></div>
         <div className="dashboard-funnel mt-3 flex gap-2 overflow-x-auto pb-1">
           {group.items.map(step => <article key={step.label} className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-4 py-4">
             <p className="flex items-center gap-2 text-sm text-muted">{step.label}<Mark tone={step.tone} /></p>
@@ -491,7 +491,6 @@ export function DashboardSection() {
           </article>)}
         </div>
       </section>)}
-      <p className="crm-hint">Контакты Авито и заявки CRM — разные показатели. Диагностика считается после отметки о проведении, ученик — после первой оплаты. Стоимость за период не является точной атрибуцией по когорте.</p>
 
       {isDataMonth && wroteRate !== null ? (
         <p className={`mt-4 ${wroteRate < 10 ? "text-red" : "text-ok"}`}>

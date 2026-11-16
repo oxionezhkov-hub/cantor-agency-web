@@ -30,7 +30,7 @@ const timeLabel = (at: string) =>
 function problem(error: unknown) {
   return error instanceof Error
     ? error.message
-    : "Не удалось сохранить демо. Проверьте доступ к хранилищу браузера.";
+    : "Не удалось сохранить изменения. Проверьте доступ к хранилищу браузера.";
 }
 
 export function PaymentsSection({ focus }: { focus?: string }) {
@@ -79,7 +79,7 @@ export function PaymentsSection({ focus }: { focus?: string }) {
         }),
       );
       setAmount("");
-      setNotice("Оплата сохранена в демо. Показатели на дашборде обновлены.");
+      setNotice("Оплата сохранена.");
     } catch (e) {
       setError(problem(e));
     }
@@ -89,7 +89,6 @@ export function PaymentsSection({ focus }: { focus?: string }) {
     <section className="crm-panel" aria-label="Оплаты учеников">
       <div className="crm-heading">
         <div>
-          <span className="crm-kicker">ОТ ДИАГНОСТИКИ К ЗАНЯТИЯМ</span>
           <h2>
             <Wallet size={18} />
             Оплаты учеников
@@ -111,10 +110,6 @@ export function PaymentsSection({ focus }: { focus?: string }) {
           <dd>{cost === null ? "Не рассчитано" : `${cost.toLocaleString("ru-RU")} ₽`}</dd>
         </div>
       </dl>
-      <p className="crm-hint">
-        Повторная оплата увеличивает сумму, но не число новых учеников. Показатели — за ноябрь;
-        журнал хранит все даты.
-      </p>
       {storageError ? (
         <p role="alert" className="crm-error">
           {storageError}
@@ -210,12 +205,8 @@ export function PaymentsSection({ focus }: { focus?: string }) {
               .map((id) => state.students.find((item) => item.id === id)?.name)
               .join(", ")}
           </span>
-          <small>Это отсутствие записи об оплате в демо, а не подтверждённая задолженность.</small>
         </div>
       ) : null}
-      <p className="crm-hint">
-        Учёт полученных денег в демоверсии. Кнопка не списывает деньги и не отправляет сообщения.
-      </p>
     </section>
   );
 }
@@ -283,7 +274,7 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
       setNotice(
         editing
           ? "Встреча перенесена. Старое окно освобождено."
-          : "Запись сохранена в демо. Это ещё не проведённая диагностика.",
+          : "Запись сохранена.",
       );
       setEditing(null);
       request.current = null;
@@ -313,7 +304,6 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
     <section className="crm-panel" aria-label="Расписание диагностик">
       <div className="crm-heading">
         <div>
-          <span className="crm-kicker">СЛЕДУЮЩИЙ ШАГ К УЧЕНИКУ</span>
           <h2>
             <CalendarDays size={18} />
             Расписание диагностик
@@ -321,10 +311,6 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
         </div>
         <span className="crm-period">Московское время</span>
       </div>
-      <p className="crm-hint">
-        Запись, проведение и оплата — разные события. Создание записи не увеличивает число
-        проведённых диагностик.
-      </p>
       {storageError ? (
         <p role="alert" className="crm-error">
           {storageError}
@@ -413,7 +399,7 @@ export function DiagnosticSection({ focus }: { focus?: string }) {
                   {dateLabel(item.startsAt)}, {timeLabel(item.startsAt)}–{timeLabel(item.endsAt)}
                 </p>
                 <span className="crm-status">
-                  {ended ? "Нужен исход встречи" : "Запись подтверждена в демо"}
+                  {ended ? "Нужен исход встречи" : "Запись подтверждена"}
                 </span>
               </div>
               <div className="crm-appointment-actions">

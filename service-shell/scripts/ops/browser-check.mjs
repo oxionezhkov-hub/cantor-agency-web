@@ -11,7 +11,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 const results=[];
 try {
  for (const width of [1440,390]) {
-  const context = await browser.newContext({ viewport: { width, height: 960 }, colorScheme: "light" });
+  const context = await browser.newContext({ viewport: { width, height: 960 }, colorScheme: "dark" });
   // When Chromium lacks the managed proxy CA, use Node's validated TLS transport.
   // Certificate verification stays enabled; no ignoreHTTPSErrors or blanket bypass.
   if (process.env.CANTOR_BROWSER_VALIDATED_TRANSPORT === "1") {
@@ -23,29 +23,29 @@ try {
       await route.fulfill({ status: response.status, headers, body: Buffer.from(await response.arrayBuffer()) });
     });
   }
+  await context.addInitScript(() => localStorage.setItem("cantor.service-theme", "dark"));
   const page = await context.newPage(); const errors=[]; const diagnostics=[];
   page.on("console", message => { if (message.type() === "error") diagnostics.push(message.text()); });
   page.on("requestfailed", request => diagnostics.push(`${request.url()}: ${request.failure()?.errorText}`));
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(url, { waitUntil: "networkidle" });
-  try { await page.getByRole('heading',{level:1}).waitFor(); }
+  try { await page.getByRole('heading',{level:1}).waitFor({ state: 'attached' }); }
   catch (error) { await page.screenshot({path:`${output}/failed-${width}.png`,fullPage:true}); console.error(JSON.stringify({pageErrors:errors,diagnostics,body:await page.locator('body').innerText()})); throw error; }
-  assert.match(await page.getByRole('note').innerText(),/Демонстрационные данные/);
+
   for(const label of ['Дашборд','Аналитика','Мои объявления','Мои диалоги','База знаний','Настройки']) {
    await page.getByRole('navigation',{name:'Разделы'}).getByRole('button',{name:new RegExp(label)}).click();
    await page.waitForURL(u=>u.searchParams.has('section'));
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
    assert.ok(overflow<=1,`${width}px ${label}: page overflows by ${overflow}px`);
   }
-  await page.getByRole('button',{name:'Тёмная тема',exact:true}).click();
-  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
   await page.reload({waitUntil:'networkidle'});
-  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
-  await page.getByRole('button',{name:'Светлая тема',exact:true}).click();
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
+  assert.equal(await page.locator('footer, .service-topbar, .service-page-heading, .preview-notice, .preview-tag, .theme-toggle').count(), 0);
+  assert.doesNotMatch(await page.locator('body').innerText(), /демоверс|демонстрацион|сохранена в демо|подтверждена в демо/i);
   await page.getByRole('navigation',{name:'Разделы'}).getByRole('button',{name:'Дашборд',exact:true}).click();
   await page.screenshot({path:`${output}/dashboard-${width}.png`,fullPage:true});
   assert.deepEqual(errors,[],`${width}px browser errors`);
-  results.push({width,sections:6,horizontalOverflow:false,themePersistence:true,pageErrors:errors});
+  results.push({width,sections:6,horizontalOverflow:false,lightOnly:true,cleanShell:true,pageErrors:errors});
   await context.close();
  }
  writeFileSync(`${output}/result.json`,JSON.stringify({url,results},null,2));

@@ -43,7 +43,6 @@ try {
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(url, { waitUntil: "networkidle" });
-    assert.match(await page.getByRole("note").innerText(), /Демонстрационные данные/);
     assert.equal(await page.getByTestId("completed-diagnostics").innerText(), "3");
     assert.equal(await page.getByTestId("new-students").innerText(), "2");
     await page.getByRole("link").filter({ hasText: "заблокировано" }).first().click();
