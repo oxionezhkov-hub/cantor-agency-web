@@ -4,7 +4,6 @@ import {
   balanceRows,
   blockRows,
   daysUntil,
-  minutesLeft,
   reserveDays,
   subscriptionRows,
 } from "./rules.ts";
@@ -80,14 +79,7 @@ test("no yesterday spend does not invent a reserve", () => {
   assert.equal(rows.find((row) => row.label === "Кто пополняет")?.value, "само");
 });
 
-test("block hour counts down and then expires", () => {
-  const found = "2026-11-15T13:40:00.000Z";
-  assert.equal(minutesLeft(found, Date.parse("2026-11-15T14:15:00.000Z")), 25);
-  assert.equal(minutesLeft(found, Date.parse("2026-11-15T14:40:00.000Z")), 0);
-  assert.equal(minutesLeft("bad", NOW.getTime()), null);
-});
-
-test("block rows name the hour and the empty kinds", () => {
+test("block rows show evidence and do not invent an hour to fix a block", () => {
   const rows = blockRows(
     {
       cabinetBlocked: false,
@@ -95,7 +87,8 @@ test("block rows name the hour and the empty kinds", () => {
     },
     Date.parse("2026-11-15T14:15:00.000Z"),
   );
-  assert.equal(rows[1]?.detail, "ещё 25 минут");
+  assert.match(rows[1]?.detail || "", /Обнаружено.*МСК.*причину/);
+  assert.doesNotMatch(rows[1]?.detail || "", /ещё|час прошёл/);
   assert.equal(rows.find((row) => row.label === "Отклонённые")?.value, "нет");
   assert.equal(rows.find((row) => row.label === "Снятые")?.value, "нет");
 });

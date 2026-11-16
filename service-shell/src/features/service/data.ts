@@ -40,13 +40,6 @@ export type WindowSlot = {
   takenBy: string | null;
 };
 
-export type Payment = {
-  id: string;
-  who: string;
-  at: string;
-  amountRub: number;
-};
-
 export const PHOTO_SLOTS = [
   "Репетитор",
   "Доска",
@@ -100,7 +93,7 @@ export const ads: Ad[] = [
     id: "alg",
     title: "Алгебра, 8 класс",
     text: "Дроби, уравнения, оценка за четверть. В показ не стоит: нет четырёх фото и оффера с диагностикой.",
-    photos: ["Репетитор", "Тетрадь", "Тема", "Формат", "Оффер", "Отзыв"],
+    photos: [...PHOTO_SLOTS.slice(0, 6)],
     offerHasDiagnostic: false,
     shows: 0,
     views: 0,
@@ -158,10 +151,3 @@ export const windows: WindowSlot[] = [
   { id: "sat-12", label: "Сб 12:00", startsAt: "2026-11-21T09:00:00.000Z", takenBy: null },
   { id: "sat-16", label: "Сб 16:00", startsAt: "2026-11-21T13:00:00.000Z", takenBy: null },
 ];
-
-export const payments: Payment[] = [
-  { id: "p1", who: "ЕГЭ", at: "2026-11-10", amountRub: 4800 },
-  { id: "p2", who: "ОГЭ", at: "2026-11-12", amountRub: 4800 },
-];
-
-export const unpaidDiagnostic = "Кирилл";

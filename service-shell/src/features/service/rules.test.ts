@@ -7,7 +7,6 @@ import {
   inContactGoal,
   missingSlotNames,
   nudgeReady,
-  payingStudentCount,
   placeTone,
   reminderState,
   replyLate,
@@ -35,11 +34,6 @@ test("a photo counts only when its slot name is present", () => {
   assert.equal(missingSlotNames([], required).length, 3);
 });
 
-test("the same person does not count twice", () => {
-  assert.equal(payingStudentCount(["ЕГЭ", "ЕГЭ", "Кирилл", "  "]), 2);
-  assert.equal(payingStudentCount([]), 0);
-});
-
 test("place inside top 20 is fine, past it is not", () => {
   assert.equal(placeTone(20), "ok");
   assert.equal(placeTone(21), "bad");
@@ -54,7 +48,7 @@ test("a reply past 30 minutes is late, an empty wait is not", () => {
   assert.equal(replyLate("nope", now), false);
 });
 
-test("a silent dialog can be nudged once the day has passed", () => {
+test("silent dialogue can be reviewed after several hours, while an unanswered inbound needs a reply", () => {
   const now = Date.parse("2026-11-16T06:45:00.000Z");
   const olga = dialogs.find((dialog) => dialog.id === "olga");
   const marina = dialogs.find((dialog) => dialog.id === "marina");
@@ -64,11 +58,12 @@ test("a silent dialog can be nudged once the day has passed", () => {
   assert.equal(nudgeReady(marina, now), false);
 });
 
-test("reminder flips only inside the last three hours", () => {
+test("meeting reminder follows the Moscow day, not an invented three-hour threshold", () => {
   const start = Date.parse("2026-11-19T16:00:00.000Z");
-  assert.equal(reminderState("2026-11-19T16:00:00.000Z", start - 4 * 60 * 60 * 1000), "за 3 часа");
+  assert.equal(reminderState("2026-11-19T16:00:00.000Z", start - 20 * 60 * 60 * 1000), "в день встречи");
+  assert.equal(reminderState("2026-11-19T16:00:00.000Z", start - 4 * 60 * 60 * 1000), "пора напомнить");
   assert.equal(reminderState("2026-11-19T16:00:00.000Z", start - 2 * 60 * 60 * 1000), "пора напомнить");
-  assert.equal(reminderState("2026-11-19T16:00:00.000Z", start), "время прошло");
+  assert.equal(reminderState("2026-11-19T16:00:00.000Z", start), "нужен исход встречи");
   assert.equal(reminderState(null, start), "нет записи");
 });
 

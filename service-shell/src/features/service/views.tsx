@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import { sampleCabinet } from "@/features/cabinet/sample.ts";
-import { formatRuDate } from "@/features/cabinet/rules.ts";
-import { ads, dialogs, payments, unpaidDiagnostic, windows, PHOTO_SLOTS, type Ad } from "./data.ts";
+import { ads, dialogs, PHOTO_SLOTS, type Ad } from "./data.ts";
 import {
   PHOTO_TARGET,
   TOP_PLACE,
@@ -12,14 +11,12 @@ import {
   inContactGoal,
   missingSlotNames,
   nudgeReady,
-  payingStudentCount,
   placeTone,
   promotionSpend,
-  reminderState,
   replyLate,
-  studentCost,
 } from "./rules.ts";
-import { readBookings, readExtraPayments, writeBookings, writeExtraPayments, STORE_EVENT, type ExtraPayment } from "./store.ts";
+import { useDemoCrm } from "./demo-crm-store.ts";
+import { monthRangeMsk, periodMetrics } from "./crm.ts";
 
 function Percent({ views, contacts }: { views: number; contacts: number }) {
   const rate = contactRate(views, contacts);
@@ -28,9 +25,10 @@ function Percent({ views, contacts }: { views: number; contacts: number }) {
   return <span className={tone}>{formatPercent(rate)}</span>;
 }
 
-export function AdsSection() {
+export function AdsSection({ focus }: { focus?: string }) {
   const [openId, setOpenId] = useState(ads[0]?.id ?? "");
   const open = ads.find((ad) => ad.id === openId) ?? null;
+  useEffect(() => { if (focus && ads.some(ad => ad.id === focus)) setOpenId(focus); }, [focus]);
   if (ads.length === 0) {
     return (
       <div>
@@ -166,12 +164,14 @@ export function ContactSection() {
   );
 }
 
-export function DialogsSection() {
+export function DialogsSection({ focus }: { focus?: string }) {
   const [now, setNow] = useState(() => Date.now());
   const [openId, setOpenId] = useState(dialogs[0]?.id ?? "");
   const [thread, setThread] = useState(false);
   const [replies, setReplies] = useState(() => Object.fromEntries(dialogs.map((dialog) => [dialog.id, dialog.reply])));
   const open = dialogs.find((dialog) => dialog.id === openId) ?? null;
+
+  useEffect(() => { if (focus && dialogs.some(dialog => dialog.id === focus)) { setOpenId(focus); setThread(true); } }, [focus]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
@@ -197,7 +197,7 @@ export function DialogsSection() {
                 >
                   <span className="block font-medium">{dialog.name}</span>
                   <span className={`block text-sm ${late || nudge ? "text-red" : "text-muted"}`}>
-                    {late ? "ждёт дольше 30 минут" : nudge ? "молчит сутки, одно сообщение" : dialog.topic}
+                    {late ? "ждёт дольше 30 минут" : nudge ? "нужно повторное касание" : dialog.topic}
                   </span>
                 </button>
               </li>
@@ -244,131 +244,7 @@ export function DialogsSection() {
   );
 }
 
-export function DiagnosticSection() {
-  const [now, setNow] = useState(() => Date.now());
-  const [booked, setBooked] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    setBooked(readBookings());
-    const timer = window.setInterval(() => setNow(Date.now()), 15_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  function book(windowId: string, name: string) {
-    setBooked((prev) => {
-      const already =
-        windows.some((slot) => slot.takenBy === name) || Object.values(prev).includes(name) || Boolean(prev[windowId]);
-      if (already || windows.find((slot) => slot.id === windowId)?.takenBy) return prev;
-      const next = { ...prev, [windowId]: name };
-      writeBookings(next);
-      return next;
-    });
-  }
-
-  return (
-    <div>
-      <ul className="mt-8 divide-y divide-line border-y border-line">
-        {windows.map((slot) => {
-          const taken = slot.takenBy || booked[slot.id] || null;
-          const reminder = reminderState(taken ? slot.startsAt : null, now);
-          const igorTaken = windows.some((item) => item.takenBy === "Игорь") || Object.values(booked).includes("Игорь");
-          return (
-            <li key={slot.id} className="flex min-h-11 flex-wrap items-center justify-between gap-3 py-3">
-              <div>
-                <p className="font-medium">{slot.label}</p>
-                <p className={`text-sm ${reminder === "пора напомнить" ? "text-red" : "text-muted"}`}>
-                  {taken ? `${taken} · ${reminder}` : "свободно"}
-                </p>
-              </div>
-              {taken || igorTaken ? null : (
-                <button type="button" className="min-h-11 rounded-full bg-ink px-4 text-sm font-medium text-bg" onClick={() => book(slot.id, "Игорь")}>
-                  Записать Игоря
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-export function PaymentsSection() {
-  const [extra, setExtra] = useState<ExtraPayment[]>([]);
-  const [draft, setDraft] = useState("");
-  const extraRef = useRef<ExtraPayment[]>([]);
-  const lock = useRef(false);
-
-  useEffect(() => {
-    const stored = readExtraPayments();
-    extraRef.current = stored;
-    setExtra(stored);
-  }, []);
-
-  const all = [
-    ...payments.map((payment) => ({ who: payment.who, amountRub: payment.amountRub, at: payment.at })),
-    ...extra.map((payment) => ({ who: payment.who, amountRub: payment.amountRub, at: "сейчас" })),
-  ];
-  const kirillPaid = all.some((payment) => payment.who === unpaidDiagnostic);
-  const cost = studentCost(promotionSpend(ads), payingStudentCount(all.map((payment) => payment.who)));
-
-  function add(event: FormEvent) {
-    event.preventDefault();
-    if (lock.current) return;
-    const amount = Math.round(Number(draft.replace(/\s/g, "").replace(",", ".")));
-    if (!Number.isInteger(amount) || amount <= 0 || amount > 999_999) return;
-    if (extraRef.current.some((item) => item.who === unpaidDiagnostic)) return;
-    if (payments.some((item) => item.who === unpaidDiagnostic)) return;
-    lock.current = true;
-    const next = [...extraRef.current, { who: unpaidDiagnostic, amountRub: amount }];
-    extraRef.current = next;
-    setDraft("");
-    setExtra(next);
-    writeExtraPayments(next);
-    lock.current = false;
-  }
-
-  return (
-    <div className="mt-8">
-      <p className="font-display text-4xl font-medium">{cost === null ? "не посчитать" : `${cost.toLocaleString("ru-RU")} ₽`}</p>
-      <p className="mt-1 text-muted">
-        на одного из {payingStudentCount(all.map((payment) => payment.who))} · расход {promotionSpend(ads).toLocaleString("ru-RU")} ₽
-      </p>
-      <ul className="mt-6 divide-y divide-line border-y border-line">
-        {all.map((payment, index) => (
-          <li key={`${payment.who}-${index}`} className="flex items-baseline justify-between gap-4 py-3">
-            <span>
-              {payment.who}
-              <span className="mt-0.5 block text-sm text-muted">{formatRuDate(payment.at)}</span>
-            </span>
-            <span>{payment.amountRub.toLocaleString("ru-RU")} ₽</span>
-          </li>
-        ))}
-        {kirillPaid ? null : (
-          <li className="flex items-baseline justify-between gap-4 py-3 text-red">
-            <span>{unpaidDiagnostic}</span>
-            <span>оплаты нет</span>
-          </li>
-        )}
-      </ul>
-      {kirillPaid ? null : (
-        <form className="mt-4 flex gap-2" onSubmit={add}>
-          <input
-            className="h-11 w-36 rounded-xl border border-line bg-bg px-3"
-            inputMode="numeric"
-            placeholder="Кирилл, ₽"
-            aria-label="Оплата Кирилла"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
-          <button type="submit" className="h-11 rounded-full bg-ink px-4 font-medium text-bg">
-            Внести
-          </button>
-        </form>
-      )}
-    </div>
-  );
-}
+export { DiagnosticSection, PaymentsSection } from "./crm-ui.tsx";
 
 const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
 const DATA_YEAR = 2026;
@@ -411,22 +287,14 @@ function Mark({ tone }: { tone: Sag }) {
 
 export function DashboardSection() {
   const today = new Date();
-  const [cursor, setCursor] = useState({ year: today.getFullYear(), month: today.getMonth() });
+  const [cursor, setCursor] = useState({ year: DATA_YEAR, month: DATA_MONTH });
   const [now, setNow] = useState(() => Date.now());
-  const [extra, setExtra] = useState<ExtraPayment[]>([]);
-  const [booked, setBooked] = useState<Record<string, string>>({});
+  const { state: crm } = useDemoCrm();
   const [tipsOpen, setTipsOpen] = useState(false);
 
   useEffect(() => {
-    const sync = () => {
-      setExtra(readExtraPayments());
-      setBooked(readBookings());
-    };
-    sync();
-    window.addEventListener(STORE_EVENT, sync);
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
     return () => {
-      window.removeEventListener(STORE_EVENT, sync);
       window.clearInterval(timer);
     };
   }, []);
@@ -437,14 +305,14 @@ export function DashboardSection() {
   const views = isDataMonth ? ads.reduce((sum, ad) => sum + ad.views, 0) : 0;
   const contacts = isDataMonth ? ads.reduce((sum, ad) => sum + ad.contacts, 0) : 0;
   const spend = isDataMonth ? promotionSpend(ads) : 0;
-  const payers = isDataMonth ? [...payments.map((payment) => payment.who), ...extra.map((payment) => payment.who)] : [];
-  const paidCount = payingStudentCount(payers);
-  const kirillPaid = payers.includes(unpaidDiagnostic);
-  const diagnosed = isDataMonth ? paidCount + (kirillPaid ? 0 : 1) : 0;
+  const crmMetrics = periodMetrics(crm, ...monthRangeMsk(cursor.year, cursor.month));
+  const paidCount = crmMetrics.newStudents;
+  const kirillPaid = !crmMetrics.unpaidStudentIds.includes("student-kirill");
+  const diagnosed = crmMetrics.completedAppointments;
   const viewRate = contactRate(shows, views);
   const wroteRate = contactRate(views, contacts);
-  const diagRate = contactRate(contacts, diagnosed);
-  const saleRate = contactRate(diagnosed, paidCount);
+
+
   const steps: { label: string; value: number; conversion: string; cost: string; tone: Sag }[] = [
     { label: "показов", value: shows, conversion: "—", cost: rubPer(spend, shows), tone: null },
     {
@@ -464,20 +332,20 @@ export function DashboardSection() {
     {
       label: "диагностик",
       value: diagnosed,
-      conversion: diagRate === null ? "—" : formatPercent(diagRate),
+      conversion: "проведено · CRM",
       cost: rubPer(spend, diagnosed),
       tone: null,
     },
     {
-      label: "продаж",
+      label: "новых учеников",
       value: paidCount,
-      conversion: saleRate === null ? "—" : formatPercent(saleRate),
+      conversion: "первая оплата · CRM",
       cost: rubPer(spend, paidCount),
-      tone: saleRate !== null && saleRate < 100 ? "warn" : null,
+      tone: null,
     },
   ];
 
-  const contactAds = (isDataMonth ? ads : []).filter((ad) => ad.contacts > 0).sort((a, b) => b.contacts - a.contacts);
+  const contactAds = (isDataMonth ? ads : []).filter((ad) => ad.contacts > 0).sort((a, b) => (b.contacts / b.views) - (a.contacts / a.views));
   const leader = contactAds[0];
   const trailer = contactAds[contactAds.length - 1];
   const adCompare =
@@ -508,13 +376,14 @@ export function DashboardSection() {
   const cityCompare = cities.length > 1 ? `${cities[0].name} в топе выше, чем ${cities[cities.length - 1].name}` : null;
 
   const blockedTitles = new Set(sampleCabinet.blocks.items.map((item) => item.title));
-  const recommendations: { id: string; title: string; text: string; section: "ads" | "stats" | "chats"; rank: number }[] = [];
+  const recommendations: { id: string; title: string; text: string; section: "ads" | "stats" | "chats"; focus?: string; rank: number }[] = [];
   const late = dialogs
     .filter((dialog) => replyLate(dialog.waitingSince, now))
     .sort((a, b) => Date.parse(a.waitingSince ?? "") - Date.parse(b.waitingSince ?? ""));
   for (const dialog of late) {
     recommendations.push({
       id: dialog.id,
+      focus: dialog.id,
       title: `${dialog.name} ждёт ответа больше получаса`,
       text: "На вопрос о цене предложите окно, не прайс.",
       section: "chats",
@@ -525,7 +394,8 @@ export function DashboardSection() {
     if (!nudgeReady(dialog, now)) continue;
     recommendations.push({
       id: dialog.id,
-      title: `${dialog.name} молчит уже сутки`,
+      focus: dialog.id,
+      title: `${dialog.name}: проверьте следующий шаг в диалоге`,
       text: "Продолжите диалог по сценарию повторных касаний из базы знаний.",
       section: "chats",
       rank: 2,
@@ -536,6 +406,7 @@ export function DashboardSection() {
     if (blockedTitles.has(ad.title)) {
       recommendations.push({
         id: `block-${ad.id}`,
+        focus: ad.id,
         title: `Объявление «${name}» заблокировано`,
         text: "Проверьте причину блокировки и рекомендации Авито по исправлению.",
         section: "ads",
@@ -546,6 +417,7 @@ export function DashboardSection() {
     if (missing.length > 0 || !ad.offerHasDiagnostic) {
       recommendations.push({
         id: `photo-${ad.id}`,
+        focus: ad.id,
         title: `У «${name}» ${PHOTO_TARGET - missing.length} фото из ${PHOTO_TARGET}`,
         text: ad.offerHasDiagnostic ? "Доберите десятку, иначе показ слабый." : "Нет оффера с диагностикой. В показ такое лучше не ставить.",
         section: "ads",
@@ -563,12 +435,12 @@ export function DashboardSection() {
       rank: 3,
     });
   }
-  void booked;
   if (isDataMonth && !kirillPaid) {
     recommendations.push({
       id: "kirill",
-      title: `${unpaidDiagnostic} не оплатил после диагностики`,
-      text: "Напомните один раз.",
+      focus: "kirill",
+      title: `Кирилл: не отмечена оплата после диагностики`,
+      text: "Если ученик оплатил занятия — внесите оплату. Число диагностик не изменится.",
       section: "stats",
       rank: 4,
     });
@@ -603,19 +475,23 @@ export function DashboardSection() {
         </button>
       </div>
 
-      <div className="dashboard-funnel mt-6 flex gap-2 overflow-x-auto pb-1">
-        {steps.map((step) => (
-          <article key={step.label} className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-3 py-4">
-            <p className="flex items-center gap-2 text-sm text-muted">
-              {step.label}
-              <Mark tone={step.tone} />
-            </p>
-            <p className="mt-1 font-display text-3xl font-medium">{step.value.toLocaleString("ru-RU")}</p>
-            <p className={`mt-3 text-sm ${step.tone === "bad" ? "text-red" : step.tone === "warn" ? "text-warn" : ""}`}>{step.conversion}</p>
-            <p className="text-sm text-muted">{step.cost}</p>
-          </article>
-        ))}
+      <div className="dashboard-overview">
+        <div><span>Поступления за период</span><strong data-testid="dashboard-revenue">{(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽</strong><small>Отмеченные оплаты за вычетом возвратов</small></div>
+        <div><span>Новых заявок в CRM</span><strong>{crmMetrics.newLeads}</strong><small>Уникальные заявки, а не контакты Авито</small></div>
+        <div><span>Встреч запланировано</span><strong>{crmMetrics.bookedAppointments}</strong><small>Записи ещё не считаются проведёнными</small></div>
       </div>
+      {[{ title: "Продвижение на Авито", source: "Статистика площадки", items: steps.slice(0, 3) }, { title: "Диагностики и ученики", source: "Учёт в CRM", items: steps.slice(3) }].map(group => <section key={group.title} className="dashboard-metric-group">
+        <div className="crm-heading"><h2>{group.title}</h2><span className="crm-period">{group.source}</span></div>
+        <div className="dashboard-funnel mt-3 flex gap-2 overflow-x-auto pb-1">
+          {group.items.map(step => <article key={step.label} className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-4 py-4">
+            <p className="flex items-center gap-2 text-sm text-muted">{step.label}<Mark tone={step.tone} /></p>
+            <p data-testid={step.label === "диагностик" ? "completed-diagnostics" : step.label === "новых учеников" ? "new-students" : undefined} className="mt-1 font-display text-3xl font-medium">{step.value.toLocaleString("ru-RU")}</p>
+            <p className={`mt-3 text-sm ${step.tone === "bad" ? "text-red" : "text-muted"}`}>{step.conversion}</p>
+            <p className="text-sm text-muted">{step.cost} · расходы на этап</p>
+          </article>)}
+        </div>
+      </section>)}
+      <p className="crm-hint">Контакты Авито и заявки CRM — разные показатели. Диагностика считается после отметки о проведении, ученик — после первой оплаты. Стоимость за период не является точной атрибуцией по когорте.</p>
 
       {isDataMonth && wroteRate !== null ? (
         <p className={`mt-4 ${wroteRate < 10 ? "text-red" : "text-ok"}`}>
@@ -680,7 +556,7 @@ export function DashboardSection() {
             <Link
               key={item.id}
               to="/"
-              search={{ section: item.section }}
+              search={{ section: item.section, focus: item.focus }}
               className="rounded-2xl border border-line bg-surface px-4 py-4"
             >
               <span className="block font-medium">{item.title}</span>

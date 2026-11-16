@@ -6,8 +6,7 @@ export const TOP_PLACE = 20;
 export const CONTACT_GOAL_MIN = 10;
 export const CONTACT_GOAL_MAX = 12;
 export const REPLY_LIMIT_MS = 30 * 60 * 1000;
-export const SILENT_AFTER_MS = 24 * 60 * 60 * 1000;
-export const REMINDER_BEFORE_MS = 3 * 60 * 60 * 1000;
+export const SILENT_AFTER_MS = 3 * 60 * 60 * 1000; // Demo default for the base's first contact after several hours.
 
 export function contactRate(views: number, contacts: number): number | null {
   if (!Number.isFinite(views) || !Number.isFinite(contacts)) return null;
@@ -28,11 +27,6 @@ export function missingSlotNames(filled: readonly string[], required: readonly s
   return required.filter((name) => !have.has(name));
 }
 
-export function payingStudentCount(names: readonly string[]): number {
-  const unique = new Set(names.map((name) => name.trim()).filter((name) => name.length > 0));
-  return unique.size;
-}
-
 export function placeTone(place: number): "ok" | "bad" {
   return place > 0 && place <= TOP_PLACE ? "ok" : "bad";
 }
@@ -51,15 +45,15 @@ export function nudgeReady(dialog: Dialog, nowMs: number): boolean {
   return nowMs - since >= SILENT_AFTER_MS;
 }
 
-export type ReminderState = "нет записи" | "за 3 часа" | "пора напомнить" | "время прошло" | "дату не разобрать";
+export type ReminderState = "нет записи" | "в день встречи" | "пора напомнить" | "нужен исход встречи" | "дату не разобрать";
 
 export function reminderState(startsAt: string | null, nowMs: number): ReminderState {
   if (!startsAt) return "нет записи";
   const start = Date.parse(startsAt);
   if (!Number.isFinite(start) || !Number.isFinite(nowMs)) return "дату не разобрать";
-  if (nowMs >= start) return "время прошло";
-  if (nowMs >= start - REMINDER_BEFORE_MS) return "пора напомнить";
-  return "за 3 часа";
+  if (nowMs >= start) return "нужен исход встречи";
+  const mskDay = (ms: number) => new Date(ms + 3 * 3600000).toISOString().slice(0, 10);
+  return mskDay(start) === mskDay(nowMs) ? "пора напомнить" : "в день встречи";
 }
 
 export function studentCost(spendRub: number, paymentCount: number): number | null {

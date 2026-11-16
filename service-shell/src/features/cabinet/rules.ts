@@ -1,6 +1,4 @@
 export const BALANCE_RESERVE_DAYS = 3;
-export const BLOCK_HANDLE_MS = 60 * 60 * 1000;
-export const DAILY_PLACEMENT_RUB = 100;
 
 export type RowTone = "plain" | "ok" | "bad";
 
@@ -124,8 +122,8 @@ export function subscriptionRows(input: SubscriptionInput, now: Date): CabinetRo
     { label: "Автопродление", value: input.autoRenew ? "да" : "нет", detail: null, tone: "plain" },
     {
       label: "Размещение",
-      value: `${DAILY_PLACEMENT_RUB} ₽ в день`,
-      detail: null,
+      value: "По тарифу Авито",
+      detail: "Стоимость размещения здесь не загружена",
       tone: "plain",
     },
   ];
@@ -175,30 +173,13 @@ export function balanceRows(input: BalanceInput): CabinetRow[] {
   ];
 }
 
-function minuteWord(value: number): string {
-  const abs = Math.abs(value) % 100;
-  const last = abs % 10;
-  if (abs > 10 && abs < 20) return "минут";
-  if (last === 1) return "минуту";
-  if (last >= 2 && last <= 4) return "минуты";
-  return "минут";
-}
-
-export function minutesLeft(foundAtIso: string, nowMs: number): number | null {
-  const found = Date.parse(foundAtIso);
-  if (!Number.isFinite(found) || !Number.isFinite(nowMs)) return null;
-  const left = found + BLOCK_HANDLE_MS - nowMs;
-  if (left <= 0) return 0;
-  return Math.ceil(left / 60_000);
-}
-
 function kindLabel(kind: BlockKind): string {
   if (kind === "blocked") return "заблокировано";
   if (kind === "rejected") return "отклонено";
   return "снято";
 }
 
-export function blockRows(input: BlocksInput, nowMs: number): CabinetRow[] {
+export function blockRows(input: BlocksInput, _nowMs: number): CabinetRow[] {
   const items = Array.isArray(input.items) ? input.items : [];
   const rows: CabinetRow[] = [
     {
@@ -210,9 +191,8 @@ export function blockRows(input: BlocksInput, nowMs: number): CabinetRow[] {
   ];
 
   for (const item of items) {
-    const left = minutesLeft(item.foundAt, nowMs);
-    const detail =
-      left === null ? "время не разобрать" : left === 0 ? "час прошёл" : `ещё ${left} ${minuteWord(left)}`;
+    const found = Date.parse(item.foundAt);
+    const detail = Number.isFinite(found) ? `Обнаружено ${new Date(found).toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })} МСК. Проверьте причину в Авито` : "Проверьте причину в Авито";
     rows.push({
       label: item.title.trim() || "Объявление без названия",
       value: kindLabel(item.kind),

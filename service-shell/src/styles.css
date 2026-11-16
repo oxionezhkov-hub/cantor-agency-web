@@ -146,3 +146,55 @@ button { transition: background-color .16s, color .16s, border-color .16s; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 
 @media (max-width: 760px) { .dashboard-funnel { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible; }.dashboard-funnel > article { min-width: 0; }.dashboard-funnel > article:last-child { grid-column: 1 / -1; } }
+
+/* CRM: shared records for payments, appointments and dashboard summaries. */
+.crm-panel { margin-top: 32px; padding-top: 26px; border-top: 1px solid var(--color-line); }
+.crm-heading { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+.crm-heading h2 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 16px; font-weight: 500; }
+.crm-kicker { display: block; margin-bottom: 8px; color: var(--color-muted); letter-spacing: 1px; font-size: 10px; }
+.crm-period { font-size: 12px; color: var(--color-muted); }
+.crm-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin: 22px 0 10px; }
+.crm-metrics > div { background: var(--soft); padding: 15px; border: 1px solid var(--color-line); border-radius: 10px; }
+.crm-metrics dt { color: var(--color-muted); font-size: 12px; }
+.crm-metrics dd { margin: 9px 0 0; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.crm-hint { color: var(--color-muted); font-size: 12px; line-height: 1.8; margin: 13px 0; }
+.crm-form { display: grid; grid-template-columns: minmax(130px,1.3fr) minmax(110px,1fr) minmax(130px,1fr); gap: 14px; padding: 20px; margin: 22px 0; border: 1px solid var(--color-line); border-radius: 12px; background: var(--soft); }
+.crm-form label { display: grid; gap: 8px; font-size: 12px; color: var(--color-muted); }
+.crm-form input,.crm-form select { min-width: 0; width: 100%; height: 44px; border-radius: 8px; border: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-ink); padding: 0 10px; font: inherit; font-size: 14px; }
+.crm-form button { justify-self: start; }
+.crm-primary,.crm-secondary,.crm-quiet { display: inline-flex; gap: 7px; align-items: center; justify-content: center; min-height: 44px; border-radius: 999px; padding: 0 15px; border: 1px solid var(--color-line); font: inherit; font-size: 13px; }
+.crm-primary { background: #e8391d; color: #fff; border-color: #e8391d; }
+.crm-primary:hover { background: #c42d13; }
+.crm-primary:disabled { opacity: .5; cursor: not-allowed; }
+.crm-secondary { background: var(--color-surface); color: var(--color-ink); }
+.crm-secondary:hover { background: var(--sunken); }
+.crm-quiet { background: transparent; color: var(--color-muted); border-color: transparent; }
+.crm-quiet:hover { color: var(--color-red); }
+.crm-error { border: 1px solid var(--color-red); border-radius: 9px; padding: 10px 13px; font-size: 13px; color: var(--color-red); }
+.crm-success { display: flex; align-items: center; gap: 7px; padding: 10px 0; font-size: 13px; color: var(--color-ok); }
+.crm-table-wrap { overflow-x: auto; }
+.crm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.crm-table th,.crm-table td { padding: 13px 10px; text-align: left; border-bottom: 1px solid var(--color-line); font-weight: 400; }
+.crm-table thead th { color: var(--color-muted); font-size: 12px; }
+.crm-table td:last-child,.crm-table thead th:last-child { text-align: right; white-space: nowrap; }
+.crm-unpaid { display: grid; gap: 6px; margin: 20px 0; padding: 14px; background: var(--accent-soft); border-radius: 10px; font-size: 13px; }
+.crm-unpaid strong { font-weight: 500; }
+.crm-unpaid small { color: var(--color-muted); font-size: 12px; }
+.crm-subheading { font-size: 14px; margin: 22px 0 13px; font-weight: 500; }
+.crm-appointments { display: grid; gap: 10px; }
+.crm-appointment { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 16px; border: 1px solid var(--color-line); background: var(--soft); border-radius: 10px; }
+.crm-appointment strong { font-size: 14px; font-weight: 500; }
+.crm-appointment p { margin: 6px 0; color: var(--color-muted); font-size: 13px; }
+.crm-status { display: inline-block; color: var(--color-ok); font-size: 12px; }
+.crm-appointment-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.crm-history { margin-top: 22px; font-size: 13px; }
+.crm-history summary { cursor: pointer; min-height: 44px; display: list-item; padding-top: 10px; color: var(--color-muted); }
+.crm-history p { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--color-line); padding: 10px 0; }
+.crm-history p span { color: var(--color-muted); }
+.dashboard-overview { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin: 22px 0 30px; }
+.dashboard-overview > div { padding: 18px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 12px; display: grid; gap: 8px; }
+.dashboard-overview span { color: var(--color-muted); font-size: 12px; }
+.dashboard-overview strong { font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.dashboard-overview small { color: var(--color-muted); font-size: 11px; line-height: 1.7; }
+.dashboard-metric-group { margin-top: 24px; }
+@media (max-width: 760px) { .crm-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }.crm-metrics > div:last-child { grid-column: 1/-1; }.crm-form { grid-template-columns: 1fr; padding: 14px; }.crm-heading h2 { font-size: 15px; }.crm-appointment-actions { width: 100%; }.dashboard-overview { grid-template-columns: 1fr; gap: 8px; }.dashboard-overview > div { grid-template-columns: 1fr auto; gap: 4px 12px; padding: 13px 15px; }.dashboard-overview strong { grid-column: 2; grid-row: 1/3; align-self: center; font-size: 23px; }.dashboard-overview small { grid-column: 1; }.dashboard-funnel > article:last-child { grid-column: auto; }.dashboard-funnel > article:last-child:nth-child(odd) { grid-column: 1/-1; } }

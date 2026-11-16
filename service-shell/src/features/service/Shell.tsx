@@ -7,7 +7,8 @@ import { sampleCabinet } from "@/features/cabinet/sample";
 import { ads, dialogs, windows, PHOTO_SLOTS } from "./data.ts";
 import { attention } from "./rules.ts";
 import { SECTIONS, type SectionId } from "./sections.ts";
-import { readBookings, readExtraPayments, STORE_EVENT } from "./store.ts";
+import { useDemoCrm } from "./demo-crm-store.ts";
+import { monthRangeMsk, periodMetrics } from "./crm.ts";
 import { AdsSection, ContactSection, DashboardSection, DiagnosticSection, DialogsSection, LearnSection, PaymentsSection, ShowsSection } from "./views.tsx";
 
 const ICONS = { today: LayoutDashboard, stats: ChartNoAxesCombined, ads: PanelTop, chats: MessageSquare, learn: BookOpen, acc: Settings2 };
@@ -20,29 +21,29 @@ const DESCRIPTIONS: Record<SectionId, string> = {
   acc: "Ваш кабинет Авито, подписка и состояние подключения.",
 };
 
-export function Shell({ section }: { section: SectionId }) {
+export function Shell({ section, focus }: { section: SectionId; focus?: string }) {
   const navigate = useNavigate();
   const [now, setNow] = useState(() => Date.now());
-  const [extraPayments, setExtraPayments] = useState(0);
-  const [booked, setBooked] = useState<Record<string, string>>({});
+  const { state: crm, storageError } = useDemoCrm();
   const [dark, setDark] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
-    const sync = () => { setExtraPayments(readExtraPayments().length); setBooked(readBookings()); };
-    sync();
-    window.addEventListener(STORE_EVENT, sync);
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
     let theme: string | null = null;
     try { theme = localStorage.getItem("cantor.service-theme"); } catch { /* Storage can be disabled by browser privacy settings. */ }
     const prefersDark = theme === "dark" || (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches);
     setDark(prefersDark);
     document.documentElement.dataset.theme = prefersDark ? "dark" : "light";
-    return () => { window.removeEventListener(STORE_EVENT, sync); window.clearInterval(timer); };
+    return () => { window.clearInterval(timer); };
   }, []);
 
-  const liveWindows = windows.map(slot => ({ ...slot, takenBy: slot.takenBy || booked[slot.id] || null }));
-  const marks = attention({ ads, dialogs, windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: extraPayments > 0 ? 0 : 1, nowMs: now });
+  const crmMetrics = periodMetrics(crm, ...monthRangeMsk(2026, 10));
+  const liveWindows = windows.map(slot => {
+    const appointment = crm.appointments.find(item => item.startsAt === slot.startsAt && item.status === "booked");
+    return { ...slot, takenBy: appointment ? crm.leads.find(item => item.id === appointment.leadId)?.name || null : null };
+  });
+  const marks = attention({ ads, dialogs, windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.length, nowMs: now });
   const cabinetShort = balanceRows(sampleCabinet.balance).some(row => row.label === "Хватит" && row.tone === "bad");
   marks.acc = (cabinetShort ? 1 : 0) + blockRows(sampleCabinet.blocks, now).filter(row => row.tone === "bad").length;
   marks.today = marks.stats + marks.ads + marks.chats;
@@ -74,11 +75,12 @@ export function Shell({ section }: { section: SectionId }) {
       <main id="service-content" className="service-content" tabIndex={-1}>
         <div className="service-page-heading"><div><p className="page-eyebrow">CANTOR / ВАШ РЕЗУЛЬТАТ</p><h1>{section === "today" ? "Всё под вашим контролем" : selected.label}<span>.</span></h1><p>{DESCRIPTIONS[section]}</p></div><span className="account-tag"><span />Кабинет репетитора</span></div>
         <div role="note" className="preview-notice"><span className="preview-notice-dot" /><p><strong>Демонстрационные данные.</strong> Авито не подключён. Записи и оплаты сохраняются только в этом браузере.</p></div>
+        {storageError ? <p role="alert" className="crm-error">{storageError}</p> : null}
         <div className={`service-section section-${section}`}>
           {section === "today" ? <DashboardSection /> : null}
-          {section === "stats" ? <div><ContactSection /><ShowsSection /><PaymentsSection /></div> : null}
-          {section === "ads" ? <AdsSection /> : null}
-          {section === "chats" ? <div><DialogsSection /><DiagnosticSection /></div> : null}
+          {section === "stats" ? <div><ContactSection /><ShowsSection /><PaymentsSection focus={focus} /></div> : null}
+          {section === "ads" ? <AdsSection focus={focus} /> : null}
+          {section === "chats" ? <div><DialogsSection focus={focus} /><DiagnosticSection focus={focus} /></div> : null}
           {section === "learn" ? <LearnSection /> : null}
           {section === "acc" ? <CabinetPage /> : null}
         </div>
