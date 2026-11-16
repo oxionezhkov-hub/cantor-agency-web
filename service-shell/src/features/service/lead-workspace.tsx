@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Copy, Search, X } from "lucide-react";
 import { ads, dialogs, windows } from "./data.ts";
@@ -82,7 +82,7 @@ export function LeadWorkspace({ focus }: { focus?: string }) {
         .includes(query.trim().toLocaleLowerCase("ru-RU")),
   );
   return (
-    <div className="lead-workspace">
+    <div className={`lead-workspace ${thread ? "workspace-thread-open" : ""}`}>
       <div className="lead-toolbar">
         <label className="lead-search">
           <Search size={17} />
@@ -139,6 +139,9 @@ export function LeadWorkspace({ focus }: { focus?: string }) {
                     navigate({ to: "/", search: { section: "chats", focus: lead.id } });
                   }}
                 >
+                  <span className="chat-avatar" aria-hidden="true">
+                    {lead.name.slice(0, 1)}
+                  </span>
                   <span className="lead-row-top">
                     <strong>{lead.name}</strong>
                     <span className={`lead-stage stage-${progress.stage}`}>{progress.label}</span>
@@ -205,7 +208,12 @@ function LeadCard({
 }) {
   const progress = leadProgress(state, lead.id, now);
   const conversation = dialogs.find((d) => d.id === lead.id);
+  const messagesBox = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<DetailTab>(conversation ? "conversation" : progress.nextTab);
+  useEffect(() => {
+    if (tab === "conversation" && messagesBox.current)
+      messagesBox.current.scrollTop = messagesBox.current.scrollHeight;
+  }, [lead.id, tab]);
   const [draft, setDraft] = useState(lead.draft ?? "");
   const [draftDirty, setDraftDirty] = useState(false);
   useEffect(() => {
@@ -277,16 +285,22 @@ function LeadCard({
     }
   }
   return (
-    <article aria-label={`Карточка: ${lead.name}`}>
+    <article
+      className={tab === "conversation" ? "conversation-card" : ""}
+      aria-label={`Карточка: ${lead.name}`}
+    >
       <header className="lead-card-header">
         <button className="lead-back crm-quiet" type="button" onClick={back}>
           <ArrowLeft size={17} />
           Все обращения
         </button>
         <div className="lead-card-title">
-          <div>
+          <span className="chat-avatar" aria-hidden="true">
+            {lead.name.slice(0, 1)}
+          </span>
+          <div className="chat-contact">
             <h2>{lead.name}</h2>
-            <p>{student.name}</p>
+            {student.name !== lead.name ? <p>{student.name}</p> : null}
           </div>
           <span className={`lead-stage stage-${progress.stage}`} data-testid="lead-stage">
             {progress.label}
@@ -348,15 +362,21 @@ function LeadCard({
       </nav>
       <div className="lead-tab-content">
         {tab === "conversation" ? (
-          <div>
-            <div className="lead-messages">
+          <div className="lead-conversation">
+            <div
+              className="lead-messages"
+              ref={messagesBox}
+              role="region"
+              aria-label={`Сообщения: ${lead.name}`}
+              tabIndex={0}
+            >
               {conversation ? (
                 conversation.messages.map((message, i) => (
                   <div
                     key={i}
                     className={`lead-message ${message.author === "Анна" ? "outgoing" : "incoming"}`}
                   >
-                    <span>{message.author}</span>
+                    <span className="sr-only">{message.author}</span>
                     <p>{message.text}</p>
                   </div>
                 ))
@@ -367,9 +387,10 @@ function LeadCard({
             {!lead.closedAt ? (
               <div className="lead-composer">
                 {progress.stage === "new" || progress.stage === "no_show" ? (
-                  <div className="lead-invitation">
+                  <details className="lead-invitation">
+                    <summary>Предложить время</summary>
                     <label>
-                      Предложить время
+                      Свободное окно
                       <select
                         aria-label="Время для приглашения"
                         value={slotId}
@@ -394,7 +415,7 @@ function LeadCard({
                     >
                       Вставить приглашение
                     </button>
-                  </div>
+                  </details>
                 ) : null}
                 <label>
                   Черновик ответа
@@ -419,9 +440,15 @@ function LeadCard({
                     <Copy size={16} />
                     Скопировать ответ
                   </button>
-                  <button type="button" className="crm-secondary" onClick={save}>
+                  <button
+                    type="button"
+                    className="crm-secondary save-draft"
+                    aria-label="Сохранить черновик"
+                    title="Сохранить черновик"
+                    onClick={save}
+                  >
                     <Check size={16} />
-                    Сохранить черновик
+                    <span>Сохранить черновик</span>
                   </button>
                 </div>
               </div>

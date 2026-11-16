@@ -77,6 +77,7 @@ try {
     else await page.goto(`${url}/?section=chats&focus=igor`, { waitUntil: "networkidle" });
     const card = page.getByRole("article", { name: "Карточка: Игорь", exact: true });
     await card.getByRole("textbox", { name: "Ответ Игорь", exact: true }).waitFor();
+    await card.locator(".lead-invitation summary").click();
     const invitation = card.getByRole("combobox", { name: "Время для приглашения" });
     assert.equal(await invitation.locator('option[value="thu"]').count(), 0);
     await invitation.selectOption("sat-12");
@@ -96,6 +97,10 @@ try {
       await card.getByRole("textbox", { name: "Ответ Игорь", exact: true }).inputValue(),
       /Игорь, удобно/,
     );
+    assert.equal(await card.locator(".lead-messages").evaluate(el => getComputedStyle(el).overflowY), "auto");
+    const editor = await card.locator(".lead-composer").boundingBox();
+    assert.ok(editor && editor.y >= 0 && editor.y + editor.height <= 961, "Editor must remain inside the viewport");
+    await page.screenshot({ path: `${output}/conversation-${width}.png`, fullPage: true });
     await page.goto(`${url}/?section=chats&focus=marina`, { waitUntil: "networkidle" });
     assert.equal(
       await page.getByRole("textbox", { name: "Ответ Марина", exact: true }).inputValue(),
