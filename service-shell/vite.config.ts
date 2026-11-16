@@ -145,6 +145,8 @@ function authPopupPlugin(): Plugin {
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.
 // The dev server starts once `src/router.tsx` and `src/routes/` exist — see
 // AGENTS.md § "First scaffold".
+const standalonePreview = process.env.CANTOR_PREVIEW === "1";
+
 export default defineConfig(({ command, isPreview }) => ({
   server: {
     host: "0.0.0.0",
@@ -166,8 +168,8 @@ export default defineConfig(({ command, isPreview }) => ({
     // PWA head + ?install=1 tutorial page; runs before Start/Nitro.
     grokPwaPlugin(),
     tailwindcss(),
-    tanstackStart(),
-    ...(command === "build" || isPreview
+    tanstackStart(standalonePreview ? { spa: { enabled: true } } : undefined),
+    ...(!standalonePreview && (command === "build" || isPreview)
       ? [
           nitro({
             preset: "vercel",

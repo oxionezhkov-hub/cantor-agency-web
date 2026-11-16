@@ -526,7 +526,7 @@ export function DashboardSection() {
     recommendations.push({
       id: dialog.id,
       title: `${dialog.name} молчит уже сутки`,
-      text: "Одно сообщение про свободное окно. Второе не пишите.",
+      text: "Продолжите диалог по сценарию повторных касаний из базы знаний.",
       section: "chats",
       rank: 2,
     });
@@ -537,7 +537,7 @@ export function DashboardSection() {
       recommendations.push({
         id: `block-${ad.id}`,
         title: `Объявление «${name}» заблокировано`,
-        text: "В первый час его ещё можно поправить.",
+        text: "Проверьте причину блокировки и рекомендации Авито по исправлению.",
         section: "ads",
         rank: 0,
       });
@@ -603,7 +603,7 @@ export function DashboardSection() {
         </button>
       </div>
 
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="dashboard-funnel mt-6 flex gap-2 overflow-x-auto pb-1">
         {steps.map((step) => (
           <article key={step.label} className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-3 py-4">
             <p className="flex items-center gap-2 text-sm text-muted">
