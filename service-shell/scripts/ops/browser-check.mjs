@@ -2,14 +2,27 @@
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { setGlobalProxyFromEnv } from "node:http";
+setGlobalProxyFromEnv();
 const url = process.argv[2] || "http://127.0.0.1:8080";
 const output = process.argv[3] || "/tmp/cantor-service-checks";
 mkdirSync(output, { recursive: true });
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium", headless: true, args: ["--no-sandbox"] });
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium", headless: true, env: process.env.CANTOR_BROWSER_DATA_HOME ? { ...process.env, XDG_DATA_HOME: process.env.CANTOR_BROWSER_DATA_HOME } : process.env, proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "localhost,127.0.0.1" } : undefined, args: ["--no-sandbox"] });
 const results=[];
 try {
  for (const width of [1440,390]) {
   const context = await browser.newContext({ viewport: { width, height: 960 }, colorScheme: "light" });
+  // When Chromium lacks the managed proxy CA, use Node's validated TLS transport.
+  // Certificate verification stays enabled; no ignoreHTTPSErrors or blanket bypass.
+  if (process.env.CANTOR_BROWSER_VALIDATED_TRANSPORT === "1") {
+    await context.route(`${new URL(url).origin}/**`, async route => {
+      const request = route.request();
+      const response = await fetch(request.url(), { method: request.method(), headers: request.headers(), body: ["GET", "HEAD"].includes(request.method()) ? undefined : request.postDataBuffer(), signal: AbortSignal.timeout(30000) });
+      const headers = Object.fromEntries(response.headers);
+      for (const name of ["content-encoding", "content-length", "transfer-encoding"]) delete headers[name];
+      await route.fulfill({ status: response.status, headers, body: Buffer.from(await response.arrayBuffer()) });
+    });
+  }
   const page = await context.newPage(); const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(url, { waitUntil: "networkidle" });
@@ -33,5 +46,5 @@ try {
   await context.close();
  }
  writeFileSync(`${output}/result.json`,JSON.stringify({url,results},null,2));
- console.log(JSON.stringify({ok:true,url,results,screenshots:output}));
+ console.log(JSON.stringify({ok:true,url,results,screenshots:output,transport:process.env.CANTOR_BROWSER_VALIDATED_TRANSPORT === "1" ? "node-tls-verified" : "chromium"}));
 } finally { await browser.close(); }
