@@ -114,9 +114,9 @@ try {
       assert.equal(await page.locator(".knowledge > :first-child").getAttribute("class"), "knowledge-start", "Course starts with the orange learning panel");
       assert.equal(await page.locator(".knowledge-header,.knowledge-context,.knowledge-footer,.knowledge-complete").count(), 0, "Removed boilerplate stays removed");
       assert.doesNotMatch(await page.locator(".knowledge").innerText(), /материал из внутренней|исходном контексте|инструкции по работе с сервисом|собраны материалы базы знаний/i);
-      assert.match(await page.title(), /Алита/);
+      assert.match(await page.title(), /Авито/);
       const brand = page.locator(".service-brand");
-      assert.match(await brand.innerText(), /Алита/);
+      assert.match(await brand.innerText(), /Авито/);
       const logo = brand.locator("img");
       await logo.waitFor({ state: "attached" });
       assert.ok(await logo.evaluate(image => image.complete && image.naturalWidth > 0), "Actual logo image loaded");
