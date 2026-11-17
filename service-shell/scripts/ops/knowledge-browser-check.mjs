@@ -55,7 +55,7 @@ try {
     };
     try {
       await page.goto(location(), { waitUntil: "networkidle" });
-      await page.getByRole("heading", { name: "База знаний", exact: true }).waitFor();
+      await page.getByRole("heading", { level: 2, name: "База знаний", exact: true }).waitFor();
       assert.equal(await page.getByRole("list", { name: "Программа курса", exact: true }).locator("li").count(), 14);
       await checkOverflow("overview");
       await page.screenshot({ path: `${output}/knowledge-overview-${width}.png`, fullPage: true });
@@ -71,13 +71,13 @@ try {
       await search.fill(phrase);
       const found = page.getByRole("list", { name: "Результаты поиска" }).locator(".knowledge-lesson-copy strong");
       assert.deepEqual(await found.allTextContents(), expected.map(lesson => lesson.title));
-      await page.getByRole("button", { name: /^Диалоги и продажи/ }).click();
+      await page.locator(".knowledge-track").filter({ hasText: "Диалоги и продажи" }).click();
       assert.equal(await page.getByRole("list", { name: "Результаты поиска" }).locator("li").count(), 0);
       await page.getByRole("heading", { name: "Материалов не найдено" }).waitFor();
       await page.getByRole("button", { name: "Сбросить поиск и фильтры" }).click();
       assert.equal(await search.inputValue(), "");
       assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), 12);
-      await page.getByRole("button", { name: /^Продвижение на Авито/ }).click();
+      await page.locator(".knowledge-track").filter({ hasText: "Продвижение на Авито" }).click();
       assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), references.filter(lesson => lesson.track === "promotion").length);
       await page.getByRole("button", { name: /Сбросить фильтр/ }).click();
       assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), 12);
