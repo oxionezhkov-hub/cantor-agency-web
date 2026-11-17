@@ -18,10 +18,7 @@ function toneClass(tone: CabinetRow["tone"]): string {
 }
 
 function Sheet({ rows }: { rows: CabinetRow[] }) {
-  const body =
-    rows.length > 0
-      ? rows
-      : [{ label: "Данные", value: "нет", detail: null, tone: "plain" as const }];
+  const body = rows.length > 0 ? rows : [{ label: "Данные", value: "нет", detail: null, tone: "plain" as const }];
   return (
     <section className="mt-8 first:mt-0">
       <table className="w-full border-collapse">
@@ -33,9 +30,7 @@ function Sheet({ rows }: { rows: CabinetRow[] }) {
               </th>
               <td className={`py-3 text-right ${toneClass(row.tone)}`}>
                 {row.value}
-                {row.detail ? (
-                  <span className="mt-0.5 block text-sm font-normal text-muted">{row.detail}</span>
-                ) : null}
+                {row.detail ? <span className="mt-0.5 block text-sm font-normal text-muted">{row.detail}</span> : null}
               </td>
             </tr>
           ))}
@@ -67,13 +62,9 @@ export function CabinetPage({
 
   return (
     <div>
-      {sheets.includes("subscription") ? (
-        <Sheet rows={subscriptionRows(snapshot.subscription, now)} />
-      ) : null}
-      {sheets.includes("balance") ? <Sheet rows={balanceRows(snapshot.balance)} /> : null}
-      {sheets.includes("blocks") ? (
-        <Sheet rows={blockRows(snapshot.blocks, now.getTime())} />
-      ) : null}
+      {sheets.includes("subscription") ? <Sheet rows={getPreviewData() ? ["План", "Статус", "Оплачена до", "Осталось", "Автопродление", "Размещение"].map(label => ({ label, value: "—", detail: null, tone: "plain" as const })) : subscriptionRows(snapshot.subscription, now)} /> : null}
+      {sheets.includes("balance") ? <Sheet rows={getPreviewData() ? balanceRows(snapshot.balance).map(row => row.label === "Расход вчера" ? { ...row, detail: null } : { ...row, value: "—", detail: null, tone: "plain" }) : balanceRows(snapshot.balance)} /> : null}
+      {sheets.includes("blocks") ? <Sheet rows={blockRows(snapshot.blocks, now.getTime())} /> : null}
     </div>
   );
 }

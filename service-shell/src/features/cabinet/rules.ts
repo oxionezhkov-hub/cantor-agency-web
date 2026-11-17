@@ -19,7 +19,7 @@ export type SubscriptionInput = {
 export type BalanceInput = {
   advanceRub: number;
   yesterdayPromotionRub: number;
-  autoTopUp: boolean | null;
+  autoTopUp: boolean;
   walletRealRub: number;
   walletBonusRub: number;
 };
@@ -40,18 +40,8 @@ export type BlocksInput = {
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const MONTHS = [
-  "января",
-  "февраля",
-  "марта",
-  "апреля",
-  "мая",
-  "июня",
-  "июля",
-  "августа",
-  "сентября",
-  "октября",
-  "ноября",
-  "декабря",
+  "января", "февраля", "марта", "апреля", "мая", "июня",
+  "июля", "августа", "сентября", "октября", "ноября", "декабря",
 ];
 
 export function formatRuDate(iso: string): string {
@@ -143,7 +133,10 @@ export function balanceRows(input: BalanceInput): CabinetRow[] {
   const walletKnown = finite(input.walletRealRub) && finite(input.walletBonusRub);
   const days = reserveDays(input.advanceRub, input.yesterdayPromotionRub);
   const short = days !== null && days < BALANCE_RESERVE_DAYS;
-  const reserveValue = days === null ? "не посчитать" : `на ${formatDayCount(days)}`;
+  const reserveValue =
+    days === null
+      ? "не посчитать"
+      : `на ${formatDayCount(days)}`;
   const reserveDetail =
     days === null
       ? "вчера расхода на продвижение не было"
@@ -158,23 +151,16 @@ export function balanceRows(input: BalanceInput): CabinetRow[] {
     },
     {
       label: "Расход вчера",
-      value: finite(input.yesterdayPromotionRub)
-        ? formatRub(input.yesterdayPromotionRub)
-        : "нет данных",
+      value: finite(input.yesterdayPromotionRub) ? formatRub(input.yesterdayPromotionRub) : "нет данных",
       detail: "продвижение, без платы за размещение",
       tone: "plain",
     },
     { label: "Хватит", value: reserveValue, detail: reserveDetail, tone: short ? "bad" : "plain" },
     {
       label: "Кто пополняет",
-      value: input.autoTopUp === null ? "нет данных" : input.autoTopUp ? "само" : "репетитор",
-      detail:
-        input.autoTopUp === null
-          ? null
-          : input.autoTopUp
-            ? "проверяем, что списание проходит"
-            : "автопополнения нет",
-      tone: short && input.autoTopUp === false ? "bad" : "plain",
+      value: input.autoTopUp ? "само" : "репетитор",
+      detail: input.autoTopUp ? "проверяем, что списание проходит" : "автопополнения нет",
+      tone: short && !input.autoTopUp ? "bad" : "plain",
     },
     {
       label: "Кошелёк",
@@ -206,9 +192,7 @@ export function blockRows(input: BlocksInput, _nowMs: number): CabinetRow[] {
 
   for (const item of items) {
     const found = Date.parse(item.foundAt);
-    const detail = Number.isFinite(found)
-      ? `Обнаружено ${new Date(found).toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })} МСК. Проверьте причину в Авито`
-      : "Проверьте причину в Авито";
+    const detail = Number.isFinite(found) ? `Обнаружено ${new Date(found).toLocaleString("ru-RU", { timeZone: "Europe/Moscow", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })} МСК. Проверьте причину в Авито` : "Проверьте причину в Авито";
     rows.push({
       label: item.title.trim() || "Объявление без названия",
       value: kindLabel(item.kind),
@@ -219,8 +203,7 @@ export function blockRows(input: BlocksInput, _nowMs: number): CabinetRow[] {
 
   const rejected = items.filter((item) => item.kind === "rejected").length;
   const removed = items.filter((item) => item.kind === "removed").length;
-  if (rejected === 0)
-    rows.push({ label: "Отклонённые", value: "нет", detail: null, tone: "plain" });
+  if (rejected === 0) rows.push({ label: "Отклонённые", value: "нет", detail: null, tone: "plain" });
   if (removed === 0) rows.push({ label: "Снятые", value: "нет", detail: null, tone: "plain" });
   return rows;
 }
