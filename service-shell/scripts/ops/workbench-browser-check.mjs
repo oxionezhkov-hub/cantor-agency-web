@@ -50,8 +50,15 @@ try {
     const go = (path) => page.goto(url + path, { waitUntil: "networkidle" });
     await go("/?section=chats");
     const list = page.getByRole("complementary", { name: "Обращения" });
-    assert.equal(await list.getByRole("button", { name: /Открыть обращение/ }).count(), 2);
-    assert.match(await list.locator(".contact-name-line").first().innerText(), /Марина/);
+    await list
+      .getByRole("button", { name: /Открыть обращение/ })
+      .first()
+      .waitFor();
+    assert.equal(await list.getByRole("button", { name: /Открыть обращение/ }).count(), 5);
+    assert.match(
+      await list.locator(".contact-name-line").first().innerText(),
+      /Екатерина|Александра|Дмитрий/,
+    );
     const listBox = await list.boundingBox(),
       headBox = await list.locator(".workbench-list-head").boundingBox();
     assert.ok(headBox.width <= listBox.width);
@@ -106,16 +113,16 @@ try {
     await input.press("Shift+Enter");
     assert.match(await input.inputValue(), /\n/);
     await input.press("Enter");
-    await card.getByRole("alert").waitFor();
-    assert.match(await card.getByRole("alert").innerText(), /не отправлено.*Авито не подключён/);
-    assert.equal(await card.locator(".message-bubble").count(), 3);
-    assert.match(await input.inputValue(), /Офлайн-черновик/);
-    await card.getByRole("button", { name: "Убрать цитату", exact: true }).click();
-    await card.getByRole("button", { name: "Информация о клиенте", exact: true }).click();
-    await card
-      .getByRole("textbox", { name: "Заметка о клиенте", exact: true })
+    await card.locator(".message-bubble").filter({ hasText: "Офлайн-черновик" }).waitFor();
+    assert.equal(await card.locator(".message-bubble").count(), 4);
+    await card.getByRole("button", { name: "Заметка о клиенте", exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Текст заметки", exact: true })
       .fill("Попросить пробник по геометрии");
-    await page.keyboard.press("Escape");
+    await page
+      .locator(".note-editor")
+      .getByRole("button", { name: "Сохранить", exact: true })
+      .click();
     assert.equal(await card.locator(".note-button.has-note").count(), 1);
     await action("Остановить таймер");
     assert.equal(
@@ -201,14 +208,11 @@ try {
     );
     await go("/?section=chats");
     await page.getByRole("button", { name: "CRM", exact: true }).click();
-    const crmIgor = page
-      .locator('.crm-lane[aria-label="Ученик"]')
-      .getByRole("button")
-      .filter({ hasText: "Игорь" });
+    const crmIgor = page.locator('.crm-lane[aria-label="Ученик"] [data-lead-id="igor"]');
     assert.equal(await crmIgor.count(), 1);
-    assert.match(await crmIgor.innerText(), /Задач: 1/);
+    assert.match(await crmIgor.innerText(), /Задачи · 1/);
     await page.screenshot({ path: `${output}/crm-${width}.png`, fullPage: true });
-    await crmIgor.click();
+    await crmIgor.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).click();
     await action("Итоги и задачи");
     await card
       .getByRole("button", { name: "Выполнить: Уточнить решение после встречи", exact: true })
@@ -242,7 +246,7 @@ try {
       searchMessagesAndCity: true,
       timerControl: true,
       offlineDraft: true,
-      noFakeDelivery: true,
+      explicitLocalDelivery: true,
       quotesAndDates: true,
       notePopover: true,
       contextMenu: true,

@@ -17,6 +17,17 @@ const leadSchema = z.object({
   timerStopped: z.boolean().optional(),
   note: z.string().max(4000).optional(),
   mode: z.enum(["manual", "ai_approval", "ai_auto"]).optional(),
+  workflowStage: z
+    .enum(["new", "booked", "outcome", "after", "no_show", "student", "closed"])
+    .optional(),
+  stageChangedAt: at.optional(),
+  aiProposal: z
+    .object({
+      text: z.string().max(5000),
+      forMsgId: id,
+      status: z.enum(["ready", "rejected", "approved"]),
+    })
+    .optional(),
   closedAt: at.optional(),
   closeReason: z.string().min(1).max(300).optional(),
 });
@@ -60,6 +71,10 @@ const chatMessageSchema = z.object({
   kind: z.enum(["text", "image", "voice", "file", "call", "video"]).optional(),
   url: z.string().url().optional(),
   fileName: z.string().max(250).optional(),
+  attachmentId: id.optional(),
+  mimeType: z.string().max(200).optional(),
+  delivery: z.enum(["local", "provider"]).optional(),
+  editedAt: at.optional(),
 });
 const followupSchema = z.object({
   id,
@@ -212,6 +227,9 @@ export function recordPayment(
   return {
     ...state,
     payments: [...state.payments, payment],
+    leads: state.leads.map((l) =>
+      l.studentId === payment.studentId ? { ...l, workflowStage: undefined } : l,
+    ),
     events: event(state, payment.id, "payment_recorded", payment.paidAt, "Внесена оплата ученика"),
   };
 }
@@ -335,6 +353,9 @@ export function bookAppointment(
   return {
     ...state,
     appointments: [...state.appointments, appointment],
+    leads: state.leads.map((l) =>
+      l.id === appointment.leadId ? { ...l, workflowStage: undefined } : l,
+    ),
     events: event(
       state,
       appointment.id,
@@ -361,6 +382,9 @@ export function appointmentOutcome(
     throw new CrmError("Встреча ещё не закончилась. Пока можно только отменить её");
   return {
     ...state,
+    leads: state.leads.map((l) =>
+      l.id === current.leadId ? { ...l, workflowStage: undefined } : l,
+    ),
     appointments: state.appointments.map((item) =>
       item.id === current.id
         ? { ...item, status, ...(status === "completed" ? { completedAt: now } : {}) }
@@ -452,6 +476,9 @@ export function rescheduleAppointment(
   const replacement = checked.appointments.find((item) => item.id === appointmentId)!;
   return {
     ...state,
+    leads: state.leads.map((l) =>
+      l.id === current.leadId ? { ...l, workflowStage: undefined } : l,
+    ),
     appointments: state.appointments.map((item) =>
       item.id === appointmentId ? replacement : item,
     ),

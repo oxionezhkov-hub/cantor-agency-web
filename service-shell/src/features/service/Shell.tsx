@@ -33,7 +33,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
     const appointment = crm.appointments.find(item => item.startsAt === slot.startsAt && item.status === "booked");
     return { ...slot, takenBy: appointment ? crm.leads.find(item => item.id === appointment.leadId)?.name || null : null };
   });
-  const marks = attention({ ads, dialogs: dialogs.filter(d => leadProgress(crm, d.id, now).stage === "new"), windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.filter(id => crm.leads.some(l => l.studentId === id && !l.closedAt)).length, nowMs: now });
+  const marks = attention({ ads, dialogs: dialogs.filter(d => crm.leads.some(l => l.id === d.id) && leadProgress(crm, d.id, now).stage === "new"), windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.filter(id => crm.leads.some(l => l.studentId === id && !l.closedAt)).length, nowMs: now });
   const cabinetShort = balanceRows(sampleCabinet.balance).some(row => row.label === "Хватит" && row.tone === "bad");
   marks.acc = (cabinetShort ? 1 : 0) + blockRows(sampleCabinet.blocks, now).filter(row => row.tone === "bad").length;
   marks.today = marks.stats + marks.ads + marks.chats;

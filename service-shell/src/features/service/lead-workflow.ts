@@ -24,17 +24,19 @@ export function leadProgress(state: CrmState, leadId: string, nowMs: number) {
   )[0];
   const stage: LeadStage = lead.closedAt
     ? "closed"
-    : booked
-      ? Date.parse(booked.endsAt) <= nowMs
-        ? "outcome"
-        : "booked"
-      : receivedMinor > 0
-        ? "student"
-        : completed.length
-          ? "after"
-          : latest?.status === "no_show"
-            ? "no_show"
-            : "new";
+    : lead.workflowStage && lead.workflowStage !== "closed"
+      ? lead.workflowStage
+      : booked
+        ? Date.parse(booked.endsAt) <= nowMs
+          ? "outcome"
+          : "booked"
+        : receivedMinor > 0
+          ? "student"
+          : completed.length
+            ? "after"
+            : latest?.status === "no_show"
+              ? "no_show"
+              : "new";
   let nextTab: DetailTab = "appointment",
     nextLabel = "Выбрать время";
   if (stage === "closed") {

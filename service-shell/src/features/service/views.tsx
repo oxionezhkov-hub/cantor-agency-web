@@ -233,7 +233,7 @@ export function DashboardSection() {
 
   const blockedTitles = new Set(sampleCabinet.blocks.items.map((item) => item.title));
   const recommendations: { id: string; title: string; text: string; section: "ads" | "stats" | "chats"; focus?: string; rank: number }[] = [];
-  const openDialogs = dialogs.filter(dialog => leadProgress(crm, dialog.id, now).stage === "new");
+  const openDialogs = dialogs.filter(dialog => crm.leads.some(l => l.id === dialog.id) && leadProgress(crm, dialog.id, now).stage === "new");
   const late = openDialogs
     .filter((dialog) => replyLate(dialog.waitingSince, now))
     .sort((a, b) => Date.parse(a.waitingSince ?? "") - Date.parse(b.waitingSince ?? ""));

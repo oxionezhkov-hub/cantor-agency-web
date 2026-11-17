@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { demoCrm } from "./crm-demo.ts";
+import { demoCrm, withDialogExamples } from "./crm-demo.ts";
 import { parseCrmState, recordPayment, bookAppointment, type CrmState } from "./crm.ts";
 import { windows } from "./data.ts";
 export const CRM_KEY = "cantor.demo-crm.v1";
@@ -49,7 +49,13 @@ export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: str
 export function readDemoCrm(): CrmState {
   if (typeof localStorage === "undefined") return demoCrm;
   const current = localStorage.getItem(CRM_KEY);
-  if (current) return parseCrmState(JSON.parse(current));
+  if (current) {
+    const state = parseCrmState(JSON.parse(current));
+    const upgraded = withDialogExamples(state);
+    if (upgraded === state) return state;
+    localStorage.setItem(CRM_KEY, JSON.stringify(upgraded));
+    return upgraded;
+  }
   let payments: unknown = null,
     bookings: unknown = null;
   try {
@@ -58,7 +64,7 @@ export function readDemoCrm(): CrmState {
   } catch {
     /* Old malformed demo data is not trusted or removed. */
   }
-  const state = migrateLegacyDemo(payments, bookings, new Date().toISOString());
+  const state = withDialogExamples(migrateLegacyDemo(payments, bookings, new Date().toISOString()));
   // Persist the migration timestamp once; legacy keys remain intact.
   localStorage.setItem(CRM_KEY, JSON.stringify(state));
   return state;

@@ -1,3 +1,4 @@
+import { dialogExamples } from "./dialog-examples.ts";
 import { parseCrmState, type CrmState } from "./crm.ts";
 export const DEMO_WORKSPACE = "cantor-demo-anna";
 export const demoCrm: CrmState = parseCrmState({
@@ -119,3 +120,56 @@ export const demoCrm: CrmState = parseCrmState({
   refunds: [],
   events: [],
 });
+
+// Additional interactive examples are seeded only into the isolated local workbench.
+export function withDialogExamples(state: CrmState): CrmState {
+  if (state.workspaceId !== DEMO_WORKSPACE) return state;
+  const examples = dialogExamples.filter((e) => !state.leads.some((l) => l.id === e.id));
+  if (!examples.length) return state;
+  return parseCrmState({
+    ...state,
+    students: [
+      ...state.students,
+      ...examples
+        .filter((e) => !state.students.some((s) => s.id === `student-${e.id}`))
+        .map((e) => ({ id: `student-${e.id}`, name: e.name })),
+    ],
+    leads: [
+      ...state.leads,
+      ...examples.map((e) => ({
+        id: e.id,
+        studentId: `student-${e.id}`,
+        name: e.name,
+        city: e.city,
+        adId: e.adId,
+        createdAt: e.messages[0].at,
+        mode: e.mode,
+        workflowStage: e.stage,
+        unreadCount: e.stage === "closed" ? 0 : 1,
+        ...(e.stage === "closed"
+          ? { closedAt: e.messages.at(-1)!.at, closeReason: "Нужны очные занятия" }
+          : {}),
+        ...(e.proposal
+          ? {
+              aiProposal: {
+                text: e.proposal,
+                forMsgId: `${e.id}-source-${e.messages.length - 1}`,
+                status: "ready" as const,
+              },
+            }
+          : {}),
+      })),
+    ],
+    followups: [
+      ...(state.followups ?? []),
+      ...examples
+        .filter((e) => e.task)
+        .map((e) => ({
+          id: `task-${e.id}`,
+          leadId: e.id,
+          title: e.task!.title,
+          dueAt: e.task!.dueAt,
+        })),
+    ],
+  });
+}
