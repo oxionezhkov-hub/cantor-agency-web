@@ -90,7 +90,7 @@ export function LeadWorkspace({
   const [now, setNow] = useState(Date.now);
   const search = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (focus) setSelectedId(focus);
+    setSelectedId(focus ?? null);
   }, [focus]);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);

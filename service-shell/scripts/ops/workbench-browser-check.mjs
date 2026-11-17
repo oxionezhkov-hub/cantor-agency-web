@@ -69,6 +69,10 @@ try {
     );
     await list.getByRole("button", { name: "Закрыть поиск", exact: true }).click();
     await list.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).click();
+    await page.waitForURL(u => u.searchParams.get("focus") === "igor");
+    await page.goBack({ waitUntil: "networkidle" });
+    await list.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).waitFor();
+    await list.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).click();
     const card = page.getByRole("article", { name: "Карточка: Игорь", exact: true }),
       input = card.getByRole("textbox", { name: "Ответ Игорь", exact: true });
     async function action(name) {
