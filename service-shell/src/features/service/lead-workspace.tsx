@@ -287,9 +287,15 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
                                 .includes(query.trim().toLocaleLowerCase("ru-RU")),
                             );
                         const m = match || messages.at(-1);
-                        return m?.kind === "call"
-                          ? "Звонок через Авито"
-                          : m?.text?.replace(/^\[Системное сообщение\]\s*/i, "") || "Нет сообщений";
+                        if (m?.kind === "call") return "Звонок через Авито";
+                        const text =
+                          m?.text?.replace(/^\[Системное сообщение\]\s*/i, "") || "Нет сообщений";
+                        if (!match) return text;
+                        const index = text
+                          .toLocaleLowerCase("ru-RU")
+                          .indexOf(query.trim().toLocaleLowerCase("ru-RU"));
+                        const start = Math.max(0, index - 24);
+                        return `${start ? "…" : ""}${text.slice(start, start + Math.max(90, query.trim().length + 30))}`;
                       })()}
                     </span>
                     {lead.unreadCount ? (
