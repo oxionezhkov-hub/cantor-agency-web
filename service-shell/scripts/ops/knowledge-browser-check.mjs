@@ -53,8 +53,9 @@ try {
         const funnel = prose.querySelector(".funnel");
         const steps = [...funnel.querySelectorAll(".fn")];
         const conversions = [...funnel.querySelectorAll(".fn-conv")];
-        const table = prose.querySelector("table");
-        const cells = [...prose.querySelectorAll("td.num")];
+        const exercise = prose.closest("article").querySelector(".knowledge-practice");
+        const table = exercise.querySelector("table");
+        const cells = [...table.querySelectorAll("td.num")];
         const wrapper = table.closest(".tbl-wrap,.table-wrap,.table-scroll");
         const scale = prose.querySelector(".scale");
         const scaleTrack = scale.querySelector(".scale-track");
