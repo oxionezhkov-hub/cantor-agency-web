@@ -4218,14 +4218,20 @@ function reportTag(u) {
 // On weekdays, right after the report is posted (so the day's numbers have been checked and entered):
 // every client of the report with no contacts over its period gets a message in its own work-chat
 // topic, tagging whoever leads it («Клиенты → Настройки»). Clients without a topic go to the main
-// topic in one list. Nothing to say — nothing is sent. Once per report.
+// topic in one list. Nothing to say — nothing is sent.
+// Once per client and period, not once per file: generating the same Avito report again must not
+// ping those topics a second time. A client that had contacts last time and has none now still gets one.
 async function reportNoContactsAlert(env, job, work, team) {
   const kv = env.AGENCY_DASHBOARD_KV;
   const dow = botMsk(Date.now()).dow;
   if (dow === 0 || dow === 6 || job.noContactsAt) return;
-  const zero = (job.report.clients || []).filter((c) => !(c.period && c.period.contacts > 0));
+  const zero = (job.report.clients || []).filter((c) => !(c.period && c.period.contacts > 0) && c.projectId);
+  const already = await reportNoContactsSent(kv, job);
+  const pending = zero.filter((c) => !already.has(c.projectId));
   job.noContactsAt = new Date().toISOString();
-  if (!zero.length) return;
+  for (const c of pending) already.add(c.projectId);
+  await kv.put(`bot:nocontacts:${job.dateFrom}:${job.dateTo}`, JSON.stringify([...already]), { expirationTtl: 60 * 60 * 24 * 21 });
+  if (!pending.length) return;
   const owners = await atLoadOwners(kv);
   const byId = new Map(team.users.map((u) => [u.id, u]));
   const topics = {};
@@ -4237,7 +4243,7 @@ async function reportNoContactsAlert(env, job, work, team) {
   const label = escapeHtml(job.report.periodLabel);
   const nums = (p) => (p.budget > 0 ? `расход ${Math.round(p.budget).toLocaleString('ru-RU')} ₽, ${Number(p.views || 0).toLocaleString('ru-RU')} просмотров` : 'бюджет не тратится');
   const loose = [];
-  for (const c of zero) {
+  for (const c of pending) {
     const p = c.period || {};
     const u = owners[c.projectId] && byId.get(owners[c.projectId].userId);
     const tag = u && u.active ? reportTag(u) : '';
@@ -4246,6 +4252,21 @@ async function reportNoContactsAlert(env, job, work, team) {
     await botSend(env, work.id, `⚠️ <b>Нет контактов</b> — ${label}: ${nums(p)}.\n${tag ? `${tag}, р` : 'Р'}азберите причину сегодня и напишите план здесь.`, { message_thread_id: thread });
   }
   if (loose.length) await botSend(env, work.id, [`⚠️ <b>Без контактов</b> — ${label}`, ...loose].join('\n'));
+}
+// Project ids already pinged for this report period. Saved after the first send; until that key
+// exists, earlier report jobs that already ran the alert count too (so a deploy doesn't repeat them).
+async function reportNoContactsSent(kv, job) {
+  const key = `bot:nocontacts:${job.dateFrom}:${job.dateTo}`;
+  const saved = await kv.get(key, 'json');
+  if (Array.isArray(saved)) return new Set(saved);
+  const ids = new Set();
+  for (const j of await listByPrefix(kv, 'reportJob:')) {
+    if (!j || j.id === job.id || j.dateFrom !== job.dateFrom || j.dateTo !== job.dateTo || !j.noContactsAt) continue;
+    for (const c of (j.report && j.report.clients) || []) {
+      if (c && c.projectId && !(c.period && c.period.contacts > 0)) ids.add(c.projectId);
+    }
+  }
+  return ids;
 }
 
 // ── Control bot (Telegram): keeps agency tasks and deadlines from getting lost ──
