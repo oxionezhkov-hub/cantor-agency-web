@@ -58,6 +58,7 @@ try {
     const page = await context.newPage(),
       errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    await page.clock.install({ time: new Date("2026-11-16T10:00:00Z") });
     await page.goto(url, { waitUntil: "networkidle" });
     assert.equal(await page.getByTestId("completed-diagnostics").innerText(), "3");
     assert.equal(await page.getByTestId("new-students").innerText(), "2");
@@ -78,9 +79,13 @@ try {
     const card = page.getByRole("article", { name: "Карточка: Игорь", exact: true });
     await card.getByRole("textbox", { name: "Ответ Игорь", exact: true }).waitFor();
     await card.locator(".lead-invitation summary").click();
+    async function choose(control, value) {
+      await control.click();
+      await page.locator(`[role="option"][data-value="${value}"]`).click();
+    }
     const invitation = card.getByRole("combobox", { name: "Время для приглашения" });
-    assert.equal(await invitation.locator('option[value="thu"]').count(), 0);
-    await invitation.selectOption("sat-12");
+    assert.equal(await page.locator('[role="option"][data-value="thu"]').count(), 0);
+    await choose(invitation, "sat-12");
     await card.getByRole("button", { name: "Вставить приглашение" }).click();
     assert.match(
       await card.getByRole("textbox", { name: "Ответ Игорь", exact: true }).inputValue(),
@@ -97,9 +102,15 @@ try {
       await card.getByRole("textbox", { name: "Ответ Игорь", exact: true }).inputValue(),
       /Игорь, удобно/,
     );
-    assert.equal(await card.locator(".lead-messages").evaluate(el => getComputedStyle(el).overflowY), "auto");
+    assert.equal(
+      await card.locator(".lead-messages").evaluate((el) => getComputedStyle(el).overflowY),
+      "auto",
+    );
     const editor = await card.locator(".lead-composer").boundingBox();
-    assert.ok(editor && editor.y >= 0 && editor.y + editor.height <= 961, "Editor must remain inside the viewport");
+    assert.ok(
+      editor && editor.y >= 0 && editor.y + editor.height <= 961,
+      "Editor must remain inside the viewport",
+    );
     await page.screenshot({ path: `${output}/conversation-${width}.png`, fullPage: true });
     await page.goto(`${url}/?section=chats&focus=marina`, { waitUntil: "networkidle" });
     assert.equal(
@@ -110,16 +121,21 @@ try {
     await card.getByRole("button", { name: "Выбрать время", exact: true }).click();
     const schedule = card.getByRole("region", { name: "Расписание диагностик" });
     const slot = schedule.getByRole("combobox", { name: /Окно/ });
-    await slot.selectOption("tue");
+    await choose(slot, "tue");
     await schedule.getByRole("button", { name: "Записать на диагностику", exact: true }).click();
     assert.equal(await card.getByTestId("lead-stage").innerText(), "Записан");
     assert.equal(await schedule.getByRole("article").filter({ hasText: "Светлана" }).count(), 0);
     await schedule.getByRole("button", { name: "Перенести запись: Игорь", exact: true }).click();
-    await slot.selectOption("sat-12");
+    await choose(slot, "sat-12");
     await schedule.getByRole("button", { name: "Сохранить перенос", exact: true }).click();
     assert.match(await schedule.getByRole("article").innerText(), /21 ноября/);
     await schedule.getByRole("button", { name: "Перенести запись: Игорь", exact: true }).click();
-    assert.equal(await slot.locator('option[value="tue"]').isDisabled(), false);
+    await slot.click();
+    assert.notEqual(
+      await page.locator('[role="option"][data-value="tue"]').getAttribute("aria-disabled"),
+      "true",
+    );
+    await page.keyboard.press("Escape");
     await schedule.getByRole("button", { name: "Отменить перенос", exact: true }).click();
     await page.screenshot({ path: `${output}/booking-${width}.png`, fullPage: true });
     await card.getByRole("button", { name: "Закрыть обращение", exact: true }).click();
@@ -135,8 +151,8 @@ try {
       .waitFor();
     await card.getByRole("button", { name: "Вернуть в работу", exact: true }).click();
     await card.getByRole("button", { name: "Выбрать время", exact: true }).click();
-    await slot.selectOption("sat-12");
-    assert.equal(await slot.locator('option[value="sat-12"]').isDisabled(), false);
+    await choose(slot, "sat-12");
+    assert.match(await slot.innerText(), /21 ноября/);
     await schedule.getByRole("button", { name: "Записать на диагностику", exact: true }).click();
     await page.clock.install({ time: new Date("2026-11-22T10:00:00Z") });
     await page.reload({ waitUntil: "networkidle" });
@@ -146,16 +162,18 @@ try {
     await card.getByRole("button", { name: "Внести оплату", exact: true }).click();
     const payments = card.getByRole("region", { name: "Оплаты учеников", exact: true });
     assert.equal(
-      await payments.getByRole("combobox", { name: "Ученик", exact: true }).inputValue(),
-      "student-igor",
-    );
-    assert.equal(
       await payments
         .getByRole("combobox", { name: "Ученик", exact: true })
-        .locator("option")
-        .count(),
-      1,
+        .getAttribute("data-value"),
+      "student-igor",
     );
+    await payments.getByRole("combobox", { name: "Ученик", exact: true }).click();
+    assert.equal(await page.getByRole("option").count(), 1);
+    await page.keyboard.press("Escape");
+    await payments.getByRole("button", { name: "Дата оплаты", exact: true }).click();
+    assert.equal((await page.locator(".service-calendar .rdp-day_button").count()) > 27, true);
+    await page.screenshot({ path: `${output}/calendar-${width}.png`, fullPage: true });
+    await page.keyboard.press("Escape");
     for (const value of ["1 234,50", "55,50"]) {
       await payments.getByRole("textbox", { name: "Сумма, ₽", exact: true }).fill(value);
       await payments.getByRole("button", { name: "Сохранить оплату", exact: true }).click();
@@ -179,7 +197,8 @@ try {
     assert.equal(await page.getByRole("link").filter({ hasText: "Игорь ждёт ответа" }).count(), 0);
     const tab = await context.newPage();
     await tab.goto(`${url}/?section=stats`, { waitUntil: "networkidle" });
-    await tab.getByRole("combobox", { name: "Ученик", exact: true }).selectOption("student-oge");
+    await tab.getByRole("combobox", { name: "Ученик", exact: true }).click();
+    await tab.locator('[role="option"][data-value="student-oge"]').click();
     await tab.getByRole("textbox", { name: "Сумма, ₽", exact: true }).fill("500");
     await tab.getByRole("button", { name: "Сохранить оплату", exact: true }).click();
     await page.waitForFunction(

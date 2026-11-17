@@ -1,3 +1,5 @@
+import { AdsSelect } from "./ads-controls";
+import { ServiceDatePicker } from "./service-date-picker";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CalendarDays, Check, Plus, Wallet } from "lucide-react";
 import {
@@ -131,21 +133,17 @@ export function PaymentsSection({
       <form ref={form} className="crm-form" onSubmit={add} aria-label="Внести оплату ученика">
         <label>
           Ученик
-          <select
+          <AdsSelect
+            label="Ученик"
             value={studentId}
-            onChange={(e) => {
-              setStudentId(e.target.value);
+            onChange={(value) => {
+              setStudentId(value);
               request.current = null;
             }}
-          >
-            {state.students
+            options={state.students
               .filter((item) => !studentScope || item.id === studentScope)
-              .map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-          </select>
+              .map((item) => ({ value: item.id, label: item.name }))}
+          />
         </label>
         <label>
           Сумма, ₽
@@ -163,15 +161,13 @@ export function PaymentsSection({
         </label>
         <label>
           Дата оплаты
-          <input
-            type="date"
+          <ServiceDatePicker
             value={paidDate}
             max={todayMsk()}
-            onChange={(e) => {
-              setPaidDate(e.target.value);
+            onChange={(value) => {
+              setPaidDate(value);
               request.current = null;
             }}
-            required
           />
         </label>
         <button type="submit" className="crm-primary" disabled={Boolean(storageError)}>
@@ -340,48 +336,37 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
         >
           <label>
             Заявка
-            <select
+            <AdsSelect
+              label="Заявка"
               value={leadId}
               disabled={Boolean(editing)}
-              onChange={(e) => {
-                setLeadId(e.target.value);
+              onChange={(value) => {
+                setLeadId(value);
                 request.current = null;
               }}
-            >
-              {state.leads
+              options={state.leads
                 .filter((item) => !item.closedAt && (!leadScope || item.id === leadScope))
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} ·{" "}
-                    {state.students.find((student) => student.id === item.studentId)?.name}
-                  </option>
-                ))}
-            </select>
+                .map((item) => ({
+                  value: item.id,
+                  label: `${item.name} · ${state.students.find((student) => student.id === item.studentId)?.name || ""}`,
+                }))}
+            />
           </label>
           <label>
             Окно · 30 минут, МСК
-            <select
+            <AdsSelect
+              label="Окно · 30 минут, МСК"
               value={slotId}
-              onChange={(e) => {
-                setSlotId(e.target.value);
+              onChange={(value) => {
+                setSlotId(value);
                 request.current = null;
               }}
-            >
-              {windows.map((slot) => (
-                <option
-                  key={slot.id}
-                  value={slot.id}
-                  disabled={busy(slot.startsAt) || Date.parse(slot.startsAt) <= now}
-                >
-                  {dateLabel(slot.startsAt)}, {timeLabel(slot.startsAt)}
-                  {Date.parse(slot.startsAt) <= now
-                    ? " · прошло"
-                    : busy(slot.startsAt)
-                      ? " · занято"
-                      : ""}
-                </option>
-              ))}
-            </select>
+              options={windows.map((slot) => ({
+                value: slot.id,
+                label: `${dateLabel(slot.startsAt)}, ${timeLabel(slot.startsAt)}${Date.parse(slot.startsAt) <= now ? " · прошло" : busy(slot.startsAt) ? " · занято" : ""}`,
+                disabled: busy(slot.startsAt) || Date.parse(slot.startsAt) <= now,
+              }))}
+            />
           </label>
           <button
             className="crm-primary"

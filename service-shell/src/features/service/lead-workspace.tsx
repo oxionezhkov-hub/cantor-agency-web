@@ -1,3 +1,4 @@
+import { AdsSelect } from "./ads-controls";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Copy, Search, X } from "lucide-react";
@@ -391,21 +392,19 @@ function LeadCard({
                     <summary>Предложить время</summary>
                     <label>
                       Свободное окно
-                      <select
-                        aria-label="Время для приглашения"
+                      <AdsSelect
+                        label="Время для приглашения"
                         value={slotId}
-                        onChange={(e) => setInvitationSlot(e.target.value)}
-                      >
-                        {slots.length ? (
-                          slots.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {stamp(s.startsAt)} · МСК
-                            </option>
-                          ))
-                        ) : (
-                          <option value="">Свободных окон нет</option>
-                        )}
-                      </select>
+                        onChange={setInvitationSlot}
+                        options={
+                          slots.length
+                            ? slots.map((slot) => ({
+                                value: slot.id,
+                                label: `${stamp(slot.startsAt)} · МСК`,
+                              }))
+                            : [{ value: "", label: "Свободных окон нет", disabled: true }]
+                        }
+                      />
                     </label>
                     <button
                       type="button"
