@@ -36,6 +36,8 @@ export const demoCrm: CrmState = parseCrmState({
     },
     {
       id: "marina",
+      city: "Москва",
+      unreadCount: 2,
       studentId: "student-marina",
       name: "Марина",
       adId: "ege",
@@ -43,6 +45,8 @@ export const demoCrm: CrmState = parseCrmState({
     },
     {
       id: "igor",
+      city: "Екатеринбург",
+      unreadCount: 1,
       studentId: "student-igor",
       name: "Игорь",
       adId: "oge",

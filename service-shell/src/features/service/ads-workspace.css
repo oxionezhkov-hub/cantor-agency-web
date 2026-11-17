@@ -766,81 +766,6 @@
   background: #c9b695;
   border-radius: 50%;
 }
-/* Shared Cantor controls: menus are rendered in the document, never by the OS. */
-.aw-select {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  min-height: 40px;
-  padding: 10px 13px;
-  border: 1px solid #e7e1d9;
-  background: #fff;
-  border-radius: 8px;
-  font-family: Geologica, sans-serif;
-  font-size: 12px;
-  color: #6f6253;
-  cursor: pointer;
-  text-align: left;
-  min-width: 130px;
-}
-.aw-select > span:first-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.aw-select > span:last-child {
-  display: flex;
-  color: #baac98;
-}
-.aw-field > .aw-select {
-  width: 100%;
-}
-.aw-select.compact {
-  min-width: 0;
-  min-height: 30px;
-  padding: 5px 9px;
-  font-size: 11px;
-  border-color: #ece6dd;
-  background: #fcfaf7;
-}
-.aw-select[data-state="open"] {
-  border-color: #cbbda8;
-}
-.aw-select-menu {
-  background: #fff;
-  border: 1px solid #e8e0d5;
-  border-radius: 10px;
-  padding: 5px;
-  box-shadow: 0 10px 35px #36291b1f;
-  z-index: 110;
-  min-width: var(--radix-select-trigger-width);
-  max-width: calc(100vw - 24px);
-  max-height: min(300px, var(--radix-select-content-available-height));
-  font-family: Geologica, sans-serif;
-  color: #6c5b47;
-  font-size: 12px;
-  overflow: auto;
-}
-.aw-select-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 35px;
-  padding: 9px 11px;
-  border-radius: 6px;
-  cursor: pointer;
-  outline: none;
-  user-select: none;
-}
-.aw-select-option[data-highlighted] {
-  background: #f7f2eb;
-}
-.aw-select-option[data-state="checked"] {
-  background: #fff3ec;
-  color: #d56b40;
-}
 .aw-help-popover {
   z-index: 120;
   width: 280px;
@@ -1044,89 +969,40 @@
     grid-template-columns: 1fr 1fr;
   }
 }
-.service-calendar {
-  z-index: 120;
-  padding: 17px;
-  background: #fff;
-  border: 1px solid #e2e0dc;
-  border-radius: 12px;
-  box-shadow: 0 12px 40px #211c1826;
-  font-family: Geologica, sans-serif;
-  color: #6f6b66;
-  font-size: 12px;
+
+.aw .sc-select-trigger {
+  min-width: 135px;
+  cursor: pointer;
 }
-.service-calendar .rdp-months {
-  position: relative;
+.aw-field > .sc-select-trigger {
+  width: 100%;
 }
-.service-calendar .rdp-month_caption {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  padding-left: 9px;
-  font-size: 12px;
-  color: #49423b;
+.aw .aw-mode-select {
+  min-width: 0;
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 11px;
+  background: #fcfaf7;
+  border-color: #ece6dd;
 }
-.service-calendar .rdp-nav {
-  position: absolute;
-  right: 0;
-  top: 0;
-  display: flex;
-  gap: 7px;
-  z-index: 1;
+.aw-tools > .sc-select-trigger {
+  flex-shrink: 0;
 }
-.service-calendar .rdp-button_previous,
-.service-calendar .rdp-button_next {
-  width: 30px;
-  height: 34px;
+.sc-select-option[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.followup-deadline {
   display: grid;
-  place-items: center;
-  border-radius: 7px;
-  cursor: pointer;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-.service-calendar .rdp-button_previous:hover,
-.service-calendar .rdp-button_next:hover {
-  background: #f5f2ec;
-}
-.service-calendar .rdp-chevron {
-  width: 15px;
-  height: 15px;
-  fill: #ae9f8b;
-}
-.service-calendar .rdp-weekday {
-  font-size: 10px;
-  font-weight: 400;
-  height: 30px;
-  color: #b8a892;
-}
-.service-calendar .rdp-day {
-  padding: 2px;
-}
-.service-calendar .rdp-day_button {
-  width: 34px;
-  height: 34px;
-  border-radius: 7px;
-  font-size: 12px;
-  cursor: pointer;
-}
-.service-calendar .rdp-day_button:hover {
-  background: #f7f1e9;
-}
-.service-calendar .rdp-selected .rdp-day_button {
-  background: #e8391d;
-  color: white;
-}
-.service-calendar .rdp-today:not(.rdp-selected) .rdp-day_button {
-  color: #e8391d;
-}
-.service-calendar .rdp-disabled {
-  opacity: 0.3;
-}
-.service-calendar button:focus-visible {
-  outline: 2px solid #e8391d;
-  outline-offset: 2px;
-}
-.crm-form .aw-select,
-.lead-invitation .aw-select {
+.followup-deadline .sc-select-trigger {
   width: 100%;
   margin-top: 6px;
+}
+.sc-select-option[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

@@ -40,7 +40,7 @@ try {
   }
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
-  assert.equal(await page.locator('footer, .service-topbar, .service-page-heading, .preview-notice, .preview-tag, .theme-toggle').count(), 0);
+  assert.equal(await page.locator('footer:not(.knowledge-footer), .service-topbar, .service-page-heading, .preview-notice, .preview-tag, .theme-toggle').count(), 0);
   assert.doesNotMatch(await page.locator('body').innerText(), /демоверс|демонстрацион|сохранена в демо|подтверждена в демо/i);
   await page.getByRole('navigation',{name:'Разделы'}).getByRole('button',{name:'Дашборд',exact:true}).click();
   await page.screenshot({path:`${output}/dashboard-${width}.png`,fullPage:true});

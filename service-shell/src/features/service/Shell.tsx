@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowUpRight, Asterisk, BookOpen, ChartNoAxesCombined, CircleHelp, LayoutDashboard, MessageSquare, PanelTop, Settings2 } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChartNoAxesCombined, CircleHelp, LayoutDashboard, MessageSquare, PanelTop, Settings2 } from "lucide-react";
 import { CabinetPage } from "@/features/cabinet/CabinetPage";
 import { balanceRows, blockRows } from "@/features/cabinet/rules";
 import { sampleCabinet } from "@/features/cabinet/sample";
@@ -10,7 +10,10 @@ import { SECTIONS, type SectionId } from "./sections.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
-import { AdsSection, ContactSection, DashboardSection, DialogsSection, LearnSection, PaymentsSection, ShowsSection } from "./views.tsx";
+import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
+import { AnalyticsSection } from "./AnalyticsSection.tsx";
+
+const KnowledgeSection = lazy(() => import("@/features/knowledge/KnowledgeSection").then(module => ({ default: module.KnowledgeSection })));
 
 const ICONS = { today: LayoutDashboard, stats: ChartNoAxesCombined, ads: PanelTop, chats: MessageSquare, learn: BookOpen, acc: Settings2 };
 
@@ -40,7 +43,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
   return <div className="service-layout">
     <a className="skip-link" href="#service-content">Перейти к содержимому</a>
     <aside className="service-sidebar">
-      <a href="/?section=today" className="service-brand" aria-label="Cantor — главная"><span className="brand-mark"><Asterisk size={24} /></span><span>Cantor</span></a>
+      <a href="/?section=today" className="service-brand" aria-label="Авито — главная"><img className="service-brand-logo" src="/images/brand/logo.svg" alt="" width="48" height="30" /><span>Авито</span></a>
       <div className="workspace-profile"><span className="profile-avatar">АС</span><div><strong>{sampleCabinet.tutor}</strong><small>{sampleCabinet.subject}</small></div></div>
       <nav className="service-nav" aria-label="Разделы">{SECTIONS.map(item => {
         const Icon = ICONS[item.id];
@@ -56,10 +59,10 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
         {storageError ? <p role="alert" className="crm-error">{storageError}</p> : null}
         <div className={`service-section section-${section}`}>
           {section === "today" ? <DashboardSection /> : null}
-          {section === "stats" ? <div><ContactSection /><ShowsSection /><PaymentsSection focus={focus} /></div> : null}
+          {section === "stats" ? <AnalyticsSection focus={focus} /> : null}
           {section === "ads" ? <AdsSection focus={focus} /> : null}
           {section === "chats" ? <DialogsSection focus={focus} /> : null}
-          {section === "learn" ? <LearnSection /> : null}
+          {section === "learn" ? <Suspense fallback={<p className="text-muted" role="status">Загружаем базу знаний…</p>}><KnowledgeSection focus={focus} /></Suspense> : null}
           {section === "acc" ? <CabinetPage /> : null}
         </div>
 

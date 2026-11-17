@@ -1,6 +1,6 @@
-import * as Select from "@radix-ui/react-select";
+import { ServiceSelect } from "./service-controls";
 import * as Popover from "@radix-ui/react-popover";
-import { Check, ChevronDown, CircleHelp } from "lucide-react";
+import { CircleHelp } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function AdsSelect({
@@ -14,58 +14,24 @@ export function AdsSelect({
   label: string;
   value: string;
   options: { value: string; label: string; disabled?: boolean }[];
-  disabled?: boolean;
   onChange: (value: string) => void;
+  disabled?: boolean;
   compact?: boolean;
 }) {
   return (
-    <Select.Root
+    <ServiceSelect
+      label={label}
+      value={value}
+      options={options}
+      onChange={onChange}
       disabled={disabled}
-      value={value || "__empty"}
-      onValueChange={(v) => onChange(v === "__empty" ? "" : v)}
-    >
-      <Select.Trigger
-        data-value={value}
-        aria-label={label}
-        className={`aw-select ${compact ? "compact" : ""}`}
-      >
-        <Select.Value />
-        <Select.Icon>
-          <ChevronDown size={14} />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal
-        container={
-          typeof document === "undefined"
-            ? undefined
-            : (document.querySelector(".aw-editor") ?? undefined)
-        }
-      >
-        <Select.Content
-          className="aw-select-menu"
-          position="popper"
-          sideOffset={6}
-          collisionPadding={12}
-        >
-          <Select.Viewport>
-            {options.map((option) => (
-              <Select.Item
-                key={option.value}
-                data-value={option.value}
-                value={option.value || "__empty"}
-                disabled={option.disabled}
-                className="aw-select-option"
-              >
-                <Select.ItemText>{option.label}</Select.ItemText>
-                <Select.ItemIndicator>
-                  <Check size={14} />
-                </Select.ItemIndicator>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
+      className={compact ? "aw-mode-select" : ""}
+      portalContainer={
+        typeof document === "undefined"
+          ? undefined
+          : (document.querySelector(".aw-editor") ?? undefined)
+      }
+    />
   );
 }
 export function AdsHelp({ label = "Справка", children }: { label?: string; children: ReactNode }) {
