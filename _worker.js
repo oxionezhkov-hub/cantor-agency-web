@@ -13925,7 +13925,10 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
  *   row 3 — «Грузим в xml» / «Не грузим» (only the former reach the XML),
  *   row 4 — type hint; «Одно или несколько значений…» / «Много значений, Option» → <Option> list,
  *   rows 5+ — ads, one per row, keyed by the `id` column.
- * Several tabs of one sheet merge into one feed. Rows with «Товар доступен?» = «Нет» are skipped.
+ * Several tabs of one sheet merge into one feed. A row whose «Товар доступен?» is «Нет»
+ * (also «не выгружать» / «выключено») is not published: it stays in the XML with DateEnd
+ * yesterday, so Avito finishes an ad that is already live. Dropping the row does not —
+ * Avito only archives an id it has seen in this feed, and a paid 30-day placement stays up.
  * Russian-named service columns (Папка на Яндекс Диск, Переразмещаем как новые?, …) never reach the XML.
  *
  * Photos: the Images cell holds links one per line or split by « | ». Links copied from the Yandex.Disk web app
@@ -14193,16 +14196,18 @@ async function feedsReadTabs(env, sheetId, names) {
 /* ── Sheet rows → ads → XML ── */
 
 function feedsParseTab(rows) {
-  const tags = rows[1] || [], marks = rows[2] || [], types = rows[3] || [];
+  const human = rows[0] || [], tags = rows[1] || [], marks = rows[2] || [], types = rows[3] || [];
   const cols = [];
-  let idCol = -1, availCol = -1, folderCol = -1;
+  let idCol = -1, folderCol = -1;
+  // The off-switch may sit in the tag row or only in the human header above it
+  // («Товар доступен?», sometimes «Товар доступен? (Да/Нет)» / «Выгружать»).
+  const availCol = feedsAvailCol(tags, human);
   for (let i = 0; i < tags.length; i++) {
     const tag = String(tags[i] || '').trim();
     if (/^id$/i.test(tag) && idCol < 0) idCol = i;
     if (tag === 'Папка на Яндекс Диск') folderCol = i;
-    if (tag === 'Товар доступен?') availCol = i;
     if (String(marks[i] || '').trim().toLowerCase() !== 'грузим в xml') continue;
-    if (FEEDS_SERVICE_COLS.has(tag) || !/^[A-Za-z][A-Za-z0-9]*$|^Promo(Auto|Manual)Options [A-Za-z]+$/.test(tag)) continue;
+    if (FEEDS_SERVICE_COLS.has(tag) || feedsIsAvailHeader(tag) || !/^[A-Za-z][A-Za-z0-9]*$|^Promo(Auto|Manual)Options [A-Za-z]+$/.test(tag)) continue;
     // «Много значений» without «Option» goes out as plain text with line breaks — as BananLab does.
     cols.push({ i, tag, multi: /нескольк|option/i.test(String(types[i] || '')) });
   }
@@ -14215,18 +14220,59 @@ function feedsParseTab(rows) {
     const row = rows[r] || [];
     const id = String(row[idCol] == null ? '' : row[idCol]).trim();
     if (!id || id.toLowerCase() === 'подробнее о параметре') continue;
-    if (availCol >= 0 && /^нет$/i.test(String(row[availCol] || '').trim())) continue;
+    // «Нет» must still go out: Avito does not take down an ad that simply disappears from the file
+    // when this feed has never published that id (it was placed earlier, or the placement is paid
+    // through). DateEnd yesterday finishes it. A new id with a past DateEnd is not published.
+    const closed = availCol >= 0 && feedsIsOff(row[availCol]);
     const fields = [];
     for (const c of cols) {
+      if (closed && (c.tag === 'DateBegin' || c.tag === 'DateEnd' || c.tag === 'AdStatus' || /^Promo/.test(c.tag))) continue;
       const raw = String(row[c.i] == null ? '' : row[c.i]);
       // BananLab skips «-» and keeps an empty <Price></Price>.
       if (raw.trim() === '-') continue;
       if (raw.trim() || c.tag === 'Price') fields.push({ tag: c.tag, multi: c.multi, value: raw });
     }
+    if (closed) fields.push({ tag: 'DateEnd', multi: false, value: feedsCloseStamp() });
     const folder = folderCol >= 0 ? String(row[folderCol] || '').trim() : '';
-    ads.push({ row: r + 1, id, fields, folder: /^https?:\/\//i.test(folder) ? folder : '' });
+    ads.push({ row: r + 1, id, fields, folder: /^https?:\/\//i.test(folder) ? folder : '', closed });
   }
   return { ads, problems };
+}
+
+// «Товар доступен?» and the same switch under a slightly different header.
+function feedsHeaderNorm(s) {
+  return String(s || '').replace(/[\u00a0\u200b\ufeff]/g, ' ').replace(/[?？]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+function feedsIsAvailHeader(s) {
+  const n = feedsHeaderNorm(s);
+  if (!n) return false;
+  if (n === 'товар доступен' || n.startsWith('товар доступен ')) return true;
+  if (/^(выгружать|выгрузка|публиковать|размещать)( |$)/.test(n)) return true;
+  return false;
+}
+function feedsAvailCol(tags, human) {
+  const pick = (row) => {
+    if (!row) return -1;
+    for (let i = 0; i < row.length; i++) if (feedsIsAvailHeader(row[i])) return i;
+    return -1;
+  };
+  const a = pick(tags);
+  return a >= 0 ? a : pick(human);
+}
+// «Нет», «Нет.», «не выгружать», «ЛОЖЬ» (a formula Google Sheets shows that way). Empty and «Да» stay on.
+function feedsIsOff(v) {
+  const s = String(v == null ? '' : v).replace(/[\u00a0\u200b\ufeff]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!s || s === 'да' || s === 'yes' || s === 'true' || s === '1' || s === 'истина') return false;
+  if (s === 'нет' || s === 'no' || s === 'false' || s === '0' || s === 'ложь' || s === 'н') return true;
+  if (/^нет(?:$|[^а-яёa-z0-9])/.test(s)) return true;
+  if (/не\s*выгруж|не\s*публик|снят|заверш|в\s*архив|выключ/.test(s)) return true;
+  return false;
+}
+// Yesterday 00:00 MSK. Avito finishes an ad whose DateEnd is in the past and does not publish a new one.
+function feedsCloseStamp() {
+  const msk = new Date(Date.now() + 3 * 3600 * 1000 - 24 * 3600 * 1000);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${msk.getUTCFullYear()}-${p(msk.getUTCMonth() + 1)}-${p(msk.getUTCDate())}T00:00:00+03:00`;
 }
 
 function feedsXmlText(s) {
@@ -14459,7 +14505,8 @@ async function feedsBuild(env, feed) {
     stat.problems.unshift({ msg: `Ссылки на закрытые файлы Яндекс.Диска есть, а токена нет: вставьте его в ячейку A2 вкладки «${FEEDS_YD_TAB}».` });
   }
   stat.problems = stat.problems.concat(problems).slice(0, 300);
-  stat.ads = ads.length;
+  stat.stopped = ads.filter((a) => a.closed).length;
+  stat.ads = ads.length - stat.stopped;
   stat.ms = Date.now() - t0;
   await kv.put(feedsKey(feed, 'xml'), xml);
   if (feedsS3(env)) {
@@ -14921,7 +14968,7 @@ async function handleFeedsApi(request, env, url) {
 
   if (parts[1] === 'build' && request.method === 'POST') {
     const stat = await feedsBuild(env, feed);
-    await log({ act: 'Пересобрал XML', name: feed.name, slug, detail: stat.error ? 'не собран: ' + String(stat.error).slice(0, 120) : `${stat.ads} объявлений` });
+    await log({ act: 'Пересобрал XML', name: feed.name, slug, detail: stat.error ? 'не собран: ' + String(stat.error).slice(0, 120) : `${stat.ads} объявлений${stat.stopped ? `, снято с выгрузки ${stat.stopped}` : ''}` });
     return json({ feed: feedsPublicView(env, feed, stat) });
   }
 
@@ -15469,7 +15516,7 @@ async function handleExtraFeedsApi(request, env, url) {
     try { stat = await feedsBuild(env, feed); } catch (err) {
       stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], error: String(err && err.message || err).slice(0, 300) };
     }
-    await extraLog(env, extraWho(await extraBody(request)), { act: 'Пересобрал XML', name: feed.name, slug, detail: stat.error ? 'не собран: ' + String(stat.error).slice(0, 120) : (stat.ads || 0) + ' объявлений' });
+    await extraLog(env, extraWho(await extraBody(request)), { act: 'Пересобрал XML', name: feed.name, slug, detail: stat.error ? 'не собран: ' + String(stat.error).slice(0, 120) : (stat.ads || 0) + ' объявлений' + (stat.stopped ? `, снято с выгрузки ${stat.stopped}` : '') });
     return json({ feed: extraFeedView(env, feed, stat) });
   }
 
