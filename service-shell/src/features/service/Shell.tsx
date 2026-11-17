@@ -43,6 +43,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
   const [now, setNow] = useState(() => Date.now());
   const { state: crm, storageError } = useDemoCrm();
   const [helpOpen, setHelpOpen] = useState(false);
+  const tutorAvatarUrl = getPreviewData()?.tutorAvatarUrl;
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
@@ -106,7 +107,19 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
           <span>Авито</span>
         </a>
         <div className="workspace-profile">
-          <span className="profile-avatar">{getPreviewData() ? "ЕД" : "АС"}</span>
+          <span className="profile-avatar">
+            {tutorAvatarUrl ? (
+              <img
+                src={tutorAvatarUrl}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+              />
+            ) : getPreviewData() ? (
+              "ЕД"
+            ) : (
+              "АС"
+            )}
+          </span>
           <div>
             <strong>{sampleCabinet.tutor}</strong>
             <small>{sampleCabinet.subject}</small>

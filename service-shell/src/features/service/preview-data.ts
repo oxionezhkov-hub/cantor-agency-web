@@ -60,6 +60,7 @@ export type PreviewChat = {
 export type PreviewMessage = { id: string; at: number; author: string; type: string; text: string };
 export type PreviewSnapshot = {
   tutor: string;
+  tutorAvatarUrl?: string;
   subject: string;
   readAt: string;
   catalogAt: number | null;
