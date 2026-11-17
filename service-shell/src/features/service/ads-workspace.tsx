@@ -493,6 +493,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         <span className={`aw-thumb aw-thumb-${i % 3}`}>
                           {a.photos[0] ? (
                             <img src={a.photos[0]} alt="" />
+                          ) : getPreviewData() ? (
+                            <ImagePlus size={20} />
                           ) : (
                             <span>
                               {a.title.includes("ОГЭ")

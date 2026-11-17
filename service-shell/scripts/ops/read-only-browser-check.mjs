@@ -67,7 +67,7 @@ try {
         "База знаний",
         "Настройки",
       ]) {
-        await nav.getByRole("button", { name: label, exact: true }).click();
+        await nav.getByRole("button", { name: new RegExp("^" + label) }).click();
         await page.waitForTimeout(180);
         assert.ok(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
@@ -78,11 +78,11 @@ try {
           /только чтение|Данные Добрыниной|сохранённые источники|Анна Смирнова|не число|NaN/i,
         );
       }
-      await nav.getByRole("button", { name: "Дашборд", exact: true }).click();
+      await nav.getByRole("button", { name: new RegExp("^" + "Дашборд") }).click();
       assert.equal(await page.locator(".dashboard-overview").count(), 1);
       assert.equal(await page.locator(".dashboard-funnel").count(), 2);
       await page.screenshot({ path: `${output}/dashboard-${width}.png`, fullPage: true });
-      await nav.getByRole("button", { name: "Аналитика", exact: true }).click();
+      await nav.getByRole("button", { name: new RegExp("^" + "Аналитика") }).click();
       assert.equal(await page.locator(".an-compact-toolbar").count(), 1);
       assert.equal(await page.getByRole("tab").count(), 4);
       for (const tab of ["Объявления", "Диалоги", "Экономика", "Обзор"]) {
@@ -91,9 +91,10 @@ try {
         assert.doesNotMatch(await page.locator("main").innerText(), /NaN|не число/);
       }
       await page.screenshot({ path: `${output}/analytics-${width}.png`, fullPage: true });
-      await nav.getByRole("button", { name: "Мои объявления", exact: true }).click();
+      await nav.getByRole("button", { name: new RegExp("^" + "Мои объявления") }).click();
       assert.equal(await page.getByRole("tab", { name: "Автозагрузка", exact: true }).count(), 1);
       assert.equal(await page.locator(".aw-table tbody tr").count(), source.ads.length);
+      assert.doesNotMatch(await page.locator(".aw-table").innerText(), /МАТЕМАТИКА|8 кл\./);
       await page.getByLabel("Поиск объявлений", { exact: true }).fill("Казань");
       assert.ok((await page.locator(".aw-table tbody tr").count()) > 0);
       await page.screenshot({ path: `${output}/ads-${width}.png`, fullPage: true });
@@ -108,7 +109,7 @@ try {
         (await editor.getByLabel("Заголовок", { exact: true }).inputValue()).includes("русскому"),
       );
       await editor.getByRole("button", { name: "Отмена", exact: true }).click();
-      await nav.getByRole("button", { name: "Мои диалоги", exact: true }).click();
+      await nav.getByRole("button", { name: new RegExp("^" + "Мои диалоги") }).click();
       await page.getByRole("button", { name: "Без ответа", exact: false }).click();
       assert.equal(await page.locator(".workbench-contact").count(), source.chats.length);
       assert.equal(await page.getByRole("button", { name: "CRM", exact: true }).count(), 1);
