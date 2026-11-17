@@ -17,6 +17,6 @@ export type ServiceSearch = { section?: SectionId; focus?: string };
 export function validateServiceSearch(search: Record<string, unknown>): ServiceSearch {
   const result: ServiceSearch = {};
   if (typeof search.section === "string" && isSection(search.section)) result.section = search.section;
-  if (typeof search.focus === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(search.focus)) result.focus = search.focus;
+  if (typeof search.focus === "string" && /^[a-zA-Z0-9_~-]{1,100}$/.test(search.focus)) result.focus = search.focus;
   return result;
 }

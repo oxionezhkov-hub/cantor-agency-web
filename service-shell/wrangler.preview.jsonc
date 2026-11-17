@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cantor-service-preview",
+  "main": "scripts/ops/preview-worker.mjs",
+  "compatibility_date": "2026-11-16",
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application",
+  },
+  "kv_namespaces": [
+    { "binding": "DEMO_AVITO", "id": "ad6fea8159ef48c4b2833620e72c52af" },
+    { "binding": "DEMO_DASHBOARD", "id": "b0921ad0182347b091c7fe4947d91cba" },
+    { "binding": "DEMO_DATA", "id": "258d0f7d3559467585fdef71f0d83cc3" },
+  ],
+  // DEMO_PASSWORD_SHA256 is the SHA-256 digest of the agency password, set as
+  // an encrypted Worker secret. No password or Avito credential belongs here.
+  // Bindings are used only by the fixed-account GET projection in dobrynina-source.mjs.
+  "observability": { "enabled": true, "traces": { "enabled": true } },
+}

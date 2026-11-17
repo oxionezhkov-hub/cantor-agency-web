@@ -5,7 +5,16 @@ import {
   Search,
   X,
   MoreHorizontal,
-  StickyNote,
+  Phone,
+  Mic,
+  Square,
+  Trash2,
+  ChevronRight,
+  CalendarDays,
+  ListTodo,
+  Wallet,
+  History,
+  MessageCircle,
   Send,
   Paperclip,
   Reply,
@@ -19,6 +28,9 @@ import {
 import { ads, windows } from "./data.ts";
 import { changeDemoCrm, useDemoCrm } from "./demo-crm-store.ts";
 import { DiagnosticSection, PaymentsSection } from "./crm-ui.tsx";
+import { CrmBoard } from "./crm-board.tsx";
+import { StageControl, NoteEditor, AnchoredPanel } from "./workbench-controls.tsx";
+import { createExampleAdapter, cacheExampleMedia, useMessageMedia } from "./sample-media.ts";
 import { LeadFollowups } from "./lead-panels.tsx";
 import {
   leadProgress,
@@ -26,7 +38,6 @@ import {
   freeWindows,
   invitationFor,
   setLeadClosure,
-  STAGE_LABELS,
   type LeadStage,
 } from "./lead-workflow.ts";
 import {
@@ -39,11 +50,14 @@ import {
   disconnectedAdapter,
   acceptDeliveredMessage,
   MODE_LABELS,
+  moveLeadStage,
+  applyEditedMessage,
   type ReplyMode,
   type ChatMessage,
   type MessageAdapter,
 } from "./communication.ts";
 import { useDraftCache } from "./use-draft-cache.ts";
+import { getPreviewData } from "./preview-data.ts";
 import type { CrmState, Lead } from "./crm.ts";
 const stamp = (at: string) =>
   new Date(at).toLocaleString("ru-RU", {
@@ -73,14 +87,23 @@ function Avatar({ lead }: { lead: Lead }) {
     </span>
   );
 }
-export function LeadWorkspace({
-  focus,
-  adapter = disconnectedAdapter,
-}: {
-  focus?: string;
-  adapter?: MessageAdapter;
-}) {
+export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: MessageAdapter }) {
   const { state, storageError } = useDemoCrm();
+  const activeAdapter =
+    adapter ??
+    (import.meta.env.VITE_SERVICE_PREVIEW === "true" && state.workspaceId === "cantor-demo-anna"
+      ? createExampleAdapter(state.workspaceId)
+      : disconnectedAdapter);
+  const [startPanel, setStartPanel] = useState<Panel>("conversation");
+  const [moveError, setMoveError] = useState("");
+  function move(id: string, stage: LeadStage) {
+    try {
+      changeDemoCrm((s) => moveLeadStage(s, s.workspaceId, id, stage, new Date().toISOString()));
+      setMoveError("");
+    } catch (e) {
+      setMoveError(e instanceof Error ? e.message : "Не удалось переместить обращение");
+    }
+  }
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(focus ?? null),
     [view, setView] = useState<"dialogs" | "crm">("dialogs");
@@ -106,7 +129,8 @@ export function LeadWorkspace({
   useEffect(() => {
     if (searching) search.current?.focus();
   }, [searching]);
-  function open(id: string) {
+  function open(id: string, panel: "tasks" | "conversation" = "conversation") {
+    setStartPanel(panel);
     setSelectedId(id);
     setView("dialogs");
     try {
@@ -158,52 +182,18 @@ export function LeadWorkspace({
           CRM
         </button>
       </div>
+      {moveError ? (
+        <p role="alert" className="crm-error">
+          {moveError}
+        </p>
+      ) : null}
       {storageError ? (
         <p role="alert" className="crm-error">
           {storageError}
         </p>
       ) : null}
       {view === "crm" ? (
-        <div className="crm-board" aria-label="CRM обращений">
-          {(Object.keys(STAGE_LABELS) as LeadStage[]).map((stage) => {
-            const entries = rows.filter((r) => r.progress.stage === stage);
-            return (
-              <section className="crm-lane" key={stage} aria-label={STAGE_LABELS[stage]}>
-                <header>
-                  {STAGE_LABELS[stage]}
-                  <span>{entries.length}</span>
-                </header>
-                <div>
-                  {entries.map(({ lead, waiting }) => {
-                    const tasks = (state.followups ?? []).filter(
-                      (t) => t.leadId === lead.id && !t.doneAt,
-                    );
-                    return (
-                      <button
-                        key={lead.id}
-                        className="crm-contact-card"
-                        type="button"
-                        onClick={() => open(lead.id)}
-                      >
-                        <span>
-                          <Avatar lead={lead} />
-                          <strong>{lead.name}</strong>
-                        </span>
-                        <small>{lead.city ?? "Город не указан"}</small>
-                        <p>{ads.find((a) => a.id === lead.adId)?.title ?? "Источник не указан"}</p>
-                        {tasks.length ? (
-                          <span className="task-count">Задач: {tasks.length}</span>
-                        ) : null}
-                        {waiting.waiting ? <time>{elapsedLabel(waiting.elapsedMs)}</time> : null}
-                      </button>
-                    );
-                  })}
-                  {!entries.length ? <p className="lane-empty">Нет обращений</p> : null}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+        <CrmBoard state={state} now={now} onOpen={open} onMove={move} />
       ) : (
         <div className="workbench-split">
           <aside className="workbench-list" aria-label="Обращения">
@@ -256,7 +246,7 @@ export function LeadWorkspace({
               )}
             </div>
             <div className="workbench-list-items">
-              {found.map(({ lead, progress, waiting, messages }) => (
+              {found.map(({ lead, waiting, messages }) => (
                 <button
                   type="button"
                   key={lead.id}
@@ -269,7 +259,8 @@ export function LeadWorkspace({
                   <span className="contact-body">
                     <span className="contact-name-line">
                       <span>{lead.name}</span>
-                      <time>
+                      {lead.city ? <span className="contact-city">{lead.city}</span> : null}
+                      <time className="sr-only">
                         {waiting.waiting
                           ? elapsedLabel(waiting.elapsedMs)
                           : lead.timerStopped
@@ -277,16 +268,12 @@ export function LeadWorkspace({
                             : ""}
                       </time>
                     </span>
-                    <span className="contact-city">{lead.city ?? "Город не указан"}</span>
                     <span className="contact-last-message">
                       {messages.at(-1)?.text ?? "Нет сообщений"}
                     </span>
-                    <span className="contact-bottom">
-                      <span className={`lead-stage stage-${progress.stage}`}>{progress.label}</span>
-                      {lead.unreadCount ? (
-                        <span className="unread-count">{lead.unreadCount}</span>
-                      ) : null}
-                    </span>
+                    {lead.unreadCount ? (
+                      <span className="unread-count">{lead.unreadCount}</span>
+                    ) : null}
                   </span>
                 </button>
               ))}
@@ -309,7 +296,8 @@ export function LeadWorkspace({
                 lead={selected}
                 now={now}
                 back={back}
-                adapter={adapter}
+                adapter={activeAdapter}
+                startPanel={startPanel}
               />
             ) : (
               <div className="workbench-empty">
@@ -329,7 +317,9 @@ function ContactChat({
   now,
   back,
   adapter,
+  startPanel,
 }: {
+  startPanel?: Panel;
   state: CrmState;
   lead: Lead;
   now: number;
@@ -339,9 +329,8 @@ function ContactChat({
   const progress = leadProgress(state, lead.id, now),
     ad = ads.find((a) => a.id === lead.adId),
     messages = conversationMessages(state, lead.id);
-  const [panel, setPanel] = useState<Panel>("conversation"),
+  const [panel, setPanel] = useState<Panel>(startPanel ?? "conversation"),
     [menu, setMenu] = useState(false),
-    [info, setInfo] = useState(false),
     [closing, setClosing] = useState(false),
     [reason, setReason] = useState("");
   const [quote, setQuote] = useState<ChatMessage | null>(null),
@@ -349,8 +338,102 @@ function ContactChat({
     [error, setError] = useState("");
   const [inviting, setInviting] = useState(false),
     [slotId, setSlotId] = useState("");
-  const { text, change, error: cacheError } = useDraftCache(state.workspaceId, lead.id, lead.draft);
+  const {
+    text,
+    change,
+    error: cacheError,
+  } = useDraftCache(
+    state.workspaceId,
+    lead.id,
+    lead.draft ?? (lead.aiProposal?.status === "ready" ? lead.aiProposal.text : ""),
+  );
   const [editing, setEditing] = useState(false);
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
+  const [attachment, setAttachment] = useState<{
+    id: string;
+    kind: "image" | "voice" | "file" | "video";
+    name: string;
+    mimeType: string;
+  } | null>(null);
+  const [preparing, setPreparing] = useState(false),
+    [recording, setRecording] = useState(false),
+    [recordSeconds, setRecordSeconds] = useState(0),
+    [callOpen, setCallOpen] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null),
+    callButton = useRef<HTMLButtonElement>(null),
+    recorder = useRef<MediaRecorder | null>(null),
+    mediaStream = useRef<MediaStream | null>(null),
+    discardRecording = useRef(false);
+  useEffect(() => {
+    if (!recording) return;
+    const t = setInterval(() => setRecordSeconds((x) => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [recording]);
+  useEffect(
+    () => () => {
+      discardRecording.current = true;
+      if (recorder.current?.state === "recording") recorder.current.stop();
+      mediaStream.current?.getTracks().forEach((t) => t.stop());
+    },
+    [],
+  );
+  async function attachFile(file: File, kind?: "voice") {
+    setPreparing(true);
+    setError("");
+    try {
+      const id = await cacheExampleMedia(state.workspaceId, file, file.name);
+      setAttachment({
+        id,
+        kind:
+          kind ??
+          (file.type.startsWith("image/")
+            ? "image"
+            : file.type.startsWith("video/")
+              ? "video"
+              : "file"),
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+      });
+      requestId.current = null;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось сохранить файл");
+    } finally {
+      setPreparing(false);
+    }
+  }
+  async function startRecording() {
+    setError("");
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder)
+        throw new Error("Запись голоса не поддерживается этим браузером");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStream.current = stream;
+      discardRecording.current = false;
+      const r = new MediaRecorder(stream),
+        chunks: BlobPart[] = [];
+      recorder.current = r;
+      r.ondataavailable = (e) => {
+        if (e.data.size) chunks.push(e.data);
+      };
+      r.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        if (discardRecording.current) return;
+        const blob = new Blob(chunks, { type: r.mimeType || "audio/webm" });
+        void attachFile(
+          new File([blob], `Голосовое-${Date.now()}.webm`, { type: blob.type }),
+          "voice",
+        );
+      };
+      r.start();
+      setRecordSeconds(0);
+      setRecording(true);
+    } catch (e) {
+      mediaStream.current?.getTracks().forEach((t) => t.stop());
+      setError(e instanceof Error ? e.message : "Не удалось включить микрофон");
+    }
+  }
+
   const reviewOriginal = useRef<string | null>(null);
   const mode = lead.mode ?? "manual",
     ai = mode !== "manual";
@@ -362,13 +445,11 @@ function ContactChat({
     function dismiss(e: PointerEvent) {
       if (popup.current && !popup.current.contains(e.target as Node)) {
         setMenu(false);
-        setInfo(false);
       }
     }
     function escape(e: globalThis.KeyboardEvent) {
       if (e.key === "Escape") {
         setMenu(false);
-        setInfo(false);
         setClosing(false);
       }
     }
@@ -387,8 +468,10 @@ function ContactChat({
     try {
       changeDemoCrm((s) => updateLeadDetails(s, s.workspaceId, lead.id, value));
       setError("");
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось сохранить");
+      return false;
     }
   }
   function recordEdit() {
@@ -412,25 +495,42 @@ function ContactChat({
     }
   }
   async function send() {
-    if (!text.trim() || sending) return;
+    if ((!text.trim() && !attachment) || sending || preparing) return;
     setSending(true);
     setError("");
     requestId.current ??= crypto.randomUUID();
     const pendingRequestId = requestId.current;
     const pendingText = text.trim();
     const pendingQuoteId = quote?.id;
+    const pendingAttachment = attachment;
     try {
+      if (editingMessage) {
+        if (!adapter.edit) throw new Error("Редактирование недоступно для этого канала");
+        const updated = await adapter.edit(editingMessage, pendingText);
+        changeDemoCrm((s) => applyEditedMessage(s, s.workspaceId, updated));
+        change("");
+        setEditingMessage(null);
+        setEditing(false);
+        requestId.current = null;
+        return;
+      }
       recordEdit();
       const confirmed = await adapter.send({
         requestId: pendingRequestId,
         leadId: lead.id,
         text: pendingText,
         ...(pendingQuoteId ? { quoteId: pendingQuoteId } : {}),
+        ...(pendingAttachment ? { attachment: pendingAttachment } : {}),
       });
       changeDemoCrm((s) => acceptDeliveredMessage(s, s.workspaceId, confirmed, pendingRequestId));
       if (ai)
         changeDemoCrm((s) => ({
           ...s,
+          leads: s.leads.map((l) =>
+            l.id === lead.id && l.aiProposal
+              ? { ...l, aiProposal: { ...l.aiProposal, status: "approved" as const } }
+              : l,
+          ),
           feedback: [
             ...(s.feedback ?? []),
             {
@@ -445,6 +545,7 @@ function ContactChat({
         }));
       change("");
       setQuote(null);
+      setAttachment(null);
       setEditing(false);
       requestId.current = null;
     } catch (e) {
@@ -478,6 +579,14 @@ function ContactChat({
         ],
       }));
       change("");
+      changeDemoCrm((s) => ({
+        ...s,
+        leads: s.leads.map((l) =>
+          l.id === lead.id && l.aiProposal
+            ? { ...l, aiProposal: { ...l.aiProposal, status: "rejected" as const } }
+            : l,
+        ),
+      }));
       setEditing(false);
     } catch (e) {
       setError(String(e));
@@ -524,18 +633,7 @@ function ContactChat({
         <div className="contact-chat-person">
           <div>
             <h2>{lead.name}</h2>
-            <button
-              type="button"
-              className={`icon-control note-button ${lead.note ? "has-note" : ""}`}
-              aria-label="Информация о клиенте"
-              title={lead.note ? "Есть заметка" : "Информация о клиенте"}
-              onClick={() => {
-                setInfo(!info);
-                setMenu(false);
-              }}
-            >
-              <StickyNote size={15} />
-            </button>
+            <NoteEditor lead={lead} onSave={(note) => patch({ note })} />
           </div>
           <p>
             {ad ? (
@@ -543,19 +641,52 @@ function ContactChat({
                 {ad.title}
               </Link>
             ) : (
-              "Объявление не указано"
+              getPreviewData()?.chats.find(c => c.id === lead.id)?.itemTitle || "Объявление не указано"
             )}{" "}
             · {lead.city ?? "Город не указан"}
           </p>
         </div>
         <div className="contact-chat-controls">
-          <span className={`lead-stage stage-${progress.stage}`} data-testid="lead-stage">
-            {progress.label}
-          </span>
-          <span className="reply-mode" data-testid="reply-mode">
+          <StageControl
+            stage={progress.stage}
+            onChange={(stage) => {
+              try {
+                changeDemoCrm((s) =>
+                  moveLeadStage(s, s.workspaceId, lead.id, stage, new Date().toISOString()),
+                );
+              } catch (e) {
+                setError(String(e));
+              }
+            }}
+          />
+          <span className={mode === "manual" ? "sr-only" : "reply-mode"} data-testid="reply-mode">
             {MODE_LABELS[mode]}
           </span>
         </div>
+        <button
+          ref={callButton}
+          type="button"
+          className="icon-control call-control"
+          aria-label="Позвонить"
+          title="Звонок"
+          onClick={() => setCallOpen(!callOpen)}
+        >
+          <Phone size={17} />
+        </button>
+        {callOpen ? (
+          <AnchoredPanel
+            anchor={callButton}
+            onClose={() => setCallOpen(false)}
+            label="Звонок"
+            width={270}
+          >
+            <div className="call-unavailable">
+              <Phone size={22} />
+              <strong>Звонок пока недоступен</strong>
+              <p>Вызовы через API Авито ещё не подключены. Эта кнопка не совершает звонок.</p>
+            </div>
+          </AnchoredPanel>
+        ) : null}
         <button
           type="button"
           className="icon-control"
@@ -563,13 +694,13 @@ function ContactChat({
           aria-expanded={menu}
           onClick={() => {
             setMenu(!menu);
-            setInfo(false);
           }}
         >
           <MoreHorizontal size={21} />
         </button>
         {menu ? (
           <div className="contact-menu" role="menu" aria-label="Действия диалога">
+            <span className="menu-label">Разделы карточки</span>
             {menus.map(([id, label]) => (
               <button
                 key={id}
@@ -582,10 +713,23 @@ function ContactChat({
                   setError("");
                 }}
               >
+                {id === "conversation" ? (
+                  <MessageCircle size={15} />
+                ) : id === "appointment" ? (
+                  <CalendarDays size={15} />
+                ) : id === "tasks" ? (
+                  <ListTodo size={15} />
+                ) : id === "payments" ? (
+                  <Wallet size={15} />
+                ) : (
+                  <History size={15} />
+                )}
                 {label}
+                <ChevronRight size={13} className="menu-navigation-arrow" />
               </button>
             ))}
             <hr />
+            <span className="menu-label">Действия</span>
             <button
               type="button"
               role="menuitem"
@@ -639,31 +783,6 @@ function ContactChat({
             ))}
           </div>
         ) : null}
-        {info ? (
-          <div className="contact-info" role="dialog" aria-label="Информация о клиенте">
-            <button
-              type="button"
-              className="icon-control popup-close"
-              aria-label="Закрыть информацию"
-              onClick={() => setInfo(false)}
-            >
-              <X size={16} />
-            </button>
-            <strong>{lead.name}</strong>
-            <p>{lead.city ?? "Город не указан"}</p>
-            <p>{ad?.title ?? "Объявление не указано"}</p>
-            <label>
-              Заметка
-              <textarea
-                aria-label="Заметка о клиенте"
-                value={lead.note ?? ""}
-                maxLength={4000}
-                onChange={(e) => patch({ note: e.target.value })}
-                placeholder="Важное о человеке"
-              />
-            </label>
-          </div>
-        ) : null}
       </header>
       {closing ? (
         <form className="close-contact-form" onSubmit={close}>
@@ -714,7 +833,7 @@ function ContactChat({
                   <div className={`message-bubble ${m.author}`}>
                     <span className="sr-only">{m.author === "manager" ? "Вы" : lead.name}</span>
                     {quoted ? <blockquote>{quoted.text}</blockquote> : null}
-                    <MessageBody message={m} />
+                    <MessageBody message={m} workspaceId={state.workspaceId} />
                     <div className="message-meta">
                       <button
                         type="button"
@@ -728,6 +847,29 @@ function ContactChat({
                       >
                         <Reply size={13} />
                       </button>
+                      {m.author === "manager" && adapter.edit ? (
+                        <button
+                          type="button"
+                          className="message-quote"
+                          aria-label={`Редактировать сообщение ${m.id}`}
+                          title="Редактировать"
+                          onClick={() => {
+                            setEditingMessage(m);
+                            setEditing(true);
+                            change(m.text);
+                            setPanel("conversation");
+                            input.current?.focus();
+                          }}
+                        >
+                          <Pencil size={12} />
+                        </button>
+                      ) : null}
+                      {m.editedAt ? <span title={stamp(m.editedAt)}>изменено</span> : null}
+                      {m.delivery === "local" ? (
+                        <span title="Сохранено только в локальном примере, не отправлено в Авито">
+                          локально
+                        </span>
+                      ) : null}
                       <time dateTime={m.at}>{hour(m.at)}</time>
                     </div>
                   </div>
@@ -799,85 +941,190 @@ function ContactChat({
                   {!slots.length ? <p>Свободных окон нет.</p> : null}
                 </div>
               ) : null}
-              <div className="message-input-row">
-                <button
-                  type="button"
-                  className="icon-control attachment-control"
-                  aria-label="Прикрепить файл"
-                  title="Отправка вложений станет доступна после подключения Авито"
-                  disabled
-                >
-                  <Paperclip size={19} />
-                </button>
-                <textarea
-                  ref={input}
-                  aria-label={`Ответ ${lead.name}`}
-                  placeholder={ai && !editing ? "Ожидается черновик ИИ" : "Написать сообщение…"}
-                  value={text}
-                  maxLength={5000}
-                  rows={1}
-                  readOnly={ai && !editing}
-                  disabled={sending}
-                  onChange={(e) => {
-                    requestId.current = null;
-                    change(e.target.value);
-                  }}
-                  onBlur={() => {
-                    try {
-                      recordEdit();
-                    } catch (e) {
-                      setError(String(e));
-                    }
-                  }}
-                  onKeyDown={onKey}
-                />
-                {ai && !editing ? (
-                  <div className="ai-response-actions">
-                    <button
-                      type="button"
-                      className="send-control"
-                      aria-label="Одобрить и отправить"
-                      title="Одобрить и отправить"
-                      disabled={!text.trim() || sending}
-                      onClick={() => void send()}
-                    >
-                      <Check size={19} />
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-control"
-                      aria-label="Отклонить ответ"
-                      onClick={reject}
-                      disabled={!text.trim()}
-                    >
-                      <X size={18} />
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-control"
-                      aria-label="Редактировать ответ"
-                      onClick={() => {
-                        reviewOriginal.current = text;
-                        setEditing(true);
-                        input.current?.focus();
-                      }}
-                    >
-                      <Pencil size={17} />
-                    </button>
-                  </div>
-                ) : (
+              {editingMessage ? (
+                <div className="quote-preview editing-preview">
+                  <Pencil size={15} />
+                  <span>Редактирование сообщения</span>
+                  <button
+                    type="button"
+                    className="icon-control"
+                    aria-label="Отменить редактирование"
+                    onClick={() => {
+                      setEditingMessage(null);
+                      setEditing(false);
+                      change("");
+                    }}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : null}
+              {attachment ? (
+                <div className="attachment-preview">
+                  <Paperclip size={16} />
+                  <span>
+                    {attachment.kind === "voice" ? "Голосовое сообщение" : attachment.name}
+                  </span>
+                  <button
+                    type="button"
+                    className="icon-control"
+                    aria-label="Убрать вложение"
+                    onClick={() => setAttachment(null)}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : null}
+              {preparing ? (
+                <div className="attachment-progress" role="status">
+                  Подготовка вложения…
+                </div>
+              ) : null}
+              <input
+                ref={fileInput}
+                className="sr-only"
+                type="file"
+                aria-label="Файл для сообщения"
+                tabIndex={-1}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void attachFile(f);
+                  e.target.value = "";
+                }}
+              />
+              {recording ? (
+                <div className="voice-recording">
+                  <span className="record-dot" />
+                  <time>
+                    {Math.floor(recordSeconds / 60)}:{String(recordSeconds % 60).padStart(2, "0")}
+                  </time>
+                  <span>Запись голоса</span>
+                  <button
+                    type="button"
+                    className="icon-control"
+                    aria-label="Отменить запись голоса"
+                    onClick={() => {
+                      discardRecording.current = true;
+                      recorder.current?.stop();
+                    }}
+                  >
+                    <Trash2 size={17} />
+                  </button>
                   <button
                     type="button"
                     className="send-control"
-                    aria-label="Отправить сообщение"
-                    title="Отправить · Enter"
-                    disabled={!text.trim() || sending}
-                    onClick={() => void send()}
+                    aria-label="Завершить запись голоса"
+                    onClick={() => recorder.current?.stop()}
                   >
-                    <Send size={19} />
+                    <Square size={16} />
                   </button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="message-input-row">
+                  <button
+                    type="button"
+                    className="icon-control attachment-control"
+                    aria-label="Прикрепить файл"
+                    title={
+                      adapter.kind === "sample"
+                        ? "Прикрепить файл в примере"
+                        : "Вложения не подключены для этого канала"
+                    }
+                    disabled={
+                      adapter.kind !== "sample" || sending || preparing || Boolean(editingMessage)
+                    }
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    <Paperclip size={19} />
+                  </button>
+                  <textarea
+                    ref={input}
+                    aria-label={`Ответ ${lead.name}`}
+                    placeholder={ai && !editing ? "Ожидается черновик ИИ" : "Написать сообщение…"}
+                    value={text}
+                    maxLength={5000}
+                    rows={1}
+                    readOnly={ai && !editing}
+                    disabled={sending}
+                    onChange={(e) => {
+                      requestId.current = null;
+                      change(e.target.value);
+                    }}
+                    onBlur={() => {
+                      try {
+                        recordEdit();
+                      } catch (e) {
+                        setError(String(e));
+                      }
+                    }}
+                    onKeyDown={onKey}
+                  />
+                  {!ai && !editingMessage ? (
+                    <button
+                      type="button"
+                      className="icon-control voice-control"
+                      aria-label="Записать голосовое"
+                      title={
+                        adapter.kind === "sample"
+                          ? "Записать голосовое в примере"
+                          : "Голосовые не подключены"
+                      }
+                      disabled={adapter.kind !== "sample" || sending || preparing}
+                      onClick={() => void startRecording()}
+                    >
+                      <Mic size={18} />
+                    </button>
+                  ) : null}
+                  {ai && !editing ? (
+                    <div className="ai-response-actions">
+                      <button
+                        type="button"
+                        className="send-control"
+                        aria-label="Одобрить и отправить"
+                        title="Одобрить и отправить"
+                        disabled={!text.trim() || sending}
+                        onClick={() => void send()}
+                      >
+                        <Check size={19} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-control"
+                        aria-label="Отклонить ответ"
+                        onClick={reject}
+                        disabled={!text.trim()}
+                      >
+                        <X size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-control"
+                        aria-label="Редактировать ответ"
+                        onClick={() => {
+                          reviewOriginal.current = text;
+                          setEditing(true);
+                          input.current?.focus();
+                        }}
+                      >
+                        <Pencil size={17} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="send-control"
+                      aria-label={
+                        editingMessage ? "Сохранить изменения сообщения" : "Отправить сообщение"
+                      }
+                      title={editingMessage ? "Сохранить изменения" : "Отправить · Enter"}
+                      disabled={(!text.trim() && !attachment) || sending || preparing}
+                      onClick={() => void send()}
+                    >
+                      {editingMessage ? <Check size={19} /> : <Send size={19} />}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="closed-contact-state">Обращение закрыто. Таймер остановлен.</div>
@@ -918,8 +1165,10 @@ function ContactChat({
     </article>
   );
 }
-function MessageBody({ message: m }: { message: ChatMessage }) {
-  const mediaUrl = m.url?.startsWith("https://") ? m.url : null;
+function MessageBody({ message: m, workspaceId }: { message: ChatMessage; workspaceId: string }) {
+  const { url: mediaUrl, error } = useMessageMedia(workspaceId, m);
+  if (error) return <p>Вложение не найдено на устройстве</p>;
+  if (m.attachmentId && !mediaUrl) return <p>Загрузка вложения…</p>;
   if (m.kind === "image" && mediaUrl)
     return (
       <>
@@ -929,13 +1178,28 @@ function MessageBody({ message: m }: { message: ChatMessage }) {
         {m.text ? <p>{m.text}</p> : null}
       </>
     );
-  if (m.kind === "voice" && mediaUrl) return <VoiceMessage url={mediaUrl} />;
-  if (m.kind === "video" && mediaUrl) return <VideoMessage url={mediaUrl} />;
+  if (m.kind === "voice" && mediaUrl)
+    return (
+      <>
+        <VoiceMessage url={mediaUrl} />
+        {m.text ? <p>{m.text}</p> : null}
+      </>
+    );
+  if (m.kind === "video" && mediaUrl)
+    return (
+      <>
+        <VideoMessage url={mediaUrl} />
+        {m.text ? <p>{m.text}</p> : null}
+      </>
+    );
   if (m.kind === "file" && mediaUrl)
     return (
-      <a href={mediaUrl} target="_blank" rel="noreferrer">
-        {m.fileName ?? "Открыть файл"}
-      </a>
+      <>
+        <a href={mediaUrl} target="_blank" rel="noreferrer">
+          {m.fileName ?? "Открыть файл"}
+        </a>
+        {m.text ? <p>{m.text}</p> : null}
+      </>
     );
   return <p>{m.kind === "call" ? "Звонок через Авито" : m.text || "Вложение недоступно"}</p>;
 }

@@ -1,6 +1,15 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowUpRight, BookOpen, ChartNoAxesCombined, CircleHelp, LayoutDashboard, MessageSquare, PanelTop, Settings2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  ChartNoAxesCombined,
+  CircleHelp,
+  LayoutDashboard,
+  MessageSquare,
+  PanelTop,
+  Settings2,
+} from "lucide-react";
 import { CabinetPage } from "@/features/cabinet/CabinetPage";
 import { balanceRows, blockRows } from "@/features/cabinet/rules";
 import { sampleCabinet } from "@/features/cabinet/sample";
@@ -12,10 +21,22 @@ import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
 import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
 import { AnalyticsSection } from "./AnalyticsSection.tsx";
+import { getPreviewData } from "./preview-data.ts";
 
-const KnowledgeSection = lazy(() => import("@/features/knowledge/KnowledgeSection").then(module => ({ default: module.KnowledgeSection })));
+const KnowledgeSection = lazy(() =>
+  import("@/features/knowledge/KnowledgeSection").then((module) => ({
+    default: module.KnowledgeSection,
+  })),
+);
 
-const ICONS = { today: LayoutDashboard, stats: ChartNoAxesCombined, ads: PanelTop, chats: MessageSquare, learn: BookOpen, acc: Settings2 };
+const ICONS = {
+  today: LayoutDashboard,
+  stats: ChartNoAxesCombined,
+  ads: PanelTop,
+  chats: MessageSquare,
+  learn: BookOpen,
+  acc: Settings2,
+};
 
 export function Shell({ section, focus }: { section: SectionId; focus?: string }) {
   const navigate = useNavigate();
@@ -25,48 +46,166 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
-    return () => { window.clearInterval(timer); };
+    return () => {
+      window.clearInterval(timer);
+    };
   }, []);
 
   const crmMetrics = periodMetrics(crm, ...monthRangeMsk(2026, 10));
-  const liveWindows = windows.map(slot => {
-    const appointment = crm.appointments.find(item => item.startsAt === slot.startsAt && item.status === "booked");
-    return { ...slot, takenBy: appointment ? crm.leads.find(item => item.id === appointment.leadId)?.name || null : null };
+  const liveWindows = windows.map((slot) => {
+    const appointment = crm.appointments.find(
+      (item) => item.startsAt === slot.startsAt && item.status === "booked",
+    );
+    return {
+      ...slot,
+      takenBy: appointment
+        ? crm.leads.find((item) => item.id === appointment.leadId)?.name || null
+        : null,
+    };
   });
-  const marks = attention({ ads, dialogs: dialogs.filter(d => leadProgress(crm, d.id, now).stage === "new"), windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.filter(id => crm.leads.some(l => l.studentId === id && !l.closedAt)).length, nowMs: now });
-  const cabinetShort = balanceRows(sampleCabinet.balance).some(row => row.label === "Хватит" && row.tone === "bad");
-  marks.acc = (cabinetShort ? 1 : 0) + blockRows(sampleCabinet.blocks, now).filter(row => row.tone === "bad").length;
+  const marks = attention({
+    ads,
+    dialogs: dialogs.filter(
+      (d) => crm.leads.some((l) => l.id === d.id) && leadProgress(crm, d.id, now).stage === "new",
+    ),
+    windows: liveWindows,
+    photoSlots: PHOTO_SLOTS,
+    blockedTitles: sampleCabinet.blocks.items.map((item) => item.title),
+    unpaid: crmMetrics.unpaidStudentIds.filter((id) =>
+      crm.leads.some((l) => l.studentId === id && !l.closedAt),
+    ).length,
+    nowMs: now,
+  });
+  const cabinetShort = balanceRows(sampleCabinet.balance).some(
+    (row) => row.label === "Хватит" && row.tone === "bad",
+  );
+  marks.acc =
+    (cabinetShort ? 1 : 0) +
+    blockRows(sampleCabinet.blocks, now).filter((row) => row.tone === "bad").length;
+  if (getPreviewData()) {
+    marks.ads = sampleCabinet.blocks.items.length;
+    marks.stats = 0;
+  }
   marks.today = marks.stats + marks.ads + marks.chats;
-  const selected = SECTIONS.find(item => item.id === section)!;
+  const selected = SECTIONS.find((item) => item.id === section)!;
 
-
-  return <div className="service-layout">
-    <a className="skip-link" href="#service-content">Перейти к содержимому</a>
-    <aside className="service-sidebar">
-      <a href="/?section=today" className="service-brand" aria-label="Авито — главная"><img className="service-brand-logo" src="/images/brand/logo.svg" alt="" width="48" height="30" /><span>Авито</span></a>
-      <div className="workspace-profile"><span className="profile-avatar">АС</span><div><strong>{sampleCabinet.tutor}</strong><small>{sampleCabinet.subject}</small></div></div>
-      <nav className="service-nav" aria-label="Разделы">{SECTIONS.map(item => {
-        const Icon = ICONS[item.id];
-        return <div key={item.id}><button type="button" className={`service-nav-item ${item.id === section ? "active" : ""}`} aria-current={item.id === section ? "page" : undefined} onClick={() => navigate({ to: "/", search: { section: item.id } })}>
-          <Icon size={18} strokeWidth={1.7} /><span>{item.label}</span>{marks[item.id] > 0 && item.id !== "today" ? <span className="nav-badge">{marks[item.id]}</span> : null}
-        </button>{item.id === "ads" && section === "ads" && <div className="ads-subnav">{[["list","Объявления"],["feeds","Автозагрузка"],["history","История"]].map(([id,label])=><button type="button" key={id} className={(focus===id || (!focus && id==="list"))?"active":""} onClick={()=>navigate({to:"/",search:{section:"ads",focus:id}})}>{label}</button>)}</div>}</div>;
-      })}</nav>
-      <div className="sidebar-bottom"><div className="support-card"><span className="support-icon"><CircleHelp size={19} /></span><strong>Мы рядом</strong><p>Куратор и команда Cantor<br />10:00–18:00 МСК</p><button type="button" onClick={() => setHelpOpen(open => !open)} aria-expanded={helpOpen}>Связь с командой<ArrowUpRight size={15} /></button>{helpOpen ? <p className="support-detail" role="status">Ваш Telegram-чат с командой ещё не привязан.</p> : null}</div></div>
-    </aside>
-    <div className="service-body">
-      <main id="service-content" className="service-content" tabIndex={-1}>
-        <h1 className="sr-only">{selected.label}</h1>
-        {storageError ? <p role="alert" className="crm-error">{storageError}</p> : null}
-        <div className={`service-section section-${section}`}>
-          {section === "today" ? <DashboardSection /> : null}
-          {section === "stats" ? <AnalyticsSection focus={focus} /> : null}
-          {section === "ads" ? <AdsSection focus={focus} /> : null}
-          {section === "chats" ? <DialogsSection focus={focus} /> : null}
-          {section === "learn" ? <Suspense fallback={<p className="text-muted" role="status">Загружаем базу знаний…</p>}><KnowledgeSection focus={focus} /></Suspense> : null}
-          {section === "acc" ? <CabinetPage /> : null}
+  return (
+    <div className="service-layout">
+      <a className="skip-link" href="#service-content">
+        Перейти к содержимому
+      </a>
+      <aside className="service-sidebar">
+        <a href="/?section=today" className="service-brand" aria-label="Авито — главная">
+          <img
+            className="service-brand-logo"
+            src="/images/brand/logo.svg"
+            alt=""
+            width="48"
+            height="30"
+          />
+          <span>Авито</span>
+        </a>
+        <div className="workspace-profile">
+          <span className="profile-avatar">{getPreviewData() ? "ЕД" : "АС"}</span>
+          <div>
+            <strong>{sampleCabinet.tutor}</strong>
+            <small>{sampleCabinet.subject}</small>
+          </div>
         </div>
-
-      </main>
+        <nav className="service-nav" aria-label="Разделы">
+          {SECTIONS.map((item) => {
+            const Icon = ICONS[item.id];
+            return (
+              <div key={item.id}>
+                <button
+                  type="button"
+                  className={`service-nav-item ${item.id === section ? "active" : ""}`}
+                  aria-current={item.id === section ? "page" : undefined}
+                  onClick={() => navigate({ to: "/", search: { section: item.id } })}
+                >
+                  <Icon size={18} strokeWidth={1.7} />
+                  <span>{item.label}</span>
+                  {marks[item.id] > 0 && item.id !== "today" ? (
+                    <span className="nav-badge">{marks[item.id]}</span>
+                  ) : null}
+                </button>
+                {item.id === "ads" && section === "ads" && (
+                  <div className="ads-subnav">
+                    {[
+                      ["list", "Объявления"],
+                      ["feeds", "Автозагрузка"],
+                      ["history", "История"],
+                    ].map(([id, label]) => (
+                      <button
+                        type="button"
+                        key={id}
+                        className={focus === id || (!focus && id === "list") ? "active" : ""}
+                        onClick={() => navigate({ to: "/", search: { section: "ads", focus: id } })}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+        <div className="sidebar-bottom">
+          <div className="support-card">
+            <span className="support-icon">
+              <CircleHelp size={19} />
+            </span>
+            <strong>Мы рядом</strong>
+            <p>
+              Куратор и команда Cantor
+              <br />
+              10:00–18:00 МСК
+            </p>
+            <button
+              type="button"
+              onClick={() => setHelpOpen((open) => !open)}
+              aria-expanded={helpOpen}
+            >
+              Связь с командой
+              <ArrowUpRight size={15} />
+            </button>
+            {helpOpen ? (
+              <p className="support-detail" role="status">
+                Ваш Telegram-чат с командой ещё не привязан.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </aside>
+      <div className="service-body">
+        <main id="service-content" className="service-content" tabIndex={-1}>
+          <h1 className="sr-only">{selected.label}</h1>
+          {storageError ? (
+            <p role="alert" className="crm-error">
+              {storageError}
+            </p>
+          ) : null}
+          <div className={`service-section section-${section}`}>
+            {section === "today" ? <DashboardSection /> : null}
+            {section === "stats" ? <AnalyticsSection focus={focus} /> : null}
+            {section === "ads" ? <AdsSection focus={focus} /> : null}
+            {section === "chats" ? <DialogsSection focus={focus} /> : null}
+            {section === "learn" ? (
+              <Suspense
+                fallback={
+                  <p className="text-muted" role="status">
+                    Загружаем базу знаний…
+                  </p>
+                }
+              >
+                <KnowledgeSection focus={focus} />
+              </Suspense>
+            ) : null}
+            {section === "acc" ? <CabinetPage /> : null}
+          </div>
+        </main>
+      </div>
     </div>
-  </div>;
+  );
 }

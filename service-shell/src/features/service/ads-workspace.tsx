@@ -18,8 +18,9 @@ import {
   ImagePlus,
   Sparkles,
   X,
-  ArrowUp,
-  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
   SlidersHorizontal,
   MapPin,
   Eye,
@@ -28,6 +29,7 @@ import { ads as samples } from "./data";
 import "./ads-workspace.css";
 import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
+import { getPreviewData } from "./preview-data";
 
 type Listing = {
   id: string;
@@ -35,7 +37,7 @@ type Listing = {
   text: string;
   city: string;
   price: number;
-  status: "published" | "draft";
+  status: string;
   source: "cantor" | "sheet";
   photos: string[];
   shows?: number;
@@ -50,6 +52,12 @@ type Listing = {
   query: string;
   start: string;
   end: string;
+  attributes?: Record<string, string>;
+  bidding?: import("./preview-data.ts").PreviewAd["bidding"];
+  address?: string;
+  autoloadId?: string;
+  startsAt?: string;
+  finishesAt?: string;
 };
 type State = {
   items: Listing[];
@@ -64,28 +72,52 @@ const initial: State = {
     title: a.title,
     text: a.text,
     city: a.cities[0]?.city ?? "Москва",
-    price: 2000,
-    status: i === 2 ? "draft" : "published",
-    source: "cantor",
-    photos: [],
+    price: getPreviewData()
+      ? (getPreviewData()!.ads.find((item) => item.id === a.id)?.price ?? NaN)
+      : 2000,
+    status: getPreviewData()
+      ? {
+          active: "published",
+          old: "archived",
+          blocked: "blocked",
+          rejected: "rejected",
+          removed: "removed",
+        }[getPreviewData()!.ads.find((item) => item.id === a.id)?.status || ""] || "draft"
+      : i === 2
+        ? "draft"
+        : "published",
+    source: a.source || "cantor",
+    photos: getPreviewData()
+      ? getPreviewData()!
+          .ads.find((item) => item.id === a.id)
+          ?.photos?.map((_, p) => `/api/demo/image?adId=${encodeURIComponent(a.id)}&index=${p}`) ||
+        []
+      : [],
     shows: a.shows,
     views: a.views,
     contacts: a.contacts,
     spend: a.spendRub,
-    bid: a.cities[0]?.bidRub ?? 20,
-    mode: "manual",
-    max: 80,
-    budget: 500,
-    target: 10,
-    query: "репетитор по математике",
-    start: "09:00",
-    end: "21:00",
+    bid: a.bidding?.currentRub ?? a.cities[0]?.bidRub ?? 20,
+    mode: getPreviewData() ? a.bidding?.mode || "" : "manual",
+    max: getPreviewData() ? (a.bidding?.maxRub ?? NaN) : 80,
+    budget: getPreviewData() ? (a.bidding?.dailyBudgetRub ?? NaN) : 500,
+    target: getPreviewData() ? NaN : 10,
+    query: getPreviewData() ? "репетитор по русскому языку" : "репетитор по математике",
+    start: getPreviewData() ? "" : "09:00",
+    end: getPreviewData() ? "" : "21:00",
+    attributes: getPreviewData()?.ads.find((item) => item.id === a.id)?.attributes || {},
+    bidding: a.bidding,
+    address: a.address,
+    autoloadId: a.autoloadId,
+    startsAt: a.startsAt,
+    finishesAt: a.finishesAt,
   })),
-  sheet: "",
-  tab: "Авито_выгрузка",
+  sheet: getPreviewData()?.feed?.sheetUrl || "",
+  tab: getPreviewData()?.feed?.tabs?.[0] || "Авито_выгрузка",
   history: [],
 };
 function load(): State {
+  if (getPreviewData()) return initial;
   try {
     const s = JSON.parse(localStorage.getItem(KEY) ?? "null");
     return s?.items && Array.isArray(s.history) ? s : initial;
@@ -101,7 +133,7 @@ function download(name: string, text: string, type = "text/csv;charset=utf-8") {
   a.click();
   URL.revokeObjectURL(url);
 }
-const rub = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
+const rub = (n: number) => (Number.isFinite(n) ? `${n.toLocaleString("ru-RU")} ₽` : "—");
 function cover(title: string, city: string) {
   const escape = (v: string) =>
     v
@@ -151,9 +183,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
   const [tab, setTab] = useState(focus === "feeds" || focus === "history" ? focus : "list");
   const [details, setDetails] = useState(false);
-  const [sort, setSort] = useState<{key: string; asc: boolean}>({key:"title",asc:true});
-  const [photoIndex,setPhotoIndex] = useState(0);
-  useEffect(()=>{ if(focus === "feeds" || focus === "history" || focus === "list") setTab(focus); },[focus]);
+  const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "title", asc: true });
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  useEffect(() => {
+    if (focus === "feeds" || focus === "history" || focus === "list") setTab(focus);
+  }, [focus]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
@@ -207,6 +242,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     };
   }, [editing]);
   function persist(next: State) {
+    if (getPreviewData()) {
+      setNotice("Недостаточно прав для изменения");
+      return false;
+    }
     try {
       localStorage.setItem(KEY, JSON.stringify(next));
       setState(next);
@@ -225,6 +264,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   }
   function open(a: Listing) {
     setEdit({ ...a, photos: [...a.photos] });
+    setPhotoIndex(0);
     setEditorTab("content");
     setCandidate(null);
     setPreview(false);
@@ -265,14 +305,45 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       setNotice("Изменения сохранены в этом браузере.");
     }
   }
-  const visible = state.items.filter(
-    (a) =>
-      (!query || `${a.title} ${a.city} ${a.id}`.toLowerCase().includes(query.toLowerCase())) &&
-      (filter === "all" || a.status === filter),
-  ).sort((a,b)=>{ const value=(x:Listing):string|number => sort.key === "conversion" ? (x.views ? x.contacts/x.views : -1) : sort.key === "cpv" ? (x.views ? x.spend/x.views : -1) : sort.key === "cpa" ? (x.contacts ? x.spend/x.contacts : -1) : (x[sort.key as keyof Listing] as string|number) ?? -1; const x=value(a), y=value(b); return (typeof x === "string" && typeof y === "string" ? x.localeCompare(y,"ru") : Number(x)-Number(y))*(sort.asc?1:-1); });
-  const heading=(key:string,label:string)=><th><button onClick={()=>setSort({key,asc:sort.key===key?!sort.asc:true})}>{label} {sort.key===key?(sort.asc?"↑":"↓"):"↕"}</button></th>;
+  const visible = state.items
+    .filter(
+      (a) =>
+        (!query || `${a.title} ${a.city} ${a.id}`.toLowerCase().includes(query.toLowerCase())) &&
+        (filter === "all" || a.status === filter),
+    )
+    .sort((a, b) => {
+      const value = (x: Listing): string | number =>
+        sort.key === "conversion"
+          ? x.views
+            ? x.contacts / x.views
+            : -1
+          : sort.key === "cpv"
+            ? x.views
+              ? x.spend / x.views
+              : -1
+            : sort.key === "cpa"
+              ? x.contacts
+                ? x.spend / x.contacts
+                : -1
+              : ((x[sort.key as keyof Listing] as string | number) ?? -1);
+      const x = value(a),
+        y = value(b);
+      return (
+        (typeof x === "string" && typeof y === "string"
+          ? x.localeCompare(y, "ru")
+          : Number(x) - Number(y)) * (sort.asc ? 1 : -1)
+      );
+    });
+  const heading = (key: string, label: string) => (
+    <th>
+      <button onClick={() => setSort({ key, asc: sort.key === key ? !sort.asc : true })}>
+        {label} {sort.key === key ? (sort.asc ? "↑" : "↓") : "↕"}
+      </button>
+    </th>
+  );
   const sheetValid = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+/.test(sheet);
   function propose(kind: "title" | "text" | "photo") {
+    if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
     if (!edit) return;
     if (kind === "photo") {
       setPhotoCaption(edit.title || "Математика");
@@ -377,14 +448,26 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               options={[
                 { value: "all", label: "Все статусы" },
                 { value: "published", label: "В публикации" },
+                ...(getPreviewData()
+                  ? [
+                      { value: "archived", label: "Архив" },
+                      { value: "blocked", label: "Заблокировано" },
+                      { value: "rejected", label: "Отклонено" },
+                      { value: "removed", label: "Снято" },
+                    ]
+                  : []),
                 { value: "draft", label: "Черновики" },
               ]}
             />
-            <button className="aw-btn" onClick={()=>setDetails(!details)} aria-pressed={details}>{details?"Свернуть":"Подробнее"}</button>
-            <button className="aw-btn aw-primary" onClick={create}>
-              <Plus size={17} />
-              Создать объявление
+            <button className="aw-btn" onClick={() => setDetails(!details)} aria-pressed={details}>
+              {details ? "Свернуть" : "Подробнее"}
             </button>
+            {!getPreviewData() && (
+              <button className="aw-btn aw-primary" onClick={create}>
+                <Plus size={17} />
+                Создать объявление
+              </button>
+            )}
           </div>
           {selected.length > 0 && (
             <div className="aw-bulk">
@@ -402,7 +485,36 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               >
                 В черновики
               </button>
-              <button onClick={() => setTab("bids")}>Настроить ставки</button>
+              <button onClick={() => setBulkOpen(!bulkOpen)}>Настроить ставки</button>
+              {bulkOpen && (
+                <>
+                  <input
+                    type="number"
+                    min="0"
+                    aria-label="Общая ставка"
+                    value={bulkBid}
+                    onChange={(e) => setBulkBid(Number(e.target.value))}
+                  />
+                  <button
+                    onClick={() => {
+                      if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
+                      if (!Number.isFinite(bulkBid) || bulkBid < 0)
+                        return setNotice("Укажите корректную ставку");
+                      commit(
+                        state.items.map((item) =>
+                          selected.includes(item.id)
+                            ? { ...item, bid: bulkBid, max: Math.max(item.max, bulkBid) }
+                            : item,
+                        ),
+                        `Ставка изменена для ${selected.length} объявлений`,
+                      );
+                      setBulkOpen(false);
+                    }}
+                  >
+                    Сохранить ставку
+                  </button>
+                </>
+              )}
               <button onClick={() => setSelected([])}>Снять выбор</button>
             </div>
           )}
@@ -420,13 +532,19 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       }
                     />
                   </th>
-                  {heading("title","Объявление")}
-                  {heading("status","Статус")}
-                  {heading("shows","Показы")}
-                  {heading("views","Просмотры")}
-                  {heading("contacts","Контакты")}
-                  {heading("spend","Расходы")}
-                  {details && <>{heading("conversion","Контакты / просмотры")}{heading("cpv","Цена просмотра")}{heading("cpa","Цена контакта")}</>}
+                  {heading("title", "Объявление")}
+                  {heading("status", "Статус")}
+                  {heading("shows", "Показы")}
+                  {heading("views", "Просмотры")}
+                  {heading("contacts", "Контакты")}
+                  {heading("spend", "Расходы")}
+                  {details && (
+                    <>
+                      {heading("conversion", "Контакты / просмотры")}
+                      {heading("cpv", "Цена просмотра")}
+                      {heading("cpa", "Цена контакта")}
+                    </>
+                  )}
                   <th />
                 </tr>
               </thead>
@@ -452,6 +570,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         <span className={`aw-thumb aw-thumb-${i % 3}`}>
                           {a.photos[0] ? (
                             <img src={a.photos[0]} alt="" />
+                          ) : getPreviewData() ? (
+                            <ImagePlus size={20} />
                           ) : (
                             <span>
                               {a.title.includes("ОГЭ")
@@ -472,16 +592,31 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       </button>
                     </td>
                     <td>
-                      <span className={`aw-status ${a.status === "draft" ? "draft" : ""}`}>
+                      <span className={`aw-status ${a.status !== "published" ? "draft" : ""}`}>
                         <i />
-                        {a.status === "draft" ? "Черновик" : "В публикации"}
+                        {{
+                          published: "В публикации",
+                          draft: "Черновик",
+                          archived: "Архив",
+                          blocked: "Заблокировано",
+                          rejected: "Отклонено",
+                          removed: "Снято",
+                        }[a.status] || a.status}
                       </span>
                     </td>
-                    <td>{a.shows ?? "—"}</td>
-                    <td>{a.views || "—"}</td>
-                    <td>{a.contacts || "—"}</td>
-                    <td>{a.spend ? rub(a.spend) : "—"}</td>
-                    {details && <><td>{a.views ? `${(100*a.contacts/a.views).toFixed(1)} %` : "—"}</td><td>{a.views ? rub(a.spend/a.views) : "—"}</td><td>{a.contacts ? rub(a.spend/a.contacts) : "—"}</td></>}
+                    <td>{Number.isFinite(a.shows) ? a.shows?.toLocaleString("ru-RU") : "—"}</td>
+                    <td>{Number.isFinite(a.views) ? a.views.toLocaleString("ru-RU") : "—"}</td>
+                    <td>
+                      {Number.isFinite(a.contacts) ? a.contacts.toLocaleString("ru-RU") : "—"}
+                    </td>
+                    <td>{Number.isFinite(a.spend) ? rub(a.spend) : "—"}</td>
+                    {details && (
+                      <>
+                        <td>{a.views ? `${((100 * a.contacts) / a.views).toFixed(1)} %` : "—"}</td>
+                        <td>{a.views ? rub(a.spend / a.views) : "—"}</td>
+                        <td>{a.contacts ? rub(a.spend / a.contacts) : "—"}</td>
+                      </>
+                    )}
                     <td>
                       <button
                         className="aw-icon"
@@ -519,15 +654,21 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 <input
                   placeholder="https://docs.google.com/spreadsheets/d/…"
                   value={sheet}
+                  readOnly={Boolean(getPreviewData())}
                   onChange={(e) => setSheet(e.target.value)}
                 />
               </Field>
               <Field label="Вкладка с объявлениями">
-                <input value={sheetTab} onChange={(e) => setSheetTab(e.target.value)} />
+                <input
+                  value={sheetTab}
+                  readOnly={Boolean(getPreviewData())}
+                  onChange={(e) => setSheetTab(e.target.value)}
+                />
               </Field>
               <div className="aw-feed-actions">
                 <button
                   className="aw-btn aw-primary"
+                  disabled={Boolean(getPreviewData())}
                   onClick={() => {
                     if (!sheetValid || !sheetTab.trim())
                       return setNotice(
@@ -556,6 +697,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 </button>
                 <button
                   className="aw-text-button"
+                  disabled={Boolean(getPreviewData())}
                   onClick={() =>
                     download(
                       "cantor-avito-template.csv",
@@ -575,25 +717,66 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 <div className="aw-panel-heading">
                   <span className="aw-eyebrow">02 · ПРОВЕРКА</span>
                   <AdsHelp label="О проверке таблицы">
-                    Проверяем доступ, обязательные поля, постоянные Id и ссылки на фотографии. Перед
-                    заменой существующего фида сравниваем изменения. Чтение таблицы пока не
-                    подключено.
+                    Таблица содержит объявления и фотографии.
                   </AdsHelp>
                 </div>
                 <div className="aw-pending">
-                  <span className="aw-pending-dot" />
-                  Ожидает подключения интеграции
+                  {getPreviewData()?.feed?.adCount ?? 0} объявлений ·{" "}
+                  {getPreviewData()?.feed?.report?.published ?? 0} опубликовано ·{" "}
+                  {getPreviewData()?.feed?.report?.errors ?? 0} ошибок
                 </div>
               </div>
               <div className="aw-panel">
                 <div className="aw-panel-heading">
                   <span className="aw-eyebrow">03 · АВТОЗАГРУЗКА</span>
                   <AdsHelp label="Как подключить XML">
-                    После успешной проверки здесь появится персональная XML-ссылка. Её нужно указать
-                    в настройках автозагрузки Авито, затем выбрать расписание и проверить отчёт.
+                    XML-ссылка и расписание автозагрузки.
                   </AdsHelp>
                 </div>
-                <div className="aw-placeholder">XML ещё не сформирован</div>
+                <div className="aw-placeholder">
+                  {getPreviewData()?.feed?.xmlUrl && (
+                    <div className="aw-feed-controls">
+                      <button
+                        className="aw-btn"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(getPreviewData()!.feed!.xmlUrl!);
+                            setNotice("Ссылка скопирована");
+                          } catch {
+                            setNotice(
+                              "Не удалось скопировать ссылку. Выделите её и скопируйте вручную.",
+                            );
+                          }
+                        }}
+                      >
+                        <Copy size={15} />
+                        Скопировать ссылку
+                      </button>
+                      <button className="aw-btn" onClick={() => window.location.reload()}>
+                        <RefreshCw size={15} />
+                        Обновить
+                      </button>
+                    </div>
+                  )}
+                  <a
+                    href={getPreviewData()?.feed?.xmlUrl || undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {getPreviewData()?.feed?.xmlUrl || "XML"}
+                  </a>
+                  <p>
+                    {getPreviewData()?.feed?.schedule || ""}
+                    {getPreviewData()?.feed?.builtAt
+                      ? ` · Обновлено ${new Date(getPreviewData()!.feed!.builtAt!).toLocaleString("ru-RU")}`
+                      : ""}
+                  </p>
+                  {getPreviewData()?.feed?.problems?.map((problem, i) => (
+                    <p key={`${problem.row}-${i}`}>
+                      Строка {problem.row}: {problem.msg}
+                    </p>
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -602,11 +785,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       {tab === "bids" && (
         <>
           <div className="aw-bids-toolbar">
-            <span className="aw-status draft">Авито не подключено</span>
+            {getPreviewData() ? null : <span className="aw-status draft">Авито не подключено</span>}
             <AdsHelp label="Как работают ставки">
               Ставка — цена за просмотр. Выберите режим рядом с объявлением, нажмите ставку для её
-              изменения. В режиме по позиции нужны запрос, город и предел ставки. В превью настройки
-              сохраняются без отправки в Авито.
+              изменения. В режиме по позиции нужны запрос, город и предел ставки.
             </AdsHelp>
           </div>
           {selected.length > 0 && (
@@ -622,6 +804,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </Field>
               <button
                 onClick={() => {
+                  if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
                   if (bulkBid < 0 || !Number.isFinite(bulkBid))
                     return setNotice("Укажите ставку от 0 ₽.");
                   commit(
@@ -693,6 +876,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       >
                         {rub(a.bid)}
                       </button>
+                      {getPreviewData() && a.bidding?.scale?.length ? (
+                        <small className="aw-muted">
+                          {a.bidding.scale.find((x) => x.rub === a.bid)?.compare ?? 0}% к
+                          конкурентам
+                        </small>
+                      ) : null}
                     </td>
                     <td>{rub(a.budget)}</td>
                     <td>
@@ -768,7 +957,13 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   </button>
                 ))}
               </div>
-              <button className="aw-icon aw-editor-close" aria-label="Закрыть редактор" onClick={() => setEdit(null)}><X /></button>
+              <button
+                className="aw-icon aw-editor-close"
+                aria-label="Закрыть редактор"
+                onClick={() => setEdit(null)}
+              >
+                <X />
+              </button>
               <div className="aw-editor-layout">
                 <div className="aw-editor-body">
                   {notice && (
@@ -794,7 +989,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.price}
+                            value={Number.isFinite(edit.price) ? edit.price : ""}
                             onChange={(e) => setEdit({ ...edit, price: Number(e.target.value) })}
                           />
                         </Field>
@@ -811,7 +1006,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           id="aw-title"
                           className="aw-input"
                           value={edit.title}
-                          placeholder="Например, подготовка к ЕГЭ по математике"
+                          placeholder="Например, подготовка к ЕГЭ"
                           maxLength={100}
                           onChange={(e) => setEdit({ ...edit, title: e.target.value })}
                         />
@@ -847,10 +1042,51 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           />
                         </Field>
                         <AdsHelp label="Об источнике управления">
-                          Выберите, где редактировать объявление. Запись правок в Google Таблицу
-                          пока не подключена.
+                          Выберите, где редактировать объявление.
                         </AdsHelp>
                       </div>
+                      {getPreviewData() &&
+                        ((edit.attributes && Object.keys(edit.attributes).length > 0) ||
+                          edit.address ||
+                          edit.autoloadId ||
+                          edit.startsAt ||
+                          edit.finishesAt) && (
+                          <details className="aw-editor-meta">
+                            <summary>Параметры объявления</summary>
+                            <dl>
+                              {edit.address ? (
+                                <div>
+                                  <dt>Адрес</dt>
+                                  <dd>{edit.address}</dd>
+                                </div>
+                              ) : null}
+                              {edit.autoloadId ? (
+                                <div>
+                                  <dt>Id автозагрузки</dt>
+                                  <dd>{edit.autoloadId}</dd>
+                                </div>
+                              ) : null}
+                              {edit.startsAt ? (
+                                <div>
+                                  <dt>Дата публикации</dt>
+                                  <dd>{edit.startsAt}</dd>
+                                </div>
+                              ) : null}
+                              {edit.finishesAt ? (
+                                <div>
+                                  <dt>Дата окончания</dt>
+                                  <dd>{edit.finishesAt}</dd>
+                                </div>
+                              ) : null}
+                              {Object.entries(edit.attributes || {}).map(([key, value]) => (
+                                <div key={key}>
+                                  <dt>{key}</dt>
+                                  <dd>{value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        )}
                       {state.items.some((a) => a.id === edit.id) && (
                         <button
                           className="aw-text-button"
@@ -874,16 +1110,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   )}
                   {editorTab === "photos" && (
                     <>
-                      <div className="aw-photo-toolbar">
-                        <button className="aw-ai-button" onClick={() => propose("photo")}>
-                          <Sparkles size={15} />
-                          Создать с ИИ
-                        </button>
-                        <AdsHelp label="О фотографиях">
-                          Первое изображение — обложка. Меняйте порядок стрелками. Генерация ИИ пока
-                          не подключена: можно согласовать пример обложки и изменить надпись.
-                        </AdsHelp>
-                      </div>
                       {candidate?.kind === "photo" && suggestion}
                       {!edit.photos.length && candidate?.kind !== "photo" && (
                         <div className="aw-photo-empty">
@@ -897,7 +1123,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                             <img src={url} alt={`Фотография ${i + 1}`} />
                             <div>
                               <button
-                                aria-label={`Переместить фото ${i + 1} выше`}
+                                aria-label={`Переместить фото ${i + 1} влево`}
                                 disabled={i === 0}
                                 onClick={() => {
                                   const p = [...edit.photos];
@@ -905,10 +1131,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                                   setEdit({ ...edit, photos: p });
                                 }}
                               >
-                                <ArrowUp size={15} />
+                                <ArrowLeft size={15} />
                               </button>
                               <button
-                                aria-label={`Переместить фото ${i + 1} ниже`}
+                                aria-label={`Переместить фото ${i + 1} вправо`}
                                 disabled={i === edit.photos.length - 1}
                                 onClick={() => {
                                   const p = [...edit.photos];
@@ -916,7 +1142,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                                   setEdit({ ...edit, photos: p });
                                 }}
                               >
-                                <ArrowDown size={15} />
+                                <ArrowRight size={15} />
                               </button>
                               <button
                                 aria-label={`Удалить фото ${i + 1}`}
@@ -932,6 +1158,15 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                             </div>
                           </div>
                         ))}
+                      </div>
+                      <div className="aw-photo-toolbar">
+                        <button className="aw-ai-button" onClick={() => propose("photo")}>
+                          <Sparkles size={15} />
+                          Создать с ИИ
+                        </button>
+                        <AdsHelp label="О фотографиях">
+                          Первое изображение — обложка. Меняйте порядок стрелками.
+                        </AdsHelp>
                       </div>
                       <div className="aw-form">
                         <Field label="Прямая ссылка на изображение">
@@ -999,7 +1234,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.bid}
+                            value={Number.isFinite(edit.bid) ? edit.bid : ""}
                             onChange={(e) => setEdit({ ...edit, bid: Number(e.target.value) })}
                           />
                         </Field>
@@ -1007,7 +1242,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.max}
+                            value={Number.isFinite(edit.max) ? edit.max : ""}
                             onChange={(e) => setEdit({ ...edit, max: Number(e.target.value) })}
                           />
                         </Field>
@@ -1015,7 +1250,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.budget}
+                            value={Number.isFinite(edit.budget) ? edit.budget : ""}
                             onChange={(e) => setEdit({ ...edit, budget: Number(e.target.value) })}
                           />
                         </Field>
@@ -1024,12 +1259,43 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                             <input
                               type="number"
                               min="1"
-                              value={edit.target}
+                              value={Number.isFinite(edit.target) ? edit.target : ""}
                               onChange={(e) => setEdit({ ...edit, target: Number(e.target.value) })}
                             />
                           </Field>
                         )}
                       </div>
+                      {getPreviewData() &&
+                      getPreviewData()!.ads.find((item) => item.id === edit.id)?.bidding?.scale
+                        ?.length ? (
+                        <details>
+                          <summary>Шкала ставок</summary>
+                          <div className="aw-table-wrap">
+                            <table className="aw-table">
+                              <thead>
+                                <tr>
+                                  <th>Ставка</th>
+                                  <th>Сравнение с конкурентами</th>
+                                  <th>Прогноз минимум</th>
+                                  <th>Прогноз максимум</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {getPreviewData()!
+                                  .ads.find((item) => item.id === edit.id)!
+                                  .bidding!.scale.map((row, index) => (
+                                    <tr key={index}>
+                                      <td>{rub(row.rub)}</td>
+                                      <td>{row.compare}%</td>
+                                      <td>{row.minForecast}</td>
+                                      <td>{row.maxForecast}</td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      ) : null}
                       {edit.mode === "position" && (
                         <>
                           <Field label="Поисковый запрос">
@@ -1069,7 +1335,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 </div>
                 <aside className={`aw-live-preview ${preview ? "mobile-open" : ""}`}>
                   <div className="aw-preview-heading">
-                    
                     <button
                       className="aw-icon aw-mobile-close"
                       aria-label="Скрыть предпросмотр"
@@ -1080,12 +1345,35 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   </div>
                   <div className="aw-preview-image">
                     {edit.photos[photoIndex % edit.photos.length] ? (
-                      <img src={edit.photos[photoIndex % edit.photos.length]} alt="Фотография объявления" />
+                      <img
+                        src={edit.photos[photoIndex % edit.photos.length]}
+                        alt="Фотография объявления"
+                      />
                     ) : (
                       <ImagePlus size={36} />
                     )}
                   </div>
-                  {edit.photos.length > 1 && <div className="aw-carousel"><button aria-label="Предыдущее фото" onClick={()=>setPhotoIndex((photoIndex-1+edit.photos.length)%edit.photos.length)}>←</button><span>{photoIndex % edit.photos.length + 1} / {edit.photos.length}</span><button aria-label="Следующее фото" onClick={()=>setPhotoIndex((photoIndex+1)%edit.photos.length)}>→</button></div>}
+                  {edit.photos.length > 1 && (
+                    <div className="aw-carousel">
+                      <button
+                        aria-label="Предыдущее фото"
+                        onClick={() =>
+                          setPhotoIndex((photoIndex - 1 + edit.photos.length) % edit.photos.length)
+                        }
+                      >
+                        ←
+                      </button>
+                      <span>
+                        {(photoIndex % edit.photos.length) + 1} / {edit.photos.length}
+                      </span>
+                      <button
+                        aria-label="Следующее фото"
+                        onClick={() => setPhotoIndex((photoIndex + 1) % edit.photos.length)}
+                      >
+                        →
+                      </button>
+                    </div>
+                  )}
                   <div className="aw-preview-content">
                     <h3>{edit.title || "Заголовок объявления"}</h3>
                     <strong>{rub(edit.price)}</strong>
@@ -1106,7 +1394,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   Предпросмотр
                 </button>
                 <AdsHelp label="О сохранении">
-                  Изменения сохраняются в этом браузере. Публикация в Авито пока не подключена.
+                  Проверьте заголовок, текст и фотографии перед сохранением.
                 </AdsHelp>
                 <button className="aw-btn" onClick={() => setEdit(null)}>
                   Отмена
