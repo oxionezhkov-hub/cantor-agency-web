@@ -1100,6 +1100,9 @@ async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = 
       return avitoRequest(freshToken, path, options, attempt, true);
     }
   }
+  // Statistics limits last much longer than our exponential retry delay. Retrying a
+  // stats 429 four times only consumes the same quota again (including during edits).
+  if (res.status === 429 && /^\/stats\/v2\//.test(path)) return res;
   // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
   if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
@@ -13567,18 +13570,27 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
   if (route === 'GET state') {
     const accounts = await mbidsAccounts(env);
     const names = Object.fromEntries(accounts.map((a) => [a.id, a.name]));
+    const paged = url.searchParams.has('limit');
+    const limit = Math.floor(Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 100)));
+    const offset = Math.max(0, Math.floor(Number(url.searchParams.get('offset')) || 0));
     const items = [];
     const money = {};
-    for (const acc of await mbidsCfgAccountIds(kv)) {
+    for (const acc of (await mbidsCfgAccountIds(kv)).sort()) {
       const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
       const st = await mbidsGet(kv, `mbids:state:${acc}`, { items: {} });
-      Object.entries(cfg.items).forEach(([id, c]) => items.push(mbidsView(acc, names[acc] || '(удалён)', id, c, (st.items || {})[id])));
+      Object.entries(cfg.items).sort(([a], [b]) => a.localeCompare(b)).forEach(([id, c]) => {
+        const item = mbidsView(acc, names[acc] || '(удалён)', id, c, (st.items || {})[id]);
+        // Scales and notes belong to the expanded detail, not every list response.
+        if (paged) { delete item.scale; delete item.notes; }
+        items.push(item);
+      });
       money[acc] = { ...(st.money || {}), todayAt: st.today ? st.today.at : null, runAt: st.runAt || null, errors: st.errors || [] };
     }
     return json({
       accounts: accounts.map((a) => ({ id: a.id, name: a.name })),
       groups: await mbidsGet(kv, 'mbids:groups', {}),
-      items, money, now: Date.now(),
+      items: paged ? items.slice(offset, offset + limit) : items, money, now: Date.now(),
+      ...(paged ? { nextOffset: offset + limit < items.length ? offset + limit : null } : {}),
     });
   }
 
@@ -13720,22 +13732,42 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
     const ids = Object.keys(cfg.items);
     if (!ids.length) return json({ stats: {} });
     const today = mbidsMsk().date;
+    const state = await mbidsGet(kv, `mbids:state:${acc}`, {});
+    const covered = new Set((state.today && state.today.ids) || []);
     if (from === today && to === today) {
-      const st = await mbidsGet(kv, `mbids:state:${acc}`, {});
+      const st = state;
       // Движок уже считал сегодняшнее по включённым — если выключенных нет, этого достаточно.
       const fresh = st.today && st.today.date === today && Date.now() - st.today.at < 12 * 60 * 1000;
-      if (fresh && ids.every((id) => cfg.items[id].on)) return json({ stats: st.today.stats, at: st.today.at });
+      if (fresh && ids.every((id) => covered.has(id))) return json({ stats: st.today.stats, at: st.today.at });
     }
     const ckey = `mbids:statc:${acc}:${from}:${to}`;
-    const cached = await kv.get(ckey, 'json');
+    const idsKey = ids.slice().sort().join(',');
+    const stored = await kv.get(ckey, 'json');
+    const cached = stored && stored.idsKey === idsKey ? stored : null;
     if (cached && cached.n === ids.length && Date.now() - cached.at < 10 * 60 * 1000) return json({ stats: cached.stats, at: cached.at });
+    const warning = 'Авито временно ограничил запросы статистики. Повторите через несколько минут';
+    const fallback = (message = warning) => {
+      if (cached && cached.n === ids.length) return json({ stats: cached.stats, at: cached.at, stale: true, warning: message });
+      if (from === today && to === today && state.today && state.today.date === today) {
+        const stats = Object.fromEntries(ids.filter((id) => covered.has(id)).map((id) => [id, (state.today.stats || {})[id] || { i: 0, v: 0, c: 0, s: 0 }]));
+        return json({ stats, at: state.today.at, stale: true, partial: !ids.every((id) => covered.has(id)), warning: message });
+      }
+      return null;
+    };
+    const cooldownKey = `mbids:stats-cooldown:${acc}`;
+    const cooldown = await kv.get(cooldownKey, 'json');
+    if (cooldown && cooldown.until > Date.now()) return fallback() || json({ error: warning }, 429);
     try {
       const token = await avitoGetToken(env, account);
       const stats = await mbidsFetchTotals(token, account.userId, ids, from, to);
-      await kv.put(ckey, JSON.stringify({ at: Date.now(), n: ids.length, stats }), { expirationTtl: 3600 });
+      await kv.put(ckey, JSON.stringify({ at: Date.now(), n: ids.length, idsKey, stats }), { expirationTtl: 3600 });
       return json({ stats, at: Date.now() });
     } catch (e) {
-      if (cached) return json({ stats: cached.stats, at: cached.at, stale: true });
+      const limited = /avito_429/.test(String(e.message));
+      if (limited) await kv.put(cooldownKey, JSON.stringify({ until: Date.now() + 60000 }), { expirationTtl: 120 });
+      const saved = fallback(limited ? warning : 'Не удалось обновить статистику. Показаны сохранённые данные');
+      if (saved) return saved;
+      if (limited) return json({ error: warning }, 429);
       return json({ error: `Статистика Авито: ${String(e.message).slice(0, 200)}` }, 502);
     }
   }
@@ -13786,7 +13818,9 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
       });
     }
     const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
-    return json({ days, hours, tod, notes: (cfg.items[id] && cfg.items[id].notes) || [], error });
+    const state = await mbidsGet(kv, `mbids:state:${acc}`, { items: {} });
+    const scale = ((state.items && state.items[id] && state.items[id].scale) || []).map(([v, cmp]) => [v / 100, cmp]);
+    return json({ days, hours, tod, scale, notes: (cfg.items[id] && cfg.items[id].notes) || [], error });
   }
 
   if (route === 'POST groups') {
