@@ -192,6 +192,7 @@ try {
             0,
           );
           assert.match(await page.getByTestId("ltv-value").innerText(), /10\s*000/);
+          assert.equal(await page.evaluate(() => Object.keys(localStorage).some(key => key.startsWith("cantor.analytics.ltv."))), false, "Protected preview LTV stays out of browser storage");
           await page.getByRole("button", { name: "Изменить LTV", exact: true }).click();
           assert.equal(
             await page.getByRole("textbox", { name: "LTV ученика, ₽", exact: true }).count(),
