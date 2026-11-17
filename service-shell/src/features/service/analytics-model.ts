@@ -256,6 +256,21 @@ export function buildAnalytics(
       name: city,
       ...marketingTotals(rows.filter((row) => row.city === city)),
     })),
+    byAdCity: ads
+      .filter((ad) => !input.adId || ad.id === input.adId)
+      .flatMap((ad) =>
+        ANALYTICS_CITIES.filter(
+          (city) =>
+            (!input.city || city === input.city) &&
+            DEMO_AD_DAILY.some((row) => row.adId === ad.id && row.city === city),
+        ).map((city) => ({
+          id: `${ad.id}:${city}`,
+          adId: ad.id,
+          city,
+          name: `${ad.title} · ${city}`,
+          ...marketingTotals(rows.filter((row) => row.adId === ad.id && row.city === city)),
+        })),
+      ),
     crm: crm
       ? {
           ...crm,

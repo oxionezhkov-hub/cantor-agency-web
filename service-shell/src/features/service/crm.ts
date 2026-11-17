@@ -256,6 +256,40 @@ export function recordRefund(
     ),
   };
 }
+export function updatePayment(
+  state: CrmState,
+  workspaceId: string,
+  input: { paymentId: string; amountMinor: number; paidAt: string; changedAt: string },
+): CrmState {
+  scope(state, workspaceId);
+  const original = state.payments.find((item) => item.id === input.paymentId);
+  if (!original) throw new CrmError("Оплата не найдена");
+  validDate(input.changedAt);
+  const payment = paymentSchema.parse({
+    ...original,
+    amountMinor: input.amountMinor,
+    paidAt: input.paidAt,
+  });
+  const refunds = state.refunds.filter((item) => item.paymentId === payment.id);
+  const refunded = refunds.reduce((sum, item) => sum + item.amountMinor, 0);
+  if (payment.amountMinor < refunded)
+    throw new CrmError("Сумма оплаты не может быть меньше уже внесённых возвратов");
+  if (refunds.some((item) => Date.parse(item.refundedAt) < Date.parse(payment.paidAt)))
+    throw new CrmError("Дата оплаты не может быть позже связанного возврата");
+  if (payment.amountMinor === original.amountMinor && payment.paidAt === original.paidAt)
+    return state;
+  return {
+    ...state,
+    payments: state.payments.map((item) => (item.id === payment.id ? payment : item)),
+    events: event(
+      state,
+      payment.id,
+      "payment_updated",
+      input.changedAt,
+      `Оплата исправлена: ${original.amountMinor / 100} → ${payment.amountMinor / 100} ₽; ${original.paidAt.slice(0, 10)} → ${payment.paidAt.slice(0, 10)}`,
+    ),
+  };
+}
 export function bookAppointment(
   state: CrmState,
   workspaceId: string,

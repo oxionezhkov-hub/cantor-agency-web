@@ -69,7 +69,7 @@ try {
     );
     await list.getByRole("button", { name: "Закрыть поиск", exact: true }).click();
     await list.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).click();
-    await page.waitForURL(u => u.searchParams.get("focus") === "igor");
+    await page.waitForURL((u) => u.searchParams.get("focus") === "igor");
     await page.goBack({ waitUntil: "networkidle" });
     await list.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).waitFor();
     await list.getByRole("button", { name: "Открыть обращение: Игорь", exact: true }).click();
@@ -176,11 +176,12 @@ try {
     await action("Оплаты");
     const payments = card.getByRole("region", { name: "Оплаты учеников", exact: true });
     assert.equal(
-      await payments
-        .getByRole("combobox", { name: "Ученик", exact: true })
-        .locator("option")
-        .count(),
-      1,
+      await payments.getByRole("combobox", { name: "Ученик", exact: true }).isDisabled(),
+      true,
+    );
+    assert.match(
+      await payments.getByRole("combobox", { name: "Ученик", exact: true }).innerText(),
+      /Игорь|Сын Игоря/,
     );
     for (const value of ["1234,50", "55,50"]) {
       await payments.getByRole("textbox", { name: "Сумма, ₽", exact: true }).fill(value);

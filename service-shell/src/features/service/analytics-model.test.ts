@@ -256,3 +256,27 @@ test("unattributed CRM source makes report rows reconcile without duplicating am
     );
   assert.equal(total.byAd.find((row) => row.id === "unattributed")?.completedAppointments, 1);
 });
+
+test("ad-by-city rows reconcile with ad and city summaries under combined filters", () => {
+  for (const options of [
+    {},
+    { adId: "oge" },
+    { city: "Москва" },
+    { adId: "oge", city: "Область" },
+  ]) {
+    const result = report(options);
+    for (const key of ["shows", "views", "contacts", "spendRub"] as const) {
+      assert.equal(
+        result.byAdCity.reduce((sum, row) => sum + row[key], 0),
+        result.totals[key],
+      );
+      for (const ad of result.byAd)
+        assert.equal(
+          result.byAdCity
+            .filter((row) => row.adId === ad.id)
+            .reduce((sum, row) => sum + row[key], 0),
+          ad[key],
+        );
+    }
+  }
+});

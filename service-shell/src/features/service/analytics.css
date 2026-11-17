@@ -1217,3 +1217,85 @@
     grid-template-columns: 135px minmax(0, 1fr) 18px;
   }
 }
+
+/* Compact report cards: titles carry the controls, without subtitle rows. */
+.analytics .an-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.analytics .an-card-title .an-chart-switch {
+  margin: 0;
+  flex-shrink: 0;
+}
+.analytics .an-table tfoot th,
+.analytics .an-table tfoot td {
+  font-weight: 500;
+  border-top: 2px solid #e5e0d8;
+  background: #faf9f6;
+}
+.analytics .an-table td,
+.analytics .an-table thead th:not(:first-child) {
+  text-align: right;
+}
+.analytics .an-table th:first-child,
+.analytics .an-table td:first-child {
+  padding-left: 16px;
+}
+.analytics .an-table th:last-child,
+.analytics .an-table td:last-child {
+  padding-right: 16px;
+}
+.analytics .an-daily-table {
+  min-width: 1050px;
+}
+.analytics .an-daily-table th,
+.analytics .an-daily-table td {
+  padding: 15px 18px;
+}
+.analytics .an-report-table {
+  margin: 0 0 18px;
+}
+.analytics [role="tabpanel"] > .an-card {
+  margin-bottom: 18px;
+}
+.analytics .an-funnel-step small {
+  display: block;
+  color: #71685d;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.analytics .an-chart-switch button {
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .analytics .an-card-title {
+    gap: 12px;
+  }
+  .analytics .an-card-title .an-chart-switch {
+    margin-left: auto;
+  }
+  .analytics .an-chart-switch {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .analytics .an-chart-switch button {
+    font-size: 11px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .analytics .an-funnel-step small {
+    font-size: 10px;
+  }
+  .analytics .an-table th:first-child,
+  .analytics .an-table td:first-child {
+    padding-left: 12px;
+  }
+  .analytics .an-table th:last-child,
+  .analytics .an-table td:last-child {
+    padding-right: 12px;
+  }
+}

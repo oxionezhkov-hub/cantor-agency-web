@@ -1,20 +1,17 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  ArrowDownToLine,
   ArrowDownUp,
   ArrowUpRight,
   CalendarDays,
   ChartNoAxesCombined,
   ChevronDown,
   CircleHelp,
-  RotateCcw,
   Search,
   TrendingUp,
 } from "lucide-react";
 import {
   Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -34,12 +31,14 @@ import { ads } from "./data.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { leadProgress, STAGE_LABELS, type LeadStage } from "./lead-workflow.ts";
 import {
-  ANALYTICS_CITIES,
   ANALYTICS_COVERAGE,
   analyticsDates,
   buildAnalytics,
+  marketingTotals,
 } from "./analytics-model.ts";
 import { PaymentsSection } from "./crm-ui.tsx";
+import { AnalyticsToolbar } from "./AnalyticsToolbar.tsx";
+import { LtvEconomics, DialogInsights } from "./AnalyticsInsights.tsx";
 import "./analytics.css";
 
 const COLORS = ["#e8391d", "#3d6c61", "#d9aa61", "#8175a0", "#7395ae", "#b8b2a7", "#59606b"];
@@ -47,7 +46,6 @@ const TABS = [
   { id: "overview", label: "Обзор" },
   { id: "ads", label: "Объявления" },
   { id: "dialogs", label: "Диалоги" },
-  { id: "cities", label: "Города" },
   { id: "economy", label: "Экономика" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
@@ -60,18 +58,16 @@ const rub = (n: number | null) =>
 const pct = (n: number | null) =>
   n === null ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}%`;
 const shortDate = (date: string) => `${date.slice(8, 10)}.${date.slice(5, 7)}`;
-const addDay = (date: string, days: number) =>
-  new Date(Date.parse(`${date}T12:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
 const mskDay = (date: string) =>
   new Date(Date.parse(date) + 3 * 3600000).toISOString().slice(0, 10);
 function Chart({
   title,
-  subtitle,
+  action,
   children,
   wide = false,
 }: {
   title: string;
-  subtitle?: string;
+  action?: ReactNode;
   children: ReactNode;
   wide?: boolean;
 }) {
@@ -79,7 +75,7 @@ function Chart({
     <article className={`an-card ${wide ? "an-wide" : ""}`}>
       <div className="an-card-title">
         <h2>{title}</h2>
-        {subtitle ? <p>{subtitle}</p> : null}
+        {action}
       </div>
       {children}
     </article>
@@ -164,19 +160,26 @@ function TrafficChart({
   metric,
 }: {
   daily: Report["daily"];
-  metric: "views" | "shows" | "contacts";
+  metric: "views" | "shows" | "contacts" | "all";
 }) {
-  const name = metric === "views" ? "Просмотры" : metric === "shows" ? "Показы" : "Контакты";
+  const all = metric === "all";
+  const names = { shows: "Показы", views: "Просмотры", contacts: "Контакты" };
+  const keys = all ? (["shows", "views", "contacts"] as const) : [metric];
   return (
     <div
       className="an-plot"
       role="img"
-      aria-label={`${name} по дням. Точные значения доступны в таблице по дням и CSV.`}
+      aria-label={all ? "Показы, просмотры и контакты по дням" : `${names[metric]} по дням`}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          data={daily.map((d) => ({ ...d, [metric]: d.available ? d[metric] : null }))}
-          margin={{ top: 10, right: 10, left: -24, bottom: 0 }}
+        <ComposedChart
+          data={daily.map((d) => ({
+            ...d,
+            shows: d.available ? d.shows : null,
+            views: d.available ? d.views : null,
+            contacts: d.available ? d.contacts : null,
+          }))}
+          margin={{ top: 10, right: all ? 5 : 12, left: -20, bottom: 0 }}
         >
           <defs>
             <linearGradient id="analytics-traffic-fill" x1="0" x2="0" y1="0" y2="1">
@@ -191,26 +194,58 @@ function TrafficChart({
             tickLine={false}
             axisLine={false}
             minTickGap={25}
-            tick={{ fill: "#817a72", fontSize: 11 }}
+            tick={{ fill: "#716c65", fontSize: 11 }}
           />
           <YAxis
+            yAxisId="main"
             tickLine={false}
             axisLine={false}
             allowDecimals={false}
-            tick={{ fill: "#817a72", fontSize: 11 }}
+            tick={{ fill: "#716c65", fontSize: 11 }}
           />
+          {all ? (
+            <YAxis
+              yAxisId="engagement"
+              orientation="right"
+              tickLine={false}
+              axisLine={false}
+              allowDecimals={false}
+              width={34}
+              tick={{ fill: "#3d6c61", fontSize: 11 }}
+            />
+          ) : null}
           <Tooltip content={<CountTooltip />} />
-          <Area
-            type="monotone"
-            dataKey={metric}
-            name={name}
-            stroke="#e8391d"
-            strokeWidth={2.5}
-            fill="url(#analytics-traffic-fill)"
-            isAnimationActive={false}
-            activeDot={{ r: 5, stroke: "white", strokeWidth: 3 }}
-          />
-        </AreaChart>
+          {all ? (
+            <Legend iconType="plainline" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+          ) : null}
+          {keys.map((key, i) =>
+            all ? (
+              <Line
+                key={key}
+                type="linear"
+                yAxisId={key === "shows" ? "main" : "engagement"}
+                dataKey={key}
+                name={`${names[key]} · ${key === "shows" ? "левая" : "правая"} шкала`}
+                stroke={COLORS[i]}
+                strokeWidth={2.3}
+                dot={false}
+                isAnimationActive={false}
+              />
+            ) : (
+              <Area
+                key={key}
+                yAxisId="main"
+                type="monotone"
+                dataKey={key}
+                name={names[key]}
+                stroke="#e8391d"
+                strokeWidth={2.5}
+                fill="url(#analytics-traffic-fill)"
+                isAnimationActive={false}
+              />
+            ),
+          )}
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
@@ -259,33 +294,34 @@ function MarketingTable({
 }
 function Funnel({ totals }: { totals: Marketing }) {
   const rows = [
-    { label: "Показы", count: totals.shows, rate: null },
-    { label: "Просмотры", count: totals.views, rate: totals.ctr },
-    { label: "Контакты", count: totals.contacts, rate: totals.contactRate },
+    {
+      label: "Показы",
+      count: totals.shows,
+      rate: null,
+      cost: totals.shows ? totals.spendRub / totals.shows : null,
+    },
+    { label: "Просмотры", count: totals.views, rate: totals.ctr, cost: totals.cpc },
+    { label: "Контакты", count: totals.contacts, rate: totals.contactRate, cost: totals.cpl },
   ];
   return (
     <div className="an-funnel">
-      {rows.map((row, index) => (
+      {rows.map((row, i) => (
         <div className="an-funnel-step" key={row.label}>
           <div>
-            <span>
-              <i style={{ background: COLORS[index] }} />
-              {row.label}
-            </span>
+            <span>{row.label}</span>
             <strong>{integer(row.count)}</strong>
           </div>
           <div className="an-funnel-track">
             <i
               style={{
-                width: `${totals.shows && row.count > 0 ? Math.max(2, (row.count / totals.shows) * 100) : 0}%`,
-                background: COLORS[index],
+                width: `${totals.shows && row.count ? (row.count / totals.shows) * 100 : 0}%`,
+                background: COLORS[i],
               }}
             />
           </div>
           <small>
-            {index === 0
-              ? "Вся рекламная выдача"
-              : `${pct(row.rate)} ${index === 1 ? "от показов" : "от просмотров"}`}
+            {i ? <>{pct(row.rate)} · </> : null}
+            {rub(row.cost)} / {i === 0 ? "показ" : i === 1 ? "просмотр" : "контакт"}
           </small>
         </div>
       ))}
@@ -331,14 +367,14 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
   useEffect(() => {
     if (focus) setTab("economy");
   }, [focus]);
-  const [from, setFrom] = useState(ANALYTICS_COVERAGE.from);
-  const [to, setTo] = useState(ANALYTICS_COVERAGE.to);
-  const [adId, setAdId] = useState("");
-  const [city, setCity] = useState("");
+  const [from, setFrom] = useState(ANALYTICS_COVERAGE.from),
+    [to, setTo] = useState(ANALYTICS_COVERAGE.to);
+  const [adId, setAdId] = useState(""),
+    [city, setCity] = useState("");
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<SortKey>("spendRub");
-  const [descending, setDescending] = useState(true);
-  const [metric, setMetric] = useState<"views" | "shows" | "contacts">("views");
+  const [sort, setSort] = useState<SortKey>("spendRub"),
+    [descending, setDescending] = useState(true);
+  const [metric, setMetric] = useState<"views" | "shows" | "contacts" | "all">("all");
   const [exported, setExported] = useState(false);
   const invalid = useMemo(() => {
     try {
@@ -360,38 +396,44 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
     [from, to, adId, city, crm, invalid],
   );
   const t = report.totals,
-    c = report.crm;
-  const hasTraffic = report.coverage.daysWithData > 0;
-  const mInt = (n: number) => (hasTraffic ? integer(n) : "—");
-  const mRub = (n: number | null) => (hasTraffic ? rub(n) : "—");
-  const mPct = (n: number | null) => (hasTraffic ? pct(n) : "—");
-  const [now] = useState(() => Date.now());
+    c = report.crm,
+    hasTraffic = report.coverage.daysWithData > 0;
+  const mInt = (n: number) => (hasTraffic ? integer(n) : "—"),
+    mRub = (n: number | null) => (hasTraffic ? rub(n) : "—"),
+    mPct = (n: number | null) => (hasTraffic ? pct(n) : "—");
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const selectedLeads = crm.leads.filter(
-    (lead) =>
+    (l) =>
       !invalid &&
-      mskDay(lead.createdAt) >= from &&
-      mskDay(lead.createdAt) <= to &&
-      (!adId || lead.adId === adId),
+      mskDay(l.createdAt) >= from &&
+      mskDay(l.createdAt) <= to &&
+      (!adId || l.adId === adId),
   );
   const stages = (Object.keys(STAGE_LABELS) as LeadStage[]).map((stage) => ({
     name: STAGE_LABELS[stage],
-    value: selectedLeads.filter((lead) => leadProgress(crm, lead.id, now).stage === stage).length,
+    value: selectedLeads.filter((l) => leadProgress(crm, l.id, now).stage === stage).length,
   }));
   const filteredAds = report.byAd
     .filter((r) =>
       r.name.toLocaleLowerCase("ru-RU").includes(query.trim().toLocaleLowerCase("ru-RU")),
     )
-    .sort((a, b) => {
-      const av = a[sort],
-        bv = b[sort];
-      if (av === null) return bv === null ? 0 : 1;
-      if (bv === null) return -1;
-      return (av - bv) * (descending ? -1 : 1);
-    });
-  const comparable = report.previousCoverage.complete && report.coverage.complete;
-  const spendDistribution = report.byAd
-    .filter((a) => a.spendRub > 0)
-    .map((a) => ({ name: a.name, value: a.spendRub }));
+    .sort((a, b) =>
+      a[sort] === null
+        ? b[sort] === null
+          ? 0
+          : 1
+        : b[sort] === null
+          ? -1
+          : (a[sort]! - b[sort]!) * (descending ? -1 : 1),
+    );
+  const shownTotals = marketingTotals(
+    filteredAds.map((row) => ({ ...row, date: "", adId: row.id, city: "" })),
+  );
+  const comparable = report.coverage.complete && report.previousCoverage.complete;
   const reset = () => {
     setFrom(ANALYTICS_COVERAGE.from);
     setTo(ANALYTICS_COVERAGE.to);
@@ -400,7 +442,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
     setQuery("");
   };
   const chooseSort = (key: SortKey) => {
-    if (sort === key) setDescending((value) => !value);
+    if (sort === key) setDescending((v) => !v);
     else {
       setSort(key);
       setDescending(true);
@@ -417,32 +459,33 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
       [],
     ];
     let rows: (string | number | null)[][];
-    if (tab === "ads")
+    if (tab === "ads") {
+      const ids = new Set(filteredAds.map((a) => a.id));
       rows = [
         reportHeader,
         ...reportRows(filteredAds).map((row) =>
-          hasTraffic ? row : row.map((v, i) => (i === 0 ? v : null)),
+          hasTraffic ? row : row.map((v, i) => (i ? null : v)),
         ),
-      ];
-    else if (tab === "cities")
-      rows = [
+        [],
+        ["По объявлениям и городам"],
         reportHeader,
-        ...reportRows(report.byCity).map((row) =>
-          hasTraffic ? row : row.map((v, i) => (i === 0 ? v : null)),
+        ...reportRows(report.byAdCity.filter((row) => ids.has(row.adId))).map((row) =>
+          hasTraffic ? row : row.map((v, i) => (i ? null : v)),
         ),
       ];
-    else if (tab === "dialogs")
+    } else if (tab === "dialogs")
       rows = c
         ? [
-            ["Обращение", "Создано, МСК", "Объявление", "Текущий этап"],
+            ["Обращение", "Создано, МСК", "Объявление", "Текущий этап", "Причина отказа"],
             ...selectedLeads.map((l) => [
               l.name,
               mskDay(l.createdAt),
               ads.find((a) => a.id === l.adId)?.title ?? "Не определено",
               leadProgress(crm, l.id, now).label,
+              l.closedAt ? (l.closeReason ?? "Не указана") : "",
             ]),
           ]
-        : [["Недоступно", "В CRM нет города обращения; сбросьте фильтр города"]];
+        : [["Недоступно", "Выберите все города"]];
     else if (tab === "economy")
       rows = [
         [
@@ -455,7 +498,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
           "Новые платящие ученики",
         ],
         ...report.daily.map((d) => {
-          const day = c?.daily.find((row) => row.date === d.date);
+          const day = c?.daily.find((r) => r.date === d.date);
           return [
             d.date,
             day?.receivedRub ?? null,
@@ -477,9 +520,11 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
           "Проведено диагностик",
           "Новые платящие ученики",
           "После возвратов, ₽",
+          "Цена показа, ₽",
+          "Цена просмотра, ₽",
         ],
         ...report.daily.map((d) => {
-          const day = c?.daily.find((row) => row.date === d.date);
+          const day = c?.daily.find((r) => r.date === d.date);
           return [
             d.date,
             d.available ? "Да" : "Нет",
@@ -490,6 +535,8 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
             day?.completedAppointments ?? null,
             day?.newStudents ?? null,
             day?.netReceivedRub ?? null,
+            d.available && d.shows ? d.spendRub / d.shows : null,
+            d.available ? d.cpc : null,
           ];
         }),
       ];
@@ -499,90 +546,28 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
   };
   return (
     <div className="analytics">
-      <div className="an-toolbar">
-        <div className="an-date-control">
-          <CalendarDays size={17} aria-hidden="true" />
-          <label>
-            <span className="sr-only">Начало периода</span>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </label>
-          <span className="an-date-dash">—</span>
-          <label>
-            <span className="sr-only">Конец периода</span>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-          </label>
-          <span className="an-timezone">МСК</span>
-        </div>
-        <div className="an-presets">
-          <button
-            type="button"
-            className={
-              from === ANALYTICS_COVERAGE.from && to === ANALYTICS_COVERAGE.to ? "selected" : ""
-            }
-            onClick={() => {
-              setFrom(ANALYTICS_COVERAGE.from);
-              setTo(ANALYTICS_COVERAGE.to);
-            }}
-          >
-            Ноябрь
-          </button>
-          <button
-            type="button"
-            className={
-              from === addDay(ANALYTICS_COVERAGE.to, -6) && to === ANALYTICS_COVERAGE.to
-                ? "selected"
-                : ""
-            }
-            onClick={() => {
-              setFrom(addDay(ANALYTICS_COVERAGE.to, -6));
-              setTo(ANALYTICS_COVERAGE.to);
-            }}
-          >
-            7 дней
-          </button>
-        </div>
-        <button type="button" className="an-export" disabled={invalid} onClick={exportReport}>
-          <ArrowDownToLine size={16} />
-          Скачать CSV
-        </button>
-      </div>
-      <div className="an-filterbar">
-        <label>
-          <span>Объявление</span>
-          <select
-            aria-label="Фильтр по объявлению"
-            value={adId}
-            onChange={(e) => setAdId(e.target.value)}
-          >
-            <option value="">Все объявления</option>
-            {ads.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Город размещения</span>
-          <select
-            aria-label="Фильтр по городу"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          >
-            <option value="">Все города</option>
-            {ANALYTICS_CITIES.map((name) => (
-              <option key={name}>{name}</option>
-            ))}
-          </select>
-        </label>
-        {adId || city || from !== ANALYTICS_COVERAGE.from || to !== ANALYTICS_COVERAGE.to ? (
-          <button type="button" className="an-reset" onClick={reset}>
-            <RotateCcw size={14} />
-            Сбросить
-          </button>
-        ) : null}
-        <span className="an-data-date">Рекламный срез: 1–16 ноября 2026</span>
-      </div>
+      <AnalyticsToolbar
+        from={from}
+        to={to}
+        onFromChange={setFrom}
+        onToChange={setTo}
+        adId={adId}
+        onAdChange={setAdId}
+        city={city}
+        onCityChange={setCity}
+        onReset={reset}
+        onExport={exportReport}
+        invalid={invalid}
+        dirty={
+          !!(
+            adId ||
+            city ||
+            query ||
+            from !== ANALYTICS_COVERAGE.from ||
+            to !== ANALYTICS_COVERAGE.to
+          )
+        }
+      />
       <div className="an-tabs" role="tablist" aria-label="Отчёты аналитики">
         {TABS.map((item, index) => (
           <button
@@ -619,7 +604,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
         <div className="an-empty" role="alert">
           <CalendarDays size={28} />
           <h2>Проверьте даты</h2>
-          <p>Начало должно быть не позже конца. Максимальный период — 366 дней.</p>
+          <p>Выберите период от 1 до 366 дней.</p>
         </div>
       ) : (
         <div role="tabpanel" id={`an-panel-${tab}`} aria-labelledby={`an-tab-${tab}`}>
@@ -627,19 +612,9 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
             <div className="an-notice">
               <CircleHelp size={17} />
               <p>
-                {report.coverage.daysWithData === 0
-                  ? "За выбранные даты рекламной статистики нет."
-                  : "Рекламная статистика покрывает только часть периода."}{" "}
-                Доступный срез: 1–16 ноября 2026. Пропуски на графиках не считаются нулём.
-              </p>
-            </div>
-          ) : null}
-          {city ? (
-            <div className="an-notice">
-              <CircleHelp size={17} />
-              <p>
-                Выбран город размещения «{city}». Диалоги, диагностики и оплаты по городам не
-                распределены — для этих отчётов выберите все города.
+                {hasTraffic
+                  ? "Рекламные данные есть только за часть периода."
+                  : "За выбранные даты рекламных данных нет."}
               </p>
             </div>
           ) : null}
@@ -680,92 +655,85 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                 <Metric
                   label="Новые платящие ученики"
                   value={c ? integer(c.newStudents) : "—"}
-                  hint="Первая активная оплата на конец периода"
+                  hint="Первая активная оплата"
                 />
                 <Metric
                   label="Получено после возвратов"
                   value={c ? rub(c.netReceivedRub) : "—"}
-                  hint="Поступления − возвраты периода"
+                  hint="Поступления − возвраты"
                 />
               </div>
               <div className="an-grid">
-                <Chart title="Как меняется интерес" subtitle="Дневная статистика рекламы" wide>
-                  <div className="an-chart-switch" aria-label="Показатель графика">
-                    {(["views", "shows", "contacts"] as const).map((key) => (
-                      <button
-                        type="button"
-                        aria-pressed={metric === key}
-                        className={metric === key ? "active" : ""}
-                        key={key}
-                        onClick={() => setMetric(key)}
-                      >
-                        {key === "views" ? "Просмотры" : key === "shows" ? "Показы" : "Контакты"}
-                      </button>
-                    ))}
-                  </div>
+                <Chart
+                  title="Как меняется интерес"
+                  wide
+                  action={
+                    <div className="an-chart-switch" aria-label="Показатель графика">
+                      {(["all", "shows", "views", "contacts"] as const).map((key) => (
+                        <button
+                          type="button"
+                          aria-pressed={metric === key}
+                          className={metric === key ? "active" : ""}
+                          key={key}
+                          onClick={() => setMetric(key)}
+                        >
+                          {key === "all"
+                            ? "Все"
+                            : key === "views"
+                              ? "Просмотры"
+                              : key === "shows"
+                                ? "Показы"
+                                : "Контакты"}
+                        </button>
+                      ))}
+                    </div>
+                  }
+                >
                   <TrafficChart daily={report.daily} metric={metric} />
-                  <p className="an-chart-note">
-                    Наведение показывает день. Все значения — в таблице ниже.
-                  </p>
                 </Chart>
-                <Chart title="Воронка рекламы" subtitle="Каждый следующий шаг — доля предыдущего">
+                <Chart title="Воронка рекламы">
                   {hasTraffic ? (
                     <Funnel totals={t} />
                   ) : (
-                    <p className="an-inline-empty">Нет рекламных данных за выбранный период.</p>
+                    <p className="an-inline-empty">Нет данных</p>
                   )}
-                  <div className="an-card-callout">
-                    {t.contacts ? (
-                      <>
-                        Один контакт обходится в <strong>{mRub(t.cpl)}</strong>. Контакт Авито и
-                        обращение CRM — разные события.
-                      </>
-                    ) : (
-                      "Контактов за выбранный период нет. Стоимость контакта не рассчитывается."
-                    )}
-                  </div>
                 </Chart>
               </div>
               <div className="an-grid an-equal">
-                <Chart
-                  title="Какие объявления приводят контакты"
-                  subtitle="Количество контактов и расход за выбранный период"
-                >
+                <Chart title="Какие объявления приводят контакты">
                   <div className="an-rank-list">
-                    {report.byAd.map((a, i) => (
-                      <Link
-                        key={a.id}
-                        to="/"
-                        search={{ section: "ads", focus: a.id }}
-                        className="an-rank-row"
-                      >
-                        <span className="an-rank-index">0{i + 1}</span>
-                        <div>
-                          <strong>{a.name}</strong>
-                          <div className="an-rank-track">
-                            <i
-                              style={{
-                                width: `${t.contacts ? (a.contacts / t.contacts) * 100 : 0}%`,
-                                background: COLORS[i],
-                              }}
-                            />
+                    {[...report.byAd]
+                      .sort((a, b) => b.contacts - a.contacts)
+                      .map((a, i) => (
+                        <Link
+                          key={a.id}
+                          to="/"
+                          search={{ section: "ads", focus: a.id }}
+                          className="an-rank-row"
+                        >
+                          <div>
+                            <strong>{a.name}</strong>
+                            <div className="an-rank-track">
+                              <i
+                                style={{
+                                  width: `${t.contacts ? (a.contacts / t.contacts) * 100 : 0}%`,
+                                  background: COLORS[i],
+                                }}
+                              />
+                            </div>
+                            <small>
+                              {mRub(a.spendRub)} расход · {mRub(a.cpl)} / контакт
+                            </small>
                           </div>
-                          <small>
-                            {mRub(a.spendRub)} расход · {mRub(a.cpl)} / контакт
-                          </small>
-                        </div>
-                        <b>
-                          {mInt(a.contacts)}
-                          <ArrowUpRight size={14} />
-                        </b>
-                      </Link>
-                    ))}
+                          <b>
+                            {mInt(a.contacts)}
+                            <ArrowUpRight size={14} />
+                          </b>
+                        </Link>
+                      ))}
                   </div>
                 </Chart>
-                <Chart
-                  title="От обращения к первой оплате"
-                  subtitle="События CRM в выбранные даты, без сквозной атрибуции"
-                >
+                <Chart title="От обращения к первой оплате">
                   {c ? (
                     <>
                       <div className="an-crm-events">
@@ -782,10 +750,6 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                           <strong>{c.newStudents}</strong>
                         </div>
                       </div>
-                      <p className="an-chart-note">
-                        Диагностика и оплата могут относиться к обращениям прошлого периода. Процент
-                        перехода между этими числами не рассчитывается.
-                      </p>
                       <button
                         className="an-text-button"
                         onClick={() => setTab("dialogs")}
@@ -807,48 +771,22 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
             <>
               <div className="an-kpis an-kpis-four">
                 <Metric
-                  label="Объявлений в срезе"
-                  value={String(report.byAd.length)}
-                  hint={`${report.byAd.filter((a) => a.shows > 0).length} получали показы`}
+                  label="Расход"
+                  value={mRub(t.spendRub)}
+                  hint={`${report.byAd.filter((a) => a.shows > 0).length} активных объявлений`}
                 />
+                <Metric label="Просмотры" value={mInt(t.views)} hint={`CTR ${mPct(t.ctr)}`} />
                 <Metric
                   label="Контакты"
                   value={mInt(t.contacts)}
                   hint={`${mPct(t.contactRate)} от просмотров`}
                   accent
                 />
-                <Metric
-                  label="Цена контакта"
-                  value={mRub(t.cpl)}
-                  hint="Общий расход ÷ все контакты"
-                />
-                <Metric label="Расход" value={mRub(t.spendRub)} hint="За выбранный период" />
-              </div>
-              <div className="an-grid an-equal">
-                <Chart title="Контакты по объявлениям" subtitle="Где сосредоточен спрос">
-                  <HorizontalBars
-                    rows={hasTraffic ? report.byAd : []}
-                    field="contacts"
-                    name="Контакты"
-                  />
-                </Chart>
-                <Chart
-                  title="Цена контакта по объявлениям"
-                  subtitle="Меньше — дешевле; без контактов нет значения"
-                >
-                  <HorizontalBars
-                    rows={hasTraffic ? report.byAd.filter((a) => a.cpl !== null) : []}
-                    field="cpl"
-                    name="Цена контакта, ₽"
-                  />
-                </Chart>
+                <Metric label="Цена контакта" value={mRub(t.cpl)} hint="Расход ÷ контакты" />
               </div>
               <article className="an-card an-report-table">
                 <div className="an-card-title an-table-toolbar">
-                  <div>
-                    <h2>Эффективность каждого объявления</h2>
-                    <p>Нажмите на заголовок, чтобы изменить сортировку</p>
-                  </div>
+                  <h2>Сводка по объявлениям</h2>
                   <label className="an-search">
                     <Search size={15} />
                     <input
@@ -865,6 +803,8 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                     <thead>
                       <tr>
                         <th>Объявление</th>
+                        <th>Показы</th>
+                        <th>CTR</th>
                         {(
                           [
                             { key: "views", label: "Просмотры" },
@@ -896,10 +836,9 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                               {a.name}
                               <ArrowUpRight size={13} />
                             </Link>
-                            <small>
-                              {mInt(a.shows)} показов · CTR {mPct(a.ctr)}
-                            </small>
                           </th>
+                          <td>{mInt(a.shows)}</td>
+                          <td>{mPct(a.ctr)}</td>
                           <td>{mInt(a.views)}</td>
                           <td>
                             <b>{mInt(a.contacts)}</b>
@@ -910,46 +849,80 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr>
+                        <th scope="row">Итого по строкам</th>
+                        <td>{mInt(shownTotals.shows)}</td>
+                        <td>{mPct(shownTotals.ctr)}</td>
+                        <td>{mInt(shownTotals.views)}</td>
+                        <td>{mInt(shownTotals.contacts)}</td>
+                        <td>{mPct(shownTotals.contactRate)}</td>
+                        <td>{mRub(shownTotals.spendRub)}</td>
+                        <td>{mRub(shownTotals.cpl)}</td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
                 {!filteredAds.length ? (
-                  <p className="an-inline-empty">По этому запросу объявлений нет.</p>
+                  <p className="an-inline-empty">Объявления не найдены.</p>
                 ) : null}
-                <p className="an-chart-note">
-                  Цена контакта считается по суммарному расходу и контактам, а не как среднее цен
-                  строк. Объявления без активности остаются в отчёте.
-                </p>
               </article>
+              <div className="an-grid an-equal">
+                <Chart title="Контакты по объявлениям">
+                  <HorizontalBars
+                    rows={hasTraffic ? report.byAd : []}
+                    field="contacts"
+                    name="Контакты"
+                  />
+                </Chart>
+                <Chart title="Цена контакта по объявлениям">
+                  <HorizontalBars
+                    rows={hasTraffic ? report.byAd.filter((a) => a.cpl !== null) : []}
+                    field="cpl"
+                    name="Цена контакта, ₽"
+                  />
+                </Chart>
+              </div>
+              <Chart title="Объявления по городам">
+                <MarketingTable
+                  rows={report.byAdCity.filter((r) => filteredAds.some((a) => a.id === r.adId))}
+                  label="Объявление · город"
+                  available={hasTraffic}
+                />
+              </Chart>
+              <div className="an-grid an-equal">
+                <Chart title="Контакты по городам">
+                  <HorizontalBars
+                    rows={hasTraffic ? report.byCity : []}
+                    field="contacts"
+                    name="Контакты"
+                  />
+                </Chart>
+                <Chart title="Сводка по городам">
+                  <MarketingTable rows={report.byCity} label="Город" available={hasTraffic} />
+                </Chart>
+              </div>
             </>
           ) : null}
           {tab === "dialogs" ? (
             c ? (
               <>
                 <div className="an-kpis an-kpis-four">
-                  <Metric
-                    label="Новые обращения CRM"
-                    value={integer(c.leads)}
-                    hint="По дате создания обращения"
-                    accent
-                  />
+                  <Metric label="Новые обращения" value={integer(c.leads)} hint="" accent />
                   <Metric
                     label="Записей на диагностику"
                     value={integer(c.bookedAppointments)}
-                    hint="Запланированные встречи периода"
+                    hint=""
                   />
                   <Metric
                     label="Диагностик проведено"
                     value={integer(c.completedAppointments)}
-                    hint="По дате отметки о проведении"
+                    hint=""
                   />
-                  <Metric
-                    label="Новых платящих учеников"
-                    value={integer(c.newStudents)}
-                    hint="По первой активной оплате на конец периода"
-                  />
+                  <Metric label="Новых платящих учеников" value={integer(c.newStudents)} hint="" />
                 </div>
                 <div className="an-grid an-equal">
-                  <Chart title="Новые обращения по дням" subtitle="CRM, по дате создания">
+                  <Chart title="Новые обращения по дням">
                     <div className="an-plot" role="img" aria-label="Обращения CRM по дням">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={c.daily} margin={{ left: -24, right: 8, top: 10 }}>
@@ -981,17 +954,11 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                       </ResponsiveContainer>
                     </div>
                   </Chart>
-                  <Chart
-                    title="Где сейчас новые обращения"
-                    subtitle="Текущие этапы обращений, созданных в выбранный период"
-                  >
+                  <Chart title="Текущие этапы обращений">
                     <div className="an-stage-list">
                       {stages.map((s, i) => (
                         <div key={s.name}>
-                          <span>
-                            <i style={{ background: COLORS[i] }} />
-                            {s.name}
-                          </span>
+                          <span>{s.name}</span>
                           <div>
                             <i
                               style={{
@@ -1004,25 +971,19 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                         </div>
                       ))}
                     </div>
-                    <p className="an-chart-note">
-                      Этапы обновляются при работе с обращением. Это состояние сейчас, а не
-                      исторический снимок на конец периода.
-                    </p>
                   </Chart>
                 </div>
-                <article className="an-card">
-                  <div className="an-card-title">
-                    <h2>Обращения выбранного периода</h2>
-                    <p>Перейдите в диалог, чтобы продолжить работу</p>
-                  </div>
+                <DialogInsights crm={crm} leadIds={selectedLeads.map((l) => l.id)} />
+                <Chart title="Обращения выбранного периода">
                   <div className="an-table-scroll" tabIndex={0} aria-label="Обращения CRM">
                     <table className="an-table">
                       <thead>
                         <tr>
                           <th>Обращение</th>
-                          <th>Создано, МСК</th>
+                          <th>Создано</th>
                           <th>Объявление</th>
                           <th>Текущий этап</th>
+                          <th>Причина отказа</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1041,117 +1002,38 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                                 {leadProgress(crm, l.id, now).label}
                               </span>
                             </td>
+                            <td>{l.closedAt ? (l.closeReason ?? "Не указана") : "—"}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                   {!selectedLeads.length ? (
-                    <p className="an-inline-empty">Новых обращений за выбранный период нет.</p>
+                    <p className="an-inline-empty">Новых обращений нет.</p>
                   ) : null}
-                  <p className="an-chart-note">
-                    Скорость ответа и число сообщений не рассчитываются: в текущих переписках нет
-                    временных меток сообщений.
-                  </p>
-                </article>
+                </Chart>
               </>
             ) : (
               <UnavailableCity onReset={() => setCity("")} />
             )
           ) : null}
-          {tab === "cities" ? (
-            <>
-              <div className="an-kpis an-kpis-four">
-                <Metric
-                  label="Города размещения"
-                  value={String(report.byCity.length)}
-                  hint="География рекламных показов"
-                />
-                <Metric label="Просмотры" value={mInt(t.views)} hint={`CTR ${mPct(t.ctr)}`} />
-                <Metric
-                  label="Контакты"
-                  value={mInt(t.contacts)}
-                  hint={`${mPct(t.contactRate)} от просмотров`}
-                  accent
-                />
-                <Metric
-                  label="Цена контакта"
-                  value={mRub(t.cpl)}
-                  hint={`${mRub(t.spendRub)} общий расход`}
-                />
-              </div>
-              <div className="an-grid an-equal">
-                <Chart title="Контакты по географии" subtitle="Город размещения объявления">
-                  <HorizontalBars
-                    rows={hasTraffic ? report.byCity : []}
-                    field="contacts"
-                    name="Контакты"
-                  />
-                </Chart>
-                <Chart
-                  title="Стоимость привлечения контакта"
-                  subtitle="Расход города ÷ контакты города"
-                >
-                  <HorizontalBars
-                    rows={hasTraffic ? report.byCity.filter((a) => a.cpl !== null) : []}
-                    field="cpl"
-                    name="Цена контакта, ₽"
-                  />
-                </Chart>
-              </div>
-              <article className="an-card">
-                <div className="an-card-title">
-                  <h2>Сравнение городов</h2>
-                  <p>Полный рекламный путь от показов до контакта</p>
-                </div>
-                <MarketingTable
-                  rows={report.byCity}
-                  label="Город размещения"
-                  available={hasTraffic}
-                />
-                <p className="an-chart-note">
-                  «Область» — отдельная зона размещения. Город размещения не определяет место
-                  проживания ученика. Оплаты и выручка к городам не привязаны.
-                </p>
-              </article>
-            </>
-          ) : null}
           {tab === "economy" ? (
             c ? (
               <>
+                <LtvEconomics report={report} />
                 <div className="an-kpis an-kpis-four">
-                  <Metric
-                    label="Поступления"
-                    value={rub(c.receivedRub)}
-                    hint="Все оплаты выбранного периода"
-                  />
-                  <Metric label="Возвраты" value={rub(c.refundedRub)} hint="По дате возврата" />
-                  <Metric
-                    label="Расход на рекламу"
-                    value={mRub(t.spendRub)}
-                    hint="Рекламный срез выбранных дат"
-                  />
+                  <Metric label="Поступления" value={rub(c.receivedRub)} hint="" />
+                  <Metric label="Возвраты" value={rub(c.refundedRub)} hint="" />
+                  <Metric label="Расход на рекламу" value={mRub(t.spendRub)} hint="" />
                   <Metric
                     label="Остаток до прочих затрат"
                     value={report.coverage.complete ? rub(c.netReceivedRub - t.spendRub) : "—"}
-                    hint="Оплаты − возвраты − реклама"
+                    hint=""
                     accent
                   />
                 </div>
-                <div className="an-notice an-economy-note">
-                  <CircleHelp size={17} />
-                  <p>
-                    Остаток не является прибылью: налоги, подписка, стоимость занятий и другие
-                    расходы здесь не учтены. Оплаты периода могут приходить от учеников,
-                    привлечённых раньше.
-                  </p>
-                </div>
                 <div className="an-grid">
-                  <Chart
-                    title="Поступления и рекламные расходы"
-                    subtitle="Движение денег по дням, ₽"
-                    wide
-                  >
+                  <Chart title="Поступления и рекламные расходы" wide>
                     <div
                       className="an-plot"
                       role="img"
@@ -1163,7 +1045,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                             ...d,
                             spendRub: d.available ? d.spendRub : null,
                             netReceivedRub:
-                              c.daily.find((row) => row.date === d.date)?.netReceivedRub ?? 0,
+                              c.daily.find((r) => r.date === d.date)?.netReceivedRub ?? 0,
                           }))}
                           margin={{ top: 10, right: 10, left: -12 }}
                         >
@@ -1204,185 +1086,61 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                       </ResponsiveContainer>
                     </div>
                   </Chart>
-                  <Chart
-                    title="Куда уходит рекламный бюджет"
-                    subtitle="Доля расходов по объявлениям"
-                  >
+                  <Chart title="Распределение рекламного бюджета">
                     {t.spendRub ? (
                       <>
-                        <div
-                          className="an-donut"
-                          role="img"
-                          aria-label="Распределение рекламного расхода по объявлениям"
-                        >
+                        <div className="an-donut">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                               <Pie
-                                data={spendDistribution}
-                                dataKey="value"
+                                data={report.byAd.filter((a) => a.spendRub > 0)}
+                                dataKey="spendRub"
                                 nameKey="name"
-                                cx="50%"
-                                cy="50%"
                                 innerRadius={58}
                                 outerRadius={83}
                                 paddingAngle={3}
                                 stroke="none"
                                 isAnimationActive={false}
                               >
-                                {spendDistribution.map((r, i) => (
-                                  <Cell key={r.name} fill={COLORS[i % COLORS.length]} />
-                                ))}
+                                {report.byAd
+                                  .filter((a) => a.spendRub > 0)
+                                  .map((a, i) => (
+                                    <Cell key={a.id} fill={COLORS[i]} />
+                                  ))}
                               </Pie>
-                              <Tooltip formatter={(value) => rub(Number(value))} />
+                              <Tooltip formatter={(v) => rub(Number(v))} />
                             </PieChart>
                           </ResponsiveContainer>
                           <div className="an-donut-center">
-                            <small>Реклама</small>
                             <strong>{mRub(t.spendRub)}</strong>
                           </div>
                         </div>
                         <div className="an-donut-legend">
-                          {spendDistribution.map((r, i) => (
-                            <div key={r.name}>
-                              <i style={{ background: COLORS[i] }} />
-                              <span>{r.name}</span>
-                              <b>{pct((r.value / t.spendRub) * 100)}</b>
-                            </div>
-                          ))}
+                          {report.byAd
+                            .filter((a) => a.spendRub > 0)
+                            .map((a, i) => (
+                              <div key={a.id}>
+                                <i style={{ background: COLORS[i] }} />
+                                <span>{a.name}</span>
+                                <b>{pct((a.spendRub / t.spendRub) * 100)}</b>
+                              </div>
+                            ))}
                         </div>
                       </>
                     ) : (
                       <p className="an-inline-empty">
-                        {hasTraffic
-                          ? "Расходов за выбранный период нет."
-                          : "Рекламных данных за выбранный период нет."}
+                        {hasTraffic ? "Расходов нет." : "Нет данных."}
                       </p>
                     )}
                   </Chart>
                 </div>
-                <div className="an-economy-bottom">
-                  <article className="an-card">
-                    <div className="an-card-title">
-                      <h2>Что стоит результат</h2>
-                      <p>Отношение событий одного периода</p>
-                    </div>
-                    <dl className="an-costs">
-                      <div>
-                        <dt>
-                          Один рекламный контакт<small>Расход ÷ контакты Авито</small>
-                        </dt>
-                        <dd>{mRub(t.cpl)}</dd>
-                      </div>
-                      <div>
-                        <dt>
-                          Одна проведённая диагностика
-                          <small>Расход ÷ проведённые встречи периода</small>
-                        </dt>
-                        <dd>
-                          {rub(
-                            c.completedAppointments && report.coverage.complete
-                              ? t.spendRub / c.completedAppointments
-                              : null,
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>
-                          Один новый платящий ученик
-                          <small>Расход ÷ новые платящие ученики периода</small>
-                        </dt>
-                        <dd>
-                          {rub(
-                            c.newStudents && report.coverage.complete
-                              ? t.spendRub / c.newStudents
-                              : null,
-                          )}
-                        </dd>
-                      </div>
-                    </dl>
-                    <p className="an-chart-note">
-                      Это ориентиры периода. Они не доказывают стоимость привлечения конкретного
-                      ученика и не являются когортным CAC.
-                    </p>
-                  </article>
-                  <article className="an-card">
-                    <div className="an-card-title">
-                      <h2>Состав денежного результата</h2>
-                      <p>Все суммы за выбранные даты</p>
-                    </div>
-                    <dl className="an-costs">
-                      <div>
-                        <dt>Получено</dt>
-                        <dd>{rub(c.receivedRub)}</dd>
-                      </div>
-                      <div>
-                        <dt>Возвращено</dt>
-                        <dd>− {rub(c.refundedRub)}</dd>
-                      </div>
-                      <div>
-                        <dt>После возвратов</dt>
-                        <dd>{rub(c.netReceivedRub)}</dd>
-                      </div>
-                      <div>
-                        <dt>Реклама</dt>
-                        <dd>− {report.coverage.daysWithData > 0 ? mRub(t.spendRub) : "—"}</dd>
-                      </div>
-                      <div className="an-cost-total">
-                        <dt>До прочих затрат</dt>
-                        <dd>
-                          {report.coverage.complete ? rub(c.netReceivedRub - t.spendRub) : "—"}
-                        </dd>
-                      </div>
-                    </dl>
-                  </article>
-                </div>
                 <DayTable report={report} economy />
-                <details className="an-days an-payment-entry" open={focus ? true : undefined}>
-                  <summary>
-                    <span>Учёт оплат</span>
-                    <ChevronDown size={15} />
-                  </summary>
-                  <PaymentsSection focus={focus} />
-                </details>
+                <PaymentsSection focus={focus} />
               </>
             ) : (
               <UnavailableCity onReset={() => setCity("")} />
             )
           ) : null}
-          <details className="an-method">
-            <summary>
-              <CircleHelp size={15} />
-              <span>Источники и методика расчёта</span>
-              <ChevronDown size={15} />
-            </summary>
-            <div>
-              <p>
-                Рекламные графики используют пример дневной статистики за 1–16 ноября 2026: 1 660
-                показов, 318 просмотров, 29 контактов и 6 420 ₽ расхода. Дневное распределение и
-                города — подготовленный пример, не данные подключённого Авито. Обращения, встречи,
-                оплаты и возвраты берутся из локальной CRM этого браузера и обновляются при работе с
-                ней.
-              </p>
-              <p>
-                CTR = просмотры ÷ показы; конверсия в контакт = контакты ÷ просмотры; цена просмотра
-                = расход ÷ просмотры; цена контакта = расход ÷ контакты. При нулевом знаменателе —
-                «—». Все даты включены, часовой пояс — Москва. Рекламная статистика вне доступного
-                среза отсутствует.
-              </p>
-              <p>
-                Обращение считается по дате создания; проведённая диагностика — по дате отметки о
-                проведении; новый платящий ученик — по первой оплате с невозвращённым остатком на
-                конец периода. Поступления и возвраты учитываются по собственным датам. При выборе
-                объявления CRM ограничена известной связью с ним; записи без связи в этот срез не
-                входят. При выборе города CRM-показатели недоступны.
-              </p>
-              <p>
-                {comparable
-                  ? `Сравнение с равным по длине периодом: ${shortDate(report.previousRange.from)}–${shortDate(report.previousRange.to)}.`
-                  : "Сравнение с предыдущим периодом скрыто: нет полного рекламного покрытия за равный по длине предыдущий период. Отсутствие данных не считается нулём."}
-              </p>
-            </div>
-          </details>
         </div>
       )}
     </div>
@@ -1392,11 +1150,7 @@ function UnavailableCity({ onReset }: { onReset: () => void }) {
   return (
     <div className="an-empty">
       <ChartNoAxesCombined size={28} />
-      <h2>Для этого отчёта нужен общий срез</h2>
-      <p>
-        В CRM пока нет привязки к городу размещения. Выберите все города, чтобы увидеть обращения и
-        оплаты.
-      </p>
+      <h2>Оплаты и обращения не привязаны к городу</h2>
       <button type="button" className="an-export" onClick={onReset}>
         Показать все города
         <ArrowUpRight size={15} />
@@ -1413,14 +1167,9 @@ function HorizontalBars({
   field: "contacts" | "cpl";
   name: string;
 }) {
-  if (!rows.length)
-    return <p className="an-inline-empty">Нет данных для расчёта за выбранный период.</p>;
+  if (!rows.length) return <p className="an-inline-empty">Нет данных</p>;
   return (
-    <div
-      className="an-plot an-horizontal-plot"
-      role="img"
-      aria-label={`${name}. Точные значения в таблице отчёта.`}
-    >
+    <div className="an-plot an-horizontal-plot" role="img" aria-label={name}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           layout="vertical"
@@ -1446,9 +1195,7 @@ function HorizontalBars({
             width={125}
             tick={{ fontSize: 11, fill: "#716c65" }}
           />
-          <Tooltip
-            formatter={(value) => (field === "cpl" ? rub(Number(value)) : integer(Number(value)))}
-          />
+          <Tooltip formatter={(v) => (field === "cpl" ? rub(Number(v)) : integer(Number(v)))} />
           <Bar
             dataKey={field}
             name={name}
@@ -1479,10 +1226,10 @@ function DayTable({ report, economy = false }: { report: Report; economy?: boole
         </span>
       </summary>
       <div className="an-table-scroll" tabIndex={0} aria-label="Показатели по дням">
-        <table className="an-table">
+        <table className="an-table an-daily-table">
           <thead>
             <tr>
-              <th>Дата, МСК</th>
+              <th>Дата</th>
               {economy ? (
                 <>
                   <th>Получено</th>
@@ -1496,17 +1243,22 @@ function DayTable({ report, economy = false }: { report: Report; economy?: boole
                   <th>Показы</th>
                   <th>Просмотры</th>
                   <th>Контакты</th>
+                  <th>CTR</th>
+                  <th>В контакт</th>
+                  <th>Цена показа</th>
+                  <th>Цена просмотра</th>
+                  <th>Цена контакта</th>
                   <th>Расход</th>
                   <th>Обращения CRM</th>
                   <th>Диагностики</th>
-                  <th>Новые платящие ученики</th>
+                  <th>Новые ученики</th>
                 </>
               )}
             </tr>
           </thead>
           <tbody>
             {report.daily.map((d) => {
-              const c = report.crm?.daily.find((row) => row.date === d.date);
+              const c = report.crm?.daily.find((r) => r.date === d.date);
               return (
                 <tr key={d.date}>
                   <th scope="row">{shortDate(d.date)}</th>
@@ -1523,6 +1275,11 @@ function DayTable({ report, economy = false }: { report: Report; economy?: boole
                       <td>{d.available ? integer(d.shows) : "—"}</td>
                       <td>{d.available ? integer(d.views) : "—"}</td>
                       <td>{d.available ? integer(d.contacts) : "—"}</td>
+                      <td>{d.available ? pct(d.ctr) : "—"}</td>
+                      <td>{d.available ? pct(d.contactRate) : "—"}</td>
+                      <td>{d.available && d.shows ? rub(d.spendRub / d.shows) : "—"}</td>
+                      <td>{d.available ? rub(d.cpc) : "—"}</td>
+                      <td>{d.available ? rub(d.cpl) : "—"}</td>
                       <td>{d.available ? rub(d.spendRub) : "—"}</td>
                       <td>{c?.leads ?? "—"}</td>
                       <td>{c?.completedAppointments ?? "—"}</td>

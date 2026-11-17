@@ -1,0 +1,173 @@
+.payments-workspace {
+  min-width: 0;
+}
+.payments-ledger {
+  min-width: 720px;
+}
+.payments-ledger td,
+.payments-ledger th {
+  vertical-align: top;
+  white-space: nowrap;
+}
+.payments-ledger tbody td strong {
+  font-weight: 500;
+}
+.payments-ledger .payments-actions {
+  flex-wrap: nowrap;
+}
+.payments-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.payments-actions .crm-quiet {
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: white;
+  font-size: 12px;
+}
+.payments-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.payments-operation {
+  scroll-margin-block: 20px;
+}
+.payments-operation-title {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.payments-operation-title strong {
+  font-weight: 500;
+}
+.payments-operation-title > span {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.payments-operation > .payments-actions,
+.payments-refund-total {
+  grid-column: 1 / -1;
+}
+.payments-refund-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.payments-refund-history > td {
+  background: var(--soft);
+  white-space: normal;
+}
+.payments-refund-history summary {
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: left;
+}
+.payments-refund-history ul {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0 0;
+  margin: 0;
+  list-style: none;
+  max-width: 420px;
+}
+.payments-refund-history li {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.payments-empty {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.payments-workspace .sc-field {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .payments-ledger {
+    min-width: 675px;
+  }
+  .payments-operation-title {
+    line-height: 1.7;
+  }
+}
+.payments-student-field {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+.payments-student-field > span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.payments-ledger th[scope="row"] > strong {
+  display: block;
+  margin-bottom: 9px;
+  font-weight: 500;
+}
+.payments-ledger th[scope="row"] .payments-actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 760px) {
+  .payments-ledger {
+    min-width: 0;
+    width: 100%;
+  }
+  .payments-ledger thead {
+    display: none;
+  }
+  .payments-ledger tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .payments-ledger tbody > tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .payments-ledger tbody > tr > th,
+  .payments-ledger tbody > tr > td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+  }
+  .payments-ledger tbody > tr > th {
+    grid-column: 1 / -1;
+  }
+  .payments-ledger tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--color-muted);
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  .payments-ledger .payments-actions {
+    gap: 7px;
+  }
+  .payments-ledger .payments-actions .crm-quiet {
+    min-height: 40px;
+  }
+  .payments-ledger tbody > .payments-refund-history {
+    margin-top: -12px;
+    background: var(--soft);
+  }
+  .payments-ledger tbody > .payments-refund-history > td {
+    grid-column: 1 / -1;
+  }
+}

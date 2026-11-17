@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type FormEvent } from "react";
 import { CalendarDays, Check, Plus, Wallet } from "lucide-react";
 import {
   appointmentOutcome,
   bookAppointment,
-  monthRangeMsk,
   parseMoneyInput,
-  periodMetrics,
   recordPayment,
+  recordRefund,
+  paymentNet,
+  updatePayment,
   rescheduleAppointment,
 } from "./crm.ts";
 import { changeDemoCrm, useDemoCrm } from "./demo-crm-store.ts";
-import { ads, windows } from "./data.ts";
-import { promotionSpend, studentCost } from "./rules.ts";
+import { windows } from "./data.ts";
+import { ServiceDatePicker, ServiceSelect } from "./service-controls.tsx";
+import "./payments.css";
 const rub = (minor: number) =>
   `${(minor / 100).toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
 const todayMsk = () => new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
@@ -47,8 +49,12 @@ export function PaymentsSection({
   const [paidDate, setPaidDate] = useState(todayMsk);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [operation, setOperation] = useState<{ id: string; mode: "edit" | "refund" } | null>(null);
+  const [operationAmount, setOperationAmount] = useState("");
+  const [operationDate, setOperationDate] = useState(todayMsk);
   const request = useRef<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
+  const operationForm = useRef<HTMLFormElement>(null);
   const focusedStudentId =
     state.leads.find((item) => item.id === focus)?.studentId ||
     state.students.find((item) => item.id === focus)?.id;
@@ -58,9 +64,12 @@ export function PaymentsSection({
       if (!studentScope) form.current?.scrollIntoView({ block: "center" });
     }
   }, [focusedStudentId, studentScope]);
-  const [from, to] = monthRangeMsk(2026, 10);
-  const metrics = periodMetrics(state, from, to);
-  const cost = studentCost(promotionSpend(ads), metrics.newStudents);
+  const isDate = (value: string) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(`${value}T12:00:00+03:00`)) &&
+    new Date(`${value}T12:00:00+03:00`).toISOString().slice(0, 10) === value;
+  const dayOf = (value: string) =>
+    new Date(Date.parse(value) + 3 * 3600000).toISOString().slice(0, 10);
   function add(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -70,7 +79,7 @@ export function PaymentsSection({
       setError("Введите сумму больше 0 ₽, не более 999 999,99 ₽ и с точностью до копеек.");
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(paidDate) || paidDate > todayMsk()) {
+    if (!isDate(paidDate) || paidDate > todayMsk()) {
       setError("Укажите дату уже полученной оплаты.");
       return;
     }
@@ -85,6 +94,7 @@ export function PaymentsSection({
           paidAt: `${paidDate}T12:00:00+03:00`,
         }),
       );
+      request.current = null;
       setAmount("");
       setNotice("Оплата сохранена.");
     } catch (e) {
@@ -94,34 +104,88 @@ export function PaymentsSection({
   const ledger = state.payments
     .filter((p) => !studentScope || p.studentId === studentScope)
     .sort((a, b) => Date.parse(b.paidAt) - Date.parse(a.paidAt));
+  const selectedPayment = operation ? ledger.find((payment) => payment.id === operation.id) : null;
+  const selectedBalance = selectedPayment ? paymentNet(state, selectedPayment) : 0;
+  const studentName = (id: string) =>
+    state.students.find((student) => student.id === id)?.name || "Ученик";
+  function begin(id: string, mode: "edit" | "refund") {
+    const payment = ledger.find((item) => item.id === id);
+    if (!payment) return;
+    setOperation({ id, mode });
+    setOperationAmount(
+      ((mode === "edit" ? payment.amountMinor : paymentNet(state, payment)) / 100).toLocaleString(
+        "ru-RU",
+        { useGrouping: false, maximumFractionDigits: 2 },
+      ),
+    );
+    setOperationDate(mode === "edit" ? dayOf(payment.paidAt) : todayMsk());
+    setError("");
+    setNotice("");
+    window.setTimeout(
+      () => operationForm.current?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      0,
+    );
+  }
+  function saveOperation(event: FormEvent) {
+    event.preventDefault();
+    if (!operation || !selectedPayment) return;
+    setError("");
+    setNotice("");
+    const minor = parseMoneyInput(operationAmount);
+    if (minor === null) {
+      setError("Введите сумму больше 0 ₽ с точностью до копеек.");
+      return;
+    }
+    if (!isDate(operationDate) || operationDate > todayMsk()) {
+      setError("Укажите корректную дату не позже сегодняшней.");
+      return;
+    }
+    const currentOperation = operation;
+    try {
+      changeDemoCrm((current) => {
+        const payment = current.payments.find((item) => item.id === currentOperation.id);
+        if (!payment) throw new Error("Оплата не найдена");
+        if (currentOperation.mode === "edit")
+          return updatePayment(current, current.workspaceId, {
+            paymentId: payment.id,
+            amountMinor: minor,
+            paidAt:
+              operationDate === dayOf(payment.paidAt)
+                ? payment.paidAt
+                : `${operationDate}T12:00:00+03:00`,
+            changedAt: new Date().toISOString(),
+          });
+        // The date editor has day precision: a same-day refund must not precede
+        // the payment solely because it uses noon as its technical timestamp.
+        const refundedAt =
+          operationDate === dayOf(payment.paidAt) &&
+          Date.parse(payment.paidAt) > Date.parse(`${operationDate}T12:00:00+03:00`)
+            ? payment.paidAt
+            : `${operationDate}T12:00:00+03:00`;
+        const key = crypto.randomUUID();
+        return recordRefund(current, current.workspaceId, {
+          id: `refund-${key}`,
+          requestId: key,
+          paymentId: payment.id,
+          amountMinor: minor,
+          refundedAt,
+        });
+      });
+      setNotice(currentOperation.mode === "edit" ? "Оплата исправлена." : "Возврат внесён в учёт.");
+      setOperation(null);
+    } catch (e) {
+      setError(problem(e));
+    }
+  }
   return (
-    <section className="crm-panel" aria-label="Оплаты учеников">
+    <section className="crm-panel payments-workspace" aria-label="Оплаты учеников">
       {!studentScope ? (
         <div className="crm-heading">
-          <div>
-            <h2>
-              <Wallet size={18} />
-              Оплаты учеников
-            </h2>
-          </div>
-          <span className="crm-period">Ноябрь 2026 · МСК</span>
+          <h2>
+            <Wallet size={18} />
+            Оплаты учеников
+          </h2>
         </div>
-      ) : null}
-      {!studentScope ? (
-        <dl className="crm-metrics">
-          <div>
-            <dt>Получено оплат</dt>
-            <dd data-testid="received-payments">{rub(metrics.receivedMinor)}</dd>
-          </div>
-          <div>
-            <dt>Новых учеников</dt>
-            <dd data-testid="paid-students">{metrics.newStudents}</dd>
-          </div>
-          <div>
-            <dt>Расходы на ученика</dt>
-            <dd>{cost === null ? "Не рассчитано" : `${cost.toLocaleString("ru-RU")} ₽`}</dd>
-          </div>
-        </dl>
       ) : null}
       {storageError ? (
         <p role="alert" className="crm-error">
@@ -129,24 +193,21 @@ export function PaymentsSection({
         </p>
       ) : null}
       <form ref={form} className="crm-form" onSubmit={add} aria-label="Внести оплату ученика">
-        <label>
-          Ученик
-          <select
+        <div className="payments-student-field">
+          <span>Ученик</span>
+          <ServiceSelect
+            label="Ученик"
             value={studentId}
-            onChange={(e) => {
-              setStudentId(e.target.value);
+            onChange={(value) => {
+              setStudentId(value);
               request.current = null;
             }}
-          >
-            {state.students
+            options={state.students
               .filter((item) => !studentScope || item.id === studentScope)
-              .map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-          </select>
-        </label>
+              .map((item) => ({ value: item.id, label: item.name }))}
+            disabled={Boolean(studentScope)}
+          />
+        </div>
         <label>
           Сумма, ₽
           <input
@@ -158,29 +219,166 @@ export function PaymentsSection({
               request.current = null;
             }}
             aria-invalid={Boolean(error)}
-            aria-describedby={error ? "payment-error" : undefined}
           />
         </label>
-        <label>
-          Дата оплаты
-          <input
-            type="date"
-            value={paidDate}
-            max={todayMsk()}
-            onChange={(e) => {
-              setPaidDate(e.target.value);
-              request.current = null;
-            }}
-            required
-          />
-        </label>
+        <ServiceDatePicker
+          label="Дата оплаты"
+          value={paidDate}
+          max={todayMsk()}
+          onChange={(value) => {
+            setPaidDate(value);
+            request.current = null;
+          }}
+        />
         <button type="submit" className="crm-primary" disabled={Boolean(storageError)}>
           <Plus size={16} />
           Сохранить оплату
         </button>
       </form>
+      <div className="crm-table-wrap" tabIndex={0} aria-label="Реестр оплат и возвратов">
+        <table className="crm-table payments-ledger">
+          <thead>
+            <tr>
+              <th scope="col">Ученик</th>
+              <th scope="col">Дата оплаты</th>
+              <th scope="col">Получено</th>
+              <th scope="col">Возвращено</th>
+              <th scope="col">После возвратов</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ledger.map((payment) => {
+              const balance = paymentNet(state, payment),
+                refunds = state.refunds
+                  .filter((item) => item.paymentId === payment.id)
+                  .sort((a, b) => Date.parse(b.refundedAt) - Date.parse(a.refundedAt));
+              return (
+                <Fragment key={payment.id}>
+                  <tr>
+                    <th scope="row">
+                      <strong>{studentName(payment.studentId)}</strong>
+                      <div className="payments-actions">
+                        <button
+                          type="button"
+                          className="crm-quiet"
+                          onClick={() => begin(payment.id, "edit")}
+                          disabled={Boolean(storageError)}
+                          aria-label={`Редактировать оплату: ${studentName(payment.studentId)}, ${dateLabel(payment.paidAt)}`}
+                        >
+                          Редактировать
+                        </button>
+                        <button
+                          type="button"
+                          className="crm-quiet"
+                          disabled={!balance || Boolean(storageError)}
+                          onClick={() => begin(payment.id, "refund")}
+                          aria-label={`Внести возврат: ${studentName(payment.studentId)}, ${dateLabel(payment.paidAt)}`}
+                        >
+                          Внести возврат
+                        </button>
+                      </div>
+                    </th>
+                    <td data-label="Дата оплаты">{dateLabel(payment.paidAt)}</td>
+                    <td data-label="Получено">{rub(payment.amountMinor)}</td>
+                    <td data-label="Возвращено">{rub(payment.amountMinor - balance)}</td>
+                    <td data-label="После возвратов">
+                      <strong>{rub(balance)}</strong>
+                    </td>
+                  </tr>
+                  {refunds.length ? (
+                    <tr className="payments-refund-history">
+                      <td colSpan={5}>
+                        <details>
+                          <summary>Возвраты по оплате: {refunds.length}</summary>
+                          <ul>
+                            {refunds.map((refund) => (
+                              <li key={refund.id}>
+                                <span>{dateLabel(refund.refundedAt)}</span>
+                                <strong>− {rub(refund.amountMinor)}</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {!ledger.length ? <p className="payments-empty">Оплат пока нет.</p> : null}
+      {selectedPayment && operation ? (
+        <form
+          ref={operationForm}
+          className="crm-form payments-operation"
+          onSubmit={saveOperation}
+          aria-label={operation.mode === "edit" ? "Редактировать оплату" : "Внести возврат"}
+        >
+          <div className="payments-operation-title">
+            <strong>
+              {operation.mode === "edit" ? "Редактировать оплату" : "Внести возврат"} ·{" "}
+              {studentName(selectedPayment.studentId)}
+            </strong>
+            <span>
+              Оплата от {dateLabel(selectedPayment.paidAt)} · {rub(selectedPayment.amountMinor)}
+            </span>
+          </div>
+          <label>
+            {operation.mode === "edit" ? "Исправленная сумма, ₽" : "Сумма возврата, ₽"}
+            <input
+              inputMode="decimal"
+              value={operationAmount}
+              onChange={(e) => setOperationAmount(e.target.value)}
+              aria-invalid={Boolean(error)}
+            />
+          </label>
+          <ServiceDatePicker
+            label={operation.mode === "edit" ? "Исправленная дата оплаты" : "Дата возврата"}
+            value={operationDate}
+            onChange={setOperationDate}
+            max={todayMsk()}
+            min={operation.mode === "refund" ? dayOf(selectedPayment.paidAt) : undefined}
+          />
+          {operation.mode === "refund" ? (
+            <div className="payments-refund-total">
+              <span>Можно вернуть: {rub(selectedBalance)}</span>
+              <button
+                type="button"
+                className="crm-quiet"
+                onClick={() =>
+                  setOperationAmount(
+                    (selectedBalance / 100).toLocaleString("ru-RU", {
+                      useGrouping: false,
+                      maximumFractionDigits: 2,
+                    }),
+                  )
+                }
+              >
+                Весь остаток
+              </button>
+            </div>
+          ) : null}
+          <div className="payments-actions">
+            <button className="crm-primary" type="submit" disabled={Boolean(storageError)}>
+              {operation.mode === "edit" ? "Сохранить изменения" : "Сохранить возврат"}
+            </button>
+            <button
+              className="crm-secondary"
+              type="button"
+              onClick={() => {
+                setOperation(null);
+                setError("");
+              }}
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      ) : null}
       {error ? (
-        <p id="payment-error" role="alert" className="crm-error">
+        <p role="alert" className="crm-error">
           {error}
         </p>
       ) : null}
@@ -189,38 +387,6 @@ export function PaymentsSection({
           <Check size={15} />
           {notice}
         </p>
-      ) : null}
-      <div className="crm-table-wrap">
-        <table className="crm-table">
-          <thead>
-            <tr>
-              <th>Ученик</th>
-              <th>Дата</th>
-              <th>Получено</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ledger.map((payment) => (
-              <tr key={payment.id}>
-                <th scope="row">
-                  {state.students.find((item) => item.id === payment.studentId)?.name || "Ученик"}
-                </th>
-                <td>{dateLabel(payment.paidAt)}</td>
-                <td>{rub(payment.amountMinor)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!studentScope && metrics.unpaidStudentIds.length ? (
-        <div className="crm-unpaid">
-          <strong>После диагностики, без отмеченной оплаты</strong>
-          <span>
-            {metrics.unpaidStudentIds
-              .map((id) => state.students.find((item) => item.id === id)?.name)
-              .join(", ")}
-          </span>
-        </div>
       ) : null}
     </section>
   );
