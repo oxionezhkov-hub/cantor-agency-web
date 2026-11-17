@@ -7,11 +7,16 @@ import {
   AlertCircle,
   MapPin,
   ArrowRight,
-  GripVertical,
+  Search,
+  SlidersHorizontal,
+  ClipboardList,
+  CreditCard,
+  History,
 } from "lucide-react";
 import { STAGE_LABELS, leadProgress, type LeadStage } from "./lead-workflow.ts";
 import { leadHealth, conversationMessages } from "./communication.ts";
 import { ads } from "./data.ts";
+import { ServiceSelect } from "./service-controls.tsx";
 import type { CrmState, Lead } from "./crm.ts";
 const date = (at: string) =>
   new Date(at).toLocaleString("ru-RU", {
@@ -29,12 +34,20 @@ export function CrmBoard({
 }: {
   state: CrmState;
   now: number;
-  onOpen: (id: string, panel?: "tasks" | "conversation") => void;
+  onOpen: (
+    id: string,
+    panel?: "tasks" | "conversation" | "appointment" | "payments" | "history",
+  ) => void;
   onMove: (id: string, stage: LeadStage) => void;
 }) {
   const [drag, setDrag] = useState<string | null>(null),
     [over, setOver] = useState<LeadStage | null>(null),
     [filter, setFilter] = useState<"all" | "attention" | "missing" | "ok">("all");
+  const [query, setQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false),
+    [showFilters, setShowFilters] = useState(false);
+  const [city, setCity] = useState(""),
+    [adId, setAdId] = useState("");
   const board = useRef<HTMLDivElement>(null),
     touch = useRef<{
       id: string;
@@ -50,11 +63,23 @@ export function CrmBoard({
     },
     [],
   );
-  const rows = state.leads.map((lead) => ({
-    lead,
-    progress: leadProgress(state, lead.id, now),
-    health: leadHealth(state, lead, now),
-  }));
+  const rows = state.leads
+    .filter(
+      (l) =>
+        (!city || l.city === city) &&
+        (!adId || l.adId === adId) &&
+        (!query.trim() ||
+          `${l.name} ${l.city ?? ""} ${conversationMessages(state, l.id)
+            .map((m) => m.text)
+            .join(" ")}`
+            .toLocaleLowerCase("ru-RU")
+            .includes(query.trim().toLocaleLowerCase("ru-RU"))),
+    )
+    .map((lead) => ({
+      lead,
+      progress: leadProgress(state, lead.id, now),
+      health: leadHealth(state, lead, now),
+    }));
   const attention = rows.filter((r) => ["overdue", "attention"].includes(r.health.kind)),
     missing = rows.filter((r) => r.health.kind === "missing"),
     ok = rows.filter((r) => r.health.kind === "ok");
@@ -65,7 +90,7 @@ export function CrmBoard({
     setOver(null);
   }
   function pointerDown(e: PointerEvent<HTMLElement>, lead: Lead) {
-    if (e.pointerType !== "touch" || !(e.target as HTMLElement).closest(".crm-drag-handle")) return;
+    if (e.pointerType !== "touch") return;
     skipClick.current = false;
     const node = e.currentTarget;
     const timer = setTimeout(() => {
@@ -117,6 +142,67 @@ export function CrmBoard({
   }
   return (
     <div className="crm-pipeline">
+      <div className="crm-tools">
+        <button
+          type="button"
+          className="icon-control"
+          aria-label="Поиск в CRM"
+          onClick={() => setShowSearch(!showSearch)}
+        >
+          <Search size={18} />
+        </button>
+        {showSearch ? (
+          <input
+            aria-label="Поиск в CRM"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setQuery("");
+                setShowSearch(false);
+              }
+              if (e.key === "Enter") e.currentTarget.blur();
+            }}
+            autoFocus
+          />
+        ) : null}
+        <button
+          type="button"
+          className="icon-control"
+          aria-label="Фильтры CRM"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <SlidersHorizontal size={18} />
+        </button>
+        {showFilters ? (
+          <div className="crm-filter-controls">
+            <ServiceSelect
+              label="Город"
+              value={city || "all"}
+              onChange={(v) => setCity(v === "all" ? "" : v)}
+              options={[
+                { value: "all", label: "Все города" },
+                ...[
+                  ...new Set(state.leads.map((l) => l.city).filter((v): v is string => Boolean(v))),
+                ]
+                  .sort()
+                  .map((v) => ({ value: v, label: v })),
+              ]}
+            />
+            <ServiceSelect
+              label="Объявление"
+              value={adId || "all"}
+              onChange={(v) => setAdId(v === "all" ? "" : v)}
+              options={[
+                { value: "all", label: "Все объявления" },
+                ...[
+                  ...new Set(state.leads.map((l) => l.adId).filter((v): v is string => Boolean(v))),
+                ].map((v) => ({ value: v, label: ads.find((a) => a.id === v)?.title || v })),
+              ]}
+            />
+          </div>
+        ) : null}
+      </div>
       <div className="crm-health-filters" role="group" aria-label="Состояние работы">
         <button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
           Все обращения <span>{rows.length}</span>
@@ -175,8 +261,7 @@ export function CrmBoard({
               </header>
               <div>
                 {entries.map(({ lead, progress, health }) => {
-                  const last = conversationMessages(state, lead.id).at(-1),
-                    ad = ads.find((a) => a.id === lead.adId);
+                  const last = conversationMessages(state, lead.id).at(-1);
                   return (
                     <article
                       key={lead.id}
@@ -231,7 +316,6 @@ export function CrmBoard({
                           </span>
                           <ArrowRight size={13} />
                         </span>
-                        {ad ? <p className="crm-card-ad">{ad.title}</p> : null}
                         {last ? <p className="crm-card-last">{last.text}</p> : null}
                         {progress.booked ? (
                           <span className="crm-card-date">
@@ -246,14 +330,6 @@ export function CrmBoard({
                         ) : null}
                       </button>
                       <div className="crm-card-followup">
-                        <button
-                          type="button"
-                          className="crm-drag-handle"
-                          aria-label={`Перетащить карточку: ${lead.name}`}
-                          title="Удерживайте, чтобы перенести"
-                        >
-                          <GripVertical size={15} />
-                        </button>
                         <span className={`health-label ${health.kind}`}>
                           {health.kind === "ok" ? (
                             <CheckCircle2 size={12} />
@@ -275,16 +351,40 @@ export function CrmBoard({
                             </time>
                           </button>
                         ) : null}
-                        <button
-                          type="button"
-                          className="crm-add-task"
-                          onClick={() => onOpen(lead.id, "tasks")}
-                        >
-                          <Plus size={13} />
-                          {health.tasks.length
-                            ? `Задачи · ${health.tasks.length}`
-                            : "Добавить задачу"}
-                        </button>
+                        <div className="crm-card-actions">
+                          <button
+                            type="button"
+                            aria-label="Добавить задачу"
+                            title="Добавить задачу"
+                            onClick={() => onOpen(lead.id, "tasks")}
+                          >
+                            <Plus size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Диагностика"
+                            title="Диагностика"
+                            onClick={() => onOpen(lead.id, "appointment")}
+                          >
+                            <ClipboardList size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Оплаты"
+                            title="Оплаты"
+                            onClick={() => onOpen(lead.id, "payments")}
+                          >
+                            <CreditCard size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="История"
+                            title="История"
+                            onClick={() => onOpen(lead.id, "history")}
+                          >
+                            <History size={15} />
+                          </button>
+                        </div>
                       </div>
                     </article>
                   );

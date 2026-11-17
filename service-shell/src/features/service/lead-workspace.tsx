@@ -107,7 +107,7 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(focus ?? null),
     [view, setView] = useState<"dialogs" | "crm">("dialogs");
-  const [filter, setFilter] = useState<"unanswered" | "reminders" | null>("unanswered"),
+  const [filter, setFilter] = useState<"unanswered" | "reminders" | null>(null),
     [searching, setSearching] = useState(false),
     [query, setQuery] = useState("");
   const [now, setNow] = useState(Date.now);
@@ -129,7 +129,7 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
   useEffect(() => {
     if (searching) search.current?.focus();
   }, [searching]);
-  function open(id: string, panel: "tasks" | "conversation" = "conversation") {
+  function open(id: string, panel: Panel = "conversation") {
     setStartPanel(panel);
     setSelectedId(id);
     setView("dialogs");
@@ -206,6 +206,13 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
                     placeholder="Поиск по всем данным"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        setQuery("");
+                        setSearching(false);
+                      }
+                      if (e.key === "Enter") e.currentTarget.blur();
+                    }}
                   />
                   <button
                     type="button"
@@ -246,13 +253,13 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
               )}
             </div>
             <div className="workbench-list-items">
-              {found.map(({ lead, waiting, messages }) => (
+              {found.map(({ lead, waiting, reminder, messages }) => (
                 <button
                   type="button"
                   key={lead.id}
                   aria-label={`Открыть обращение: ${lead.name}`}
                   aria-current={selected?.id === lead.id ? "true" : undefined}
-                  className={`workbench-contact ${selected?.id === lead.id ? "selected" : ""} ${lead.unreadCount ? "unread" : ""}`}
+                  className={`workbench-contact ${selected?.id === lead.id ? "selected" : ""} ${lead.unreadCount ? "unread" : ""} ${waiting.waiting ? "needs-reply" : reminder ? "needs-reminder" : ""}`}
                   onClick={() => open(lead.id)}
                 >
                   <Avatar lead={lead} />
@@ -269,7 +276,27 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
                       </time>
                     </span>
                     <span className="contact-last-message">
-                      {messages.at(-1)?.text ?? "Нет сообщений"}
+                      {(() => {
+                        const match =
+                          query.trim() &&
+                          [...messages]
+                            .reverse()
+                            .find((m) =>
+                              m.text
+                                .toLocaleLowerCase("ru-RU")
+                                .includes(query.trim().toLocaleLowerCase("ru-RU")),
+                            );
+                        const m = match || messages.at(-1);
+                        if (m?.kind === "call") return "Звонок через Авито";
+                        const text =
+                          m?.text?.replace(/^\[Системное сообщение\]\s*/i, "") || "Нет сообщений";
+                        if (!match) return text;
+                        const index = text
+                          .toLocaleLowerCase("ru-RU")
+                          .indexOf(query.trim().toLocaleLowerCase("ru-RU"));
+                        const start = Math.max(0, index - 24);
+                        return `${start ? "…" : ""}${text.slice(start, start + Math.max(90, query.trim().length + 30))}`;
+                      })()}
                     </span>
                     {lead.unreadCount ? (
                       <span className="unread-count">{lead.unreadCount}</span>
@@ -613,8 +640,8 @@ function ContactChat({
     chosen = slots.find((s) => s.id === slotId) ?? slots[0];
   const menus: [Panel, string][] = [
     ["conversation", "Переписка"],
+    ["tasks", "Задачи"],
     ["appointment", "Диагностика"],
-    ["tasks", "Итоги и задачи"],
     ["payments", "Оплаты"],
     ["history", "История"],
   ];
@@ -641,7 +668,8 @@ function ContactChat({
                 {ad.title}
               </Link>
             ) : (
-              getPreviewData()?.chats.find(c => c.id === lead.id)?.itemTitle || "Объявление не указано"
+              getPreviewData()?.chats.find((c) => c.id === lead.id)?.itemTitle ||
+              "Объявление не указано"
             )}{" "}
             · {lead.city ?? "Город не указан"}
           </p>
@@ -830,7 +858,7 @@ function ContactChat({
                       })}
                     </div>
                   ) : null}
-                  <div className={`message-bubble ${m.author}`}>
+                  <div className={`message-bubble ${m.kind === "call" ? "system" : m.author}`}>
                     <span className="sr-only">{m.author === "manager" ? "Вы" : lead.name}</span>
                     {quoted ? <blockquote>{quoted.text}</blockquote> : null}
                     <MessageBody message={m} workspaceId={state.workspaceId} />
@@ -1139,9 +1167,16 @@ function ContactChat({
           >
             <ArrowLeft size={15} />К переписке
           </button>
-          {panel === "appointment" ? <DiagnosticSection leadScope={lead.id} /> : null}
+          {panel === "appointment" ? (
+            <>
+              <DiagnosticSection leadScope={lead.id} />
+              <LeadFollowups state={state} leadId={lead.id} section="outcome" />
+            </>
+          ) : null}
           {panel === "payments" ? <PaymentsSection studentScope={lead.studentId} /> : null}
-          {panel === "tasks" ? <LeadFollowups state={state} leadId={lead.id} /> : null}
+          {panel === "tasks" ? (
+            <LeadFollowups state={state} leadId={lead.id} section="tasks" />
+          ) : null}
           {panel === "history" ? (
             <ol className="lead-timeline">
               {leadTimeline(state, lead.id).map((item) => (
@@ -1201,7 +1236,13 @@ function MessageBody({ message: m, workspaceId }: { message: ChatMessage; worksp
         {m.text ? <p>{m.text}</p> : null}
       </>
     );
-  return <p>{m.kind === "call" ? "Звонок через Авито" : m.text || "Вложение недоступно"}</p>;
+  return (
+    <p>
+      {m.kind === "call"
+        ? "Звонок через Авито"
+        : m.text?.replace(/^\[Системное сообщение\]\s*/i, "") || "Вложение недоступно"}
+    </p>
+  );
 }
 function VoiceMessage({ url }: { url: string }) {
   const audio = useRef<HTMLAudioElement>(null),
