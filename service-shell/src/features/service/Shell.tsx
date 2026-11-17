@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowUpRight, Asterisk, BookOpen, ChartNoAxesCombined, CircleHelp, LayoutDashboard, MessageSquare, PanelTop, Settings2 } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChartNoAxesCombined, CircleHelp, LayoutDashboard, MessageSquare, PanelTop, Settings2 } from "lucide-react";
 import { CabinetPage } from "@/features/cabinet/CabinetPage";
 import { balanceRows, blockRows } from "@/features/cabinet/rules";
 import { sampleCabinet } from "@/features/cabinet/sample";
@@ -43,7 +43,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
   return <div className="service-layout">
     <a className="skip-link" href="#service-content">Перейти к содержимому</a>
     <aside className="service-sidebar">
-      <a href="/?section=today" className="service-brand" aria-label="Cantor — главная"><span className="brand-mark"><Asterisk size={24} /></span><span>Cantor</span></a>
+      <a href="/?section=today" className="service-brand" aria-label="Алита — главная"><img className="service-brand-logo" src="/images/brand/logo.svg" alt="" width="48" height="30" /><span>Алита</span></a>
       <div className="workspace-profile"><span className="profile-avatar">АС</span><div><strong>{sampleCabinet.tutor}</strong><small>{sampleCabinet.subject}</small></div></div>
       <nav className="service-nav" aria-label="Разделы">{SECTIONS.map(item => {
         const Icon = ICONS[item.id];

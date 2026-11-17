@@ -206,6 +206,54 @@ for lesson in lessons:
         found = plain_text.find(chunk, cursor)
         assert found >= 0, (lesson['id'], 'Lost source text', chunk[:100])
         cursor = found + len(chunk)
+
+# Original transfer has now been checked in full. Apply the reviewed tutor-facing
+# interpretation only to the generated artifact; academy/base remain untouched.
+guidance_path = ROOT / 'service-shell/src/features/knowledge/tutor-guidance.json'
+guidance = json.loads(guidance_path.read_text())
+assert set(guidance) == {lesson['id'] for lesson in lessons if lesson['kind'] == 'reference'} | {'course-1', 'course-2', 'course-12', 'course-13', 'course-14'}
+for lesson in lessons:
+    entry = guidance.get(lesson['id'])
+    if not entry:
+        continue
+    if 'sections' in entry:
+        lesson['title'] = entry['title']
+        lesson['description'] = entry['description']
+        lesson['track'] = entry.get('track', lesson['track'])
+        tree = Node('div', children=[Node('section', children=[
+            Node('h2', [('id', section['id'])], [section['title']]),
+            Parser(section['html']).root,
+        ]) for section in entry['sections']])
+        lesson['headings'] = headings_for(tree, lesson['id'])
+        lesson['html'] = render(tree, lesson['id'])
+        if 'tasks' in entry:
+            lesson['tasks'] = [{
+                'id': lesson['id'] + '-' + task['id'], 'title': task['title'],
+                'html': render(Parser(task['html']).root, lesson['id']),
+                'answerHtml': render(Parser(task['answerHtml']).root, lesson['id']),
+            } for task in entry['tasks']]
+        lesson['minutes'] = max(3, round(len(clean_text(tree).split()) / 150))
+        lesson['source']['label'] = 'Практика для преподавателя'
+    if 'replacements' in entry:
+        def replace_text(value):
+            if isinstance(value, str):
+                for before, after in entry['replacements']:
+                    value = value.replace(before, after)
+                return value
+            if isinstance(value, list):
+                return [replace_text(item) for item in value]
+            if isinstance(value, dict):
+                return {key: replace_text(item) for key, item in value.items()}
+            return value
+        lesson.update(replace_text(lesson))
+    lesson['searchText'] = clean_text(Parser(lesson['html']).root) + ' ' + ' '.join(
+        task['title'] + ' ' + clean_text(Parser(task['html'] + task['answerHtml']).root)
+        for task in lesson['tasks'])
+
+assert sum(len(lesson['tasks']) for lesson in lessons) == 28
+all_html = {lesson['id']: lesson['html'] for lesson in lessons}
+for lesson in lessons:
+    parsed = Parser(lesson['html']).root
     element_ids = [node.attrs['id'] for node in parsed.walk() if 'id' in node.attrs]
     assert len(element_ids) == len(set(element_ids)), (lesson['id'], 'Duplicate anchor')
     for heading in lesson['headings']:

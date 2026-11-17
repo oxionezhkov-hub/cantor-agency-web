@@ -48,6 +48,60 @@ try {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       assert.ok(overflow <= 1, `${width}px ${label}: page overflows by ${overflow}px`);
     };
+    const checkModuleTwo = async () => {
+      const metrics = await page.locator(".knowledge-prose").first().evaluate(prose => {
+        const funnel = prose.querySelector(".funnel");
+        const steps = [...funnel.querySelectorAll(".fn")];
+        const conversions = [...funnel.querySelectorAll(".fn-conv")];
+        const table = prose.querySelector("table");
+        const cells = [...prose.querySelectorAll("td.num")];
+        const wrapper = table.closest(".tbl-wrap,.table-wrap,.table-scroll");
+        const scale = prose.querySelector(".scale");
+        const scaleTrack = scale.querySelector(".scale-track");
+        const cards = [...prose.querySelectorAll(".stats .stat")];
+        return {
+          direction: getComputedStyle(funnel).flexDirection,
+          targetDisplay: getComputedStyle(scaleTrack).display,
+          targetColumns: getComputedStyle(scaleTrack).gridTemplateColumns.split(" ").length,
+          targetGap: parseFloat(getComputedStyle(scaleTrack).gap),
+          statGap: parseFloat(getComputedStyle(prose.querySelector(".stats")).gap),
+          statPadding: cards.map(card => parseFloat(getComputedStyle(card).paddingTop)),
+          valueLabelGaps: cards.map(card => parseFloat(getComputedStyle(card.querySelector("b")).marginBottom)),
+          stepDisplays: steps.map(step => getComputedStyle(step).display),
+          stepBackgrounds: steps.map(step => getComputedStyle(step).backgroundColor),
+          conversionTexts: conversions.map(item => item.textContent),
+          tableDisplay: getComputedStyle(table).display,
+          cellDisplays: cells.map(cell => getComputedStyle(cell).display),
+          cellCount: cells.length,
+          wrapperOverflow: getComputedStyle(wrapper).overflowX,
+          wrapperWidth: wrapper.getBoundingClientRect().width,
+          viewportWidth: innerWidth,
+          targetMarkers: [...prose.querySelectorAll(".scale-zone")].filter(item => item.textContent.trim()).map(item => item.textContent.trim()),
+        };
+      });
+      assert.equal(metrics.targetDisplay, "grid", "Target conversion thresholds use separated chips");
+      assert.equal(metrics.targetColumns, width <= 760 ? 1 : 3, "Target chips stack on mobile");
+      assert.ok(metrics.targetGap >= 9);
+      assert.ok(metrics.statGap >= 12);
+      assert.ok(metrics.statPadding.every(value => value >= 16), "Target metric cards have readable internal spacing");
+      assert.ok(metrics.valueLabelGaps.every(value => value >= 8), "Metric values have space before their labels");
+      assert.equal(metrics.direction, "column", "Module 2 funnel is a readable vertical sequence");
+      assert.equal(metrics.stepDisplays.length, 5);
+      assert.ok(metrics.stepDisplays.every(display => display === "flex"));
+      assert.ok(metrics.stepBackgrounds.every(background => background !== "rgba(0, 0, 0, 0)"));
+      assert.ok(metrics.conversionTexts.some(text => /10–12%/.test(text)));
+      assert.ok(metrics.conversionTexts.some(text => /50%/.test(text)));
+      assert.equal(metrics.tableDisplay, "table", "Metric tables preserve semantic column layout");
+      assert.ok(metrics.cellCount >= 5);
+      assert.ok(metrics.cellDisplays.every(display => display === "table-cell"), "Numeric values remain table cells rather than numbered badges");
+      assert.equal(metrics.wrapperOverflow, "auto", "Wide tables scroll within their wrapper");
+      assert.ok(metrics.wrapperWidth <= metrics.viewportWidth);
+      assert.ok(metrics.targetMarkers.some(text => /10–12%/.test(text)));
+      await checkOverflow("module 2 metrics and tables");
+      await page.locator(".knowledge-prose .scale").screenshot({ path: `${output}/knowledge-target-thresholds-${width}.png` });
+      await page.locator(".knowledge-practice .tbl-wrap").filter({ has: page.locator("td.num") }).first().screenshot({ path: `${output}/knowledge-numeric-exercise-${width}.png` });
+      await page.screenshot({ path: `${output}/knowledge-metrics-${width}.png`, fullPage: true });
+    };
     const checkToc = async lesson => {
       const links = page.getByRole("navigation", { name: "Содержание урока" }).locator("a");
       assert.equal(await links.count(), lesson.headings.length, `${lesson.id}: TOC coverage`);
@@ -55,32 +109,77 @@ try {
     };
     try {
       await page.goto(location(), { waitUntil: "networkidle" });
-      await page.getByRole("heading", { level: 2, name: "База знаний", exact: true }).waitFor();
+      await page.getByRole("heading", { level: 2, name: "От объявления до ученика", exact: true }).waitFor();
+      assert.equal(await page.locator(".knowledge > :first-child").getAttribute("class"), "knowledge-start", "Course starts with the orange learning panel");
+      assert.equal(await page.locator(".knowledge-header,.knowledge-context,.knowledge-footer,.knowledge-complete").count(), 0, "Removed boilerplate stays removed");
+      assert.doesNotMatch(await page.locator(".knowledge").innerText(), /материал из внутренней|исходном контексте|инструкции по работе с сервисом|собраны материалы базы знаний/i);
+      assert.match(await page.title(), /Алита/);
+      const brand = page.locator(".service-brand");
+      assert.match(await brand.innerText(), /Алита/);
+      const logo = brand.locator("img");
+      await logo.waitFor({ state: "attached" });
+      assert.ok(await logo.evaluate(image => image.complete && image.naturalWidth > 0), "Actual logo image loaded");
+      assert.equal(await brand.locator("svg").count(), 0, "Placeholder star logo is gone");
       assert.equal(await page.getByRole("list", { name: "Программа курса", exact: true }).locator("li").count(), 14);
       await checkOverflow("overview");
       await page.screenshot({ path: `${output}/knowledge-overview-${width}.png`, fullPage: true });
-      await page.getByRole("button", { name: /^Регламенты/ }).click();
-      assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), 12);
+      await page.getByRole("button", { name: /^Подсказки/ }).click();
+      assert.equal(await page.getByRole("list", { name: "Подсказки для репетитора" }).locator("li").count(), 12);
 
       // Body-only phrase: ensure this cannot pass by searching titles/descriptions alone.
-      const phrase = "молчание клиента не равно довольству";
-      const expected = lessons.filter(lesson => normalize(lesson.searchText).includes(phrase));
+      const phrase = ["списалось", "наращивать", "окупаемость"].find(candidate => {
+        const matches = lessons.filter(lesson => normalize(lesson.searchText).includes(candidate));
+        return matches.length && matches.every(lesson => lesson.track !== "dialogues" && !normalize(`${lesson.title} ${lesson.description}`).includes(candidate));
+      });
+      assert.ok(phrase, "A body-only search fixture exists in the actual content");
+      const queryMatches = query => lessons.filter(lesson => normalize(query).split(/\s+/).every(word => normalize(`${lesson.title} ${lesson.description} ${lesson.searchText}`).includes(word)));
+      const expected = queryMatches(phrase);
       assert.ok(expected.length > 0);
       assert.ok(expected.every(lesson => !normalize(`${lesson.title} ${lesson.description}`).includes(phrase)));
       const search = page.getByRole("searchbox", { name: "Поиск по всем материалам" });
       await search.fill(phrase);
+      await search.focus();
+      const focusStyle = await search.evaluate(input => {
+        const style = getComputedStyle(input);
+        const wrapper = getComputedStyle(input.closest("label"));
+        return { outline: style.outlineColor, wrapperOutline: wrapper.outlineColor, border: wrapper.borderColor, background: wrapper.backgroundColor };
+      });
+      assert.notEqual(focusStyle.outline, "rgb(232, 57, 29)", "Search focus is neutral rather than orange");
+      assert.notEqual(focusStyle.border, "rgb(232, 57, 29)", "Search border is neutral rather than orange");
       const found = page.getByRole("list", { name: "Результаты поиска" }).locator(".knowledge-lesson-copy strong");
       assert.deepEqual(await found.allTextContents(), expected.map(lesson => lesson.title));
+      const snippets = page.locator(".knowledge-snippet");
+      assert.equal(await snippets.count(), expected.length, "Each search result explains its match");
+      for (const snippet of await snippets.all()) {
+        assert.ok(normalize(await snippet.innerText()).includes(phrase), "Search snippet contains the matched phrase");
+        assert.ok((await snippet.innerText()).length < 360, "Search snippet is concise");
+        assert.ok(await snippet.locator("mark").count(), "Matching text is highlighted");
+      }
+      assert.match(await page.locator("#knowledge-search-status").innerText(), new RegExp(phrase));
+      assert.ok((await page.locator("#knowledge-search-status").innerText()).includes(String(expected.length)));
+      assert.equal(await page.locator("#knowledge-search-status").getAttribute("role"), "status");
+      assert.equal(await search.getAttribute("aria-describedby"), "knowledge-search-status");
+      assert.equal(await page.locator(".knowledge-match>small").count(), expected.length);
+      await page.screenshot({ path: `${output}/knowledge-search-${width}.png`, fullPage: true });
+      // Multiple words are combined with AND even when they are separated in the lesson.
+      const multiword = "конверсия диагностика";
+      await search.fill(multiword);
+      assert.deepEqual(await found.allTextContents(), queryMatches(multiword).map(lesson => lesson.title));
+      assert.ok((await snippets.count()) > 0);
+      for (const snippet of await snippets.all()) assert.ok(await snippet.locator("mark").count(), "Multiword result still explains at least one actual match");
+      await page.getByRole("button", { name: "Очистить поиск", exact: true }).click();
+      assert.equal(await search.inputValue(), "");
+      await search.fill(phrase);
       await page.locator(".knowledge-track").filter({ hasText: "Диалоги и продажи" }).click();
       assert.equal(await page.getByRole("list", { name: "Результаты поиска" }).locator("li").count(), 0);
       await page.getByRole("heading", { name: "Материалов не найдено" }).waitFor();
       await page.getByRole("button", { name: "Сбросить поиск и фильтры" }).click();
       assert.equal(await search.inputValue(), "");
-      assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), 12);
+      assert.equal(await page.getByRole("list", { name: "Подсказки для репетитора" }).locator("li").count(), 12);
       await page.locator(".knowledge-track").filter({ hasText: "Продвижение на Авито" }).click();
-      assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), references.filter(lesson => lesson.track === "promotion").length);
+      assert.equal(await page.getByRole("list", { name: "Подсказки для репетитора" }).locator("li").count(), references.filter(lesson => lesson.track === "promotion").length);
       await page.getByRole("button", { name: /Сбросить фильтр/ }).click();
-      assert.equal(await page.getByRole("list", { name: "Рабочие регламенты" }).locator("li").count(), 12);
+      assert.equal(await page.getByRole("list", { name: "Подсказки для репетитора" }).locator("li").count(), 12);
       await page.getByRole("button", { name: "Начать обучение" }).click();
       await expectFocus("course-1");
       await checkToc(courses[0]);
@@ -94,15 +193,20 @@ try {
       await criteria.locator("summary").click();
       assert.ok(await criteria.locator(".knowledge-answer").isVisible());
       assert.ok((await criteria.locator(".knowledge-answer").innerText()).length > 30);
-      await page.getByRole("button", { name: "Отметить изученным", exact: true }).click();
-      assert.equal(await page.getByRole("button", { name: "Снять отметку", exact: true }).getAttribute("aria-pressed"), "true");
+      const actions = page.getByRole("navigation", { name: "Действия с материалом" });
+      assert.equal(await actions.locator(".knowledge-mark").count(), 1, "Completion is inside the same next/previous action bar");
+      await actions.getByRole("button", { name: "Отметить изученным", exact: true }).click();
+      assert.equal(await page.locator(".knowledge-mark").getAttribute("aria-pressed"), "true");
+      assert.equal(await page.locator(".knowledge-mark").innerText(), "Изучено");
       await page.reload({ waitUntil: "networkidle" });
       await expectFocus("course-1");
-      assert.equal(await page.getByRole("button", { name: "Снять отметку", exact: true }).getAttribute("aria-pressed"), "true");
+      assert.equal(await page.locator(".knowledge-mark").getAttribute("aria-pressed"), "true");
+      assert.equal(await page.locator(".knowledge-mark").innerText(), "Изучено");
       assert.ok(await page.evaluate(() => JSON.parse(localStorage.getItem("cantor-knowledge-progress-v1") || "[]").includes("course-1")));
-      await page.getByRole("navigation", { name: "Переход между материалами" }).getByRole("button", { name: /Следующий материал/ }).click();
+      await page.getByRole("navigation", { name: "Действия с материалом" }).getByRole("button", { name: /Следующий материал/ }).click();
       await expectFocus("course-2");
-      await page.getByRole("navigation", { name: "Переход между материалами" }).getByRole("button", { name: /Предыдущий материал/ }).click();
+      await checkModuleTwo();
+      await page.getByRole("navigation", { name: "Действия с материалом" }).getByRole("button", { name: /Предыдущий материал/ }).click();
       await expectFocus("course-1");
       await page.getByRole("button", { name: "К программе и материалам" }).click();
       await page.getByRole("button", { name: "Продолжить обучение" }).click();
@@ -113,6 +217,7 @@ try {
         await page.goto(location(lesson.id), { waitUntil: "domcontentloaded" });
         await expectFocus(lesson.id);
         await checkToc(lesson);
+        assert.equal(await page.locator(".knowledge-context,.knowledge-footer,.knowledge-complete").count(), 0, `${lesson.id}: removed boilerplate stays removed`);
         await checkOverflow(lesson.id);
         if (lesson.id === "course-12") await page.screenshot({ path: `${output}/knowledge-reader-${width}.png`, fullPage: false });
       }
@@ -134,7 +239,7 @@ try {
       assert.deepEqual(pageErrors, [], `${width}px JavaScript runtime errors`);
       assert.deepEqual(consoleErrors, [], `${width}px console errors`);
       assert.deepEqual(requestFailures, [], `${width}px failed requests`);
-      results.push({ width, courseModules: 14, referenceDocuments: 12, directLinks: lessons.length, fullTextSearch: true, filters: true, selfCheck: true, progressReload: true, previousNext: true, internalAnchorNavigation: true, horizontalOverflow: false, pageErrors, consoleErrors, requestFailures });
+      results.push({ width, courseModules: 14, referenceDocuments: 12, directLinks: lessons.length, fullTextSearch: true, matchedSearchSnippets: true, neutralSearchFocus: true, actualAlitaLogo: true, noBoilerplate: true, styledMetricFunnel: true, semanticTables: true, completionWithNavigation: true, filters: true, selfCheck: true, progressReload: true, previousNext: true, internalAnchorNavigation: true, horizontalOverflow: false, pageErrors, consoleErrors, requestFailures });
     } catch (error) {
       await page.screenshot({ path: `${output}/knowledge-failed-${width}.png`, fullPage: true }).catch(() => {});
       writeFileSync(`${output}/failure-${width}.json`, JSON.stringify({ url: page.url(), error: error.message, pageErrors, consoleErrors, requestFailures, body: await page.locator("body").innerText().catch(() => "") }, null, 2));
