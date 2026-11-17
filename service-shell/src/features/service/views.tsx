@@ -18,6 +18,7 @@ import {
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
+import { getPreviewData, previewTotals } from "./preview-data.ts";
 
 function Percent({ views, contacts }: { views: number; contacts: number }) {
   const rate = contactRate(views, contacts);
@@ -114,7 +115,7 @@ function countLabel(count: number, one: string, few: string, many: string): stri
 }
 
 function rubPer(spend: number, count: number): string {
-  if (count <= 0 || spend < 0) return "—";
+  if (!Number.isFinite(spend) || !Number.isFinite(count) || count <= 0 || spend < 0) return "—";
   return `${Math.round(spend / count).toLocaleString("ru-RU")} ₽`;
 }
 
@@ -157,14 +158,17 @@ export function DashboardSection() {
 
   const isDataMonth = cursor.year === DATA_YEAR && cursor.month === DATA_MONTH;
   const isCurrentMonth = cursor.year === today.getFullYear() && cursor.month === today.getMonth();
-  const shows = isDataMonth ? ads.reduce((sum, ad) => sum + ad.shows, 0) : 0;
-  const views = isDataMonth ? ads.reduce((sum, ad) => sum + ad.views, 0) : 0;
-  const contacts = isDataMonth ? ads.reduce((sum, ad) => sum + ad.contacts, 0) : 0;
-  const spend = isDataMonth ? promotionSpend(ads) : 0;
+  const preview = getPreviewData();
+  const prefix = `${cursor.year}-${String(cursor.month + 1).padStart(2, "0")}`;
+  const totals = preview ? previewTotals(`${prefix}-01`, `${prefix}-31`) : null;
+  const shows = preview ? NaN : isDataMonth ? ads.reduce((sum, ad) => sum + ad.shows, 0) : 0;
+  const views = totals ? totals.views : isDataMonth ? ads.reduce((sum, ad) => sum + ad.views, 0) : 0;
+  const contacts = totals ? totals.contacts : isDataMonth ? ads.reduce((sum, ad) => sum + ad.contacts, 0) : 0;
+  const spend = totals ? totals.budget : isDataMonth ? promotionSpend(ads) : 0;
   const crmMetrics = periodMetrics(crm, ...monthRangeMsk(cursor.year, cursor.month));
-  const paidCount = crmMetrics.newStudents;
+  const paidCount = totals ? totals.sales : crmMetrics.newStudents;
   const kirillPaid = !crmMetrics.unpaidStudentIds.includes("student-kirill");
-  const diagnosed = crmMetrics.completedAppointments;
+  const diagnosed = totals ? totals.diagnostics : crmMetrics.completedAppointments;
   const viewRate = contactRate(shows, views);
   const wroteRate = contactRate(views, contacts);
 
@@ -188,14 +192,14 @@ export function DashboardSection() {
     {
       label: "диагностик",
       value: diagnosed,
-      conversion: "проведено · CRM",
+      conversion: preview ? "проведено" : "проведено · CRM",
       cost: rubPer(spend, diagnosed),
       tone: null,
     },
     {
       label: "новых учеников",
       value: paidCount,
-      conversion: "первая оплата · CRM",
+      conversion: preview ? "—" : "первая оплата · CRM",
       cost: rubPer(spend, paidCount),
       tone: null,
     },
@@ -212,7 +216,7 @@ export function DashboardSection() {
   const cityMap = new Map<string, { places: number[]; bids: number[] }>();
   if (isDataMonth) {
     for (const ad of ads) {
-      for (const city of ad.cities) {
+      for (const city of ad.cities.filter(city => Number.isFinite(city.place) && Number.isFinite(city.bidRub))) {
         const row = cityMap.get(city.city) ?? { places: [], bids: [] };
         row.places.push(city.place);
         row.bids.push(city.bidRub);
@@ -271,7 +275,7 @@ export function DashboardSection() {
       });
     }
     const missing = missingSlotNames(ad.photos, PHOTO_SLOTS);
-    if (missing.length > 0 || !ad.offerHasDiagnostic) {
+    if (!preview && (missing.length > 0 || !ad.offerHasDiagnostic)) {
       recommendations.push({
         id: `photo-${ad.id}`,
         focus: ad.id,
@@ -333,16 +337,16 @@ export function DashboardSection() {
       </div>
 
       <div className="dashboard-overview">
-        <div><span>Поступления за период</span><strong data-testid="dashboard-revenue">{(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽</strong></div>
+        <div><span>Поступления за период</span><strong data-testid="dashboard-revenue">{preview ? "—" : `${(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽`}</strong></div>
         <div><span>Новых заявок в CRM</span><strong>{crmMetrics.newLeads}</strong></div>
-        <div><span>Встреч запланировано</span><strong>{crmMetrics.bookedAppointments}</strong></div>
+        <div><span>Встреч запланировано</span><strong>{preview ? "—" : crmMetrics.bookedAppointments}</strong></div>
       </div>
       {[{ title: "Продвижение на Авито", items: steps.slice(0, 3) }, { title: "Диагностики и ученики", items: steps.slice(3) }].map(group => <section key={group.title} className="dashboard-metric-group">
         <div className="crm-heading"><h2>{group.title}</h2></div>
         <div className="dashboard-funnel mt-3 flex gap-2 overflow-x-auto pb-1">
           {group.items.map(step => <article key={step.label} className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-4 py-4">
             <p className="flex items-center gap-2 text-sm text-muted">{step.label}<Mark tone={step.tone} /></p>
-            <p data-testid={step.label === "диагностик" ? "completed-diagnostics" : step.label === "новых учеников" ? "new-students" : undefined} className="mt-1 font-display text-3xl font-medium">{step.value.toLocaleString("ru-RU")}</p>
+            <p data-testid={step.label === "диагностик" ? "completed-diagnostics" : step.label === "новых учеников" ? "new-students" : undefined} className="mt-1 font-display text-3xl font-medium">{Number.isFinite(step.value) ? step.value.toLocaleString("ru-RU") : "—"}</p>
             <p className={`mt-3 text-sm ${step.tone === "bad" ? "text-red" : "text-muted"}`}>{step.conversion}</p>
             <p className="text-sm text-muted">{step.cost} · расходы на этап</p>
           </article>)}

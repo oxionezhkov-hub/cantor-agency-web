@@ -57,6 +57,7 @@ import {
   type MessageAdapter,
 } from "./communication.ts";
 import { useDraftCache } from "./use-draft-cache.ts";
+import { getPreviewData } from "./preview-data.ts";
 import type { CrmState, Lead } from "./crm.ts";
 const stamp = (at: string) =>
   new Date(at).toLocaleString("ru-RU", {
@@ -640,7 +641,7 @@ function ContactChat({
                 {ad.title}
               </Link>
             ) : (
-              "Объявление не указано"
+              getPreviewData()?.chats.find(c => c.id === lead.id)?.itemTitle || "Объявление не указано"
             )}{" "}
             · {lead.city ?? "Город не указан"}
           </p>

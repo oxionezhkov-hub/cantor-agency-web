@@ -1,4 +1,5 @@
 import { dialogExamples } from "./dialog-examples.ts";
+import { getPreviewData } from "./preview-data.ts";
 export type CityBid = {
   city: string;
   bidRub: number;
@@ -62,7 +63,7 @@ const egeText =
 const ogeText =
   "ОГЭ по математике: разбираем ошибки, а не прорешиваем вариант подряд. На диагностике смотрю работу и называю, сколько занятий нужно до экзамена.";
 
-export const ads: Ad[] = [
+const exampleAds: Ad[] = [
   {
     id: "ege",
     title: "Математика ЕГЭ, с 60 до 80+",
@@ -107,7 +108,7 @@ export const ads: Ad[] = [
   },
 ];
 
-export const dialogs: Dialog[] = [
+const exampleDialogs: Dialog[] = [
   ...dialogExamples.map((e) => ({
     id: e.id,
     name: e.name,
@@ -186,9 +187,20 @@ export const dialogs: Dialog[] = [
   },
 ];
 
-export const windows: WindowSlot[] = [
+const exampleWindows: WindowSlot[] = [
   { id: "tue", label: "Вт 17:00", startsAt: "2026-11-17T14:00:00.000Z", takenBy: null },
   { id: "thu", label: "Чт 19:00", startsAt: "2026-11-19T16:00:00.000Z", takenBy: "Светлана" },
   { id: "sat-12", label: "Сб 12:00", startsAt: "2026-11-21T09:00:00.000Z", takenBy: null },
   { id: "sat-16", label: "Сб 16:00", startsAt: "2026-11-21T13:00:00.000Z", takenBy: null },
 ];
+const preview = getPreviewData();
+export const ads: Ad[] = preview ? preview.ads.map(a => ({
+  id: a.id, title: a.title, text: a.description || "", photos: [], offerHasDiagnostic: /диагност/i.test(a.description || ""),
+  shows: NaN, views: NaN, contacts: NaN, spendRub: NaN, cities: a.city ? [{ city: a.city, bidRub: NaN, place: NaN }] : [], autobidder: false,
+})) : exampleAds;
+export const dialogs: Dialog[] = preview ? preview.chats.map(c => ({
+  id: c.id, name: c.name || "Собеседник", topic: c.itemTitle || "", reply: "",
+  messages: [],
+  waitingSince: c.lastAuthor === "client" && c.lastAt ? new Date(c.lastAt).toISOString() : null, silentSince: null,
+})) : exampleDialogs;
+export const windows: WindowSlot[] = preview ? [] : exampleWindows;

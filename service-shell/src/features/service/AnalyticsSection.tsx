@@ -52,11 +52,11 @@ type Tab = (typeof TABS)[number]["id"];
 type Report = ReturnType<typeof buildAnalytics>;
 type Marketing = Report["totals"];
 type SortKey = "views" | "contacts" | "spendRub" | "contactRate" | "cpl";
-const integer = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 0 });
+const integer = (n: number) => Number.isFinite(n) ? n.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) : "—";
 const rub = (n: number | null) =>
-  n === null ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
+  n === null || !Number.isFinite(n) ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
 const pct = (n: number | null) =>
-  n === null ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}%`;
+  n === null || !Number.isFinite(n) ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}%`;
 const shortDate = (date: string) => `${date.slice(8, 10)}.${date.slice(5, 7)}`;
 const mskDay = (date: string) =>
   new Date(Date.parse(date) + 3 * 3600000).toISOString().slice(0, 10);
@@ -743,11 +743,11 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
                         </div>
                         <div>
                           <span>Проведено диагностик</span>
-                          <strong>{c.completedAppointments}</strong>
+                          <strong>{integer(c.completedAppointments)}</strong>
                         </div>
                         <div>
                           <span>Новые платящие ученики</span>
-                          <strong>{c.newStudents}</strong>
+                          <strong>{integer(c.newStudents)}</strong>
                         </div>
                       </div>
                       <button
@@ -1282,8 +1282,8 @@ function DayTable({ report, economy = false }: { report: Report; economy?: boole
                       <td>{d.available ? rub(d.cpl) : "—"}</td>
                       <td>{d.available ? rub(d.spendRub) : "—"}</td>
                       <td>{c?.leads ?? "—"}</td>
-                      <td>{c?.completedAppointments ?? "—"}</td>
-                      <td>{c?.newStudents ?? "—"}</td>
+                      <td>{c ? integer(c.completedAppointments) : "—"}</td>
+                      <td>{c ? integer(c.newStudents) : "—"}</td>
                     </>
                   )}
                 </tr>

@@ -12,6 +12,7 @@ import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
 import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
 import { AnalyticsSection } from "./AnalyticsSection.tsx";
+import { getPreviewData } from "./preview-data.ts";
 
 const KnowledgeSection = lazy(() => import("@/features/knowledge/KnowledgeSection").then(module => ({ default: module.KnowledgeSection })));
 
@@ -36,6 +37,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
   const marks = attention({ ads, dialogs: dialogs.filter(d => crm.leads.some(l => l.id === d.id) && leadProgress(crm, d.id, now).stage === "new"), windows: liveWindows, photoSlots: PHOTO_SLOTS, blockedTitles: sampleCabinet.blocks.items.map(item => item.title), unpaid: crmMetrics.unpaidStudentIds.filter(id => crm.leads.some(l => l.studentId === id && !l.closedAt)).length, nowMs: now });
   const cabinetShort = balanceRows(sampleCabinet.balance).some(row => row.label === "Хватит" && row.tone === "bad");
   marks.acc = (cabinetShort ? 1 : 0) + blockRows(sampleCabinet.blocks, now).filter(row => row.tone === "bad").length;
+  if (getPreviewData()) { marks.ads = sampleCabinet.blocks.items.length; marks.stats = 0; }
   marks.today = marks.stats + marks.ads + marks.chats;
   const selected = SECTIONS.find(item => item.id === section)!;
 
@@ -44,7 +46,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
     <a className="skip-link" href="#service-content">Перейти к содержимому</a>
     <aside className="service-sidebar">
       <a href="/?section=today" className="service-brand" aria-label="Авито — главная"><img className="service-brand-logo" src="/images/brand/logo.svg" alt="" width="48" height="30" /><span>Авито</span></a>
-      <div className="workspace-profile"><span className="profile-avatar">АС</span><div><strong>{sampleCabinet.tutor}</strong><small>{sampleCabinet.subject}</small></div></div>
+      <div className="workspace-profile"><span className="profile-avatar">{getPreviewData() ? "ЕД" : "АС"}</span><div><strong>{sampleCabinet.tutor}</strong><small>{sampleCabinet.subject}</small></div></div>
       <nav className="service-nav" aria-label="Разделы">{SECTIONS.map(item => {
         const Icon = ICONS[item.id];
         return <button key={item.id} type="button" className={`service-nav-item ${item.id === section ? "active" : ""}`} aria-current={item.id === section ? "page" : undefined} onClick={() => navigate({ to: "/", search: { section: item.id } })}>

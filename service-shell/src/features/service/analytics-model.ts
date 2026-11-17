@@ -1,9 +1,10 @@
 import { ads } from "./data.ts";
 import type { CrmState } from "./crm.ts";
+import { getPreviewData } from "./preview-data.ts";
 
 export type AnalyticsRange = { from: string; to: string };
 export const ANALYTICS_COVERAGE: AnalyticsRange = { from: "2026-11-01", to: "2026-11-16" };
-export const ANALYTICS_CITIES = ["Москва", "Область"] as const;
+export const ANALYTICS_CITIES: readonly string[] = getPreviewData() ? [...new Set(getPreviewData()!.ads.map(a => a.city).filter(Boolean))] : ["Москва", "Область"];
 export type AdDailyStat = {
   date: string;
   adId: string;
@@ -83,7 +84,7 @@ const fixtureGroups = [
   { adId: "oge", city: "Москва", shows: 480, views: 116, contacts: 14, spendRub: 2260 },
   { adId: "oge", city: "Область", shows: 260, views: 62, contacts: 7, spendRub: 1220 },
 ];
-export const DEMO_AD_DAILY: readonly AdDailyStat[] = fixtureGroups.flatMap((group) => {
+export const DEMO_AD_DAILY: readonly AdDailyStat[] = getPreviewData() ? getPreviewData()!.daily.map(r => ({ date: r.date, adId: "__account__", city: "__account__", shows: NaN, views: r.views, contacts: r.contacts, spendRub: r.budget })) : fixtureGroups.flatMap((group) => {
   const shows = distribute(group.shows),
     views = distribute(group.views),
     contacts = distribute(group.contacts),
@@ -99,7 +100,7 @@ export const DEMO_AD_DAILY: readonly AdDailyStat[] = fixtureGroups.flatMap((grou
   }));
 });
 const ratio = (numerator: number, denominator: number, scale = 1) =>
-  denominator > 0 ? (numerator / denominator) * scale : null;
+  Number.isFinite(numerator) && Number.isFinite(denominator) && denominator > 0 ? (numerator / denominator) * scale : null;
 export function marketingTotals(rows: readonly AdDailyStat[]): MarketingTotals {
   const total = rows.reduce(
     (sum, row) => ({
@@ -120,7 +121,7 @@ export function marketingTotals(rows: readonly AdDailyStat[]): MarketingTotals {
 }
 function coverage(dates: string[]): Coverage {
   const daysWithData = dates.filter(
-    (date) => date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
+    (date) => getPreviewData() ? getPreviewData()!.daily.some(r => r.date === date) : date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
   ).length;
   return { complete: daysWithData === dates.length, daysWithData, daysRequested: dates.length };
 }
@@ -201,6 +202,11 @@ function crmRows(state: CrmState, range: AnalyticsRange, adId?: string) {
     receivedRub: Math.round(row.receivedRub * 100) / 100,
     refundedRub: Math.round(row.refundedRub * 100) / 100,
     netReceivedRub: Math.round((row.receivedRub - row.refundedRub) * 100) / 100,
+    ...(getPreviewData() ? {
+      completedAppointments: adId ? NaN : getPreviewData()!.daily.find(r => r.date === date)?.diagnostics ?? NaN,
+      newStudents: adId ? NaN : getPreviewData()!.daily.find(r => r.date === date)?.sales ?? NaN,
+      bookedAppointments: NaN, receivedRub: NaN, refundedRub: NaN, netReceivedRub: NaN,
+    } : {}),
   }));
   const totals = daily.reduce(
     (sum, row) => ({
@@ -236,25 +242,27 @@ export function buildAnalytics(
     (row) => row.date >= previousRange.from && row.date <= previousRange.to,
   );
   const crm = input.city ? null : crmRows(input.crm, input, input.adId);
+  const unknown: MarketingTotals = { shows: NaN, views: NaN, contacts: NaN, spendRub: NaN, ctr: null, contactRate: null, cpc: null, cpl: null };
+  const totals = (rows: readonly AdDailyStat[]) => getPreviewData() && (input.adId || input.city) ? unknown : marketingTotals(rows);
   return {
-    totals: marketingTotals(rows),
-    previousTotals: marketingTotals(previous),
+    totals: totals(rows),
+    previousTotals: totals(previous),
     daily: dates.map((date) => ({
       date,
-      ...marketingTotals(rows.filter((row) => row.date === date)),
-      available: date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
+      ...totals(rows.filter((row) => row.date === date)),
+      available: getPreviewData() ? getPreviewData()!.daily.some(r => r.date === date) : date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
     })),
     byAd: ads
       .filter((ad) => !input.adId || ad.id === input.adId)
       .map((ad) => ({
         id: ad.id,
         name: ad.title,
-        ...marketingTotals(rows.filter((row) => row.adId === ad.id)),
+        ...(getPreviewData() ? unknown : marketingTotals(rows.filter((row) => row.adId === ad.id))),
       })),
     byCity: ANALYTICS_CITIES.filter((city) => !input.city || city === input.city).map((city) => ({
       id: city,
       name: city,
-      ...marketingTotals(rows.filter((row) => row.city === city)),
+      ...(getPreviewData() ? unknown : marketingTotals(rows.filter((row) => row.city === city))),
     })),
     byAdCity: ads
       .filter((ad) => !input.adId || ad.id === input.adId)

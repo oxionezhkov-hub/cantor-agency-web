@@ -1,7 +1,8 @@
 import { dialogExamples } from "./dialog-examples.ts";
+import { getPreviewData } from "./preview-data.ts";
 import { parseCrmState, type CrmState } from "./crm.ts";
 export const DEMO_WORKSPACE = "cantor-demo-anna";
-export const demoCrm: CrmState = parseCrmState({
+const exampleCrm: CrmState = parseCrmState({
   version: 1,
   workspaceId: DEMO_WORKSPACE,
   students: [
@@ -120,6 +121,15 @@ export const demoCrm: CrmState = parseCrmState({
   refunds: [],
   events: [],
 });
+
+const preview = getPreviewData();
+export const demoCrm: CrmState = preview ? parseCrmState({
+  version: 1, workspaceId: "cantor-elena-dobrynina",
+  students: preview.chats.map(c => ({ id: `student-${c.id}`, name: c.name || "Собеседник" })),
+  leads: preview.chats.map(c => ({ id: c.id, studentId: `student-${c.id}`, name: c.name || "Собеседник", adId: c.itemId || null, city: c.city || "", createdAt: new Date(c.messages?.[0]?.at || c.lastAt).toISOString(), mode: "manual" })),
+  messages: preview.chats.flatMap(c => (c.messages || []).map(m => ({ id: `${c.id}:${m.id}`, leadId: c.id, author: ["client", "manager", "system"].includes(m.author) ? m.author : "system", text: m.text || "", at: new Date(m.at).toISOString(), kind: ["text", "image", "voice", "file", "call", "video"].includes(m.type) ? m.type : "text", delivery: "provider" }))),
+  appointments: [], payments: [], refunds: [], events: [], followups: [], outcomes: [], feedback: [],
+}) : exampleCrm;
 
 // Additional interactive examples are seeded only into the isolated local workbench.
 export function withDialogExamples(state: CrmState): CrmState {

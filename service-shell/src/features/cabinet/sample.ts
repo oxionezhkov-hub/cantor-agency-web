@@ -1,4 +1,5 @@
 import type { BalanceInput, BlocksInput, SubscriptionInput } from "./rules.ts";
+import { getPreviewData } from "../service/preview-data.ts";
 
 export type CabinetSnapshot = {
   tutor: string;
@@ -8,7 +9,7 @@ export type CabinetSnapshot = {
   blocks: BlocksInput;
 };
 
-export const sampleCabinet: CabinetSnapshot = {
+const exampleCabinet: CabinetSnapshot = {
   tutor: "Анна Смирнова",
   subject: "Математика ОГЭ/ЕГЭ",
   subscription: {
@@ -35,3 +36,10 @@ export const sampleCabinet: CabinetSnapshot = {
     ],
   },
 };
+const preview = getPreviewData();
+export const sampleCabinet: CabinetSnapshot = preview ? {
+  tutor: preview.tutor, subject: preview.subject,
+  subscription: { planName: "", paidUntil: "", lastPaidAt: "", autoRenew: false },
+  balance: { advanceRub: NaN, yesterdayPromotionRub: preview.daily.at(-1)?.budget ?? NaN, autoTopUp: false, walletRealRub: NaN, walletBonusRub: NaN },
+  blocks: { cabinetBlocked: false, items: preview.ads.filter(a => ["blocked", "rejected", "removed"].includes(a.status)).map(a => ({ title: a.title, kind: a.status as "blocked" | "rejected" | "removed", foundAt: new Date(preview.catalogAt || Date.now()).toISOString() })) },
+} : exampleCabinet;

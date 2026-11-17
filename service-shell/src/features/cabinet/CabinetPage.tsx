@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { sampleCabinet, type CabinetSnapshot } from "./sample.ts";
 import { balanceRows, blockRows, subscriptionRows, type CabinetRow } from "./rules.ts";
+import { getPreviewData } from "../service/preview-data.ts";
 
 const TICK_MS = 15_000;
 
@@ -61,8 +62,8 @@ export function CabinetPage({
 
   return (
     <div>
-      {sheets.includes("subscription") ? <Sheet rows={subscriptionRows(snapshot.subscription, now)} /> : null}
-      {sheets.includes("balance") ? <Sheet rows={balanceRows(snapshot.balance)} /> : null}
+      {sheets.includes("subscription") ? <Sheet rows={getPreviewData() ? ["План", "Статус", "Оплачена до", "Осталось", "Автопродление", "Размещение"].map(label => ({ label, value: "—", detail: null, tone: "plain" as const })) : subscriptionRows(snapshot.subscription, now)} /> : null}
+      {sheets.includes("balance") ? <Sheet rows={getPreviewData() ? balanceRows(snapshot.balance).map(row => row.label === "Расход вчера" ? { ...row, detail: null } : { ...row, value: "—", detail: null, tone: "plain" }) : balanceRows(snapshot.balance)} /> : null}
       {sheets.includes("blocks") ? <Sheet rows={blockRows(snapshot.blocks, now.getTime())} /> : null}
     </div>
   );

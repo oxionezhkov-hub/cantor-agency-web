@@ -28,6 +28,7 @@ import { ads as samples } from "./data";
 import "./ads-workspace.css";
 import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
+import { getPreviewData, previewTotals } from "./preview-data";
 
 type Listing = {
   id: string;
@@ -63,27 +64,28 @@ const initial: State = {
     title: a.title,
     text: a.text,
     city: a.cities[0]?.city ?? "Москва",
-    price: 2000,
-    status: i === 2 ? "draft" : "published",
+    price: getPreviewData() ? getPreviewData()!.ads.find(item => item.id === a.id)?.price ?? NaN : 2000,
+    status: getPreviewData() ? getPreviewData()!.ads.find(item => item.id === a.id)?.status === "active" ? "published" : "draft" : i === 2 ? "draft" : "published",
     source: "cantor",
     photos: [],
     views: a.views,
     contacts: a.contacts,
     spend: a.spendRub,
     bid: a.cities[0]?.bidRub ?? 20,
-    mode: "manual",
-    max: 80,
-    budget: 500,
-    target: 10,
-    query: "репетитор по математике",
-    start: "09:00",
-    end: "21:00",
+    mode: getPreviewData() ? "" : "manual",
+    max: getPreviewData() ? NaN : 80,
+    budget: getPreviewData() ? NaN : 500,
+    target: getPreviewData() ? NaN : 10,
+    query: getPreviewData() ? "репетитор по русскому языку" : "репетитор по математике",
+    start: getPreviewData() ? "" : "09:00",
+    end: getPreviewData() ? "" : "21:00",
   })),
   sheet: "",
   tab: "Авито_выгрузка",
   history: [],
 };
 function load(): State {
+  if (getPreviewData()) return initial;
   try {
     const s = JSON.parse(localStorage.getItem(KEY) ?? "null");
     return s?.items && Array.isArray(s.history) ? s : initial;
@@ -99,7 +101,7 @@ function download(name: string, text: string, type = "text/csv;charset=utf-8") {
   a.click();
   URL.revokeObjectURL(url);
 }
-const rub = (n: number) => `${n.toLocaleString("ru-RU")} ₽`;
+const rub = (n: number) => Number.isFinite(n) ? `${n.toLocaleString("ru-RU")} ₽` : "—";
 function cover(title: string, city: string) {
   const escape = (v: string) =>
     v
@@ -201,6 +203,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     };
   }, [editing]);
   function persist(next: State) {
+    if (getPreviewData()) { setNotice("Недостаточно прав для изменения"); return false; }
     try {
       localStorage.setItem(KEY, JSON.stringify(next));
       setState(next);
@@ -274,6 +277,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   );
   const sheetValid = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+/.test(sheet);
   function propose(kind: "title" | "text" | "photo") {
+    if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
     if (!edit) return;
     if (kind === "photo") {
       setPhotoCaption(edit.title || "Математика");
@@ -374,8 +378,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           ))}
         </div>
         <AdsHelp label="Как начать работу">
-          Создайте объявление или подключите таблицу, затем настройте продвижение. В превью правки
-          сохраняются в браузере; публикация, ИИ и автозагрузка ещё не подключены.
+          Создайте объявление или подключите таблицу, затем настройте продвижение.
         </AdsHelp>
       </div>
       {notice && (
@@ -391,9 +394,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           <div className="aw-summary">
             {[
               [state.items.filter((a) => a.status === "published").length, "в публикации"],
-              [total.views, "просмотров"],
-              [total.contacts, "контактов"],
-              [rub(total.spend), "расходы за ноябрь"],
+              [getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").views : total.views, "просмотров"],
+              [getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").contacts : total.contacts, "контактов"],
+              [rub(getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").budget : total.spend), "расходы за ноябрь"],
             ].map(([v, l]) => (
               <div key={l}>
                 <strong>{v}</strong>
@@ -638,11 +641,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       {tab === "bids" && (
         <>
           <div className="aw-bids-toolbar">
-            <span className="aw-status draft">Авито не подключено</span>
+            {getPreviewData() ? null : <span className="aw-status draft">Авито не подключено</span>}
             <AdsHelp label="Как работают ставки">
               Ставка — цена за просмотр. Выберите режим рядом с объявлением, нажмите ставку для её
-              изменения. В режиме по позиции нужны запрос, город и предел ставки. В превью настройки
-              сохраняются без отправки в Авито.
+              изменения. В режиме по позиции нужны запрос, город и предел ставки.
             </AdsHelp>
           </div>
           {selected.length > 0 && (
@@ -658,6 +660,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </Field>
               <button
                 onClick={() => {
+                  if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
                   if (bulkBid < 0 || !Number.isFinite(bulkBid))
                     return setNotice("Укажите ставку от 0 ₽.");
                   commit(
@@ -848,7 +851,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.price}
+                            value={Number.isFinite(edit.price) ? edit.price : ""}
                             onChange={(e) => setEdit({ ...edit, price: Number(e.target.value) })}
                           />
                         </Field>
@@ -865,7 +868,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           id="aw-title"
                           className="aw-input"
                           value={edit.title}
-                          placeholder="Например, подготовка к ЕГЭ по математике"
+                          placeholder="Например, подготовка к ЕГЭ"
                           maxLength={100}
                           onChange={(e) => setEdit({ ...edit, title: e.target.value })}
                         />
@@ -901,8 +904,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           />
                         </Field>
                         <AdsHelp label="Об источнике управления">
-                          Выберите, где редактировать объявление. Запись правок в Google Таблицу
-                          пока не подключена.
+                          Выберите, где редактировать объявление.
                         </AdsHelp>
                       </div>
                       {state.items.some((a) => a.id === edit.id) && (
@@ -934,8 +936,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           Создать с ИИ
                         </button>
                         <AdsHelp label="О фотографиях">
-                          Первое изображение — обложка. Меняйте порядок стрелками. Генерация ИИ пока
-                          не подключена: можно согласовать пример обложки и изменить надпись.
+                          Первое изображение — обложка. Меняйте порядок стрелками.
                         </AdsHelp>
                       </div>
                       {candidate?.kind === "photo" && suggestion}
@@ -1053,7 +1054,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.bid}
+                            value={Number.isFinite(edit.bid) ? edit.bid : ""}
                             onChange={(e) => setEdit({ ...edit, bid: Number(e.target.value) })}
                           />
                         </Field>
@@ -1061,7 +1062,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.max}
+                            value={Number.isFinite(edit.max) ? edit.max : ""}
                             onChange={(e) => setEdit({ ...edit, max: Number(e.target.value) })}
                           />
                         </Field>
@@ -1069,7 +1070,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           <input
                             type="number"
                             min="0"
-                            value={edit.budget}
+                            value={Number.isFinite(edit.budget) ? edit.budget : ""}
                             onChange={(e) => setEdit({ ...edit, budget: Number(e.target.value) })}
                           />
                         </Field>
@@ -1078,7 +1079,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                             <input
                               type="number"
                               min="1"
-                              value={edit.target}
+                              value={Number.isFinite(edit.target) ? edit.target : ""}
                               onChange={(e) => setEdit({ ...edit, target: Number(e.target.value) })}
                             />
                           </Field>
@@ -1159,7 +1160,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   Предпросмотр
                 </button>
                 <AdsHelp label="О сохранении">
-                  Изменения сохраняются в этом браузере. Публикация в Авито пока не подключена.
+                  Проверьте заголовок, текст и фотографии перед сохранением.
                 </AdsHelp>
                 <button className="aw-btn" onClick={() => setEdit(null)}>
                   Отмена

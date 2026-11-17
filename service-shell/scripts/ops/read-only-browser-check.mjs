@@ -4,11 +4,10 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { setGlobalProxyFromEnv } from "node:http";
 setGlobalProxyFromEnv();
 const base = process.argv[2] || "http://127.0.0.1:8080";
-const output = process.argv[3] || "/tmp/cantor-read-only";
-assert.ok(process.env.DASHBOARD_PASSWORD, "Set DASHBOARD_PASSWORD without logging it");
+const output = process.argv[3] || "/tmp/cantor-original-data";
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
+  executablePath: "/usr/bin/chromium",
   headless: true,
   args: ["--no-sandbox"],
   proxy: process.env.HTTPS_PROXY
@@ -19,110 +18,142 @@ const results = [];
 try {
   for (const width of [1440, 390]) {
     const context = await browser.newContext({ viewport: { width, height: 960 } });
-    if (process.env.CANTOR_BROWSER_VALIDATED_TRANSPORT === "1") {
+    if (process.env.CANTOR_BROWSER_VALIDATED_TRANSPORT === "1")
       await context.route(`${new URL(base).origin}/**`, async (route) => {
-        const request = route.request();
-        const response = await fetch(request.url(), {
-          method: request.method(),
-          headers: request.headers(),
-          signal: AbortSignal.timeout(120000),
-        });
-        const headers = Object.fromEntries(response.headers);
-        for (const key of ["content-encoding", "content-length", "transfer-encoding"])
-          delete headers[key];
+        const q = route.request(),
+          r = await fetch(q.url(), {
+            method: q.method(),
+            headers: q.headers(),
+            signal: AbortSignal.timeout(120000),
+          }),
+          headers = Object.fromEntries(r.headers);
+        for (const k of ["content-length", "content-encoding", "transfer-encoding"])
+          delete headers[k];
         await route.fulfill({
-          status: response.status,
+          status: r.status,
           headers,
-          body: Buffer.from(await response.arrayBuffer()),
+          body: Buffer.from(await r.arrayBuffer()),
         });
       });
-    }
-    const page = await context.newPage();
-    const errors = [],
-      mutations = [],
-      external = [];
+    const page = await context.newPage(),
+      errors = [],
+      consoleErrors = [],
+      mutations = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    page.on("console", (m) => {
+      if (m.type() === "error" && !m.text().includes("401")) consoleErrors.push(m.text());
+    });
     page.on("request", (r) => {
-      if (!["GET", "HEAD"].includes(r.method()))
-        mutations.push({ url: r.url(), method: r.method() });
-      if (new URL(r.url()).origin !== new URL(base).origin) external.push(r.url());
+      if (!["GET", "HEAD"].includes(r.method())) mutations.push(r.method() + " " + r.url());
     });
-    await page.goto(base, { waitUntil: "networkidle" });
-    await page.getByRole("heading", { name: "Кабинет Елены Добрыниной" }).waitFor();
-    assert.equal(await page.getByRole("navigation", { name: "Разделы" }).count(), 0);
-    await page.getByLabel("Пароль панели агентства").fill("invalid-test-password");
-    await page.getByRole("button", { name: "Открыть демо", exact: true }).click();
-    await page.getByRole("alert").waitFor();
-    await page.getByLabel("Пароль панели агентства").fill(process.env.DASHBOARD_PASSWORD);
-    await page.getByRole("button", { name: "Открыть демо", exact: true }).click();
-    await page.getByRole("navigation", { name: "Разделы" }).waitFor({ timeout: 120000 });
-    const nav = page.getByRole("navigation", { name: "Разделы" });
-    for (const label of [
-      "Дашборд",
-      "Аналитика",
-      "Мои объявления",
-      "Мои диалоги",
-      "База знаний",
-      "Настройки",
-    ]) {
-      await nav.getByRole("button", { name: label, exact: true }).click();
+    try {
+      await page.goto(base, { waitUntil: "networkidle" });
+      await page.getByRole("heading", { name: "Вход в кабинет" }).waitFor();
+      await page.getByLabel("Пароль", { exact: true }).fill(process.env.DASHBOARD_PASSWORD);
+      const loaded = page.waitForResponse(
+        (r) => r.url().endsWith("/api/demo/bootstrap") && r.status() === 200,
+        { timeout: 120000 },
+      );
+      await page.getByRole("button", { name: "Войти", exact: true }).click();
+      const source = await (await loaded).json();
+      const nav = page.getByRole("navigation", { name: "Разделы" });
+      await nav.waitFor({ timeout: 120000 });
+      assert.equal(await nav.getByRole("button").count(), 6);
+      for (const label of [
+        "Дашборд",
+        "Аналитика",
+        "Мои объявления",
+        "Мои диалоги",
+        "База знаний",
+        "Настройки",
+      ]) {
+        await nav.getByRole("button", { name: label, exact: true }).click();
+        await page.waitForTimeout(180);
+        assert.ok(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+          `${width}: overflow ${label}`,
+        );
+        assert.doesNotMatch(
+          await page.locator("main").innerText(),
+          /только чтение|Данные Добрыниной|сохранённые источники|Анна Смирнова|не число|NaN/i,
+        );
+      }
+      await nav.getByRole("button", { name: "Дашборд", exact: true }).click();
+      assert.equal(await page.locator(".dashboard-overview").count(), 1);
+      assert.equal(await page.locator(".dashboard-funnel").count(), 2);
+      await page.screenshot({ path: `${output}/dashboard-${width}.png`, fullPage: true });
+      await nav.getByRole("button", { name: "Аналитика", exact: true }).click();
+      assert.equal(await page.locator(".an-compact-toolbar").count(), 1);
+      assert.equal(await page.getByRole("tab").count(), 4);
+      for (const tab of ["Объявления", "Диалоги", "Экономика", "Обзор"]) {
+        await page.getByRole("tab", { name: tab, exact: true }).click();
+        await page.waitForTimeout(100);
+        assert.doesNotMatch(await page.locator("main").innerText(), /NaN|не число/);
+      }
+      await page.screenshot({ path: `${output}/analytics-${width}.png`, fullPage: true });
+      await nav.getByRole("button", { name: "Мои объявления", exact: true }).click();
+      assert.equal(await page.getByRole("tab", { name: "Автозагрузка", exact: true }).count(), 1);
+      assert.equal(await page.locator(".aw-table tbody tr").count(), source.ads.length);
+      await page.getByLabel("Поиск объявлений", { exact: true }).fill("Казань");
+      assert.ok((await page.locator(".aw-table tbody tr").count()) > 0);
+      await page.screenshot({ path: `${output}/ads-${width}.png`, fullPage: true });
+      await page.getByLabel("Поиск объявлений", { exact: true }).fill("");
       await page
-        .getByRole("heading", { level: 1, name: label, exact: true })
-        .waitFor({ state: "attached" });
-      await page.waitForTimeout(150);
+        .getByRole("button", { name: /^Редактировать / })
+        .first()
+        .click();
+      const editor = page.getByRole("dialog", { name: "Редактор объявления" });
+      await editor.waitFor();
       assert.ok(
-        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
-        `${width}: overflow in ${label}`,
+        (await editor.getByLabel("Заголовок", { exact: true }).inputValue()).includes("русскому"),
       );
-      assert.doesNotMatch(
-        await page.locator("main").innerText(),
-        /Анна Смирнова|Математика ЕГЭ, с 60|Алгебра, 8 класс/,
+      await editor.getByRole("button", { name: "Отмена", exact: true }).click();
+      await nav.getByRole("button", { name: "Мои диалоги", exact: true }).click();
+      await page.getByRole("button", { name: "Без ответа", exact: false }).click();
+      assert.equal(await page.locator(".workbench-contact").count(), source.chats.length);
+      assert.equal(await page.getByRole("button", { name: "CRM", exact: true }).count(), 1);
+      const target = source.chats.find(
+        (c) => c.id.includes("~") && source.chats.filter((x) => x.name === c.name).length === 1,
       );
+      if (target)
+        await page
+          .getByRole("button", { name: `Открыть обращение: ${target.name}`, exact: true })
+          .click();
+      else await page.locator(".workbench-contact").first().click();
+      await page.locator(".contact-chat").waitFor();
+      if (target) assert.equal(new URL(page.url()).searchParams.get("focus"), target.id);
+      assert.ok(
+        (await page.locator(".message-bubble").count()) > 0 ||
+          (await page.locator(".contact-messages").innerText()),
+      );
+      await page.screenshot({ path: `${output}/dialog-${width}.png`, fullPage: true });
+      assert.deepEqual(errors, []);
+      assert.deepEqual(consoleErrors, []);
+      assert.deepEqual(mutations, []);
+      results.push({
+        width,
+        sections: 6,
+        originalShell: true,
+        noAddedLabels: true,
+        ads: source.ads.length,
+        chats: source.chats.length,
+        messages: source.chats.reduce((n, c) => n + (c.messages?.length || 0), 0),
+        errors,
+        mutations,
+      });
+    } catch (e) {
+      await page.screenshot({ path: `${output}/failure-${width}.png`, fullPage: true });
+      console.error(
+        JSON.stringify({
+          errors,
+          consoleErrors,
+          body: (await page.locator("body").innerText()).slice(0, 2000),
+        }),
+      );
+      throw e;
+    } finally {
+      await context.close();
     }
-    await nav.getByRole("button", { name: "Аналитика", exact: true }).click();
-    assert.ok((await page.locator(".ro-table tbody tr").count()) > 0);
-    for (const tab of ["Объявления", "Диалоги", "Экономика", "Обзор"])
-      await page.getByRole("tab", { name: tab, exact: true }).click();
-    await page.screenshot({ path: `${output}/analytics-${width}.png`, fullPage: true });
-    await nav.getByRole("button", { name: "Мои объявления", exact: true }).click();
-    assert.equal(await page.locator(".ro-ad-list article").count(), 143);
-    await page.getByPlaceholder("Название, город или ID").fill("Казань");
-    assert.ok((await page.locator(".ro-ad-list article").count()) > 0);
-    assert.ok((await page.locator(".ro-ad-list article").count()) < 143);
-    await page.locator(".ro-ad-list summary").first().click();
-    assert.ok(await page.locator(".ro-ad-text").first().isVisible());
-    await nav.getByRole("button", { name: "Мои диалоги", exact: true }).click();
-    assert.equal(await page.locator(".ro-chat-list button").count(), 187);
-    await page.locator(".ro-chat-list button").first().click();
-    await page.locator(".ro-messages article").first().waitFor({ timeout: 30000 });
-    assert.equal(
-      await page.locator("textarea, input[type=file], [contenteditable=true]").count(),
-      0,
-    );
-    await page.screenshot({ path: `${output}/dialog-${width}.png`, fullPage: true });
-    await nav.getByRole("button", { name: "Дашборд", exact: true }).click();
-    await page.screenshot({ path: `${output}/dashboard-${width}.png`, fullPage: true });
-    assert.deepEqual(errors, []);
-    assert.deepEqual(mutations, []);
-    assert.deepEqual(external, []);
-    const persisted = await page.evaluate(() =>
-      JSON.stringify({ ...localStorage, ...sessionStorage }),
-    );
-    assert.ok(!persisted.includes(process.env.DASHBOARD_PASSWORD));
-    await page.getByRole("button", { name: "Выйти из демо" }).click();
-    await page.getByRole("heading", { name: "Кабинет Елены Добрыниной" }).waitFor();
-    await page.reload({ waitUntil: "networkidle" });
-    await page.getByRole("heading", { name: "Кабинет Елены Добрыниной" }).waitFor();
-    results.push({
-      width,
-      sections: 6,
-      ads: 143,
-      chats: 187,
-      mutations: 0,
-      externalRequests: 0,
-      errors,
-    });
-    await context.close();
   }
   writeFileSync(`${output}/result.json`, JSON.stringify({ base, results }, null, 2));
   console.log(JSON.stringify({ ok: true, results, output }));

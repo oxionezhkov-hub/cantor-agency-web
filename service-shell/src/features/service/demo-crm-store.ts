@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { demoCrm, withDialogExamples } from "./crm-demo.ts";
 import { parseCrmState, recordPayment, bookAppointment, type CrmState } from "./crm.ts";
 import { windows } from "./data.ts";
+import { getPreviewData } from "./preview-data.ts";
 export const CRM_KEY = "cantor.demo-crm.v1";
 export const CRM_EVENT = "cantor-crm-changed";
 export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: string): CrmState {
@@ -47,6 +48,7 @@ export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: str
   return state;
 }
 export function readDemoCrm(): CrmState {
+  if (getPreviewData()) return demoCrm;
   if (typeof localStorage === "undefined") return demoCrm;
   const current = localStorage.getItem(CRM_KEY);
   if (current) {
@@ -70,6 +72,7 @@ export function readDemoCrm(): CrmState {
   return state;
 }
 export function changeDemoCrm(change: (state: CrmState) => CrmState): CrmState {
+  if (getPreviewData()) throw new Error("Недостаточно прав для изменения");
   const current = readDemoCrm();
   const next = parseCrmState(change(current));
   localStorage.setItem(CRM_KEY, JSON.stringify(next));

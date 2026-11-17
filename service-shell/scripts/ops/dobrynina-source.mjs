@@ -64,6 +64,34 @@ export async function readDobrynina(env, chatId = null) {
         })),
     );
   }
+  const chats = [];
+  const indexed = Object.values(index.chats);
+  for (let i = 0; i < indexed.length; i += 20) {
+    const batch = await Promise.all(
+      indexed.slice(i, i + 20).map(async (c) => {
+        const stored = await env.DEMO_AVITO.get(`aisales:chat:${ACCOUNT}:${c.chatId}`, "json");
+        return {
+          id: c.chatId,
+          name: c.name,
+          itemId: c.itemId,
+          itemTitle: c.itemTitle,
+          city: c.itemCity,
+          lastAt: c.lastAt,
+          lastText: c.lastText,
+          lastAuthor: c.lastAuthor,
+          messageCount: c.msgCount,
+          messages: (stored?.messages || []).map((m) => ({
+            id: m.id,
+            at: m.at,
+            author: m.author,
+            type: m.type,
+            text: m.text,
+          })),
+        };
+      }),
+    );
+    chats.push(...batch);
+  }
   return {
     mode: "read-only",
     tutor: "Елена Добрынина",
@@ -81,18 +109,6 @@ export async function readDobrynina(env, chatId = null) {
       description: content.get(String(a.id)) || null,
     })),
     daily: daily.sort((a, b) => a.date.localeCompare(b.date)),
-    chats: Object.values(index.chats)
-      .map((c) => ({
-        id: c.chatId,
-        name: c.name,
-        itemId: c.itemId,
-        itemTitle: c.itemTitle,
-        city: c.itemCity,
-        lastAt: c.lastAt,
-        lastText: c.lastText,
-        lastAuthor: c.lastAuthor,
-        messageCount: c.msgCount,
-      }))
-      .sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0)),
+    chats: chats.sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0)),
   };
 }
