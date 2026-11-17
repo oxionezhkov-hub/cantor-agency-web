@@ -123,13 +123,48 @@ const exampleCrm: CrmState = parseCrmState({
 });
 
 const preview = getPreviewData();
-export const demoCrm: CrmState = preview ? parseCrmState({
-  version: 1, workspaceId: "cantor-elena-dobrynina",
-  students: preview.chats.map(c => ({ id: `student-${c.id}`, name: c.name || "Собеседник" })),
-  leads: preview.chats.map(c => ({ id: c.id, studentId: `student-${c.id}`, name: c.name || "Собеседник", adId: c.itemId || null, city: c.city || "", createdAt: new Date(c.messages?.[0]?.at || c.lastAt).toISOString(), mode: "manual" })),
-  messages: preview.chats.flatMap(c => (c.messages || []).map(m => ({ id: `${c.id}:${m.id}`, leadId: c.id, author: ["client", "manager", "system"].includes(m.author) ? m.author : "system", text: m.text || "", at: new Date(m.at).toISOString(), kind: ["text", "image", "voice", "file", "call", "video"].includes(m.type) ? m.type : "text", delivery: "provider" }))),
-  appointments: [], payments: [], refunds: [], events: [], followups: [], outcomes: [], feedback: [],
-}) : exampleCrm;
+export const demoCrm: CrmState = preview
+  ? parseCrmState({
+      version: 1,
+      workspaceId: "cantor-elena-dobrynina",
+      students: preview.chats.map((c) => ({ id: `student-${c.id}`, name: c.name || "Собеседник" })),
+      leads: preview.chats.map((c) => ({
+        id: c.id,
+        studentId: `student-${c.id}`,
+        name: c.name || "Собеседник",
+        adId: c.itemId || null,
+        city: c.city || "",
+        avatarUrl: c.avatarUrl || undefined,
+        createdAt: new Date(c.messages?.[0]?.at || c.lastAt).toISOString(),
+        mode: "manual",
+        workflowStage: c.workflowStage,
+        ...(c.workflowStage === "closed"
+          ? { closedAt: new Date(c.lastAt).toISOString(), closeReason: c.reviewReason || "Закрыто" }
+          : {}),
+        ...(c.reviewReason && c.workflowStage !== "closed" ? { note: c.reviewReason } : {}),
+      })),
+      messages: preview.chats.flatMap((c) =>
+        (c.messages || []).map((m) => ({
+          id: `${c.id}:${m.id}`,
+          leadId: c.id,
+          author: ["client", "manager", "system"].includes(m.author) ? m.author : "system",
+          text: m.text || "",
+          at: new Date(m.at).toISOString(),
+          kind: ["text", "image", "voice", "file", "call", "video"].includes(m.type)
+            ? m.type
+            : "text",
+          delivery: "provider",
+        })),
+      ),
+      appointments: [],
+      payments: [],
+      refunds: [],
+      events: [],
+      followups: [],
+      outcomes: [],
+      feedback: [],
+    })
+  : exampleCrm;
 
 // Additional interactive examples are seeded only into the isolated local workbench.
 export function withDialogExamples(state: CrmState): CrmState {

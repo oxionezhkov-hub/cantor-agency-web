@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { setPreviewData } from "./preview-data";
 import type { SectionId } from "./sections";
 const Shell = lazy(() => import("./Shell").then((m) => ({ default: m.Shell })));
@@ -7,6 +7,17 @@ export function PreviewAccess({ section, focus }: { section: SectionId; focus?: 
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/demo/bootstrap", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) return;
+        setPreviewData(await response.json(), "");
+        setReady(true);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   async function login() {
     setLoading(true);
     setError("");

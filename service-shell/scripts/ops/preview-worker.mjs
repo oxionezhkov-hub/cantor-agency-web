@@ -1,18 +1,6 @@
 import { readDobrynina } from "./dobrynina-source.mjs";
+import { passwordAuthorized, imageSessionCookie, sessionAuthorized } from "./demo-session.mjs";
 // The demo source exposes only fixed-account KV reads. No external API or writes.
-async function authorized(request, expected) {
-  if (!expected) return false;
-  const password = request.headers.get("x-demo-password") || "";
-  if (!password || password.length > 1024) return false;
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password));
-  const actual = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join(
-    "",
-  );
-  if (expected.length !== actual.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < actual.length; i++) mismatch |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
-  return mismatch === 0;
-}
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -33,9 +21,13 @@ export default {
           { error: "read_only" },
           { status: 405, headers: { ...privateHeaders, allow: "GET" } },
         );
-      if (!(await authorized(request, env.DEMO_PASSWORD_SHA256)))
+      const imageRequest = path === "/api/demo/image";
+      if (
+        !(await passwordAuthorized(request, env.DEMO_PASSWORD_SHA256)) &&
+        !(await sessionAuthorized(request, env.DEMO_PASSWORD_SHA256))
+      )
         return Response.json({ error: "unauthorized" }, { status: 401, headers: privateHeaders });
-      if (!["/api/demo/bootstrap", "/api/demo/chat"].includes(path))
+      if (!["/api/demo/bootstrap", "/api/demo/chat", "/api/demo/image"].includes(path))
         return Response.json({ error: "not_found" }, { status: 404, headers: privateHeaders });
       if (path === "/api/demo/bootstrap" && url.search)
         return Response.json({ error: "invalid_query" }, { status: 400, headers: privateHeaders });
@@ -46,7 +38,47 @@ export default {
       )
         return Response.json({ error: "invalid_query" }, { status: 400, headers: privateHeaders });
       try {
+        if (imageRequest) {
+          if (
+            [...url.searchParams.keys()].some((k) => !["adId", "index"].includes(k)) ||
+            !/^\d+$/.test(url.searchParams.get("adId") || "") ||
+            !/^\d{1,2}$/.test(url.searchParams.get("index") || "")
+          )
+            return Response.json(
+              { error: "invalid_query" },
+              { status: 400, headers: privateHeaders },
+            );
+          const data = await readDobrynina(env);
+          const imageUrl = data.ads.find((a) => a.id === url.searchParams.get("adId"))?.photos?.[
+            Number(url.searchParams.get("index"))
+          ];
+          if (!imageUrl) return new Response(null, { status: 404, headers: privateHeaders });
+          const source = new URL(imageUrl);
+          if (
+            source.protocol !== "https:" ||
+            (![
+              "functions.yandexcloud.net",
+              "mainweb.oxion-ezhkov.workers.dev",
+              "storage.yandexcloud.net",
+              "static.avito.ru",
+            ].includes(source.hostname) &&
+              !source.hostname.endsWith(".avito.st"))
+          )
+            return new Response(null, { status: 404, headers: privateHeaders });
+          const response = await fetch(source.href, { method: "GET" });
+          if (!response.ok || !response.headers.get("content-type")?.startsWith("image/"))
+            return new Response(null, { status: 502, headers: privateHeaders });
+          return new Response(response.body, {
+            headers: {
+              ...privateHeaders,
+              "content-type": response.headers.get("content-type"),
+              "cache-control": "private, max-age=3600",
+            },
+          });
+        }
         const data = await readDobrynina(env, path === "/api/demo/chat" ? id : null);
+        if (path === "/api/demo/bootstrap")
+          privateHeaders["set-cookie"] = await imageSessionCookie(env.DEMO_PASSWORD_SHA256);
         return Response.json(data || { error: "not_found" }, {
           status: data ? 200 : 404,
           headers: privateHeaders,

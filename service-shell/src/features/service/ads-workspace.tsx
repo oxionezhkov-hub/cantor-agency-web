@@ -36,7 +36,7 @@ type Listing = {
   text: string;
   city: string;
   price: number;
-  status: "published" | "draft";
+  status: string;
   source: "cantor" | "sheet";
   photos: string[];
   views: number;
@@ -50,6 +50,12 @@ type Listing = {
   query: string;
   start: string;
   end: string;
+  attributes?: Record<string, string>;
+  bidding?: import("./preview-data.ts").PreviewAd["bidding"];
+  address?: string;
+  autoloadId?: string;
+  startsAt?: string;
+  finishesAt?: string;
 };
 type State = {
   items: Listing[];
@@ -64,24 +70,47 @@ const initial: State = {
     title: a.title,
     text: a.text,
     city: a.cities[0]?.city ?? "Москва",
-    price: getPreviewData() ? getPreviewData()!.ads.find(item => item.id === a.id)?.price ?? NaN : 2000,
-    status: getPreviewData() ? getPreviewData()!.ads.find(item => item.id === a.id)?.status === "active" ? "published" : "draft" : i === 2 ? "draft" : "published",
-    source: "cantor",
-    photos: [],
+    price: getPreviewData()
+      ? (getPreviewData()!.ads.find((item) => item.id === a.id)?.price ?? NaN)
+      : 2000,
+    status: getPreviewData()
+      ? {
+          active: "published",
+          old: "archived",
+          blocked: "blocked",
+          rejected: "rejected",
+          removed: "removed",
+        }[getPreviewData()!.ads.find((item) => item.id === a.id)?.status || ""] || "draft"
+      : i === 2
+        ? "draft"
+        : "published",
+    source: a.source || "cantor",
+    photos: getPreviewData()
+      ? getPreviewData()!
+          .ads.find((item) => item.id === a.id)
+          ?.photos?.map((_, p) => `/api/demo/image?adId=${encodeURIComponent(a.id)}&index=${p}`) ||
+        []
+      : [],
     views: a.views,
     contacts: a.contacts,
     spend: a.spendRub,
-    bid: a.cities[0]?.bidRub ?? 20,
-    mode: getPreviewData() ? "" : "manual",
-    max: getPreviewData() ? NaN : 80,
-    budget: getPreviewData() ? NaN : 500,
+    bid: a.bidding?.currentRub ?? a.cities[0]?.bidRub ?? 20,
+    mode: getPreviewData() ? a.bidding?.mode || "" : "manual",
+    max: getPreviewData() ? (a.bidding?.maxRub ?? NaN) : 80,
+    budget: getPreviewData() ? (a.bidding?.dailyBudgetRub ?? NaN) : 500,
     target: getPreviewData() ? NaN : 10,
     query: getPreviewData() ? "репетитор по русскому языку" : "репетитор по математике",
     start: getPreviewData() ? "" : "09:00",
     end: getPreviewData() ? "" : "21:00",
+    attributes: getPreviewData()?.ads.find((item) => item.id === a.id)?.attributes || {},
+    bidding: a.bidding,
+    address: a.address,
+    autoloadId: a.autoloadId,
+    startsAt: a.startsAt,
+    finishesAt: a.finishesAt,
   })),
-  sheet: "",
-  tab: "Авито_выгрузка",
+  sheet: getPreviewData()?.feed?.sheetUrl || "",
+  tab: getPreviewData()?.feed?.tabs?.[0] || "Авито_выгрузка",
   history: [],
 };
 function load(): State {
@@ -101,7 +130,7 @@ function download(name: string, text: string, type = "text/csv;charset=utf-8") {
   a.click();
   URL.revokeObjectURL(url);
 }
-const rub = (n: number) => Number.isFinite(n) ? `${n.toLocaleString("ru-RU")} ₽` : "—";
+const rub = (n: number) => (Number.isFinite(n) ? `${n.toLocaleString("ru-RU")} ₽` : "—");
 function cover(title: string, city: string) {
   const escape = (v: string) =>
     v
@@ -203,7 +232,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     };
   }, [editing]);
   function persist(next: State) {
-    if (getPreviewData()) { setNotice("Недостаточно прав для изменения"); return false; }
+    if (getPreviewData()) {
+      setNotice("Недостаточно прав для изменения");
+      return false;
+    }
     try {
       localStorage.setItem(KEY, JSON.stringify(next));
       setState(next);
@@ -394,9 +426,22 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           <div className="aw-summary">
             {[
               [state.items.filter((a) => a.status === "published").length, "в публикации"],
-              [getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").views : total.views, "просмотров"],
-              [getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").contacts : total.contacts, "контактов"],
-              [rub(getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").budget : total.spend), "расходы за ноябрь"],
+              [
+                getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").views : total.views,
+                "просмотров",
+              ],
+              [
+                getPreviewData()
+                  ? previewTotals("2026-11-01", "2026-11-30").contacts
+                  : total.contacts,
+                "контактов",
+              ],
+              [
+                rub(
+                  getPreviewData() ? previewTotals("2026-11-01", "2026-11-30").budget : total.spend,
+                ),
+                "расходы за ноябрь",
+              ],
             ].map(([v, l]) => (
               <div key={l}>
                 <strong>{v}</strong>
@@ -421,13 +466,23 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               options={[
                 { value: "all", label: "Все статусы" },
                 { value: "published", label: "В публикации" },
+                ...(getPreviewData()
+                  ? [
+                      { value: "archived", label: "Архив" },
+                      { value: "blocked", label: "Заблокировано" },
+                      { value: "rejected", label: "Отклонено" },
+                      { value: "removed", label: "Снято" },
+                    ]
+                  : []),
                 { value: "draft", label: "Черновики" },
               ]}
             />
-            <button className="aw-btn aw-primary" onClick={create}>
-              <Plus size={17} />
-              Создать объявление
-            </button>
+            {!getPreviewData() && (
+              <button className="aw-btn aw-primary" onClick={create}>
+                <Plus size={17} />
+                Создать объявление
+              </button>
+            )}
           </div>
           {selected.length > 0 && (
             <div className="aw-bulk">
@@ -515,14 +570,23 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       </button>
                     </td>
                     <td>
-                      <span className={`aw-status ${a.status === "draft" ? "draft" : ""}`}>
+                      <span className={`aw-status ${a.status !== "published" ? "draft" : ""}`}>
                         <i />
-                        {a.status === "draft" ? "Черновик" : "В публикации"}
+                        {{
+                          published: "В публикации",
+                          draft: "Черновик",
+                          archived: "Архив",
+                          blocked: "Заблокировано",
+                          rejected: "Отклонено",
+                          removed: "Снято",
+                        }[a.status] || a.status}
                       </span>
                     </td>
-                    <td>{a.views || "—"}</td>
-                    <td>{a.contacts || "—"}</td>
-                    <td>{a.spend ? rub(a.spend) : "—"}</td>
+                    <td>{Number.isFinite(a.views) ? a.views.toLocaleString("ru-RU") : "—"}</td>
+                    <td>
+                      {Number.isFinite(a.contacts) ? a.contacts.toLocaleString("ru-RU") : "—"}
+                    </td>
+                    <td>{Number.isFinite(a.spend) ? rub(a.spend) : "—"}</td>
                     <td>
                       <button
                         className="aw-icon"
@@ -560,15 +624,21 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 <input
                   placeholder="https://docs.google.com/spreadsheets/d/…"
                   value={sheet}
+                  readOnly={Boolean(getPreviewData())}
                   onChange={(e) => setSheet(e.target.value)}
                 />
               </Field>
               <Field label="Вкладка с объявлениями">
-                <input value={sheetTab} onChange={(e) => setSheetTab(e.target.value)} />
+                <input
+                  value={sheetTab}
+                  readOnly={Boolean(getPreviewData())}
+                  onChange={(e) => setSheetTab(e.target.value)}
+                />
               </Field>
               <div className="aw-feed-actions">
                 <button
                   className="aw-btn aw-primary"
+                  disabled={Boolean(getPreviewData())}
                   onClick={() => {
                     if (!sheetValid || !sheetTab.trim())
                       return setNotice(
@@ -597,6 +667,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 </button>
                 <button
                   className="aw-text-button"
+                  disabled={Boolean(getPreviewData())}
                   onClick={() =>
                     download(
                       "cantor-avito-template.csv",
@@ -616,25 +687,42 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 <div className="aw-panel-heading">
                   <span className="aw-eyebrow">02 · ПРОВЕРКА</span>
                   <AdsHelp label="О проверке таблицы">
-                    Проверяем доступ, обязательные поля, постоянные Id и ссылки на фотографии. Перед
-                    заменой существующего фида сравниваем изменения. Чтение таблицы пока не
-                    подключено.
+                    Таблица содержит объявления и фотографии.
                   </AdsHelp>
                 </div>
                 <div className="aw-pending">
-                  <span className="aw-pending-dot" />
-                  Ожидает подключения интеграции
+                  {getPreviewData()?.feed?.adCount ?? 0} объявлений ·{" "}
+                  {getPreviewData()?.feed?.report?.published ?? 0} опубликовано ·{" "}
+                  {getPreviewData()?.feed?.report?.errors ?? 0} ошибок
                 </div>
               </div>
               <div className="aw-panel">
                 <div className="aw-panel-heading">
                   <span className="aw-eyebrow">03 · АВТОЗАГРУЗКА</span>
                   <AdsHelp label="Как подключить XML">
-                    После успешной проверки здесь появится персональная XML-ссылка. Её нужно указать
-                    в настройках автозагрузки Авито, затем выбрать расписание и проверить отчёт.
+                    XML-ссылка и расписание автозагрузки.
                   </AdsHelp>
                 </div>
-                <div className="aw-placeholder">XML ещё не сформирован</div>
+                <div className="aw-placeholder">
+                  <a
+                    href={getPreviewData()?.feed?.xmlUrl || undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {getPreviewData()?.feed?.xmlUrl || "XML"}
+                  </a>
+                  <p>
+                    {getPreviewData()?.feed?.schedule || ""}
+                    {getPreviewData()?.feed?.builtAt
+                      ? ` · Обновлено ${new Date(getPreviewData()!.feed!.builtAt!).toLocaleString("ru-RU")}`
+                      : ""}
+                  </p>
+                  {getPreviewData()?.feed?.problems?.map((problem, i) => (
+                    <p key={`${problem.row}-${i}`}>
+                      Строка {problem.row}: {problem.msg}
+                    </p>
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -734,6 +822,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       >
                         {rub(a.bid)}
                       </button>
+                      {getPreviewData() && a.bidding?.scale?.length ? (
+                        <small className="aw-muted">
+                          {a.bidding.scale.find((x) => x.rub === a.bid)?.compare ?? 0}% к
+                          конкурентам
+                        </small>
+                      ) : null}
                     </td>
                     <td>{rub(a.budget)}</td>
                     <td>
@@ -909,6 +1003,48 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           Выберите, где редактировать объявление.
                         </AdsHelp>
                       </div>
+                      {getPreviewData() &&
+                        ((edit.attributes && Object.keys(edit.attributes).length > 0) ||
+                          edit.address ||
+                          edit.autoloadId ||
+                          edit.startsAt ||
+                          edit.finishesAt) && (
+                          <details className="aw-editor-meta">
+                            <summary>Параметры объявления</summary>
+                            <dl>
+                              {edit.address ? (
+                                <div>
+                                  <dt>Адрес</dt>
+                                  <dd>{edit.address}</dd>
+                                </div>
+                              ) : null}
+                              {edit.autoloadId ? (
+                                <div>
+                                  <dt>Id автозагрузки</dt>
+                                  <dd>{edit.autoloadId}</dd>
+                                </div>
+                              ) : null}
+                              {edit.startsAt ? (
+                                <div>
+                                  <dt>Дата публикации</dt>
+                                  <dd>{edit.startsAt}</dd>
+                                </div>
+                              ) : null}
+                              {edit.finishesAt ? (
+                                <div>
+                                  <dt>Дата окончания</dt>
+                                  <dd>{edit.finishesAt}</dd>
+                                </div>
+                              ) : null}
+                              {Object.entries(edit.attributes || {}).map(([key, value]) => (
+                                <div key={key}>
+                                  <dt>{key}</dt>
+                                  <dd>{value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        )}
                       {state.items.some((a) => a.id === edit.id) && (
                         <button
                           className="aw-text-button"
@@ -1087,6 +1223,37 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           </Field>
                         )}
                       </div>
+                      {getPreviewData() &&
+                      getPreviewData()!.ads.find((item) => item.id === edit.id)?.bidding?.scale
+                        ?.length ? (
+                        <details>
+                          <summary>Шкала ставок</summary>
+                          <div className="aw-table-wrap">
+                            <table className="aw-table">
+                              <thead>
+                                <tr>
+                                  <th>Ставка</th>
+                                  <th>Сравнение с конкурентами</th>
+                                  <th>Прогноз минимум</th>
+                                  <th>Прогноз максимум</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {getPreviewData()!
+                                  .ads.find((item) => item.id === edit.id)!
+                                  .bidding!.scale.map((row, index) => (
+                                    <tr key={index}>
+                                      <td>{rub(row.rub)}</td>
+                                      <td>{row.compare}%</td>
+                                      <td>{row.minForecast}</td>
+                                      <td>{row.maxForecast}</td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
+                      ) : null}
                       {edit.mode === "position" && (
                         <>
                           <Field label="Поисковый запрос">

@@ -47,7 +47,9 @@ export function ShowsSection() {
             <tr key={`${ad.id}-${city.city}`} className="border-b border-line">
               <th scope="row" className="py-3 pr-3 text-left font-medium">
                 {ad.title}
-                <span className={`mt-0.5 block text-sm font-normal ${ad.autobidder ? "text-red" : "text-muted"}`}>
+                <span
+                  className={`mt-0.5 block text-sm font-normal ${ad.autobidder ? "text-red" : "text-muted"}`}
+                >
                   {ad.autobidder ? "автобидер включён" : "автобидер выключен"}
                 </span>
               </th>
@@ -103,14 +105,32 @@ export { LeadWorkspace as DialogsSection } from "./lead-workspace.tsx";
 
 export { DiagnosticSection, PaymentsSection } from "./crm-ui.tsx";
 
-const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+const MONTHS = [
+  "январь",
+  "февраль",
+  "март",
+  "апрель",
+  "май",
+  "июнь",
+  "июль",
+  "август",
+  "сентябрь",
+  "октябрь",
+  "ноябрь",
+  "декабрь",
+];
 const DATA_YEAR = 2026;
 const DATA_MONTH = 10;
 
 function countLabel(count: number, one: string, few: string, many: string): string {
   const mod10 = count % 10;
   const mod100 = count % 100;
-  const word = mod10 === 1 && mod100 !== 11 ? one : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? few : many;
+  const word =
+    mod10 === 1 && mod100 !== 11
+      ? one
+      : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)
+        ? few
+        : many;
   return `${count} ${word}`;
 }
 
@@ -139,7 +159,12 @@ type Sag = "bad" | "warn" | null;
 
 function Mark({ tone }: { tone: Sag }) {
   if (!tone) return null;
-  return <TriangleAlert className={`h-4 w-4 shrink-0 ${tone === "bad" ? "text-red" : "text-warn"}`} aria-label={tone === "bad" ? "сильно ниже" : "проседает"} />;
+  return (
+    <TriangleAlert
+      className={`h-4 w-4 shrink-0 ${tone === "bad" ? "text-red" : "text-warn"}`}
+      aria-label={tone === "bad" ? "сильно ниже" : "проседает"}
+    />
+  );
 }
 
 export function DashboardSection() {
@@ -161,9 +186,21 @@ export function DashboardSection() {
   const preview = getPreviewData();
   const prefix = `${cursor.year}-${String(cursor.month + 1).padStart(2, "0")}`;
   const totals = preview ? previewTotals(`${prefix}-01`, `${prefix}-31`) : null;
-  const shows = preview ? NaN : isDataMonth ? ads.reduce((sum, ad) => sum + ad.shows, 0) : 0;
-  const views = totals ? totals.views : isDataMonth ? ads.reduce((sum, ad) => sum + ad.views, 0) : 0;
-  const contacts = totals ? totals.contacts : isDataMonth ? ads.reduce((sum, ad) => sum + ad.contacts, 0) : 0;
+  const shows = totals
+    ? totals.shows
+    : isDataMonth
+      ? ads.reduce((sum, ad) => sum + ad.shows, 0)
+      : 0;
+  const views = totals
+    ? totals.views
+    : isDataMonth
+      ? ads.reduce((sum, ad) => sum + ad.views, 0)
+      : 0;
+  const contacts = totals
+    ? totals.contacts
+    : isDataMonth
+      ? ads.reduce((sum, ad) => sum + ad.contacts, 0)
+      : 0;
   const spend = totals ? totals.budget : isDataMonth ? promotionSpend(ads) : 0;
   const crmMetrics = periodMetrics(crm, ...monthRangeMsk(cursor.year, cursor.month));
   const paidCount = totals ? totals.sales : crmMetrics.newStudents;
@@ -171,7 +208,6 @@ export function DashboardSection() {
   const diagnosed = totals ? totals.diagnostics : crmMetrics.completedAppointments;
   const viewRate = contactRate(shows, views);
   const wroteRate = contactRate(views, contacts);
-
 
   const steps: { label: string; value: number; conversion: string; cost: string; tone: Sag }[] = [
     { label: "показов", value: shows, conversion: "—", cost: rubPer(spend, shows), tone: null },
@@ -205,18 +241,22 @@ export function DashboardSection() {
     },
   ];
 
-  const contactAds = (isDataMonth ? ads : []).filter((ad) => ad.contacts > 0).sort((a, b) => (b.contacts / b.views) - (a.contacts / a.views));
+  const contactAds = (isDataMonth ? ads : [])
+    .filter((ad) => ad.contacts > 0)
+    .sort((a, b) => b.contacts / b.views - a.contacts / a.views);
   const leader = contactAds[0];
   const trailer = contactAds[contactAds.length - 1];
   const adCompare =
     leader && trailer && leader.id !== trailer.id
-      ? `${AD_NAME[leader.id]} даёт контакты чаще, чем ${AD_NAME[trailer.id]}`
+      ? `${AD_NAME[leader.id] ?? leader.title} даёт контакты чаще, чем ${AD_NAME[trailer.id] ?? trailer.title}`
       : null;
 
   const cityMap = new Map<string, { places: number[]; bids: number[] }>();
   if (isDataMonth) {
     for (const ad of ads) {
-      for (const city of ad.cities.filter(city => Number.isFinite(city.place) && Number.isFinite(city.bidRub))) {
+      for (const city of ad.cities.filter(
+        (city) => Number.isFinite(city.place) && Number.isFinite(city.bidRub),
+      )) {
         const row = cityMap.get(city.city) ?? { places: [], bids: [] };
         row.places.push(city.place);
         row.bids.push(city.bidRub);
@@ -233,11 +273,25 @@ export function DashboardSection() {
       bidMax: Math.max(...row.bids),
     }))
     .sort((a, b) => a.best - b.best);
-  const cityCompare = cities.length > 1 ? `${cities[0].name} в топе выше, чем ${cities[cities.length - 1].name}` : null;
+  const cityCompare =
+    cities.length > 1
+      ? `${cities[0].name} в топе выше, чем ${cities[cities.length - 1].name}`
+      : null;
 
   const blockedTitles = new Set(sampleCabinet.blocks.items.map((item) => item.title));
-  const recommendations: { id: string; title: string; text: string; section: "ads" | "stats" | "chats"; focus?: string; rank: number }[] = [];
-  const openDialogs = dialogs.filter(dialog => crm.leads.some(l => l.id === dialog.id) && leadProgress(crm, dialog.id, now).stage === "new");
+  const recommendations: {
+    id: string;
+    title: string;
+    text: string;
+    section: "ads" | "stats" | "chats";
+    focus?: string;
+    rank: number;
+  }[] = [];
+  const openDialogs = dialogs.filter(
+    (dialog) =>
+      crm.leads.some((l) => l.id === dialog.id) &&
+      leadProgress(crm, dialog.id, now).stage === "new",
+  );
   const late = openDialogs
     .filter((dialog) => replyLate(dialog.waitingSince, now))
     .sort((a, b) => Date.parse(a.waitingSince ?? "") - Date.parse(b.waitingSince ?? ""));
@@ -280,7 +334,9 @@ export function DashboardSection() {
         id: `photo-${ad.id}`,
         focus: ad.id,
         title: `У «${name}» ${PHOTO_TARGET - missing.length} фото из ${PHOTO_TARGET}`,
-        text: ad.offerHasDiagnostic ? "Доберите десятку, иначе показ слабый." : "Нет оффера с диагностикой. В показ такое лучше не ставить.",
+        text: ad.offerHasDiagnostic
+          ? "Доберите десятку, иначе показ слабый."
+          : "Нет оффера с диагностикой. В показ такое лучше не ставить.",
         section: "ads",
         rank: 5,
       });
@@ -296,7 +352,7 @@ export function DashboardSection() {
       rank: 3,
     });
   }
-  if (isDataMonth && !kirillPaid && !crm.leads.find(l => l.id === "kirill")?.closedAt) {
+  if (isDataMonth && !kirillPaid && !crm.leads.find((l) => l.id === "kirill")?.closedAt) {
     recommendations.push({
       id: "kirill",
       focus: "kirill",
@@ -312,14 +368,20 @@ export function DashboardSection() {
 
   function shift(delta: number) {
     const next = new Date(cursor.year, cursor.month + delta, 1);
-    if (next.getFullYear() * 12 + next.getMonth() > today.getFullYear() * 12 + today.getMonth()) return;
+    if (next.getFullYear() * 12 + next.getMonth() > today.getFullYear() * 12 + today.getMonth())
+      return;
     setCursor({ year: next.getFullYear(), month: next.getMonth() });
   }
 
   return (
     <div>
       <div className="flex items-center gap-1">
-        <button type="button" className="h-11 w-11 rounded-full text-xl" aria-label="Предыдущий месяц" onClick={() => shift(-1)}>
+        <button
+          type="button"
+          className="h-11 w-11 rounded-full text-xl"
+          aria-label="Предыдущий месяц"
+          onClick={() => shift(-1)}
+        >
           ‹
         </button>
         <span className="min-w-36 text-center font-medium">
@@ -337,26 +399,69 @@ export function DashboardSection() {
       </div>
 
       <div className="dashboard-overview">
-        <div><span>Поступления за период</span><strong data-testid="dashboard-revenue">{preview ? "—" : `${(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽`}</strong></div>
-        <div><span>Новых заявок в CRM</span><strong>{crmMetrics.newLeads}</strong></div>
-        <div><span>Встреч запланировано</span><strong>{preview ? "—" : crmMetrics.bookedAppointments}</strong></div>
-      </div>
-      {[{ title: "Продвижение на Авито", items: steps.slice(0, 3) }, { title: "Диагностики и ученики", items: steps.slice(3) }].map(group => <section key={group.title} className="dashboard-metric-group">
-        <div className="crm-heading"><h2>{group.title}</h2></div>
-        <div className="dashboard-funnel mt-3 flex gap-2 overflow-x-auto pb-1">
-          {group.items.map(step => <article key={step.label} className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-4 py-4">
-            <p className="flex items-center gap-2 text-sm text-muted">{step.label}<Mark tone={step.tone} /></p>
-            <p data-testid={step.label === "диагностик" ? "completed-diagnostics" : step.label === "новых учеников" ? "new-students" : undefined} className="mt-1 font-display text-3xl font-medium">{Number.isFinite(step.value) ? step.value.toLocaleString("ru-RU") : "—"}</p>
-            <p className={`mt-3 text-sm ${step.tone === "bad" ? "text-red" : "text-muted"}`}>{step.conversion}</p>
-            <p className="text-sm text-muted">{step.cost} · расходы на этап</p>
-          </article>)}
+        <div>
+          <span>Поступления за период</span>
+          <strong data-testid="dashboard-revenue">
+            {preview ? "—" : `${(crmMetrics.netReceivedMinor / 100).toLocaleString("ru-RU")} ₽`}
+          </strong>
         </div>
-      </section>)}
+        <div>
+          <span>Новых заявок в CRM</span>
+          <strong>{crmMetrics.newLeads}</strong>
+        </div>
+        <div>
+          <span>Встреч запланировано</span>
+          <strong>{preview ? "—" : crmMetrics.bookedAppointments}</strong>
+        </div>
+      </div>
+      {[
+        { title: "Продвижение на Авито", items: steps.slice(0, 3) },
+        { title: "Диагностики и ученики", items: steps.slice(3) },
+      ].map((group) => (
+        <section key={group.title} className="dashboard-metric-group">
+          <div className="crm-heading">
+            <h2>{group.title}</h2>
+          </div>
+          <div className="dashboard-funnel mt-3 flex gap-2 overflow-x-auto pb-1">
+            {group.items.map((step) => (
+              <article
+                key={step.label}
+                className="min-w-36 flex-1 rounded-2xl border border-line bg-surface px-4 py-4"
+              >
+                <p className="flex items-center gap-2 text-sm text-muted">
+                  {step.label}
+                  <Mark tone={step.tone} />
+                </p>
+                <p
+                  data-testid={
+                    step.label === "диагностик"
+                      ? "completed-diagnostics"
+                      : step.label === "новых учеников"
+                        ? "new-students"
+                        : undefined
+                  }
+                  className="mt-1 font-display text-3xl font-medium"
+                >
+                  {Number.isFinite(step.value) ? step.value.toLocaleString("ru-RU") : "—"}
+                </p>
+                <p className={`mt-3 text-sm ${step.tone === "bad" ? "text-red" : "text-muted"}`}>
+                  {step.conversion}
+                </p>
+                <p className="text-sm text-muted">{step.cost} · расходы на этап</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
 
       {isDataMonth && wroteRate !== null ? (
         <p className={`mt-4 ${wroteRate < 10 ? "text-red" : "text-ok"}`}>
           Норма контактов — 10–12% от просмотров. Сейчас {formatPercent(wroteRate)}.
-          {wroteRate < 10 ? " Это меньше." : inContactGoal(wroteRate) ? " Это норма." : " Это выше нормы."}
+          {wroteRate < 10
+            ? " Это меньше."
+            : inContactGoal(wroteRate)
+              ? " Это норма."
+              : " Это выше нормы."}
         </p>
       ) : (
         <p className="mt-4 text-muted">За этот месяц цифр нет.</p>
@@ -377,7 +482,9 @@ export function DashboardSection() {
                   </span>
                   <span className="text-right text-sm">
                     {countLabel(ad.contacts, "контакт", "контакта", "контактов")}
-                    <span className={`ml-2 ${tone === "bad" ? "text-red" : "text-muted"}`}>{rate === null ? "—" : formatPercent(rate)}</span>
+                    <span className={`ml-2 ${tone === "bad" ? "text-red" : "text-muted"}`}>
+                      {rate === null ? "—" : formatPercent(rate)}
+                    </span>
                     <span className="ml-2 text-muted">{rubPer(ad.spendRub, ad.contacts)}</span>
                   </span>
                 </li>
@@ -400,8 +507,14 @@ export function DashboardSection() {
                     <Mark tone={tone} />
                   </span>
                   <span className="text-right text-sm">
-                    <span className={tone === "bad" ? "text-red" : tone === "warn" ? "text-warn" : ""}>{placeLabel(city.best, city.worst)}</span>
-                    <span className="ml-2 text-muted">ставка {moneyRange(city.bidMin, city.bidMax)}</span>
+                    <span
+                      className={tone === "bad" ? "text-red" : tone === "warn" ? "text-warn" : ""}
+                    >
+                      {placeLabel(city.best, city.worst)}
+                    </span>
+                    <span className="ml-2 text-muted">
+                      ставка {moneyRange(city.bidMin, city.bidMax)}
+                    </span>
                   </span>
                 </li>
               );
@@ -425,7 +538,11 @@ export function DashboardSection() {
             </Link>
           ))}
           {recommendations.length > 3 ? (
-            <button type="button" className="h-11 text-left text-sm text-muted" onClick={() => setTipsOpen((open) => !open)}>
+            <button
+              type="button"
+              className="h-11 text-left text-sm text-muted"
+              onClick={() => setTipsOpen((open) => !open)}
+            >
               {tipsOpen ? "Свернуть" : `Ещё ${recommendations.length - 3}`}
             </button>
           ) : null}

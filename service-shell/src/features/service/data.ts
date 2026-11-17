@@ -1,5 +1,6 @@
 import { dialogExamples } from "./dialog-examples.ts";
 import { getPreviewData } from "./preview-data.ts";
+import { previewAdTotals, previewImageUrl } from "./preview-data.ts";
 export type CityBid = {
   city: string;
   bidRub: number;
@@ -18,6 +19,15 @@ export type Ad = {
   spendRub: number;
   cities: CityBid[];
   autobidder: boolean;
+  status?: string;
+  price?: number | null;
+  bidding?: import("./preview-data.ts").PreviewAd["bidding"];
+  address?: string;
+  autoloadId?: string;
+  startsAt?: string;
+  finishesAt?: string;
+  attributes?: Record<string, string>;
+  source?: "cantor" | "sheet";
 };
 
 export type DialogMessage = {
@@ -194,13 +204,52 @@ const exampleWindows: WindowSlot[] = [
   { id: "sat-16", label: "Сб 16:00", startsAt: "2026-11-21T13:00:00.000Z", takenBy: null },
 ];
 const preview = getPreviewData();
-export const ads: Ad[] = preview ? preview.ads.map(a => ({
-  id: a.id, title: a.title, text: a.description || "", photos: [], offerHasDiagnostic: /диагност/i.test(a.description || ""),
-  shows: NaN, views: NaN, contacts: NaN, spendRub: NaN, cities: a.city ? [{ city: a.city, bidRub: NaN, place: NaN }] : [], autobidder: false,
-})) : exampleAds;
-export const dialogs: Dialog[] = preview ? preview.chats.map(c => ({
-  id: c.id, name: c.name || "Собеседник", topic: c.itemTitle || "", reply: "",
-  messages: [],
-  waitingSince: c.lastAuthor === "client" && c.lastAt ? new Date(c.lastAt).toISOString() : null, silentSince: null,
-})) : exampleDialogs;
+export const ads: Ad[] = preview
+  ? preview.ads.map((a) => {
+      const traffic = previewAdTotals(a.id);
+      return {
+        id: a.id,
+        title: a.title,
+        text: a.description || "",
+        photos: (a.photos || []).map((_, i) => previewImageUrl(a.id, i)),
+        offerHasDiagnostic: /диагност/i.test(a.description || ""),
+        shows: traffic.shows,
+        views: traffic.views,
+        contacts: traffic.contacts,
+        spendRub: traffic.spendRub,
+        cities: a.city ? [{ city: a.city, bidRub: a.bidding?.currentRub ?? NaN, place: NaN }] : [],
+        autobidder: a.bidding?.mode === "2",
+        status: a.status,
+        price: a.price,
+        bidding: a.bidding,
+        address: a.address,
+        autoloadId: a.autoloadId,
+        startsAt: a.startsAt,
+        finishesAt: a.finishesAt,
+        attributes: a.attributes,
+        source: a.source,
+      };
+    })
+  : exampleAds;
+export const dialogs: Dialog[] = preview
+  ? preview.chats.map((c) => ({
+      id: c.id,
+      name: c.name || "Собеседник",
+      topic: c.itemTitle || "",
+      reply: "",
+      messages: (c.messages || []).map((m) => ({
+        id: m.id,
+        at: new Date(m.at).toISOString(),
+        author:
+          m.author === "manager"
+            ? "Елена"
+            : m.author === "client"
+              ? c.name || "Собеседник"
+              : "Система",
+        text: m.text,
+      })),
+      waitingSince: c.lastAuthor === "client" && c.lastAt ? new Date(c.lastAt).toISOString() : null,
+      silentSince: null,
+    }))
+  : exampleDialogs;
 export const windows: WindowSlot[] = preview ? [] : exampleWindows;

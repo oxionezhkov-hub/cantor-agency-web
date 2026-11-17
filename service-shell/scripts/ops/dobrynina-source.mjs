@@ -2,6 +2,19 @@
 const ACCOUNT = "6c974a5d5326";
 const PROJECT = "elena-dobrynina";
 export async function readDobrynina(env, chatId = null) {
+  if (env.DEMO_DATA) {
+    const compressed = await env.DEMO_DATA.get("snapshot.gz", "arrayBuffer");
+    if (compressed) {
+      const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"));
+      const snapshot = await new Response(stream).json();
+      if (snapshot.accountId !== ACCOUNT) throw new Error("account_mismatch");
+      if (chatId !== null) {
+        const chat = snapshot.chats.find((c) => c.id === chatId);
+        return chat ? { id: chatId, messages: chat.messages, syncedAt: snapshot.chatsAt } : null;
+      }
+      return snapshot;
+    }
+  }
   const index = await env.DEMO_AVITO.get(`aisales:index:${ACCOUNT}`, "json");
   if (!index?.chats) throw new Error("source_unavailable");
   if (chatId !== null) {

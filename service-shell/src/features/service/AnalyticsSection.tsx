@@ -52,11 +52,16 @@ type Tab = (typeof TABS)[number]["id"];
 type Report = ReturnType<typeof buildAnalytics>;
 type Marketing = Report["totals"];
 type SortKey = "views" | "contacts" | "spendRub" | "contactRate" | "cpl";
-const integer = (n: number) => Number.isFinite(n) ? n.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) : "—";
+const integer = (n: number) =>
+  Number.isFinite(n) ? n.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) : "—";
 const rub = (n: number | null) =>
-  n === null || !Number.isFinite(n) ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
+  n === null || !Number.isFinite(n)
+    ? "—"
+    : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`;
 const pct = (n: number | null) =>
-  n === null || !Number.isFinite(n) ? "—" : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}%`;
+  n === null || !Number.isFinite(n)
+    ? "—"
+    : `${n.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}%`;
 const shortDate = (date: string) => `${date.slice(8, 10)}.${date.slice(5, 7)}`;
 const mskDay = (date: string) =>
   new Date(Date.parse(date) + 3 * 3600000).toISOString().slice(0, 10);
@@ -336,7 +341,7 @@ function saveCsv(rows: (string | number | null)[][], filename: string) {
         row
           .map(
             (value) =>
-              `"${(typeof value === "string" && /^[=+@\-\t\r]/.test(value) ? "'" + value : String(typeof value === "number" && !Number.isFinite(value) ? "" : value ?? "")).replaceAll('"', '""')}"`,
+              `"${(typeof value === "string" && /^[=+@\-\t\r]/.test(value) ? "'" + value : String(typeof value === "number" && !Number.isFinite(value) ? "" : (value ?? ""))).replaceAll('"', '""')}"`,
           )
           .join(";"),
       )

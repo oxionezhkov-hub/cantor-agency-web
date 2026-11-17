@@ -1,10 +1,21 @@
 import { ads } from "./data.ts";
 import type { CrmState } from "./crm.ts";
-import { getPreviewData } from "./preview-data.ts";
+import { getPreviewData, previewPeriod } from "./preview-data.ts";
 
 export type AnalyticsRange = { from: string; to: string };
-export const ANALYTICS_COVERAGE: AnalyticsRange = { from: "2026-11-01", to: "2026-11-16" };
-export const ANALYTICS_CITIES: readonly string[] = getPreviewData() ? [...new Set(getPreviewData()!.ads.map(a => a.city).filter(Boolean))] : ["Москва", "Область"];
+export const ANALYTICS_COVERAGE: AnalyticsRange = getPreviewData()?.defaultPeriod || {
+  from: "2026-11-01",
+  to: "2026-11-16",
+};
+export const ANALYTICS_CITIES: readonly string[] = getPreviewData()
+  ? [
+      ...new Set(
+        getPreviewData()!
+          .ads.map((a) => a.city)
+          .filter(Boolean),
+      ),
+    ]
+  : ["Москва", "Область"];
 export type AdDailyStat = {
   date: string;
   adId: string;
@@ -84,24 +95,40 @@ const fixtureGroups = [
   { adId: "oge", city: "Москва", shows: 480, views: 116, contacts: 14, spendRub: 2260 },
   { adId: "oge", city: "Область", shows: 260, views: 62, contacts: 7, spendRub: 1220 },
 ];
-export const DEMO_AD_DAILY: readonly AdDailyStat[] = getPreviewData() ? getPreviewData()!.daily.map(r => ({ date: r.date, adId: "__account__", city: "__account__", shows: NaN, views: r.views, contacts: r.contacts, spendRub: r.budget })) : fixtureGroups.flatMap((group) => {
-  const shows = distribute(group.shows),
-    views = distribute(group.views),
-    contacts = distribute(group.contacts),
-    spendRub = distribute(group.spendRub);
-  return weights.map((_, index) => ({
-    date: `2026-11-${String(index + 1).padStart(2, "0")}`,
-    adId: group.adId,
-    city: group.city,
-    shows: shows[index],
-    views: views[index],
-    contacts: contacts[index],
-    spendRub: spendRub[index],
-  }));
-});
+export const DEMO_AD_DAILY: readonly AdDailyStat[] =
+  getPreviewData()?.adDaily ||
+  (getPreviewData()
+    ? getPreviewData()!.daily.map((r) => ({
+        date: r.date,
+        adId: "__account__",
+        city: "__account__",
+        shows: NaN,
+        views: r.views,
+        contacts: r.contacts,
+        spendRub: r.budget,
+      }))
+    : fixtureGroups.flatMap((group) => {
+        const shows = distribute(group.shows),
+          views = distribute(group.views),
+          contacts = distribute(group.contacts),
+          spendRub = distribute(group.spendRub);
+        return weights.map((_, index) => ({
+          date: `2026-11-${String(index + 1).padStart(2, "0")}`,
+          adId: group.adId,
+          city: group.city,
+          shows: shows[index],
+          views: views[index],
+          contacts: contacts[index],
+          spendRub: spendRub[index],
+        }));
+      }));
 const ratio = (numerator: number, denominator: number, scale = 1) =>
-  Number.isFinite(numerator) && Number.isFinite(denominator) && denominator > 0 ? (numerator / denominator) * scale : null;
-export function marketingTotals(rows: readonly AdDailyStat[]): MarketingTotals {
+  Number.isFinite(numerator) && Number.isFinite(denominator) && denominator > 0
+    ? (numerator / denominator) * scale
+    : null;
+export function marketingTotals(
+  rows: readonly Pick<AdDailyStat, "shows" | "views" | "contacts" | "spendRub">[],
+): MarketingTotals {
   const total = rows.reduce(
     (sum, row) => ({
       shows: sum.shows + row.shows,
@@ -120,8 +147,10 @@ export function marketingTotals(rows: readonly AdDailyStat[]): MarketingTotals {
   };
 }
 function coverage(dates: string[]): Coverage {
-  const daysWithData = dates.filter(
-    (date) => getPreviewData() ? getPreviewData()!.daily.some(r => r.date === date) : date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
+  const daysWithData = dates.filter((date) =>
+    getPreviewData()
+      ? getPreviewData()!.daily.some((r) => r.date === date)
+      : date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
   ).length;
   return { complete: daysWithData === dates.length, daysWithData, daysRequested: dates.length };
 }
@@ -202,18 +231,33 @@ function crmRows(state: CrmState, range: AnalyticsRange, adId?: string) {
     receivedRub: Math.round(row.receivedRub * 100) / 100,
     refundedRub: Math.round(row.refundedRub * 100) / 100,
     netReceivedRub: Math.round((row.receivedRub - row.refundedRub) * 100) / 100,
-    ...(getPreviewData() ? {
-      completedAppointments: adId ? NaN : getPreviewData()!.daily.find(r => r.date === date)?.diagnostics ?? NaN,
-      newStudents: adId ? NaN : getPreviewData()!.daily.find(r => r.date === date)?.sales ?? NaN,
-      bookedAppointments: NaN, receivedRub: NaN, refundedRub: NaN, netReceivedRub: NaN,
-    } : {}),
+    ...(getPreviewData()
+      ? {
+          completedAppointments: adId
+            ? NaN
+            : (getPreviewData()!.daily.find((r) => r.date === date)?.diagnostics ?? NaN),
+          newStudents: adId
+            ? NaN
+            : (getPreviewData()!.daily.find((r) => r.date === date)?.sales ?? NaN),
+          bookedAppointments: NaN,
+          receivedRub: NaN,
+          refundedRub: NaN,
+          netReceivedRub: NaN,
+        }
+      : {}),
   }));
   const totals = daily.reduce(
     (sum, row) => ({
       leads: sum.leads + row.leads,
-      completedAppointments: sum.completedAppointments + row.completedAppointments,
+      completedAppointments:
+        sum.completedAppointments +
+        (getPreviewData() && !Number.isFinite(row.completedAppointments)
+          ? 0
+          : row.completedAppointments),
       bookedAppointments: sum.bookedAppointments + row.bookedAppointments,
-      newStudents: sum.newStudents + row.newStudents,
+      newStudents:
+        sum.newStudents +
+        (getPreviewData() && !Number.isFinite(row.newStudents) ? 0 : row.newStudents),
       receivedRub: sum.receivedRub + row.receivedRub,
       refundedRub: sum.refundedRub + row.refundedRub,
       netReceivedRub: sum.netReceivedRub + row.netReceivedRub,
@@ -242,43 +286,145 @@ export function buildAnalytics(
     (row) => row.date >= previousRange.from && row.date <= previousRange.to,
   );
   const crm = input.city ? null : crmRows(input.crm, input, input.adId);
-  const unknown: MarketingTotals = { shows: NaN, views: NaN, contacts: NaN, spendRub: NaN, ctr: null, contactRate: null, cpc: null, cpl: null };
-  const totals = (rows: readonly AdDailyStat[]) => getPreviewData() && (input.adId || input.city) ? unknown : marketingTotals(rows);
+  const unknown: MarketingTotals = {
+    shows: NaN,
+    views: NaN,
+    contacts: NaN,
+    spendRub: NaN,
+    ctr: null,
+    contactRate: null,
+    cpc: null,
+    cpl: null,
+  };
+  const source = getPreviewData();
+  const period = source?.accountDaily ? previewPeriod(input.from, input.to) : undefined;
+  const previousPeriod = source?.accountDaily
+    ? previewPeriod(previousRange.from, previousRange.to)
+    : undefined;
+  const sourceAds = ads.filter(
+    (a) =>
+      (!input.adId || a.id === input.adId) &&
+      (!input.city || a.cities.some((c) => c.city === input.city)),
+  );
+  const ids = new Set(sourceAds.map((a) => a.id));
+  const sumPeriod = (p: typeof period, selectedIds = ids): MarketingTotals =>
+    p ? marketingTotals(p.items.filter((r) => selectedIds.has(r.adId))) : unknown;
+  const dayAvailable = (date: string) =>
+    source?.accountDaily
+      ? input.adId || input.city
+        ? source.trafficCoverage?.includes(date) || false
+        : source.accountDaily.some((r) => r.date === date)
+      : source
+        ? source.daily.some((r) => r.date === date)
+        : date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to;
+  const daily = dates.map((date) => {
+    const account = source?.accountDaily?.find((r) => r.date === date);
+    const stats =
+      source?.accountDaily && !input.adId && !input.city
+        ? account
+          ? marketingTotals([account])
+          : unknown
+        : source && (!source.adDaily || !dayAvailable(date))
+          ? unknown
+          : marketingTotals(rows.filter((r) => r.date === date));
+    return { date, ...stats, available: dayAvailable(date) };
+  });
+  const trafficCoverage = source?.accountDaily
+    ? period && (input.adId || input.city)
+      ? { complete: true, daysWithData: dates.length, daysRequested: dates.length }
+      : {
+          complete: dates.every(dayAvailable),
+          daysWithData: dates.filter(dayAvailable).length,
+          daysRequested: dates.length,
+        }
+    : coverage(dates);
+  const previousCoverage = source?.accountDaily
+    ? input.adId || input.city
+      ? {
+          complete: Boolean(previousPeriod),
+          daysWithData: previousPeriod ? previousDates.length : 0,
+          daysRequested: previousDates.length,
+        }
+      : {
+          complete: previousDates.every((date) =>
+            source.accountDaily!.some((row) => row.date === date),
+          ),
+          daysWithData: previousDates.filter((date) =>
+            source.accountDaily!.some((row) => row.date === date),
+          ).length,
+          daysRequested: previousDates.length,
+        }
+    : coverage(previousDates);
   return {
-    totals: totals(rows),
-    previousTotals: totals(previous),
-    daily: dates.map((date) => ({
-      date,
-      ...totals(rows.filter((row) => row.date === date)),
-      available: getPreviewData() ? getPreviewData()!.daily.some(r => r.date === date) : date >= ANALYTICS_COVERAGE.from && date <= ANALYTICS_COVERAGE.to,
+    totals: source?.accountDaily
+      ? period
+        ? sumPeriod(period)
+        : !input.adId && !input.city
+          ? marketingTotals(
+              source.accountDaily.filter((r) => r.date >= input.from && r.date <= input.to),
+            )
+          : unknown
+      : source && (input.adId || input.city)
+        ? unknown
+        : marketingTotals(rows),
+    previousTotals: source?.accountDaily
+      ? previousPeriod
+        ? sumPeriod(previousPeriod)
+        : !input.adId && !input.city
+          ? marketingTotals(
+              source.accountDaily.filter(
+                (r) => r.date >= previousRange.from && r.date <= previousRange.to,
+              ),
+            )
+          : unknown
+      : marketingTotals(previous),
+    daily,
+    byAd: sourceAds.map((ad) => ({
+      id: ad.id,
+      name: ad.title,
+      ...(source
+        ? sumPeriod(period, new Set([ad.id]))
+        : marketingTotals(rows.filter((r) => r.adId === ad.id))),
     })),
-    byAd: ads
-      .filter((ad) => !input.adId || ad.id === input.adId)
-      .map((ad) => ({
-        id: ad.id,
-        name: ad.title,
-        ...(getPreviewData() ? unknown : marketingTotals(rows.filter((row) => row.adId === ad.id))),
-      })),
     byCity: ANALYTICS_CITIES.filter((city) => !input.city || city === input.city).map((city) => ({
       id: city,
       name: city,
-      ...(getPreviewData() ? unknown : marketingTotals(rows.filter((row) => row.city === city))),
+      ...(source
+        ? sumPeriod(
+            period,
+            new Set(
+              sourceAds.filter((a) => a.cities.some((c) => c.city === city)).map((a) => a.id),
+            ),
+          )
+        : marketingTotals(rows.filter((r) => r.city === city))),
     })),
-    byAdCity: ads
-      .filter((ad) => !input.adId || ad.id === input.adId)
-      .flatMap((ad) =>
-        ANALYTICS_CITIES.filter(
-          (city) =>
-            (!input.city || city === input.city) &&
-            DEMO_AD_DAILY.some((row) => row.adId === ad.id && row.city === city),
-        ).map((city) => ({
-          id: `${ad.id}:${city}`,
-          adId: ad.id,
-          city,
-          name: `${ad.title} · ${city}`,
-          ...marketingTotals(rows.filter((row) => row.adId === ad.id && row.city === city)),
-        })),
-      ),
+    byAdCity: source
+      ? sourceAds.flatMap((ad) =>
+          ad.cities
+            .filter((c) => !input.city || c.city === input.city)
+            .map((c) => ({
+              id: `${ad.id}:${c.city}`,
+              adId: ad.id,
+              city: c.city,
+              name: `${ad.title} · ${c.city}`,
+              ...sumPeriod(period, new Set([ad.id])),
+            })),
+        )
+      : ads
+          .filter((ad) => !input.adId || ad.id === input.adId)
+          .flatMap((ad) =>
+            ANALYTICS_CITIES.filter(
+              (city) =>
+                (!input.city || city === input.city) &&
+                DEMO_AD_DAILY.some((r) => r.adId === ad.id && r.city === city),
+            ).map((city) => ({
+              id: `${ad.id}:${city}`,
+              adId: ad.id,
+              city,
+              name: `${ad.title} · ${city}`,
+              ...marketingTotals(rows.filter((r) => r.adId === ad.id && r.city === city)),
+            })),
+          ),
     crm: crm
       ? {
           ...crm,
@@ -300,7 +446,7 @@ export function buildAnalytics(
       : null,
     previousCrm: input.city ? null : crmRows(input.crm, previousRange, input.adId),
     previousRange,
-    coverage: coverage(dates),
-    previousCoverage: coverage(previousDates),
+    coverage: trafficCoverage,
+    previousCoverage,
   };
 }
