@@ -94,6 +94,9 @@ export function NoteEditor({ lead, onSave }: { lead: Lead; onSave: (text: string
               onChange={(e) => setText(e.target.value)}
               placeholder="Напишите важное…"
             />
+            <button type="button" className="crm-quiet" onClick={() => setText("")}>
+              Стереть
+            </button>
             <button
               type="button"
               className="crm-secondary"
