@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight, Asterisk, BookOpen, ChartNoAxesCombined, CircleHelp, LayoutDashboard, MessageSquare, PanelTop, Settings2 } from "lucide-react";
 import { CabinetPage } from "@/features/cabinet/CabinetPage";
@@ -10,7 +10,9 @@ import { SECTIONS, type SectionId } from "./sections.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
-import { AdsSection, ContactSection, DashboardSection, DialogsSection, LearnSection, PaymentsSection, ShowsSection } from "./views.tsx";
+import { AdsSection, ContactSection, DashboardSection, DialogsSection, PaymentsSection, ShowsSection } from "./views.tsx";
+
+const KnowledgeSection = lazy(() => import("@/features/knowledge/KnowledgeSection").then(module => ({ default: module.KnowledgeSection })));
 
 const ICONS = { today: LayoutDashboard, stats: ChartNoAxesCombined, ads: PanelTop, chats: MessageSquare, learn: BookOpen, acc: Settings2 };
 
@@ -59,7 +61,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
           {section === "stats" ? <div><ContactSection /><ShowsSection /><PaymentsSection focus={focus} /></div> : null}
           {section === "ads" ? <AdsSection focus={focus} /> : null}
           {section === "chats" ? <DialogsSection focus={focus} /> : null}
-          {section === "learn" ? <LearnSection /> : null}
+          {section === "learn" ? <Suspense fallback={<p className="text-muted" role="status">Загружаем базу знаний…</p>}><KnowledgeSection focus={focus} /></Suspense> : null}
           {section === "acc" ? <CabinetPage /> : null}
         </div>
 
