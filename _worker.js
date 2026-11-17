@@ -15612,6 +15612,18 @@ export default {
       }
     }
 
+    // Extensionless HTML must render as a page even when Assets assigns a generic MIME type.
+    if (url.pathname === '/zagruzka-extra' || url.pathname === '/zagruzka-extra/') {
+      const assetUrl = new URL(request.url);
+      assetUrl.pathname = '/zagruzka-extra';
+      const response = await env.ASSETS.fetch(new Request(assetUrl, request));
+      if (!response.ok) return withNoIndexHeader(response);
+      const headers = new Headers(response.headers);
+      headers.set('Content-Type', 'text/html; charset=utf-8');
+      headers.delete('Content-Disposition');
+      return withNoIndexHeader(new Response(response.body, { status: response.status, headers }));
+    }
+
     // /mba-mybrand itself is served from mba-mybrand/index.html — the directory also
     // holds per-client podcast materials pages (mba-mybrand/<slug>-podcastN). Handles
     // both with and without the trailing slash since production (cantor.agency, served
