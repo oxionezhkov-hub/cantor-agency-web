@@ -336,7 +336,7 @@ function saveCsv(rows: (string | number | null)[][], filename: string) {
         row
           .map(
             (value) =>
-              `"${(typeof value === "string" && /^[=+@\-\t\r]/.test(value) ? "'" + value : String(value ?? "")).replaceAll('"', '""')}"`,
+              `"${(typeof value === "string" && /^[=+@\-\t\r]/.test(value) ? "'" + value : String(typeof value === "number" && !Number.isFinite(value) ? "" : value ?? "")).replaceAll('"', '""')}"`,
           )
           .join(";"),
       )
