@@ -485,7 +485,9 @@ async function api(path, opts = {}, pw) {
       const res = await fetch(ROUTES[idx](path), { ...opts, headers: { 'Content-Type': 'application/json', 'x-dashboard-password': pw || getPw() }, signal: AbortSignal.timeout(90000) });
       const data = await res.json().catch(() => ({}));
       // Яндекс-функция не дождалась воркера (долгий запрос) — пробуем напрямую.
-      if ((res.status === 502 || res.status === 504) && data.error === 'upstream_failed' && i < ROUTES.length - 1) continue;
+      if ((res.status === 502 || res.status === 504) && (opts.method || 'GET') === 'GET'
+          && (data.error === 'upstream_failed' || data.errorType === 'JobResponseTooLong')
+          && i < ROUTES.length - 1) continue;
       route = idx;
       return { status: res.status, ok: res.ok, data };
     } catch (e) { /* следующий маршрут */ }
@@ -662,15 +664,37 @@ const STATUS = { ok: 'Успешно', wait: 'Ждём Авито / в очер�
 // «Ждём Авито» — pending с причиной (Авито временно не отдал шкалу ставок); pending без причины — первая проверка, считаем «Успешно».
 const stKey = (x) => (x.status === 'queued' ? 'wait' : x.status === 'pending' ? (x.reason ? 'wait' : 'ok') : x.status);
 
-async function bidsLoad() {
-  const r = await api('/api/dashboard/mbids/state');
-  if (r.status === 401) return showGate();
-  if (!r.ok) { $('#rows').innerHTML = `<tr><td>${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`; return; }
-  Object.assign(B, r.data, { loaded: true });
-  setMe(r.data.me);
-  const keys = new Set(B.items.map((x) => x.key));
-  [...sel].forEach((k) => { if (!keys.has(k)) sel.delete(k); });
-  render();
+// Assemble pages before replacing the table; a failed page must not erase saved settings.
+async function bidsState(pw) {
+  const items = [];
+  let offset = 0;
+  for (;;) {
+    const r = await api(`/api/dashboard/mbids/state?limit=100&offset=${offset}`, {}, pw);
+    if (!r.ok) return r;
+    items.push(...r.data.items);
+    if (r.data.nextOffset == null) return { ...r, data: { ...r.data, items } };
+    if (r.data.nextOffset <= offset) return { ok: false, status: 502, data: { error: 'Не удалось загрузить следующую страницу' } };
+    offset = r.data.nextOffset;
+  }
+}
+let bidsLoading = null;
+function bidsLoad() {
+  if (bidsLoading) return bidsLoading;
+  bidsLoading = (async () => {
+    const r = await bidsState();
+    if (r.status === 401) return showGate();
+    if (!r.ok) {
+      if (B.loaded) toast(r.data.error || 'Не удалось обновить список');
+      else $('#rows').innerHTML = `<tr><td>${emptyState('info', r.data.error || 'Не удалось загрузить')}</td></tr>`;
+      return;
+    }
+    Object.assign(B, r.data, { loaded: true });
+    setMe(r.data.me);
+    const keys = new Set(B.items.map((x) => x.key));
+    [...sel].forEach((k) => { if (!keys.has(k)) sel.delete(k); });
+    render();
+  })().finally(() => { bidsLoading = null; });
+  return bidsLoading;
 }
 
 function period() {
@@ -680,22 +704,29 @@ function period() {
   if (p === 'custom') { const a = $('#pFrom').value || t, b = $('#pTo').value || t; return a <= b ? [a, b] : [b, a]; }
   return [dAdd(t, -(Number(p) - 1)), t];
 }
-let statsSeq = 0, statsErr = '';
+let statsSeq = 0, statsErr = '', statsPeriod = '';
 async function loadStats() {
   const seq = ++statsSeq;
   const [from, to] = period();
   const accs = [...new Set(B.items.map((x) => x.accountId))];
   const next = {};
   const errs = [];
+  const warnings = [];
+  const samePeriod = statsPeriod === `${from}:${to}`;
   for (const acc of accs) {
     const r = await api(`/api/dashboard/mbids/stats?accountId=${encodeURIComponent(acc)}&from=${from}&to=${to}`);
     if (seq !== statsSeq) return;
-    if (r.ok) Object.entries(r.data.stats || {}).forEach(([id, v]) => { next[`${acc}:${id}`] = v; });
-    else errs.push(r.data.error || 'ошибка');
+    if (r.ok) {
+      Object.entries(r.data.stats || {}).forEach(([id, v]) => { next[`${acc}:${id}`] = v; });
+      if (!r.data.partial) B.items.filter((x) => x.accountId === acc).forEach((x) => { if (!next[x.key]) next[x.key] = { i: 0, v: 0, c: 0, s: 0 }; });
+      if (r.data.stale || r.data.partial) warnings.push(r.data.warning || 'Показаны сохранённые данные; статистика обновится позже');
+    } else {
+      errs.push(r.data.error || 'ошибка');
+      if (samePeriod) B.items.filter((x) => x.accountId === acc).forEach((x) => { if (stats[x.key]) next[x.key] = stats[x.key]; });
+    }
   }
   // Нет строки в ответе Авито — за период по объявлению ничего не было: нули, а не прочерк.
-  if (!errs.length) B.items.forEach((x) => { if (!next[x.key]) next[x.key] = { i: 0, v: 0, c: 0, s: 0 }; });
-  stats = next; statsAt = Date.now(); statsErr = errs[0] || '';
+  stats = next; statsPeriod = `${from}:${to}`; statsAt = Date.now(); statsErr = errs[0] || warnings[0] || '';
   render();
 }
 
@@ -729,8 +760,15 @@ function visible() {
   return list;
 }
 
+let renderPending = false;
+// Background refreshes must not replace an input while the user is typing a bid.
 function render() {
   if (!B.loaded) return;
+  if (document.activeElement && document.activeElement.matches('#rows input[data-bid]')) {
+    renderPending = true;
+    return;
+  }
+  renderPending = false;
   renderTop();
   const groupsView = view === 'groups' && !curGroup;
   $$('[data-view]').forEach((b) => b.classList.toggle('on', b.dataset.view === (curGroup ? 'groups' : view)));
@@ -948,9 +986,10 @@ function detailHtml(x) {
   const tod = d.data.tod || [];
   const mx = Math.max(1, ...tod.map((t) => t.v));
   if (tod.some((t) => t.i || t.v)) html += `<div class="chart"><b class="small">Время суток — просмотры по часам МСК за период</b><div class="tod">${tod.map((t) => `<div style="height:${(t.v / mx) * 100}%" data-tip="${hh(t.h)}: показы ${t.i}, просмотры ${t.v}, контакты ${t.c}, расходы ${rub(t.s)}"></div>`).join('')}</div><div class="tod-l">${tod.map((t) => `<span>${t.h}</span>`).join('')}</div></div>`;
-  if (x.scale && x.scale.length) {
-    let curIdx = -1; x.scale.forEach(([v], k) => { if (x.now != null && v <= x.now) curIdx = k; });
-    html += `<details><summary>Шкала ставок Авито: ставка → опережение конкурентов</summary><table class="scale"><tr><th>Ставка</th><th>Опережение</th></tr>${x.scale.map(([v, c], k) => `<tr class="${k === curIdx ? 'cur' : ''}"><td class="num">${rub(v)}${k === 0 ? ' · базовая' : ''}</td><td class="num">${c} %</td></tr>`).join('')}</table></details>`;
+  const scale = d.data.scale || x.scale || [];
+  if (scale.length) {
+    let curIdx = -1; scale.forEach(([v], k) => { if (x.now != null && v <= x.now) curIdx = k; });
+    html += `<details><summary>Шкала ставок Авито: ставка → опережение конкурентов</summary><table class="scale"><tr><th>Ставка</th><th>Опережение</th></tr>${scale.map(([v, c], k) => `<tr class="${k === curIdx ? 'cur' : ''}"><td class="num">${rub(v)}${k === 0 ? ' · базовая' : ''}</td><td class="num">${c} %</td></tr>`).join('')}</table></details>`;
   }
   const notes = d.data.notes || [];
   if (notes.length) html += `<div class="notes"><b class="small">Заметки</b>${notes.slice().reverse().map((n) => `<div class="n"><time>${fmtAt(n.at)}</time><span>${esc(n.text)}</span><button class="icon-btn sm" type="button" data-delnote="${esc(x.key)}|${n.at}" aria-label="Удалить заметку" data-tip="Удалить заметку">${I('x', 'ic-sm')}</button></div>`).join('')}</div>`;
@@ -1001,9 +1040,12 @@ async function update(keys, set, note, extra = {}) {
     if (set.days !== undefined) x.days = set.days && set.days.length < 7 ? set.days : null;
   });
   render();
-  setTimeout(bidsLoad, 7000); setTimeout(bidsLoad, 25000); // движок применяет правки в фоне
+  clearTimeout(update.refreshSoon); clearTimeout(update.refreshLater);
+  update.refreshSoon = setTimeout(bidsLoad, 7000); update.refreshLater = setTimeout(bidsLoad, 25000); // движок применяет правки в фоне
   return r.data;
 }
+
+$('#rows').addEventListener('focusout', () => { setTimeout(() => { if (renderPending) render(); }, 0); });
 
 $('#rows').addEventListener('change', async (e) => {
   const t = e.target;
@@ -1760,8 +1802,9 @@ function showGate() {
 $('#gateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const pw = $('#gatePw').value;
-  const r = await api('/api/dashboard/mbids/state', {}, pw);
+  const r = await bidsState(pw);
   if (r.status === 401) { $('#gateErr').textContent = 'Неверный пароль'; return; }
+  if (!r.ok) { $('#gateErr').textContent = r.data.error || 'Не удалось загрузить кабинет'; return; }
   try { localStorage.setItem(PW_KEY, pw); } catch (err) {}
   $('#gate').hidden = true; $('#app').hidden = false;
   if (r.ok) { Object.assign(B, r.data, { loaded: true }); setMe(r.data.me); }
