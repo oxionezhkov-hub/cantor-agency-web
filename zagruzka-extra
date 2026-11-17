@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Загрузка Экстра</title>
+<link rel="preload" href="/fonts/geologica-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="icon" type="image/svg+xml" href="/images/brand/favicon.svg">
+<script>try { const t = localStorage.getItem('zagruzka_extra.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<style>
+:root{
+  --accent:#E8391D;--accent-600:#C42D13;--accent-bg:#FFF0EB;--accent-ring:rgba(232,57,29,.16);
+  --bg:#F4F3F0;--surface:#fff;--surface-2:#FAF9F7;--sunken:#EFEDE9;--line:#E5E2DD;--line-2:#EEECE8;
+  --ink:#151515;--text:#2A2927;--muted:#76716A;--faint:#A7A29B;
+  --green:#1C8048;--green-bg:#E6F4EC;--amber:#B06500;--amber-bg:#FFF2DA;--red:#D5311A;--red-bg:#FDEBE7;
+  --shadow:0 1px 2px rgba(22,20,18,.04),0 3px 12px rgba(22,20,18,.045);--shadow-lg:0 18px 48px rgba(22,20,18,.16);
+  --r:14px;--r-sm:10px;--top:60px;
+  --font:'Geologica',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--display:'Unbounded','Geologica',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+  --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;--line:#2E2C2A;--line-2:#282624;
+  --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--red:#FF6F57;--red-bg:#3D1812;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --accent:#FF5A3C;--accent-600:#FF7A60;--accent-bg:#3A1C15;--accent-ring:rgba(255,90,60,.22);
+  --bg:#121211;--surface:#1B1A19;--surface-2:#201F1D;--sunken:#161514;--line:#2E2C2A;--line-2:#282624;
+  --ink:#F4F2EE;--text:#DEDAD4;--muted:#A19B93;--faint:#6E6962;
+  --green:#4CC784;--green-bg:#133222;--amber:#F2A93B;--amber-bg:#35270D;--red:#FF6F57;--red-bg:#3D1812;
+  --shadow:0 1px 2px rgba(0,0,0,.3);--shadow-lg:0 18px 48px rgba(0,0,0,.5);color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.5;color:var(--text);background:var(--bg);min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.hide,[hidden]{display:none!important}
+.muted{color:var(--muted)}.faint{color:var(--faint)}.small{font-size:12.5px}
+.grow{flex:1}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ic{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic-sm{width:15px;height:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 15px;border-radius:999px;font-weight:600;font-size:13.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);white-space:nowrap}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-600);border-color:var(--accent-600)}
+.btn.warn{background:transparent;border-color:transparent;color:var(--red)}
+.btn.warn:hover{background:var(--red-bg)}
+.btn.sm{min-height:32px;padding:0 12px;font-size:12.5px}
+.btn:disabled{opacity:.5;pointer-events:none}
+.icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.icon-btn:hover{background:var(--sunken);color:var(--ink)}
+.input,.select{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-size:13.5px;min-height:38px;outline:none}
+.input:focus,.select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.select{appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2376716A' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+label.f{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.chip.green{background:var(--green-bg);color:var(--green)}
+.chip.amber{background:var(--amber-bg);color:var(--amber)}
+.chip.red{background:var(--red-bg);color:var(--red)}
+.chip.accent{background:var(--accent-bg);color:var(--accent)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--sunken);padding:1px 6px;border-radius:6px;color:var(--ink);overflow-wrap:anywhere}
+.cb{appearance:none;width:18px;height:18px;border:1.5px solid var(--faint);border-radius:6px;background:var(--surface);display:inline-grid;place-items:center;flex:none;margin:0}
+.cb:checked{background:var(--accent);border-color:var(--accent)}
+.cb:checked::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+.switch{position:relative;width:40px;height:24px;display:inline-block;flex:none}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch i{position:absolute;inset:0;border-radius:999px;background:var(--line)}
+.switch i::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.switch input:checked + i{background:var(--accent)}
+.switch input:checked + i::after{transform:translateX(16px)}
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-2)}
+.top-in{max-width:1480px;margin:0 auto;min-height:var(--top);display:flex;align-items:center;gap:10px;padding:8px 16px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:15px;color:var(--ink);white-space:nowrap}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#byName{width:150px;min-height:36px}
+main{max-width:1480px;margin:0 auto;padding:14px 16px 40px;display:grid;gap:12px}
+main>*{min-width:0}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th{font-size:11.5px;font-weight:600;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0}
+td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;font-size:13px}
+.r{text-align:right}.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.lnkb{color:var(--ink);font-weight:500;font-size:12.5px;border-bottom:1px dashed var(--faint);text-decoration:none}
+.lnkb:hover{color:var(--accent);border-color:var(--accent)}
+.empty{display:grid;place-items:center;gap:8px;color:var(--muted);text-align:center;padding:36px 16px}
+.tip{position:fixed;z-index:90;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.45;padding:7px 10px;border-radius:9px;max-width:280px;pointer-events:none;box-shadow:var(--shadow-lg)}
+.modal-bg{position:fixed;inset:0;background:rgba(10,10,10,.28);z-index:60;display:grid;place-items:center;padding:16px}
+.modal{width:min(620px,100%);max-height:90vh;display:flex;flex-direction:column;border-radius:20px;box-shadow:var(--shadow-lg);background:var(--surface);overflow:hidden}
+.modal.wide{width:min(980px,100%)}
+.m-h{padding:18px 22px 10px;display:flex;align-items:center;gap:10px}
+.m-h h2{font-family:var(--display);font-size:16px;font-weight:700;color:var(--ink);flex:1}
+.m-b{padding:6px 22px 16px;overflow:auto;display:grid;gap:12px}
+.m-f{padding:12px 22px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line-2)}
+.note{font-size:12.5px;color:var(--muted)}
+.err-box{background:var(--red-bg);color:var(--red);border-radius:12px;padding:10px 12px;font-size:13px}
+.ok-box{background:var(--green-bg);color:var(--green);border-radius:12px;padding:10px 12px;font-size:13px}
+.warn-box{background:var(--amber-bg);color:var(--amber);border-radius:12px;padding:10px 12px;font-size:13px;word-break:break-word}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;z-index:95;font-size:13.5px;box-shadow:var(--shadow-lg);max-width:min(560px,92vw)}
+.center{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.gate{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:32px 26px;text-align:center;box-shadow:var(--shadow)}
+.gate h1{font-family:var(--display);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.gate p{color:var(--muted);font-size:14px;margin-bottom:18px}
+.gate form{display:grid;gap:10px}
+.fwrap{overflow:auto;max-height:calc(100vh - 210px);min-height:240px}
+.ftbl{min-width:760px}
+.ftbl tr.off td{opacity:.55}
+.fname b{color:var(--ink);font-weight:600;margin-right:6px}
+.fname .chip{height:20px;padding:0 8px;font-size:11px;margin-right:4px;vertical-align:1px}
+.fact{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
+.fbtn{height:30px;padding:0 10px;border-radius:9px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--muted);white-space:nowrap;border:1px solid var(--line-2);background:var(--surface)}
+.fbtn:hover{color:var(--ink);border-color:var(--line)}
+.fbtn.accent{color:var(--accent);border-color:var(--accent-ring)}
+.fbtn:disabled{opacity:.5;pointer-events:none}
+.sa{padding:12px 14px;font-size:13px}
+.help h3{font-size:14px;color:var(--ink);margin:8px 0 2px}
+.help p,.help li{font-size:13.5px;margin:4px 0}
+.help ol{padding-left:20px}
+.psum{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.psum .big{font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.psum .big.red{color:var(--red)}.psum .big.amber{color:var(--amber)}
+.pcard{border:1px solid var(--line-2);border-left:3px solid var(--amber);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.pcard.err{border-left-color:var(--red)}.pcard.fix{border-left-color:var(--green)}
+.pc-h{display:flex;gap:10px;align-items:flex-start}
+.pc-t{flex:1;font-size:13.5px;color:var(--ink);line-height:1.45;word-break:break-word}
+.pc-w{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 0 4px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--sunken);color:var(--muted)}
+.pill b{color:var(--ink)}
+.tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.tile{border-radius:14px;padding:12px 14px;background:var(--sunken)}
+.tile .t-v{font-size:24px;font-weight:700;line-height:1.1}
+.tile .t-l{font-size:12.5px;font-weight:600;margin-top:2px}
+.tile .t-s{font-size:11.5px;color:var(--muted);margin-top:3px}
+.tile.green{background:var(--green-bg)}.tile.green .t-v,.tile.green .t-l{color:var(--green)}
+.tile.amber{background:var(--amber-bg)}.tile.amber .t-v,.tile.amber .t-l{color:var(--amber)}
+.tile.red{background:var(--red-bg)}.tile.red .t-v,.tile.red .t-l{color:var(--red)}
+.ph2{font-size:13px;font-weight:700;color:var(--ink);margin-top:4px}
+.tabs-list{display:flex;flex-wrap:wrap;gap:6px}
+.tabs-list label{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+.lg-day{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:14px 0 6px;border-bottom:1px solid var(--line-2)}
+.lg-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.lg-t{width:42px;flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:760px){
+  .top-in{padding:8px 10px}
+  #byName{width:120px}
+  .fwrap{max-height:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 1.8-2M4 12l1 1 1.8-2M4 18l1 1 1.8-2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1.5-1.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 01-12 0V8zM12 18v4"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4M8 9h8M8 13h5"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11.5 12.5L21 3M16 8l2 2M18 6l2 2"/></symbol>
+</svg>
+
+<div class="center" id="gate" hidden>
+  <div class="gate">
+    <h1>Загрузка Экстра</h1>
+    <p>Отдельный раздел автозагрузки. Пароль от других разделов сюда не подходит.</p>
+    <form id="gateForm" autocomplete="off">
+      <input class="input" id="gatePw" type="password" name="zagruzka-extra-password" autocomplete="off" placeholder="Пароль раздела" required>
+      <button class="btn primary" id="gateBtn" type="submit">Войти</button>
+    </form>
+    <div class="note" id="gateErr" style="margin-top:10px;color:var(--red)"></div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">Загрузка Экстра</div>
+      <div class="top-right">
+        <input class="input" id="byName" maxlength="40" placeholder="Ваше имя" autocomplete="name" aria-label="Ваше имя для журнала">
+        <button class="icon-btn" type="button" id="reloadBtn" aria-label="Обновить список"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        <button class="btn" type="button" id="accAdd"><svg class="ic ic-sm"><use href="#i-key"/></svg>Кабинет</button>
+        <button class="btn primary" type="button" id="feedAdd"><svg class="ic ic-sm"><use href="#i-plus"/></svg>Таблица</button>
+        <button class="icon-btn" type="button" id="logBtn" aria-label="Журнал"><svg class="ic"><use href="#i-note"/></svg></button>
+        <button class="icon-btn" type="button" id="helpBtn" aria-label="Инструкция"><svg class="ic"><use href="#i-info"/></svg></button>
+        <button class="icon-btn" type="button" id="themeBtn" aria-label="Тема"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <button class="btn sm" type="button" id="outBtn">Выйти</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="card sa" id="saBox">Загрузка…</div>
+    <div class="card">
+      <div class="fwrap">
+        <table class="ftbl">
+          <thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th>Ошибки</th><th>XML обновлён</th><th></th></tr></thead>
+          <tbody id="rows"><tr><td colspan="6"><div class="empty">Загрузка…</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="note">Google Таблица → XML для автозагрузки Авито. Раз в час сервис пересобирает включённые таблицы. Ключи кабинетов вводятся здесь и никуда больше не попадают.</div>
+  </main>
+</div>
+<div class="toast hide" id="toast" role="status"></div>
+<div class="tip hide" id="tip"></div>
+<div id="modals"></div>
+<script>
+(function () {
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' }[c]));
+const I = (n, c) => `<svg class="ic${c ? ' ' + c : ''}"><use href="#i-${n}"/></svg>`;
+const API_BASE = 'https://mainweb.oxion-ezhkov.workers.dev';
+const API_PROXY_URL = 'https://functions.yandexcloud.net/d4eiu56ijlg0jn5o9rch';
+const ROUTES = location.hostname.endsWith('workers.dev')
+  ? [(p) => location.origin + p, (p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`]
+  : [(p) => `${API_PROXY_URL}?p=${encodeURIComponent(p)}`, (p) => API_BASE + p];
+const PW_KEY = 'zagruzka_extra_pw';
+const BY_KEY = 'zagruzka_extra_by';
+const API = '/api/dashboard/feeds-extra';
+let route = 0;
+const inflight = new Set();
+const F = { feeds: [], accounts: [], serviceAccount: null, loaded: false };
+const getPw = () => { try { return localStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } };
+const actor = () => { try { return (localStorage.getItem(BY_KEY) || '').trim().slice(0, 40); } catch (e) { return ''; } };
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.remove('hide');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hide'), 4800);
+}
+const int = (v) => v == null ? '—' : Number(v).toLocaleString('ru-RU');
+const fmtAt = (ms) => ms ? new Date(ms).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }) : '—';
+function ago(ms) { if (!ms) return '—'; const m = Math.round((Date.now() - ms) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад'; return fmtAt(ms); }
+function emptyState(title, sub) { return `<div class="empty"><div>${esc(title)}</div>${sub ? `<div class="small faint">${esc(sub)}</div>` : ''}</div>`; }
+function httpUrl(u) { return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
+
+async function api(path, opts) {
+  const headers = { 'Content-Type': 'application/json', 'x-dashboard-password': getPw() };
+  for (let i = 0; i < ROUTES.length; i++) {
+    const idx = (route + i) % ROUTES.length;
+    try {
+      const res = await fetch(ROUTES[idx](path), { ...opts, headers, signal: AbortSignal.timeout(90000) });
+      const data = await res.json().catch(() => ({}));
+      if ((res.status === 502 || res.status === 504) && (!opts || !opts.method || opts.method === 'GET') && i < ROUTES.length - 1) continue;
+      route = idx;
+      return { status: res.status, ok: res.ok, data };
+    } catch (e) { /* next route */ }
+  }
+  return { status: 0, ok: false, data: { error: 'Нет связи с сервером. Проверьте интернет и нажмите ещё раз.' } };
+}
+const send = (method, path, body) => api(path, { method, body: JSON.stringify({ by: actor(), ...(body || {}) }) });
+
+function showGate(msg) {
+  $('#app').hidden = true; $('#gate').hidden = false;
+  $('#gateErr').textContent = msg || '';
+  const b = $('#gateBtn'); if (b) b.disabled = false;
+  setTimeout(() => { const el = $('#gatePw'); if (el) el.focus(); }, 30);
+}
+function denied(r) {
+  if (r.status !== 401) return false;
+  try { localStorage.removeItem(PW_KEY); } catch (e) {}
+  showGate('Пароль не подошёл. Это отдельный пароль раздела.');
+  return true;
+}
+
+function themeIcon() {
+  const dark = (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+  $('#themeBtn').innerHTML = I(dark ? 'sun' : 'moon');
+}
+$('#themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('zagruzka_extra.theme', next); } catch (e) {}
+  themeIcon();
+});
+themeIcon();
+try { $('#byName').value = localStorage.getItem(BY_KEY) || ''; } catch (e) {}
+$('#byName').addEventListener('change', () => { try { localStorage.setItem(BY_KEY, $('#byName').value.trim().slice(0, 40)); } catch (e) {} });
+
+const tipEl = $('#tip');
+function hideTip() { tipEl.classList.add('hide'); }
+document.addEventListener('mouseover', (e) => {
+  const el = e.target.closest('[data-tip]');
+  if (!el || !el.dataset.tip) { hideTip(); return; }
+  tipEl.textContent = el.dataset.tip; tipEl.classList.remove('hide');
+  const r = el.getBoundingClientRect();
+  tipEl.style.left = Math.max(8, Math.min(r.left, innerWidth - tipEl.offsetWidth - 8)) + 'px';
+  tipEl.style.top = (r.bottom + 8 + tipEl.offsetHeight > innerHeight ? r.top - tipEl.offsetHeight - 8 : r.bottom + 8) + 'px';
+});
+document.addEventListener('scroll', hideTip, true);
+
+let modalEl = null;
+function openModal(html, wide) {
+  closeModal();
+  modalEl = document.createElement('div');
+  modalEl.className = 'modal-bg';
+  modalEl.innerHTML = `<div class="modal${wide ? ' wide' : ''}" role="dialog" aria-modal="true">${html}</div>`;
+  $('#modals').appendChild(modalEl);
+  modalEl.addEventListener('mousedown', (e) => { if (e.target === modalEl) closeModal(); });
+  $$('[data-close]', modalEl).forEach((b) => b.addEventListener('click', closeModal));
+  const f = modalEl.querySelector('input,textarea,select'); if (f) setTimeout(() => f.focus(), 30);
+  return modalEl;
+}
+function closeModal() { if (modalEl) { modalEl.remove(); modalEl = null; } }
+const mHead = (t) => `<div class="m-h"><h2>${esc(t)}</h2><button class="icon-btn" type="button" data-close aria-label="Закрыть">${I('x')}</button></div>`;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalEl) closeModal(); });
+
+const accName = (id) => { const a = F.accounts.find((x) => x.id === id); return a ? a.name : ''; };
+const feedBy = (slug) => F.feeds.find((f) => f.slug === slug);
+const fb = (attr, id, icon, label, tip, cls) => `<button class="fbtn${cls ? ' ' + cls : ''}" type="button" ${attr}="${esc(id)}" data-tip="${esc(tip)}" aria-label="${esc(label)}">${I(icon, 'ic-sm')}<span>${esc(label)}</span></button>`;
+function errCount(s) { return s ? (s.error ? 1 : 0) + (s.s3Error ? 1 : 0) + ((s.tabs || []).filter((t) => t.error).length) + ((s.problems || []).length) : 0; }
+
+function renderSa() {
+  const email = F.serviceAccount;
+  $('#saBox').innerHTML = email
+    ? `Дайте таблице доступ на чтение для <span class="mono">${esc(email)}</span>. Без этого сборка не увидит строки. Кабинеты Авито добавляются кнопкой «Кабинет» — client_id и client_secret.`
+    : 'Сервисный аккаунт Google не настроен на сервере. Тогда откройте таблицу по ссылке: «Все, у кого есть ссылка» → читатель.';
+}
+function render() {
+  const linked = new Set(F.feeds.map((f) => f.avitoAccountId).filter(Boolean));
+  const free = F.accounts.filter((a) => !linked.has(a.id));
+  const rows = F.feeds.map((f) => {
+    const s = f.stat;
+    const n = errCount(s);
+    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${esc(f.slug)}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${esc(f.slug)}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
+    const acc = accName(f.avitoAccountId);
+    const tags = [!acc && '<span class="chip amber">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>'].filter(Boolean).join(' ');
+    return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname"><b>${esc(f.name)}</b>${tags}${acc && acc !== f.name ? `<div class="small muted">${esc(acc)}</div>` : ''}</td>
+      <td>${f.sheetUrl ? `<a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a>` : '—'}</td>
+      <td class="r num">${s && !s.error ? int(s.ads) : '—'}</td><td>${pill}</td>
+      <td class="num small muted">${s && s.builtAt ? esc(ago(Date.parse(s.builtAt))) : '—'}</td>
+      <td><div class="fact">
+        ${acc ? fb('data-report', f.slug, 'list', 'Отчёт', 'Последний отчёт автозагрузки Авито') : ''}
+        ${fb('data-copy', f.slug, 'link', 'Ссылка', 'Скопировать ссылку на XML')}
+        ${fb('data-build', f.slug, 'refresh', 'Пересобрать', 'Собрать XML из таблицы сейчас')}
+        ${fb('data-upload', f.slug, 'send', 'В Авито', 'Попросить Авито забрать XML сейчас')}
+        ${fb('data-connect', f.slug, 'plug', 'Подключить', 'Записать ссылку на XML в кабинет Авито')}
+        ${f.avitoAccountId ? fb('data-keys', f.avitoAccountId, 'key', 'Ключи', 'Ключи этого кабинета') : ''}
+        ${fb('data-edit', f.slug, 'edit', 'Изменить', 'Имя, таблица, вкладки, кабинет')}</div></td></tr>`;
+  }).join('');
+  const loose = free.map((a) => `<tr><td class="fname"><b>${esc(a.name)}</b><span class="chip">нет таблицы</span>${a.userId ? `<div class="small muted">Авито ${esc(a.userId)}</div>` : ''}</td><td colspan="4"></td>
+    <td><div class="fact">${fb('data-new', a.id, 'plus', 'Добавить таблицу', 'Подключить Google Таблицу к этому кабинету', 'accent')}${fb('data-keys', a.id, 'key', 'Ключи', 'Изменить ключи кабинета')}</div></td></tr>`).join('');
+  $('#rows').innerHTML = (rows + loose) || `<tr><td colspan="6">${emptyState('Пока пусто', 'Добавьте кабинет Авито, затем таблицу с объявлениями.')}</td></tr>`;
+}
+function replaceFeed(f) {
+  const i = F.feeds.findIndex((x) => x.slug === f.slug);
+  if (i >= 0) F.feeds[i] = f; else F.feeds.push(f);
+  render();
+}
+function replaceAccount(a) {
+  const i = F.accounts.findIndex((x) => x.id === a.id);
+  if (i >= 0) F.accounts[i] = a; else F.accounts.push(a);
+  render();
+}
+
+async function load() {
+  const r = await api(API);
+  if (denied(r)) return;
+  if (!r.ok) {
+    $('#rows').innerHTML = `<tr><td colspan="6">${emptyState(r.data.error || 'Не удалось загрузить', 'Нажмите обновить.')}</td></tr>`;
+    $('#saBox').textContent = 'Список не загрузился.';
+    return;
+  }
+  F.feeds = r.data.feeds || [];
+  F.accounts = r.data.accounts || [];
+  F.serviceAccount = r.data.serviceAccount || null;
+  F.loaded = true;
+  renderSa();
+  render();
+}
+
+$('#rows').addEventListener('click', async (e) => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  if (b.dataset.copy) {
+    const f = feedBy(b.dataset.copy);
+    const url = f && f.feedUrl;
+    if (!url) return toast('Ссылки ещё нет — сначала пересоберите XML');
+    try { await navigator.clipboard.writeText(url); toast('Ссылка на XML скопирована'); } catch (err) { toast(url); }
+  } else if (b.dataset.build) {
+    const slug = b.dataset.build;
+    if (inflight.has(slug)) return;
+    inflight.add(slug); b.disabled = true; toast('Собираю XML…');
+    const r = await send('POST', `${API}/${slug}/build`, {});
+    inflight.delete(slug);
+    if (b.isConnected) b.disabled = false;
+    if (denied(r)) return;
+    if (!r.ok) return toast(r.data.error || 'Не удалось собрать XML');
+    replaceFeed(r.data.feed);
+    const s = r.data.feed.stat || {};
+    toast(s.error ? 'XML не собран: ' + s.error : `XML собран: ${s.ads || 0} объявлений`);
+  } else if (b.dataset.upload) {
+    const slug = b.dataset.upload;
+    if (inflight.has('up:' + slug)) return;
+    inflight.add('up:' + slug); b.disabled = true;
+    const r = await send('POST', `${API}/${slug}/avito-upload`, {});
+    inflight.delete('up:' + slug); b.disabled = false;
+    if (denied(r)) return;
+    toast(r.ok ? 'Авито начал загрузку. Результат — в «Отчёт» через несколько минут.' : (r.data.error || 'Авито не принял запрос'));
+  } else if (b.dataset.connect) openConnect(b.dataset.connect);
+  else if (b.dataset.edit) openFeed(b.dataset.edit);
+  else if (b.dataset.new) { const a = F.accounts.find((x) => x.id === b.dataset.new); openFeed(null, { name: a ? a.name : '', avitoAccountId: b.dataset.new }); }
+  else if (b.dataset.keys) openAccount(b.dataset.keys);
+  else if (b.dataset.probs) openProbs(b.dataset.probs);
+  else if (b.dataset.report) openReport(b.dataset.report);
+});
+
+const SKIP_TABS = /справк|файл из авито|уникализац|дубли|сюда выгрузка|яндекс\.диск|тексты|позиции/i;
+function openFeed(slug, preset) {
+  const ed = slug ? feedBy(slug) : null;
+  const pre = preset || {};
+  const accOpts = F.accounts.map((a) => `<option value="${esc(a.id)}" ${(ed ? ed.avitoAccountId : pre.avitoAccountId) === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const m = openModal(`${mHead(ed ? 'Изменить — ' + ed.name : 'Новая таблица')}<form class="m-b" id="eForm">
+    <div><label class="f" for="eName">Имя клиента</label><input class="input" id="eName" maxlength="60" required value="${esc(ed ? ed.name : pre.name || '')}"></div>
+    <div><label class="f" for="eSheet">Ссылка на Google Таблицу</label><div class="row" style="flex-wrap:nowrap"><input class="input" id="eSheet" inputmode="url" value="${esc(ed ? ed.sheetUrl : '')}" placeholder="https://docs.google.com/spreadsheets/d/…"><button class="btn" type="button" id="eTabsBtn">Вкладки</button></div>
+      <div class="note" style="margin-top:6px">${F.serviceAccount ? `Доступ на чтение для <span class="mono">${esc(F.serviceAccount)}</span>` : 'Либо откройте доступ «все, у кого есть ссылка».'}</div></div>
+    <div><label class="f">Вкладки с объявлениями</label><div class="tabs-list" id="eTabs"></div></div>
+    <div><label class="f" for="eAcc">Кабинет Авито</label><select class="select" id="eAcc"><option value="">— не привязан —</option>${accOpts}</select>${F.accounts.length ? '' : '<div class="note">Сначала добавьте кабинет кнопкой «Кабинет».</div>'}</div>
+    <label class="row" style="cursor:pointer"><label class="switch"><input type="checkbox" id="eOn" ${!ed || ed.enabled ? 'checked' : ''}><i></i></label><span>Пересобирать XML каждый час</span></label>
+    <div class="err-box hide" id="eErr"></div></form>
+    <div class="m-f">${ed ? '<button class="btn warn" type="button" id="eDel">Удалить</button>' : ''}<span class="grow"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="eForm" id="eSave">Сохранить</button></div>`);
+  const paintTabs = (all, checked) => {
+    $('#eTabs').innerHTML = all.length ? all.map((t) => `<label><input type="checkbox" class="cb" value="${esc(t)}" ${checked.includes(t) ? 'checked' : ''}>${esc(t)}</label>`).join('') : '<span class="note">Нажмите «Вкладки», чтобы прочитать их из таблицы</span>';
+  };
+  paintTabs(ed ? ed.tabs || [] : [], ed ? ed.tabs || [] : []);
+  const err = (t) => { const el = $('#eErr'); if (!el) return; el.textContent = t || ''; el.classList.toggle('hide', !t); };
+  $('#eTabsBtn').onclick = async () => {
+    const sheet = $('#eSheet').value.trim();
+    if (!sheet) return $('#eSheet').focus();
+    if (inflight.has('tabs')) return;
+    inflight.add('tabs'); $('#eTabsBtn').disabled = true;
+    const r = await api(API + '/tabs?sheet=' + encodeURIComponent(sheet));
+    inflight.delete('tabs'); if ($('#eTabsBtn')) $('#eTabsBtn').disabled = false;
+    if (denied(r)) return;
+    if (!r.ok) return err(r.data.error || 'Не удалось открыть таблицу');
+    err('');
+    const cur = $$('#eTabs input:checked').map((i) => i.value);
+    paintTabs(r.data.tabs || [], cur.length ? cur : (r.data.tabs || []).filter((t) => !SKIP_TABS.test(t)));
+  };
+  $('#eForm', m).addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const btn = $('#eSave');
+    if (!btn || btn.disabled) return;
+    const body = { name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAcc').value, enabled: $('#eOn').checked };
+    if (!body.tabs.length) return err('Отметьте хотя бы одну вкладку');
+    btn.disabled = true; btn.textContent = ed ? 'Сохраняю…' : 'Собираю XML…';
+    const r = ed ? await send('PUT', API + '/' + ed.slug, body) : await send('POST', API, body);
+    if ($('#eSave')) { btn.disabled = false; btn.textContent = 'Сохранить'; }
+    if (denied(r)) return;
+    if (!r.ok) return err(r.data.error || 'Не удалось сохранить');
+    replaceFeed(r.data.feed); closeModal();
+    const s = r.data.feed.stat;
+    toast(!ed && s && s.error ? 'Таблица добавлена, но XML не собран: ' + s.error : (ed ? 'Сохранено. Нажмите «Пересобрать», чтобы обновить XML.' : `Добавлено, в XML ${s ? s.ads : 0} объявлений`));
+  });
+  if (ed) $('#eDel').onclick = async () => {
+    const b = $('#eDel');
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Точно удалить?'; return; }
+    if (b.disabled) return;
+    b.disabled = true;
+    const r = await send('DELETE', API + '/' + ed.slug, {});
+    if (denied(r)) return;
+    if (!r.ok) { b.disabled = false; return toast(r.data.error || 'Не удалось удалить'); }
+    F.feeds = F.feeds.filter((f) => f.slug !== ed.slug); render(); closeModal(); toast('Таблица удалена');
+  };
+}
+
+function openAccount(id) {
+  const ed = id ? F.accounts.find((a) => a.id === id) : null;
+  const m = openModal(`${mHead(ed ? 'Ключи — ' + ed.name : 'Новый кабинет Авито')}<form class="m-b" id="aForm">
+    <div class="note">Ключи из кабинета разработчика Авито (client_id и client_secret). Перед сохранением сервис проверяет, что Авито их принимает. Секрет на страницу обратно не присылается.</div>
+    <div><label class="f" for="aName">Название кабинета</label><input class="input" id="aName" maxlength="80" required value="${esc(ed ? ed.name : '')}"></div>
+    <div><label class="f" for="aId">client_id</label><input class="input" id="aId" maxlength="100" required autocomplete="off" value="${esc(ed ? ed.clientId : '')}"></div>
+    <div><label class="f" for="aSec">client_secret</label><input class="input" id="aSec" type="password" maxlength="200" autocomplete="new-password" placeholder="${ed ? 'Оставьте пустым, чтобы не менять' : ''}" ${ed ? '' : 'required'}></div>
+    ${ed && ed.userId ? `<div class="note">Авито user id: <span class="mono">${esc(ed.userId)}</span></div>` : ''}
+    <div class="err-box hide" id="aErr"></div></form>
+    <div class="m-f">${ed ? '<button class="btn warn" type="button" id="aDel">Удалить кабинет</button>' : ''}<span class="grow"></span><button class="btn" type="button" data-close>Отмена</button><button class="btn primary" type="submit" form="aForm" id="aSave">Проверить и сохранить</button></div>`);
+  const err = (t) => { const el = $('#aErr'); if (!el) return; el.textContent = t || ''; el.classList.toggle('hide', !t); };
+  $('#aForm', m).addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const btn = $('#aSave');
+    if (!btn || btn.disabled) return;
+    const body = { name: $('#aName').value.trim(), clientId: $('#aId').value.trim(), clientSecret: $('#aSec').value };
+    if (!ed && !body.clientSecret) return err('Вставьте client_secret');
+    btn.disabled = true; btn.textContent = 'Проверяю ключи в Авито…';
+    const r = ed ? await send('PUT', API + '/accounts/' + ed.id, body) : await send('POST', API + '/accounts', body);
+    if ($('#aSave')) { btn.disabled = false; btn.textContent = 'Проверить и сохранить'; }
+    if (denied(r)) return;
+    if (!r.ok) return err(r.data.error || 'Не удалось сохранить');
+    replaceAccount(r.data.account); closeModal(); toast(ed ? 'Кабинет обновлён' : 'Кабинет добавлен. Теперь привяжите таблицу.');
+  });
+  if (ed) $('#aDel').onclick = async () => {
+    const b = $('#aDel');
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Точно удалить?'; return; }
+    if (b.disabled) return;
+    b.disabled = true;
+    const r = await send('DELETE', API + '/accounts/' + ed.id, {});
+    b.disabled = false;
+    if (denied(r)) return;
+    if (!r.ok) return err(r.data.error || 'Не удалось удалить');
+    F.accounts = F.accounts.filter((a) => a.id !== ed.id); render(); closeModal(); toast('Кабинет удалён');
+  };
+}
+
+function openConnect(slug) {
+  const f = feedBy(slug);
+  if (!f) return;
+  const acc = F.accounts.find((a) => a.id === f.avitoAccountId);
+  const m = openModal(`${mHead('Подключить на Авито')}<form class="m-b" id="cForm">
+    <div class="note">${acc ? `В кабинет «${esc(acc.name)}» запишется ссылка на XML этого раздела. Объявления с теми же id Авито не удалит.` : 'Сначала привяжите кабинет в «Изменить».'}</div>
+    <div><label class="f" for="cEmail">Почта для отчётов автозагрузки</label><input class="input" id="cEmail" type="email" placeholder="если пусто — оставим ту, что уже в Авито"></div>
+    <div class="err-box hide" id="cErr"></div><div id="cDone"></div></form>
+    <div class="m-f"><button class="btn" type="button" data-close>Закрыть</button><button class="btn primary" type="submit" form="cForm" id="cSave" ${acc ? '' : 'disabled'}>Подключить</button></div>`);
+  $('#cForm', m).addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const btn = $('#cSave');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    const r = await send('POST', `${API}/${f.slug}/avito-connect`, { reportEmail: $('#cEmail').value.trim() });
+    if ($('#cSave')) btn.disabled = false;
+    if (denied(r)) return;
+    const box = $('#cErr');
+    if (!r.ok) { if (box) { box.textContent = r.data.error || 'Авито не принял настройки'; box.classList.remove('hide'); } return; }
+    const prev = (r.data.previousFeeds || []).map((p) => p.feed_url).filter((u) => httpUrl(u));
+    if ($('#cDone')) $('#cDone').innerHTML = `<div class="ok-box">Готово. Авито заберёт XML при следующей загрузке.${prev.length ? ' Раньше стояло: ' + prev.map((u) => `<span class="mono">${esc(u)}</span>`).join(', ') : ''}</div>`;
+    if (box) box.classList.add('hide');
+  });
+}
+
+function probGroups(items) {
+  const g = new Map();
+  for (const it of items) {
+    const key = String(it.msg || '').slice(0, 180);
+    if (!g.has(key)) g.set(key, { msg: it.msg, kind: it.kind, items: [] });
+    g.get(key).items.push(it);
+  }
+  return [...g.values()].map((x) => ({ kind: x.kind, msg: x.msg, where: x.items.map((it) => it.where).filter(Boolean) })).sort((a, b) => b.where.length - a.where.length);
+}
+function probCards(groups) {
+  return groups.map((g) => `<div class="pcard ${g.kind || 'warn'}"><div class="pc-h"><div class="pc-t">${esc(g.msg)}</div>${g.where.length > 1 ? `<span class="chip">${g.where.length}</span>` : ''}</div>${g.where.length ? `<div class="pc-w">${g.where.slice(0, 40).map((w) => `<span class="pill">${w}</span>`).join('')}${g.where.length > 40 ? `<span class="pill">ещё ${g.where.length - 40}</span>` : ''}</div>` : ''}</div>`).join('');
+}
+function openProbs(slug) {
+  const f = feedBy(slug); if (!f) return;
+  const s = f.stat || {};
+  const items = [];
+  if (s.error) items.push({ kind: 'err', msg: s.error, where: '' });
+  if (s.s3Error) items.push({ kind: 'err', msg: 'XML не выложен в хранилище: ' + s.s3Error, where: '' });
+  (s.tabs || []).filter((t) => t.error).forEach((t) => items.push({ kind: 'err', msg: t.error, where: '' }));
+  const multi = [];
+  (s.problems || []).forEach((p) => {
+    if (p.ids && p.ids.length > 1) { multi.push({ kind: 'warn', msg: p.msg, where: p.ids.slice(0, 20).map((id) => `<b>${esc(id)}</b>`) }); return; }
+    items.push({ kind: 'warn', msg: p.msg, where: [p.row && `стр. ${p.row}`, p.id && `<b>${esc(p.id)}</b>`].filter(Boolean).join(' · ') });
+  });
+  const groups = multi.concat(probGroups(items));
+  const fixes = (s.fixes || []).map((x) => `<div class="pcard fix"><div class="pc-h"><div class="pc-t"><b>${esc(x.tag)}</b>: «${esc(x.from)}» → «${esc(x.to)}»</div><span class="chip">${int(x.n)}</span></div></div>`).join('');
+  openModal(`${mHead('Ошибки XML — ' + f.name)}<div class="m-b">
+    ${items.length ? `<div class="psum"><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${s.builtAt ? 'Сборка ' + esc(ago(Date.parse(s.builtAt))) + ' · ' : ''}в XML ${int(s.ads)} объявлений</div></div>` : '<div class="ok-box">Ошибок сборки нет</div>'}
+    ${probCards(groups)}
+    ${fixes ? `<h3 class="ph2">Исправлено при сборке</h3><div class="note">В XML подставлены значения, которые Авито принимает. Таблица сама не меняется.</div>${fixes}` : ''}
+    ${s.catalogError ? `<div class="warn-box">Справочник Авито не проверен: ${esc(s.catalogError)}</div>` : ''}
+    <div class="note">Это ошибки сборки XML. Что Авито сделал с объявлениями — кнопка «Отчёт».</div></div>`, true);
+}
+
+const R = {};
+function reportCsv(rows) {
+  const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const lines = [['ID в файле', 'ID на Авито', 'Раздел', 'Статус', 'Тип', 'Код', 'Сообщение', 'Ссылка'].map(q).join(';')];
+  rows.forEach((it) => ((it.messages && it.messages.length) ? it.messages : [{}]).forEach((m) => lines.push([it.adId, it.avitoId, it.section, it.avitoStatus, m.type, m.code, m.text, it.url].map(q).join(';'))));
+  return '\uFEFF' + lines.join('\r\n');
+}
+async function openReport(slug) {
+  const f = feedBy(slug); if (!f) return;
+  openModal(`${mHead('Отчёт Авито — ' + f.name)}<div class="m-b" id="repBody"><div class="note">Запрашиваю отчёт у Авито…</div></div>
+    <div class="m-f"><button class="btn" type="button" id="repRe">${I('refresh', 'ic-sm')}Обновить</button><span class="grow"></span><button class="btn primary" type="button" id="repCsv" disabled>Скачать ошибки</button></div>`, true);
+  const loadRep = async () => {
+    if ($('#repCsv')) $('#repCsv').disabled = true;
+    const r = await api(`${API}/${slug}/report`);
+    if (!$('#repBody')) return;
+    if (denied(r)) return;
+    if (!r.ok) { $('#repBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Авито не отдал отчёт')}</div>`; return; }
+    R[slug] = r.data; paintReport(slug);
+  };
+  $('#repRe').onclick = () => { if ($('#repBody')) $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; loadRep(); };
+  $('#repCsv').onclick = () => {
+    const d = R[slug]; if (!d) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([reportCsv(d.problems || [])], { type: 'text/csv;charset=utf-8' }));
+    a.download = `oshibki_${f.slug}.csv`; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  };
+  loadRep();
+}
+function paintReport(slug) {
+  const d = R[slug]; if (!d || !$('#repBody')) return;
+  const s = d.summary || {};
+  const src = d.source;
+  const secs = s.sectionStats && Array.isArray(s.sectionStats.sections) ? s.sectionStats.sections : [];
+  const tone = (x) => /^success|successful/.test(x || '') ? 'green' : /error|fail/.test(x || '') ? 'red' : 'amber';
+  const srcBox = !src ? '' : src.kind === 'cantor'
+    ? `<div class="ok-box">Кабинет грузится из XML этого раздела${src.enabled ? '' : ' — но автозагрузка в кабинете выключена'}</div>`
+    : `<div class="warn-box">${src.kind === 'none' ? 'В кабинете не указана ссылка на фид' : 'Кабинет грузится из другой ссылки'}${src.urls && src.urls[0] ? ': <span class="mono">' + esc(src.urls[0]) + '</span>' : ''}. После «Подключить» Авито возьмёт XML этого раздела.</div>`;
+  const items = [];
+  (d.problems || []).forEach((it) => {
+    const msgs = it.messages || [];
+    const bad = msgs.filter((m) => m.type === 'error' || m.type === 'alarm');
+    const ms = bad.length ? bad : msgs.filter((m) => m.type !== 'info');
+    const href = httpUrl(it.url);
+    const where = href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(it.adId || it.avitoId || 'объявление')}</a>` : esc(it.adId || it.avitoId || '');
+    (ms.length ? ms : [{ text: it.section }]).forEach((m) => items.push({ kind: bad.length ? 'err' : 'warn', msg: m.text || it.section || 'Проблема', where }));
+  });
+  if ($('#repCsv')) $('#repCsv').disabled = !(d.problems || []).length;
+  $('#repBody').innerHTML = `${srcBox}
+    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${int(s.items)} объявлений</div>
+    <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug)}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title || '')}</div></div>`).join('')}</div>
+    ${items.length ? `<h3 class="ph2">Проблемы — ${(d.problems || []).length}</h3>${probCards(probGroups(items))}` : '<div class="ok-box">Проблемных объявлений в отчёте нет</div>'}`;
+}
+
+function openHelp() {
+  openModal(`${mHead('Как работать')}<div class="m-b help">
+    <h3>Что это</h3><p>Объявления живут в Google Таблице по шаблону BananLab. Сервис собирает из неё XML, кладёт его в хранилище, Авито забирает файл сам. Этот раздел не видит кабинеты и таблицы других разделов сайта.</p>
+    <h3>Новый кабинет</h3><ol>
+      <li>«Кабинет» → название, client_id и client_secret из кабинета разработчика Авито. Кнопка проверяет ключи, без верных ключей кабинет не сохранится.</li>
+      <li>Таблица: «Настройки доступа» → добавьте адрес сервисного аккаунта (он написан сверху) как читателя. Либо откройте доступ «все, у кого есть ссылка».</li>
+      <li>У строки кабинета «Добавить таблицу» → вставьте ссылку → «Вкладки» → отметьте вкладку с объявлениями → «Сохранить». XML соберётся сразу.</li>
+      <li>«Подключить» → почта для отчётов. Ссылка запишется в автозагрузку Авито.</li>
+      <li>«В Авито» — забрать XML сейчас (Авито разрешает не чаще раза в час).</li>
+      <li>Через некоторое время «Отчёт» — что опубликовалось. «Ошибки» в строке — это ещё сборка таблицы, не ответ Авито.</li>
+    </ol>
+    <h3>Фото</h3><p>В колонке Images — ссылки, по одной на строку или через « | ». Закрытые ссылки Яндекс.Диска работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен. Публичные ссылки — без токена.</p>
+    <h3>Если не обновилось</h3><p>«Пересобрать», затем «В Авито». Если кабинет не грузит совсем — проверьте, что автозагрузка включена в профиле Авито и тариф активен. Текст ошибки показывается в окне, ничего не проглатывается молча.</p>
+  </div>`, true);
+}
+
+function openLog() {
+  const month = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7);
+  openModal(`${mHead('Журнал')}<div class="m-b" id="logBody"><div class="note">Загружаю…</div></div>`, true);
+  api(API + '/log?month=' + month).then((r) => {
+    if (!$('#logBody')) return;
+    if (denied(r)) return;
+    if (!r.ok) { $('#logBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Не удалось загрузить журнал')}</div>`; return; }
+    const accounts = r.data.accounts || {};
+    let cur = '';
+    const rows = (r.data.entries || []).map((e) => {
+      const dd = new Date(e.t + 3 * 3600e3).toISOString().slice(0, 10);
+      const head = dd !== cur ? `<div class="lg-day">${esc(dd)}</div>` : '';
+      cur = dd;
+      const acc = (e.acc || []).map((id) => accounts[id] || id).join(', ');
+      const extra = [e.name, acc, e.detail].filter(Boolean).join(' — ');
+      return `${head}<div class="lg-row"><span class="lg-t">${esc(new Date(e.t).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }))}</span><div><b>${esc(e.by || 'Загрузка Экстра')}</b> · ${esc(e.act || '')}${extra ? `<div class="note">${esc(extra)}</div>` : ''}</div></div>`;
+    }).join('');
+    $('#logBody').innerHTML = rows || emptyState('За этот месяц записей нет', 'Здесь будут добавления кабинетов, сборки и подключения.');
+  });
+}
+
+$('#accAdd').addEventListener('click', () => openAccount(null));
+$('#feedAdd').addEventListener('click', () => openFeed(null));
+$('#reloadBtn').addEventListener('click', () => { $('#rows').innerHTML = '<tr><td colspan="6"><div class="empty">Загрузка…</div></td></tr>'; load(); });
+$('#helpBtn').addEventListener('click', openHelp);
+$('#logBtn').addEventListener('click', openLog);
+$('#outBtn').addEventListener('click', () => { try { localStorage.removeItem(PW_KEY); } catch (e) {} showGate(''); });
+$('#gateForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = $('#gateBtn');
+  const pw = $('#gatePw').value;
+  if (!pw || btn.disabled) return;
+  btn.disabled = true; $('#gateErr').textContent = '';
+  try { localStorage.setItem(PW_KEY, pw); } catch (e) { btn.disabled = false; $('#gateErr').textContent = 'Браузер не сохранил пароль'; return; }
+  const r = await api(API);
+  if (r.status === 401) {
+    try { localStorage.removeItem(PW_KEY); } catch (e) {}
+    btn.disabled = false; $('#gateErr').textContent = 'Неверный пароль'; return;
+  }
+  if (!r.ok) { btn.disabled = false; $('#gateErr').textContent = r.data.error || 'Нет связи с сервером'; return; }
+  $('#gatePw').value = '';
+  $('#gate').hidden = true; $('#app').hidden = false;
+  F.feeds = r.data.feeds || []; F.accounts = r.data.accounts || []; F.serviceAccount = r.data.serviceAccount || null; F.loaded = true;
+  renderSa(); render();
+});
+
+if (!getPw()) showGate('');
+else { $('#gate').hidden = true; $('#app').hidden = false; load(); }
+})();
+</script>
+</body>
+</html>
