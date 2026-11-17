@@ -38,6 +38,7 @@ type Listing = {
   status: "published" | "draft";
   source: "cantor" | "sheet";
   photos: string[];
+  shows?: number;
   views: number;
   contacts: number;
   spend: number;
@@ -67,6 +68,7 @@ const initial: State = {
     status: i === 2 ? "draft" : "published",
     source: "cantor",
     photos: [],
+    shows: a.shows,
     views: a.views,
     contacts: a.contacts,
     spend: a.spendRub,
@@ -147,7 +149,11 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
-  const [tab, setTab] = useState("list");
+  const [tab, setTab] = useState(focus === "feeds" || focus === "history" ? focus : "list");
+  const [details, setDetails] = useState(false);
+  const [sort, setSort] = useState<{key: string; asc: boolean}>({key:"title",asc:true});
+  const [photoIndex,setPhotoIndex] = useState(0);
+  useEffect(()=>{ if(focus === "feeds" || focus === "history" || focus === "list") setTab(focus); },[focus]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
@@ -263,15 +269,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     (a) =>
       (!query || `${a.title} ${a.city} ${a.id}`.toLowerCase().includes(query.toLowerCase())) &&
       (filter === "all" || a.status === filter),
-  );
-  const total = state.items.reduce(
-    (s, a) => ({
-      views: s.views + a.views,
-      contacts: s.contacts + a.contacts,
-      spend: s.spend + a.spend,
-    }),
-    { views: 0, contacts: 0, spend: 0 },
-  );
+  ).sort((a,b)=>{ const value=(x:Listing):string|number => sort.key === "conversion" ? (x.views ? x.contacts/x.views : -1) : sort.key === "cpv" ? (x.views ? x.spend/x.views : -1) : sort.key === "cpa" ? (x.contacts ? x.spend/x.contacts : -1) : (x[sort.key as keyof Listing] as string|number) ?? -1; const x=value(a), y=value(b); return (typeof x === "string" && typeof y === "string" ? x.localeCompare(y,"ru") : Number(x)-Number(y))*(sort.asc?1:-1); });
+  const heading=(key:string,label:string)=><th><button onClick={()=>setSort({key,asc:sort.key===key?!sort.asc:true})}>{label} {sort.key===key?(sort.asc?"↑":"↓"):"↕"}</button></th>;
   const sheetValid = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+/.test(sheet);
   function propose(kind: "title" | "text" | "photo") {
     if (!edit) return;
@@ -351,33 +350,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   );
   return (
     <div className="aw">
-      <div className="aw-top">
-        <div className="aw-tabs" role="tablist" aria-label="Работа с объявлениями">
-          {[
-            ["list", "Объявления"],
-            ["feeds", "Автозагрузка"],
-            ["bids", "Ставки"],
-            ["history", "История"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => {
-                setTab(id);
-                setNotice("");
-              }}
-            >
-              {label}
-              {id === "list" && <span>{state.items.length}</span>}
-            </button>
-          ))}
-        </div>
-        <AdsHelp label="Как начать работу">
-          Создайте объявление или подключите таблицу, затем настройте продвижение. В превью правки
-          сохраняются в браузере; публикация, ИИ и автозагрузка ещё не подключены.
-        </AdsHelp>
-      </div>
       {notice && (
         <div className="aw-notice" role="status">
           {notice}
@@ -388,19 +360,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       )}
       {tab === "list" && (
         <>
-          <div className="aw-summary">
-            {[
-              [state.items.filter((a) => a.status === "published").length, "в публикации"],
-              [total.views, "просмотров"],
-              [total.contacts, "контактов"],
-              [rub(total.spend), "расходы за ноябрь"],
-            ].map(([v, l]) => (
-              <div key={l}>
-                <strong>{v}</strong>
-                <span>{l}</span>
-              </div>
-            ))}
-          </div>
           <div className="aw-tools">
             <div className="aw-search">
               <Search size={17} />
@@ -421,6 +380,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 { value: "draft", label: "Черновики" },
               ]}
             />
+            <button className="aw-btn" onClick={()=>setDetails(!details)} aria-pressed={details}>{details?"Свернуть":"Подробнее"}</button>
             <button className="aw-btn aw-primary" onClick={create}>
               <Plus size={17} />
               Создать объявление
@@ -460,11 +420,13 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       }
                     />
                   </th>
-                  <th>Объявление</th>
-                  <th>Статус</th>
-                  <th>Просмотры</th>
-                  <th>Контакты</th>
-                  <th>Расходы</th>
+                  {heading("title","Объявление")}
+                  {heading("status","Статус")}
+                  {heading("shows","Показы")}
+                  {heading("views","Просмотры")}
+                  {heading("contacts","Контакты")}
+                  {heading("spend","Расходы")}
+                  {details && <>{heading("conversion","Контакты / просмотры")}{heading("cpv","Цена просмотра")}{heading("cpa","Цена контакта")}</>}
                   <th />
                 </tr>
               </thead>
@@ -502,7 +464,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           )}
                         </span>
                         <span>
-                          <strong>{a.title}</strong>
+                          <strong className={details ? "aw-title-full" : ""}>{a.title}</strong>
                           <small>
                             {a.city} · {rub(a.price)}
                           </small>
@@ -515,9 +477,11 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         {a.status === "draft" ? "Черновик" : "В публикации"}
                       </span>
                     </td>
+                    <td>{a.shows ?? "—"}</td>
                     <td>{a.views || "—"}</td>
                     <td>{a.contacts || "—"}</td>
                     <td>{a.spend ? rub(a.spend) : "—"}</td>
+                    {details && <><td>{a.views ? `${(100*a.contacts/a.views).toFixed(1)} %` : "—"}</td><td>{a.views ? rub(a.spend/a.views) : "—"}</td><td>{a.contacts ? rub(a.spend/a.contacts) : "—"}</td></>}
                     <td>
                       <button
                         className="aw-icon"
@@ -793,25 +757,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 if (e.key === "Escape") setEdit(null);
               }}
             >
-              <header>
-                <div>
-                  <small>
-                    {state.items.some((a) => a.id === edit.id)
-                      ? "Редактирование"
-                      : "Создание объявления"}
-                  </small>
-                  <h2>
-                    {state.items.some((a) => a.id === edit.id) ? edit.title : "Новое объявление"}
-                  </h2>
-                </div>
-                <button
-                  className="aw-icon"
-                  aria-label="Закрыть редактор"
-                  onClick={() => setEdit(null)}
-                >
-                  <X />
-                </button>
-              </header>
               <div className="aw-tabs">
                 {[
                   ["content", "Содержание"],
@@ -823,6 +768,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   </button>
                 ))}
               </div>
+              <button className="aw-icon aw-editor-close" aria-label="Закрыть редактор" onClick={() => setEdit(null)}><X /></button>
               <div className="aw-editor-layout">
                 <div className="aw-editor-body">
                   {notice && (
@@ -1123,7 +1069,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 </div>
                 <aside className={`aw-live-preview ${preview ? "mobile-open" : ""}`}>
                   <div className="aw-preview-heading">
-                    <span>Предпросмотр</span>
+                    
                     <button
                       className="aw-icon aw-mobile-close"
                       aria-label="Скрыть предпросмотр"
@@ -1133,12 +1079,13 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                     </button>
                   </div>
                   <div className="aw-preview-image">
-                    {edit.photos[0] ? (
-                      <img src={edit.photos[0]} alt="Обложка объявления" />
+                    {edit.photos[photoIndex % edit.photos.length] ? (
+                      <img src={edit.photos[photoIndex % edit.photos.length]} alt="Фотография объявления" />
                     ) : (
                       <ImagePlus size={36} />
                     )}
                   </div>
+                  {edit.photos.length > 1 && <div className="aw-carousel"><button aria-label="Предыдущее фото" onClick={()=>setPhotoIndex((photoIndex-1+edit.photos.length)%edit.photos.length)}>←</button><span>{photoIndex % edit.photos.length + 1} / {edit.photos.length}</span><button aria-label="Следующее фото" onClick={()=>setPhotoIndex((photoIndex+1)%edit.photos.length)}>→</button></div>}
                   <div className="aw-preview-content">
                     <h3>{edit.title || "Заголовок объявления"}</h3>
                     <strong>{rub(edit.price)}</strong>

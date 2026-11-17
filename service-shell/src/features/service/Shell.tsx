@@ -47,9 +47,9 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
       <div className="workspace-profile"><span className="profile-avatar">АС</span><div><strong>{sampleCabinet.tutor}</strong><small>{sampleCabinet.subject}</small></div></div>
       <nav className="service-nav" aria-label="Разделы">{SECTIONS.map(item => {
         const Icon = ICONS[item.id];
-        return <button key={item.id} type="button" className={`service-nav-item ${item.id === section ? "active" : ""}`} aria-current={item.id === section ? "page" : undefined} onClick={() => navigate({ to: "/", search: { section: item.id } })}>
+        return <div key={item.id}><button type="button" className={`service-nav-item ${item.id === section ? "active" : ""}`} aria-current={item.id === section ? "page" : undefined} onClick={() => navigate({ to: "/", search: { section: item.id } })}>
           <Icon size={18} strokeWidth={1.7} /><span>{item.label}</span>{marks[item.id] > 0 && item.id !== "today" ? <span className="nav-badge">{marks[item.id]}</span> : null}
-        </button>;
+        </button>{item.id === "ads" && section === "ads" && <div className="ads-subnav">{[["list","Объявления"],["feeds","Автозагрузка"],["history","История"]].map(([id,label])=><button type="button" key={id} className={(focus===id || (!focus && id==="list"))?"active":""} onClick={()=>navigate({to:"/",search:{section:"ads",focus:id}})}>{label}</button>)}</div>}</div>;
       })}</nav>
       <div className="sidebar-bottom"><div className="support-card"><span className="support-icon"><CircleHelp size={19} /></span><strong>Мы рядом</strong><p>Куратор и команда Cantor<br />10:00–18:00 МСК</p><button type="button" onClick={() => setHelpOpen(open => !open)} aria-expanded={helpOpen}>Связь с командой<ArrowUpRight size={15} /></button>{helpOpen ? <p className="support-detail" role="status">Ваш Telegram-чат с командой ещё не привязан.</p> : null}</div></div>
     </aside>
