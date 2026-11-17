@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from "@tanstack/react-router";
-import { Shell } from "@/features/service/Shell";
+import { ReadOnlyDemo } from "@/features/service/ReadOnlyDemo";
 import { validateServiceSearch } from "@/features/service/sections";
 import "./styles.css";
 
@@ -14,7 +14,7 @@ const indexRoute = createRoute({
 });
 export function Preview() {
   const { section, focus } = indexRoute.useSearch();
-  return <Shell section={section ?? "today"} focus={focus} />;
+  return <ReadOnlyDemo section={section ?? "today"} focus={focus} />;
 }
 const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute]) });
 const target = document.getElementById("root");
