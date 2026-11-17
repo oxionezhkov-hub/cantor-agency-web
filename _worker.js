@@ -2249,6 +2249,9 @@ async function handleSalesCrmTgSync(request, env, kv) {
 // ── /dashboard: agency-owner dashboard ──
 
 const DASHBOARD_PASSWORD = '12345678';
+// /zagruzka-extra only. A secret ZAGRUZKA_EXTRA_PASSWORD overrides this. It must not equal the
+// dashboard password — extraPasswordOk refuses the section rather than opening it with that password.
+const ZAGRUZKA_EXTRA_PASSWORD = 'Kedr-47-Nebo-extra';
 const SALE_PRICES = { primary: 50000, repeat: 25000 };
 
 const DEFAULT_EMPLOYEES = [
@@ -12877,6 +12880,11 @@ async function handleApi(request, env, url, ctx) {
 
   // Same for Avito Tasks: per-person invite links instead of the dashboard password.
   // Under /api/dashboard/ so the Yandex Cloud proxy (yc-dashboard-api-proxy) lets it through.
+  // Separate autoload (/zagruzka-extra). Registered before /feeds so it cannot fall into the agency handler.
+  if (pathname === '/api/dashboard/feeds-extra' || pathname.startsWith('/api/dashboard/feeds-extra/')) {
+    return handleExtraFeedsApi(request, env, url);
+  }
+
   if (pathname === '/api/dashboard/feeds' || pathname.startsWith('/api/dashboard/feeds/')) {
     return handleFeedsApi(request, env, url);
   }
@@ -13960,6 +13968,12 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
  * ([{ client, active, sheetUrl, xmlUrl, dataSource }]) becomes feeds in one go — tabs are picked from the
  * sheet, Avito cabinets are matched by name; feeds are built by the cron. Cabinets without a feed are
  * listed on the page as «нет таблицы». GET …/<slug>/compare diffs our XML with BananLab's (xmlUrl).
+ *
+ * /zagruzka-extra (handleExtraFeedsApi) is a separate copy for another team: its own password, no agency
+ * cabinets, no task tracker. Records live under xfeed: / xfeedxml: / xfeedstat: / xfeedytok: / xacc: / xlog:
+ * and slugs are xextra- + 12 hex, which agency feedsSlug() cannot produce. Shared builders branch on
+ * feed.ns === 'x' and never fall back to account:. Public XML and photos stay at /feed/<slug>/… (the
+ * Yandex proxy allow-list). The S3 object stays feeds/<slug>/avito.xml — the slug cannot collide.
  */
 
 const FEEDS_BASE_URL = 'https://mainweb.oxion-ezhkov.workers.dev';
@@ -14001,6 +14015,19 @@ function feedsS3(env) {
     ? { bucket: String(env.FEEDS_S3_BUCKET).trim(), id: env.FEEDS_S3_KEY_ID, secret: env.FEEDS_S3_SECRET } : null;
 }
 const feedsS3Key = (slug) => `feeds/${slug}/avito.xml`;
+
+// Agency feeds have no ns. Extra feeds (ns === 'x') use the same suffixes with an x in front,
+// so a build can never write feedxml:/feedstat: for another team's sheet.
+function feedsKey(feed, kind) {
+  const extra = !!(feed && feed.ns === 'x');
+  const slug = feed && feed.slug;
+  if (kind === 'stat') return (extra ? 'xfeedstat:' : 'feedstat:') + slug;
+  if (kind === 'ytok') return (extra ? 'xfeedytok:' : 'feedytok:') + slug;
+  if (kind === 'xml') return (extra ? 'xfeedxml:' : 'feedxml:') + slug;
+  return (extra ? 'xfeed:' : 'feed:') + slug;
+}
+const EXTRA_SLUG_RE = /^xextra-[0-9a-f]{12}$/;
+const EXTRA_ACC_RE = /^xe[0-9a-f]{16}$/;
 
 async function feedsS3Put(env, key, body, contentType) {
   const s3 = feedsS3(env);
@@ -14326,11 +14353,14 @@ function feedsYandexSource(src) {
 }
 
 async function feedsBuild(env, feed) {
+  if (feed && feed.ns === 'x' && !EXTRA_SLUG_RE.test(String(feed.slug || ''))) {
+    return { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], yandexToken: false, error: 'Некорректный идентификатор фида' };
+  }
   const t0 = Date.now();
   const kv = env.AVITO_KV;
   const stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], yandexToken: false };
   let ads = [];
-  const prev = await kv.get('feedstat:' + feed.slug, 'json');
+  const prev = await kv.get(feedsKey(feed, 'stat'), 'json');
   if (prev && prev.s3At) stat.s3At = prev.s3At;
   try {
     if (!feed.tabs.length) throw new Error('Не выбраны вкладки с объявлениями — откройте «Редактировать» и отметьте их');
@@ -14350,12 +14380,12 @@ async function feedsBuild(env, feed) {
     const ytok = ydRows && ydRows[1] && String(ydRows[1][0] || '').trim();
     if (ytok && /^[A-Za-z0-9_.-]{20,}$/.test(ytok)) {
       stat.yandexToken = true;
-      if ((await kv.get('feedytok:' + feed.slug)) !== ytok) await kv.put('feedytok:' + feed.slug, ytok);
+      if ((await kv.get(feedsKey(feed, 'ytok'))) !== ytok) await kv.put(feedsKey(feed, 'ytok'), ytok);
     }
   } catch (err) {
     stat.error = String(err && err.message || err);
     stat.ms = Date.now() - t0;
-    await kv.put('feedstat:' + feed.slug, JSON.stringify(stat));
+    await kv.put(feedsKey(feed, 'stat'), JSON.stringify(stat));
     return stat;
   }
 
@@ -14380,7 +14410,7 @@ async function feedsBuild(env, feed) {
   let disk = null;
   if (stat.yandexToken) {
     try {
-      const token = await kv.get('feedytok:' + feed.slug);
+      const token = await kv.get(feedsKey(feed, 'ytok'));
       const all = await feedsDiskIndex(token);
       const lower = new Map();
       all.forEach((x) => { const k = x.toLowerCase(); lower.set(k, [...(lower.get(k) || []), x]); });
@@ -14431,7 +14461,7 @@ async function feedsBuild(env, feed) {
   stat.problems = stat.problems.concat(problems).slice(0, 300);
   stat.ads = ads.length;
   stat.ms = Date.now() - t0;
-  await kv.put('feedxml:' + feed.slug, xml);
+  await kv.put(feedsKey(feed, 'xml'), xml);
   if (feedsS3(env)) {
     try {
       await feedsS3Put(env, feedsS3Key(feed.slug), xml, 'application/xml; charset=utf-8');
@@ -14441,7 +14471,7 @@ async function feedsBuild(env, feed) {
     }
   }
   stat.ms = Date.now() - t0;
-  await kv.put('feedstat:' + feed.slug, JSON.stringify(stat));
+  await kv.put(feedsKey(feed, 'stat'), JSON.stringify(stat));
   return stat;
 }
 
@@ -14470,9 +14500,15 @@ async function feedsCatalog(env, feed) {
   let token = null;
   const getToken = async () => {
     if (token) return token;
-    let account = feed.avitoAccountId ? await kv.get('account:' + feed.avitoAccountId, 'json') : null;
-    if (!account) account = (await listByPrefix(kv, 'account:')).find((a) => a && a.id);
-    if (!account) throw new Error('нет ни одного кабинета Авито');
+    let account = null;
+    if (feed && feed.ns === 'x') {
+      account = feed.avitoAccountId ? await kv.get('xacc:' + feed.avitoAccountId, 'json') : null;
+      if (!account || !account.clientSecret) throw new Error('Для проверки справочника нужен кабинет Авито этого раздела — добавьте ключи и привяжите кабинет');
+    } else {
+      account = feed.avitoAccountId ? await kv.get('account:' + feed.avitoAccountId, 'json') : null;
+      if (!account) account = (await listByPrefix(kv, 'account:')).find((a) => a && a.id);
+      if (!account) throw new Error('нет ни одного кабинета Авито');
+    }
     token = await avitoGetToken(env, account);
     return token;
   };
@@ -14697,14 +14733,16 @@ async function handleFeedPublic(request, env, url) {
   const m = url.pathname.match(/^\/feed\/([a-z0-9-]{4,60})\/(?:avito\.xml|img\/([0-9a-f]{20})\/([A-Za-z0-9_-]+)\.[a-z]{3,4})$/);
   if (!m || (request.method !== 'GET' && request.method !== 'HEAD')) return new Response('Not found', { status: 404 });
   const [, slug, sig, enc] = m;
-  const feed = await env.AVITO_KV.get('feed:' + slug, 'json');
-  if (!feed) return new Response('Not found', { status: 404 });
+  const extra = EXTRA_SLUG_RE.test(slug);
+  const kv = env.AVITO_KV;
+  const feed = await kv.get((extra ? 'xfeed:' : 'feed:') + slug, 'json');
+  if (!feed || extra !== (feed.ns === 'x')) return new Response('Not found', { status: 404 });
 
   if (!sig) {
-    let xml = await env.AVITO_KV.get('feedxml:' + slug);
+    let xml = await kv.get((extra ? 'xfeedxml:' : 'feedxml:') + slug);
     if (xml == null) {
       await feedsBuild(env, feed);
-      xml = await env.AVITO_KV.get('feedxml:' + slug);
+      xml = await kv.get((extra ? 'xfeedxml:' : 'feedxml:') + slug);
     }
     if (xml == null) return new Response('Feed is not built yet', { status: 503 });
     return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
@@ -14715,7 +14753,7 @@ async function handleFeedPublic(request, env, url) {
   let api;
   const headers = {};
   if (src.startsWith('p:')) {
-    const tok = await env.AVITO_KV.get('feedytok:' + slug);
+    const tok = await kv.get((extra ? 'xfeedytok:' : 'feedytok:') + slug);
     if (!tok) return new Response('No Yandex.Disk token', { status: 404 });
     headers.Authorization = 'OAuth ' + tok;
     api = 'https://cloud-api.yandex.net/v1/disk/resources/download?path=' + encodeURIComponent(src.slice(2));
@@ -15093,7 +15131,427 @@ async function feedsCompare(env, feed) {
   return { ours: a.size, theirs: b.size, same: [...a.keys()].filter((id) => b.has(id)).length, onlyOurs: onlyOurs.slice(0, 60), onlyTheirs: onlyTheirs.slice(0, 60), onlyOursCount: onlyOurs.length, onlyTheirsCount: onlyTheirs.length, fieldDiffs: fields, diffs };
 }
 
+/* ═══════════════ /zagruzka-extra — autoload for another team ═══════════════
+ * Same sheet → XML → Avito pipeline as the agency feeds, but none of the agency data:
+ * password is not the dashboard password and not an avito-tasks token; cabinets are typed in
+ * here (xacc:) and checked against Avito before they are saved; feeds are xfeed: with ns:'x'.
+ * Catalog checks never fall back to an agency account. The client never receives clientSecret.
+ */
+
+function extraPasswordOk(request, env) {
+  const expected = String(env.ZAGRUZKA_EXTRA_PASSWORD || ZAGRUZKA_EXTRA_PASSWORD || '');
+  const feedsPw = String(env.FEEDS_PASSWORD || DASHBOARD_PASSWORD || '');
+  if (!expected || expected === DASHBOARD_PASSWORD || expected === feedsPw) return false;
+  const pw = String(request.headers.get('x-dashboard-password') || '');
+  if (!pw || pw.startsWith('at:') || pw === DASHBOARD_PASSWORD || pw === feedsPw) return false;
+  return pw === expected;
+}
+
+function extraWho(body) {
+  const name = String(body && body.by || '').replace(/[\u0000-\u001F]/g, '').trim().slice(0, 40);
+  return { id: null, name: name || 'Загрузка Экстра' };
+}
+
+async function extraBody(request) {
+  const body = await readJson(request);
+  if (!body || Array.isArray(body) || typeof body !== 'object') return {};
+  return body;
+}
+
+async function extraListKeys(kv, prefix) {
+  const names = [];
+  let cursor;
+  for (let i = 0; i < 20; i++) {
+    const page = await kv.list({ prefix, cursor, limit: 1000 });
+    for (const k of page.keys) names.push(k.name);
+    if (page.list_complete) break;
+    cursor = page.cursor;
+    if (!cursor) break;
+  }
+  return names;
+}
+
+function extraAccountView(a) {
+  if (!a || typeof a !== 'object' || !EXTRA_ACC_RE.test(String(a.id || ''))) return null;
+  return {
+    id: a.id,
+    name: String(a.name || ''),
+    userId: a.userId || null,
+    clientId: String(a.clientId || ''),
+    hasSecret: !!a.clientSecret,
+    createdAt: a.createdAt || null,
+    updatedAt: a.updatedAt || null,
+  };
+}
+
+function extraFeedView(env, feed, stat) {
+  const view = feedsPublicView(env, feed, stat);
+  delete view.secret;
+  delete view.clientSecret;
+  delete view.clientId;
+  return view;
+}
+
+function extraTabs(input) {
+  const raw = (Array.isArray(input) ? input : String(input || '').split(/\r?\n|,/)).map((t) => String(t).trim()).filter(Boolean);
+  if (new Set(raw).size > FEEDS_MAX_TABS) return { error: 'Не больше ' + FEEDS_MAX_TABS + ' вкладок' };
+  const tabs = feedsCleanTabs(input).map((t) => t.slice(0, 100)).filter(Boolean);
+  if (!tabs.length) return { error: 'Укажите хотя бы одну вкладку с объявлениями' };
+  return { tabs };
+}
+
+function extraCleanCred(body) {
+  return {
+    name: String(body.name || '').replace(/[\u0000-\u001F]/g, '').trim().slice(0, 80),
+    clientId: String(body.clientId || '').trim(),
+    clientSecret: String(body.clientSecret || '').trim(),
+  };
+}
+
+function extraCredError(clientId, clientSecret) {
+  if (!/^[A-Za-z0-9._-]{8,100}$/.test(clientId)) return 'client_id должен быть ключом из кабинета разработчика Авито';
+  if (!clientSecret || clientSecret.length < 8 || clientSecret.length > 200 || /[\r\n\u0000]/.test(clientSecret)) return 'Вставьте client_secret из кабинета разработчика Авито';
+  return '';
+}
+
+async function extraVerifyAccount(clientId, clientSecret) {
+  try {
+    return String(await avitoLookupUserId(clientId, clientSecret));
+  } catch (err) {
+    let msg = String(err && err.message || err);
+    if (clientSecret && clientSecret.length > 4) msg = msg.split(clientSecret).join('…');
+    if (/auth_failed_401|auth_failed_403|invalid_client|unauthorized/i.test(msg)) {
+      throw new Error('Авито не принял client_id или client_secret. Проверьте ключи в кабинете разработчика.');
+    }
+    throw new Error('Не удалось проверить ключи: ' + msg.slice(0, 180));
+  }
+}
+
+async function extraClientIdOwner(kv, clientId) {
+  const locked = await kv.get('xaccid:' + clientId);
+  if (locked && EXTRA_ACC_RE.test(locked) && await kv.get('xacc:' + locked, 'json')) return locked;
+  for (const name of await extraListKeys(kv, 'xacc:')) {
+    const a = await kv.get(name, 'json');
+    if (a && a.clientId === clientId && EXTRA_ACC_RE.test(String(a.id || ''))) return a.id;
+  }
+  return null;
+}
+
+async function extraLog(env, who, entry) {
+  entry = entry || {};
+  try {
+    const kv = env.AVITO_KV;
+    const key = 'xlog:' + new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7);
+    const list = (await kv.get(key, 'json')) || [];
+    const row = {
+      t: Date.now(),
+      by: (who && who.name) || 'Загрузка Экстра',
+      act: String(entry.act || '').slice(0, 120),
+    };
+    if (entry.name) row.name = String(entry.name).slice(0, 80);
+    if (entry.slug) row.slug = String(entry.slug).slice(0, 40);
+    if (Array.isArray(entry.acc)) row.acc = entry.acc.map((x) => String(x).slice(0, 24)).slice(0, 5);
+    if (entry.detail) row.detail = String(entry.detail).slice(0, 300);
+    list.push(row);
+    await kv.put(key, JSON.stringify(list.slice(-2000)));
+  } catch (err) {
+    console.error('xlog failed', err && err.stack);
+  }
+}
+
+async function extraAccountId(kv, raw) {
+  if (raw == null || String(raw).trim() === '') return { id: null };
+  const id = String(raw).trim();
+  if (!EXTRA_ACC_RE.test(id)) return { error: 'Привязать можно только кабинет, добавленный в этом разделе' };
+  const acc = await kv.get('xacc:' + id, 'json');
+  if (!acc || !acc.clientSecret) return { error: 'Кабинет не найден в этом разделе' };
+  return { id };
+}
+
+async function extraAvitoAccount(env, feed) {
+  if (!feed.avitoAccountId) throw new Error('К таблице не привязан кабинет Авито. Выберите его в «Изменить».');
+  if (!EXTRA_ACC_RE.test(String(feed.avitoAccountId))) throw new Error('Привязан чужой кабинет. Выберите кабинет этого раздела.');
+  const account = await env.AVITO_KV.get('xacc:' + feed.avitoAccountId, 'json');
+  if (!account || !account.clientSecret) throw new Error('Кабинет удалён или без ключа. Добавьте его заново.');
+  return { account, token: await avitoGetToken(env, account) };
+}
+
+async function handleExtraFeedsApi(request, env, url) {
+  if (!extraPasswordOk(request, env)) return json({ error: 'unauthorized' }, 401);
+  const kv = env.AVITO_KV;
+  if (!kv) return json({ error: 'Хранилище раздела не настроено' }, 500);
+  const parts = url.pathname.replace(/^\/api\/dashboard\/feeds-extra\/?/, '').split('/').filter(Boolean);
+
+  if (!parts.length && request.method === 'GET') {
+    const feeds = [];
+    for (const name of await extraListKeys(kv, 'xfeed:')) {
+      const feed = await kv.get(name, 'json');
+      if (!feed || feed.ns !== 'x' || !EXTRA_SLUG_RE.test(String(feed.slug || ''))) continue;
+      feeds.push(extraFeedView(env, feed, await kv.get('xfeedstat:' + feed.slug, 'json')));
+    }
+    feeds.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+    const accounts = [];
+    for (const name of await extraListKeys(kv, 'xacc:')) {
+      const view = extraAccountView(await kv.get(name, 'json'));
+      if (view) accounts.push(view);
+    }
+    accounts.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
+    return json({ feeds, accounts, serviceAccount: feedsServiceEmail(env) || null });
+  }
+
+  if (parts[0] === 'log' && request.method === 'GET') {
+    const asked = url.searchParams.get('month') || '';
+    const month = /^\d{4}-\d{2}$/.test(asked) ? asked : new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 7);
+    const list = ((await kv.get('xlog:' + month, 'json')) || []).slice().reverse().slice(0, 500);
+    const accounts = {};
+    for (const name of await extraListKeys(kv, 'xacc:')) {
+      const a = await kv.get(name, 'json');
+      if (a && EXTRA_ACC_RE.test(String(a.id || ''))) accounts[a.id] = String(a.name || a.id);
+    }
+    return json({ month, entries: list, accounts });
+  }
+
+  if (parts[0] === 'tabs' && request.method === 'GET') {
+    const sheetId = feedsSheetId(url.searchParams.get('sheet'));
+    if (!sheetId) return json({ error: 'Это не ссылка на Google Таблицу' }, 400);
+    try {
+      return json({ tabs: (await feedsListTabs(env, sheetId)).map((t) => t.name) });
+    } catch (err) {
+      return json({ error: String(err.message || err) }, 400);
+    }
+  }
+
+  if (parts[0] === 'accounts' && parts.length === 1 && request.method === 'POST') {
+    const body = await extraBody(request);
+    const { name, clientId, clientSecret } = extraCleanCred(body);
+    if (!name) return json({ error: 'Укажите название кабинета' }, 400);
+    const credErr = extraCredError(clientId, clientSecret);
+    if (credErr) return json({ error: credErr }, 400);
+    if ((await extraListKeys(kv, 'xacc:')).length >= 300) return json({ error: 'Слишком много кабинетов в этом разделе' }, 400);
+    if (await extraClientIdOwner(kv, clientId)) return json({ error: 'Такой client_id уже добавлен в этом разделе' }, 400);
+    let userId;
+    try { userId = await extraVerifyAccount(clientId, clientSecret); } catch (err) { return json({ error: String(err.message || err) }, 400); }
+    if (await extraClientIdOwner(kv, clientId)) return json({ error: 'Такой client_id уже добавлен в этом разделе' }, 400);
+    const account = { id: 'xe' + randomHex(8), name, clientId, clientSecret, userId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    if (!EXTRA_ACC_RE.test(account.id)) return json({ error: 'Не удалось создать кабинет' }, 500);
+    await kv.put('xacc:' + account.id, JSON.stringify(account));
+    await kv.put('xaccid:' + clientId, account.id);
+    await extraLog(env, extraWho(body), { act: 'Добавил кабинет', name, acc: [account.id] });
+    return json({ account: extraAccountView(account) });
+  }
+
+  if (parts[0] === 'accounts' && parts.length === 2 && EXTRA_ACC_RE.test(parts[1]) && request.method === 'PUT') {
+    const id = parts[1];
+    const account = await kv.get('xacc:' + id, 'json');
+    if (!account || !account.clientSecret) return json({ error: 'not_found' }, 404);
+    const body = await extraBody(request);
+    const { name, clientId, clientSecret } = extraCleanCred(body);
+    if (!name) return json({ error: 'Укажите название кабинета' }, 400);
+    const nextSecret = clientSecret || account.clientSecret;
+    const credErr = extraCredError(clientId, nextSecret);
+    if (credErr) return json({ error: credErr }, 400);
+    const credsChanged = clientId !== account.clientId || (!!clientSecret && clientSecret !== account.clientSecret);
+    if (credsChanged) {
+      const owner = await extraClientIdOwner(kv, clientId);
+      if (owner && owner !== id) return json({ error: 'Такой client_id уже добавлен в этом разделе' }, 400);
+      try { account.userId = await extraVerifyAccount(clientId, nextSecret); } catch (err) { return json({ error: String(err.message || err) }, 400); }
+      await kv.delete('token:' + id);
+    }
+    if (clientId !== account.clientId) {
+      await kv.delete('xaccid:' + account.clientId);
+      await kv.put('xaccid:' + clientId, id);
+    }
+    account.name = name;
+    account.clientId = clientId;
+    account.clientSecret = nextSecret;
+    account.updatedAt = new Date().toISOString();
+    await kv.put('xacc:' + id, JSON.stringify(account));
+    await extraLog(env, extraWho(body), { act: credsChanged ? 'Обновил ключи кабинета' : 'Переименовал кабинет', name, acc: [id] });
+    return json({ account: extraAccountView(account) });
+  }
+
+  if (parts[0] === 'accounts' && parts.length === 2 && EXTRA_ACC_RE.test(parts[1]) && request.method === 'DELETE') {
+    const id = parts[1];
+    const account = await kv.get('xacc:' + id, 'json');
+    if (!account) return json({ error: 'not_found' }, 404);
+    for (const name of await extraListKeys(kv, 'xfeed:')) {
+      const f = await kv.get(name, 'json');
+      if (f && f.ns === 'x' && f.avitoAccountId === id) return json({ error: 'Сначала отвяжите кабинет от таблиц или удалите их' }, 400);
+    }
+    await kv.delete('xacc:' + id);
+    await kv.delete('token:' + id);
+    if (account.clientId) await kv.delete('xaccid:' + account.clientId);
+    await extraLog(env, extraWho(await extraBody(request)), { act: 'Удалил кабинет', name: account.name, acc: [id] });
+    return json({ ok: true });
+  }
+
+  if (!parts.length && request.method === 'POST') {
+    const body = await extraBody(request);
+    const name = String(body.name || '').replace(/[\u0000-\u001F]/g, '').trim().slice(0, 60);
+    const sheetId = feedsSheetId(body.sheetUrl);
+    const picked = extraTabs(body.tabs);
+    if (picked.error) return json({ error: picked.error }, 400);
+    const tabs = picked.tabs;
+    if (!name) return json({ error: 'Укажите имя клиента' }, 400);
+    if (!sheetId) return json({ error: 'Вставьте ссылку на Google Таблицу из адресной строки' }, 400);
+    if ((await extraListKeys(kv, 'xfeed:')).length >= 300) return json({ error: 'Слишком много таблиц в этом разделе' }, 400);
+    const bound = await extraAccountId(kv, body.avitoAccountId);
+    if (bound.error) return json({ error: bound.error }, 400);
+    for (const key of await extraListKeys(kv, 'xfeed:')) {
+      const prev = await kv.get(key, 'json');
+      if (prev && prev.ns === 'x' && prev.sheetId === sheetId) return json({ error: 'Эта таблица уже подключена в этом разделе: ' + (prev.name || prev.slug) }, 400);
+    }
+    const now = new Date().toISOString();
+    const who = extraWho(body);
+    const feed = {
+      ns: 'x', slug: 'xextra-' + randomHex(6), name, sheetId, tabs, enabled: body.enabled !== false,
+      avitoAccountId: bound.id, secret: randomHex(16), createdAt: now, updatedAt: now, createdBy: who.name, updatedBy: who.name,
+    };
+    if (!EXTRA_SLUG_RE.test(feed.slug)) return json({ error: 'Не удалось создать таблицу' }, 500);
+    await kv.put('xfeed:' + feed.slug, JSON.stringify(feed));
+    await extraLog(env, who, { act: 'Добавил таблицу', name, slug: feed.slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined, detail: 'вкладки: ' + tabs.join(', ') });
+    let stat;
+    try { stat = await feedsBuild(env, feed); } catch (err) {
+      stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], error: String(err && err.message || err).slice(0, 300) };
+    }
+    return json({ feed: extraFeedView(env, feed, stat) });
+  }
+
+  const slug = parts[0];
+  if (!slug || !EXTRA_SLUG_RE.test(slug)) return json({ error: 'not_found' }, 404);
+  const feed = await kv.get('xfeed:' + slug, 'json');
+  if (!feed || feed.ns !== 'x') return json({ error: 'not_found' }, 404);
+
+  if (parts.length === 1 && request.method === 'PUT') {
+    const body = await extraBody(request);
+    const who = extraWho(body);
+    if (body.name !== undefined) {
+      const name = String(body.name || '').replace(/[\u0000-\u001F]/g, '').trim().slice(0, 60);
+      if (!name) return json({ error: 'Укажите имя клиента' }, 400);
+      feed.name = name;
+    }
+    if (body.sheetUrl !== undefined) {
+      const id = feedsSheetId(body.sheetUrl);
+      if (!id) return json({ error: 'Вставьте ссылку на Google Таблицу из адресной строки' }, 400);
+      for (const key of await extraListKeys(kv, 'xfeed:')) {
+        const prev = await kv.get(key, 'json');
+        if (prev && prev.ns === 'x' && prev.sheetId === id && prev.slug !== slug) return json({ error: 'Эта таблица уже подключена в этом разделе: ' + (prev.name || prev.slug) }, 400);
+      }
+      feed.sheetId = id;
+    }
+    if (body.tabs !== undefined) {
+      const picked = extraTabs(body.tabs);
+      if (picked.error) return json({ error: picked.error }, 400);
+      feed.tabs = picked.tabs;
+    }
+    if (body.enabled !== undefined) feed.enabled = !!body.enabled;
+    if (body.avitoAccountId !== undefined) {
+      const bound = await extraAccountId(kv, body.avitoAccountId);
+      if (bound.error) return json({ error: bound.error }, 400);
+      feed.avitoAccountId = bound.id;
+    }
+    feed.ns = 'x';
+    feed.updatedAt = new Date().toISOString();
+    feed.updatedBy = who.name;
+    await kv.put('xfeed:' + slug, JSON.stringify(feed));
+    await extraLog(env, who, { act: 'Изменил таблицу', name: feed.name, slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined });
+    return json({ feed: extraFeedView(env, feed, await kv.get('xfeedstat:' + slug, 'json')) });
+  }
+
+  if (parts.length === 1 && request.method === 'DELETE') {
+    await Promise.all(['xfeed:', 'xfeedxml:', 'xfeedstat:', 'xfeedytok:'].map((p) => kv.delete(p + slug)));
+    await extraLog(env, extraWho(await extraBody(request)), { act: 'Удалил таблицу', name: feed.name, slug });
+    return json({ ok: true });
+  }
+
+  if (parts[1] === 'build' && parts.length === 2 && request.method === 'POST') {
+    let stat;
+    try { stat = await feedsBuild(env, feed); } catch (err) {
+      stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], error: String(err && err.message || err).slice(0, 300) };
+    }
+    await extraLog(env, extraWho(await extraBody(request)), { act: 'Пересобрал XML', name: feed.name, slug, detail: stat.error ? 'не собран: ' + String(stat.error).slice(0, 120) : (stat.ads || 0) + ' объявлений' });
+    return json({ feed: extraFeedView(env, feed, stat) });
+  }
+
+  if (parts[1] === 'report' && parts.length === 2 && request.method === 'GET') {
+    try {
+      const { account, token } = await extraAvitoAccount(env, feed);
+      const [result, profile] = await Promise.all([
+        fetchAvitoAutoloadReport(env, account, null),
+        avitoJson(token, '/autoload/v2/profile').catch(() => null),
+      ]);
+      const urls = profile ? ((profile.feeds_data || []).map((f) => f.feed_url).concat(profile.upload_url || [])).filter(Boolean) : [];
+      const ours = urls.some((u) => u.includes(`/feeds/${feed.slug}/`) || u.includes(`/feed/${feed.slug}/`));
+      return json({
+        account: account.name,
+        summary: result.summary,
+        problems: result.items.filter((it) => it.problem),
+        source: !profile ? null : { urls, kind: ours ? 'cantor' : urls.length ? 'other' : 'none', enabled: profile.autoload_enabled !== false },
+      });
+    } catch (err) {
+      return json({ error: String(err.message || err).slice(0, 400) }, 400);
+    }
+  }
+
+  if (parts[1] === 'avito-upload' && parts.length === 2 && request.method === 'POST') {
+    try {
+      const { token } = await extraAvitoAccount(env, feed);
+      const res = await avitoRequest(token, '/autoload/v1/upload', { method: 'POST' });
+      const text = await res.text();
+      if (!res.ok) return json({ error: `Авито не запустил загрузку (${res.status}). Обновлять можно не чаще раза в час. ${text.slice(0, 200)}` }, 400);
+      await extraLog(env, extraWho(await extraBody(request)), { act: 'Отправил XML в Авито', name: feed.name, slug, acc: [feed.avitoAccountId] });
+      return json({ ok: true });
+    } catch (err) {
+      return json({ error: String(err.message || err).slice(0, 400) }, 400);
+    }
+  }
+
+  if (parts[1] === 'avito-connect' && parts.length === 2 && request.method === 'POST') {
+    try {
+      const { account, token } = await extraAvitoAccount(env, feed);
+      const input = await extraBody(request);
+      const profRes = await avitoRequest(token, '/autoload/v2/profile').catch(() => null);
+      const profText = profRes ? await profRes.text().catch(() => '') : '';
+      let before = null;
+      if (profRes && profRes.ok) { try { before = JSON.parse(profText); } catch (e) { before = null; } }
+      if (profRes && profRes.status === 403) {
+        return json({ error: `Авито не открыл автозагрузку кабинету «${account.name}». Войдите в этот аккаунт на Авито → Профиль → Автозагрузка: включите её и проверьте, что тариф активен. Потом нажмите «Подключить» ещё раз.` }, 400);
+      }
+      const reportEmail = String(input.reportEmail || (before && before.report_email) || '').trim();
+      if (!isValidEmail(reportEmail)) return json({ error: 'Укажите почту, на которую Авито будет присылать отчёты автозагрузки' }, 400);
+      const stat = await kv.get('xfeedstat:' + feed.slug, 'json');
+      if (feedsS3(env) && !(stat && stat.s3At)) return json({ error: 'XML ещё не выложен в хранилище. Нажмите «Пересобрать» и посмотрите ошибки.' }, 400);
+      const feedUrl = feedsXmlUrl(env, feed.slug, stat);
+      const body = {
+        autoload_enabled: true,
+        report_email: reportEmail,
+        feeds_data: [{ feed_name: 'Extra', feed_url: feedUrl }],
+        schedule: (before && Array.isArray(before.schedule) && before.schedule.length)
+          ? before.schedule
+          : [{ rate: 20000, weekdays: [0, 1, 2, 3, 4, 5, 6], time_slots: [...Array(24).keys()] }],
+      };
+      const res = await avitoRequest(token, '/autoload/v2/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const text = await res.text();
+      if (!res.ok) return json({ error: `Авито не сохранил настройки автозагрузки (${res.status}): ${text.slice(0, 300)}` }, 400);
+      const prevUrls = ((before && before.feeds_data) || []).map((f) => f.feed_url).filter(Boolean);
+      feed.connectedAt = new Date().toISOString();
+      feed.connectedBy = extraWho(input).name;
+      feed.previousFeedUrls = prevUrls.slice(0, 5);
+      feed.ns = 'x';
+      await kv.put('xfeed:' + slug, JSON.stringify(feed));
+      await extraLog(env, extraWho(input), { act: 'Подключил кабинет к XML', name: feed.name, slug, acc: [feed.avitoAccountId], detail: 'почта ' + reportEmail });
+      return json({ ok: true, feedUrl, previousFeeds: (before && before.feeds_data) || (before && before.upload_url ? [{ feed_url: before.upload_url }] : []) });
+    } catch (err) {
+      return json({ error: String(err.message || err).slice(0, 400) }, 400);
+    }
+  }
+
+  return json({ error: 'not_found' }, 404);
+}
+
 // Rebuilds enabled feeds older than ~an hour, a few per tick so one run stays well inside the limits.
+// Agency feeds stay at 5 per tick. Extra feeds are a separate pass (3) so a failure there cannot
+// stop the agency pass, and extra cannot take the agency slots.
 async function feedsCron(env) {
   const kv = env.AVITO_KV;
   const page = await kv.list({ prefix: 'feed:' });
@@ -15101,11 +15559,25 @@ async function feedsCron(env) {
   for (const k of page.keys) {
     if (done >= 5) break;
     const feed = await kv.get(k.name, 'json');
-    if (!feed || !feed.enabled) continue;
+    if (!feed || !feed.enabled || feed.ns === 'x') continue;
     const stat = await kv.get('feedstat:' + feed.slug, 'json');
     if (stat && Date.now() - Date.parse(stat.builtAt) < FEEDS_REBUILD_MS) continue;
     await feedsBuild(env, feed).catch((err) => console.error('feed build failed', feed.slug, err && err.stack));
     done++;
+  }
+  try {
+    let extra = 0;
+    for (const name of await extraListKeys(kv, 'xfeed:')) {
+      if (extra >= 3) break;
+      const feed = await kv.get(name, 'json');
+      if (!feed || feed.ns !== 'x' || !feed.enabled || !EXTRA_SLUG_RE.test(String(feed.slug || ''))) continue;
+      const stat = await kv.get('xfeedstat:' + feed.slug, 'json');
+      if (stat && Number.isFinite(Date.parse(stat.builtAt)) && Date.now() - Date.parse(stat.builtAt) < FEEDS_REBUILD_MS) continue;
+      await feedsBuild(env, feed).catch((err) => console.error('extra feed build failed', feed.slug, err && err.stack));
+      extra++;
+    }
+  } catch (err) {
+    console.error('extra feeds cron failed', err && err.stack);
   }
 }
 
