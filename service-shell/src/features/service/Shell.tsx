@@ -10,7 +10,8 @@ import { SECTIONS, type SectionId } from "./sections.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
-import { AdsSection, ContactSection, DashboardSection, DialogsSection, PaymentsSection, ShowsSection } from "./views.tsx";
+import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
+import { AnalyticsSection } from "./AnalyticsSection.tsx";
 
 const KnowledgeSection = lazy(() => import("@/features/knowledge/KnowledgeSection").then(module => ({ default: module.KnowledgeSection })));
 
@@ -58,7 +59,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
         {storageError ? <p role="alert" className="crm-error">{storageError}</p> : null}
         <div className={`service-section section-${section}`}>
           {section === "today" ? <DashboardSection /> : null}
-          {section === "stats" ? <div><ContactSection /><ShowsSection /><PaymentsSection focus={focus} /></div> : null}
+          {section === "stats" ? <AnalyticsSection focus={focus} /> : null}
           {section === "ads" ? <AdsSection focus={focus} /> : null}
           {section === "chats" ? <DialogsSection focus={focus} /> : null}
           {section === "learn" ? <Suspense fallback={<p className="text-muted" role="status">Загружаем базу знаний…</p>}><KnowledgeSection focus={focus} /></Suspense> : null}

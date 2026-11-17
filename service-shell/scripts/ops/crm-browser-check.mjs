@@ -179,6 +179,8 @@ try {
     assert.equal(await page.getByRole("link").filter({ hasText: "Игорь ждёт ответа" }).count(), 0);
     const tab = await context.newPage();
     await tab.goto(`${url}/?section=stats`, { waitUntil: "networkidle" });
+    await tab.getByRole("tab", { name: "Экономика", exact: true }).click();
+    await tab.getByText("Учёт оплат", { exact: true }).click();
     await tab.getByRole("combobox", { name: "Ученик", exact: true }).selectOption("student-oge");
     await tab.getByRole("textbox", { name: "Сумма, ₽", exact: true }).fill("500");
     await tab.getByRole("button", { name: "Сохранить оплату", exact: true }).click();
