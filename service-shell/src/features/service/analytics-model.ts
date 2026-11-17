@@ -271,6 +271,14 @@ function crmRows(state: CrmState, range: AnalyticsRange, adId?: string) {
   );
   return {
     ...totals,
+    completedAppointments:
+      getPreviewData() && daily.some((row) => !Number.isFinite(row.completedAppointments))
+        ? NaN
+        : totals.completedAppointments,
+    newStudents:
+      getPreviewData() && daily.some((row) => !Number.isFinite(row.newStudents))
+        ? NaN
+        : totals.newStudents,
     receivedRub: Math.round(totals.receivedRub * 100) / 100,
     refundedRub: Math.round(totals.refundedRub * 100) / 100,
     netReceivedRub: Math.round(totals.netReceivedRub * 100) / 100,

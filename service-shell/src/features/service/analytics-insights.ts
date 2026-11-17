@@ -20,16 +20,18 @@ export function ltvEconomics(
   const validLtv = ltvRub !== null && Number.isFinite(ltvRub) && ltvRub > 0;
   const limitRub = validLtv ? ltvRub * 0.2 : null;
   const sharePct = validLtv && costRub !== null ? (costRub / ltvRub) * 100 : null;
+  const comparison =
+    costRub !== null && validLtv
+      ? Math.round(spendRub * 100) * 5 - newStudents * Math.round(ltvRub * 100)
+      : null;
   return {
     costRub,
     limitRub,
     sharePct,
-    // Compare money in minor units before division so an exact 20% boundary
-    // cannot become a false negative through floating point rounding.
-    works:
-      costRub !== null && validLtv
-        ? Math.round(spendRub * 100) * 5 <= newStudents * Math.round(ltvRub * 100)
-        : null,
+    // The owner has not resolved whether exactly 20% counts as success.
+    // Compare integer minor units to keep the boundary independent of rounding.
+    atBoundary: comparison === 0,
+    works: comparison === null || comparison === 0 ? null : comparison < 0,
   };
 }
 
@@ -41,12 +43,21 @@ export type DialogueRecommendation = {
   count: number;
   leadId: string;
 };
+export function topRecommendations(recommendations: readonly DialogueRecommendation[]) {
+  return [...recommendations]
+    .sort((a, b) => b.count - a.count || a.id.localeCompare(b.id))
+    .slice(0, 5);
+}
 export function dialogueInsights(crm: CrmState, leadIds: readonly string[], now = Date.now()) {
   const ids = new Set(leadIds);
   const leads = crm.leads.filter((lead) => ids.has(lead.id));
   const reasons = new Map<string, RefusalReason>();
   for (const lead of leads.filter((lead) => lead.closedAt)) {
-    const reason = lead.closeReason?.replace(/\s+/g, " ").trim() || "Причина не указана";
+    const rawReason = lead.closeReason?.replace(/\s+/g, " ").trim();
+    const reason =
+      !rawReason || rawReason.toLocaleLowerCase("ru-RU") === "закрыто"
+        ? "Причина не указана"
+        : rawReason;
     const key = reason.toLocaleLowerCase("ru-RU");
     const row = reasons.get(key) ?? { reason, count: 0, leadIds: [] };
     row.count++;

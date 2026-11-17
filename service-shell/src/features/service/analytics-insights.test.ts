@@ -2,21 +2,40 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { demoCrm } from "./crm-demo.ts";
 import { setLeadClosure } from "./lead-workflow.ts";
-import { dialogueInsights, ltvEconomics } from "./analytics-insights.ts";
+import { dialogueInsights, ltvEconomics, topRecommendations } from "./analytics-insights.ts";
+
+test("recommendations rank the five largest groups without mutating the source", () => {
+  const input = [1, 2, 8, 3, 7, 6, 4].map((count, i) => ({
+    id: `r${i}`,
+    title: "",
+    action: "",
+    leadId: "lead",
+    count,
+  }));
+  assert.deepEqual(
+    topRecommendations(input).map((item) => item.count),
+    [8, 7, 6, 4, 3],
+  );
+  assert.deepEqual(
+    input.map((item) => item.count),
+    [1, 2, 8, 3, 7, 6, 4],
+  );
+});
 import { acceptDeliveredMessage, updateLeadDetails } from "./communication.ts";
 import { parseCrmState } from "./crm.ts";
 
-test("economics uses up to 20% LTV including the exact boundary", () => {
+test("economics leaves the exact 20% boundary neutral", () => {
   assert.deepEqual(ltvEconomics(28800, 2, 72000), {
     costRub: 14400,
     limitRub: 14400,
     sharePct: 20,
-    works: true,
+    atBoundary: true,
+    works: null,
   });
   assert.equal(ltvEconomics(28801, 2, 72000).works, false);
   assert.equal(ltvEconomics(6420, 2, 72000).works, true);
   assert.equal(ltvEconomics(0, 2, 72000).works, true);
-  assert.equal(ltvEconomics(2646.3, 3, 4410.5).works, true);
+  assert.equal(ltvEconomics(2646.3, 3, 4410.5).atBoundary, true);
 });
 test("missing LTV, paying students or traffic coverage never creates an economics verdict", () => {
   for (const assessment of [
