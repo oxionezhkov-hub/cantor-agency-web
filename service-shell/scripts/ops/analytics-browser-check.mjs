@@ -154,6 +154,7 @@ try {
     const screenshot = (name) =>
       page.screenshot({ path: `${output}/${name}-${width}.png`, fullPage: true });
     const tabs = page.getByRole("tablist", { name: "Отчёты аналитики" });
+    await tabs.getByRole("tab", { name: "Обзор", exact: true }).waitFor({ state: "visible" });
     assert.equal(await tabs.getByRole("tab").count(), 4);
     assert.equal(await page.getByText("Источники и методика расчёта", { exact: true }).count(), 0);
     assert.equal(await page.locator(".an-filterbar,.an-data-date,.an-timezone").count(), 0);
