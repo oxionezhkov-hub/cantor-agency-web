@@ -67,6 +67,7 @@ export type PreviewSnapshot = {
   ads: PreviewAd[];
   daily: PreviewDaily[];
   chats: PreviewChat[];
+  diagnosticBookings?: { date: string; adId: string | null }[];
   accountDaily?: (PreviewTraffic & { date: string })[];
   adDaily?: PreviewAdDaily[];
   trafficCoverage?: string[];

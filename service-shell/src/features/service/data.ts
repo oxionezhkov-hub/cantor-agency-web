@@ -237,17 +237,7 @@ export const dialogs: Dialog[] = preview
       name: c.name || "Собеседник",
       topic: c.itemTitle || "",
       reply: "",
-      messages: (c.messages || []).map((m) => ({
-        id: m.id,
-        at: new Date(m.at).toISOString(),
-        author:
-          m.author === "manager"
-            ? "Елена"
-            : m.author === "client"
-              ? c.name || "Собеседник"
-              : "Система",
-        text: m.text,
-      })),
+      messages: [],
       waitingSince: c.lastAuthor === "client" && c.lastAt ? new Date(c.lastAt).toISOString() : null,
       silentSince: null,
     }))

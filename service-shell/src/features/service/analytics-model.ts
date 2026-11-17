@@ -195,6 +195,11 @@ function crmRows(state: CrmState, range: AnalyticsRange, adId?: string) {
       if (row) row.bookedAppointments += 1;
     }
   }
+  for (const booking of getPreviewData()?.diagnosticBookings ?? []) {
+    if (!adMatches(booking.adId)) continue;
+    const row = rows.get(booking.date);
+    if (row) row.bookedAppointments += 1;
+  }
   // First payment with a positive unrefunded balance as of this report cutoff.
   // Later refunds never leak into an earlier report. Repeated payments count once.
   // Daily acquisition follows the same period-end snapshot so its sum reconciles.
@@ -239,7 +244,7 @@ function crmRows(state: CrmState, range: AnalyticsRange, adId?: string) {
           newStudents: adId
             ? NaN
             : (getPreviewData()!.daily.find((r) => r.date === date)?.sales ?? NaN),
-          bookedAppointments: NaN,
+          bookedAppointments: row.bookedAppointments,
           receivedRub: NaN,
           refundedRub: NaN,
           netReceivedRub: NaN,
