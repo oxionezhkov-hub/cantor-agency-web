@@ -11,6 +11,12 @@ const leadSchema = z.object({
   adId: id.nullable(),
   createdAt: at,
   draft: z.string().max(5000).optional(),
+  city: z.string().max(120).optional(),
+  avatarUrl: z.string().url().optional(),
+  unreadCount: z.number().int().nonnegative().optional(),
+  timerStopped: z.boolean().optional(),
+  note: z.string().max(4000).optional(),
+  mode: z.enum(["manual", "ai_approval", "ai_auto"]).optional(),
   closedAt: at.optional(),
   closeReason: z.string().min(1).max(300).optional(),
 });
@@ -43,6 +49,25 @@ const eventSchema = z.object({
   at,
   detail: z.string().max(200),
 });
+const chatMessageSchema = z.object({
+  id,
+  leadId: id,
+  author: z.enum(["client", "manager", "system"]),
+  text: z.string().max(5000),
+  at,
+  quoteId: id.optional(),
+  requestId: id.optional(),
+  kind: z.enum(["text", "image", "voice", "file", "call", "video"]).optional(),
+  url: z.string().url().optional(),
+  fileName: z.string().max(250).optional(),
+});
+const followupSchema = z.object({
+  id,
+  leadId: id,
+  title: z.string().min(1).max(300),
+  dueAt: at,
+  doneAt: at.optional(),
+});
 const stateSchema = z.object({
   version: z.literal(1),
   workspaceId: id,
@@ -52,6 +77,21 @@ const stateSchema = z.object({
   payments: z.array(paymentSchema),
   refunds: z.array(refundSchema),
   events: z.array(eventSchema),
+  messages: z.array(chatMessageSchema).optional(),
+  followups: z.array(followupSchema).optional(),
+  outcomes: z.array(z.object({ id, leadId: id, text: z.string().min(1).max(4000), at })).optional(),
+  feedback: z
+    .array(
+      z.object({
+        id,
+        leadId: id,
+        original: z.string().max(5000),
+        corrected: z.string().max(5000),
+        action: z.enum(["edited", "approved", "rejected"]),
+        at,
+      }),
+    )
+    .optional(),
 });
 export type CrmState = z.infer<typeof stateSchema>;
 export type Lead = CrmState["leads"][number];
@@ -80,6 +120,16 @@ export function parseCrmState(raw: unknown): CrmState {
     state.payments.length + state.refunds.length
   )
     throw new CrmError("Повторяющаяся платёжная операция");
+  for (const items of [
+    state.messages ?? [],
+    state.followups ?? [],
+    state.outcomes ?? [],
+    state.feedback ?? [],
+  ]) {
+    if (!unique(items)) throw new CrmError("Повторяющиеся идентификаторы коммуникаций");
+    if (items.some((item) => !state.leads.some((lead) => lead.id === item.leadId)))
+      throw new CrmError("Коммуникация не связана с обращением");
+  }
   if (state.leads.some((lead) => !state.students.some((student) => student.id === lead.studentId)))
     throw new CrmError("У заявки отсутствует ученик");
   if (
