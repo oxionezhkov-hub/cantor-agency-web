@@ -1,25 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { setPreviewData } from "./preview-data";
 import type { SectionId } from "./sections";
-import "./preview-loading.css";
+import { ServiceLoading } from "./ServiceLoading";
 const Shell = lazy(() => import("./Shell").then((m) => ({ default: m.Shell })));
-function PreviewLoading() {
-  return (
-    <div className="preview-loading" role="status" aria-label="Загрузка кабинета">
-      <div className="preview-loading-sidebar" aria-hidden="true">
-        <div className="preview-skeleton preview-loading-logo" />
-        <div className="preview-skeleton preview-loading-profile" />
-        <div className="preview-loading-nav">{Array.from({ length: 6 }, (_, i) => <div className="preview-skeleton preview-loading-nav-item" key={i} />)}</div>
-      </div>
-      <div className="preview-loading-content" aria-hidden="true">
-        <div className="preview-skeleton preview-loading-title" />
-        <div className="preview-loading-cards">{Array.from({ length: 4 }, (_, i) => <div className="preview-skeleton preview-loading-card" key={i} />)}</div>
-        <div className="preview-skeleton preview-loading-main" />
-        <div className="preview-loading-bottom"><div className="preview-skeleton" /><div className="preview-skeleton" /></div>
-      </div>
-    </div>
-  );
-}
 export function PreviewAccess({ section, focus }: { section: SectionId; focus?: string }) {
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -61,11 +44,11 @@ export function PreviewAccess({ section, focus }: { section: SectionId; focus?: 
   }
   if (ready)
     return (
-      <Suspense fallback={<PreviewLoading />}>
+      <Suspense fallback={<ServiceLoading />}>
         <Shell section={section} focus={focus} />
       </Suspense>
     );
-  if (checking) return <PreviewLoading />;
+  if (checking) return <ServiceLoading />;
   return (
     <main className="mx-auto mt-24 max-w-sm px-6">
       <img src="/images/brand/logo.svg" alt="Авито" width="72" />

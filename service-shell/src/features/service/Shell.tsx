@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { ServiceLoading } from "./ServiceLoading";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowUpRight,
@@ -206,11 +207,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
             {section === "chats" ? <DialogsSection focus={focus} /> : null}
             {section === "learn" ? (
               <Suspense
-                fallback={
-                  <p className="text-muted" role="status">
-                    Загружаем базу знаний…
-                  </p>
-                }
+                fallback={<ServiceLoading variant="knowledge" />}
               >
                 <KnowledgeSection focus={focus} />
               </Suspense>
