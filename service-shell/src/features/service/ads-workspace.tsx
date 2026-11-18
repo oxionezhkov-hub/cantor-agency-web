@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -284,8 +285,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   }, [editing]);
   function persist(next: State) {
     if (getPreviewData()) {
-      setNotice("Недостаточно прав для изменения");
-      return false;
+      setState(next);
+      setNotice("Изменения действуют до обновления страницы и не отправлены в Авито.");
+      return true;
     }
     try {
       localStorage.setItem(KEY, JSON.stringify(next));
@@ -334,48 +336,57 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     ) {
       if (tab === "generate") create();
       else setEdit(null);
-      setNotice("Изменения сохранены в этом браузере.");
+      setNotice(
+        getPreviewData()
+          ? "Изменения действуют до обновления страницы и не отправлены в Авито."
+          : "Изменения сохранены в этом браузере.",
+      );
     }
   }
-  const visible = state.items
-    .filter(
-      (a) =>
-        (!query || `${a.title} ${a.city} ${a.id}`.toLowerCase().includes(query.toLowerCase())) &&
-        (filter === "all" || a.status === filter),
-    )
-    .sort((a, b) => {
-      const value = (x: Listing): string | number | null => {
-        const ratio = (numerator: number, denominator: number | undefined) =>
-          Number.isFinite(numerator) &&
-          denominator != null &&
-          Number.isFinite(denominator) &&
-          denominator > 0
-            ? numerator / denominator
-            : null;
-        if (sort.key === "viewRate") return ratio(x.views, x.shows);
-        if (sort.key === "showCost") return ratio(x.spend, x.shows);
-        if (sort.key === "conversion") return ratio(x.contacts, x.views);
-        if (sort.key === "cpv") return ratio(x.spend, x.views);
-        if (sort.key === "cpa") return ratio(x.spend, x.contacts);
-        const result = x[sort.key as keyof Listing];
-        return typeof result === "string"
-          ? result || null
-          : typeof result === "number" && Number.isFinite(result)
-            ? result
-            : null;
-      };
-      const x = value(a),
-        y = value(b);
-      if (x === null) return y === null ? 0 : 1;
-      if (y === null) return -1;
-      return (
-        (typeof x === "string" && typeof y === "string"
-          ? x.localeCompare(y, "ru")
-          : Number(x) - Number(y)) * (sort.asc ? 1 : -1)
-      );
-    });
+  const visible = useMemo(
+    () =>
+      state.items
+        .filter(
+          (a) =>
+            (!query ||
+              `${a.title} ${a.city} ${a.id}`.toLowerCase().includes(query.toLowerCase())) &&
+            (filter === "all" || a.status === filter),
+        )
+        .sort((a, b) => {
+          const value = (x: Listing): string | number | null => {
+            const ratio = (numerator: number, denominator: number | undefined) =>
+              Number.isFinite(numerator) &&
+              denominator != null &&
+              Number.isFinite(denominator) &&
+              denominator > 0
+                ? numerator / denominator
+                : null;
+            if (sort.key === "viewRate") return ratio(x.views, x.shows);
+            if (sort.key === "showCost") return ratio(x.spend, x.shows);
+            if (sort.key === "conversion") return ratio(x.contacts, x.views);
+            if (sort.key === "cpv") return ratio(x.spend, x.views);
+            if (sort.key === "cpa") return ratio(x.spend, x.contacts);
+            const result = x[sort.key as keyof Listing];
+            return typeof result === "string"
+              ? result || null
+              : typeof result === "number" && Number.isFinite(result)
+                ? result
+                : null;
+          };
+          const x = value(a),
+            y = value(b);
+          if (x === null) return y === null ? 0 : 1;
+          if (y === null) return -1;
+          return (
+            (typeof x === "string" && typeof y === "string"
+              ? x.localeCompare(y, "ru")
+              : Number(x) - Number(y)) * (sort.asc ? 1 : -1)
+          );
+        }),
+    [state.items, query, filter, sort],
+  );
   // В раскрытом виде рассчитываем ширину по самому длинному названию, чтобы оно не обрезалось.
-  const titleWidth = (() => {
+  const titleWidth = useMemo(() => {
     if (!details || typeof document === "undefined") return 360;
     const context = document.createElement("canvas").getContext("2d");
     if (!context) return 360;
@@ -383,14 +394,14 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     return Math.ceil(
       Math.max(
         360,
-        ...visible.map((item) => {
+        ...state.items.map((item) => {
           const words = item.title.split(/\s+/).filter(Boolean);
           const longest = Math.max(0, ...words.map((word) => context.measureText(word).width));
           return (context.measureText(item.title).width + longest) / 2 + 35;
         }),
       ),
     );
-  })();
+  }, [details, state.items]);
   function bidField(a: Listing, field: "bid" | "max" | "budget" | "target", label: string) {
     const key = `${a.id}:${field}`;
     return (
@@ -478,6 +489,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     { value: "sheet", label: "Google Таблица" },
   ];
   const sheetSaved = Boolean(state.sheet && state.sheet === sheet && state.tab === sheetTab);
+  const feedSnapshotMatches =
+    !getPreviewData() || (state.sheet === initial.sheet && state.tab === initial.tab);
   const suggestion = candidate && (
     <div className="aw-suggestion" aria-label="Предложенный вариант">
       <div className="aw-suggestion-heading">
@@ -1036,6 +1049,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             >
               Ставки
             </button>
+            {showBids && (
+              <AdsHelp label="О режиме ставок">
+                «Авто · источник» — обозначение из исходных данных. Как именно работает этот режим,
+                пока не подтверждено. Настройки в превью не отправляются в Авито.
+              </AdsHelp>
+            )}
             {selected.length > 0 && (
               <div className="aw-bulk">
                 <strong>Выбрано: {selected.length}</strong>
@@ -1066,7 +1085,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                     />
                     <button
                       onClick={() => {
-                        if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
                         if (!Number.isFinite(bulkBid) || bulkBid < 0)
                           return setNotice("Укажите корректную ставку");
                         commit(
@@ -1239,7 +1257,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                               { value: "", label: "Нет данных" },
                               ...bidModes,
                               ...(a.mode && !bidModes.some((item) => item.value === a.mode)
-                                ? [{ value: a.mode, label: a.mode }]
+                                ? [
+                                    {
+                                      value: a.mode,
+                                      label: a.mode === "auto" ? "Авто · источник" : a.mode,
+                                    },
+                                  ]
                                 : []),
                             ]}
                             onChange={(mode) =>
@@ -1284,7 +1307,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           />
                         </td>
                         {(["start", "end"] as const).map((field) => (
-                          <td key={field}>
+                          <td key={field} className="aw-time-cell">
                             <AdsSelect
                               compact
                               label={`${field === "start" ? "Начало" : "Конец"} ${a.title} ${a.city}`}
@@ -1331,21 +1354,15 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 <input
                   placeholder="https://docs.google.com/spreadsheets/d/…"
                   value={sheet}
-                  readOnly={Boolean(getPreviewData())}
                   onChange={(e) => setSheet(e.target.value)}
                 />
               </Field>
               <Field label="Вкладка с объявлениями">
-                <input
-                  value={sheetTab}
-                  readOnly={Boolean(getPreviewData())}
-                  onChange={(e) => setSheetTab(e.target.value)}
-                />
+                <input value={sheetTab} onChange={(e) => setSheetTab(e.target.value)} />
               </Field>
               <div className="aw-feed-actions">
                 <button
                   className="aw-btn aw-primary"
-                  disabled={Boolean(getPreviewData())}
                   onClick={() => {
                     if (!sheetValid || !sheetTab.trim())
                       return setNotice(
@@ -1366,7 +1383,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       })
                     )
                       setNotice(
-                        "Настройки сохранены. Чтение таблицы появится после подключения интеграции.",
+                        getPreviewData()
+                          ? "Настройки действуют до обновления страницы. Таблица не подключена."
+                          : "Настройки сохранены. Чтение таблицы появится после подключения интеграции.",
                       );
                   }}
                 >
@@ -1374,7 +1393,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 </button>
                 <button
                   className="aw-text-button"
-                  disabled={Boolean(getPreviewData())}
                   onClick={() =>
                     download(
                       "cantor-avito-template.csv",
@@ -1388,7 +1406,13 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </div>
             </div>
           </div>
-          {sheetSaved && (
+          {sheetSaved && !feedSnapshotMatches && (
+            <div className="aw-panel">
+              Для этой таблицы проверка ещё не выполнялась. Настройки действуют только до обновления
+              страницы.
+            </div>
+          )}
+          {sheetSaved && feedSnapshotMatches && (
             <>
               <div className="aw-panel">
                 <div className="aw-panel-heading">
@@ -1517,7 +1541,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </Field>
               <button
                 onClick={() => {
-                  if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
                   if (bulkBid < 0 || !Number.isFinite(bulkBid))
                     return setNotice("Укажите ставку от 0 ₽.");
                   commit(

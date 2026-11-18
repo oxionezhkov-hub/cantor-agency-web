@@ -1351,6 +1351,7 @@
     text-overflow: ellipsis;
   }
 }
+
 /* Список и встроенный редактор: неподвижные рабочие панели и прокрутка содержимого. */
 .aw-list-view {
   display: flex;
@@ -1488,5 +1489,72 @@
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
+  }
+}
+
+/* Компактные одинаковые элементы ставок и более читаемая автозагрузка. */
+.aw-list-view .aw-mode-select {
+  width: 155px;
+  min-width: 155px;
+  background: #fff;
+}
+.aw-list-view .aw-time-cell .aw-mode-select {
+  width: 88px;
+  min-width: 88px;
+  font-variant-numeric: tabular-nums;
+}
+.aw-list-view .aw-time-cell {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.aw-feed-layout .aw-eyebrow {
+  color: #554d46;
+  font-weight: 500;
+}
+.aw-feed-layout .aw-pending,
+.aw-feed-layout .aw-placeholder,
+.aw-feed-layout .aw-placeholder p,
+.aw-feed-layout .aw-placeholder a,
+.aw-feed-layout .aw-feed-errors p {
+  color: #554d46;
+}
+.aw-feed-layout .aw-text-button {
+  color: #bd351c;
+}
+.service-section:has(.aw-editor-inline) {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.aw-editor-inline {
+  height: calc(100dvh - 95px);
+}
+.aw-editor-inline > .aw-tabs {
+  padding-left: 16px;
+}
+.aw-editor-inline footer {
+  padding-bottom: 6px;
+  padding-top: 6px;
+}
+@media (max-width: 760px) {
+  .aw-editor-inline {
+    height: calc(100dvh - 195px);
+  }
+}
+@media (max-width: 600px) {
+  .aw-list-view .aw-table th:nth-child(2),
+  .aw-list-view .aw-table td:nth-child(2) {
+    position: static;
+  }
+  .aw-list-view .aw-table thead th:nth-child(2) {
+    position: sticky;
+    left: auto;
+  }
+  .aw-list-view .aw-table-wrap {
+    scroll-padding-left: 34px;
+  }
+  .aw-list-view .aw-table:has(.aw-title-full) td:nth-child(2) .aw-ad strong {
+    width: var(--aw-title-width, 360px);
+    min-width: var(--aw-title-width, 360px) !important;
+    max-width: var(--aw-title-width, 360px) !important;
   }
 }

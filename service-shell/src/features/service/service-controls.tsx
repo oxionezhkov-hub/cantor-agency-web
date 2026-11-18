@@ -29,11 +29,14 @@ export function ServiceSelect({
   mobileIcon?: ReactNode;
   menuClassName?: string;
 }) {
+  const [open, setOpen] = useState(false);
   return (
     <Select.Root
       value={value || EMPTY_VALUE}
       onValueChange={(next) => onChange(next === EMPTY_VALUE ? "" : next)}
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     >
       <Select.Trigger
         data-value={value}
@@ -42,36 +45,40 @@ export function ServiceSelect({
         title={options.find((option) => option.value === value)?.label}
       >
         {mobileIcon ? <span className="sc-select-mobile-icon" aria-hidden="true">{mobileIcon}</span> : null}
-        <Select.Value placeholder={placeholder || label} />
+        <Select.Value placeholder={placeholder || label}>
+          {options.find((option) => option.value === value)?.label || placeholder || label}
+        </Select.Value>
         <Select.Icon>
           <ChevronDown size={15} />
         </Select.Icon>
       </Select.Trigger>
-      <Select.Portal container={portalContainer}>
-        <Select.Content
-          className={`sc-select-menu ${menuClassName}`}
-          position="popper"
-          sideOffset={7}
-          collisionPadding={12}
-        >
-          <Select.Viewport>
-            {options.map((option) => (
-              <Select.Item
-                className="sc-select-option"
-                key={option.value}
-                data-value={option.value}
-                value={option.value || EMPTY_VALUE}
-                disabled={option.disabled}
-              >
-                <Select.ItemText>{option.label}</Select.ItemText>
-                <Select.ItemIndicator>
-                  <Check size={15} />
-                </Select.ItemIndicator>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      {open && (
+        <Select.Portal container={portalContainer}>
+          <Select.Content
+            className={`sc-select-menu ${menuClassName}`}
+            position="popper"
+            sideOffset={7}
+            collisionPadding={12}
+          >
+            <Select.Viewport>
+              {options.map((option) => (
+                <Select.Item
+                  className="sc-select-option"
+                  key={option.value}
+                  data-value={option.value}
+                  value={option.value || EMPTY_VALUE}
+                  disabled={option.disabled}
+                >
+                  <Select.ItemText>{option.label}</Select.ItemText>
+                  <Select.ItemIndicator>
+                    <Check size={15} />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      )}
     </Select.Root>
   );
 }
