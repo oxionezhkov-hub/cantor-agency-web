@@ -9,7 +9,7 @@ const base = process.argv.includes("--cloud") ? remote : local;
 mkdirSync("/tmp/cantor-ads-nov18", { recursive: true });
 const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox"] });
 try {
-  for (const width of [1440, 390]) {
+  for (const width of process.argv.includes("--mobile") ? [390] : [1440, 390]) {
     const c = await b.newContext({ viewport: { width, height: 900 } });
     await c.route(base + "/**", async (route) => {
       const q = route.request(),
@@ -36,7 +36,13 @@ try {
     await p.goto(base, { waitUntil: "domcontentloaded", timeout: 120000 });
     await p.getByLabel("Пароль", { exact: true }).fill(process.env.DASHBOARD_PASSWORD);
     await p.getByRole("button", { name: "Войти", exact: true }).click();
-    const nav = p.getByRole("navigation", { name: "Разделы" });
+    const nav = p.locator("#service-navigation");
+    if (width === 390) await p.locator(".service-mobile-menu-button").waitFor({ timeout: 120000 });
+    const openMenu = async () => {
+      if (width === 390 && (await p.getByRole("button", { name: "Открыть меню" }).count()))
+        await p.getByRole("button", { name: "Открыть меню" }).click();
+    };
+    await openMenu();
     await nav.getByRole("button", { name: /^Мои объявления/ }).waitFor({ timeout: 120000 });
     await nav.getByRole("button", { name: /^Мои объявления/ }).click();
     await p.locator(".aw-table tbody tr").first().waitFor();
@@ -117,6 +123,7 @@ try {
         .count(),
     );
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/list-${width}.png` });
+    await openMenu();
     await nav.getByRole("button", { name: "Автозагрузка", exact: true }).click();
     await p.getByRole("heading", { name: "История", exact: true }).waitFor();
     await p.getByRole("button", { name: "Показать ошибки" }).click();
@@ -140,6 +147,7 @@ try {
       "1px",
     );
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/feed-${width}.png` });
+    await openMenu();
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
     const d = p.getByRole("region", { name: "Редактор объявления" });
     await d.waitFor();
@@ -181,10 +189,12 @@ try {
         .getByText("Изменения действуют до обновления страницы и не отправлены в Авито.")
         .count(),
     );
+    await openMenu();
     await nav.getByRole("button", { name: /^Мои объявления/ }).click();
     await p.locator(".aw-table tbody tr").first().waitFor();
     assert.ok(await p.getByText("Тест объявления", { exact: true }).count());
     assert.equal(await p.getByRole("dialog", { name: "Редактор объявления" }).count(), 0);
+    await openMenu();
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
     await d.waitFor();
     assert.equal(await d.getByLabel("Заголовок", { exact: true }).inputValue(), "");
