@@ -1,5 +1,5 @@
 import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ServiceLoading } from "./ServiceLoading";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -51,9 +51,25 @@ export function Shell({
   view?: "crm";
 }) {
   const navigate = useNavigate();
+  const navRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const { state: crm, storageError } = useDemoCrm();
   const tutorAvatarUrl = getPreviewData()?.tutorAvatarUrl;
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav || window.matchMedia("(max-width: 760px)").matches) return;
+    const active = nav.querySelector<HTMLElement>(".service-nav-item.active");
+    const submenu = active?.parentElement?.querySelector<HTMLElement>(".ads-subnav");
+    if (!active || !submenu) return;
+    const viewport = nav.getBoundingClientRect();
+    const top = active.getBoundingClientRect().top;
+    const bottom = submenu.getBoundingClientRect().bottom;
+    const delta = bottom - top > viewport.height ? top - viewport.top :
+      bottom > viewport.bottom ? bottom - viewport.bottom :
+      top < viewport.top ? top - viewport.top : 0;
+    if (delta) nav.scrollTo({ top: nav.scrollTop + delta, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }, [section]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
@@ -135,7 +151,7 @@ export function Shell({
             <small>{sampleCabinet.subject}</small>
           </div>
         </div>
-        <nav className="service-nav" aria-label="Разделы">
+        <nav ref={navRef} className="service-nav" aria-label="Разделы">
           {SECTIONS.map((item) => {
             const Icon = ICONS[item.id];
             return (
