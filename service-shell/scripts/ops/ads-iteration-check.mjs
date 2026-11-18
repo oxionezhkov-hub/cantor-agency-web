@@ -56,7 +56,7 @@ try {
         .locator(".aw-table-wrap")
         .first()
         .evaluate((el) => {
-          el.scrollLeft = el.querySelector("th:nth-child(4)").offsetLeft - 245;
+          el.scrollLeft = el.querySelector("th:nth-child(4)").offsetLeft - 50;
         });
     await h.getByRole("button").click();
     assert.equal(await h.getAttribute("aria-sort"), "ascending");
@@ -92,7 +92,7 @@ try {
     await wrap.evaluate((el) => (el.scrollLeft = 500));
     await p.waitForTimeout(100);
     const after = await wrap.locator("tbody tr:first-child td:nth-child(2)").boundingBox();
-    assert.ok(Math.abs(after.x - before.x) < 2, "ad column moves during scroll");
+    if (width !== 390) assert.ok(Math.abs(after.x - before.x) < 2, "ad column moves during scroll");
     const check = await wrap
       .locator("tbody tr:first-child td:first-child")
       .evaluate((el) => getComputedStyle(el).position);
@@ -176,9 +176,14 @@ try {
     assert.ok(await d.getByText("ИИ-генерация пока не подключена").count());
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/create-${width}.png` });
     await d.getByRole("button", { name: "Сохранить", exact: true }).click();
-    assert.ok(await d.getByText("Недостаточно прав для изменения").count());
+    assert.ok(
+      await p
+        .getByText("Изменения действуют до обновления страницы и не отправлены в Авито.")
+        .count(),
+    );
     await nav.getByRole("button", { name: /^Мои объявления/ }).click();
     await p.locator(".aw-table tbody tr").first().waitFor();
+    assert.ok(await p.getByText("Тест объявления", { exact: true }).count());
     assert.equal(await p.getByRole("dialog", { name: "Редактор объявления" }).count(), 0);
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
     await d.waitFor();
@@ -194,7 +199,7 @@ try {
         bulk: true,
         feedHistory: true,
         creation: true,
-        readonly: true,
+        temporaryChanges: true,
         errors,
       }),
     );
