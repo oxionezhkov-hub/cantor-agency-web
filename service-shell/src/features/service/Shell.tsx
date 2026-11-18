@@ -1,3 +1,4 @@
+import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ServiceLoading } from "./ServiceLoading";
 import { useNavigate } from "@tanstack/react-router";
@@ -181,7 +182,24 @@ export function Shell({
                         key={id}
                         className={analyticsTabFromFocus(focus) === id ? "active" : ""}
                         aria-current={analyticsTabFromFocus(focus) === id ? "page" : undefined}
-                        onClick={() => navigate({ to: "/", search: { section: "stats", focus: id } })}
+                        onClick={() =>
+                          navigate({ to: "/", search: { section: "stats", focus: id } })
+                        }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {item.id === "acc" && section === "acc" && (
+                  <div className="ads-subnav settings-subnav" aria-label="Разделы настроек">
+                    {SETTINGS_PAGES.map(({ id, label }) => (
+                      <button
+                        type="button"
+                        key={id}
+                        className={settingsPage(focus) === id ? "active" : ""}
+                        aria-current={settingsPage(focus) === id ? "page" : undefined}
+                        onClick={() => navigate({ to: "/", search: { section: "acc", focus: id } })}
                       >
                         {label}
                       </button>
@@ -217,7 +235,7 @@ export function Shell({
             </span>
             <strong>Мы рядом</strong>
             <p>
-              Куратор и команда Cantor
+              Команда Cantor Agency
               <br />
               10:00–18:00 МСК
             </p>
@@ -250,7 +268,7 @@ export function Shell({
                 <KnowledgeSection focus={focus} />
               </Suspense>
             ) : null}
-            {section === "acc" ? <CabinetPage /> : null}
+            {section === "acc" ? <CabinetPage focus={focus} /> : null}
           </div>
         </main>
       </div>
