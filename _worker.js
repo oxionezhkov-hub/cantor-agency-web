@@ -1223,11 +1223,11 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
 
 // ── Autoload uploads (API v4) ──
 // The v2/v3 report endpoints are deprecated. v4 exposes the latest completed upload
-// and its items separately; it does not expose items for an arbitrary historical upload.
+// and its items separately. Prefer current so a newer failed upload is not hidden by an older successful one.
 async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
   if (reportId) throw new Error('Доступен только последний отчёт автозагрузки');
   const kv = env.AVITO_KV;
-  const key = `autoload-report:v2:${account.id}`;
+  const key = `autoload-report:v3:${account.id}`;
   const cooldownKey = `autoload-report-cooldown:${account.id}`;
   let state = await kv.get(key, 'json');
   const cooldown = await kv.get(cooldownKey, 'json');
@@ -1242,7 +1242,8 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
       status: upload.status || null,
       startedAt: upload.started_at || upload.startedAt || null,
       finishedAt: upload.finished_at || upload.finishedAt || null,
-      sectionStats: upload.sections_stats || upload.section_stats || upload.sectionStats || null,
+      sectionStats: upload.stats || upload.sections_stats || upload.section_stats || upload.sectionStats || null,
+      totalItems: upload.stats && upload.stats.count != null ? upload.stats.count : null,
       items: items.length, problems: items.filter((it) => it.problem).length, bySection,
       complete: !!(state && state.complete), warning: warning || null, retryAt: retryAt || null,
       cachedAt: state && state.updatedAt || null,
@@ -1269,23 +1270,32 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
   try {
     // Pin all pages to one upload. Check its identity on every continuation so a
     // scheduled upload cannot mix pages from two different reports.
-    let upload, fallbackId = null;
-    try { upload = await get('/autoload/v4/uploads/last_successful'); } catch (err) {
+    let upload, fallbackId = null, source = 'current';
+    try { upload = await get('/autoload/v4/uploads/current'); } catch (err) {
       if (err.status !== 404) throw err;
-      const list = await get('/autoload/v4/uploads?perPage=10');
-      upload = (list.uploads || []).find((u) => u && u.status && !/processing|pending/i.test(u.status));
-      if (!upload) throw new Error('В кабинете ещё нет завершённого отчёта автозагрузки');
-      fallbackId = upload.upload_id || upload.id;
+      source = 'last_successful';
+      try { upload = await get('/autoload/v4/uploads/last_successful'); } catch (lastError) {
+        if (lastError.status !== 404) throw lastError;
+        const list = await get('/autoload/v4/uploads?perPage=10');
+        upload = (list.uploads || []).find((u) => u && u.status && !/processing|pending/i.test(u.status));
+        if (!upload) throw new Error('В кабинете ещё нет завершённого отчёта автозагрузки');
+        fallbackId = upload.upload_id || upload.id;
+      }
     }
     const id = upload.upload_id || upload.report_id || upload.id;
     if (id == null) throw new Error('В ответе Авито отсутствует номер отчёта');
-    if (!state || String(state.id) !== String(id)) state = { id, upload, fallbackId, page: 1, items: [], complete: false };
+    if (!state || String(state.id) !== String(id) || state.source !== source) state = { id, upload, fallbackId, source, page: 1, items: [], complete: false };
     state.upload = upload;
+    if (/^(processing|pending|running|in_progress|scheduled)$/i.test(upload.status || '')) {
+      state.items = []; state.page = 1; state.complete = false;
+      await kv.put(key, JSON.stringify(state), { expirationTtl: 3600 });
+      return result('Авито ещё обрабатывает последнюю загрузку. Ожидаем её завершения; это не отчёт об отсутствии ошибок.', Date.now() + 60000);
+    }
     if (state.complete) {
       state.checkAfter = Date.now() + 10 * 60 * 1000;
     } else {
       const page = state.page;
-      const path = state.fallbackId ? `/autoload/v2/reports/${state.fallbackId}/items?per_page=50&page=${page - 1}` : `/autoload/v4/uploads/last_successful/items?perPage=50&page=${page}`;
+      const path = state.fallbackId ? `/autoload/v2/reports/${state.fallbackId}/items?per_page=50&page=${page - 1}` : `/autoload/v4/uploads/${state.source}/items?perPage=50&page=${page}`;
       const data = await get(path);
       if (!Array.isArray(data.items)) throw new Error(`В ответе Авито нет списка объявлений: страница ${page}`);
       const batch = data.items;

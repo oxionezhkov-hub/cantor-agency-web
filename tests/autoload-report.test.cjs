@@ -36,7 +36,7 @@ test('invalid 200 response retains progress and identifies the failing page',asy
  const c=setup([upload('a'),page(50,2),upload('a'),new Response('not JSON')]);await c.run();const r=await c.run();assert.equal(r.items.length,50);assert.equal(r.summary.complete,false);assert.match(r.summary.warning,/page=2/);
 });
 test('404 uses the existing completed-upload fallback and zero-based v2 pages',async()=>{
- const c=setup([new Response('',{status:404}),ok({uploads:[{upload_id:'old',status:'finished'}]}),page(2,1)]);const r=await c.run();assert.equal(r.summary.complete,true);assert.match(c.called[2],/v2\/reports\/old\/items.*page=0/);
+ const c=setup([new Response('',{status:404}),new Response('',{status:404}),ok({uploads:[{upload_id:'old',status:'finished'}]}),page(2,1)]);const r=await c.run();assert.equal(r.summary.complete,true);assert.match(c.called[3],/v2\/reports\/old\/items.*page=0/);
 });
 test('API messages on successful items are preserved and whitespace is normalized',()=>{
  const c=setup();const r=vm.runInContext(`normalizeAutoloadItem({section:'success',messages:[{type:'warning',title:'Photo',description:'not    ready'}]})`,c);assert.equal(r.problem,true);assert.equal(r.messages[0].text,'Photo: not ready');
@@ -66,4 +66,16 @@ test('Disk verification failures are exposed by both feed views without modifyin
  const c=setup();c.stat={ads:2,problems:[],diskError:'HTTP 524'};
  const v=vm.runInContext("feedsPublicView({}, {slug:'feed-test',sheetId:'sheet'},stat)",c);
  assert.equal(v.stat.problems.length,1);assert.match(v.stat.problems[0].msg,/Яндекс.Диска/);assert.equal(c.stat.problems.length,0);
+});
+test('latest failed upload is read from current, including actual v4 stats',async()=>{
+ const c=setup([ok({upload_id:'failed-new',status:'error',stats:{count:452,sections:[{slug:'not_publish',count:169}]}}),page(2,1)]);
+ const r=await c.run();assert.match(c.called[0],/\/current$/);assert.match(c.called[1],/\/current\/items/);assert.equal(r.summary.reportId,'failed-new');assert.equal(r.summary.totalItems,452);assert.equal(r.summary.sectionStats.sections[0].count,169);
+});
+test('processing upload never reuses a complete old report as the latest result',async()=>{
+ const c=setup([upload('old'),page(1,1),ok({upload_id:'new',status:'processing'})]);await c.run();
+ const r=await vm.runInContext('fetchAvitoAutoloadReport(env,account,null,{refresh:true})',c);
+ assert.equal(r.summary.reportId,'new');assert.equal(r.summary.complete,false);assert.equal(r.items.length,0);assert.match(r.summary.warning,/обрабатывает/);assert.equal(c.called.length,3);
+});
+test('missing current endpoint falls back to last_successful with paired item endpoint',async()=>{
+ const c=setup([new Response('',{status:404}),upload('last'),page(2,1)]);const r=await c.run();assert.equal(r.summary.complete,true);assert.match(c.called[2],/last_successful\/items/);
 });
