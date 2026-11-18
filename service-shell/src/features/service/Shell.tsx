@@ -8,9 +8,11 @@ import {
   ChartNoAxesCombined,
   CircleHelp,
   LayoutDashboard,
+  Menu,
   MessageSquare,
   PanelTop,
   Settings2,
+  X,
 } from "lucide-react";
 import { CabinetPage } from "@/features/cabinet/CabinetPage";
 import { balanceRows, blockRows } from "@/features/cabinet/rules";
@@ -51,6 +53,7 @@ export function Shell({
   view?: "crm";
 }) {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const { state: crm, storageError } = useDemoCrm();
@@ -122,6 +125,7 @@ export function Shell({
         Перейти к содержимому
       </a>
       <aside className="service-sidebar">
+        <div className="service-mobile-header">
         <a href="/?section=today" className="service-brand" aria-label="Авито — главная">
           <img
             className="service-brand-logo"
@@ -132,6 +136,10 @@ export function Shell({
           />
           <span>Авито</span>
         </a>
+        <button type="button" className="service-mobile-menu-button" aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"} aria-expanded={mobileMenuOpen} aria-controls="service-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        </div>
         <button
           type="button"
           className="workspace-profile"
@@ -156,7 +164,7 @@ export function Shell({
             <small>{sampleCabinet.subject}</small>
           </div>
         </button>
-        <nav ref={navRef} className="service-nav" aria-label="Разделы">
+        <nav ref={navRef} id="service-navigation" className={`service-nav${mobileMenuOpen ? " mobile-open" : ""}`} aria-label="Разделы" onClick={(event) => { if ((event.target as HTMLElement).closest(".ads-subnav button")) setMobileMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setMobileMenuOpen(false); }}>
           {SECTIONS.map((item) => {
             const Icon = ICONS[item.id];
             return (
@@ -165,7 +173,7 @@ export function Shell({
                   type="button"
                   className={`service-nav-item ${item.id === section ? "active" : ""}`}
                   aria-current={item.id === section ? "page" : undefined}
-                  onClick={() => navigate({ to: "/", search: { section: item.id } })}
+                  onClick={() => { if (!["chats", "stats", "ads", "acc"].includes(item.id)) setMobileMenuOpen(false); void navigate({ to: "/", search: { section: item.id } }); }}
                 >
                   <Icon size={18} strokeWidth={1.7} />
                   <span>{item.label}</span>
