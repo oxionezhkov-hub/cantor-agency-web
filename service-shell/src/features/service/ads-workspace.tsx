@@ -32,6 +32,7 @@ import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
 import { getPreviewData } from "./preview-data";
 import { AdCampaign } from "./ad-campaign";
+import { OfferMailings } from "./offer-mailings";
 
 type Listing = {
   id: string;
@@ -209,7 +210,13 @@ function newListing(): Listing {
 export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
   const [tab, setTab] = useState(
-    focus === "feeds" || focus === "history" ? "feeds" : focus === "generate" ? "generate" : "list",
+    focus === "feeds" || focus === "history"
+      ? "feeds"
+      : focus === "generate"
+        ? "generate"
+        : focus === "offers"
+          ? "offers"
+          : "list",
   );
   const [showBids, setShowBids] = useState(false);
   const [bidDrafts, setBidDrafts] = useState<Record<string, string>>({});
@@ -230,7 +237,13 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       setNotice("");
       setImageUrl("");
       setPhotoIndex(0);
-    } else if (!focus || focus === "feeds" || focus === "history" || focus === "list") {
+    } else if (
+      !focus ||
+      focus === "feeds" ||
+      focus === "history" ||
+      focus === "list" ||
+      focus === "offers"
+    ) {
       setTab(!focus ? "list" : focus === "history" ? "feeds" : focus);
       setEdit(null);
     }
@@ -1010,6 +1023,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   );
   return (
     <div className="aw">
+      <div hidden={tab !== "offers"}>
+        <OfferMailings ads={state.items} />
+      </div>
       {notice && !edit && (
         <div className="aw-notice" role="status">
           {notice}

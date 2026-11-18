@@ -284,6 +284,7 @@ export function Shell({
                       ["list", "Объявления"],
                       ["generate", "ИИ-генерация"],
                       ["feeds", "Автозагрузка"],
+                      ["offers", "Рассылки"],
                     ].map(([id, label]) => (
                       <button
                         type="button"
