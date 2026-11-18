@@ -1025,6 +1025,15 @@ async function avitoGetToken(env, account, fresh = false) {
 // /core/v1/accounts/self, the same id Avito otherwise only surfaces inside the developer
 // portal's app settings.
 async function avitoLookupUserId(clientId, clientSecret) {
+  if (AVITO_PROXY.url && Date.now() > AVITO_PROXY_OFF_UNTIL) {
+    const res = await avitoCallViaProxy({ clientId, clientSecret }, '/core/v1/accounts/self', {});
+    if (res) {
+      if (!res.ok) throw new Error(`avito_${res.status} /core/v1/accounts/self: ${(await res.text()).slice(0, 200)}`);
+      const self = await res.json();
+      if (self == null || self.id == null) throw new Error('self_has_no_id');
+      return String(self.id);
+    }
+  }
   const res = await avitoFetch('/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -12882,7 +12891,7 @@ async function handleApi(request, env, url, ctx) {
   // Under /api/dashboard/ so the Yandex Cloud proxy (yc-dashboard-api-proxy) lets it through.
   // Separate autoload (/zagruzka-extra). Registered before /feeds so it cannot fall into the agency handler.
   if (pathname === '/api/dashboard/feeds-extra' || pathname.startsWith('/api/dashboard/feeds-extra/')) {
-    return handleExtraFeedsApi(request, env, url);
+    return handleExtraFeedsApi(request, env, url, ctx);
   }
 
   if (pathname === '/api/dashboard/feeds' || pathname.startsWith('/api/dashboard/feeds/')) {
@@ -15276,7 +15285,7 @@ async function extraAvitoAccount(env, feed) {
   return { account, token: await avitoGetToken(env, account) };
 }
 
-async function handleExtraFeedsApi(request, env, url) {
+async function handleExtraFeedsApi(request, env, url, ctx) {
   if (!extraPasswordOk(request, env)) return json({ error: 'unauthorized' }, 401);
   const kv = env.AVITO_KV;
   if (!kv) return json({ error: 'Хранилище раздела не настроено' }, 500);
@@ -15410,11 +15419,16 @@ async function handleExtraFeedsApi(request, env, url) {
     if (!EXTRA_SLUG_RE.test(feed.slug)) return json({ error: 'Не удалось создать таблицу' }, 500);
     await kv.put('xfeed:' + feed.slug, JSON.stringify(feed));
     await extraLog(env, who, { act: 'Добавил таблицу', name, slug: feed.slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined, detail: 'вкладки: ' + tabs.join(', ') });
-    let stat;
-    try { stat = await feedsBuild(env, feed); } catch (err) {
-      stat = { builtAt: new Date().toISOString(), ads: 0, tabs: [], problems: [], error: String(err && err.message || err).slice(0, 300) };
-    }
-    return json({ feed: extraFeedView(env, feed, stat) });
+    // Saving must finish before the proxy's 28-second deadline. Build separately;
+    // the hourly job also picks up feeds without a completed build.
+    const pending = { queuedAt: now, building: true, ads: 0, problems: [], tabs: [] };
+    await kv.put('xfeedstat:' + feed.slug, JSON.stringify(pending));
+    if (ctx && ctx.waitUntil) ctx.waitUntil((async () => {
+      try { await feedsBuild(env, feed); } catch (err) {
+        await kv.put('xfeedstat:' + feed.slug, JSON.stringify({ ...pending, building: false, error: String(err && err.message || err).slice(0, 300) }));
+      }
+    })());
+    return json({ feed: extraFeedView(env, feed, pending) }, 202);
   }
 
   const slug = parts[0];
