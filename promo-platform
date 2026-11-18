@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-platform-build="14bbde6f3264a08f">
+<html lang="ru" data-platform-build="944a26029c64c608">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -329,8 +329,11 @@ form.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValid
       event.preventDefault();
       choices[targets[event.key]].focus();
     });
-    wrap.addEventListener('focusout', () => {
-      queueMicrotask(() => { if (!wrap.contains(document.activeElement)) close(); });
+    wrap.addEventListener('focusout', event => {
+      // During native pointer focus changes activeElement can temporarily be body.
+      // relatedTarget is the destination; an option inside this picker must stay open.
+      if (event.relatedTarget && wrap.contains(event.relatedTarget)) return;
+      close();
     });
     document.addEventListener('click', event => {
       if (!wrap.contains(event.target)) close();

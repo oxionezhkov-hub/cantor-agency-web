@@ -127,8 +127,11 @@
       event.preventDefault();
       choices[targets[event.key]].focus();
     });
-    wrap.addEventListener('focusout', () => {
-      queueMicrotask(() => { if (!wrap.contains(document.activeElement)) close(); });
+    wrap.addEventListener('focusout', event => {
+      // During native pointer focus changes activeElement can temporarily be body.
+      // relatedTarget is the destination; an option inside this picker must stay open.
+      if (event.relatedTarget && wrap.contains(event.relatedTarget)) return;
+      close();
     });
     document.addEventListener('click', event => {
       if (!wrap.contains(event.target)) close();

@@ -43,3 +43,25 @@ test('only contact fields and consent are mandatory; funnel stays on the page', 
     assert.ok(href.startsWith('#') || href === '/politika', href);
   }
 });
+
+test('pointer focus moving into an option must not close its picker', () => {
+  const ui = fs.readFileSync(path.join(root, 'promo-platform-ui.js'), 'utf8');
+  // Exercise the actual registered callback in the native focus transition:
+  // activeElement can still be body while relatedTarget already names the option.
+  const callback = ui.match(/wrap\.addEventListener\('focusout', ([\s\S]*?\n    \})\);/);
+  assert.ok(callback, 'picker has a focusout handler');
+  const option = {};
+  let closed = 0;
+  const handler = vm.runInNewContext(`(${callback[1]})`, {
+    wrap: { contains: node => node === option },
+    close: () => { closed++; },
+    document: { activeElement: {} },
+    queueMicrotask: action => action(),
+  });
+  handler({ relatedTarget: option });
+  assert.equal(closed, 0, 'keep the option available for pointerup/click');
+  handler({ relatedTarget: {} });
+  assert.equal(closed, 1, 'close when focus moves to a different field');
+  handler({ relatedTarget: null });
+  assert.equal(closed, 2, 'close when focus leaves the document');
+});
