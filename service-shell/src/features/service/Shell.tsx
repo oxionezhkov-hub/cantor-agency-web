@@ -50,7 +50,7 @@ export function Shell({
 }: {
   section: SectionId;
   focus?: string;
-  view?: "crm";
+  view?: "crm" | "ai";
 }) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -68,10 +68,21 @@ export function Shell({
     const viewport = nav.getBoundingClientRect();
     const top = active.getBoundingClientRect().top;
     const bottom = submenu.getBoundingClientRect().bottom;
-    const delta = bottom - top > viewport.height ? top - viewport.top :
-      bottom > viewport.bottom ? bottom - viewport.bottom :
-      top < viewport.top ? top - viewport.top : 0;
-    if (delta) nav.scrollTo({ top: nav.scrollTop + delta, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    const delta =
+      bottom - top > viewport.height
+        ? top - viewport.top
+        : bottom > viewport.bottom
+          ? bottom - viewport.bottom
+          : top < viewport.top
+            ? top - viewport.top
+            : 0;
+    if (delta)
+      nav.scrollTo({
+        top: nav.scrollTop + delta,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
+      });
   }, [section]);
 
   useEffect(() => {
@@ -126,19 +137,26 @@ export function Shell({
       </a>
       <aside className="service-sidebar">
         <div className="service-mobile-header">
-        <a href="/?section=today" className="service-brand" aria-label="Авито — главная">
-          <img
-            className="service-brand-logo"
-            src="/images/brand/logo.svg"
-            alt=""
-            width="48"
-            height="30"
-          />
-          <span>Авито</span>
-        </a>
-        <button type="button" className="service-mobile-menu-button" aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"} aria-expanded={mobileMenuOpen} aria-controls="service-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+          <a href="/?section=today" className="service-brand" aria-label="Авито — главная">
+            <img
+              className="service-brand-logo"
+              src="/images/brand/logo.svg"
+              alt=""
+              width="48"
+              height="30"
+            />
+            <span>Авито</span>
+          </a>
+          <button
+            type="button"
+            className="service-mobile-menu-button"
+            aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="service-navigation"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
         <button
           type="button"
@@ -164,7 +182,19 @@ export function Shell({
             <small>{sampleCabinet.subject}</small>
           </div>
         </button>
-        <nav ref={navRef} id="service-navigation" className={`service-nav${mobileMenuOpen ? " mobile-open" : ""}`} aria-label="Разделы" onClick={(event) => { if ((event.target as HTMLElement).closest(".ads-subnav button")) setMobileMenuOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setMobileMenuOpen(false); }}>
+        <nav
+          ref={navRef}
+          id="service-navigation"
+          className={`service-nav${mobileMenuOpen ? " mobile-open" : ""}`}
+          aria-label="Разделы"
+          onClick={(event) => {
+            if ((event.target as HTMLElement).closest(".ads-subnav button"))
+              setMobileMenuOpen(false);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setMobileMenuOpen(false);
+          }}
+        >
           {SECTIONS.map((item) => {
             const Icon = ICONS[item.id];
             return (
@@ -173,7 +203,11 @@ export function Shell({
                   type="button"
                   className={`service-nav-item ${item.id === section ? "active" : ""}`}
                   aria-current={item.id === section ? "page" : undefined}
-                  onClick={() => { if (!["chats", "stats", "ads", "acc"].includes(item.id)) setMobileMenuOpen(false); void navigate({ to: "/", search: { section: item.id } }); }}
+                  onClick={() => {
+                    if (!["chats", "stats", "ads", "acc"].includes(item.id))
+                      setMobileMenuOpen(false);
+                    void navigate({ to: "/", search: { section: item.id } });
+                  }}
                 >
                   <Icon size={18} strokeWidth={1.7} />
                   <span>{item.label}</span>
@@ -185,8 +219,8 @@ export function Shell({
                   <div className="ads-subnav chat-subnav">
                     <button
                       type="button"
-                      className={view !== "crm" ? "active" : ""}
-                      aria-current={view !== "crm" ? "page" : undefined}
+                      className={!view ? "active" : ""}
+                      aria-current={!view ? "page" : undefined}
                       onClick={() => navigate({ to: "/", search: { section: "chats" } })}
                     >
                       Сообщения
@@ -200,6 +234,15 @@ export function Shell({
                       }
                     >
                       CRM
+                    </button>
+                    <button
+                      type="button"
+                      className={view === "ai" ? "active" : ""}
+                      onClick={() =>
+                        navigate({ to: "/", search: { section: "chats", view: "ai" } })
+                      }
+                    >
+                      ИИ-менеджер
                     </button>
                   </div>
                 )}

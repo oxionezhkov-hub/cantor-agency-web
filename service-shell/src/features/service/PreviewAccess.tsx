@@ -10,7 +10,7 @@ export function PreviewAccess({
 }: {
   section: SectionId;
   focus?: string;
-  view?: "crm";
+  view?: "crm" | "ai";
 }) {
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
