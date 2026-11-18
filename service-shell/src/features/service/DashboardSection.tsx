@@ -1,22 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  BookOpen,
-  Check,
-  CircleAlert,
-  MessageSquare,
-  PanelTop,
-  TrendingUp,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, Check, MessageSquare, PanelTop } from "lucide-react";
 import { getPreviewData } from "./preview-data.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { waitingForReply, reminderDue } from "./communication.ts";
 import { leadProgress } from "./lead-workflow.ts";
 import { sampleCabinet } from "../cabinet/sample.ts";
 import { ads } from "./data.ts";
-import { dailyBrief, dayLabel, moscowDay } from "./dashboard-model.ts";
+import { dailyBrief, dayLabel } from "./dashboard-model.ts";
 import type { ServiceSearch } from "./sections.ts";
 import "./dashboard.css";
 
@@ -91,7 +82,7 @@ export function DashboardSection() {
           ? `${waiting[0].lead.name} и другие ждут ответа. Начните с самого раннего обращения.`
           : `${waiting[0].lead.name} ждёт ответа. Откройте последнее сообщение.`,
       search: { section: "chats", focus: waiting[0].lead.id },
-      label: "Открыть диалог",
+      label: "Открыть сообщение",
     });
   if (badAds.length)
     actions.push({
@@ -105,30 +96,18 @@ export function DashboardSection() {
   if (feedErrors)
     actions.push({
       id: "feed",
+      urgent: true,
       title: `Разобрать ошибки автозагрузки · ${feedErrors}`,
       detail: snapshot?.feed?.problems[0]?.msg || "В последнем отчёте автозагрузки есть ошибки.",
       search: { section: "ads", focus: "feeds" },
       label: "К автозагрузке",
     });
-  if (reminders.length)
-    actions.push({
-      id: "remind",
-      title: `Вернуться к обращениям · ${reminders.length}`,
-      detail: "Есть напоминания или встречи, по которым нужно уточнить результат.",
-      search: { section: "chats", focus: reminders[0].id },
-      label: "Открыть обращение",
-    });
-  const latestRead =
-    snapshot?.readAt && Number.isFinite(Date.parse(snapshot.readAt))
-      ? dayLabel(moscowDay(Date.parse(snapshot.readAt)))
-      : null;
   const metrics = [
     {
-      label: "Контакты",
-      value: number(brief.current?.contacts),
-      delta:
-        brief.current && brief.previous ? brief.current.contacts - brief.previous.contacts : null,
-      note: "обращения с Авито",
+      label: "Расход на продвижение",
+      value: money(brief.current?.spendRub),
+      delta: null,
+      note: "за один день",
     },
     {
       label: "Просмотры",
@@ -137,10 +116,11 @@ export function DashboardSection() {
       note: "интерес к объявлениям",
     },
     {
-      label: "Расход на продвижение",
-      value: money(brief.current?.spendRub),
-      delta: null,
-      note: "за один день",
+      label: "Контакты",
+      value: number(brief.current?.contacts),
+      delta:
+        brief.current && brief.previous ? brief.current.contacts - brief.previous.contacts : null,
+      note: "обращения с Авито",
     },
     {
       label: "Стоимость контакта",
@@ -158,18 +138,13 @@ export function DashboardSection() {
       <section className="brief-promotion" aria-label="Сводка продвижения">
         <div className="brief-section-heading">
           <div>
-            <div className="brief-eyebrow">
-              <TrendingUp size={16} />
-              Продвижение
-            </div>
             <h2>
-              {brief.day === brief.yesterday ? "Результаты за вчера" : "Последний день с данными"}
+              {brief.day === brief.yesterday
+                ? "Результаты за вчера"
+                : brief.day
+                  ? `Результаты за ${dayLabel(brief.day)}`
+                  : "Статистика пока недоступна"}
             </h2>
-            <p>
-              {brief.day
-                ? `${dayLabel(brief.day)}${brief.previous ? " · по сравнению с предыдущим днём" : " · без данных для сравнения"}`
-                : "Статистика за завершённый день пока недоступна"}
-            </p>
           </div>
           <Jump search={{ section: "stats" }}>Вся аналитика</Jump>
         </div>
@@ -206,16 +181,6 @@ export function DashboardSection() {
                 : "По доступным данным срочных действий нет"}
             </p>
           </div>
-          <span className={`brief-badge ${actions.length ? "attention" : ""}`}>
-            {actions.length ? (
-              `${actions.length} ${actions.length === 1 ? "задача" : actions.length < 5 ? "задачи" : "задач"}`
-            ) : (
-              <>
-                <Check size={14} />
-                Всё разобрано
-              </>
-            )}
-          </span>
         </div>
         {actions.length ? (
           <div className="brief-actions">
@@ -234,7 +199,6 @@ export function DashboardSection() {
                 </span>
               </Link>
             ))}
-            {actions.length > 3 ? <Jump search={actions[3].search}>{actions[3].title}</Jump> : null}
           </div>
         ) : (
           <div className="brief-clear">
@@ -281,16 +245,6 @@ export function DashboardSection() {
                 : "Нет данных"}
             </b>
           </div>
-          <p className="brief-workspace-note">
-            {badAds.length || feedErrors ? (
-              <>
-                <CircleAlert size={15} />
-                Есть объявления, которые стоит проверить
-              </>
-            ) : (
-              "Статусы объявлений — на момент последней проверки"
-            )}
-          </p>
         </section>
         <section className="brief-workspace">
           <div className="brief-section-heading">
@@ -312,11 +266,6 @@ export function DashboardSection() {
             <span>Напоминания и результаты встреч</span>
             <b>{reminders.length}</b>
           </div>
-          <p className="brief-workspace-note">
-            {waiting.length
-              ? "Начните с тех, кто дольше ждёт ответа"
-              : "Нет открытых обращений с вопросом без ответа"}
-          </p>
         </section>
       </div>
       {!hasStudied ? (
@@ -328,12 +277,6 @@ export function DashboardSection() {
           </span>
           <ArrowRight size={18} />
         </Link>
-      ) : null}
-      {latestRead ? (
-        <p className="brief-asof">
-          Состояние кабинета на {latestRead}. Рекламные показатели — за{" "}
-          {brief.day ? dayLabel(brief.day) : "доступный день"}.
-        </p>
       ) : null}
     </div>
   );

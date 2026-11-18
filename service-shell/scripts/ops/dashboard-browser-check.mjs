@@ -56,7 +56,7 @@ try {
     await empty.clock.install({ time: new Date("2026-11-20T09:00:00Z") });
     await empty.route("**/api/demo/bootstrap", route => route.fulfill({ json: { ...fixture, ads: [], chats: [], feed: undefined, accountDaily: [] } }));
     await empty.goto(base);
-    await empty.getByRole("heading", { name: "Последний день с данными" }).waitFor();
+    await empty.getByRole("heading", { name: "Статистика пока недоступна" }).waitFor();
     assert.match(await empty.locator(".brief-metrics").innerText(), /—/);
     assert.equal(await empty.locator(".brief-action").count(), 0);
     await empty.screenshot({ path: `/tmp/cantor-dashboard-check/empty-${width}.png`, fullPage: true });
