@@ -429,6 +429,7 @@ function openFeed(slug, preset) {
     <div><label class="f" for="eName">Имя клиента</label><input class="input" id="eName" maxlength="60" required value="${esc(ed ? ed.name : pre.name || '')}"></div>
     <div><label class="f" for="eSheet">Ссылка на Google Таблицу</label><div class="row" style="flex-wrap:nowrap"><input class="input" id="eSheet" inputmode="url" value="${esc(ed ? ed.sheetUrl : '')}" placeholder="https://docs.google.com/spreadsheets/d/…"><button class="btn" type="button" id="eTabsBtn">Вкладки</button></div>
       <div class="note" style="margin-top:6px">${F.serviceAccount ? `Доступ на чтение для <span class="mono">${esc(F.serviceAccount)}</span>` : 'Либо откройте доступ «все, у кого есть ссылка».'}</div></div>
+    <div><label class="f" for="ePhotoReady">XML BananLab для проверки готовности фото</label><input class="input" id="ePhotoReady" inputmode="url" value="${esc(ed ? (ed.photoReadyXml === undefined ? ed.bananlabXml || '' : ed.photoReadyXml) : '')}" placeholder="https://storage.yandexcloud.net/server1/avito/clients/…/….xml"><div class="note">Если фото обрабатывает BananLab, укажите его XML. До появления категории и готовых фото в этом файле объявление не попадёт в нашу выгрузку.</div></div>
     <div><label class="f">Вкладки с объявлениями</label><div class="tabs-list" id="eTabs"></div></div>
     <div><label class="f" for="eAcc">Кабинет Авито</label><select class="select" id="eAcc"><option value="">— не привязан —</option>${accOpts}</select>${F.accounts.length ? '' : '<div class="note">Сначала добавьте кабинет кнопкой «Кабинет».</div>'}</div>
     <label class="row" style="cursor:pointer"><label class="switch"><input type="checkbox" id="eOn" ${!ed || ed.enabled ? 'checked' : ''}><i></i></label><span>Пересобирать XML каждый час</span></label>
@@ -456,7 +457,7 @@ function openFeed(slug, preset) {
     ev.preventDefault();
     const btn = $('#eSave');
     if (!btn || btn.disabled) return;
-    const body = { name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAcc').value, enabled: $('#eOn').checked };
+    const body = { photoReadyXml: $('#ePhotoReady').value.trim(), name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAcc').value, enabled: $('#eOn').checked };
     if (!body.tabs.length) return err('Отметьте хотя бы одну вкладку');
     btn.disabled = true; btn.textContent = 'Сохраняю…';
     const r = ed ? await send('PUT', API + '/' + ed.slug, body) : await send('POST', API, body);
