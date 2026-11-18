@@ -1111,7 +1111,7 @@ async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = 
   }
   // Statistics limits last much longer than our exponential retry delay. Retrying a
   // stats 429 four times only consumes the same quota again (including during edits).
-  if (res.status === 429 && /^\/stats\/v2\//.test(path)) return res;
+  if (res.status === 429 && /^(?:\/stats\/v2\/|\/autoload\/)/.test(path)) return res;
   // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
   if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
@@ -1224,85 +1224,95 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
 // ── Autoload uploads (API v4) ──
 // The v2/v3 report endpoints are deprecated. v4 exposes the latest completed upload
 // and its items separately; it does not expose items for an arbitrary historical upload.
-async function fetchAvitoAutoloadReport(env, account, reportId) {
-  if (reportId) {
-    throw new Error('autoload v4 only supports the latest successful upload; historical report IDs are unavailable');
-  }
-  const token = await avitoGetToken(env, account);
-  const tried = [];
-  const get = async (path) => {
-    const res = await avitoRequest(token, path);
-    const text = await res.text().catch(() => '');
-    let data = null;
-    try { data = JSON.parse(text); } catch (e) { /* not JSON */ }
-    // Never include upstream response bodies here: they may contain account or listing data.
-    tried.push(`${path} → ${res.status}`);
-    return { ok: res.ok, status: res.status, data };
-  };
-
-  let uploadResult = await get('/autoload/v4/uploads/last_successful');
-  // 404 — у кабинета ещё нет ни одной успешной загрузки (например, все объявления отклонены). Тогда берём
-  // последнюю завершённую загрузку из списка, а её объявления — из v2 /reports/{id}/items (v4 отдаёт
-  // объявления только для last_successful; v2 Авито держит до 2027-03-08).
-  let fallbackId = null;
-  if (uploadResult.status === 404) {
-    const list = await get('/autoload/v4/uploads?perPage=10');
-    const done = ((list.data && list.data.uploads) || []).find((u) => u && u.status && u.status !== 'processing');
-    if (done) { uploadResult = { ok: true, status: 200, data: done }; fallbackId = done.upload_id; }
-  }
-  if (!uploadResult.ok || !uploadResult.data) {
-    const authFailed = uploadResult.status === 401 || uploadResult.status === 403;
-    const advice = authFailed
-      ? ' Обычно это значит, что Авито не открыл кабинету автозагрузку: включите её в аккаунте на Авито (Профиль → Автозагрузка) и проверьте, что тариф активен.'
-      : '';
-    throw new Error(`autoload report unavailable: ${tried.join(' | ')}.${advice}`);
-  }
-
-  const upload = uploadResult.data;
-  const items = [];
-  const perPage = 50; // v4 caps perPage at 50; pages start at 1.
-  for (let page = 1; page <= 60; page += 1) {
-    // v2 считает страницы с 0 и берёт per_page до 100 — 50 подходит обоим.
-    const path = fallbackId
-      ? `/autoload/v2/reports/${fallbackId}/items?per_page=${perPage}&page=${page - 1}`
-      : `/autoload/v4/uploads/last_successful/items?perPage=${perPage}&page=${page}`;
-    const result = await get(path);
-    if (!result.ok || !result.data) {
-      const authFailed = result.status === 401 || result.status === 403;
-      const advice = authFailed
-        ? ' Обычно это значит, что Авито не открыл кабинету автозагрузку: включите её в аккаунте на Авито (Профиль → Автозагрузка) и проверьте, что тариф активен.'
-        : '';
-      throw new Error(`autoload items unavailable: ${tried.join(' | ')}.${advice}`);
-    }
-    const batch = Array.isArray(result.data.items) ? result.data.items : [];
-    items.push(...batch.map(normalizeAutoloadItem));
-    const pages = Number(
-      result.data.meta && result.data.meta.pages
-      || result.data.meta && result.data.meta.pages === 0 && 1
-      || result.data.pagination && (result.data.pagination.totalPages || result.data.pagination.pages)
-      || result.data.pages
-      || 0
-    );
-    if (!batch.length || (pages ? page >= pages : batch.length < perPage)) break;
-  }
-
-  const bySection = {};
-  items.forEach((it) => { bySection[it.section || '—'] = (bySection[it.section || '—'] || 0) + 1; });
-  return {
-    summary: {
+async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
+  if (reportId) throw new Error('Доступен только последний отчёт автозагрузки');
+  const kv = env.AVITO_KV;
+  const key = `autoload-report:v2:${account.id}`;
+  const cooldownKey = `autoload-report-cooldown:${account.id}`;
+  let state = await kv.get(key, 'json');
+  const cooldown = await kv.get(cooldownKey, 'json');
+  const now = Date.now();
+  const result = (warning, retryAt) => {
+    const items = state ? state.items : [];
+    const upload = state ? state.upload : {};
+    const bySection = {};
+    items.forEach((it) => { bySection[it.section || '—'] = (bySection[it.section || '—'] || 0) + 1; });
+    return { summary: {
       reportId: upload.upload_id || upload.report_id || upload.id || null,
       status: upload.status || null,
       startedAt: upload.started_at || upload.startedAt || null,
       finishedAt: upload.finished_at || upload.finishedAt || null,
       sectionStats: upload.sections_stats || upload.section_stats || upload.sectionStats || null,
-      items: items.length,
-      problems: items.filter((it) => it.problem).length,
-      bySection,
-    },
-    items,
-    report: upload,
-    tried,
+      items: items.length, problems: items.filter((it) => it.problem).length, bySection,
+      complete: !!(state && state.complete), warning: warning || null, retryAt: retryAt || null,
+      cachedAt: state && state.updatedAt || null,
+    }, items, report: upload, tried: [] };
   };
+  const limited = 'Авито временно ограничил запросы отчёта. Уже загруженные страницы сохранены; загрузка продолжится автоматически.';
+  if (cooldown && cooldown.until > now) return result(limited, cooldown.until);
+  if (state && state.complete && state.checkAfter > now && !options.refresh) return result();
+  const token = await avitoGetToken(env, account);
+  const get = async (path) => {
+    const res = await avitoRequest(token, path);
+    if (res.status === 429) {
+      const header = res.headers.get('Retry-After');
+      const seconds = Number(header);
+      const until = Math.max(Date.now() + 60000, header && !Number.isFinite(seconds) ? Date.parse(header) || 0 : Date.now() + (seconds || 60) * 1000);
+      await kv.put(cooldownKey, JSON.stringify({ until }), { expirationTtl: Math.max(120, Math.ceil((until - Date.now()) / 1000) + 60) });
+      const err = new Error(limited); err.retryAt = until; throw err;
+    }
+    if (!res.ok) { const err = new Error(`Авито не отдал отчёт: ${path} → ${res.status}`); err.status = res.status; throw err; }
+    const data = await res.json().catch(() => null);
+    if (!data || typeof data !== 'object') throw new Error(`Авито вернул пустой или некорректный ответ: ${path} → ${res.status}`);
+    return data;
+  };
+  try {
+    // Pin all pages to one upload. Check its identity on every continuation so a
+    // scheduled upload cannot mix pages from two different reports.
+    let upload, fallbackId = null;
+    try { upload = await get('/autoload/v4/uploads/last_successful'); } catch (err) {
+      if (err.status !== 404) throw err;
+      const list = await get('/autoload/v4/uploads?perPage=10');
+      upload = (list.uploads || []).find((u) => u && u.status && !/processing|pending/i.test(u.status));
+      if (!upload) throw new Error('В кабинете ещё нет завершённого отчёта автозагрузки');
+      fallbackId = upload.upload_id || upload.id;
+    }
+    const id = upload.upload_id || upload.report_id || upload.id;
+    if (id == null) throw new Error('В ответе Авито отсутствует номер отчёта');
+    if (!state || String(state.id) !== String(id)) state = { id, upload, fallbackId, page: 1, items: [], complete: false };
+    state.upload = upload;
+    if (state.complete) {
+      state.checkAfter = Date.now() + 10 * 60 * 1000;
+    } else {
+      const page = state.page;
+      const path = state.fallbackId ? `/autoload/v2/reports/${state.fallbackId}/items?per_page=50&page=${page - 1}` : `/autoload/v4/uploads/last_successful/items?perPage=50&page=${page}`;
+      const data = await get(path);
+      if (!Array.isArray(data.items)) throw new Error(`В ответе Авито нет списка объявлений: страница ${page}`);
+      const batch = data.items;
+      const pages = Number(data.meta && data.meta.pages || data.pagination && (data.pagination.totalPages || data.pagination.pages) || data.pages || 0);
+      state.items.push(...batch.map(normalizeAutoloadItem));
+      state.page++;
+      state.complete = !batch.length || (pages ? page >= pages : batch.length < 50);
+      state.checkAfter = Date.now() + 10 * 60 * 1000;
+    }
+    state.updatedAt = Date.now();
+    await kv.put(key, JSON.stringify(state), { expirationTtl: 3600 });
+    return result(state.complete ? null : 'Отчёт загружен частично. Получаем следующие страницы; список ошибок пока неполный.', state.complete ? null : Date.now() + 15000);
+  } catch (err) {
+    // Preserve progress even if the first item page was rejected.
+    if (state) await kv.put(key, JSON.stringify(state), { expirationTtl: 3600 });
+    return result(String(err.message || err), err.retryAt || Date.now() + 60000);
+  }
+}
+async function fetchAutoloadProfileCached(env, account, token) {
+  const key = `autoload-profile:${account.id}`;
+  const cached = await env.AVITO_KV.get(key, 'json');
+  if (cached && Date.now() - cached.at < 600000) return cached.profile;
+  try {
+    const profile = await avitoJson(token, '/autoload/v2/profile');
+    await env.AVITO_KV.put(key, JSON.stringify({ at: Date.now(), profile }), { expirationTtl: 3600 });
+    return profile;
+  } catch { return cached ? cached.profile : null; }
 }
 
 function normalizeAutoloadItem(it) {
@@ -1319,7 +1329,7 @@ function normalizeAutoloadItem(it) {
     url: it.url || '',
     section: section.title || section.slug || '',
     sectionSlug: section.slug || '',
-    problem: !/^success/.test(section.slug || ''),
+    problem: !/^success/.test(section.slug || '') || messages.some((m) => /^(error|alarm|warning)$/i.test(m.type)),
     avitoStatus: it.avito_status || it.status || '',
     title: it.title || '',
     applied: it.applied_vas || it.fee_info || null,
@@ -1847,6 +1857,7 @@ async function handleAvitoApi(request, env, url) {
       const result = await fetchAvitoAutoloadReport(env, account, url.searchParams.get('reportId'));
       const format = url.searchParams.get('format');
       if (format === 'raw') return json(result);
+      if (format === 'csv' && (!result.summary.complete || result.summary.warning)) return json({ error: result.summary.warning || 'Отчёт ещё загружается' }, 409);
       if (format === 'csv') {
         const onlyProblems = url.searchParams.get('all') !== '1';
         const rows = result.items.filter((it) => !onlyProblems || it.problem);
@@ -5375,6 +5386,7 @@ async function botSendAutoloadErrors(env, chatId, query) {
     return reply(`Не получилось получить отчёт автозагрузки «${escapeHtml(account.name)}»: ${escapeHtml(String(e && e.message).slice(0, 300))}`);
   }
   const s = result.summary;
+  if (!s.complete || s.warning) return reply(escapeHtml(s.warning || 'Отчёт ещё загружается. Повторите запрос позже.'));
   const lines = [`<b>Автозагрузка — ${escapeHtml(account.name)}</b>`];
   if (s.finishedAt) lines.push(`Отчёт ${escapeHtml(String(s.reportId))} от ${botFmtDate(Date.parse(s.finishedAt))}, всего объявлений: ${s.items}`);
   const stats = s.sectionStats && Array.isArray(s.sectionStats.sections) ? s.sectionStats.sections : [];
@@ -14225,6 +14237,12 @@ function feedsParseTab(rows) {
     const id = String(row[idCol] == null ? '' : row[idCol]).trim();
     if (!id || id.toLowerCase() === 'подробнее о параметре') continue;
     if (availCol >= 0 && /^нет$/i.test(String(row[availCol] || '').trim())) continue;
+    const transforms = tags.map((tag, i) => ({ tag: String(tag || '').trim(), value: String(row[i] || '').trim() }))
+      .filter(({ tag, value }) => /^(Ссылка на картинку для наложения на фото [1-5]|Сделать картинку 4 на 3|Фон\. Ссылка на новый фон|Текст для накладывания)$/.test(tag)
+        && value && !/^(нет|false|0|-|Накладывай\s*любой текст!)$/i.test(value));
+    if (transforms.length) problems.push({ row: r + 1, id, tag: 'Images', msg: 'Настроена обработка фото BananLab: ' + transforms.map((x) => x.tag).join(', ') + '. Наш сервис не накладывает плашки, текст и фон. Укажите готовые обработанные фотографии в Images.' });
+    const processing = row.some((v, i) => !/^(Description|Title)$/i.test(String(tags[i] || '')) && /(?:картинки\s+редактиру|пока\s+редактируются\s+фото)/i.test(String(v || '')));
+    if (processing) problems.push({ row: r + 1, id, tag: 'Images', msg: 'BananLab сообщает, что фотографии ещё редактируются. Дождитесь готовых фото и проверьте заполнение Category перед выгрузкой.' });
     const fields = [];
     for (const c of cols) {
       const raw = String(row[c.i] == null ? '' : row[c.i]);
@@ -14232,6 +14250,7 @@ function feedsParseTab(rows) {
       if (raw.trim() === '-') continue;
       if (raw.trim() || c.tag === 'Price') fields.push({ tag: c.tag, multi: c.multi, value: raw });
     }
+    if (!fields.some((f) => f.tag === 'Category' && f.value.trim())) problems.push({ row: r + 1, id, tag: 'Category', msg: 'Category («Категория») не передаётся в XML. Авито не сможет разместить объявление. Если BananLab обрабатывает фото, дождитесь окончания и заполнения категории.' });
     const folder = folderCol >= 0 ? String(row[folderCol] || '').trim() : '';
     ads.push({ row: r + 1, id, fields, folder: /^https?:\/\//i.test(folder) ? folder : '' });
   }
@@ -14784,6 +14803,7 @@ async function handleFeedPublic(request, env, url) {
 
 function feedsPublicView(env, feed, stat) {
   const { secret, ...rest } = feed;
+  if (stat) stat = { ...stat, problems: [...(stat.problems || []), ...(stat.diskError ? [{ msg: 'Проверка файлов Яндекс.Диска не выполнена: ' + stat.diskError }] : []), ...(stat.catalogError ? [{ msg: 'Проверка справочника Авито не выполнена: ' + stat.catalogError }] : [])] };
   return { ...rest, feedUrl: feedsXmlUrl(env, feed.slug, stat), sheetUrl: `https://docs.google.com/spreadsheets/d/${feed.sheetId}/edit`, stat: stat || null };
 }
 
@@ -14948,8 +14968,8 @@ async function handleFeedsApi(request, env, url) {
     try {
       const { account, token } = await feedsAvitoAccount(env, feed);
       const [result, profile] = await Promise.all([
-        fetchAvitoAutoloadReport(env, account, null),
-        avitoJson(token, '/autoload/v2/profile').catch(() => null),
+        fetchAvitoAutoloadReport(env, account, null, { refresh: url.searchParams.get('refresh') === '1' }),
+        fetchAutoloadProfileCached(env, account, token),
       ]);
       const urls = profile ? ((profile.feeds_data || []).map((f) => f.feed_url).concat(profile.upload_url || [])).filter(Boolean) : [];
       const ours = urls.some((u) => u.includes(`/feeds/${feed.slug}/`) || u.includes(`/feed/${feed.slug}/`));
@@ -15008,6 +15028,7 @@ async function handleFeedsApi(request, env, url) {
       const res = await avitoRequest(token, '/autoload/v2/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const text = await res.text();
       if (!res.ok) return json({ error: `Авито не сохранил настройки автозагрузки (${res.status}): ${text.slice(0, 300)}` }, 400);
+      await kv.delete(`autoload-profile:${account.id}`);
       const prevUrls = ((before && before.feeds_data) || []).map((f) => f.feed_url).filter(Boolean);
       feed.connectedAt = new Date().toISOString(); feed.connectedBy = who.name; feed.previousFeedUrls = prevUrls;
       await kv.put('feed:' + slug, JSON.stringify(feed));
@@ -15491,8 +15512,8 @@ async function handleExtraFeedsApi(request, env, url, ctx) {
     try {
       const { account, token } = await extraAvitoAccount(env, feed);
       const [result, profile] = await Promise.all([
-        fetchAvitoAutoloadReport(env, account, null),
-        avitoJson(token, '/autoload/v2/profile').catch(() => null),
+        fetchAvitoAutoloadReport(env, account, null, { refresh: url.searchParams.get('refresh') === '1' }),
+        fetchAutoloadProfileCached(env, account, token),
       ]);
       const urls = profile ? ((profile.feeds_data || []).map((f) => f.feed_url).concat(profile.upload_url || [])).filter(Boolean) : [];
       const ours = urls.some((u) => u.includes(`/feeds/${feed.slug}/`) || u.includes(`/feed/${feed.slug}/`));
@@ -15547,6 +15568,7 @@ async function handleExtraFeedsApi(request, env, url, ctx) {
       const res = await avitoRequest(token, '/autoload/v2/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const text = await res.text();
       if (!res.ok) return json({ error: `Авито не сохранил настройки автозагрузки (${res.status}): ${text.slice(0, 300)}` }, 400);
+      await kv.delete(`autoload-profile:${account.id}`);
       const prevUrls = ((before && before.feeds_data) || []).map((f) => f.feed_url).filter(Boolean);
       feed.connectedAt = new Date().toISOString();
       feed.connectedBy = extraWho(input).name;
