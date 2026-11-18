@@ -39,7 +39,15 @@ const ICONS = {
   acc: Settings2,
 };
 
-export function Shell({ section, focus }: { section: SectionId; focus?: string }) {
+export function Shell({
+  section,
+  focus,
+  view,
+}: {
+  section: SectionId;
+  focus?: string;
+  view?: "crm";
+}) {
   const navigate = useNavigate();
   const [now, setNow] = useState(() => Date.now());
   const { state: crm, storageError } = useDemoCrm();
@@ -142,6 +150,28 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
                     <span className="nav-badge">{marks[item.id]}</span>
                   ) : null}
                 </button>
+                {item.id === "chats" && section === "chats" && (
+                  <div className="ads-subnav chat-subnav">
+                    <button
+                      type="button"
+                      className={view !== "crm" ? "active" : ""}
+                      aria-current={view !== "crm" ? "page" : undefined}
+                      onClick={() => navigate({ to: "/", search: { section: "chats" } })}
+                    >
+                      Сообщения
+                    </button>
+                    <button
+                      type="button"
+                      className={view === "crm" ? "active" : ""}
+                      aria-current={view === "crm" ? "page" : undefined}
+                      onClick={() =>
+                        navigate({ to: "/", search: { section: "chats", view: "crm" } })
+                      }
+                    >
+                      CRM
+                    </button>
+                  </div>
+                )}
                 {item.id === "ads" && section === "ads" && (
                   <div className="ads-subnav">
                     {[
@@ -198,7 +228,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
             {section === "today" ? <DashboardSection /> : null}
             {section === "stats" ? <AnalyticsSection focus={focus} /> : null}
             {section === "ads" ? <AdsSection focus={focus} /> : null}
-            {section === "chats" ? <DialogsSection focus={focus} /> : null}
+            {section === "chats" ? <DialogsSection focus={focus} view={view} /> : null}
             {section === "learn" ? (
               <Suspense fallback={<ServiceLoading variant="knowledge" />}>
                 <KnowledgeSection focus={focus} />

@@ -8,6 +8,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const { section, focus } = Route.useSearch();
-  return <Shell section={section ?? "today"} focus={focus} />;
+  const { section, focus, view } = Route.useSearch();
+  return <Shell section={section ?? "today"} focus={focus} view={view} />;
 }

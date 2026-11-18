@@ -21,11 +21,11 @@ import {
   Check,
   CheckCheck,
   Pencil,
-  Columns3,
   MessagesSquare,
   Pause,
   Play,
 } from "lucide-react";
+import { Avatar } from "./contact-avatar.tsx";
 import { ads, windows } from "./data.ts";
 import { changeDemoCrm, useDemoCrm } from "./demo-crm-store.ts";
 import { DiagnosticSection, PaymentsSection } from "./crm-ui.tsx";
@@ -77,19 +77,15 @@ const hour = (at: string) =>
   });
 const day = (at: string) => new Date(Date.parse(at) + 3 * 3600000).toISOString().slice(0, 10);
 type Panel = "conversation" | "appointment" | "payments" | "history" | "tasks";
-function Avatar({ lead }: { lead: Lead }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <span className="chat-avatar" aria-hidden="true">
-      {lead.avatarUrl?.startsWith("https://") && !failed ? (
-        <img src={lead.avatarUrl} alt="" onError={() => setFailed(true)} />
-      ) : (
-        lead.name.slice(0, 1)
-      )}
-    </span>
-  );
-}
-export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: MessageAdapter }) {
+export function LeadWorkspace({
+  focus,
+  adapter,
+  view,
+}: {
+  focus?: string;
+  adapter?: MessageAdapter;
+  view?: "crm";
+}) {
   const { state, storageError } = useDemoCrm();
   const activeAdapter =
     adapter ??
@@ -108,8 +104,7 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
     }
   }
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState<string | null>(focus ?? null),
-    [view, setView] = useState<"dialogs" | "crm">("dialogs");
+  const [selectedId, setSelectedId] = useState<string | null>(focus ?? null);
   const [filter, setFilter] = useState<"unanswered" | "reminders" | null>(null),
     [searching, setSearching] = useState(false),
     [query, setQuery] = useState("");
@@ -125,7 +120,7 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
   useEffect(() => {
     document.documentElement.classList.toggle(
       "cantor-chat-open",
-      Boolean(selectedId) && view === "dialogs",
+      Boolean(selectedId) && view !== "crm",
     );
     return () => document.documentElement.classList.remove("cantor-chat-open");
   }, [selectedId, view]);
@@ -135,7 +130,6 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
   function open(id: string, panel: Panel = "conversation") {
     setStartPanel(panel);
     setSelectedId(id);
-    setView("dialogs");
     try {
       changeDemoCrm((s) => updateLeadDetails(s, s.workspaceId, id, { unreadCount: 0 }));
     } catch {
@@ -175,16 +169,6 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
   };
   return (
     <div className={`dialog-workbench ${selected ? "contact-open" : ""} view-${view}`}>
-      <div className="workbench-view-switch" role="group" aria-label="Представление обращений">
-        <button type="button" aria-pressed={view === "dialogs"} onClick={() => setView("dialogs")}>
-          <MessagesSquare size={15} />
-          Диалоги
-        </button>
-        <button type="button" aria-pressed={view === "crm"} onClick={() => setView("crm")}>
-          <Columns3 size={15} />
-          CRM
-        </button>
-      </div>
       {moveError ? (
         <p role="alert" className="crm-error">
           {moveError}

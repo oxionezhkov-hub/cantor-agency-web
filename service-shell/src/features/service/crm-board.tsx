@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { STAGE_LABELS, leadProgress, type LeadStage } from "./lead-workflow.ts";
 import { leadHealth, conversationMessages } from "./communication.ts";
+import { Avatar } from "./contact-avatar.tsx";
 import { ads } from "./data.ts";
 import { ServiceSelect } from "./service-controls.tsx";
 import type { CrmState, Lead } from "./crm.ts";
@@ -316,19 +317,25 @@ export function CrmBoard({
                         }}
                       >
                         <span className="crm-card-person">
-                          <span className="chat-avatar">{lead.name.slice(0, 1)}</span>
+                          <Avatar lead={lead} />
                           <span>
                             <strong>{lead.name}</strong>
-                            {lead.city ? (
-                              <small>
-                                <MapPin size={11} />
-                                {lead.city}
-                              </small>
-                            ) : null}
+                            <small>
+                              <MapPin size={11} />
+                              {lead.city || "Без локации"}
+                            </small>
                           </span>
                           <ArrowRight size={13} />
                         </span>
-                        {last ? <p className="crm-card-last">{last.text}</p> : null}
+                        {last && (last.text || last.kind === "call") ? (
+                          <p className="crm-card-last">
+                            <span>
+                              {last.kind === "call"
+                                ? "Звонок через Авито"
+                                : last.text.replace(/^\[Системное сообщение\]\s*/i, "")}
+                            </span>
+                          </p>
+                        ) : null}
                         {progress.booked ? (
                           <span className="crm-card-date">
                             <CalendarDays size={13} />

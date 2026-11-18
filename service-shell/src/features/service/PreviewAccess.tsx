@@ -3,7 +3,15 @@ import { setPreviewData } from "./preview-data";
 import type { SectionId } from "./sections";
 import { ServiceLoading } from "./ServiceLoading";
 const Shell = lazy(() => import("./Shell").then((m) => ({ default: m.Shell })));
-export function PreviewAccess({ section, focus }: { section: SectionId; focus?: string }) {
+export function PreviewAccess({
+  section,
+  focus,
+  view,
+}: {
+  section: SectionId;
+  focus?: string;
+  view?: "crm";
+}) {
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const [password, setPassword] = useState("");
@@ -18,7 +26,9 @@ export function PreviewAccess({ section, focus }: { section: SectionId; focus?: 
         setReady(true);
       })
       .catch(() => {})
-      .finally(() => { if (!controller.signal.aborted) setChecking(false); });
+      .finally(() => {
+        if (!controller.signal.aborted) setChecking(false);
+      });
     return () => controller.abort();
   }, []);
   async function login() {
@@ -45,7 +55,7 @@ export function PreviewAccess({ section, focus }: { section: SectionId; focus?: 
   if (ready)
     return (
       <Suspense fallback={<ServiceLoading />}>
-        <Shell section={section} focus={focus} />
+        <Shell section={section} focus={focus} view={view} />
       </Suspense>
     );
   if (checking) return <ServiceLoading />;
