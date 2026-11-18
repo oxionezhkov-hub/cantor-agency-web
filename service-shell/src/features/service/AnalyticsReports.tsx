@@ -57,7 +57,9 @@ function Ranking({
           {ranked.map((r, i) => (
             <li key={r.name}>
               <span className="an-ranking-number">{i + 1}</span>
-              <span className="an-ranking-name">{r.name}</span>
+              <span className="an-ranking-name" title={r.name}>
+                {r.name}
+              </span>
               <strong>{metric === "spendRub" ? money(r.value!) : number(r.value!)}</strong>
             </li>
           ))}
@@ -72,18 +74,7 @@ export function AdsReport({ report }: { report: Report }) {
   const available = report.coverage.daysWithData > 0;
   return (
     <>
-      <div className="an-report-actions">
-        <Link to="/" search={{ section: "ads" }}>
-          Мои объявления <ArrowUpRight size={15} />
-        </Link>
-      </div>
       <div className="an-grid an-equal an-report-rankings">
-        <Ranking
-          title="Заголовки · просмотры"
-          rows={report.byAd}
-          metric="views"
-          available={available}
-        />
         <Ranking
           title="Заголовки · контакты"
           rows={report.byAd}
@@ -91,15 +82,21 @@ export function AdsReport({ report }: { report: Report }) {
           available={available}
         />
         <Ranking
-          title="Города · просмотры"
+          title="Города · контакты"
           rows={report.byCity}
+          metric="contacts"
+          available={available}
+        />
+        <Ranking
+          title="Заголовки · просмотры"
+          rows={report.byAd}
           metric="views"
           available={available}
         />
         <Ranking
-          title="Города · контакты"
+          title="Города · просмотры"
           rows={report.byCity}
-          metric="contacts"
+          metric="views"
           available={available}
         />
       </div>
@@ -132,16 +129,18 @@ export function DialogReport({
 }) {
   const c = report.crm;
   if (!c) return <CityUnavailable onReset={onResetCity} />;
-  const stages = (Object.keys(STAGE_LABELS) as LeadStage[]).map((stage) => ({
-    stage,
-    label: STAGE_LABELS[stage],
-    count: selectedLeads.filter((l) => leadProgress(crm, l.id, now).stage === stage).length,
-  }));
+  const stages = (Object.keys(STAGE_LABELS) as LeadStage[])
+    .map((stage) => ({
+      stage,
+      label: STAGE_LABELS[stage],
+      count: selectedLeads.filter((l) => leadProgress(crm, l.id, now).stage === stage).length,
+    }))
+    .filter((stage) => stage.count > 0);
   return (
     <>
       <div className="an-grid an-equal">
         <Section title="Новые обращения по дням">
-          <div className="an-plot" role="img" aria-label="Обращения по дням">
+          <div className="an-plot an-dialog-plot" role="img" aria-label="Обращения по дням">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={c.daily} margin={{ left: -24, right: 8, top: 10 }}>
                 <CartesianGrid vertical={false} stroke="#eeece8" />
@@ -173,14 +172,18 @@ export function DialogReport({
           </div>
         </Section>
         <Section title="Текущие этапы обращений">
-          <ul className="an-report-stages">
-            {stages.map((s) => (
-              <li key={s.stage}>
-                <span>{s.label}</span>
-                <strong>{s.count}</strong>
-              </li>
-            ))}
-          </ul>
+          {stages.length ? (
+            <ul className="an-report-stages">
+              {stages.map((s) => (
+                <li key={s.stage}>
+                  <span>{s.label}</span>
+                  <strong>{s.count}</strong>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="an-inline-empty">Нет обращений за выбранный период.</p>
+          )}
         </Section>
       </div>
       <DialogInsights crm={crm} leadIds={selectedLeads.map((l) => l.id)} />

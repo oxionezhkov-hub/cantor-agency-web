@@ -87,6 +87,7 @@ export function LtvEconomics({ report }: { report: ReturnType<typeof buildAnalyt
             <Popover.Content className="an-ltv-help-content" sideOffset={8} align="end">
               LTV = цена занятия × занятий в месяц × месяцев обучения. Стоимость привлечения ученика
               — до 20% его LTV. Расход на ученика рассчитан по событиям выбранного периода.
+              {previewOnly ? " Введённый LTV действует до перезагрузки страницы." : null}
               <Popover.Arrow className="an-ltv-help-arrow" />
             </Popover.Content>
           </Popover.Portal>
@@ -160,12 +161,11 @@ export function LtvEconomics({ report }: { report: ReturnType<typeof buildAnalyt
                   setSaved(false);
                 }}
               >
-                <Pencil size={15} />
+                <Pencil size={12} />
               </button>
             ) : null}
           </span>
           <strong data-testid="ltv-value">{rub(ltv)}</strong>
-          {previewOnly && ltv !== null ? <small>На время сеанса</small> : null}
         </div>
       </div>
       {assessment.atBoundary ? (
@@ -222,7 +222,7 @@ export function DialogInsights({ crm, leadIds }: { crm: CrmState; leadIds: strin
         </div>
         {insight.refusalReasons.length ? (
           <div className="an-refusal-list">
-            {insight.refusalReasons.slice(0, 5).map((reason) => (
+            {insight.refusalReasons.slice(0, 10).map((reason) => (
               <div key={reason.reason}>
                 <Link to="/" search={{ section: "chats", focus: reason.leadIds[0] }}>
                   <span>{reason.reason}</span>

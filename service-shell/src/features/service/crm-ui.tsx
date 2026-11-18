@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent } from "react";
-import { CalendarDays, Check, Plus, Wallet } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, Plus, Wallet } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover";
 import {
   appointmentOutcome,
   bookAppointment,
@@ -45,6 +46,9 @@ export function PaymentsSection({
   const { state, storageError } = useDemoCrm();
   const [selectedStudentId, setStudentId] = useState(studentScope ?? "student-kirill");
   const studentId = studentScope ?? selectedStudentId;
+  const [newStudentName, setNewStudentName] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [paidDate, setPaidDate] = useState(todayMsk);
   const [error, setError] = useState("");
@@ -61,6 +65,7 @@ export function PaymentsSection({
   useEffect(() => {
     if (focusedStudentId) {
       setStudentId(focusedStudentId);
+      setNewStudentName("");
       if (!studentScope) form.current?.scrollIntoView({ block: "center" });
     }
   }, [focusedStudentId, studentScope]);
@@ -83,18 +88,29 @@ export function PaymentsSection({
       setError("Укажите дату уже полученной оплаты.");
       return;
     }
+    if (!studentId && !newStudentName) {
+      setError("Выберите ученика или добавьте нового.");
+      return;
+    }
     request.current ??= crypto.randomUUID();
+    const paymentStudentId = studentId || `student-${request.current}`;
     try {
       changeDemoCrm((current) =>
-        recordPayment(current, current.workspaceId, {
+        recordPayment(newStudentName && !studentId
+          ? { ...current, students: [...current.students, { id: paymentStudentId, name: newStudentName }] }
+          : current, current.workspaceId, {
           id: `payment-${request.current}`,
           requestId: request.current!,
-          studentId,
+          studentId: paymentStudentId,
           amountMinor: minor,
           paidAt: `${paidDate}T12:00:00+03:00`,
         }),
       );
       request.current = null;
+      if (newStudentName && !studentId) {
+        setStudentId(paymentStudentId);
+        setNewStudentName("");
+      }
       setAmount("");
       setNotice("Оплата сохранена.");
     } catch (e) {
@@ -195,18 +211,27 @@ export function PaymentsSection({
       <form ref={form} className="crm-form" onSubmit={add} aria-label="Внести оплату ученика">
         <div className="payments-student-field">
           <span>Ученик</span>
-          <ServiceSelect
-            label="Ученик"
-            value={studentId}
-            onChange={(value) => {
-              setStudentId(value);
-              request.current = null;
-            }}
-            options={state.students
-              .filter((item) => !studentScope || item.id === studentScope)
-              .map((item) => ({ value: item.id, label: item.name }))}
-            disabled={Boolean(studentScope)}
-          />
+          <Popover.Root open={studentPickerOpen} onOpenChange={(open) => { setStudentPickerOpen(open); if (open) setStudentSearch(""); }}>
+            <Popover.Trigger asChild>
+              <button type="button" role="combobox" aria-label="Ученик" className="payments-student-trigger" disabled={Boolean(studentScope)}>
+                <span>{newStudentName || state.students.find((item) => item.id === studentId)?.name || "Выберите ученика"}</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content className="payments-student-popover" sideOffset={6} align="start">
+                <input aria-label="Поиск или имя ученика" placeholder="Найти или добавить ученика" value={studentSearch} maxLength={120} onChange={(event) => setStudentSearch(event.target.value)} />
+                <div role="listbox" aria-label="Ученики" className="payments-student-options">
+                  {state.students.filter((item) => item.name.toLocaleLowerCase("ru-RU").includes(studentSearch.trim().toLocaleLowerCase("ru-RU"))).map((item) => (
+                    <button key={item.id} type="button" role="option" aria-selected={!newStudentName && item.id === studentId} onClick={() => { setStudentId(item.id); setNewStudentName(""); request.current = null; setStudentPickerOpen(false); }}>{item.name}</button>
+                  ))}
+                  {studentSearch.trim() && !state.students.some((item) => item.name.toLocaleLowerCase("ru-RU") === studentSearch.trim().toLocaleLowerCase("ru-RU")) ? (
+                    <button type="button" role="option" aria-selected={false} onClick={() => { setStudentId(""); setNewStudentName(studentSearch.trim()); request.current = null; setStudentPickerOpen(false); }}>Добавить «{studentSearch.trim()}»</button>
+                  ) : null}
+                </div>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         </div>
         <label>
           Сумма, ₽

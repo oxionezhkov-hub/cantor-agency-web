@@ -112,7 +112,8 @@ try {
       await page.goto(`${base}/?section=stats`, { waitUntil: "networkidle" });
       const tabs = page.getByRole("tablist", { name: "Отчёты аналитики" });
       await tabs.getByRole("tab", { name: "Обзор", exact: true }).waitFor();
-      assert.equal(await tabs.getByRole("tab").count(), 4);
+      assert.equal(await tabs.getByRole("tab").count(), 3);
+      assert.equal(await tabs.getByRole("tab", { name: "Объявления", exact: true }).count(), 0);
       assert.ok(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
         `${width} overview overflow`,
@@ -122,44 +123,44 @@ try {
         0,
       );
       assert.equal(await page.locator(".an-plot .recharts-legend-wrapper").count(), 0);
+      assert.equal(await page.getByRole("heading", { name: "Воронка рекламы", exact: true }).count(), 0);
+      for (const label of ["Расход на рекламу", "Показы", "Просмотры", "Контакты", "Диагностики", "Продажи"]) {
+        assert.equal(await page.locator(".an-kpis").getByText(label, { exact: true }).count(), 1, label);
+      }
+      assert.match(await page.locator(".an-kpis").innerText(), /Окупаемость по поступлениям/);
+      assert.match(await page.locator(".an-kpis").innerText(), /за период/);
+        for (const heading of [
+          "Заголовки · просмотры",
+          "Заголовки · контакты",
+          "Города · просмотры",
+          "Города · контакты",
+        ]) {
+          const panel = page
+            .locator("article")
+            .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
+          await panel.waitFor();
+          assert.ok((await panel.locator(".an-ranking-list li").count()) <= 5, heading);
+        }
+        const views = page
+          .locator("article")
+          .filter({
+            has: page.getByRole("heading", { name: "Заголовки · просмотры", exact: true }),
+          });
+        const item = views.locator("li").filter({ hasText: "Общий заголовок" });
+        assert.equal(await item.count(), 1, "Duplicate title must collapse to one row");
+        assert.match(await item.innerText(), /110/, "Duplicate views must sum");
+
       await page.screenshot({ path: `${output}/overview-${width}.png`, fullPage: true });
-      for (const name of ["Объявления", "Диалоги", "Экономика"]) {
+      for (const name of ["Диалоги", "Экономика"]) {
         await tabs.getByRole("tab", { name, exact: true }).click();
         assert.ok(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
           `${width} ${name} overflow`,
         );
         assert.doesNotMatch(await page.locator("main").innerText(), /NaN|undefined/);
-        if (name === "Объявления") {
-          for (const heading of [
-            "Заголовки · просмотры",
-            "Заголовки · контакты",
-            "Города · просмотры",
-            "Города · контакты",
-          ]) {
-            const panel = page
-              .locator("article")
-              .filter({ has: page.getByRole("heading", { name: heading, exact: true }) });
-            await panel.waitFor();
-            assert.ok((await panel.locator(".an-ranking-list li").count()) <= 5, heading);
-          }
-          const views = page
-            .locator("article")
-            .filter({
-              has: page.getByRole("heading", { name: "Заголовки · просмотры", exact: true }),
-            });
-          const item = views.locator("li").filter({ hasText: "Общий заголовок" });
-          assert.equal(await item.count(), 1, "Duplicate title must collapse to one row");
-          assert.match(await item.innerText(), /110/, "Duplicate views must sum");
-          assert.equal(
-            await page.locator("[role=tabpanel] svg.recharts-surface").count(),
-            0,
-            "Ads report contains no charts",
-          );
-        }
         if (name === "Диалоги") {
           const reasons = page.locator(".an-refusal-list");
-          assert.ok((await reasons.locator("a").count()) <= 5, "Top five reasons");
+          assert.ok((await reasons.locator("a").count()) <= 10, "Top ten reasons");
           assert.ok(
             (await page.locator(".an-dialog-advice a").count()) <= 5,
             "Top five recommendations",
