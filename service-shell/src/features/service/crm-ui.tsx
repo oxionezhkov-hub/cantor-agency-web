@@ -396,7 +396,7 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
   const { state, storageError } = useDemoCrm();
   const [selectedLeadId, setLeadId] = useState(leadScope ?? "igor");
   const leadId = leadScope ?? selectedLeadId;
-  const [slotId, setSlotId] = useState(windows[0].id);
+  const [slotId, setSlotId] = useState(windows[0]?.id ?? "");
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -527,6 +527,8 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
             <ServiceSelect
               label="Окно · 30 минут, МСК"
               value={slotId}
+              disabled={!windows.length}
+              placeholder={windows.length ? "Выберите окно" : "Нет доступных окон"}
               onChange={(value) => {
                 setSlotId(value);
                 request.current = null;
@@ -543,6 +545,7 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
             type="submit"
             disabled={
               Boolean(storageError) ||
+              !slotId ||
               (!editing &&
                 windows.some(
                   (slot) =>
@@ -619,8 +622,9 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
                       setEditing(item.id);
                       setLeadId(item.leadId);
                       setSlotId(
-                        windows.find((slot) => slot.startsAt === item.startsAt)?.id ||
-                          windows[0].id,
+                        (windows.find((slot) => slot.startsAt === item.startsAt)?.id ||
+                          windows[0]?.id) ??
+                          "",
                       );
                       setNotice("");
                       setError("");
@@ -642,7 +646,11 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
           );
         })}
         {!active.length ? (
-          <p className="crm-hint">Пока нет предстоящих встреч. Выберите заявку и свободное окно.</p>
+          <p className="crm-hint">
+            {windows.length
+              ? "Пока нет предстоящих встреч. Выберите заявку и свободное окно."
+              : "Пока нет предстоящих встреч и доступных окон."}
+          </p>
         ) : null}
       </div>
       <details className="crm-history">
