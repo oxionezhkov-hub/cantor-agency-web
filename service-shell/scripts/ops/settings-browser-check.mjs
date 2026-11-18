@@ -8,7 +8,7 @@ try{for(const width of [1440,390]){
  await page.route('**/api/demo/bootstrap',r=>r.fulfill({json:{tutor:'Елена Добрынина',subject:'Русский язык',readAt:'2026-11-18T00:00:00Z',catalogAt:null,chatsAt:null,ads:[],daily:[],chats:[]}}));
  await page.goto('http://127.0.0.1:9156/?section=acc');
  await page.getByRole('heading',{name:'Конструктор',exact:true}).first().waitFor();
- assert.equal(await page.getByRole('link',{name:'Связь с командой'}).getAttribute('href'),'https://t.me/cantor_agency_manager');
+ assert.equal(await page.locator('.support-manager-link').getAttribute('href'),'https://t.me/cantor_agency_manager');
  await page.screenshot({path:`/tmp/cantor-settings/tariff-${width}.png`,fullPage:true});
  await page.getByRole('button',{name:'Выбрать тариф',exact:true}).first().click();
  const d=page.getByRole('dialog'); await d.waitFor();
