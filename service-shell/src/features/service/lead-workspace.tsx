@@ -682,6 +682,17 @@ function ContactChat({
             · {lead.city ?? "Город не указан"}
           </p>
         </div>
+        {waitingForReply(state, lead, now).waiting ? (
+          <button
+            type="button"
+            className="reply-ack"
+            title="Снять отметку «Без ответа» на время просмотра"
+            onClick={onAcknowledge}
+            aria-label="Ответ не требуется"
+          >
+            <CheckCheck size={16} />
+          </button>
+        ) : null}
         <div className="contact-chat-controls">
           <StageControl
             stage={progress.stage}
@@ -699,18 +710,6 @@ function ContactChat({
             {MODE_LABELS[mode]}
           </span>
         </div>
-        {waitingForReply(state, lead, now).waiting ? (
-          <button
-            type="button"
-            className="reply-ack"
-            title="Снять отметку «Без ответа» на время просмотра"
-            onClick={onAcknowledge}
-            aria-label="Ответ не требуется"
-          >
-            <CheckCheck size={16} />
-            <span>Ответ не требуется</span>
-          </button>
-        ) : null}
         <button
           ref={callButton}
           type="button"
