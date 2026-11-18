@@ -26,6 +26,8 @@ import {
   Play,
 } from "lucide-react";
 import { Avatar } from "./contact-avatar.tsx";
+import { AiManager } from "./ai-manager";
+import { generateAi } from "./ai-manager-client";
 import { ads, windows } from "./data.ts";
 import { changeDemoCrm, useDemoCrm } from "./demo-crm-store.ts";
 import { DiagnosticSection, PaymentsSection } from "./crm-ui.tsx";
@@ -84,7 +86,7 @@ export function LeadWorkspace({
 }: {
   focus?: string;
   adapter?: MessageAdapter;
-  view?: "crm";
+  view?: "crm" | "ai";
 }) {
   const { state, storageError } = useDemoCrm();
   const activeAdapter =
@@ -120,10 +122,7 @@ export function LeadWorkspace({
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
-    document.documentElement.classList.toggle(
-      "cantor-chat-open",
-      Boolean(selectedId) && view !== "crm",
-    );
+    document.documentElement.classList.toggle("cantor-chat-open", Boolean(selectedId) && !view);
     return () => document.documentElement.classList.remove("cantor-chat-open");
   }, [selectedId, view]);
   useEffect(() => {
@@ -181,7 +180,9 @@ export function LeadWorkspace({
           {storageError}
         </p>
       ) : null}
-      {view === "crm" ? (
+      {view === "ai" ? (
+        <AiManager />
+      ) : view === "crm" ? (
         <CrmBoard state={state} now={now} onOpen={open} onMove={move} />
       ) : (
         <div className="workbench-split">
@@ -368,6 +369,7 @@ function ContactChat({
     lead.id,
     lead.draft ?? (lead.aiProposal?.status === "ready" ? lead.aiProposal.text : ""),
   );
+  const [generating, setGenerating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [attachment, setAttachment] = useState<{
@@ -668,6 +670,49 @@ function ContactChat({
             · {lead.city ?? "Город не указан"}
           </p>
         </div>
+        <button
+          type="button"
+          className="reply-ack"
+          aria-label="Подготовить ответ ИИ"
+          title="Подготовить ответ ИИ"
+          disabled={generating}
+          onClick={async () => {
+            setGenerating(true);
+            setError("");
+            try {
+              const forMessage = messages.at(-1)?.id;
+              const draft = await generateAi(
+                messages
+                  .filter((m) => m.author !== "system")
+                  .map((m) => ({
+                    role: m.author === "manager" ? "assistant" : "user",
+                    content: m.text || "[Вложение]",
+                  })),
+                (state.feedback ?? [])
+                  .slice(-8)
+                  .map((f) => `${f.original} → ${f.corrected}`)
+                  .join("\n"),
+              );
+              if (
+                forMessage !==
+                conversationMessages((await import("./demo-crm-store")).readDemoCrm(), lead.id).at(
+                  -1,
+                )?.id
+              )
+                throw Error("Появилось новое сообщение. Подготовьте ответ заново.");
+              patch({ mode: "ai_approval" });
+              change(draft);
+              setEditing(false);
+              setPanel("conversation");
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Не удалось подготовить ответ");
+            } finally {
+              setGenerating(false);
+            }
+          }}
+        >
+          {generating ? "…" : "ИИ"}
+        </button>
         {waitingForReply(state, lead, now).waiting ? (
           <button
             type="button"

@@ -1,3 +1,4 @@
+import { aiManager } from "./ai-manager.mjs";
 import { readDobrynina } from "./dobrynina-source.mjs";
 import { passwordAuthorized, imageSessionCookie, sessionAuthorized } from "./demo-session.mjs";
 import { campaignSuggestion } from "./campaign-ai.mjs";
@@ -18,6 +19,10 @@ export default {
         "cache-control": "no-store, private",
         vary: "x-demo-password",
       };
+      if (path === "/api/demo/ai-manager") {
+        if (!(await passwordAuthorized(request, env.DEMO_PASSWORD_SHA256)) && !(await sessionAuthorized(request, env.DEMO_PASSWORD_SHA256))) return Response.json({error:"unauthorized"},{status:401,headers:privateHeaders});
+        return aiManager(request,env,privateHeaders);
+      }
       if (request.method !== "GET")
         return Response.json(
           { error: "read_only" },
