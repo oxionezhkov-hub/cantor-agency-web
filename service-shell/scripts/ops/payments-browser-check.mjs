@@ -143,6 +143,17 @@ try {
       await page.getByRole("button", { name: /^Внести возврат: Кирилл/ }).isDisabled(),
       true,
     );
+    await add.getByRole("combobox", { name: "Ученик", exact: true }).click();
+    await page.getByRole("textbox", { name: "Поиск или имя ученика", exact: true }).fill("Новый тестовый ученик");
+    await page.getByRole("option", { name: "Добавить «Новый тестовый ученик»", exact: true }).click();
+    await add.getByRole("textbox", { name: "Сумма, ₽", exact: true }).fill("1234");
+    await add.getByRole("textbox", { name: "Дата оплаты", exact: true }).fill("16.11.2026");
+    await add.getByRole("button", { name: "Сохранить оплату", exact: true }).click();
+    await region.getByText("Оплата сохранена.", { exact: true }).waitFor();
+    state = await page.evaluate(() => JSON.parse(localStorage.getItem("cantor.demo-crm.v1")));
+    const newStudent = state.students.find((student) => student.name === "Новый тестовый ученик");
+    assert.ok(newStudent, "New student is created");
+    assert.ok(state.payments.some((payment) => payment.studentId === newStudent.id && payment.amountMinor === 123400), "New student's payment is saved");
     await page.getByText("Возвраты по оплате: 2", { exact: true }).click();
     await page.screenshot({ path: `${output}/payments-${width}.png`, fullPage: true });
     assert.ok((await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 1);
