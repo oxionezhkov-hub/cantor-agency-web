@@ -1252,3 +1252,102 @@
   outline: 2px solid #e8391d;
   outline-offset: 1px;
 }
+/* Keep the selection and ad identity visible without decoration while scrolling. */
+.aw-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.aw-table th:first-child,
+.aw-table td:first-child {
+  position: sticky;
+  left: 0;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  z-index: 3;
+  box-sizing: border-box;
+}
+.aw-table th:nth-child(2),
+.aw-table td:nth-child(2) {
+  position: sticky;
+  left: 46px;
+  z-index: 3;
+}
+.aw-table th:first-child,
+.aw-table th:nth-child(2) {
+  background: #faf9f7;
+  z-index: 4;
+}
+.aw-table td:first-child,
+.aw-table td:nth-child(2) {
+  background: #fff;
+}
+.aw-sort-active {
+  background: #faf9f7 !important;
+}
+.aw-editor-inline {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 600px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.aw-editor-inline .aw-editor-layout {
+  min-height: 480px;
+}
+.aw-editor-inline .aw-editor-body {
+  overflow: visible;
+}
+.aw-editor-inline .aw-live-preview {
+  overflow: visible;
+}
+@media (max-width: 700px) {
+  .aw-editor-inline {
+    height: auto;
+    min-height: 0;
+  }
+  .aw-editor-inline .aw-editor-layout {
+    overflow: visible;
+  }
+  .aw-editor-inline .aw-live-preview.mobile-open {
+    position: relative;
+    inset: auto;
+  }
+  .aw-editor-inline footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+  }
+}
+@media (max-width: 600px) {
+  .aw-table-wrap {
+    scroll-padding-left: 236px;
+  }
+  .aw-table th:nth-child(2),
+  .aw-table td:nth-child(2) {
+    width: 190px;
+    min-width: 190px;
+    max-width: 190px;
+    box-sizing: border-box;
+  }
+  .aw-table td:nth-child(2) .aw-ad {
+    gap: 7px;
+  }
+  .aw-table td:nth-child(2) .aw-thumb {
+    width: 42px;
+  }
+  .aw-table td:nth-child(2) .aw-ad strong,
+  .aw-table:has(.aw-title-full) td:nth-child(2) .aw-ad strong {
+    min-width: 0;
+    width: 108px;
+    max-width: 108px !important;
+  }
+  .aw-table td:nth-child(2) .aw-ad small {
+    max-width: 108px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

@@ -10,7 +10,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import {
-  Plus,
   Search,
   Check,
   Copy,
@@ -180,6 +179,30 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     </div>
   );
 }
+function newListing(): Listing {
+  return {
+    id: crypto.randomUUID(),
+    title: "",
+    text: "",
+    city: "",
+    price: 0,
+    status: "draft",
+    source: "cantor",
+    photos: [],
+    shows: 0,
+    views: 0,
+    contacts: 0,
+    spend: 0,
+    bid: 0,
+    mode: "manual",
+    max: 0,
+    budget: 0,
+    target: 10,
+    query: "",
+    start: "09:00",
+    end: "21:00",
+  };
+}
 export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
   const [tab, setTab] = useState(
@@ -192,8 +215,19 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [bulkOpen, setBulkOpen] = useState(false);
   useEffect(() => {
-    if (focus === "feeds" || focus === "history") setTab("feeds");
-    else if (focus === "generate" || focus === "list") setTab(focus);
+    if (focus === "generate") {
+      setTab("generate");
+      setEdit(newListing());
+      setEditorTab("content");
+      setCandidate(null);
+      setPreview(false);
+      setNotice("");
+      setImageUrl("");
+      setPhotoIndex(0);
+    } else if (!focus || focus === "feeds" || focus === "history" || focus === "list") {
+      setTab(!focus ? "list" : focus === "history" ? "feeds" : focus);
+      setEdit(null);
+    }
   }, [focus]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
@@ -215,7 +249,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
 
   const [bulkBid, setBulkBid] = useState(30);
   const dialogRef = useRef<HTMLElement>(null);
-  const editing = edit !== null;
+  const editing = edit !== null && tab !== "generate";
   useEffect(() => {
     if (!editing) return;
     const previous = document.activeElement;
@@ -278,28 +312,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     setImageUrl("");
   }
   function create() {
-    open({
-      id: crypto.randomUUID(),
-      title: "",
-      text: "",
-      city: "",
-      price: 0,
-      status: "draft",
-      source: "cantor",
-      photos: [],
-      shows: 0,
-      views: 0,
-      contacts: 0,
-      spend: 0,
-      bid: 0,
-      mode: "manual",
-      max: 0,
-      budget: 0,
-      target: 10,
-      query: "",
-      start: "09:00",
-      end: "21:00",
-    });
+    open(newListing());
   }
   function save() {
     if (!edit) return;
@@ -318,7 +331,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         `Сохранено объявление «${edit.title}»`,
       )
     ) {
-      setEdit(null);
+      if (tab === "generate") create();
+      else setEdit(null);
       setNotice("Изменения сохранены в этом браузере.");
     }
   }
@@ -491,9 +505,472 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       </div>
     </div>
   );
+  const editorContent = edit && (
+    <section
+      ref={dialogRef}
+      className={`aw-editor ${tab === "generate" ? "aw-editor-inline" : ""}`}
+      role={tab === "generate" ? "region" : "dialog"}
+      aria-modal={tab === "generate" ? undefined : true}
+      aria-label="Редактор объявления"
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && tab !== "generate") setEdit(null);
+      }}
+    >
+      <div className="aw-tabs">
+        {[
+          ["content", "Содержание"],
+          ["photos", `Фотографии · ${edit.photos.length}`],
+          ["promotion", "Ставка и расписание"],
+        ].map(([id, label]) => (
+          <button key={id} onClick={() => setEditorTab(id)} aria-pressed={editorTab === id}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab !== "generate" && (
+        <button
+          className="aw-icon aw-editor-close"
+          aria-label="Закрыть редактор"
+          onClick={() => setEdit(null)}
+        >
+          <X />
+        </button>
+      )}
+      <div className="aw-editor-layout">
+        <div className="aw-editor-body">
+          {notice && (
+            <div className="aw-notice" role="status">
+              {notice}
+            </div>
+          )}
+          {editorTab === "content" && (
+            <div className="aw-form">
+              <div className="aw-grid aw-location">
+                <Field label="Город размещения">
+                  <div className="aw-city-input">
+                    <MapPin size={16} />
+                    <input
+                      aria-label="Город"
+                      placeholder="Введите город"
+                      value={edit.city}
+                      onChange={(e) => setEdit({ ...edit, city: e.target.value })}
+                    />
+                  </div>
+                </Field>
+                <Field label="Цена занятия, ₽">
+                  <input
+                    type="number"
+                    min="0"
+                    value={Number.isFinite(edit.price) ? edit.price : ""}
+                    onChange={(e) => setEdit({ ...edit, price: Number(e.target.value) })}
+                  />
+                </Field>
+              </div>
+              <div>
+                <div className="aw-field-heading">
+                  <label htmlFor="aw-title">Заголовок</label>
+                  <button className="aw-ai-button" onClick={() => propose("title")}>
+                    <Sparkles size={14} />
+                    Предложить заголовок
+                  </button>
+                </div>
+                <input
+                  id="aw-title"
+                  className="aw-input"
+                  value={edit.title}
+                  placeholder="Например, подготовка к ЕГЭ"
+                  maxLength={100}
+                  onChange={(e) => setEdit({ ...edit, title: e.target.value })}
+                />
+                {candidate?.kind === "title" && suggestion}
+              </div>
+              <div>
+                <div className="aw-field-heading">
+                  <label htmlFor="aw-text">Текст объявления</label>
+                  <button className="aw-ai-button" onClick={() => propose("text")}>
+                    <Sparkles size={14} />
+                    Предложить текст
+                  </button>
+                </div>
+                <textarea
+                  id="aw-text"
+                  className="aw-input"
+                  rows={7}
+                  placeholder="Расскажите о занятиях, формате и первой встрече"
+                  value={edit.text}
+                  onChange={(e) => setEdit({ ...edit, text: e.target.value })}
+                />
+                {candidate?.kind === "text" && suggestion}
+              </div>
+              <div className="aw-editor-meta">
+                <Field label="Управление объявлением">
+                  <AdsSelect
+                    label="Источник управления"
+                    value={edit.source}
+                    options={sourceOptions}
+                    onChange={(source) => setEdit({ ...edit, source: source as Listing["source"] })}
+                  />
+                </Field>
+                <AdsHelp label="Об источнике управления">
+                  Выберите, где редактировать объявление.
+                </AdsHelp>
+              </div>
+              {getPreviewData() &&
+                ((edit.attributes && Object.keys(edit.attributes).length > 0) ||
+                  edit.address ||
+                  edit.autoloadId ||
+                  edit.startsAt ||
+                  edit.finishesAt) && (
+                  <details className="aw-editor-meta">
+                    <summary>Параметры объявления</summary>
+                    <dl>
+                      {edit.address ? (
+                        <div>
+                          <dt>Адрес</dt>
+                          <dd>{edit.address}</dd>
+                        </div>
+                      ) : null}
+                      {edit.autoloadId ? (
+                        <div>
+                          <dt>Id автозагрузки</dt>
+                          <dd>{edit.autoloadId}</dd>
+                        </div>
+                      ) : null}
+                      {edit.startsAt ? (
+                        <div>
+                          <dt>Дата публикации</dt>
+                          <dd>{edit.startsAt}</dd>
+                        </div>
+                      ) : null}
+                      {edit.finishesAt ? (
+                        <div>
+                          <dt>Дата окончания</dt>
+                          <dd>{edit.finishesAt}</dd>
+                        </div>
+                      ) : null}
+                      {Object.entries(edit.attributes || {}).map(([key, value]) => (
+                        <div key={key}>
+                          <dt>{key}</dt>
+                          <dd>{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
+                )}
+              {state.items.some((a) => a.id === edit.id) && (
+                <button
+                  className="aw-text-button"
+                  onClick={() =>
+                    open({
+                      ...edit,
+                      id: crypto.randomUUID(),
+                      title: `${edit.title} — копия`,
+                      status: "draft",
+                      views: 0,
+                      contacts: 0,
+                      spend: 0,
+                    })
+                  }
+                >
+                  <Copy size={14} />
+                  Дублировать
+                </button>
+              )}
+            </div>
+          )}
+          {editorTab === "photos" && (
+            <>
+              {candidate?.kind === "photo" && suggestion}
+              {!edit.photos.length && candidate?.kind !== "photo" && (
+                <div className="aw-photo-empty">
+                  <ImagePlus size={28} />
+                  <span>Добавьте первую фотографию</span>
+                </div>
+              )}
+              <div className="aw-photo-grid">
+                {edit.photos.map((url, i) => (
+                  <div className="aw-photo" key={`${url}-${i}`}>
+                    <img src={url} alt={`Фотография ${i + 1}`} />
+                    <div>
+                      <button
+                        aria-label={`Переместить фото ${i + 1} влево`}
+                        disabled={i === 0}
+                        onClick={() => {
+                          const p = [...edit.photos];
+                          [p[i - 1], p[i]] = [p[i], p[i - 1]];
+                          setEdit({ ...edit, photos: p });
+                        }}
+                      >
+                        <ArrowLeft size={15} />
+                      </button>
+                      <button
+                        aria-label={`Переместить фото ${i + 1} вправо`}
+                        disabled={i === edit.photos.length - 1}
+                        onClick={() => {
+                          const p = [...edit.photos];
+                          [p[i + 1], p[i]] = [p[i], p[i + 1]];
+                          setEdit({ ...edit, photos: p });
+                        }}
+                      >
+                        <ArrowRight size={15} />
+                      </button>
+                      <button
+                        aria-label={`Удалить фото ${i + 1}`}
+                        onClick={() =>
+                          setEdit({
+                            ...edit,
+                            photos: edit.photos.filter((_, j) => j !== i),
+                          })
+                        }
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="aw-photo-toolbar">
+                <button className="aw-ai-button" onClick={() => propose("photo")}>
+                  <Sparkles size={15} />
+                  Создать с ИИ
+                </button>
+                <AdsHelp label="О фотографиях">
+                  Первое изображение — обложка. Меняйте порядок стрелками.
+                </AdsHelp>
+              </div>
+              <div className="aw-form">
+                <Field label="Прямая ссылка на изображение">
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    placeholder="https://…/photo.jpg"
+                    onChange={(e) => setImageUrl(e.target.value)}
+                  />
+                </Field>
+                <button
+                  className="aw-btn"
+                  onClick={() => {
+                    try {
+                      const u = new URL(imageUrl);
+                      if (u.protocol !== "https:") throw Error();
+                      setEdit({ ...edit, photos: [...edit.photos, u.href] });
+                      setImageUrl("");
+                    } catch {
+                      setNotice("Укажите HTTPS-ссылку на изображение.");
+                    }
+                  }}
+                >
+                  <ImagePlus size={17} />
+                  Добавить по ссылке
+                </button>
+                <Field label="Или загрузите файл">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      if (f.size > 1500000)
+                        return setNotice("Для превью выберите изображение до 1,5 МБ.");
+                      const r = new FileReader();
+                      r.onload = () =>
+                        setEdit({ ...edit, photos: [...edit.photos, String(r.result)] });
+                      r.readAsDataURL(f);
+                    }}
+                  />
+                </Field>
+              </div>
+            </>
+          )}
+          {editorTab === "promotion" && (
+            <div className="aw-form">
+              <div className="aw-mode-row">
+                <Field label="Режим управления">
+                  <AdsSelect
+                    label="Режим управления"
+                    value={edit.mode}
+                    options={bidModes}
+                    onChange={(mode) => setEdit({ ...edit, mode })}
+                  />
+                </Field>
+                <AdsHelp label="О режимах ставок">
+                  Вручную — ваша ставка. С рекомендациями — изменения после вашего решения. По
+                  позиции — будущий биддер в заданных пределах; сейчас настройки не отправляются в
+                  Авито.
+                </AdsHelp>
+              </div>
+              <div className="aw-grid">
+                <Field label="Ставка за просмотр, ₽">
+                  <input
+                    type="number"
+                    min="0"
+                    value={Number.isFinite(edit.bid) ? edit.bid : ""}
+                    onChange={(e) => setEdit({ ...edit, bid: Number(e.target.value) })}
+                  />
+                </Field>
+                <Field label="Максимальная ставка, ₽">
+                  <input
+                    type="number"
+                    min="0"
+                    value={Number.isFinite(edit.max) ? edit.max : ""}
+                    onChange={(e) => setEdit({ ...edit, max: Number(e.target.value) })}
+                  />
+                </Field>
+                <Field label="Дневной бюджет, ₽">
+                  <input
+                    type="number"
+                    min="0"
+                    value={Number.isFinite(edit.budget) ? edit.budget : ""}
+                    onChange={(e) => setEdit({ ...edit, budget: Number(e.target.value) })}
+                  />
+                </Field>
+                {edit.mode === "position" && (
+                  <Field label="Целевая позиция">
+                    <input
+                      type="number"
+                      min="1"
+                      value={Number.isFinite(edit.target) ? edit.target : ""}
+                      onChange={(e) => setEdit({ ...edit, target: Number(e.target.value) })}
+                    />
+                  </Field>
+                )}
+              </div>
+              {getPreviewData() &&
+              getPreviewData()!.ads.find((item) => item.id === edit.id)?.bidding?.scale?.length ? (
+                <details>
+                  <summary>Шкала ставок</summary>
+                  <div className="aw-table-wrap">
+                    <table className="aw-table">
+                      <thead>
+                        <tr>
+                          <th>Ставка</th>
+                          <th>Сравнение с конкурентами</th>
+                          <th>Прогноз минимум</th>
+                          <th>Прогноз максимум</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getPreviewData()!
+                          .ads.find((item) => item.id === edit.id)!
+                          .bidding!.scale.map((row, index) => (
+                            <tr key={index}>
+                              <td>{rub(row.rub)}</td>
+                              <td>{row.compare}%</td>
+                              <td>{row.minForecast}</td>
+                              <td>{row.maxForecast}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              ) : null}
+              {edit.mode === "position" && (
+                <>
+                  <Field label="Поисковый запрос">
+                    <input
+                      value={edit.query}
+                      onChange={(e) => setEdit({ ...edit, query: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Город замера">
+                    <input
+                      value={edit.city}
+                      onChange={(e) => setEdit({ ...edit, city: e.target.value })}
+                    />
+                  </Field>
+                </>
+              )}
+              <div className="aw-grid">
+                <Field label="Работать с, МСК">
+                  <AdsSelect
+                    label="Работать с, МСК"
+                    value={edit.start}
+                    options={timeOptions}
+                    onChange={(start) => setEdit({ ...edit, start })}
+                  />
+                </Field>
+                <Field label="Работать до, МСК">
+                  <AdsSelect
+                    label="Работать до, МСК"
+                    value={edit.end}
+                    options={timeOptions}
+                    onChange={(end) => setEdit({ ...edit, end })}
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
+        </div>
+        <aside className={`aw-live-preview ${preview ? "mobile-open" : ""}`}>
+          <div className="aw-preview-heading">
+            <button
+              className="aw-icon aw-mobile-close"
+              aria-label="Скрыть предпросмотр"
+              onClick={() => setPreview(false)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="aw-preview-image">
+            {edit.photos[photoIndex % edit.photos.length] ? (
+              <img src={edit.photos[photoIndex % edit.photos.length]} alt="Фотография объявления" />
+            ) : (
+              <ImagePlus size={36} />
+            )}
+          </div>
+          {edit.photos.length > 1 && (
+            <div className="aw-carousel">
+              <button
+                aria-label="Предыдущее фото"
+                onClick={() =>
+                  setPhotoIndex((photoIndex - 1 + edit.photos.length) % edit.photos.length)
+                }
+              >
+                ←
+              </button>
+              <span>
+                {(photoIndex % edit.photos.length) + 1} / {edit.photos.length}
+              </span>
+              <button
+                aria-label="Следующее фото"
+                onClick={() => setPhotoIndex((photoIndex + 1) % edit.photos.length)}
+              >
+                →
+              </button>
+            </div>
+          )}
+          <div className="aw-preview-content">
+            <h3>{edit.title || "Заголовок объявления"}</h3>
+            <strong>{rub(edit.price)}</strong>
+            <span>
+              <MapPin size={12} />
+              {edit.city || "Город"}
+            </span>
+            <p>{edit.text || "Текст вашего объявления появится здесь"}</p>
+          </div>
+        </aside>
+      </div>
+      <footer>
+        <button className="aw-text-button aw-preview-toggle" onClick={() => setPreview(!preview)}>
+          <Eye size={15} />
+          Предпросмотр
+        </button>
+        <AdsHelp label="О сохранении">
+          Проверьте заголовок, текст и фотографии перед сохранением.
+        </AdsHelp>
+        <button className="aw-btn" onClick={() => (tab === "generate" ? create() : setEdit(null))}>
+          {tab === "generate" ? "Очистить" : "Отмена"}
+        </button>
+        <button className="aw-btn aw-primary" onClick={save}>
+          Сохранить
+        </button>
+      </footer>
+    </section>
+  );
   return (
     <div className="aw">
-      {notice && (
+      {notice && !edit && (
         <div className="aw-notice" role="status">
           {notice}
           <button aria-label="Скрыть уведомление" onClick={() => setNotice("")}>
@@ -827,21 +1304,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           </div>
         </>
       )}
-      {tab === "generate" && (
-        <div className="aw-create-section">
-          <div className="aw-create-icon">
-            <Sparkles size={22} />
-          </div>
-          <div>
-            <h2>Новое объявление</h2>
-            <p>Заполните поля самостоятельно или подготовьте текст и фотографии с помощником.</p>
-            <button className="aw-btn aw-primary" onClick={create}>
-              <Plus size={16} />
-              Создать объявление
-            </button>
-          </div>
-        </div>
-      )}
       {tab === "feeds" && (
         <div className={`aw-feed-layout ${sheetSaved ? "" : "first-step"}`}>
           <div className="aw-panel">
@@ -1139,484 +1601,19 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         </div>
       )}
       {edit &&
-        createPortal(
-          <div
-            className="aw aw-overlay"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setEdit(null);
-            }}
-          >
-            <section
-              ref={dialogRef}
-              className="aw-editor"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Редактор объявления"
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setEdit(null);
-              }}
-            >
-              <div className="aw-tabs">
-                {[
-                  ["content", "Содержание"],
-                  ["photos", `Фотографии · ${edit.photos.length}`],
-                  ["promotion", "Ставка и расписание"],
-                ].map(([id, label]) => (
-                  <button key={id} onClick={() => setEditorTab(id)} aria-pressed={editorTab === id}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="aw-icon aw-editor-close"
-                aria-label="Закрыть редактор"
-                onClick={() => setEdit(null)}
+        (tab === "generate"
+          ? editorContent
+          : createPortal(
+              <div
+                className="aw aw-overlay"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setEdit(null);
+                }}
               >
-                <X />
-              </button>
-              <div className="aw-editor-layout">
-                <div className="aw-editor-body">
-                  {notice && (
-                    <div className="aw-notice" role="status">
-                      {notice}
-                    </div>
-                  )}
-                  {editorTab === "content" && (
-                    <div className="aw-form">
-                      <div className="aw-grid aw-location">
-                        <Field label="Город размещения">
-                          <div className="aw-city-input">
-                            <MapPin size={16} />
-                            <input
-                              aria-label="Город"
-                              placeholder="Введите город"
-                              value={edit.city}
-                              onChange={(e) => setEdit({ ...edit, city: e.target.value })}
-                            />
-                          </div>
-                        </Field>
-                        <Field label="Цена занятия, ₽">
-                          <input
-                            type="number"
-                            min="0"
-                            value={Number.isFinite(edit.price) ? edit.price : ""}
-                            onChange={(e) => setEdit({ ...edit, price: Number(e.target.value) })}
-                          />
-                        </Field>
-                      </div>
-                      <div>
-                        <div className="aw-field-heading">
-                          <label htmlFor="aw-title">Заголовок</label>
-                          <button className="aw-ai-button" onClick={() => propose("title")}>
-                            <Sparkles size={14} />
-                            Предложить заголовок
-                          </button>
-                        </div>
-                        <input
-                          id="aw-title"
-                          className="aw-input"
-                          value={edit.title}
-                          placeholder="Например, подготовка к ЕГЭ"
-                          maxLength={100}
-                          onChange={(e) => setEdit({ ...edit, title: e.target.value })}
-                        />
-                        {candidate?.kind === "title" && suggestion}
-                      </div>
-                      <div>
-                        <div className="aw-field-heading">
-                          <label htmlFor="aw-text">Текст объявления</label>
-                          <button className="aw-ai-button" onClick={() => propose("text")}>
-                            <Sparkles size={14} />
-                            Предложить текст
-                          </button>
-                        </div>
-                        <textarea
-                          id="aw-text"
-                          className="aw-input"
-                          rows={7}
-                          placeholder="Расскажите о занятиях, формате и первой встрече"
-                          value={edit.text}
-                          onChange={(e) => setEdit({ ...edit, text: e.target.value })}
-                        />
-                        {candidate?.kind === "text" && suggestion}
-                      </div>
-                      <div className="aw-editor-meta">
-                        <Field label="Управление объявлением">
-                          <AdsSelect
-                            label="Источник управления"
-                            value={edit.source}
-                            options={sourceOptions}
-                            onChange={(source) =>
-                              setEdit({ ...edit, source: source as Listing["source"] })
-                            }
-                          />
-                        </Field>
-                        <AdsHelp label="Об источнике управления">
-                          Выберите, где редактировать объявление.
-                        </AdsHelp>
-                      </div>
-                      {getPreviewData() &&
-                        ((edit.attributes && Object.keys(edit.attributes).length > 0) ||
-                          edit.address ||
-                          edit.autoloadId ||
-                          edit.startsAt ||
-                          edit.finishesAt) && (
-                          <details className="aw-editor-meta">
-                            <summary>Параметры объявления</summary>
-                            <dl>
-                              {edit.address ? (
-                                <div>
-                                  <dt>Адрес</dt>
-                                  <dd>{edit.address}</dd>
-                                </div>
-                              ) : null}
-                              {edit.autoloadId ? (
-                                <div>
-                                  <dt>Id автозагрузки</dt>
-                                  <dd>{edit.autoloadId}</dd>
-                                </div>
-                              ) : null}
-                              {edit.startsAt ? (
-                                <div>
-                                  <dt>Дата публикации</dt>
-                                  <dd>{edit.startsAt}</dd>
-                                </div>
-                              ) : null}
-                              {edit.finishesAt ? (
-                                <div>
-                                  <dt>Дата окончания</dt>
-                                  <dd>{edit.finishesAt}</dd>
-                                </div>
-                              ) : null}
-                              {Object.entries(edit.attributes || {}).map(([key, value]) => (
-                                <div key={key}>
-                                  <dt>{key}</dt>
-                                  <dd>{value}</dd>
-                                </div>
-                              ))}
-                            </dl>
-                          </details>
-                        )}
-                      {state.items.some((a) => a.id === edit.id) && (
-                        <button
-                          className="aw-text-button"
-                          onClick={() =>
-                            open({
-                              ...edit,
-                              id: crypto.randomUUID(),
-                              title: `${edit.title} — копия`,
-                              status: "draft",
-                              views: 0,
-                              contacts: 0,
-                              spend: 0,
-                            })
-                          }
-                        >
-                          <Copy size={14} />
-                          Дублировать
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {editorTab === "photos" && (
-                    <>
-                      {candidate?.kind === "photo" && suggestion}
-                      {!edit.photos.length && candidate?.kind !== "photo" && (
-                        <div className="aw-photo-empty">
-                          <ImagePlus size={28} />
-                          <span>Добавьте первую фотографию</span>
-                        </div>
-                      )}
-                      <div className="aw-photo-grid">
-                        {edit.photos.map((url, i) => (
-                          <div className="aw-photo" key={`${url}-${i}`}>
-                            <img src={url} alt={`Фотография ${i + 1}`} />
-                            <div>
-                              <button
-                                aria-label={`Переместить фото ${i + 1} влево`}
-                                disabled={i === 0}
-                                onClick={() => {
-                                  const p = [...edit.photos];
-                                  [p[i - 1], p[i]] = [p[i], p[i - 1]];
-                                  setEdit({ ...edit, photos: p });
-                                }}
-                              >
-                                <ArrowLeft size={15} />
-                              </button>
-                              <button
-                                aria-label={`Переместить фото ${i + 1} вправо`}
-                                disabled={i === edit.photos.length - 1}
-                                onClick={() => {
-                                  const p = [...edit.photos];
-                                  [p[i + 1], p[i]] = [p[i], p[i + 1]];
-                                  setEdit({ ...edit, photos: p });
-                                }}
-                              >
-                                <ArrowRight size={15} />
-                              </button>
-                              <button
-                                aria-label={`Удалить фото ${i + 1}`}
-                                onClick={() =>
-                                  setEdit({
-                                    ...edit,
-                                    photos: edit.photos.filter((_, j) => j !== i),
-                                  })
-                                }
-                              >
-                                <X size={15} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="aw-photo-toolbar">
-                        <button className="aw-ai-button" onClick={() => propose("photo")}>
-                          <Sparkles size={15} />
-                          Создать с ИИ
-                        </button>
-                        <AdsHelp label="О фотографиях">
-                          Первое изображение — обложка. Меняйте порядок стрелками.
-                        </AdsHelp>
-                      </div>
-                      <div className="aw-form">
-                        <Field label="Прямая ссылка на изображение">
-                          <input
-                            type="url"
-                            value={imageUrl}
-                            placeholder="https://…/photo.jpg"
-                            onChange={(e) => setImageUrl(e.target.value)}
-                          />
-                        </Field>
-                        <button
-                          className="aw-btn"
-                          onClick={() => {
-                            try {
-                              const u = new URL(imageUrl);
-                              if (u.protocol !== "https:") throw Error();
-                              setEdit({ ...edit, photos: [...edit.photos, u.href] });
-                              setImageUrl("");
-                            } catch {
-                              setNotice("Укажите HTTPS-ссылку на изображение.");
-                            }
-                          }}
-                        >
-                          <ImagePlus size={17} />
-                          Добавить по ссылке
-                        </button>
-                        <Field label="Или загрузите файл">
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (!f) return;
-                              if (f.size > 1500000)
-                                return setNotice("Для превью выберите изображение до 1,5 МБ.");
-                              const r = new FileReader();
-                              r.onload = () =>
-                                setEdit({ ...edit, photos: [...edit.photos, String(r.result)] });
-                              r.readAsDataURL(f);
-                            }}
-                          />
-                        </Field>
-                      </div>
-                    </>
-                  )}
-                  {editorTab === "promotion" && (
-                    <div className="aw-form">
-                      <div className="aw-mode-row">
-                        <Field label="Режим управления">
-                          <AdsSelect
-                            label="Режим управления"
-                            value={edit.mode}
-                            options={bidModes}
-                            onChange={(mode) => setEdit({ ...edit, mode })}
-                          />
-                        </Field>
-                        <AdsHelp label="О режимах ставок">
-                          Вручную — ваша ставка. С рекомендациями — изменения после вашего решения.
-                          По позиции — будущий биддер в заданных пределах; сейчас настройки не
-                          отправляются в Авито.
-                        </AdsHelp>
-                      </div>
-                      <div className="aw-grid">
-                        <Field label="Ставка за просмотр, ₽">
-                          <input
-                            type="number"
-                            min="0"
-                            value={Number.isFinite(edit.bid) ? edit.bid : ""}
-                            onChange={(e) => setEdit({ ...edit, bid: Number(e.target.value) })}
-                          />
-                        </Field>
-                        <Field label="Максимальная ставка, ₽">
-                          <input
-                            type="number"
-                            min="0"
-                            value={Number.isFinite(edit.max) ? edit.max : ""}
-                            onChange={(e) => setEdit({ ...edit, max: Number(e.target.value) })}
-                          />
-                        </Field>
-                        <Field label="Дневной бюджет, ₽">
-                          <input
-                            type="number"
-                            min="0"
-                            value={Number.isFinite(edit.budget) ? edit.budget : ""}
-                            onChange={(e) => setEdit({ ...edit, budget: Number(e.target.value) })}
-                          />
-                        </Field>
-                        {edit.mode === "position" && (
-                          <Field label="Целевая позиция">
-                            <input
-                              type="number"
-                              min="1"
-                              value={Number.isFinite(edit.target) ? edit.target : ""}
-                              onChange={(e) => setEdit({ ...edit, target: Number(e.target.value) })}
-                            />
-                          </Field>
-                        )}
-                      </div>
-                      {getPreviewData() &&
-                      getPreviewData()!.ads.find((item) => item.id === edit.id)?.bidding?.scale
-                        ?.length ? (
-                        <details>
-                          <summary>Шкала ставок</summary>
-                          <div className="aw-table-wrap">
-                            <table className="aw-table">
-                              <thead>
-                                <tr>
-                                  <th>Ставка</th>
-                                  <th>Сравнение с конкурентами</th>
-                                  <th>Прогноз минимум</th>
-                                  <th>Прогноз максимум</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {getPreviewData()!
-                                  .ads.find((item) => item.id === edit.id)!
-                                  .bidding!.scale.map((row, index) => (
-                                    <tr key={index}>
-                                      <td>{rub(row.rub)}</td>
-                                      <td>{row.compare}%</td>
-                                      <td>{row.minForecast}</td>
-                                      <td>{row.maxForecast}</td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </details>
-                      ) : null}
-                      {edit.mode === "position" && (
-                        <>
-                          <Field label="Поисковый запрос">
-                            <input
-                              value={edit.query}
-                              onChange={(e) => setEdit({ ...edit, query: e.target.value })}
-                            />
-                          </Field>
-                          <Field label="Город замера">
-                            <input
-                              value={edit.city}
-                              onChange={(e) => setEdit({ ...edit, city: e.target.value })}
-                            />
-                          </Field>
-                        </>
-                      )}
-                      <div className="aw-grid">
-                        <Field label="Работать с, МСК">
-                          <AdsSelect
-                            label="Работать с, МСК"
-                            value={edit.start}
-                            options={timeOptions}
-                            onChange={(start) => setEdit({ ...edit, start })}
-                          />
-                        </Field>
-                        <Field label="Работать до, МСК">
-                          <AdsSelect
-                            label="Работать до, МСК"
-                            value={edit.end}
-                            options={timeOptions}
-                            onChange={(end) => setEdit({ ...edit, end })}
-                          />
-                        </Field>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <aside className={`aw-live-preview ${preview ? "mobile-open" : ""}`}>
-                  <div className="aw-preview-heading">
-                    <button
-                      className="aw-icon aw-mobile-close"
-                      aria-label="Скрыть предпросмотр"
-                      onClick={() => setPreview(false)}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                  <div className="aw-preview-image">
-                    {edit.photos[photoIndex % edit.photos.length] ? (
-                      <img
-                        src={edit.photos[photoIndex % edit.photos.length]}
-                        alt="Фотография объявления"
-                      />
-                    ) : (
-                      <ImagePlus size={36} />
-                    )}
-                  </div>
-                  {edit.photos.length > 1 && (
-                    <div className="aw-carousel">
-                      <button
-                        aria-label="Предыдущее фото"
-                        onClick={() =>
-                          setPhotoIndex((photoIndex - 1 + edit.photos.length) % edit.photos.length)
-                        }
-                      >
-                        ←
-                      </button>
-                      <span>
-                        {(photoIndex % edit.photos.length) + 1} / {edit.photos.length}
-                      </span>
-                      <button
-                        aria-label="Следующее фото"
-                        onClick={() => setPhotoIndex((photoIndex + 1) % edit.photos.length)}
-                      >
-                        →
-                      </button>
-                    </div>
-                  )}
-                  <div className="aw-preview-content">
-                    <h3>{edit.title || "Заголовок объявления"}</h3>
-                    <strong>{rub(edit.price)}</strong>
-                    <span>
-                      <MapPin size={12} />
-                      {edit.city || "Город"}
-                    </span>
-                    <p>{edit.text || "Текст вашего объявления появится здесь"}</p>
-                  </div>
-                </aside>
-              </div>
-              <footer>
-                <button
-                  className="aw-text-button aw-preview-toggle"
-                  onClick={() => setPreview(!preview)}
-                >
-                  <Eye size={15} />
-                  Предпросмотр
-                </button>
-                <AdsHelp label="О сохранении">
-                  Проверьте заголовок, текст и фотографии перед сохранением.
-                </AdsHelp>
-                <button className="aw-btn" onClick={() => setEdit(null)}>
-                  Отмена
-                </button>
-                <button className="aw-btn aw-primary" onClick={save}>
-                  Сохранить
-                </button>
-              </footer>
-            </section>
-          </div>,
-          document.body,
-        )}
+                {editorContent}
+              </div>,
+              document.body,
+            ))}
     </div>
   );
 }
