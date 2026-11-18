@@ -43,7 +43,6 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
   const navigate = useNavigate();
   const [now, setNow] = useState(() => Date.now());
   const { state: crm, storageError } = useDemoCrm();
-  const [helpOpen, setHelpOpen] = useState(false);
   const tutorAvatarUrl = getPreviewData()?.tutorAvatarUrl;
 
   useEffect(() => {
@@ -176,19 +175,14 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
               <br />
               10:00–18:00 МСК
             </p>
-            <button
-              type="button"
-              onClick={() => setHelpOpen((open) => !open)}
-              aria-expanded={helpOpen}
+            <a
+              href="https://t.me/cantor_agency_manager"
+              target="_blank"
+              rel="noreferrer"
+              className="support-manager-link"
             >
-              Связь с командой
-              <ArrowUpRight size={15} />
-            </button>
-            {helpOpen ? (
-              <p className="support-detail" role="status">
-                Ваш Telegram-чат с командой ещё не привязан.
-              </p>
-            ) : null}
+              Связь с командой <ArrowUpRight size={15} />
+            </a>
           </div>
         </div>
       </aside>
