@@ -31,6 +31,7 @@ import "./ads-workspace.css";
 import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
 import { getPreviewData } from "./preview-data";
+import { AdCampaign } from "./ad-campaign";
 
 type Listing = {
   id: string;
@@ -213,12 +214,14 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   const [showBids, setShowBids] = useState(false);
   const [bidDrafts, setBidDrafts] = useState<Record<string, string>>({});
   const [details, setDetails] = useState(false);
+  const [singleCreation, setSingleCreation] = useState(false);
   const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "title", asc: true });
   const [photoIndex, setPhotoIndex] = useState(0);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [feedErrorsOpen, setFeedErrorsOpen] = useState(false);
   useEffect(() => {
     if (focus === "generate") {
+      setSingleCreation(false);
       setTab("generate");
       setEdit(newListing());
       setEditorTab("content");
@@ -1705,7 +1708,25 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           </div>
         </div>
       )}
+      {tab === "generate" && !singleCreation && (
+        <AdCampaign
+          sources={state.items}
+          onSingle={() => setSingleCreation(true)}
+          onAdd={(drafts) =>
+            commit(
+              [...state.items, ...drafts.map((d) => ({ ...newListing(), ...d }))],
+              `Создана партия: ${drafts.length} черновиков`,
+            )
+          }
+        />
+      )}
+      {tab === "generate" && singleCreation && (
+        <button className="aw-text-button" onClick={() => setSingleCreation(false)}>
+          К массовому созданию
+        </button>
+      )}
       {edit &&
+        (tab !== "generate" || singleCreation) &&
         (tab === "generate"
           ? editorContent
           : createPortal(

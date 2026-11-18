@@ -178,6 +178,19 @@ try {
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/feed-${width}.png` });
     await openMenu();
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
+    await p.locator('.ac').getByLabel('Заголовок', {exact:true}).fill('Математика · {город}');
+    await p.locator('.ac').getByLabel('Текст', {exact:true}).fill('Онлайн-занятия по математике для школьников. {город}.');
+    await p.locator('.ac').getByLabel('Цена занятия, ₽', {exact:true}).fill('1500');
+    await p.locator('.ac').getByLabel('Добавьте списком').fill(Array.from({length:100}, (_,i)=>`Тестовый город ${i+1}`).join('\n'));
+    await p.getByRole('button',{name:'Проверить партию',exact:true}).click();
+    assert.equal(await p.locator('.ac-review tbody tr').count(),15);
+    await p.getByRole('button',{name:'Следующая страница партии'}).click();
+    assert.ok(await p.locator('.ac-review').getByText('Тестовый город 16',{exact:true}).count());
+    await p.locator('.ac-confirm input').check();
+    await p.screenshot({path:`/tmp/cantor-ads-nov18/campaign-${width}.png`});
+    await p.getByRole('button',{name:'Добавить 100 в объявления',exact:true}).click();
+    assert.ok(await p.getByText(/Добавлено черновиков: 100/).count());
+    await p.getByRole("button", { name: "Одно объявление", exact: true }).click();
     const d = p.getByRole("region", { name: "Редактор объявления" });
     await d.waitFor();
     assert.equal(await p.getByRole("dialog", { name: "Редактор объявления" }).count(), 0);
@@ -225,6 +238,7 @@ try {
     assert.equal(await p.getByRole("dialog", { name: "Редактор объявления" }).count(), 0);
     await openMenu();
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
+    await p.getByRole("button", { name: "Одно объявление", exact: true }).click();
     await d.waitFor();
     assert.equal(await d.getByLabel("Заголовок", { exact: true }).inputValue(), "");
     assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));

@@ -1,10 +1,12 @@
 import { readDobrynina } from "./dobrynina-source.mjs";
 import { passwordAuthorized, imageSessionCookie, sessionAuthorized } from "./demo-session.mjs";
+import { campaignSuggestion } from "./campaign-ai.mjs";
 // The demo source exposes only fixed-account KV reads. No external API or writes.
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    if (path === "/api/campaign/suggest") return campaignSuggestion(request, env);
     const headers = {
       "x-robots-tag": "noindex, nofollow",
       "x-content-type-options": "nosniff",
