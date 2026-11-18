@@ -4,6 +4,7 @@ import {
   useState,
   type ReactNode,
   type ReactElement,
+  type CSSProperties,
   cloneElement,
   isValidElement,
   useId,
@@ -20,7 +21,6 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
-  SlidersHorizontal,
   MapPin,
   Eye,
 } from "lucide-react";
@@ -214,6 +214,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "title", asc: true });
   const [photoIndex, setPhotoIndex] = useState(0);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [feedErrorsOpen, setFeedErrorsOpen] = useState(false);
   useEffect(() => {
     if (focus === "generate") {
       setTab("generate");
@@ -373,6 +374,23 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           : Number(x) - Number(y)) * (sort.asc ? 1 : -1)
       );
     });
+  // В раскрытом виде рассчитываем ширину по самому длинному названию, чтобы оно не обрезалось.
+  const titleWidth = (() => {
+    if (!details || typeof document === "undefined") return 360;
+    const context = document.createElement("canvas").getContext("2d");
+    if (!context) return 360;
+    context.font = "500 13px Geologica, sans-serif";
+    return Math.ceil(
+      Math.max(
+        360,
+        ...visible.map((item) => {
+          const words = item.title.split(/\s+/).filter(Boolean);
+          const longest = Math.max(0, ...words.map((word) => context.measureText(word).width));
+          return (context.measureText(item.title).width + longest) / 2 + 35;
+        }),
+      ),
+    );
+  })();
   function bidField(a: Listing, field: "bid" | "max" | "budget" | "target", label: string) {
     const key = `${a.id}:${field}`;
     return (
@@ -979,7 +997,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         </div>
       )}
       {tab === "list" && (
-        <>
+        <div className="aw-list-view">
           <div className="aw-tools">
             <div className="aw-search">
               <Search size={17} />
@@ -1071,7 +1089,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             )}
           </div>
           <div className="aw-table-wrap">
-            <table className="aw-table">
+            <table
+              className="aw-table"
+              style={{ "--aw-title-width": `${titleWidth}px` } as CSSProperties}
+            >
               <thead>
                 <tr>
                   <th>
@@ -1115,7 +1136,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       {heading("end", "Конец · МСК")}
                     </>
                   )}
-                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -1283,15 +1303,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         ))}
                       </>
                     )}
-                    <td>
-                      <button
-                        className="aw-icon"
-                        aria-label={`Редактировать ${a.title}`}
-                        onClick={() => open(a)}
-                      >
-                        <SlidersHorizontal size={17} />
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1302,7 +1313,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
       {tab === "feeds" && (
         <div className={`aw-feed-layout ${sheetSaved ? "" : "first-step"}`}>
@@ -1391,6 +1402,36 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   {getPreviewData()?.feed?.report?.published ?? 0} опубликовано ·{" "}
                   {getPreviewData()?.feed?.report?.errors ?? 0} ошибок
                 </div>
+                <button
+                  className="aw-btn aw-errors-toggle"
+                  aria-expanded={feedErrorsOpen}
+                  onClick={() => setFeedErrorsOpen(!feedErrorsOpen)}
+                >
+                  {feedErrorsOpen ? "Скрыть ошибки" : "Показать ошибки"}
+                </button>
+                {feedErrorsOpen && (
+                  <div className="aw-feed-errors" role="region" aria-label="Ошибки автозагрузки">
+                    {getPreviewData()?.feed?.problems?.length ? (
+                      <>
+                        {getPreviewData()!.feed!.problems.map((problem, i) => (
+                          <p key={`${problem.row}-${i}`}>
+                            {problem.row != null ? `Строка ${problem.row}: ` : ""}
+                            {problem.msg}
+                          </p>
+                        ))}
+                        {(getPreviewData()?.feed?.report?.errors ?? 0) >
+                          (getPreviewData()?.feed?.problems?.length ?? 0) && (
+                          <p>
+                            В сохранённом срезе доступна часть подробностей; остальные причины — в
+                            отчёте Авито.
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p>Подробности ошибок в сохранённом срезе недоступны.</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="aw-panel">
                 <div className="aw-panel-heading">
@@ -1418,9 +1459,20 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         <Copy size={15} />
                         Скопировать ссылку
                       </button>
-                      <button className="aw-btn" onClick={() => window.location.reload()}>
+                      <button
+                        className="aw-btn"
+                        onClick={() => setNotice("Обновление таблицы пока не подключено")}
+                      >
                         <RefreshCw size={15} />
-                        Обновить
+                        Обновить из таблицы
+                      </button>
+                      <button
+                        className="aw-btn"
+                        onClick={() =>
+                          setNotice("Внеочередная загрузка в Авито пока не подключена")
+                        }
+                      >
+                        Отправить в Авито
                       </button>
                     </div>
                   )}
@@ -1437,11 +1489,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       ? ` · Обновлено ${new Date(getPreviewData()!.feed!.builtAt!).toLocaleString("ru-RU")}`
                       : ""}
                   </p>
-                  {getPreviewData()?.feed?.problems?.map((problem, i) => (
-                    <p key={`${problem.row}-${i}`}>
-                      Строка {problem.row}: {problem.msg}
-                    </p>
-                  ))}
                 </div>
               </div>
             </>

@@ -65,13 +65,28 @@ try {
       await h.evaluate((el) => getComputedStyle(el).backgroundColor),
       "rgb(250, 249, 247)",
     );
-    assert.equal(
-      await p
+    const titleFits = await p
+      .locator(".aw-title-full")
+      .evaluateAll((els) =>
+        els.every(
+          (el) =>
+            el.scrollHeight <= el.clientHeight + 1 && getComputedStyle(el).overflow !== "hidden",
+        ),
+      );
+    assert.ok(titleFits, "A full title is clipped");
+    if (width === 1440) {
+      const maxLines = await p
         .locator(".aw-title-full")
-        .first()
-        .evaluate((el) => getComputedStyle(el).webkitLineClamp),
-      "2",
-    );
+        .evaluateAll((els) =>
+          Math.max(
+            ...els.map(
+              (el) =>
+                el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight),
+            ),
+          ),
+        );
+      assert.ok(maxLines <= 2.1, `title exceeds two lines: ${maxLines}`);
+    }
     const wrap = p.locator(".aw-table-wrap").first();
     const before = await wrap.locator("tbody tr:first-child td:nth-child(2)").boundingBox();
     await wrap.evaluate((el) => (el.scrollLeft = 500));
@@ -83,6 +98,14 @@ try {
       .evaluate((el) => getComputedStyle(el).position);
     assert.equal(check, "sticky");
     await wrap.evaluate((el) => (el.scrollLeft = 0));
+    const headerBefore = await wrap.locator("thead th:nth-child(3)").boundingBox();
+    const toolbarBefore = await p.locator(".aw-tools").boundingBox();
+    await wrap.evaluate((el) => (el.scrollTop = 800));
+    const headerAfter = await wrap.locator("thead th:nth-child(3)").boundingBox();
+    const toolbarAfter = await p.locator(".aw-tools").boundingBox();
+    assert.ok(Math.abs(headerAfter.y - headerBefore.y) < 2, "table header moved when scrolling");
+    assert.ok(Math.abs(toolbarAfter.y - toolbarBefore.y) < 2, "toolbar moved when scrolling");
+    await wrap.evaluate((el) => (el.scrollTop = 0));
     await p.getByRole("button", { name: "Ставки", exact: true }).click();
     assert.ok((await p.locator('input[aria-label^="Ставка "]').count()) > 0);
     assert.ok((await p.locator('input[aria-label^="Бюджет в день "]').count()) > 0);
@@ -96,6 +119,19 @@ try {
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/list-${width}.png` });
     await nav.getByRole("button", { name: "Автозагрузка", exact: true }).click();
     await p.getByRole("heading", { name: "История", exact: true }).waitFor();
+    await p.getByRole("button", { name: "Показать ошибки" }).click();
+    assert.ok(await p.getByRole("region", { name: "Ошибки автозагрузки" }).isVisible());
+    await p.getByRole("button", { name: "Обновить из таблицы" }).click();
+    assert.ok(
+      await p.getByRole("status").getByText("Обновление таблицы пока не подключено").count(),
+    );
+    await p.getByRole("button", { name: "Отправить в Авито" }).click();
+    assert.ok(
+      await p
+        .getByRole("status")
+        .getByText("Внеочередная загрузка в Авито пока не подключена")
+        .count(),
+    );
     assert.equal(
       await p
         .locator(".aw-panel")
@@ -114,6 +150,25 @@ try {
         .count(),
       0,
     );
+    const tabsBefore = await d.locator(":scope > .aw-tabs").boundingBox();
+    const footerBefore = await d.locator(":scope > footer").boundingBox();
+    await d.locator(".aw-editor-body").evaluate((el) => {
+      const space = document.createElement("div");
+      space.style.height = "1200px";
+      space.dataset.testSpacer = "1";
+      el.appendChild(space);
+    });
+    await d.locator(width === 390 ? ".aw-editor-layout" : ".aw-editor-body").evaluate((el) => {
+      el.scrollTop = 500;
+    });
+    const tabsAfter = await d.locator(":scope > .aw-tabs").boundingBox();
+    const footerAfter = await d.locator(":scope > footer").boundingBox();
+    assert.ok(Math.abs(tabsAfter.y - tabsBefore.y) < 2, "editor tabs moved");
+    assert.ok(Math.abs(footerAfter.y - footerBefore.y) < 2, "editor footer moved");
+    await d.locator("[data-test-spacer]").evaluate((el) => el.remove());
+    await d.locator(width === 390 ? ".aw-editor-layout" : ".aw-editor-body").evaluate((el) => {
+      el.scrollTop = 0;
+    });
     await d.getByLabel("Заголовок", { exact: true }).fill("Тест объявления");
     await d.getByLabel("Текст объявления", { exact: true }).fill("Текст объявления");
     await d.getByLabel("Город", { exact: true }).fill("Москва");

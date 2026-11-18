@@ -138,7 +138,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
                 >
                   <Icon size={18} strokeWidth={1.7} />
                   <span>{item.label}</span>
-                  {marks[item.id] > 0 && item.id !== "today" ? (
+                  {marks[item.id] > 0 && item.id !== "today" && item.id !== "ads" ? (
                     <span className="nav-badge">{marks[item.id]}</span>
                   ) : null}
                 </button>
@@ -200,9 +200,7 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
             {section === "ads" ? <AdsSection focus={focus} /> : null}
             {section === "chats" ? <DialogsSection focus={focus} /> : null}
             {section === "learn" ? (
-              <Suspense
-                fallback={<ServiceLoading variant="knowledge" />}
-              >
+              <Suspense fallback={<ServiceLoading variant="knowledge" />}>
                 <KnowledgeSection focus={focus} />
               </Suspense>
             ) : null}

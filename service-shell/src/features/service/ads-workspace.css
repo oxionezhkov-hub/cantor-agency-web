@@ -1351,3 +1351,142 @@
     text-overflow: ellipsis;
   }
 }
+/* Список и встроенный редактор: неподвижные рабочие панели и прокрутка содержимого. */
+.aw-list-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 125px);
+  min-height: 260px;
+}
+.aw-list-view .aw-tools {
+  flex: 0 0 auto;
+}
+.aw-list-view .aw-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.aw-list-view .aw-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  vertical-align: middle;
+}
+.aw-list-view .aw-table thead th:first-child,
+.aw-list-view .aw-table thead th:nth-child(2) {
+  z-index: 7;
+}
+.aw-list-view .aw-table th:first-child,
+.aw-list-view .aw-table td:first-child {
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  padding-left: 10px;
+  padding-right: 8px;
+}
+.aw-list-view .aw-table th:nth-child(2),
+.aw-list-view .aw-table td:nth-child(2) {
+  left: 34px;
+}
+.aw-list-view .aw-table th:first-child input {
+  display: block;
+  margin: 0 auto;
+}
+.aw-title-full {
+  display: block !important;
+  overflow: visible !important;
+  text-overflow: clip;
+  white-space: normal;
+  max-width: none !important;
+  min-width: var(--aw-title-width, 360px) !important;
+  max-width: var(--aw-title-width, 360px) !important;
+  overflow-wrap: anywhere;
+  line-height: 1.42;
+}
+.aw-ad small {
+  margin-top: 3px;
+}
+.aw-editor-inline {
+  height: calc(100dvh - 125px);
+  min-height: 260px;
+  overflow: hidden;
+}
+.aw-editor-inline > .aw-tabs {
+  flex-shrink: 0;
+}
+.aw-editor-inline .aw-editor-layout {
+  min-height: 0;
+  overflow: hidden;
+  flex: 1;
+}
+.aw-editor-inline .aw-editor-body {
+  overflow: auto;
+  padding-bottom: 16px;
+}
+.aw-editor-inline .aw-live-preview {
+  overflow: auto;
+}
+.aw-editor-inline footer {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.aw-errors-toggle {
+  margin-top: 16px;
+}
+.aw-feed-errors {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.aw-feed-errors p {
+  margin: 6px 0;
+}
+@media (max-width: 760px) {
+  .service-nav {
+    align-items: flex-start;
+  }
+  .service-nav > div {
+    flex-shrink: 0;
+  }
+  .aw-list-view {
+    height: calc(100dvh - 215px);
+    min-height: 260px;
+  }
+  .aw-editor-inline {
+    height: calc(100dvh - 215px);
+    min-height: 260px;
+  }
+  .aw-editor-inline .aw-editor-layout {
+    overflow: auto;
+  }
+  .aw-editor-inline .aw-editor-body {
+    overflow: visible;
+  }
+  .aw-editor-inline .aw-live-preview {
+    overflow: visible;
+  }
+  .aw-editor-inline footer {
+    position: static;
+  }
+}
+@media (max-width: 600px) {
+  .aw-list-view .aw-table-wrap {
+    scroll-padding-left: 224px;
+  }
+  .aw-list-view .aw-table td:nth-child(2) .aw-ad strong,
+  .aw-list-view .aw-table:has(.aw-title-full) td:nth-child(2) .aw-ad strong {
+    min-width: 0 !important;
+    width: 108px;
+    max-width: 108px !important;
+    overflow: visible !important;
+    text-overflow: clip;
+    display: block !important;
+    white-space: normal;
+  }
+  .aw-list-view .aw-table td:nth-child(2) .aw-ad small {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
