@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import * as Select from "@radix-ui/react-select";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
@@ -15,6 +15,8 @@ export function ServiceSelect({
   className = "",
   placeholder,
   portalContainer,
+  mobileIcon,
+  menuClassName = "",
 }: {
   label: string;
   value: string;
@@ -24,6 +26,8 @@ export function ServiceSelect({
   className?: string;
   placeholder?: string;
   portalContainer?: Element;
+  mobileIcon?: ReactNode;
+  menuClassName?: string;
 }) {
   return (
     <Select.Root
@@ -37,6 +41,7 @@ export function ServiceSelect({
         aria-label={label}
         title={options.find((option) => option.value === value)?.label}
       >
+        {mobileIcon ? <span className="sc-select-mobile-icon" aria-hidden="true">{mobileIcon}</span> : null}
         <Select.Value placeholder={placeholder || label} />
         <Select.Icon>
           <ChevronDown size={15} />
@@ -44,7 +49,7 @@ export function ServiceSelect({
       </Select.Trigger>
       <Select.Portal container={portalContainer}>
         <Select.Content
-          className="sc-select-menu"
+          className={`sc-select-menu ${menuClassName}`}
           position="popper"
           sideOffset={7}
           collisionPadding={12}

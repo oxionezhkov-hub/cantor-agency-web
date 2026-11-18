@@ -22,7 +22,8 @@
   min-width: 0;
   text-align: left;
 }
-.sc-select-trigger > span:first-child {
+.sc-select-mobile-icon { display: none; }
+.sc-select-trigger > span:not(.sc-select-mobile-icon):not(:last-child) {
   min-width: 0;
   display: block;
   overflow: hidden;
@@ -54,6 +55,10 @@
   box-shadow: 0 10px 35px #3c2b181a;
   font-family: var(--font-sans), sans-serif;
 }
+.an-ad-menu { width: min(350px, calc(100vw - 24px)); }
+.an-ad-menu [data-radix-select-viewport] { width: 100%; }
+.an-ad-menu .sc-select-option { width: 100%; box-sizing: border-box; }
+.an-ad-menu .sc-select-option > span:first-child { display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sc-select-option {
   position: relative;
   display: flex;
@@ -328,27 +333,19 @@
 }
 @media (max-width: 760px) {
   .an-compact-toolbar {
-    gap: 7px;
+    flex-wrap: nowrap;
+    gap: 4px;
     margin-bottom: 16px;
   }
-  .an-compact-presets {
-    flex: 1;
-    justify-content: space-between;
-  }
-  .an-compact-presets button {
-    padding: 0 10px;
-  }
-  .an-ad-select {
-    width: calc(58% - 4px);
-    flex-grow: 1;
-  }
-  .an-city-select {
-    width: calc(42% - 4px);
-    flex-grow: 1;
-  }
-  .an-export-compact {
-    margin-left: auto;
-  }
+  .an-compact-presets { flex: 1 1 auto; min-width: 0; justify-content: space-between; gap: 0; padding: 2px; }
+  .an-compact-presets button { min-width: 0; padding: 0 4px; font-size: 10px; white-space: nowrap; }
+  .an-calendar-trigger, .an-ad-select.sc-select-trigger, .an-city-select.sc-select-trigger,
+  .an-reset-compact, .an-export-compact { width: 32px; min-width: 32px; flex: 0 0 32px; padding: 0; justify-content: center; }
+  .an-ad-select.sc-select-trigger > span:not(.sc-select-mobile-icon),
+  .an-city-select.sc-select-trigger > span:not(.sc-select-mobile-icon),
+  .an-export-compact > span, .an-export-when-clean { display: none; }
+  .an-ad-select .sc-select-mobile-icon, .an-city-select .sc-select-mobile-icon { display: inline-flex; }
+  .an-export-compact, .an-reset-compact { margin-left: 0; }
   .sc-range-popover {
     width: 340px;
     gap: 12px;

@@ -1,5 +1,5 @@
 import * as Popover from "@radix-ui/react-popover";
-import { ArrowDownToLine, CalendarDays, RotateCcw } from "lucide-react";
+import { ArrowDownToLine, CalendarDays, RotateCcw, MapPin, LayoutList } from "lucide-react";
 import { ads } from "./data.ts";
 import { ANALYTICS_CITIES, ANALYTICS_COVERAGE, adTitleFilter } from "./analytics-model.ts";
 import { ServiceDatePicker, ServiceSelect } from "./service-controls.tsx";
@@ -99,6 +99,8 @@ export function AnalyticsToolbar(props: AnalyticsToolbarProps) {
           { value: "", label: "Все объявления" },
           ...[...new Set(ads.map((ad) => ad.title))].map((title) => ({ value: adTitleFilter(title), label: title })),
         ]}
+        mobileIcon={<LayoutList size={17} />}
+        menuClassName="an-ad-menu"
         className="an-ad-select"
       />
       <ServiceSelect
@@ -109,6 +111,7 @@ export function AnalyticsToolbar(props: AnalyticsToolbarProps) {
           { value: "", label: "Все города" },
           ...ANALYTICS_CITIES.map((city) => ({ value: city, label: city })),
         ]}
+        mobileIcon={<MapPin size={17} />}
         className="an-city-select"
       />
       {dirty ? (
@@ -122,7 +125,7 @@ export function AnalyticsToolbar(props: AnalyticsToolbarProps) {
           <RotateCcw size={16} />
         </button>
       ) : null}
-      <button type="button" className="an-export-compact" disabled={invalid} onClick={onExport}>
+      <button type="button" className={`an-export-compact ${dirty ? "an-export-when-clean" : ""}`} aria-label="Скачать CSV" title="Скачать CSV" disabled={invalid} onClick={onExport}>
         <ArrowDownToLine size={16} />
         <span>Скачать CSV</span>
       </button>
