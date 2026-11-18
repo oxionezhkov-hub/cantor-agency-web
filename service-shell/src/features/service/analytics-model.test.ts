@@ -6,6 +6,7 @@ import { parseCrmState, recordPayment, recordRefund } from "./crm.ts";
 import {
   ANALYTICS_COVERAGE,
   DEMO_AD_DAILY,
+  adTitleFilter,
   analyticsDates,
   buildAnalytics,
   marketingTotals,
@@ -278,5 +279,26 @@ test("ad-by-city rows reconcile with ad and city summaries under combined filter
           ad[key],
         );
     }
+  }
+});
+
+
+test("a title filter combines every matching ad and attributed CRM events", () => {
+  const original = ads[1].title;
+  ads[1].title = ads[0].title;
+  try {
+    const first = report({ adId: ads[0].id });
+    const second = report({ adId: ads[1].id });
+    const group = report({ adId: adTitleFilter(ads[0].title) });
+    for (const metric of ["shows", "views", "contacts", "spendRub"] as const)
+      assert.equal(group.totals[metric], first.totals[metric] + second.totals[metric]);
+    for (const metric of ["leads", "completedAppointments", "newStudents", "receivedRub"] as const)
+      assert.equal(group.crm![metric], first.crm![metric] + second.crm![metric]);
+    assert.equal(group.byAd.length, 2);
+    const groupedCity = report({ adId: adTitleFilter(ads[0].title), city: "Москва" });
+    assert.equal(groupedCity.totals.views, 256);
+    assert.equal(groupedCity.crm, null);
+  } finally {
+    ads[1].title = original;
   }
 });

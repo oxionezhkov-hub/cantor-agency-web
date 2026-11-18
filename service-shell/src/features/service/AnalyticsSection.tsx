@@ -12,20 +12,15 @@ import {
 import { ads } from "./data.ts";
 import { useDemoCrm } from "./demo-crm-store.ts";
 import { leadProgress } from "./lead-workflow.ts";
-import { ANALYTICS_COVERAGE, analyticsDates, buildAnalytics } from "./analytics-model.ts";
+import { ANALYTICS_COVERAGE, adFilterLabel, adMatchesFilter, analyticsDates, buildAnalytics } from "./analytics-model.ts";
 import { PaymentsSection } from "./crm-ui.tsx";
+import { ANALYTICS_TABS, analyticsTabFromFocus } from "./analytics-navigation.ts";
 import { AnalyticsToolbar } from "./AnalyticsToolbar.tsx";
 import { AdsReport, DialogReport, EconomyReport } from "./AnalyticsReports.tsx";
 import { getPreviewData } from "./preview-data.ts";
 import "./analytics.css";
 
 const COLORS = ["#e8391d", "#3d6c61", "#d9aa61", "#8175a0", "#7395ae", "#b8b2a7", "#59606b"];
-const TABS = [
-  { id: "overview", label: "Обзор" },
-  { id: "dialogs", label: "Диалоги" },
-  { id: "economy", label: "Экономика" },
-] as const;
-type Tab = (typeof TABS)[number]["id"];
 type Report = ReturnType<typeof buildAnalytics>;
 const integer = (n: number) =>
   Number.isFinite(n) ? n.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) : "—";
@@ -257,10 +252,7 @@ const reportHeader = [
 
 export function AnalyticsSection({ focus }: { focus?: string }) {
   const { state: crm } = useDemoCrm();
-  const [tab, setTab] = useState<Tab>(focus ? "economy" : "overview");
-  useEffect(() => {
-    if (focus) setTab("economy");
-  }, [focus]);
+  const tab = analyticsTabFromFocus(focus);
   const [from, setFrom] = useState(ANALYTICS_COVERAGE.from),
     [to, setTo] = useState(ANALYTICS_COVERAGE.to);
   const [adId, setAdId] = useState(""),
@@ -302,7 +294,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
       !invalid &&
       mskDay(l.createdAt) >= from &&
       mskDay(l.createdAt) <= to &&
-      (!adId || l.adId === adId),
+      adMatchesFilter(l.adId, adId),
   );
   const reset = () => {
     setFrom(ANALYTICS_COVERAGE.from);
@@ -312,9 +304,9 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
   };
   const exportReport = () => {
     const meta: (string | number | null)[][] = [
-      ["Отчёт Cantor", TABS.find((t) => t.id === tab)!.label],
+      ["Отчёт Cantor", ANALYTICS_TABS.find((t) => t.id === tab)!.label],
       ["Период, МСК", from, to],
-      ["Объявление", ads.find((a) => a.id === adId)?.title ?? "Все"],
+      ["Объявление", adFilterLabel(adId)],
       ["Город размещения", city || "Все"],
       [
         "Источник рекламы",
@@ -413,35 +405,6 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
         invalid={invalid}
         dirty={!!(adId || city || from !== ANALYTICS_COVERAGE.from || to !== ANALYTICS_COVERAGE.to)}
       />
-      <div className="an-tabs" role="tablist" aria-label="Отчёты аналитики">
-        {TABS.map((item, index) => (
-          <button
-            type="button"
-            role="tab"
-            id={`an-tab-${item.id}`}
-            aria-controls={`an-panel-${item.id}`}
-            aria-selected={tab === item.id}
-            tabIndex={tab === item.id ? 0 : -1}
-            key={item.id}
-            onClick={() => setTab(item.id)}
-            onKeyDown={(e) => {
-              if (["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) {
-                e.preventDefault();
-                const next =
-                  e.key === "Home"
-                    ? 0
-                    : e.key === "End"
-                      ? TABS.length - 1
-                      : (index + (e.key === "ArrowRight" ? 1 : -1) + TABS.length) % TABS.length;
-                setTab(TABS[next].id);
-                document.getElementById(`an-tab-${TABS[next].id}`)?.focus();
-              }
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
       <span className="sr-only" role="status">
         {exported ? "CSV скачан" : ""}
       </span>
@@ -452,7 +415,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
           <p>Выберите период от 1 до 366 дней.</p>
         </div>
       ) : (
-        <div role="tabpanel" id={`an-panel-${tab}`} aria-labelledby={`an-tab-${tab}`}>
+        <section className="an-report" aria-label={ANALYTICS_TABS.find((item) => item.id === tab)?.label}>
           {!report.coverage.complete ? (
             <div className="an-notice">
               <CircleHelp size={17} />
@@ -548,7 +511,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
               dailyTable={<DayTable report={report} economy />}
             />
           ) : null}
-        </div>
+        </section>
       )}
     </div>
   );

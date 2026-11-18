@@ -22,6 +22,7 @@ import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
 import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
 import { AnalyticsSection } from "./AnalyticsSection.tsx";
+import { ANALYTICS_TABS, analyticsTabFromFocus } from "./analytics-navigation.ts";
 import { getPreviewData } from "./preview-data.ts";
 
 const KnowledgeSection = lazy(() =>
@@ -170,6 +171,21 @@ export function Shell({
                     >
                       CRM
                     </button>
+                  </div>
+                )}
+                {item.id === "stats" && section === "stats" && (
+                  <div className="ads-subnav" aria-label="Разделы аналитики">
+                    {ANALYTICS_TABS.map(({ id, label }) => (
+                      <button
+                        type="button"
+                        key={id}
+                        className={analyticsTabFromFocus(focus) === id ? "active" : ""}
+                        aria-current={analyticsTabFromFocus(focus) === id ? "page" : undefined}
+                        onClick={() => navigate({ to: "/", search: { section: "stats", focus: id } })}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 )}
                 {item.id === "ads" && section === "ads" && (
