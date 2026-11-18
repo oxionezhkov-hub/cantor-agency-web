@@ -102,7 +102,7 @@ const initial: State = {
     max: getPreviewData() ? (a.bidding?.maxRub ?? NaN) : 80,
     budget: getPreviewData() ? (a.bidding?.dailyBudgetRub ?? NaN) : 500,
     target: getPreviewData() ? NaN : 10,
-    query: getPreviewData() ? "репетитор по русскому языку" : "репетитор по математике",
+    query: getPreviewData() ? "" : "репетитор по математике",
     start: getPreviewData() ? "" : "09:00",
     end: getPreviewData() ? "" : "21:00",
     attributes: getPreviewData()?.ads.find((item) => item.id === a.id)?.attributes || {},
@@ -133,7 +133,8 @@ function download(name: string, text: string, type = "text/csv;charset=utf-8") {
   a.click();
   URL.revokeObjectURL(url);
 }
-const rub = (n: number) => (Number.isFinite(n) ? `${n.toLocaleString("ru-RU")} ₽` : "—");
+const rub = (n: number) =>
+  Number.isFinite(n) ? `${n.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽` : "—";
 function cover(title: string, city: string) {
   const escape = (v: string) =>
     v
@@ -181,13 +182,18 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
-  const [tab, setTab] = useState(focus === "feeds" || focus === "history" ? focus : "list");
+  const [tab, setTab] = useState(
+    focus === "feeds" || focus === "history" ? "feeds" : focus === "generate" ? "generate" : "list",
+  );
+  const [showBids, setShowBids] = useState(false);
+  const [bidDrafts, setBidDrafts] = useState<Record<string, string>>({});
   const [details, setDetails] = useState(false);
   const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "title", asc: true });
   const [photoIndex, setPhotoIndex] = useState(0);
   const [bulkOpen, setBulkOpen] = useState(false);
   useEffect(() => {
-    if (focus === "feeds" || focus === "history" || focus === "list") setTab(focus);
+    if (focus === "feeds" || focus === "history") setTab("feeds");
+    else if (focus === "generate" || focus === "list") setTab(focus);
   }, [focus]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
@@ -273,15 +279,26 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   }
   function create() {
     open({
-      ...initial.items[2],
       id: crypto.randomUUID(),
       title: "",
       text: "",
+      city: "",
+      price: 0,
       status: "draft",
+      source: "cantor",
       photos: [],
+      shows: 0,
       views: 0,
       contacts: 0,
       spend: 0,
+      bid: 0,
+      mode: "manual",
+      max: 0,
+      budget: 0,
+      target: 10,
+      query: "",
+      start: "09:00",
+      end: "21:00",
     });
   }
   function save() {
@@ -312,30 +329,85 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         (filter === "all" || a.status === filter),
     )
     .sort((a, b) => {
-      const value = (x: Listing): string | number =>
-        sort.key === "conversion"
-          ? x.views
-            ? x.contacts / x.views
-            : -1
-          : sort.key === "cpv"
-            ? x.views
-              ? x.spend / x.views
-              : -1
-            : sort.key === "cpa"
-              ? x.contacts
-                ? x.spend / x.contacts
-                : -1
-              : ((x[sort.key as keyof Listing] as string | number) ?? -1);
+      const value = (x: Listing): string | number | null => {
+        const ratio = (numerator: number, denominator: number | undefined) =>
+          Number.isFinite(numerator) &&
+          denominator != null &&
+          Number.isFinite(denominator) &&
+          denominator > 0
+            ? numerator / denominator
+            : null;
+        if (sort.key === "viewRate") return ratio(x.views, x.shows);
+        if (sort.key === "showCost") return ratio(x.spend, x.shows);
+        if (sort.key === "conversion") return ratio(x.contacts, x.views);
+        if (sort.key === "cpv") return ratio(x.spend, x.views);
+        if (sort.key === "cpa") return ratio(x.spend, x.contacts);
+        const result = x[sort.key as keyof Listing];
+        return typeof result === "string"
+          ? result || null
+          : typeof result === "number" && Number.isFinite(result)
+            ? result
+            : null;
+      };
       const x = value(a),
         y = value(b);
+      if (x === null) return y === null ? 0 : 1;
+      if (y === null) return -1;
       return (
         (typeof x === "string" && typeof y === "string"
           ? x.localeCompare(y, "ru")
           : Number(x) - Number(y)) * (sort.asc ? 1 : -1)
       );
     });
+  function bidField(a: Listing, field: "bid" | "max" | "budget" | "target", label: string) {
+    const key = `${a.id}:${field}`;
+    return (
+      <input
+        className="aw-inline-bid"
+        aria-label={`${label} ${a.title} ${a.city}`}
+        inputMode="decimal"
+        value={bidDrafts[key] ?? (Number.isFinite(a[field]) ? String(a[field]) : "")}
+        placeholder="—"
+        onChange={(e) => setBidDrafts((prev) => ({ ...prev, [key]: e.target.value }))}
+        onBlur={() => {
+          const raw = bidDrafts[key];
+          if (raw === undefined) return;
+          const amount = Number(raw.replace(",", "."));
+          if (
+            !raw.trim() ||
+            !Number.isFinite(amount) ||
+            amount < 0 ||
+            (field === "target" && (!Number.isInteger(amount) || amount < 1))
+          ) {
+            setNotice("Укажите корректное значение");
+            return;
+          }
+          if (field === "max" && Number.isFinite(a.bid) && amount < a.bid) {
+            setNotice("Максимум не может быть ниже ставки");
+            return;
+          }
+          if (field === "bid" && Number.isFinite(a.max) && amount > a.max) {
+            setNotice("Ставка выше установленного максимума");
+            return;
+          }
+          commit(
+            state.items.map((item) => (item.id === a.id ? { ...item, [field]: amount } : item)),
+            `${label}: «${a.title}»`,
+          );
+          setBidDrafts((prev) => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+        }}
+      />
+    );
+  }
   const heading = (key: string, label: string) => (
-    <th>
+    <th
+      aria-sort={sort.key === key ? (sort.asc ? "ascending" : "descending") : "none"}
+      className={sort.key === key ? "aw-sort-active" : undefined}
+    >
       <button onClick={() => setSort({ key, asc: sort.key === key ? !sort.asc : true })}>
         {label} {sort.key === key ? (sort.asc ? "↑" : "↓") : "↕"}
       </button>
@@ -343,7 +415,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   );
   const sheetValid = /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+/.test(sheet);
   function propose(kind: "title" | "text" | "photo") {
-    if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
+    if (getPreviewData()) return setNotice("ИИ-генерация пока не подключена");
     if (!edit) return;
     if (kind === "photo") {
       setPhotoCaption(edit.title || "Математика");
@@ -462,62 +534,65 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             <button className="aw-btn" onClick={() => setDetails(!details)} aria-pressed={details}>
               {details ? "Свернуть" : "Подробнее"}
             </button>
-            {!getPreviewData() && (
-              <button className="aw-btn aw-primary" onClick={create}>
-                <Plus size={17} />
-                Создать объявление
-              </button>
+            <button
+              className="aw-btn"
+              onClick={() => setShowBids(!showBids)}
+              aria-pressed={showBids}
+            >
+              Ставки
+            </button>
+            {selected.length > 0 && (
+              <div className="aw-bulk">
+                <strong>Выбрано: {selected.length}</strong>
+                <button
+                  onClick={() => {
+                    if (
+                      commit(
+                        state.items.map((a) =>
+                          selected.includes(a.id) ? { ...a, status: "draft" } : a,
+                        ),
+                        `Переведено в черновики: ${selected.length}`,
+                      )
+                    )
+                      setSelected([]);
+                  }}
+                >
+                  В черновики
+                </button>
+                <button onClick={() => setBulkOpen(!bulkOpen)}>Настроить ставки</button>
+                {bulkOpen && (
+                  <>
+                    <input
+                      type="number"
+                      min="0"
+                      aria-label="Общая ставка"
+                      value={bulkBid}
+                      onChange={(e) => setBulkBid(Number(e.target.value))}
+                    />
+                    <button
+                      onClick={() => {
+                        if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
+                        if (!Number.isFinite(bulkBid) || bulkBid < 0)
+                          return setNotice("Укажите корректную ставку");
+                        commit(
+                          state.items.map((item) =>
+                            selected.includes(item.id)
+                              ? { ...item, bid: bulkBid, max: Math.max(item.max, bulkBid) }
+                              : item,
+                          ),
+                          `Ставка изменена для ${selected.length} объявлений`,
+                        );
+                        setBulkOpen(false);
+                      }}
+                    >
+                      Сохранить ставку
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setSelected([])}>Снять выбор</button>
+              </div>
             )}
           </div>
-          {selected.length > 0 && (
-            <div className="aw-bulk">
-              <strong>Выбрано: {selected.length}</strong>
-              <button
-                onClick={() => {
-                  commit(
-                    state.items.map((a) =>
-                      selected.includes(a.id) ? { ...a, status: "draft" } : a,
-                    ),
-                    `Переведено в черновики: ${selected.length}`,
-                  );
-                  setSelected([]);
-                }}
-              >
-                В черновики
-              </button>
-              <button onClick={() => setBulkOpen(!bulkOpen)}>Настроить ставки</button>
-              {bulkOpen && (
-                <>
-                  <input
-                    type="number"
-                    min="0"
-                    aria-label="Общая ставка"
-                    value={bulkBid}
-                    onChange={(e) => setBulkBid(Number(e.target.value))}
-                  />
-                  <button
-                    onClick={() => {
-                      if (getPreviewData()) return setNotice("Недостаточно прав для изменения");
-                      if (!Number.isFinite(bulkBid) || bulkBid < 0)
-                        return setNotice("Укажите корректную ставку");
-                      commit(
-                        state.items.map((item) =>
-                          selected.includes(item.id)
-                            ? { ...item, bid: bulkBid, max: Math.max(item.max, bulkBid) }
-                            : item,
-                        ),
-                        `Ставка изменена для ${selected.length} объявлений`,
-                      );
-                      setBulkOpen(false);
-                    }}
-                  >
-                    Сохранить ставку
-                  </button>
-                </>
-              )}
-              <button onClick={() => setSelected([])}>Снять выбор</button>
-            </div>
-          )}
           <div className="aw-table-wrap">
             <table className="aw-table">
               <thead>
@@ -535,14 +610,32 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                   {heading("title", "Объявление")}
                   {heading("status", "Статус")}
                   {heading("shows", "Показы")}
+                  {details && heading("showCost", "Цена показа")}
                   {heading("views", "Просмотры")}
-                  {heading("contacts", "Контакты")}
-                  {heading("spend", "Расходы")}
                   {details && (
                     <>
-                      {heading("conversion", "Контакты / просмотры")}
+                      {heading("viewRate", "Показы → просмотры")}
                       {heading("cpv", "Цена просмотра")}
+                    </>
+                  )}
+                  {heading("contacts", "Контакты")}
+                  {details && (
+                    <>
+                      {heading("conversion", "Просмотры → контакты")}
                       {heading("cpa", "Цена контакта")}
+                    </>
+                  )}
+                  {heading("spend", "Расходы")}
+                  {showBids && (
+                    <>
+                      {heading("bid", "Ставка, ₽")}
+                      {heading("mode", "Режим")}
+                      {heading("max", "Максимум, ₽")}
+                      {heading("budget", "Бюджет в день, ₽")}
+                      {heading("target", "Цель, место")}
+                      {heading("query", "Запрос")}
+                      {heading("start", "Начало · МСК")}
+                      {heading("end", "Конец · МСК")}
                     </>
                   )}
                   <th />
@@ -605,16 +698,112 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       </span>
                     </td>
                     <td>{Number.isFinite(a.shows) ? a.shows?.toLocaleString("ru-RU") : "—"}</td>
+                    {details && (
+                      <td>{a.shows && Number.isFinite(a.spend) ? rub(a.spend / a.shows) : "—"}</td>
+                    )}
                     <td>{Number.isFinite(a.views) ? a.views.toLocaleString("ru-RU") : "—"}</td>
+                    {details && (
+                      <>
+                        <td>
+                          {a.shows && Number.isFinite(a.views)
+                            ? `${((100 * a.views) / a.shows).toFixed(1)} %`
+                            : "—"}
+                        </td>
+                        <td>
+                          {a.views && Number.isFinite(a.spend) ? rub(a.spend / a.views) : "—"}
+                        </td>
+                      </>
+                    )}
                     <td>
                       {Number.isFinite(a.contacts) ? a.contacts.toLocaleString("ru-RU") : "—"}
                     </td>
-                    <td>{Number.isFinite(a.spend) ? rub(a.spend) : "—"}</td>
                     {details && (
                       <>
-                        <td>{a.views ? `${((100 * a.contacts) / a.views).toFixed(1)} %` : "—"}</td>
-                        <td>{a.views ? rub(a.spend / a.views) : "—"}</td>
-                        <td>{a.contacts ? rub(a.spend / a.contacts) : "—"}</td>
+                        <td>
+                          {a.views && Number.isFinite(a.contacts)
+                            ? `${((100 * a.contacts) / a.views).toFixed(1)} %`
+                            : "—"}
+                        </td>
+                        <td>
+                          {a.contacts && Number.isFinite(a.spend) ? rub(a.spend / a.contacts) : "—"}
+                        </td>
+                      </>
+                    )}
+                    <td>{Number.isFinite(a.spend) ? rub(a.spend) : "—"}</td>
+                    {showBids && (
+                      <>
+                        <td>{bidField(a, "bid", "Ставка")}</td>
+                        <td>
+                          <AdsSelect
+                            compact
+                            label={`Режим ${a.title} ${a.city}`}
+                            value={a.mode || ""}
+                            options={[
+                              { value: "", label: "Нет данных" },
+                              ...bidModes,
+                              ...(a.mode && !bidModes.some((item) => item.value === a.mode)
+                                ? [{ value: a.mode, label: a.mode }]
+                                : []),
+                            ]}
+                            onChange={(mode) =>
+                              commit(
+                                state.items.map((item) =>
+                                  item.id === a.id ? { ...item, mode } : item,
+                                ),
+                                `Изменён режим «${a.title}»`,
+                              )
+                            }
+                          />
+                        </td>
+                        <td>{bidField(a, "max", "Максимум")}</td>
+                        <td>{bidField(a, "budget", "Бюджет в день")}</td>
+                        <td>{bidField(a, "target", "Целевая позиция")}</td>
+                        <td>
+                          <input
+                            className="aw-inline-query"
+                            aria-label={`Поисковый запрос ${a.title} ${a.city}`}
+                            value={bidDrafts[`${a.id}:query`] ?? a.query}
+                            onChange={(e) =>
+                              setBidDrafts((prev) => ({
+                                ...prev,
+                                [`${a.id}:query`]: e.target.value,
+                              }))
+                            }
+                            onBlur={() => {
+                              const key = `${a.id}:query`;
+                              if (bidDrafts[key] === undefined) return;
+                              commit(
+                                state.items.map((item) =>
+                                  item.id === a.id ? { ...item, query: bidDrafts[key] } : item,
+                                ),
+                                `Изменён поисковый запрос «${a.title}»`,
+                              );
+                              setBidDrafts((prev) => {
+                                const next = { ...prev };
+                                delete next[key];
+                                return next;
+                              });
+                            }}
+                          />
+                        </td>
+                        {(["start", "end"] as const).map((field) => (
+                          <td key={field}>
+                            <AdsSelect
+                              compact
+                              label={`${field === "start" ? "Начало" : "Конец"} ${a.title} ${a.city}`}
+                              value={a[field] || ""}
+                              options={[{ value: "", label: "—" }, ...timeOptions]}
+                              onChange={(value) =>
+                                commit(
+                                  state.items.map((item) =>
+                                    item.id === a.id ? { ...item, [field]: value } : item,
+                                  ),
+                                  `Изменено расписание «${a.title}»`,
+                                )
+                              }
+                            />
+                          </td>
+                        ))}
                       </>
                     )}
                     <td>
@@ -637,6 +826,21 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             )}
           </div>
         </>
+      )}
+      {tab === "generate" && (
+        <div className="aw-create-section">
+          <div className="aw-create-icon">
+            <Sparkles size={22} />
+          </div>
+          <div>
+            <h2>Новое объявление</h2>
+            <p>Заполните поля самостоятельно или подготовьте текст и фотографии с помощником.</p>
+            <button className="aw-btn aw-primary" onClick={create}>
+              <Plus size={16} />
+              Создать объявление
+            </button>
+          </div>
+        </div>
       )}
       {tab === "feeds" && (
         <div className={`aw-feed-layout ${sheetSaved ? "" : "first-step"}`}>
@@ -905,27 +1109,33 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           </div>
         </>
       )}
-      {tab === "history" && (
-        <div className="aw-history-list">
-          {state.history.length ? (
-            state.history.map((h, i) => (
-              <div className="aw-history" key={i}>
-                <span>
-                  <Check size={17} />
-                </span>
-                <div>
-                  <strong>{h.text}</strong>
-                  <small>
-                    {new Date(h.at).toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })} МСК · Вы
-                  </small>
+      {tab === "feeds" && (
+        <div className="aw-feed-history">
+          <h2>История</h2>
+          <div className="aw-history-list">
+            {state.history.length ? (
+              state.history.map((h, i) => (
+                <div className="aw-history" key={i}>
+                  <span>
+                    <Check size={17} />
+                  </span>
+                  <div>
+                    <strong>{h.text}</strong>
+                    <small>
+                      {new Date(h.at).toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })} МСК ·
+                      Вы
+                    </small>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="aw-empty">
+                {getPreviewData()
+                  ? "История загрузок пока недоступна."
+                  : "Пока нет изменений. Сохраните объявление — действие появится здесь."}
               </div>
-            ))
-          ) : (
-            <div className="aw-empty">
-              Пока нет изменений. Сохраните объявление — действие появится здесь.
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
       {edit &&

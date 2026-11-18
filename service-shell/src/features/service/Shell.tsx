@@ -146,8 +146,8 @@ export function Shell({ section, focus }: { section: SectionId; focus?: string }
                   <div className="ads-subnav">
                     {[
                       ["list", "Объявления"],
+                      ["generate", "ИИ-генерация"],
                       ["feeds", "Автозагрузка"],
-                      ["history", "История"],
                     ].map(([id, label]) => (
                       <button
                         type="button"
