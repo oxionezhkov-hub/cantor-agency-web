@@ -39,46 +39,40 @@ export default {
         return Response.json({ error: "invalid_query" }, { status: 400, headers: privateHeaders });
       try {
         if (imageRequest) {
-          if (
-            [...url.searchParams.keys()].some((k) => !["adId", "index"].includes(k)) ||
-            !/^\d+$/.test(url.searchParams.get("adId") || "") ||
-            !/^\d{1,2}$/.test(url.searchParams.get("index") || "")
-          )
-            return Response.json(
-              { error: "invalid_query" },
-              { status: 400, headers: privateHeaders },
-            );
-          const data = await readDobrynina(env);
-          const imageUrl = data.ads.find((a) => a.id === url.searchParams.get("adId"))?.photos?.[
-            Number(url.searchParams.get("index"))
-          ];
-          if (!imageUrl) return new Response(null, { status: 404, headers: privateHeaders });
-          const source = new URL(imageUrl);
-          if (
-            source.protocol !== "https:" ||
-            (![
-              "functions.yandexcloud.net",
-              "mainweb.oxion-ezhkov.workers.dev",
-              "storage.yandexcloud.net",
-              "static.avito.ru",
-            ].includes(source.hostname) &&
-              !source.hostname.endsWith(".avito.st"))
-          )
-            return new Response(null, { status: 404, headers: privateHeaders });
-          const response = await fetch(source.href, { method: "GET" });
-          if (!response.ok || !response.headers.get("content-type")?.startsWith("image/"))
-            return new Response(null, { status: 502, headers: privateHeaders });
-          return new Response(response.body, {
-            headers: {
-              ...privateHeaders,
-              "content-type": response.headers.get("content-type"),
-              "cache-control": "private, max-age=3600",
-            },
-          });
+          const key = url.searchParams.get("key");
+          const adId = url.searchParams.get("adId");
+          const index = url.searchParams.get("index");
+          if ([...url.searchParams.keys()].some((k) => !["adId", "index", "key"].includes(k)))
+            return Response.json({ error: "invalid_query" }, { status: 400, headers: privateHeaders });
+          let imageKey = key;
+          if (!key && /^\d+$/.test(adId || "") && /^\d{1,2}$/.test(index || "")) {
+            const data = await readDobrynina(env);
+            const imageUrl = data.ads.find((a) => a.id === adId)?.photos?.[Number(index)];
+            if (!imageUrl) return new Response(null, { status: 404, headers: privateHeaders });
+            const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(imageUrl));
+            imageKey = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+          }
+          if (!/^[a-f0-9]{64}$/.test(imageKey || "") || (key && (adId || index)))
+            return Response.json({ error: "invalid_query" }, { status: 400, headers: privateHeaders });
+          const image = await env.DEMO_DATA.get(`image:${imageKey}`, "arrayBuffer");
+          if (!image) return new Response(null, { status: 404, headers: privateHeaders });
+          return new Response(image, { headers: { ...privateHeaders, "content-type": "image/jpeg", "cache-control": "private, max-age=3600" } });
         }
+
         const data = await readDobrynina(env, path === "/api/demo/chat" ? id : null);
-        if (path === "/api/demo/bootstrap")
+        if (path === "/api/demo/bootstrap") {
           privateHeaders["set-cookie"] = await imageSessionCookie(env.DEMO_PASSWORD_SHA256);
+          const localAvatar = async (source) => {
+            if (!source || !source.startsWith("https://")) return "";
+            const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+            const key = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+            return `${url.origin}/api/demo/image?key=${key}`;
+          };
+          data.tutorAvatarUrl = await localAvatar(data.tutorAvatarUrl);
+          await Promise.all(data.chats.map(async (chat) => {
+            chat.avatarUrl = await localAvatar(chat.avatarUrl);
+          }));
+        }
         return Response.json(data || { error: "not_found" }, {
           status: data ? 200 : 404,
           headers: privateHeaders,

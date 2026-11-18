@@ -132,3 +132,23 @@ test("unavailable sources fail closed", async () => {
   assert.equal(r.status, 503);
   assert.deepEqual(await r.json(), { error: "source_unavailable" });
 });
+test("cached images require authentication and are served without contacting their source", async () => {
+  const f = fixture();
+  const source = "https://example.test/photo.jpg";
+  const key = createHash("sha256").update(source).digest("hex");
+  const image = Uint8Array.from([0xff, 0xd8, 0xff, 0xd9]);
+  const { gzipSync } = await import("node:zlib");
+  const snapshot = gzipSync(JSON.stringify({ accountId: "6c974a5d5326", ads: [{ id: "123", photos: [source] }], chats: [{ avatarUrl: source }], tutorAvatarUrl: source }));
+  f.env.DEMO_DATA = { async get(k) { return k === "snapshot.gz" ? snapshot : k === `image:${key}` ? image : null; } };
+  const path = "/api/demo/image?adId=123&index=0";
+  assert.equal((await worker.fetch(request(path, "GET", null), f.env)).status, 401);
+  const response = await worker.fetch(request(path), f.env);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "image/jpeg");
+  assert.deepEqual(new Uint8Array(await response.arrayBuffer()), image);
+  const data = await (await worker.fetch(request("/api/demo/bootstrap"), f.env)).json();
+  assert.equal(data.tutorAvatarUrl, `https://demo.test/api/demo/image?key=${key}`);
+  assert.equal(data.chats[0].avatarUrl, data.tutorAvatarUrl);
+  assert.equal((await worker.fetch(request(`/api/demo/image?key=${key}`), f.env)).status, 200);
+  assert.equal((await worker.fetch(request("/api/demo/image?key=invalid"), f.env)).status, 400);
+});
