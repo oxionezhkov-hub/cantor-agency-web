@@ -12,6 +12,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check landing build and cache regression
+        run: |
+          node scripts/build-promo-platform.cjs --check
+          node --test tests/promo-platform.test.cjs
+
       - name: Deploy via rsync over SSH
         uses: burnett01/rsync-deployments@7.0.1
         with:
@@ -22,3 +27,6 @@ jobs:
           remote_port: ${{ secrets.SSH_PORT }}
           remote_user: ${{ secrets.SSH_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Verify published landing
+        run: node scripts/check-promo-platform-live.cjs
