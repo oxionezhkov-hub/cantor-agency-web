@@ -197,10 +197,7 @@ export function PaymentsSection({
     <section className="crm-panel payments-workspace" aria-label="Оплаты учеников">
       {!studentScope ? (
         <div className="crm-heading">
-          <h2>
-            <Wallet size={18} />
-            Оплаты учеников
-          </h2>
+          <h2>Оплаты учеников</h2>
         </div>
       ) : null}
       {storageError ? (

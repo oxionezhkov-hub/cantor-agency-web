@@ -142,6 +142,7 @@ function TrafficChart({
   const all = metric === "all";
   const names = { shows: "Показы", views: "Просмотры", contacts: "Контакты" };
   const keys = all ? (["shows", "views", "contacts"] as const) : [metric];
+  const colorIndex = { shows: 0, views: 1, contacts: 2 };
   return (
     <div
       className="an-plot"
@@ -201,16 +202,16 @@ function TrafficChart({
             />
           ) : null}
           <Tooltip content={<CountTooltip />} />
-          {keys.map((key, i) => (
+          {keys.map((key) => (
             <Area
               key={key}
               type="monotone"
               yAxisId={all && key !== "shows" ? "engagement" : "main"}
               dataKey={key}
               name={names[key]}
-              stroke={all ? COLORS[i] : COLORS[0]}
+              stroke={COLORS[colorIndex[key]]}
               strokeWidth={2.3}
-              fill={`url(#analytics-traffic-fill-${all ? i : 0})`}
+              fill={`url(#analytics-traffic-fill-${colorIndex[key]})`}
               isAnimationActive={false}
             />
           ))}
