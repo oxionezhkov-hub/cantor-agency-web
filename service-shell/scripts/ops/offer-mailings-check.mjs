@@ -49,51 +49,39 @@ try {
     await openMenu();
     await nav.getByRole("button", { name: "Рассылки", exact: true }).click();
     const form = p.locator(".om");
-    await form.getByLabel("Название плана", { exact: true }).fill("Набор на декабрь");
-    await form
-      .getByLabel("Предложение ученику", { exact: true })
-      .fill("Приглашаю обсудить задачу и формат занятий.");
+    for (const label of [
+      "Название плана",
+      "Предложение ученику",
+      "Общий бюджет, ₽",
+      "Дата запуска",
+    ])
+      assert.equal(await form.getByLabel(label, { exact: true }).count(), 0);
+    const check = form.getByRole("button", { name: "Проверить доступность", exact: true });
+    assert.ok(await check.isDisabled());
     await form.locator(".om-ads input[type=checkbox]").first().check();
-    await form.getByLabel("Общий бюджет, ₽", { exact: true }).fill("2000");
-    await form.getByLabel("Дата запуска", { exact: true }).fill("01.12.2099");
-    await form.getByRole("button", { name: "Проверить план", exact: true }).click();
-    await form.getByRole("button", { name: "Сохранить план", exact: true }).click();
+    assert.equal(await check.isDisabled(), false);
+    await check.click();
     assert.ok(
       await form
         .getByText(
-          "План сохранён до обновления страницы. Автоматический запуск не назначен; деньги не списаны.",
-        )
-        .count(),
-    );
-    const plan = form.locator("article").first();
-    await plan.getByRole("button", { name: "Перейти к запуску" }).click();
-    assert.ok(
-      await form
-        .getByText(
-          "Запуск платных предложений из сервиса пока не подключён. План не отправлен в Авито; деньги не списаны.",
+          "Проверка доступности рассылок пока не подключена. Данные из Авито не получены; рассылка не создана.",
         )
         .count(),
     );
     assert.equal(
-      await plan
-        .locator("dd")
-        .allTextContents()
-        .then((x) => x.every((v) => v === "—")),
-      true,
+      await form.getByRole("button", { name: "Оплатить и отправить", exact: true }).count(),
+      0,
     );
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/mailings-${width}.png` });
-    await plan.getByRole("button", { name: "Отменить план", exact: true }).click();
-    assert.ok(await plan.getByText("Отменён", { exact: true }).count());
-    assert.ok(await plan.getByRole("button", { name: "Перейти к запуску" }).isDisabled());
     assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     assert.deepEqual(errors, []);
     console.log(
       JSON.stringify({
         width,
-        plan: true,
+        apiFieldsOnly: true,
         noExternalSend: true,
         unknownMetrics: true,
-        cancel: true,
+        eligibilityGate: true,
         errors,
       }),
     );
