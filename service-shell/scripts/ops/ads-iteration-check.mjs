@@ -47,6 +47,35 @@ try {
     await nav.getByRole("button", { name: /^Мои объявления/ }).click();
     await p.locator(".aw-table tbody tr").first().waitFor();
     assert.equal(await nav.getByRole("button", { name: "История", exact: true }).count(), 0);
+    if (width === 390) {
+      const tools = p.locator(".aw-tools");
+      const search = p.getByRole("textbox", { name: "Поиск объявлений" });
+      const controls = [
+        p.getByRole("button", { name: "Открыть поиск объявлений" }),
+        p.getByLabel("Статус объявлений"),
+        p.getByRole("button", { name: "Подробнее", exact: true }),
+        p.getByRole("button", { name: "Ставки", exact: true }),
+      ];
+      const boxes = await Promise.all(controls.map((control) => control.boundingBox()));
+      assert.ok(
+        boxes.every((box) => box && Math.abs(box.y - boxes[0].y) < 5),
+        "mobile controls do not fit in one row",
+      );
+      assert.ok(
+        await tools.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+        "mobile toolbar overflows",
+      );
+      await controls[0].click();
+      assert.ok(await search.evaluate((el) => document.activeElement === el));
+      assert.equal(await controls[2].isVisible(), false);
+      await search.fill("несуществующее объявление");
+      assert.ok(
+        await p.getByText("Объявлений не найдено. Измените фильтр или создайте новое.").isVisible(),
+      );
+      await p.getByRole("button", { name: "Закрыть поиск объявлений" }).click();
+      assert.ok(await controls[2].isVisible());
+      assert.equal(await p.locator('input[aria-label="Поиск объявлений"]').inputValue(), "");
+    }
     await p.getByRole("button", { name: "Подробнее", exact: true }).click();
     for (const n of [
       "Цена показа",

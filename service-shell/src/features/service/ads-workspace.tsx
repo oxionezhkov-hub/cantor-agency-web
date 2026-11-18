@@ -22,6 +22,7 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
+  SlidersHorizontal,
   MapPin,
   Eye,
 } from "lucide-react";
@@ -232,6 +233,11 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     }
   }, [focus]);
   const [query, setQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (mobileSearchOpen) searchRef.current?.focus();
+  }, [mobileSearchOpen]);
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [edit, setEdit] = useState<Listing | null>(() =>
@@ -1011,34 +1017,63 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       )}
       {tab === "list" && (
         <div className="aw-list-view">
-          <div className="aw-tools">
+          <div
+            className={`aw-tools${mobileSearchOpen ? " aw-tools-search-open" : ""}${selected.length ? " aw-tools-selected" : ""}`}
+          >
+            <button
+              className="aw-mobile-search-toggle"
+              aria-label="Открыть поиск объявлений"
+              onClick={() => setMobileSearchOpen(true)}
+            >
+              <Search size={18} />
+            </button>
             <div className="aw-search">
               <Search size={17} />
               <input
+                ref={searchRef}
                 aria-label="Поиск объявлений"
                 placeholder="Название, город или номер"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape" && mobileSearchOpen) {
+                    setQuery("");
+                    setMobileSearchOpen(false);
+                  }
+                }}
+              />
+              <button
+                className="aw-mobile-search-close"
+                aria-label="Закрыть поиск объявлений"
+                onClick={() => {
+                  setQuery("");
+                  setMobileSearchOpen(false);
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={`aw-filter-control${filter !== "all" ? " is-active" : ""}`}>
+              <SlidersHorizontal className="aw-filter-icon" size={17} aria-hidden="true" />
+              <AdsSelect
+                label="Статус объявлений"
+                value={filter}
+                onChange={setFilter}
+                options={[
+                  { value: "all", label: "Все статусы" },
+                  { value: "published", label: "В публикации" },
+                  ...(getPreviewData()
+                    ? [
+                        { value: "archived", label: "Архив" },
+                        { value: "blocked", label: "Заблокировано" },
+                        { value: "rejected", label: "Отклонено" },
+                        { value: "removed", label: "Снято" },
+                      ]
+                    : []),
+                  { value: "draft", label: "Черновики" },
+                ]}
               />
             </div>
-            <AdsSelect
-              label="Статус объявлений"
-              value={filter}
-              onChange={setFilter}
-              options={[
-                { value: "all", label: "Все статусы" },
-                { value: "published", label: "В публикации" },
-                ...(getPreviewData()
-                  ? [
-                      { value: "archived", label: "Архив" },
-                      { value: "blocked", label: "Заблокировано" },
-                      { value: "rejected", label: "Отклонено" },
-                      { value: "removed", label: "Снято" },
-                    ]
-                  : []),
-                { value: "draft", label: "Черновики" },
-              ]}
-            />
             <button className="aw-btn" onClick={() => setDetails(!details)} aria-pressed={details}>
               {details ? "Свернуть" : "Подробнее"}
             </button>
