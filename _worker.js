@@ -14250,9 +14250,11 @@ function feedsParseTab(rows) {
     const transforms = tags.map((tag, i) => ({ tag: String(tag || '').trim(), value: String(row[i] || '').trim() }))
       .filter(({ tag, value }) => /^(Ссылка на картинку для наложения на фото [1-5]|Сделать картинку 4 на 3|Фон\. Ссылка на новый фон|Текст для накладывания)$/.test(tag)
         && value && !/^(нет|false|0|-|Накладывай\s*любой текст!)$/i.test(value));
-    if (transforms.length) problems.push({ row: r + 1, id, tag: 'Images', msg: 'Настроена обработка фото BananLab: ' + transforms.map((x) => x.tag).join(', ') + '. Наш сервис не накладывает плашки, текст и фон. Укажите готовые обработанные фотографии в Images.' });
-    const processing = row.some((v, i) => !/^(Description|Title)$/i.test(String(tags[i] || '')) && /(?:картинки\s+редактиру|пока\s+редактируются\s+фото)/i.test(String(v || '')));
-    if (processing) problems.push({ row: r + 1, id, tag: 'Images', msg: 'BananLab сообщает, что фотографии ещё редактируются. Дождитесь готовых фото и проверьте заполнение Category перед выгрузкой.' });
+    if (transforms.length) problems.push({ row: r + 1, id, tag: 'Images', code: 'external_photo_processing', msg: 'Настроена обработка фото BananLab: ' + transforms.map((x) => x.tag).join(', ') + '. Наш сервис не накладывает плашки, текст и фон. Укажите готовые обработанные фотографии в Images.' });
+    const photoStatus = row.filter((v, i) => !/^(Description|Title)$/i.test(String(tags[i] || '')))
+      .map((v) => String(v || '').replace(/<[^>]+>/g, ' ')).join(' ');
+    const photoUnavailable = /(?:картинки\s+редактиру|пока\s+редактируются\s+фото|фото(?:графии)?\s+(?:ещ[её]\s+)?(?:редактиру|обрабатыва)|не удалось\s+(?:загрузить|обработать)\s+(?:главную|первую|основную)\s+фото(?:графию)?)/i.test(photoStatus);
+    if (photoUnavailable) problems.push({ row: r + 1, id, tag: 'Images', skipped: true, msg: 'Объявление не включено в XML: главное фото недоступно или BananLab ещё обрабатывает фотографии. Дождитесь готовых фото и исчезновения статуса ошибки.' });
     const fields = [];
     for (const c of cols) {
       const raw = String(row[c.i] == null ? '' : row[c.i]);
@@ -14260,9 +14262,10 @@ function feedsParseTab(rows) {
       if (raw.trim() === '-') continue;
       if (raw.trim() || c.tag === 'Price') fields.push({ tag: c.tag, multi: c.multi, value: raw });
     }
-    if (!fields.some((f) => f.tag === 'Category' && f.value.trim())) problems.push({ row: r + 1, id, tag: 'Category', msg: 'Category («Категория») не передаётся в XML. Авито не сможет разместить объявление. Если BananLab обрабатывает фото, дождитесь окончания и заполнения категории.' });
+    const missingCategory = !fields.some((f) => f.tag === 'Category' && f.value.trim());
+    if (missingCategory) problems.push({ row: r + 1, id, tag: 'Category', skipped: true, msg: 'Объявление не включено в XML: отсутствует Category («Категория»). Если BananLab убрал категорию на время обработки фото, дождитесь её восстановления.' });
     const folder = folderCol >= 0 ? String(row[folderCol] || '').trim() : '';
-    ads.push({ row: r + 1, id, fields, folder: /^https?:\/\//i.test(folder) ? folder : '' });
+    ads.push({ row: r + 1, id, fields, blocked: photoUnavailable || missingCategory, folder: /^https?:\/\//i.test(folder) ? folder : '' });
   }
   return { ads, problems };
 }
@@ -14326,7 +14329,17 @@ function feedsNested(fields, wrap, item, tags, tagOf) {
 function feedsBuildXml(ads, imageUrl) {
   const out = ['<?xml version="1.0" encoding="UTF-8"?>', '<Ads formatVersion="3" target="Avito.ru">'];
   const problems = [];
+  let count = 0, skipped = 0;
   for (const ad of ads) {
+    if (ad.blocked) { skipped++; continue; }
+    const images = ad.fields.find((f) => f.tag === 'Images');
+    const first = images && feedsLines(images.value)[0];
+    if (first && !imageUrl(feedsImageSrc(first, ad.folder))) {
+      skipped++;
+      problems.push({ tab: ad.tab, row: ad.row, id: ad.id, tag: 'Images', skipped: true, msg: 'Объявление не включено в XML: не удалось подготовить главную фотографию. Другие фото не подставляются вместо главного.' });
+      continue;
+    }
+    count++;
     out.push('  <Ad>');
     const done = new Set();
     for (const f of ad.fields) {
@@ -14370,7 +14383,7 @@ function feedsBuildXml(ads, imageUrl) {
     out.push('  </Ad>');
   }
   out.push('</Ads>', '');
-  return { xml: out.join('\n'), problems };
+  return { xml: out.join('\n'), problems, count, skipped };
 }
 
 // A Yandex.Disk link → { kind: 'p', path } (private, needs the token) or { kind: 'u', key } (public).
@@ -14388,6 +14401,62 @@ function feedsYandexSource(src) {
   const m = decodeURIComponent(u.pathname).match(/^\/client\/disk(\/.+\.[A-Za-z0-9]{2,5})$/);
   if (m) return { kind: 'p', path: 'disk:' + m[1] };
   return null;
+}
+
+function feedsPhotoReadyUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  let url;
+  try { url = new URL(value); } catch { throw new Error('Укажите ссылку на XML BananLab'); }
+  if (url.protocol !== 'https:' || url.hostname !== 'storage.yandexcloud.net' || url.username || url.password
+      || url.port || url.search || url.hash || !/^\/server1\/avito\/clients\/[A-Za-z0-9_/-]+\.xml$/.test(url.pathname)) {
+    throw new Error('Нужна прямая ссылка XML BananLab: https://storage.yandexcloud.net/server1/avito/clients/…/….xml');
+  }
+  return url.href;
+}
+
+async function feedsApplyPhotoReadiness(feed, ads, stat) {
+  const source = feed.photoReadyXml === undefined ? feed.bananlabXml : feed.photoReadyXml;
+  if (!source) return;
+  const url = feedsPhotoReadyUrl(source);
+  const res = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error(`XML BananLab недоступен (${res.status}). Готовность фото не подтверждена`);
+  const xml = await res.text();
+  if (!/<Ads(?:\s|>)/.test(xml) || !/<\/Ads>/.test(xml)) throw new Error('BananLab вернул некорректный XML. Готовность фото не подтверждена');
+  const reference = feedsAdsIndex(xml);
+  const preparedImages = new Map();
+  for (const chunk of xml.split(/<Ad>/).slice(1)) {
+    const body = chunk.split('</Ad>')[0];
+    const id = (body.match(/<id>([\s\S]*?)<\/id>/) || [])[1];
+    if (!id) continue;
+    const urls = [...body.matchAll(/<Image\s+[^>]*url=(['"])(.*?)\1/g)].map((m) => m[2].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'"))
+      .filter((u) => { try { return /^https?:$/.test(new URL(u).protocol); } catch { return false; } });
+    preparedImages.set(id.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<!\[CDATA\[|\]\]>/g, '').trim(), urls);
+  }
+  stat.photoReadiness = { checkedAt: new Date().toISOString(), source: url };
+  for (const ad of ads) {
+    if (ad.blocked) continue;
+    const ready = reference.get(ad.id);
+    const comment = ready && (ready.comment || ready.Comment || '') || '';
+    const failedPhoto = /не удалось\s+(?:загрузить|обработать)\s+(?:главную|первую|основную)\s+фото|картинки\s+редактиру|пока\s+редактируются\s+фото/i.test(comment);
+    const readyImages = preparedImages.get(ad.id) || [];
+    const reason = !ready ? 'BananLab ещё не включил объявление в свой XML'
+      : !String(ready.Category || '').trim() ? 'BananLab ещё не вернул Category в свой XML'
+      : failedPhoto ? 'BananLab сообщает об ошибке главного фото или незавершённой обработке'
+      : !readyImages.length ? 'в XML BananLab нет готовых фотографий' : '';
+    if (!reason) {
+      // The provider's processed images, including the main photo, are the output
+      // of the editing job. Do not publish the raw sheet images in their place.
+      const field = ad.fields.find((f) => f.tag === 'Images');
+      stat.problems = stat.problems.filter((p) => !(p.code === 'external_photo_processing' && p.id === ad.id && p.row === ad.row && p.tab === ad.tab));
+      if (field) field.value = readyImages.join(' | ');
+      else ad.fields.push({ tag: 'Images', value: readyImages.join(' | '), multi: false });
+      continue;
+    }
+    ad.blocked = true;
+    stat.problems.push({ tab: ad.tab, row: ad.row, id: ad.id, tag: 'Images', skipped: true,
+      msg: 'Объявление не включено в XML: ' + reason + '. Повторная сборка проверит готовность снова; значение категории в Google Таблице не обходит эту проверку.' });
+  }
 }
 
 async function feedsBuild(env, feed) {
@@ -14411,7 +14480,7 @@ async function feedsBuild(env, feed) {
       const parsed = feedsParseTab(tabs[name]);
       parsed.ads.forEach((a) => { a.tab = name; });
       parsed.problems.forEach((p) => stat.problems.push({ tab: name, ...p }));
-      stat.tabs.push({ name, ads: parsed.ads.length });
+      stat.tabs.push({ name, ads: parsed.ads.filter((a) => !a.blocked).length });
       ads = ads.concat(parsed.ads);
     }
     const ydRows = tabs[FEEDS_YD_TAB];
@@ -14436,6 +14505,15 @@ async function feedsBuild(env, feed) {
     stat.problems.push({ tab: a.tab, row: a.row, id: a.id, msg: `Повтор id — он же на вкладке «${keep.tab}», строка ${keep.row}; в XML идёт та строка, эта пропущена.` });
     return false;
   });
+
+  try { await feedsApplyPhotoReadiness(feed, ads, stat); } catch (err) {
+    stat.error = 'Сборка остановлена: ' + String(err.message || err) + '. Предыдущий XML сохранён.';
+    stat.ms = Date.now() - t0;
+    await kv.put(feedsKey(feed, 'stat'), JSON.stringify(stat));
+    return stat;
+  }
+  stat.skipped = ads.filter((a) => a.blocked).length;
+  ads = ads.filter((a) => !a.blocked);
 
   // Values Avito doesn't know (subject, experience, time…) — checked against Avito's own catalog.
   try {
@@ -14492,12 +14570,13 @@ async function feedsBuild(env, feed) {
   }
   stat.fixes = (stat.fixes || []).concat([...moved.values()]);
   for (const x of lost.values()) stat.problems.push({ id: x.ids[0], ids: x.ids, n: x.n, tag: 'Images', msg: `Фото нет на Яндекс.Диске: ${x.path.replace(/^disk:/, '')} — файл удалён или переименован` });
-  const { xml, problems } = feedsBuildXml(ads, (src) => signed.get(src) || null);
+  const { xml, problems, count, skipped } = feedsBuildXml(ads, (src) => signed.get(src) || null);
   if (!stat.yandexToken && [...signed.entries()].some(([src, u]) => !u && feedsYandexSource(src))) {
     stat.problems.unshift({ msg: `Ссылки на закрытые файлы Яндекс.Диска есть, а токена нет: вставьте его в ячейку A2 вкладки «${FEEDS_YD_TAB}».` });
   }
   stat.problems = stat.problems.concat(problems).slice(0, 300);
-  stat.ads = ads.length;
+  stat.ads = count;
+  stat.skipped += skipped;
   stat.ms = Date.now() - t0;
   await kv.put(feedsKey(feed, 'xml'), xml);
   if (feedsS3(env)) {
@@ -14902,6 +14981,8 @@ async function handleFeedsApi(request, env, url) {
 
   if (!parts.length && request.method === 'POST') {
     const body = (await readJson(request)) || {};
+    let photoReadyXml;
+    try { photoReadyXml = feedsPhotoReadyUrl(body.photoReadyXml); } catch (err) { return json({ error: err.message }, 400); }
     const name = String(body.name || '').trim().slice(0, 60);
     const sheetId = feedsSheetId(body.sheetUrl);
     const tabs = feedsCleanTabs(body.tabs);
@@ -14909,7 +14990,7 @@ async function handleFeedsApi(request, env, url) {
     if (!sheetId) return json({ error: 'Вставьте ссылку на Google Таблицу из адресной строки' }, 400);
     if (!tabs.length) return json({ error: 'Укажите хотя бы одну вкладку с объявлениями' }, 400);
     const now = new Date().toISOString();
-    const feed = { slug: feedsSlug(name), name, sheetId, tabs, enabled: true, avitoAccountId: String(body.avitoAccountId || '') || null, secret: randomHex(16), createdAt: now, updatedAt: now, createdBy: who.name, updatedBy: who.name };
+    const feed = { photoReadyXml, slug: feedsSlug(name), name, sheetId, tabs, enabled: true, avitoAccountId: String(body.avitoAccountId || '') || null, secret: randomHex(16), createdAt: now, updatedAt: now, createdBy: who.name, updatedBy: who.name };
     await kv.put('feed:' + feed.slug, JSON.stringify(feed));
     await log({ act: 'Добавил клиента', name, slug: feed.slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined, detail: 'вкладки: ' + tabs.join(', ') });
     const stat = await feedsBuild(env, feed);
@@ -14922,8 +15003,11 @@ async function handleFeedsApi(request, env, url) {
 
   if (parts.length === 1 && request.method === 'PUT') {
     const body = (await readJson(request)) || {};
-    const before = JSON.stringify([feed.name, feed.sheetId, feed.tabs, feed.enabled, feed.avitoAccountId]);
+    let photoReadyXml;
+    try { photoReadyXml = feedsPhotoReadyUrl(body.photoReadyXml); } catch (err) { return json({ error: err.message }, 400); }
+    const before = JSON.stringify([feed.name, feed.sheetId, feed.tabs, feed.enabled, feed.avitoAccountId, feed.photoReadyXml]);
     const was = { ...feed };
+    if (body.photoReadyXml !== undefined) feed.photoReadyXml = photoReadyXml;
     if (body.name !== undefined) feed.name = String(body.name).trim().slice(0, 60) || feed.name;
     if (body.sheetUrl !== undefined) {
       const id = feedsSheetId(body.sheetUrl);
@@ -14940,13 +15024,14 @@ async function handleFeedsApi(request, env, url) {
     feed.updatedAt = new Date().toISOString();
     feed.updatedBy = who.name;
     await kv.put('feed:' + slug, JSON.stringify(feed));
-    if (JSON.stringify([feed.name, feed.sheetId, feed.tabs, feed.enabled, feed.avitoAccountId]) !== before) {
+    if (JSON.stringify([feed.name, feed.sheetId, feed.tabs, feed.enabled, feed.avitoAccountId, feed.photoReadyXml]) !== before) {
       const what = [];
       if (was.name !== feed.name) what.push(`имя «${was.name}» → «${feed.name}»`);
       if (was.sheetId !== feed.sheetId) what.push('другая таблица');
       if (JSON.stringify(was.tabs) !== JSON.stringify(feed.tabs)) what.push('вкладки: ' + feed.tabs.join(', '));
       if (was.enabled !== feed.enabled) what.push(feed.enabled ? 'включил автообновление' : 'выключил автообновление');
       if (was.avitoAccountId !== feed.avitoAccountId) what.push('другой кабинет');
+      if (was.photoReadyXml !== feed.photoReadyXml) what.push('источник готовности фото BananLab');
       await log({ act: 'Изменил клиента', name: feed.name, slug, acc: feed.avitoAccountId ? [feed.avitoAccountId] : undefined, detail: what.join(', ') });
     }
     return json({ feed: feedsPublicView(env, feed, await kv.get('feedstat:' + slug, 'json')) });
@@ -15427,6 +15512,8 @@ async function handleExtraFeedsApi(request, env, url, ctx) {
 
   if (!parts.length && request.method === 'POST') {
     const body = await extraBody(request);
+    let photoReadyXml;
+    try { photoReadyXml = feedsPhotoReadyUrl(body.photoReadyXml); } catch (err) { return json({ error: err.message }, 400); }
     const name = String(body.name || '').replace(/[\u0000-\u001F]/g, '').trim().slice(0, 60);
     const sheetId = feedsSheetId(body.sheetUrl);
     const picked = extraTabs(body.tabs);
@@ -15443,7 +15530,7 @@ async function handleExtraFeedsApi(request, env, url, ctx) {
     }
     const now = new Date().toISOString();
     const who = extraWho(body);
-    const feed = {
+    const feed = { photoReadyXml,
       ns: 'x', slug: 'xextra-' + randomHex(6), name, sheetId, tabs, enabled: body.enabled !== false,
       avitoAccountId: bound.id, secret: randomHex(16), createdAt: now, updatedAt: now, createdBy: who.name, updatedBy: who.name,
     };
@@ -15469,7 +15556,10 @@ async function handleExtraFeedsApi(request, env, url, ctx) {
 
   if (parts.length === 1 && request.method === 'PUT') {
     const body = await extraBody(request);
+    let photoReadyXml;
+    try { photoReadyXml = feedsPhotoReadyUrl(body.photoReadyXml); } catch (err) { return json({ error: err.message }, 400); }
     const who = extraWho(body);
+    if (body.photoReadyXml !== undefined) feed.photoReadyXml = photoReadyXml;
     if (body.name !== undefined) {
       const name = String(body.name || '').replace(/[\u0000-\u001F]/g, '').trim().slice(0, 60);
       if (!name) return json({ error: 'Укажите имя клиента' }, 400);

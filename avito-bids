@@ -1673,6 +1673,7 @@ function feedEdit(slug, preset) {
     <div><label class="f" for="eName">Имя клиента</label><input class="input" id="eName" maxlength="60" value="${esc(ed ? ed.name : pre.name || '')}"></div>
     <div><label class="f" for="eSheet">Ссылка на Google Таблицу</label><div class="row" style="flex-wrap:nowrap"><input class="input" id="eSheet" inputmode="url" value="${esc(ed ? ed.sheetUrl : '')}"><button class="btn" type="button" id="eLoadTabs">Вкладки</button></div>
       <div class="note" style="margin-top:6px">${F.serviceAccount ? `Дайте доступ к таблице на чтение адресу <span class="mono">${esc(F.serviceAccount)}</span>` : 'В таблице: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».'}</div></div>
+    <div><label class="f" for="ePhotoReady">XML BananLab для проверки готовности фото</label><input class="input" id="ePhotoReady" inputmode="url" value="${esc(ed ? (ed.photoReadyXml === undefined ? ed.bananlabXml || '' : ed.photoReadyXml) : '')}" placeholder="https://storage.yandexcloud.net/server1/avito/clients/…/….xml"><div class="note">Если фото обрабатывает BananLab, укажите его XML. До появления категории и готовых фото в этом файле объявление не попадёт в нашу выгрузку.</div></div>
     <div><label class="f">Вкладки с объявлениями</label><div class="tabs-list" id="eTabs"></div></div>
     <div><label class="f">Аккаунт Авито</label><select class="select" id="eAccount"><option value="">— не привязан —</option>${F.accounts.map((a) => `<option value="${esc(a.id)}" ${(ed ? ed.avitoAccountId : pre.avitoAccountId) === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select></div>
     <label class="row" style="cursor:pointer;flex-wrap:nowrap"><label class="switch"><input type="checkbox" id="eEnabled" ${!ed || ed.enabled ? 'checked' : ''}><i></i></label>Пересобирать XML каждый час</label>
@@ -1693,7 +1694,7 @@ function feedEdit(slug, preset) {
   };
   $('#eForm', m).addEventListener('submit', async (e) => {
     e.preventDefault();
-    const body = { name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAccount').value, enabled: $('#eEnabled').checked };
+    const body = { photoReadyXml: $('#ePhotoReady').value.trim(), name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAccount').value, enabled: $('#eEnabled').checked };
     const b = $('#eSave'); b.disabled = true; b.textContent = ed ? 'Сохраняю…' : 'Собираю XML…';
     const r = ed ? await api('/api/dashboard/feeds/' + ed.slug, { method: 'PUT', body: JSON.stringify(body) }) : await post('/api/dashboard/feeds', body);
     if ($('#eSave')) { b.disabled = false; b.textContent = 'Сохранить'; }

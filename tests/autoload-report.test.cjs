@@ -4,7 +4,7 @@ const fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync(`${__dirname}/../_worker.js`,'utf8').replace('export default {','globalThis.worker = {');
 function setup(responses=[]){
  const records={};let count=0;
- const c=vm.createContext({Response,Request,URL,Headers,console,records,
+ const c=vm.createContext({Response,Request,URL,Headers,AbortSignal,console,records,
  env:{AVITO_KV:{get:async k=>records[k]?structuredClone(records[k]):null,put:async(k,v)=>{records[k]=JSON.parse(v);}}},
  account:{id:'one'},responses,called:[],
  request:async(path)=>{c.called.push(path);const r=responses[count++];if(!r)throw new Error('Unexpected upstream call');return r;}});
@@ -42,7 +42,7 @@ test('API messages on successful items are preserved and whitespace is normalize
  const c=setup();const r=vm.runInContext(`normalizeAutoloadItem({section:'success',messages:[{type:'warning',title:'Photo',description:'not    ready'}]})`,c);assert.equal(r.problem,true);assert.equal(r.messages[0].text,'Photo: not ready');
 });
 function parse(tags,values){const c=setup();c.rows=[[],tags,tags.map(()=> 'Грузим в xml'),[],values];return vm.runInContext('feedsParseTab(rows)',c);}
-test('BananLab editing controls and missing Category are diagnosed without changing selection',()=>{
+test('BananLab controls are diagnosed and missing Category blocks the ad',()=>{
  const r=parse(['id','Images','Category','Ссылка на картинку для наложения на фото 1'],['ad-1','https://example.test/image.jpg','','https://example.test/overlay.png']);
  assert.equal(r.ads.length,1);assert.ok(r.problems.some(p=>p.tag==='Images'));assert.ok(r.problems.some(p=>p.tag==='Category'));
 });
@@ -51,7 +51,7 @@ test('disabled ads and inactive photo controls do not create photo warnings',()=
  r=parse(['id','Товар доступен?','Ссылка на картинку для наложения на фото 1'],['ad-1','Нет','https://example.test/overlay.png']);assert.equal(r.ads.length,0);assert.equal(r.problems.length,0);
 });
 test('BananLab processing status is exposed',()=>{
- const r=parse(['id','Category','Ошибки фото'],['ad-1','Предложение услуг','Картинки редактируется: 4064. Пока редактируются фото, будет не заполнена Категория']);assert.ok(r.problems.some(p=>/ещё редактируются/.test(p.msg)));
+ const r=parse(['id','Category','Ошибки фото'],['ad-1','Предложение услуг','Картинки редактируется: 4064. Пока редактируются фото, будет не заполнена Категория']);assert.equal(r.ads[0].blocked,true);assert.ok(r.problems.some(p=>p.skipped));
 });
 for(const [file,name] of [['avito-bids','renderReport'],['zagruzka-extra','paintReport']])test(`${file} does not display no-problems for an incomplete report`,()=>{
  const s=fs.readFileSync(`${__dirname}/../${file}`,'utf8');const a=s.indexOf('function '+name+'(');const b=s.indexOf('\n}',a)+2;
@@ -78,4 +78,50 @@ test('processing upload never reuses a complete old report as the latest result'
 });
 test('missing current endpoint falls back to last_successful with paired item endpoint',async()=>{
  const c=setup([new Response('',{status:404}),upload('last'),page(2,1)]);const r=await c.run();assert.equal(r.summary.complete,true);assert.match(c.called[2],/last_successful\/items/);
+});
+test('blocked rows never enter XML, while unrelated ready rows remain',()=>{
+ const c=setup();c.rows=[[],['id','Category','comment'],['Грузим в xml','Грузим в xml','Не грузим'],[],['waiting','Предложение услуг','Картинки редактируется: 4064'],['broken','Предложение услуг','Не удалось загрузить главную фотографию товара, либо еще идет редактирование фото.'],['no-category','',''],['ready','Предложение услуг','']];
+ const r=vm.runInContext('feedsBuildXml(feedsParseTab(rows).ads, x=>x)',c);
+ assert.equal(r.count,1);assert.equal(r.skipped,3);assert.match(r.xml,/<id>ready<\/id>/);assert.ok(!r.xml.includes('<id>waiting</id>'));assert.ok(!r.xml.includes('<id>broken</id>'));assert.ok(!r.xml.includes('<id>no-category</id>'));
+});
+test('row automatically becomes eligible after photo status clears and Category returns',()=>{
+ const c=setup();c.rows=[[],['id','Category','comment'],['Грузим в xml','Грузим в xml','Не грузим'],[],['waiting','','Пока редактируются фото, будет не заполнена Категория']];
+ assert.equal(vm.runInContext('feedsBuildXml(feedsParseTab(rows).ads, x=>x).count',c),0);
+ c.rows[4][1]='Предложение услуг';c.rows[4][2]='';
+ assert.equal(vm.runInContext('feedsBuildXml(feedsParseTab(rows).ads, x=>x).count',c),1);
+});
+test('a failed main image is not replaced by a working second image',()=>{
+ const c=setup();c.ads=[{id:'photo-failed',row:5,fields:[{tag:'id',value:'photo-failed'},{tag:'Category',value:'Предложение услуг'},{tag:'Images',value:'https://example.test/bad.jpg | https://example.test/good.jpg'}]}];
+ const r=vm.runInContext("feedsBuildXml(ads, src=>src.includes('bad')?null:src)",c);assert.equal(r.count,0);assert.equal(r.skipped,1);assert.ok(r.problems[0].skipped);assert.ok(!r.xml.includes('<Ad>'));
+});
+test('a blocked last duplicate cannot fall back to the earlier ready row',async()=>{
+ const c=setup();c.env.AVITO_KV.put=async(k,v)=>{c.records[k]=v.startsWith('<')?v:JSON.parse(v);};c.feed={slug:'test-feed',tabs:['Ads']};c.rows=[[],['id','Category','comment'],['Грузим в xml','Грузим в xml','Не грузим'],[],['same','Предложение услуг',''],['same','Предложение услуг','Не удалось загрузить главную фотографию товара']];
+ vm.runInContext(`feedsReadTabs=async()=>({tabs:{Ads:rows},missing:[],allTabs:['Ads']});feedsValidate=async()=>{};feedsS3=()=>null;`,c);
+ const s=await vm.runInContext('feedsBuild(env,feed)',c);assert.equal(s.ads,0);assert.equal(s.skipped,1);assert.ok(!c.records['feedxml:test-feed'].includes('<Ad>'));
+});
+test('provider Category controls readiness even if the sheet Category is filled',async()=>{
+ const c=setup();c.feed={photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};
+ c.ads=[{id:'one',fields:[{tag:'Category',value:'Предложение услуг'},{tag:'Images',value:'https://raw.test/old.jpg'}]}];c.stat={problems:[]};
+ c.fetch=async()=>new Response('<Ads><Ad><id>one</id><Category/><comment>Не удалось загрузить главную фотографию товара</comment><Images><Image url="https://prepared.test/new.jpg"/></Images></Ad></Ads>');
+ await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,true);
+ assert.ok(c.stat.problems[0].skipped);
+ c.ads[0].blocked=false;c.stat.problems=[];
+ c.fetch=async()=>new Response('<Ads><Ad><id>one</id><Category>Предложение услуг</Category><Images><Image url="https://prepared.test/new.jpg"/></Images></Ad></Ads>');
+ await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,false);assert.equal(c.ads[0].fields[1].value,'https://prepared.test/new.jpg');
+});
+test('new ad absent from provider output is held back',async()=>{
+ const c=setup();c.feed={photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};c.ads=[{id:'new',fields:[]}];c.stat={problems:[]};c.fetch=async()=>new Response('<Ads></Ads>');
+ await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,true);
+});
+test('failure to check readiness preserves the previous XML',async()=>{
+ const c=setup();c.records['feedxml:test-feed']='<Ads>previous</Ads>';
+ c.env.AVITO_KV.put=async(k,v)=>{c.records[k]=v.startsWith('<')?v:JSON.parse(v);};
+ c.feed={slug:'test-feed',tabs:['Ads'],photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};
+ c.rows=[[],['id','Category'],['Грузим в xml','Грузим в xml'],[],['one','Предложение услуг']];
+ vm.runInContext(`feedsReadTabs=async()=>({tabs:{Ads:rows},missing:[],allTabs:['Ads']});`,c);
+ c.fetch=async()=>new Response('',{status:403});
+ const stat=await vm.runInContext('feedsBuild(env,feed)',c);assert.match(stat.error,/Сборка остановлена/);assert.match(stat.error,/403/);assert.equal(c.records['feedxml:test-feed'],'<Ads>previous</Ads>');
+});
+test('readiness source rejects arbitrary hosts and redirects are disallowed',()=>{
+ const c=setup();assert.throws(()=>vm.runInContext("feedsPhotoReadyUrl('https://internal.test/feed.xml')",c));assert.throws(()=>vm.runInContext("feedsPhotoReadyUrl('https://storage.yandexcloud.net/other/feed.xml')",c));
 });
