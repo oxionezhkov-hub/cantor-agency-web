@@ -132,7 +132,12 @@ export function Shell({
           />
           <span>Авито</span>
         </a>
-        <div className="workspace-profile">
+        <button
+          type="button"
+          className="workspace-profile"
+          aria-label="Открыть настройки кабинета"
+          onClick={() => navigate({ to: "/", search: { section: "acc", focus: "cabinet" } })}
+        >
           <span className="profile-avatar">
             {tutorAvatarUrl ? (
               <img
@@ -150,7 +155,7 @@ export function Shell({
             <strong>{sampleCabinet.tutor}</strong>
             <small>{sampleCabinet.subject}</small>
           </div>
-        </div>
+        </button>
         <nav ref={navRef} className="service-nav" aria-label="Разделы">
           {SECTIONS.map((item) => {
             const Icon = ICONS[item.id];

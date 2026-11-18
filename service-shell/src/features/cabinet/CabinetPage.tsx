@@ -10,10 +10,7 @@ import {
   CreditCard,
   Mail,
   MessageCircle,
-  Puzzle,
   Send,
-  ShieldCheck,
-  Sparkles,
   Star,
   X,
 } from "lucide-react";
@@ -30,6 +27,7 @@ import {
   money,
   settingsPage,
 } from "./settings-model";
+import { useNotificationPreferences } from "./use-notification-preferences";
 import "./settings.css";
 const manager = "https://t.me/cantor_agency_manager";
 const topics = [
@@ -54,24 +52,40 @@ function Toggle({
   return (
     <button
       type="button"
-      className="st-toggle"
-      role="switch"
+      className="st-check-control"
+      role="checkbox"
       aria-label={label}
       aria-checked={checked}
       onClick={onChange}
     >
-      <span />
+      <span>{checked && <Check size={12} />}</span>
     </button>
   );
 }
-function Feature({ title, detail }: { title: string; detail: string }) {
+function Feature({
+  title,
+  detail,
+  status,
+  inline = false,
+}: {
+  title: string;
+  detail: string;
+  status?: string;
+  inline?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
   return (
-    <Popover.Root>
-      <Popover.Trigger className="st-feature-button">
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <div className={`st-feature-button ${inline ? "st-feature-inline" : ""}`}>
         <Check size={16} />
-        <span>{title}</span>
-        <CircleHelp size={14} />
-      </Popover.Trigger>
+        <button className="st-feature-title" onClick={() => setOpen(!open)}>
+          {title}
+        </button>
+        {status && <span className="st-feature-status">{status}</span>}
+        <Popover.Trigger className="st-question" aria-label={`${title}: пояснение`}>
+          <CircleHelp size={14} />
+        </Popover.Trigger>
+      </div>
       <Popover.Portal>
         <Popover.Content className="st-help" sideOffset={8} collisionPadding={16}>
           <strong>{title}</strong>
@@ -85,12 +99,14 @@ function Feature({ title, detail }: { title: string; detail: string }) {
     </Popover.Root>
   );
 }
+
 function Modal({
   open,
   onOpenChange,
   title,
   description,
   wide,
+  header,
   children,
 }: {
   open: boolean;
@@ -98,6 +114,7 @@ function Modal({
   title: string;
   description: string;
   wide?: boolean;
+  header?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -105,7 +122,10 @@ function Modal({
       <Dialog.Portal>
         <Dialog.Overlay className="st-overlay" />
         <Dialog.Content className={`st-dialog ${wide ? "st-dialog-wide" : ""}`}>
-          <Dialog.Title>{title}</Dialog.Title>
+          <div className="st-dialog-heading">
+            <Dialog.Title>{title}</Dialog.Title>
+            {header}
+          </div>
           <Dialog.Description>{description}</Dialog.Description>
           <Dialog.Close className="st-close" aria-label="Закрыть">
             <X size={20} />
@@ -132,10 +152,21 @@ export function CabinetPage({ focus }: { focus?: string }) {
     [noticeState, setNoticeState] = useState({ page: tab, text: "" });
   const notice = noticeState.page === tab ? noticeState.text : "";
   const setNotice = (text: string) => setNoticeState({ page: tab, text });
-  const [email, setEmail] = useState(""),
-    [channels, setChannels] = useState([false, false]),
-    [events, setEvents] = useState(topics.map(() => true)),
-    [rating, setRating] = useState(0),
+  const source = getPreviewData();
+  const notification = useNotificationPreferences(
+    (source as { accountId?: string } | null)?.accountId || source?.tutor || "example",
+  );
+  const { email, channels, events } = notification;
+  const setEmail = (value: string) => notification.update({ email: value });
+  const setChannels = (value: boolean[]) => notification.update({ channels: value });
+  const setEvents = (value: boolean[]) => notification.update({ events: value });
+  const [profileEmail, setProfileEmail] = useState("");
+  const [telegram, setTelegram] = useState("");
+  const [phone, setPhone] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [rating, setRating] = useState(0),
     [review, setReview] = useState(""),
     [reviewOpen, setReviewOpen] = useState(false),
     [name, setName] = useState(sampleCabinet.tutor),
@@ -173,15 +204,6 @@ export function CabinetPage({ focus }: { focus?: string }) {
       {plans.map((p, i) => (
         <article className="st-plan" key={p.name}>
           <div className="st-plan-title">
-            <span className="st-plan-symbol">
-              {i === 0 ? (
-                <Puzzle size={18} />
-              ) : i === 1 ? (
-                <Sparkles size={18} />
-              ) : (
-                <ShieldCheck size={18} />
-              )}
-            </span>
             {current === i && <span className="st-current-label">Текущий</span>}
           </div>
           <h3>{p.name}</h3>
@@ -254,11 +276,19 @@ export function CabinetPage({ focus }: { focus?: string }) {
             </div>
             <div className="st-account-summary">
               <div className="st-account-avatar">
-                {sampleCabinet.tutor
-                  .split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")}
+                {source?.tutorAvatarUrl && !avatarFailed ? (
+                  <img
+                    src={source.tutorAvatarUrl}
+                    alt={sampleCabinet.tutor}
+                    onError={() => setAvatarFailed(true)}
+                  />
+                ) : (
+                  sampleCabinet.tutor
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                )}
               </div>
               <div>
                 <strong>{sampleCabinet.tutor}</strong>
@@ -347,11 +377,47 @@ export function CabinetPage({ focus }: { focus?: string }) {
                   value={zone}
                   onChange={setZone}
                   options={[
+                    { value: "kaliningrad", label: "Калининград · UTC+2" },
                     { value: "moscow", label: "Москва · UTC+3" },
                     { value: "samara", label: "Самара · UTC+4" },
                     { value: "ekaterinburg", label: "Екатеринбург · UTC+5" },
+                    { value: "omsk", label: "Омск · UTC+6" },
                     { value: "novosibirsk", label: "Новосибирск · UTC+7" },
+                    { value: "irkutsk", label: "Иркутск · UTC+8" },
+                    { value: "yakutsk", label: "Якутск · UTC+9" },
+                    { value: "vladivostok", label: "Владивосток · UTC+10" },
+                    { value: "magadan", label: "Магадан · UTC+11" },
+                    { value: "kamchatka", label: "Камчатка · UTC+12" },
                   ]}
+                />
+              </label>
+              <label className="st-field">
+                Электронная почта
+                <input
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  placeholder="name@example.ru"
+                  autoComplete="email"
+                />
+              </label>
+              <label className="st-field">
+                Telegram
+                <input
+                  value={telegram}
+                  onChange={(e) => setTelegram(e.target.value)}
+                  placeholder="@username"
+                  autoComplete="off"
+                />
+              </label>
+              <label className="st-field">
+                Номер телефона
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+7"
+                  autoComplete="tel"
                 />
               </label>
             </div>
@@ -409,6 +475,8 @@ export function CabinetPage({ focus }: { focus?: string }) {
                   placeholder="name@example.ru"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailTouched(true)}
+                  aria-invalid={emailTouched && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
                 />
               </label>
             )}
@@ -452,18 +520,16 @@ export function CabinetPage({ focus }: { focus?: string }) {
               </div>
             ))}
           </section>
-          <button
-            className="st-primary"
-            onClick={() =>
-              setNotice(
-                channels[0] && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-                  ? "Укажите корректный адрес электронной почты"
-                  : "Предпочтения уведомлений сохранены",
-              )
-            }
-          >
-            Сохранить предпочтения
-          </button>
+          {notification.error && (
+            <p className="st-error" role="alert">
+              {notification.error}
+            </p>
+          )}
+          {channels[0] && emailTouched && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+            <p className="st-error" role="alert">
+              Укажите корректный адрес электронной почты
+            </p>
+          )}
         </>
       )}
       {tab === "tariff" && (
@@ -490,24 +556,15 @@ export function CabinetPage({ focus }: { focus?: string }) {
                 <small> / {paidAnnual ? "год" : "мес"}</small>
               </strong>
               <p>Оплачен до {expiry}</p>
+              <button
+                className="st-renew-button"
+                aria-pressed={renew}
+                onClick={() => setRenew(!renew)}
+              >
+                {renew ? <Check size={13} /> : null}Автопродление {renew ? "включено" : "выключено"}
+              </button>
             </div>
           </section>
-          <section className="st-renew">
-            <div>
-              <strong>Автопродление</strong>
-              <p>
-                {renew
-                  ? `${expiry} · ${money(monthlyPrice(current, paidModules) * (paidAnnual ? 12 : 1))}`
-                  : "Выключено · доступ до конца оплаченного периода"}
-              </p>
-            </div>
-            <Toggle label="Автопродление" checked={renew} onChange={() => setRenew(!renew)} />
-          </section>
-          <div className="st-heading-row st-options-heading">
-            <h3>Тарифы</h3>
-            {periodControl}
-          </div>
-          {planCards}
           <section className="st-card">
             <div className="st-heading-row">
               <h3>Состав тарифа</h3>
@@ -526,14 +583,16 @@ export function CabinetPage({ focus }: { focus?: string }) {
             </div>
             {baseFeatures.map((f) => (
               <div className="st-composition" key={f.title}>
-                <Feature {...f} />
-                <span>Включено</span>
+                <Feature {...f} status="Включено" />
               </div>
             ))}
             {modules.map((m, i) => (
               <div className="st-composition" key={m.id}>
-                <Feature title={m.title} detail={m.detail} />
-                <span>{current > 0 || paidModules[i] ? "Включено" : "Не подключено"}</span>
+                <Feature
+                  title={m.title}
+                  detail={m.detail}
+                  status={current > 0 || paidModules[i] ? "Включено" : "Не подключено"}
+                />
               </div>
             ))}
           </section>
@@ -575,21 +634,52 @@ export function CabinetPage({ focus }: { focus?: string }) {
               <h3>Ваш отзыв о платформе</h3>
               <p>Как вам работается с Cantor Agency?</p>
             </div>
-            <div className="st-stars" role="group" aria-label="Оценка платформы">
+            <div
+              className="st-stars"
+              role="group"
+              aria-label="Оценка платформы"
+              onMouseLeave={() => setHoverRating(0)}
+            >
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   aria-label={`${n} из 5`}
                   aria-pressed={rating === n}
+                  className={n <= (hoverRating || rating) ? "filled" : ""}
+                  onMouseEnter={() => setHoverRating(n)}
+                  onFocus={() => setHoverRating(n)}
+                  onBlur={() => setHoverRating(0)}
                   onClick={() => {
                     setRating(n);
                     setReviewOpen(true);
                   }}
                 >
-                  <Star size={26} fill={n <= rating ? "currentColor" : "none"} />
+                  <Star size={26} fill={n <= (hoverRating || rating) ? "currentColor" : "none"} />
                 </button>
               ))}
             </div>
+            {reviewOpen && (
+              <div className="st-inline-review">
+                <label className="st-field">
+                  Подробный отзыв
+                  <textarea
+                    value={review}
+                    onChange={(e) => setReview(e.target.value)}
+                    rows={4}
+                    placeholder="Что понравилось и что можно улучшить?"
+                  />
+                </label>
+                <button
+                  className="st-button"
+                  onClick={() => {
+                    setReviewOpen(false);
+                    setNotice("Отзыв сохранён");
+                  }}
+                >
+                  Сохранить отзыв
+                </button>
+              </div>
+            )}
           </section>
         </>
       )}
@@ -598,9 +688,9 @@ export function CabinetPage({ focus }: { focus?: string }) {
         onOpenChange={setPicker}
         wide
         title="Изменить тариф"
+        header={periodControl}
         description="Выберите состав возможностей и период оплаты."
       >
-        <div className="st-modal-period">{periodControl}</div>
         {planCards}
       </Modal>
       <Modal
@@ -616,13 +706,13 @@ export function CabinetPage({ focus }: { focus?: string }) {
           </strong>
         </div>
         {baseFeatures.map((f) => (
-          <Feature key={f.title} {...f} />
+          <Feature key={f.title} {...f} inline />
         ))}
         <div className="st-config-modules">
           {modules.map((m, i) => (
             <div className="st-module" key={m.id}>
               <div>
-                <Feature title={m.title} detail={m.detail} />
+                <Feature title={m.title} detail={m.detail} inline />
                 <span>
                   + {money(m.price * (annual ? 12 : 1))} / {annual ? "год" : "мес"}
                 </span>
@@ -700,14 +790,10 @@ export function CabinetPage({ focus }: { focus?: string }) {
                   </button>
                 ))}
               </div>
-              <div className="st-row">
-                <span>Автопродление</span>
-                <Toggle
-                  label="Продлевать подписку"
-                  checked={renew}
-                  onChange={() => setRenew(!renew)}
-                />
-              </div>
+              <p className="st-checkout-renew">
+                <Check size={14} />
+                Автопродление включено
+              </p>
               {checkout === 2 && current !== 2 && (
                 <p className="st-muted">
                   Первый{" "}
@@ -727,6 +813,7 @@ export function CabinetPage({ focus }: { focus?: string }) {
                   setCurrent(checkout);
                   setPaidAnnual(annual);
                   setPaidModules([...enabled]);
+                  setRenew(true);
                   setComplete(true);
                 }}
               >
@@ -739,39 +826,6 @@ export function CabinetPage({ focus }: { focus?: string }) {
               </a>
             </>
           ))}
-      </Modal>
-      <Modal
-        open={reviewOpen}
-        onOpenChange={setReviewOpen}
-        title="Ваш отзыв о платформе"
-        description={`Ваша оценка — ${rating} из 5. Расскажите, что понравилось и что можно улучшить.`}
-      >
-        <label className="st-field">
-          Отзыв
-          <textarea
-            autoFocus
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-            rows={5}
-            placeholder="Поделитесь впечатлениями"
-          />
-        </label>
-        <button
-          className="st-primary st-full"
-          disabled={!review.trim()}
-          onClick={() => {
-            if (review.trim()) {
-              setReviewOpen(false);
-              setNotice("Отзыв сохранён");
-            } else setNotice("Напишите несколько слов о платформе");
-          }}
-        >
-          Сохранить отзыв
-        </button>
-        <a className="st-refund" href={manager} target="_blank" rel="noreferrer">
-          Передать отзыв менеджеру
-          <ArrowUpRight size={13} />
-        </a>
       </Modal>
     </div>
   );
