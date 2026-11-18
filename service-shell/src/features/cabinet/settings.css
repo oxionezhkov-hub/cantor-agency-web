@@ -1030,3 +1030,121 @@
     font-size: 11px;
   }
 }
+
+/* Shared row geometry in plan cards and dialog headers. */
+.st-dialog-heading {
+  padding-right: 0;
+  gap: 12px;
+  min-height: 38px;
+}
+.st-dialog-heading > .st-close {
+  position: static;
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 9px;
+  background: var(--color-surface);
+}
+.st-dialog-heading > .st-close:hover {
+  background: var(--color-bg);
+}
+.st-dialog-heading .st-segment {
+  height: 38px;
+  align-items: center;
+}
+.st-dialog-heading .st-segment button {
+  height: 30px;
+  padding-block: 0;
+}
+.st-dialog .st-plan {
+  display: flex;
+  flex-direction: column;
+}
+.st-plan-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.st-plan-heading h3 {
+  min-width: 0;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.st-plan-heading .st-current-label {
+  flex: none;
+  margin-left: auto;
+}
+.st-dialog .st-plan-description {
+  min-height: 40px;
+  margin: 6px 0 14px !important;
+}
+.st-dialog .st-plan-price {
+  min-height: 34px;
+}
+.st-dialog .st-first-price {
+  min-height: 18px;
+  margin: 4px 0 0 !important;
+}
+.st-dialog .st-plan-features {
+  padding: 18px 0;
+  gap: 8px;
+}
+.st-dialog .st-plan-features > .st-feature-button {
+  min-height: 40px;
+  align-items: flex-start;
+}
+.st-dialog .st-plan-features > .st-feature-button > svg {
+  margin-top: 5px;
+}
+@media (max-width: 760px) {
+  .st-stars {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0;
+  }
+  .st-stars button {
+    display: grid;
+    place-items: center;
+    flex: 1;
+    min-height: 48px;
+    padding: 8px 0;
+  }
+  .st-stars button svg {
+    width: 32px;
+    height: 32px;
+  }
+  .st-inline-review > .st-button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .st-composition .st-feature-button {
+    column-gap: 10px;
+  }
+  .st-composition .st-feature-button > svg {
+    flex: 0 0 16px;
+  }
+  .st-composition .st-feature-status {
+    flex-basis: 75px;
+  }
+  .st-dialog-heading {
+    gap: 8px;
+  }
+  .st-dialog-heading h2 {
+    font-size: 16px;
+  }
+  .st-dialog-heading > .st-close {
+    flex-basis: 38px;
+  }
+  .st-dialog .st-plan-description {
+    min-height: 0;
+  }
+  .st-dialog .st-first-price:empty {
+    display: none;
+  }
+}

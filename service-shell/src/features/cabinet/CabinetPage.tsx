@@ -125,11 +125,11 @@ function Modal({
           <div className="st-dialog-heading">
             <Dialog.Title>{title}</Dialog.Title>
             {header}
+            <Dialog.Close className="st-close" aria-label="Закрыть">
+              <X size={21} />
+            </Dialog.Close>
           </div>
           <Dialog.Description>{description}</Dialog.Description>
-          <Dialog.Close className="st-close" aria-label="Закрыть">
-            <X size={20} />
-          </Dialog.Close>
           {children}
         </Dialog.Content>
       </Dialog.Portal>
@@ -162,7 +162,6 @@ export function CabinetPage({ focus }: { focus?: string }) {
   const setEvents = (value: boolean[]) => notification.update({ events: value });
   const [profileEmail, setProfileEmail] = useState("");
   const [telegram, setTelegram] = useState("");
-  const [phone, setPhone] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
@@ -203,21 +202,19 @@ export function CabinetPage({ focus }: { focus?: string }) {
     <div className="st-plans">
       {plans.map((p, i) => (
         <article className="st-plan" key={p.name}>
-          <div className="st-plan-title">
+          <div className="st-plan-heading">
+            <h3>{p.name}</h3>
             {current === i && <span className="st-current-label">Текущий</span>}
           </div>
-          <h3>{p.name}</h3>
           <p className="st-plan-description">{p.description}</p>
           <div className="st-plan-price">
             {i === 0 && <small>от </small>}
             {money((i === 0 ? 1990 : p.price) * (annual ? 12 : 1))}
             <small> / {annual ? "год" : "мес"}</small>
           </div>
-          {i === 2 && (
-            <p className="st-first-price">
-              Первый {annual ? "год — 325 000 ₽" : "месяц — 50 000 ₽"}
-            </p>
-          )}
+          <p className="st-first-price">
+            {i === 2 ? `Первый ${annual ? "год — 325 000 ₽" : "месяц — 50 000 ₽"}` : null}
+          </p>
           <div className="st-plan-features">
             {(i === 0
               ? baseFeatures
@@ -408,16 +405,6 @@ export function CabinetPage({ focus }: { focus?: string }) {
                   onChange={(e) => setTelegram(e.target.value)}
                   placeholder="@username"
                   autoComplete="off"
-                />
-              </label>
-              <label className="st-field">
-                Номер телефона
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+7"
-                  autoComplete="tel"
                 />
               </label>
             </div>
@@ -790,10 +777,7 @@ export function CabinetPage({ focus }: { focus?: string }) {
                   </button>
                 ))}
               </div>
-              <p className="st-checkout-renew">
-                <Check size={14} />
-                Автопродление включено
-              </p>
+
               {checkout === 2 && current !== 2 && (
                 <p className="st-muted">
                   Первый{" "}
