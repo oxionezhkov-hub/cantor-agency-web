@@ -89,7 +89,9 @@ export function LeadWorkspace({
   const { state, storageError } = useDemoCrm();
   const activeAdapter =
     adapter ??
-    (import.meta.env.VITE_SERVICE_PREVIEW === "true" && state.workspaceId === "cantor-demo-anna"
+    (import.meta.env.VITE_SERVICE_PREVIEW === "true" &&
+    (state.workspaceId === "cantor-demo-anna" ||
+      (state.workspaceId === "cantor-elena-dobrynina" && Boolean(getPreviewData())))
       ? createExampleAdapter(state.workspaceId)
       : disconnectedAdapter);
   const [, refreshReplyState] = useState(0);
@@ -885,7 +887,7 @@ function ContactChat({
                         </button>
                       ) : null}
                       {m.editedAt ? <span title={stamp(m.editedAt)}>изменено</span> : null}
-                      {m.delivery === "local" ? (
+                      {m.delivery === "local" && !getPreviewData() ? (
                         <span title="Сохранено только в локальном примере, не отправлено в Авито">
                           локально
                         </span>
@@ -1047,7 +1049,7 @@ function ContactChat({
                     aria-label="Прикрепить файл"
                     title={
                       adapter.kind === "sample"
-                        ? "Прикрепить файл в примере"
+                        ? "Прикрепить файл"
                         : "Вложения не подключены для этого канала"
                     }
                     disabled={
@@ -1085,9 +1087,7 @@ function ContactChat({
                       className="icon-control voice-control"
                       aria-label="Записать голосовое"
                       title={
-                        adapter.kind === "sample"
-                          ? "Записать голосовое в примере"
-                          : "Голосовые не подключены"
+                        adapter.kind === "sample" ? "Записать голосовое" : "Голосовые не подключены"
                       }
                       disabled={adapter.kind !== "sample" || sending || preparing}
                       onClick={() => void startRecording()}

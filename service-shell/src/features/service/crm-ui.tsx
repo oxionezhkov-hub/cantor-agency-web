@@ -13,6 +13,8 @@ import {
 } from "./crm.ts";
 import { changeDemoCrm, useDemoCrm } from "./demo-crm-store.ts";
 import { windows } from "./data.ts";
+import { getPreviewData } from "./preview-data.ts";
+import { timeOptions } from "./ads-options.ts";
 import { ServiceDatePicker, ServiceSelect } from "./service-controls.tsx";
 import "./payments.css";
 const rub = (minor: number) =>
@@ -96,15 +98,22 @@ export function PaymentsSection({
     const paymentStudentId = studentId || `student-${request.current}`;
     try {
       changeDemoCrm((current) =>
-        recordPayment(newStudentName && !studentId
-          ? { ...current, students: [...current.students, { id: paymentStudentId, name: newStudentName }] }
-          : current, current.workspaceId, {
-          id: `payment-${request.current}`,
-          requestId: request.current!,
-          studentId: paymentStudentId,
-          amountMinor: minor,
-          paidAt: `${paidDate}T12:00:00+03:00`,
-        }),
+        recordPayment(
+          newStudentName && !studentId
+            ? {
+                ...current,
+                students: [...current.students, { id: paymentStudentId, name: newStudentName }],
+              }
+            : current,
+          current.workspaceId,
+          {
+            id: `payment-${request.current}`,
+            requestId: request.current!,
+            studentId: paymentStudentId,
+            amountMinor: minor,
+            paidAt: `${paidDate}T12:00:00+03:00`,
+          },
+        ),
       );
       request.current = null;
       if (newStudentName && !studentId) {
@@ -208,22 +217,80 @@ export function PaymentsSection({
       <form ref={form} className="crm-form" onSubmit={add} aria-label="Внести оплату ученика">
         <div className="payments-student-field">
           <span>Ученик</span>
-          <Popover.Root open={studentPickerOpen} onOpenChange={(open) => { setStudentPickerOpen(open); if (open) setStudentSearch(""); }}>
+          <Popover.Root
+            open={studentPickerOpen}
+            onOpenChange={(open) => {
+              setStudentPickerOpen(open);
+              if (open) setStudentSearch("");
+            }}
+          >
             <Popover.Trigger asChild>
-              <button type="button" role="combobox" aria-label="Ученик" className="payments-student-trigger" disabled={Boolean(studentScope)}>
-                <span>{newStudentName || state.students.find((item) => item.id === studentId)?.name || "Выберите ученика"}</span>
+              <button
+                type="button"
+                role="combobox"
+                aria-label="Ученик"
+                className="payments-student-trigger"
+                disabled={Boolean(studentScope)}
+              >
+                <span>
+                  {newStudentName ||
+                    state.students.find((item) => item.id === studentId)?.name ||
+                    "Выберите ученика"}
+                </span>
                 <ChevronDown size={16} aria-hidden="true" />
               </button>
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content className="payments-student-popover" sideOffset={6} align="start">
-                <input aria-label="Поиск или имя ученика" placeholder="Найти или добавить ученика" value={studentSearch} maxLength={120} onChange={(event) => setStudentSearch(event.target.value)} />
+                <input
+                  aria-label="Поиск или имя ученика"
+                  placeholder="Найти или добавить ученика"
+                  value={studentSearch}
+                  maxLength={120}
+                  onChange={(event) => setStudentSearch(event.target.value)}
+                />
                 <div role="listbox" aria-label="Ученики" className="payments-student-options">
-                  {state.students.filter((item) => item.name.toLocaleLowerCase("ru-RU").includes(studentSearch.trim().toLocaleLowerCase("ru-RU"))).map((item) => (
-                    <button key={item.id} type="button" role="option" aria-selected={!newStudentName && item.id === studentId} onClick={() => { setStudentId(item.id); setNewStudentName(""); request.current = null; setStudentPickerOpen(false); }}>{item.name}</button>
-                  ))}
-                  {studentSearch.trim() && !state.students.some((item) => item.name.toLocaleLowerCase("ru-RU") === studentSearch.trim().toLocaleLowerCase("ru-RU")) ? (
-                    <button type="button" role="option" aria-selected={false} onClick={() => { setStudentId(""); setNewStudentName(studentSearch.trim()); request.current = null; setStudentPickerOpen(false); }}>Добавить «{studentSearch.trim()}»</button>
+                  {state.students
+                    .filter((item) =>
+                      item.name
+                        .toLocaleLowerCase("ru-RU")
+                        .includes(studentSearch.trim().toLocaleLowerCase("ru-RU")),
+                    )
+                    .map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        role="option"
+                        aria-selected={!newStudentName && item.id === studentId}
+                        onClick={() => {
+                          setStudentId(item.id);
+                          setNewStudentName("");
+                          request.current = null;
+                          setStudentPickerOpen(false);
+                        }}
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+                  {studentSearch.trim() &&
+                  !state.students.some(
+                    (item) =>
+                      item.name.toLocaleLowerCase("ru-RU") ===
+                      studentSearch.trim().toLocaleLowerCase("ru-RU"),
+                  ) ? (
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => {
+                        setStudentId("");
+                        setNewStudentName(studentSearch.trim());
+                        request.current = null;
+                        setStudentPickerOpen(false);
+                      }}
+                    >
+                      Добавить «{studentSearch.trim()}»
+                    </button>
                   ) : null}
                 </div>
               </Popover.Content>
@@ -257,82 +324,87 @@ export function PaymentsSection({
           Сохранить оплату
         </button>
       </form>
-      {ledger.length ? <div className="crm-table-wrap" tabIndex={0} aria-label="Реестр оплат и возвратов">
-        <table className="crm-table payments-ledger">
-          <thead>
-            <tr>
-              <th scope="col">Ученик</th>
-              <th scope="col">Дата оплаты</th>
-              <th scope="col">Получено</th>
-              <th scope="col">Возвращено</th>
-              <th scope="col">После возвратов</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ledger.map((payment) => {
-              const balance = paymentNet(state, payment),
-                refunds = state.refunds
-                  .filter((item) => item.paymentId === payment.id)
-                  .sort((a, b) => Date.parse(b.refundedAt) - Date.parse(a.refundedAt));
-              return (
-                <Fragment key={payment.id}>
-                  <tr>
-                    <th scope="row">
-                      <strong>{studentName(payment.studentId)}</strong>
-                      <div className="payments-actions">
-                        <button
-                          type="button"
-                          className="crm-quiet"
-                          onClick={() => begin(payment.id, "edit")}
-                          disabled={Boolean(storageError)}
-                          aria-label={`Редактировать оплату: ${studentName(payment.studentId)}, ${dateLabel(payment.paidAt)}`}
-                        >
-                          Редактировать
-                        </button>
-                        <button
-                          type="button"
-                          className="crm-quiet"
-                          disabled={!balance || Boolean(storageError)}
-                          onClick={() => begin(payment.id, "refund")}
-                          aria-label={`Внести возврат: ${studentName(payment.studentId)}, ${dateLabel(payment.paidAt)}`}
-                        >
-                          Внести возврат
-                        </button>
-                      </div>
-                    </th>
-                    <td data-label="Дата оплаты">{dateLabel(payment.paidAt)}</td>
-                    <td data-label="Получено">{rub(payment.amountMinor)}</td>
-                    <td data-label="Возвращено">{rub(payment.amountMinor - balance)}</td>
-                    <td data-label="После возвратов">
-                      <strong>{rub(balance)}</strong>
-                    </td>
-                  </tr>
-                  {refunds.length ? (
-                    <tr className="payments-refund-history">
-                      <td colSpan={5}>
-                        <details>
-                          <summary>Возвраты по оплате: {refunds.length}</summary>
-                          <ul>
-                            {refunds.map((refund) => (
-                              <li key={refund.id}>
-                                <span>{dateLabel(refund.refundedAt)}</span>
-                                <strong>− {rub(refund.amountMinor)}</strong>
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
+      {ledger.length ? (
+        <div className="crm-table-wrap" tabIndex={0} aria-label="Реестр оплат и возвратов">
+          <table className="crm-table payments-ledger">
+            <thead>
+              <tr>
+                <th scope="col">Ученик</th>
+                <th scope="col">Дата оплаты</th>
+                <th scope="col">Получено</th>
+                <th scope="col">Возвращено</th>
+                <th scope="col">После возвратов</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ledger.map((payment) => {
+                const balance = paymentNet(state, payment),
+                  refunds = state.refunds
+                    .filter((item) => item.paymentId === payment.id)
+                    .sort((a, b) => Date.parse(b.refundedAt) - Date.parse(a.refundedAt));
+                return (
+                  <Fragment key={payment.id}>
+                    <tr>
+                      <th scope="row">
+                        <strong>{studentName(payment.studentId)}</strong>
+                        <div className="payments-actions">
+                          <button
+                            type="button"
+                            className="crm-quiet"
+                            onClick={() => begin(payment.id, "edit")}
+                            disabled={Boolean(storageError)}
+                            aria-label={`Редактировать оплату: ${studentName(payment.studentId)}, ${dateLabel(payment.paidAt)}`}
+                          >
+                            Редактировать
+                          </button>
+                          <button
+                            type="button"
+                            className="crm-quiet"
+                            disabled={!balance || Boolean(storageError)}
+                            onClick={() => begin(payment.id, "refund")}
+                            aria-label={`Внести возврат: ${studentName(payment.studentId)}, ${dateLabel(payment.paidAt)}`}
+                          >
+                            Внести возврат
+                          </button>
+                        </div>
+                      </th>
+                      <td data-label="Дата оплаты">{dateLabel(payment.paidAt)}</td>
+                      <td data-label="Получено">{rub(payment.amountMinor)}</td>
+                      <td data-label="Возвращено">{rub(payment.amountMinor - balance)}</td>
+                      <td data-label="После возвратов">
+                        <strong>{rub(balance)}</strong>
                       </td>
                     </tr>
-                  ) : null}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-      </div> : (
+                    {refunds.length ? (
+                      <tr className="payments-refund-history">
+                        <td colSpan={5}>
+                          <details>
+                            <summary>Возвраты по оплате: {refunds.length}</summary>
+                            <ul>
+                              {refunds.map((refund) => (
+                                <li key={refund.id}>
+                                  <span>{dateLabel(refund.refundedAt)}</span>
+                                  <strong>− {rub(refund.amountMinor)}</strong>
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
         <div className="payments-empty">
           <Wallet size={20} aria-hidden="true" />
-          <div><strong>Оплат пока нет</strong><p>Добавьте первую оплату, и она появится здесь.</p></div>
+          <div>
+            <strong>Оплат пока нет</strong>
+            <p>Добавьте первую оплату, и она появится здесь.</p>
+          </div>
         </div>
       )}
       {selectedPayment && operation ? (
@@ -423,6 +495,9 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
   const [selectedLeadId, setLeadId] = useState(leadScope ?? "igor");
   const leadId = leadScope ?? selectedLeadId;
   const [slotId, setSlotId] = useState(windows[0]?.id ?? "");
+  const [manualDate, setManualDate] = useState("");
+  const [manualTime, setManualTime] = useState("10:00");
+  const manualScheduling = Boolean(getPreviewData()) && windows.length === 0;
   const [editing, setEditing] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -454,7 +529,11 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
     event.preventDefault();
     setError("");
     setNotice("");
-    const slot = windows.find((item) => item.id === slotId);
+    const manualInstant = Date.parse(`${manualDate}T${manualTime}:00+03:00`);
+    const slot =
+      manualScheduling && Number.isFinite(manualInstant)
+        ? { startsAt: new Date(manualInstant).toISOString() }
+        : windows.find((item) => item.id === slotId);
     if (!slot) return;
     request.current ??= crypto.randomUUID();
     try {
@@ -548,31 +627,56 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
                 }))}
             />
           </label>
-          <label>
-            Окно · 30 минут, МСК
-            <ServiceSelect
-              label="Окно · 30 минут, МСК"
-              value={slotId}
-              disabled={!windows.length}
-              placeholder={windows.length ? "Выберите окно" : "Нет доступных окон"}
-              onChange={(value) => {
-                setSlotId(value);
-                request.current = null;
-              }}
-              options={windows.map((slot) => ({
-                value: slot.id,
-                label: `${dateLabel(slot.startsAt)}, ${timeLabel(slot.startsAt)}${Date.parse(slot.startsAt) <= now ? " · прошло" : busy(slot.startsAt) ? " · занято" : ""}`,
-                disabled: busy(slot.startsAt) || Date.parse(slot.startsAt) <= now,
-              }))}
-            />
-          </label>
+          {manualScheduling ? (
+            <>
+              <ServiceDatePicker
+                label="Дата диагностики"
+                value={manualDate}
+                onChange={setManualDate}
+              />
+              <label>
+                Время · МСК
+                <ServiceSelect
+                  label="Время диагностики, МСК"
+                  value={manualTime}
+                  onChange={setManualTime}
+                  options={timeOptions}
+                />
+              </label>
+            </>
+          ) : (
+            <>
+              <label>
+                Окно · 30 минут, МСК
+                <ServiceSelect
+                  label="Окно · 30 минут, МСК"
+                  value={slotId}
+                  disabled={!windows.length}
+                  placeholder={windows.length ? "Выберите окно" : "Нет доступных окон"}
+                  onChange={(value) => {
+                    setSlotId(value);
+                    request.current = null;
+                  }}
+                  options={windows.map((slot) => ({
+                    value: slot.id,
+                    label: `${dateLabel(slot.startsAt)}, ${timeLabel(slot.startsAt)}${Date.parse(slot.startsAt) <= now ? " · прошло" : busy(slot.startsAt) ? " · занято" : ""}`,
+                    disabled: busy(slot.startsAt) || Date.parse(slot.startsAt) <= now,
+                  }))}
+                />
+              </label>
+            </>
+          )}
           <button
             className="crm-primary"
             type="submit"
             disabled={
               Boolean(storageError) ||
-              !slotId ||
-              (!editing &&
+              (manualScheduling
+                ? !manualDate ||
+                  !Number.isFinite(Date.parse(`${manualDate}T${manualTime}:00+03:00`))
+                : !slotId) ||
+              (!manualScheduling &&
+                !editing &&
                 windows.some(
                   (slot) =>
                     slot.id === slotId && (busy(slot.startsAt) || Date.parse(slot.startsAt) <= now),
@@ -675,7 +779,9 @@ export function DiagnosticSection({ focus, leadScope }: { focus?: string; leadSc
           <p className="crm-hint">
             {windows.length
               ? "Пока нет предстоящих встреч. Выберите заявку и свободное окно."
-              : "Пока нет предстоящих встреч и доступных окон."}
+              : manualScheduling
+                ? "Пока нет предстоящих встреч."
+                : "Пока нет предстоящих встреч и доступных окон."}
           </p>
         ) : null}
       </div>

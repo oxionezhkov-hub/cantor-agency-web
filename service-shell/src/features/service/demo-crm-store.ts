@@ -4,6 +4,7 @@ import { parseCrmState, recordPayment, bookAppointment, type CrmState } from "./
 import { windows } from "./data.ts";
 import { getPreviewData } from "./preview-data.ts";
 export const CRM_KEY = "cantor.demo-crm.v1";
+let protectedPreviewState: CrmState | null = null;
 export const CRM_EVENT = "cantor-crm-changed";
 export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: string): CrmState {
   let state = structuredClone(demoCrm);
@@ -48,7 +49,7 @@ export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: str
   return state;
 }
 export function readDemoCrm(): CrmState {
-  if (getPreviewData()) return demoCrm;
+  if (getPreviewData()) return protectedPreviewState ?? demoCrm;
   if (typeof localStorage === "undefined") return demoCrm;
   const current = localStorage.getItem(CRM_KEY);
   if (current) {
@@ -72,7 +73,13 @@ export function readDemoCrm(): CrmState {
   return state;
 }
 export function changeDemoCrm(change: (state: CrmState) => CrmState): CrmState {
-  if (getPreviewData()) throw new Error("Недостаточно прав для изменения");
+  if (getPreviewData()) {
+    const next = parseCrmState(change(protectedPreviewState ?? demoCrm));
+    if (next.workspaceId !== demoCrm.workspaceId) throw new Error("Нет доступа");
+    protectedPreviewState = next;
+    if (typeof window !== "undefined") window.dispatchEvent(new Event(CRM_EVENT));
+    return next;
+  }
   const current = readDemoCrm();
   const next = parseCrmState(change(current));
   localStorage.setItem(CRM_KEY, JSON.stringify(next));
