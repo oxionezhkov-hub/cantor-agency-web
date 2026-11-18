@@ -335,12 +335,12 @@ function render() {
   const rows = F.feeds.map((f) => {
     const s = f.stat;
     const n = errCount(s);
-    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${esc(f.slug)}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${esc(f.slug)}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
+    const pill = s && s.building ? '<span class="chip amber">собирается</span>' : !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${esc(f.slug)}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${esc(f.slug)}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
     const acc = accName(f.avitoAccountId);
     const tags = [!acc && '<span class="chip amber">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>'].filter(Boolean).join(' ');
     return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname"><b>${esc(f.name)}</b>${tags}${acc && acc !== f.name ? `<div class="small muted">${esc(acc)}</div>` : ''}</td>
       <td>${f.sheetUrl ? `<a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a>` : '—'}</td>
-      <td class="r num">${s && !s.error ? int(s.ads) : '—'}</td><td>${pill}</td>
+      <td class="r num">${s && !s.error && !s.building ? int(s.ads) : '—'}</td><td>${pill}</td>
       <td class="num small muted">${s && s.builtAt ? esc(ago(Date.parse(s.builtAt))) : '—'}</td>
       <td><div class="fact">
         ${acc ? fb('data-report', f.slug, 'list', 'Отчёт', 'Последний отчёт автозагрузки Авито') : ''}
@@ -381,6 +381,8 @@ async function load() {
   renderSa();
   render();
 }
+
+setInterval(() => { if (F.loaded && F.feeds.some((f) => f.stat && f.stat.building) && !document.hidden) load(); }, 15000);
 
 $('#rows').addEventListener('click', async (e) => {
   const b = e.target.closest('button');
@@ -456,14 +458,14 @@ function openFeed(slug, preset) {
     if (!btn || btn.disabled) return;
     const body = { name: $('#eName').value.trim(), sheetUrl: $('#eSheet').value.trim(), tabs: $$('#eTabs input:checked').map((i) => i.value), avitoAccountId: $('#eAcc').value, enabled: $('#eOn').checked };
     if (!body.tabs.length) return err('Отметьте хотя бы одну вкладку');
-    btn.disabled = true; btn.textContent = ed ? 'Сохраняю…' : 'Собираю XML…';
+    btn.disabled = true; btn.textContent = 'Сохраняю…';
     const r = ed ? await send('PUT', API + '/' + ed.slug, body) : await send('POST', API, body);
     if ($('#eSave')) { btn.disabled = false; btn.textContent = 'Сохранить'; }
     if (denied(r)) return;
     if (!r.ok) return err(r.data.error || 'Не удалось сохранить');
     replaceFeed(r.data.feed); closeModal();
     const s = r.data.feed.stat;
-    toast(!ed && s && s.error ? 'Таблица добавлена, но XML не собран: ' + s.error : (ed ? 'Сохранено. Нажмите «Пересобрать», чтобы обновить XML.' : `Добавлено, в XML ${s ? s.ads : 0} объявлений`));
+    toast(s && s.building ? 'Таблица сохранена. XML собирается — список обновится автоматически.' : !ed && s && s.error ? 'Таблица добавлена, но XML не собран: ' + s.error : (ed ? 'Сохранено. Нажмите «Пересобрать», чтобы обновить XML.' : `Добавлено, в XML ${s ? s.ads : 0} объявлений`));
   });
   if (ed) $('#eDel').onclick = async () => {
     const b = $('#eDel');
