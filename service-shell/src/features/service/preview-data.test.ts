@@ -66,7 +66,13 @@ test("account data replaces example seeds without local storage or fabricated ad
   assert.equal(state.messages?.[0].author, "client");
   assert.deepEqual(state.payments, []);
   assert.deepEqual(state.appointments, []);
-  assert.throws(() => changeDemoCrm((s) => s), /Недостаточно прав/);
+  const changed = changeDemoCrm((s) => ({
+    ...s,
+    leads: s.leads.map((l) => (l.id === "chat-1" ? { ...l, note: "Заметка" } : l)),
+  }));
+  assert.equal(changed.leads[0].note, "Заметка");
+  assert.equal(readDemoCrm().leads[0].note, "Заметка");
+  assert.equal(typeof globalThis.localStorage, "undefined");
   const report = buildAnalytics({ from: "2026-11-01", to: "2026-11-01", crm: state });
   assert.equal(report.totals.views, 20);
   assert.equal(report.totals.contacts, 3);

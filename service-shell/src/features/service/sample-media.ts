@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
+import { getPreviewData } from "./preview-data.ts";
 import type { ChatMessage, MessageAdapter } from "./communication.ts";
+const sessionMedia = new Map<string, { workspaceId: string; blob: Blob }>();
+const isProtectedSandbox = (workspaceId: string) =>
+  Boolean(getPreviewData()) && workspaceId === "cantor-elena-dobrynina";
 const MAX_FILE = 20 * 1024 * 1024;
 function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -12,12 +16,16 @@ function database(): Promise<IDBDatabase> {
   });
 }
 export async function cacheExampleMedia(workspaceId: string, blob: Blob, name: string) {
-  if (workspaceId !== "cantor-demo-anna")
-    throw new Error("Локальный адаптер доступен только в примерах");
+  if (workspaceId !== "cantor-demo-anna" && !isProtectedSandbox(workspaceId))
+    throw new Error("Недоступно для этого кабинета");
   if (blob.size > MAX_FILE)
     throw new Error("Файл больше 20 МБ — выберите файл поменьше для локального примера");
-  const id = crypto.randomUUID(),
-    db = await database();
+  const id = crypto.randomUUID();
+  if (isProtectedSandbox(workspaceId)) {
+    sessionMedia.set(id, { workspaceId, blob });
+    return id;
+  }
+  const db = await database();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction("files", "readwrite");
     tx.objectStore("files").put({ id, workspaceId, blob, name });
@@ -28,6 +36,10 @@ export async function cacheExampleMedia(workspaceId: string, blob: Blob, name: s
   return id;
 }
 async function readMedia(workspaceId: string, id: string): Promise<Blob | null> {
+  if (isProtectedSandbox(workspaceId)) {
+    const item = sessionMedia.get(id);
+    return item?.workspaceId === workspaceId ? item.blob : null;
+  }
   const db = await database();
   return new Promise<Blob | null>((resolve, reject) => {
     const tx = db.transaction("files", "readonly"),
@@ -69,7 +81,7 @@ export function useMessageMedia(workspaceId: string, message: ChatMessage) {
 }
 export function createExampleAdapter(workspaceId: string): MessageAdapter {
   function scope() {
-    if (workspaceId !== "cantor-demo-anna")
+    if (workspaceId !== "cantor-demo-anna" && !isProtectedSandbox(workspaceId))
       throw new Error("Локальный адаптер запрещён для рабочего кабинета");
   }
   return {

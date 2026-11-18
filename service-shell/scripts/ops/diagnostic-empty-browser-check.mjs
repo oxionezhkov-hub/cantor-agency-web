@@ -58,14 +58,14 @@ try {
       await section.getByRole("button", { name: "Записать на диагностику" }).isDisabled(),
       true,
     );
-    assert.equal(
-      await section.getByRole("combobox", { name: "Окно · 30 минут, МСК" }).isDisabled(),
-      true,
-    );
-    await section.getByText("Пока нет предстоящих встреч и доступных окон.").waitFor();
+    await section.getByRole("textbox", { name: "Дата диагностики" }).waitFor();
+    await section.getByText("Пока нет предстоящих встреч.").waitFor();
     await card.getByRole("textbox", { name: "Итог диагностики" }).waitFor();
     await card.getByRole("button", { name: "К переписке" }).click();
-    if (width === 390) await p.getByRole("button", { name: "Все обращения" }).click();
+    if (width === 390) {
+      await p.getByRole("button", { name: "Все обращения" }).click();
+      await p.getByRole("button", { name: "Открыть меню" }).click();
+    }
     await p.getByRole("button", { name: "CRM", exact: true }).click();
     const crm = p.locator(".crm-contact-card").first();
     await crm.getByRole("button", { name: "Диагностика", exact: true }).click();
