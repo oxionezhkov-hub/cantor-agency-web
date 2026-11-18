@@ -19,6 +19,7 @@ import {
   Paperclip,
   Reply,
   Check,
+  CheckCheck,
   Pencil,
   Columns3,
   MessagesSquare,
@@ -43,6 +44,7 @@ import {
 import {
   conversationMessages,
   waitingForReply,
+  acknowledgeReply,
   elapsedLabel,
   reminderDue,
   searchableLead,
@@ -94,6 +96,7 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
     (import.meta.env.VITE_SERVICE_PREVIEW === "true" && state.workspaceId === "cantor-demo-anna"
       ? createExampleAdapter(state.workspaceId)
       : disconnectedAdapter);
+  const [, refreshReplyState] = useState(0);
   const [startPanel, setStartPanel] = useState<Panel>("conversation");
   const [moveError, setMoveError] = useState("");
   function move(id: string, stage: LeadStage) {
@@ -325,6 +328,9 @@ export function LeadWorkspace({ focus, adapter }: { focus?: string; adapter?: Me
                 back={back}
                 adapter={activeAdapter}
                 startPanel={startPanel}
+                onAcknowledge={() => {
+                  if (acknowledgeReply(state, selected.id)) refreshReplyState((value) => value + 1);
+                }}
               />
             ) : (
               <div className="workbench-empty">
@@ -345,7 +351,9 @@ function ContactChat({
   back,
   adapter,
   startPanel,
+  onAcknowledge,
 }: {
+  onAcknowledge: () => void;
   startPanel?: Panel;
   state: CrmState;
   lead: Lead;
@@ -691,6 +699,18 @@ function ContactChat({
             {MODE_LABELS[mode]}
           </span>
         </div>
+        {waitingForReply(state, lead, now).waiting ? (
+          <button
+            type="button"
+            className="reply-ack"
+            title="Снять отметку «Без ответа» на время просмотра"
+            onClick={onAcknowledge}
+            aria-label="Ответ не требуется"
+          >
+            <CheckCheck size={16} />
+            <span>Ответ не требуется</span>
+          </button>
+        ) : null}
         <button
           ref={callButton}
           type="button"
@@ -758,17 +778,6 @@ function ContactChat({
             ))}
             <hr />
             <span className="menu-label">Действия</span>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                patch({ timerStopped: !lead.timerStopped });
-                setMenu(false);
-              }}
-            >
-              {lead.timerStopped ? <Play size={14} /> : <Pause size={14} />}{" "}
-              {lead.timerStopped ? "Включить таймер" : "Остановить таймер"}
-            </button>
             <button
               type="button"
               role="menuitem"

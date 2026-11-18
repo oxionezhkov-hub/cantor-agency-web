@@ -5,6 +5,7 @@ import { parseCrmState } from "./crm.ts";
 import {
   conversationMessages,
   waitingForReply,
+  acknowledgeReply,
   searchableLead,
   updateLeadDetails,
   addOutcome,
@@ -208,4 +209,29 @@ test("offline draft copy is immediate, lead/workspace scoped, and corrupt data i
     if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
     else Reflect.deleteProperty(globalThis, "localStorage");
   }
+});
+
+test("acknowledgement clears only the current message and a new inbound returns to queue", () => {
+  const state = { ...demoCrm, workspaceId: "ack-test" };
+  const igor = state.leads.find((l) => l.id === "igor")!;
+  const marina = state.leads.find((l) => l.id === "marina")!;
+  assert.equal(waitingForReply(state, igor, now).waiting, true);
+  assert.equal(acknowledgeReply(state, "igor"), true);
+  assert.equal(waitingForReply(state, igor, now).waiting, false);
+  assert.equal(waitingForReply(state, marina, now).waiting, true);
+  const next = {
+    ...state,
+    messages: [
+      ...(state.messages ?? []),
+      {
+        id: "new-inbound",
+        leadId: "igor",
+        author: "client" as const,
+        text: "Новый вопрос",
+        at: "2026-11-17T12:00:00Z",
+      },
+    ],
+  };
+  assert.equal(waitingForReply(next, igor, now).waiting, true);
+  assert.equal(waitingForReply({ ...state, workspaceId: "other" }, igor, now).waiting, true);
 });

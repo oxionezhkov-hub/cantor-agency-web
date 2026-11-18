@@ -142,89 +142,101 @@ export function CrmBoard({
   }
   return (
     <div className="crm-pipeline">
-      <div className="crm-tools">
-        <button
-          type="button"
-          className="icon-control"
-          aria-label="Поиск в CRM"
-          onClick={() => setShowSearch(!showSearch)}
-        >
-          <Search size={18} />
-        </button>
-        {showSearch ? (
-          <input
+      <div className="crm-toolbar">
+        <div className="crm-tools">
+          <button
+            type="button"
+            className="icon-control"
             aria-label="Поиск в CRM"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                setQuery("");
-                setShowSearch(false);
-              }
-              if (e.key === "Enter") e.currentTarget.blur();
+            onClick={() => {
+              setShowSearch(!showSearch);
+              setShowFilters(false);
             }}
-            autoFocus
-          />
-        ) : null}
-        <button
-          type="button"
-          className="icon-control"
-          aria-label="Фильтры CRM"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <SlidersHorizontal size={18} />
-        </button>
-        {showFilters ? (
-          <div className="crm-filter-controls">
-            <ServiceSelect
-              label="Город"
-              value={city || "all"}
-              onChange={(v) => setCity(v === "all" ? "" : v)}
-              options={[
-                { value: "all", label: "Все города" },
-                ...[
-                  ...new Set(state.leads.map((l) => l.city).filter((v): v is string => Boolean(v))),
-                ]
-                  .sort()
-                  .map((v) => ({ value: v, label: v })),
-              ]}
+          >
+            <Search size={18} />
+          </button>
+          {showSearch ? (
+            <input
+              aria-label="Поиск в CRM"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setQuery("");
+                  setShowSearch(false);
+                }
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+              autoFocus
             />
-            <ServiceSelect
-              label="Объявление"
-              value={adId || "all"}
-              onChange={(v) => setAdId(v === "all" ? "" : v)}
-              options={[
-                { value: "all", label: "Все объявления" },
-                ...[
-                  ...new Set(state.leads.map((l) => l.adId).filter((v): v is string => Boolean(v))),
-                ].map((v) => ({ value: v, label: ads.find((a) => a.id === v)?.title || v })),
-              ]}
-            />
-          </div>
-        ) : null}
-      </div>
-      <div className="crm-health-filters" role="group" aria-label="Состояние работы">
-        <button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
-          Все обращения <span>{rows.length}</span>
-        </button>
-        <button
-          type="button"
-          aria-pressed={filter === "attention"}
-          onClick={() => setFilter("attention")}
-        >
-          <AlertCircle size={14} />
-          Требуют внимания <span>{attention.length}</span>
-        </button>
-        <button
-          type="button"
-          aria-pressed={filter === "missing"}
-          onClick={() => setFilter("missing")}
-        >
-          Без следующего шага <span>{missing.length}</span>
-        </button>
-        <button type="button" aria-pressed={filter === "ok"} onClick={() => setFilter("ok")}>
-          <CheckCircle2 size={14} />В работе <span>{ok.length}</span>
-        </button>
+          ) : null}
+          <button
+            type="button"
+            className="icon-control"
+            aria-label="Фильтры CRM"
+            onClick={() => {
+              setShowFilters(!showFilters);
+              setShowSearch(false);
+            }}
+          >
+            <SlidersHorizontal size={18} />
+          </button>
+          {showFilters ? (
+            <div className="crm-filter-controls">
+              <ServiceSelect
+                label="Город"
+                value={city || "all"}
+                onChange={(v) => setCity(v === "all" ? "" : v)}
+                options={[
+                  { value: "all", label: "Все города" },
+                  ...[
+                    ...new Set(
+                      state.leads.map((l) => l.city).filter((v): v is string => Boolean(v)),
+                    ),
+                  ]
+                    .sort()
+                    .map((v) => ({ value: v, label: v })),
+                ]}
+              />
+              <ServiceSelect
+                label="Объявление"
+                value={adId || "all"}
+                onChange={(v) => setAdId(v === "all" ? "" : v)}
+                options={[
+                  { value: "all", label: "Все объявления" },
+                  ...[
+                    ...new Set(
+                      state.leads.map((l) => l.adId).filter((v): v is string => Boolean(v)),
+                    ),
+                  ].map((v) => ({ value: v, label: ads.find((a) => a.id === v)?.title || v })),
+                ]}
+              />
+            </div>
+          ) : null}
+        </div>
+        <div className="crm-health-filters" role="group" aria-label="Состояние работы">
+          <button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>
+            Все обращения <span>{rows.length}</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={filter === "attention"}
+            onClick={() => setFilter("attention")}
+          >
+            <AlertCircle size={14} />
+            Требуют внимания <span>{attention.length}</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={filter === "missing"}
+            onClick={() => setFilter("missing")}
+          >
+            Без следующего шага <span>{missing.length}</span>
+          </button>
+          <button type="button" aria-pressed={filter === "ok"} onClick={() => setFilter("ok")}>
+            <CheckCircle2 size={14} />В работе <span>{ok.length}</span>
+          </button>
+        </div>
       </div>
       <div ref={board} className="crm-board" aria-label="CRM обращений">
         {(Object.keys(STAGE_LABELS) as LeadStage[]).map((stage) => {

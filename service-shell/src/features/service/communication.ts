@@ -23,10 +23,26 @@ export function conversationMessages(state: CrmState, leadId: string): ChatMessa
   for (const m of state.messages ?? []) if (m.leadId === leadId) merged.set(m.id, m);
   return [...merged.values()].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
 }
+// Acknowledgement is scoped to the current inbound message and this tab's session.
+const acknowledgedReplies = new Map<string, string>();
+export function acknowledgeReply(state: CrmState, leadId: string) {
+  const lead = state.leads.find((item) => item.id === leadId);
+  if (!lead || lead.closedAt) return false;
+  const last = conversationMessages(state, leadId)
+    .filter((m) => m.author !== "system")
+    .at(-1);
+  if (!last || last.author !== "client") return false;
+  acknowledgedReplies.set(`${state.workspaceId}:${leadId}`, last.id);
+  return true;
+}
 export function waitingForReply(state: CrmState, lead: Lead, nowMs: number) {
   const messages = conversationMessages(state, lead.id),
     last = messages.filter((m) => m.author !== "system").at(-1);
-  const waiting = !lead.closedAt && !lead.timerStopped && last?.author === "client";
+  const waiting =
+    !lead.closedAt &&
+    !lead.timerStopped &&
+    last?.author === "client" &&
+    acknowledgedReplies.get(`${state.workspaceId}:${lead.id}`) !== last.id;
   const since = waiting ? last!.at : null;
   return {
     waiting: Boolean(waiting),

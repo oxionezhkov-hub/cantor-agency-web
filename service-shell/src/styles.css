@@ -271,3 +271,18 @@ button { transition: background-color .16s, color .16s, border-color .16s; }
 .crm-pipeline,.crm-board,.crm-lane,.crm-lane > div,.crm-contact-card,.crm-card-open { min-width: 0; }.crm-pipeline .crm-lane { width: 260px; max-width: 260px; }.crm-card-last { overflow-wrap:anywhere; word-break:break-word; }.workbench-list-head input:focus,.workbench-list-head input:focus-visible { outline:none; border-color:#aaa39a; box-shadow:none; }.contact-name-line .contact-city { margin:0; font-size:11px; color:#716c65 !important; }.workbench-contact.needs-reply:not(.selected) { background:#fff6f2; }.workbench-contact.needs-reminder:not(.selected) { background:#fffaf0; }
 
 .crm-tools {display:flex;align-items:center;gap:6px;position:relative;flex-wrap:wrap;margin-bottom:8px}.crm-tools input {border:1px solid var(--color-line);border-radius:8px;padding:8px;font:inherit;outline:none}.crm-filter-controls {display:flex;gap:8px;flex-wrap:wrap}.crm-card-actions {display:flex;gap:10px}.crm-card-actions button {display:grid;place-items:center;border:0;background:transparent;color:var(--color-muted);padding:5px;cursor:pointer}
+
+/* Compact CRM controls and overlay switch. */
+.crm-toolbar { display:flex; align-items:center; gap:6px; min-width:0; flex-shrink:0; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; margin-bottom:12px; }
+.crm-toolbar::-webkit-scrollbar { display:none; }
+.crm-toolbar .crm-tools,.crm-toolbar .crm-health-filters { flex-shrink:0; flex-wrap:nowrap; margin:0; overflow:visible; }
+.crm-toolbar .crm-filter-controls { flex-wrap:nowrap; }
+.crm-toolbar .crm-tools input { width:180px; }
+.crm-pipeline .crm-board { padding-bottom:0; }
+.crm-pipeline .crm-lane > div { padding-bottom:70px; }
+.workbench-view-switch { z-index:20; }
+.note-button,.note-button.has-note { background:transparent; border:0; box-shadow:none; }
+.note-button.has-note i { right:5px; top:4px; }
+
+.reply-ack { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; border:0; background:transparent; color:var(--color-muted); font:inherit; font-size:10px; min-height:36px; padding:0 6px; border-radius:7px; }.reply-ack:hover {background:var(--sunken);color:var(--color-ink)}
+@media(max-width:760px){.reply-ack {width:28px;min-width:28px;justify-content:center;padding:0}.reply-ack span {display:none}}
