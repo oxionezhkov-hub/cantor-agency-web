@@ -205,7 +205,7 @@ td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;
     <div class="card">
       <div class="fwrap">
         <table class="ftbl">
-          <thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th>Ошибки</th><th>XML обновлён</th><th></th></tr></thead>
+          <thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th>Ошибки XML</th><th>XML обновлён</th><th></th></tr></thead>
           <tbody id="rows"><tr><td colspan="6"><div class="empty">Загрузка…</div></td></tr></tbody>
         </table>
       </div>
@@ -576,6 +576,7 @@ function openProbs(slug) {
 }
 
 const R = {};
+let reportSession = 0;
 function reportCsv(rows) {
   const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
   const lines = [['ID в файле', 'ID на Авито', 'Раздел', 'Статус', 'Тип', 'Код', 'Сообщение', 'Ссылка'].map(q).join(';')];
@@ -583,18 +584,31 @@ function reportCsv(rows) {
   return '\uFEFF' + lines.join('\r\n');
 }
 async function openReport(slug) {
+  const session = ++reportSession;
+  let reportTimer = null, reportBusy = false;
   const f = feedBy(slug); if (!f) return;
   openModal(`${mHead('Отчёт Авито — ' + f.name)}<div class="m-b" id="repBody"><div class="note">Запрашиваю отчёт у Авито…</div></div>
     <div class="m-f"><button class="btn" type="button" id="repRe">${I('refresh', 'ic-sm')}Обновить</button><span class="grow"></span><button class="btn primary" type="button" id="repCsv" disabled>Скачать ошибки</button></div>`, true);
-  const loadRep = async () => {
+  const loadRep = async (force = false) => {
+    if (reportBusy || session !== reportSession || !$('#repBody')) return;
+    clearTimeout(reportTimer); reportBusy = true;
+    $('#repRe').disabled = true;
     if ($('#repCsv')) $('#repCsv').disabled = true;
-    const r = await api(`${API}/${slug}/report`);
+    const r = await api(`${API}/${slug}/report${force ? '?refresh=1' : ''}`);
+    reportBusy = false;
+    if (session !== reportSession || !$('#repBody')) return;
+    $('#repRe').disabled = false;
     if (!$('#repBody')) return;
     if (denied(r)) return;
     if (!r.ok) { $('#repBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Авито не отдал отчёт')}</div>`; return; }
     R[slug] = r.data; paintReport(slug);
+    if (r.data.summary && r.data.summary.retryAt) {
+      const delay = Math.max(15000, r.data.summary.retryAt - Date.now());
+      $('#repRe').disabled = true;
+      reportTimer = setTimeout(() => { if (session === reportSession && $('#repBody')) loadRep(); }, delay);
+    }
   };
-  $('#repRe').onclick = () => { if ($('#repBody')) $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; loadRep(); };
+  $('#repRe').onclick = () => { if ($('#repBody')) $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; loadRep(true); };
   $('#repCsv').onclick = () => {
     const d = R[slug]; if (!d) return;
     const a = document.createElement('a');
@@ -622,11 +636,12 @@ function paintReport(slug) {
     const where = href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(it.adId || it.avitoId || 'объявление')}</a>` : esc(it.adId || it.avitoId || '');
     (ms.length ? ms : [{ text: it.section }]).forEach((m) => items.push({ kind: bad.length ? 'err' : 'warn', msg: m.text || it.section || 'Проблема', where }));
   });
-  if ($('#repCsv')) $('#repCsv').disabled = !(d.problems || []).length;
+  if ($('#repCsv')) $('#repCsv').disabled = !(d.problems || []).length || !s.complete || !!s.warning;
   $('#repBody').innerHTML = `${srcBox}
+    ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
     <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${int(s.items)} объявлений</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug)}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title || '')}</div></div>`).join('')}</div>
-    ${items.length ? `<h3 class="ph2">Проблемы — ${(d.problems || []).length}</h3>${probCards(probGroups(items))}` : '<div class="ok-box">Проблемных объявлений в отчёте нет</div>'}`;
+    ${items.length ? `<h3 class="ph2">Проблемы — ${(d.problems || []).length}</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений в отчёте нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }
 
 function openHelp() {
@@ -640,7 +655,7 @@ function openHelp() {
       <li>«В Авито» — забрать XML сейчас (Авито разрешает не чаще раза в час).</li>
       <li>Через некоторое время «Отчёт» — что опубликовалось. «Ошибки» в строке — это ещё сборка таблицы, не ответ Авито.</li>
     </ol>
-    <h3>Фото</h3><p>В колонке Images — ссылки, по одной на строку или через « | ». Закрытые ссылки Яндекс.Диска работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен. Публичные ссылки — без токена.</p>
+    <h3>Фото</h3><p>В Images нужны готовые фотографии. Обработка BananLab (плашки, текст, фон, изменение пропорций) здесь не выполняется; дождитесь её окончания и проверьте Category. В колонке Images — ссылки, по одной на строку или через « | ». Закрытые ссылки Яндекс.Диска работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен. Публичные ссылки — без токена.</p>
     <h3>Если не обновилось</h3><p>«Пересобрать», затем «В Авито». Если кабинет не грузит совсем — проверьте, что автозагрузка включена в профиле Авито и тариф активен. Текст ошибки показывается в окне, ничего не проглатывается молча.</p>
   </div>`, true);
 }

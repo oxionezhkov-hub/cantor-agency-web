@@ -438,7 +438,7 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
     <!-- ═══ Автозагрузка ═══ -->
     <section id="pg-feeds" class="hide">
       <div class="row hide" id="fScopeRow" style="margin-bottom:12px"><div class="seg" role="tablist" aria-label="Чьи клиенты"><button type="button" data-fscope="mine" role="tab">Мои клиенты</button><button type="button" data-fscope="all" role="tab">Все</button></div><span class="small muted" id="fScopeNote"></span></div>
-      <div class="fwrap"><table class="ftbl"><thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th data-tip="Замечания при сборке XML из таблицы — нажмите на число">Ошибки</th><th>XML обновлён</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
+      <div class="fwrap"><table class="ftbl"><thead><tr><th>Клиент</th><th>Таблица</th><th class="r">Объявл.</th><th data-tip="Замечания при сборке XML из таблицы — нажмите на число">Ошибки XML</th><th>XML обновлён</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
       <div class="fnote"><span class="grow">Google Таблица → XML для автозагрузки Авито. XML пересобирается каждый час и лежит в Яндексе. Новые кабинеты Авито появляются здесь сами.</span><button class="lnkb muted hide" type="button" id="fOffBtn"></button></div>
     </section>
   </main>
@@ -1594,6 +1594,7 @@ function feedProbs(slug) {
 
 /* ── Отчёт автозагрузки Авито ── */
 const R = {};
+let reportSession = 0;
 function reportCsv(rows) {
   const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
   const lines = [['ID в файле', 'ID на Авито', 'Раздел отчёта', 'Статус на Авито', 'Тип', 'Код', 'Сообщение', 'Ссылка'].map(q).join(';')];
@@ -1607,17 +1608,30 @@ function downloadFile(name, text, type) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 async function feedReport(slug) {
+  const session = ++reportSession;
+  let reportTimer = null, reportBusy = false;
   const f = feedBy(slug);
-  openModal(`${mHead('Отчёт Авито — ' + f.name)}<div class="m-b" id="repBody"><div class="note">Запрашиваю отчёт автозагрузки у Авито… Большие кабинеты — до минуты.</div></div>
+  openModal(`${mHead('Отчёт Авито — ' + f.name)}<div class="m-b" id="repBody"><div class="note">Запрашиваю отчёт автозагрузки у Авито… Большие отчёты загружаются по частям.</div></div>
     <div class="m-f"><button class="btn" type="button" id="repRe">${I('refresh', 'ic-sm')}Обновить</button><span class="grow"></span><button class="btn primary" type="button" id="repCsv" disabled>${I('upload', 'ic-sm')}Скачать файл ошибок</button></div>`, { wide: true });
-  const load = async () => {
+  const load = async (force = false) => {
+    if (reportBusy || session !== reportSession || !$('#repBody')) return;
+    clearTimeout(reportTimer); reportBusy = true;
+    $('#repRe').disabled = true;
     $('#repCsv').disabled = true;
-    const r = await api(`/api/dashboard/feeds/${slug}/report`);
+    const r = await api(`/api/dashboard/feeds/${slug}/report${force ? '?refresh=1' : ''}`);
+    reportBusy = false;
+    if (session !== reportSession || !$('#repBody')) return;
+    $('#repRe').disabled = false;
     if (!$('#repBody')) return;
     if (!r.ok) { $('#repBody').innerHTML = `<div class="err-box">${esc(r.data.error || 'Авито не отдал отчёт')}</div>`; return; }
     R[slug] = r.data; renderReport(slug);
+    if (r.data.summary && r.data.summary.retryAt) {
+      const delay = Math.max(15000, r.data.summary.retryAt - Date.now());
+      $('#repRe').disabled = true;
+      reportTimer = setTimeout(() => { if (session === reportSession && $('#repBody')) load(); }, delay);
+    }
   };
-  $('#repRe').onclick = () => { $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; load(); };
+  $('#repRe').onclick = () => { $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; load(true); };
   $('#repCsv').onclick = () => { const d = R[slug]; if (d) downloadFile(`Oshibki_avtozagruzki_${f.slug}_${(d.summary.finishedAt || '').slice(0, 10) || 'last'}.csv`, reportCsv(d.problems), 'text/csv;charset=utf-8'); };
   load();
 }
@@ -1633,11 +1647,12 @@ function renderReport(slug) {
     const ms = bad.length ? bad : it.messages.filter((m) => m.type !== 'info');
     (ms.length ? ms : [{ text: it.section }]).forEach((m) => items.push({ kind: bad.length ? 'err' : 'warn', msg: m.text || it.section, where: it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.adId || it.avitoId)}</a>` : esc(it.adId || it.avitoId) }));
   });
-  $('#repCsv').disabled = !d.problems.length;
+  $('#repCsv').disabled = !d.problems.length || !s.complete || !!s.warning;
   $('#repBody').innerHTML = `${srcBox}
+    ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
     <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.items)} объявлений</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div>${(x.sections || []).filter((y) => y.count).map((y) => `<div class="t-s">${esc(y.title)} — ${int(y.count)}</div>`).join('')}</div>`).join('')}</div>
-    ${items.length ? `<h3 class="ph2">Что не так — ${d.problems.length} объявлений</h3>${probCards(probGroups(items))}` : '<div class="ok-box">Проблемных объявлений нет</div>'}`;
+    ${items.length ? `<h3 class="ph2">Что не так — ${d.problems.length} объявлений</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }
 
 /* ── Инструкция раздела ── */
@@ -1646,7 +1661,7 @@ function feedsHelp() {
     <h3>Как это устроено</h3><p>Объявления клиента живут в его <b>Google Таблице</b> (шаблон BananLab). Каждый час сервис собирает из неё XML и кладёт его в Яндекс (<span class="mono">storage.yandexcloud.net/cantor-feeds</span>). Авито сам забирает XML по расписанию кабинета. Правите таблицу — через 1–2 часа изменения на Авито.</p>
     <h3>Новый клиент</h3><ol><li>Добавьте кабинет Авито в дашборде — он сам появится здесь строкой «нет таблицы».</li><li>Таблица клиента: «Настройки доступа» → «Все, у кого есть ссылка» → «Читатель».</li><li>«Добавить таблицу» → вставьте ссылку → «Вкладки» → отметьте вкладку с объявлениями (обычно «Авито_выгрузка») → «Сохранить». XML соберётся сразу.</li><li>«Подключить» → почта для отчётов → «Подключить». Ссылка на наш XML запишется в кабинет Авито.</li><li>«В Авито» — чтобы Авито забрал XML сейчас, а не по расписанию.</li><li>Через час — «Отчёт Авито»: всё ли опубликовалось.</li></ol>
     <h3>Каждый день</h3><p><b>Ошибки</b> — замечания при сборке XML из таблицы: непонятная ссылка на фото, повтор id, закрытая таблица. Такие строки не попадают в XML. Ещё сервис сверяет значения со справочником Авито (предмет, опыт, аудитория, время работы) и сам ставит правильные, если ответ однозначный, — они в том же окне, в блоке «Исправлено автоматически». <b>Отчёт Авито</b> — что Авито сделал с объявлениями: опубликовано, с проблемами, отклонено; там же «Скачать файл ошибок».</p>
-    <h3>Фото</h3><p>В колонке Images — ссылки с Яндекс.Диска, по одной на строку или через « | ». Личные ссылки (disk.yandex.ru/client/disk/…) работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен; публичные (disk.yandex.ru/i/…) — без токена. Можно писать только имена файлов, если заполнена «Папка на Яндекс Диск».</p>
+    <h3>Фото</h3><p>В Images нужны готовые фотографии. Обработка BananLab (плашки, текст, фон, изменение пропорций) здесь не выполняется; дождитесь её окончания и проверьте Category. В колонке Images — ссылки с Яндекс.Диска, по одной на строку или через « | ». Личные ссылки (disk.yandex.ru/client/disk/…) работают, если на вкладке «Яндекс.Диск.Доступ» в ячейке A2 есть токен; публичные (disk.yandex.ru/i/…) — без токена. Можно писать только имена файлов, если заполнена «Папка на Яндекс Диск».</p>
     <h3>Если что-то не так</h3><ol><li>Изменения не появились — «Пересобрать», затем «В Авито» (Авито разрешает не чаще раза в час).</li><li>Объявление не вышло — «Отчёт Авито», там причина от Авито.</li><li>Кабинет перестал грузить совсем — проверьте подписку Авито (без неё автозагрузка останавливается) и что в «Отчёт Авито» стоит «грузится из нашего XML».</li></ol>
     <h3>Кнопки</h3><p><b>Сравнить</b> — сверка с XML BananLab (для клиентов из импорта) · <b>Ссылка</b> — скопировать ссылку на XML · <b>Изменить</b> — таблица, вкладки, кабинет, выключить автообновление. «Импорт из BananLab» и «Клиент» — вверху справа.</p></div>`, { wide: true });
 }
