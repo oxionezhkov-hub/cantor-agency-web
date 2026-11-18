@@ -2,6 +2,22 @@ import { ads } from "./data.ts";
 import type { CrmState } from "./crm.ts";
 import { getPreviewData, previewPeriod } from "./preview-data.ts";
 
+// A selected title represents every underlying listing with that exact title.
+const TITLE_FILTER = "title:";
+export function adTitleFilter(title: string) { return `${TITLE_FILTER}${title}`; }
+export function adFilterLabel(filter: string) {
+  if (!filter) return "Все";
+  if (filter.startsWith(TITLE_FILTER)) return filter.slice(TITLE_FILTER.length);
+  return ads.find((ad) => ad.id === filter)?.title ?? "Все";
+}
+export function adMatchesFilter(adId: string | null | undefined, filter?: string): boolean {
+  if (!filter) return true;
+  if (filter === "unattributed") return !adId;
+  if (filter.startsWith(TITLE_FILTER))
+    return ads.some((ad) => ad.id === adId && ad.title === filter.slice(TITLE_FILTER.length));
+  return adId === filter;
+}
+
 export type AnalyticsRange = { from: string; to: string };
 export const ANALYTICS_COVERAGE: AnalyticsRange = getPreviewData()?.defaultPeriod || {
   from: "2026-11-01",
@@ -176,7 +192,7 @@ function crmRows(state: CrmState, range: AnalyticsRange, adId?: string) {
   const dates = analyticsDates(range);
   const cutoff = dateMs(range.to) + DAY - 3 * 3_600_000;
   const adMatches = (source: string | null | undefined) =>
-    !adId || (adId === "unattributed" ? !source : source === adId);
+    adMatchesFilter(source, adId);
   const rows = new Map(dates.map((date) => [date, emptyCrm()]));
   const within = (at: string) => rows.get(mskAnalyticsDate(at));
   for (const lead of state.leads) {
@@ -292,7 +308,7 @@ export function buildAnalytics(
     previousRange = previousAnalyticsRange(input),
     previousDates = analyticsDates(previousRange);
   const matches = (row: AdDailyStat) =>
-    (!input.adId || row.adId === input.adId) && (!input.city || row.city === input.city);
+    adMatchesFilter(row.adId, input.adId) && (!input.city || row.city === input.city);
   const selected = DEMO_AD_DAILY.filter(matches);
   const rows = selected.filter((row) => row.date >= input.from && row.date <= input.to);
   const previous = selected.filter(
@@ -316,7 +332,7 @@ export function buildAnalytics(
     : undefined;
   const sourceAds = ads.filter(
     (a) =>
-      (!input.adId || a.id === input.adId) &&
+      adMatchesFilter(a.id, input.adId) &&
       (!input.city || a.cities.some((c) => c.city === input.city)),
   );
   const ids = new Set(sourceAds.map((a) => a.id));
@@ -424,7 +440,7 @@ export function buildAnalytics(
             })),
         )
       : ads
-          .filter((ad) => !input.adId || ad.id === input.adId)
+          .filter((ad) => adMatchesFilter(ad.id, input.adId))
           .flatMap((ad) =>
             ANALYTICS_CITIES.filter(
               (city) =>
@@ -443,7 +459,7 @@ export function buildAnalytics(
           ...crm,
           byAd: [
             ...ads
-              .filter((ad) => !input.adId || ad.id === input.adId)
+              .filter((ad) => adMatchesFilter(ad.id, input.adId))
               .map((ad) => ({ id: ad.id, name: ad.title, ...crmRows(input.crm, input, ad.id) })),
             ...(!input.adId
               ? [

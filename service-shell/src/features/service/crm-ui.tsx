@@ -197,10 +197,7 @@ export function PaymentsSection({
     <section className="crm-panel payments-workspace" aria-label="Оплаты учеников">
       {!studentScope ? (
         <div className="crm-heading">
-          <h2>
-            <Wallet size={18} />
-            Оплаты учеников
-          </h2>
+          <h2>Оплаты учеников</h2>
         </div>
       ) : null}
       {storageError ? (
@@ -260,7 +257,7 @@ export function PaymentsSection({
           Сохранить оплату
         </button>
       </form>
-      <div className="crm-table-wrap" tabIndex={0} aria-label="Реестр оплат и возвратов">
+      {ledger.length ? <div className="crm-table-wrap" tabIndex={0} aria-label="Реестр оплат и возвратов">
         <table className="crm-table payments-ledger">
           <thead>
             <tr>
@@ -332,8 +329,12 @@ export function PaymentsSection({
             })}
           </tbody>
         </table>
-      </div>
-      {!ledger.length ? <p className="payments-empty">Оплат пока нет.</p> : null}
+      </div> : (
+        <div className="payments-empty">
+          <Wallet size={20} aria-hidden="true" />
+          <div><strong>Оплат пока нет</strong><p>Добавьте первую оплату, и она появится здесь.</p></div>
+        </div>
+      )}
       {selectedPayment && operation ? (
         <form
           ref={operationForm}

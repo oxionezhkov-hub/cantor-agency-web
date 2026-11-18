@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ServiceLoading } from "./ServiceLoading";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -22,6 +23,7 @@ import { leadProgress } from "./lead-workflow.ts";
 import { monthRangeMsk, periodMetrics } from "./crm.ts";
 import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
 import { AnalyticsSection } from "./AnalyticsSection.tsx";
+import { ANALYTICS_TABS, analyticsTabFromFocus } from "./analytics-navigation.ts";
 import { getPreviewData } from "./preview-data.ts";
 
 const KnowledgeSection = lazy(() =>
@@ -49,9 +51,25 @@ export function Shell({
   view?: "crm";
 }) {
   const navigate = useNavigate();
+  const navRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const { state: crm, storageError } = useDemoCrm();
   const tutorAvatarUrl = getPreviewData()?.tutorAvatarUrl;
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav || window.matchMedia("(max-width: 760px)").matches) return;
+    const active = nav.querySelector<HTMLElement>(".service-nav-item.active");
+    const submenu = active?.parentElement?.querySelector<HTMLElement>(".ads-subnav");
+    if (!active || !submenu) return;
+    const viewport = nav.getBoundingClientRect();
+    const top = active.getBoundingClientRect().top;
+    const bottom = submenu.getBoundingClientRect().bottom;
+    const delta = bottom - top > viewport.height ? top - viewport.top :
+      bottom > viewport.bottom ? bottom - viewport.bottom :
+      top < viewport.top ? top - viewport.top : 0;
+    if (delta) nav.scrollTo({ top: nav.scrollTop + delta, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }, [section]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
@@ -114,7 +132,12 @@ export function Shell({
           />
           <span>Авито</span>
         </a>
-        <div className="workspace-profile">
+        <button
+          type="button"
+          className="workspace-profile"
+          aria-label="Открыть настройки кабинета"
+          onClick={() => navigate({ to: "/", search: { section: "acc", focus: "cabinet" } })}
+        >
           <span className="profile-avatar">
             {tutorAvatarUrl ? (
               <img
@@ -132,8 +155,8 @@ export function Shell({
             <strong>{sampleCabinet.tutor}</strong>
             <small>{sampleCabinet.subject}</small>
           </div>
-        </div>
-        <nav className="service-nav" aria-label="Разделы">
+        </button>
+        <nav ref={navRef} className="service-nav" aria-label="Разделы">
           {SECTIONS.map((item) => {
             const Icon = ICONS[item.id];
             return (
@@ -172,6 +195,38 @@ export function Shell({
                     </button>
                   </div>
                 )}
+                {item.id === "stats" && section === "stats" && (
+                  <div className="ads-subnav" aria-label="Разделы аналитики">
+                    {ANALYTICS_TABS.map(({ id, label }) => (
+                      <button
+                        type="button"
+                        key={id}
+                        className={analyticsTabFromFocus(focus) === id ? "active" : ""}
+                        aria-current={analyticsTabFromFocus(focus) === id ? "page" : undefined}
+                        onClick={() =>
+                          navigate({ to: "/", search: { section: "stats", focus: id } })
+                        }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {item.id === "acc" && section === "acc" && (
+                  <div className="ads-subnav settings-subnav" aria-label="Разделы настроек">
+                    {SETTINGS_PAGES.map(({ id, label }) => (
+                      <button
+                        type="button"
+                        key={id}
+                        className={settingsPage(focus) === id ? "active" : ""}
+                        aria-current={settingsPage(focus) === id ? "page" : undefined}
+                        onClick={() => navigate({ to: "/", search: { section: "acc", focus: id } })}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {item.id === "ads" && section === "ads" && (
                   <div className="ads-subnav">
                     {[
@@ -201,7 +256,7 @@ export function Shell({
             </span>
             <strong>Мы рядом</strong>
             <p>
-              Куратор и команда Cantor
+              Команда Cantor Agency
               <br />
               10:00–18:00 МСК
             </p>
@@ -234,7 +289,7 @@ export function Shell({
                 <KnowledgeSection focus={focus} />
               </Suspense>
             ) : null}
-            {section === "acc" ? <CabinetPage /> : null}
+            {section === "acc" ? <CabinetPage focus={focus} /> : null}
           </div>
         </main>
       </div>

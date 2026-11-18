@@ -1,7 +1,7 @@
 import * as Popover from "@radix-ui/react-popover";
 import { ArrowDownToLine, CalendarDays, RotateCcw } from "lucide-react";
 import { ads } from "./data.ts";
-import { ANALYTICS_CITIES, ANALYTICS_COVERAGE } from "./analytics-model.ts";
+import { ANALYTICS_CITIES, ANALYTICS_COVERAGE, adTitleFilter } from "./analytics-model.ts";
 import { ServiceDatePicker, ServiceSelect } from "./service-controls.tsx";
 import "./service-controls.css";
 
@@ -97,7 +97,7 @@ export function AnalyticsToolbar(props: AnalyticsToolbarProps) {
         onChange={onAdChange}
         options={[
           { value: "", label: "Все объявления" },
-          ...ads.map((ad) => ({ value: ad.id, label: ad.title })),
+          ...[...new Set(ads.map((ad) => ad.title))].map((title) => ({ value: adTitleFilter(title), label: title })),
         ]}
         className="an-ad-select"
       />

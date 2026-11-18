@@ -110,10 +110,10 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     try {
       await page.goto(`${base}/?section=stats`, { waitUntil: "networkidle" });
-      const tabs = page.getByRole("tablist", { name: "Отчёты аналитики" });
-      await tabs.getByRole("tab", { name: "Обзор", exact: true }).waitFor();
-      assert.equal(await tabs.getByRole("tab").count(), 3);
-      assert.equal(await tabs.getByRole("tab", { name: "Объявления", exact: true }).count(), 0);
+      const nav = page.locator('[aria-label="Разделы аналитики"]');
+      await nav.getByRole("button", { name: "Обзор", exact: true }).waitFor();
+      assert.equal(await nav.getByRole("button").count(), 3);
+      assert.equal(await nav.getByRole("button", { name: "Объявления", exact: true }).count(), 0);
       assert.ok(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
         `${width} overview overflow`,
@@ -150,9 +150,35 @@ try {
         assert.equal(await item.count(), 1, "Duplicate title must collapse to one row");
         assert.match(await item.innerText(), /110/, "Duplicate views must sum");
 
+      const toolbar = page.locator(".an-compact-toolbar");
+      await page.evaluate(() => window.scrollTo(0, 700));
+      await page.waitForTimeout(150);
+      const rect = await toolbar.boundingBox();
+      assert.ok(rect && rect.y >= -1 && rect.y <= 2, `${width} filters remain at top while scrolling: ${rect?.y}`);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const adFilter = page.getByRole("combobox", { name: "Фильтр по объявлению" });
+      await adFilter.click();
+      const groupedTitle = page.getByRole("option", { name: "Общий заголовок", exact: true });
+      assert.equal(await groupedTitle.count(), 1, "Identical ad titles share one filter option");
+      await groupedTitle.click();
+      assert.match(await adFilter.innerText(), /Общий заголовок/);
+      const viewsKpi = page.locator(".an-metric").filter({ has: page.getByText("Просмотры", { exact: true }) });
+      assert.match(await viewsKpi.innerText(), /110/, "Selected group sums metrics from both ads");
       await page.screenshot({ path: `${output}/overview-${width}.png`, fullPage: true });
+      const cityFilter = page.getByRole("combobox", { name: "Фильтр по городу" });
+      await cityFilter.click();
+      await page.getByRole("option", { name: "Москва", exact: true }).click();
+      const week = page.getByRole("button", { name: "7 дней", exact: true });
+      await week.click();
       for (const name of ["Диалоги", "Экономика"]) {
-        await tabs.getByRole("tab", { name, exact: true }).click();
+        await nav.getByRole("button", { name, exact: true }).click();
+        assert.match(await adFilter.innerText(), /Общий заголовок/, "Ad filter survives navigation");
+        assert.match(await cityFilter.innerText(), /Москва/, "City filter survives navigation");
+        assert.equal(await week.getAttribute("aria-pressed"), "true", "Date range survives navigation");
+      }
+      await page.getByRole("button", { name: "Сбросить фильтры" }).click();
+      for (const name of ["Диалоги", "Экономика"]) {
+        await nav.getByRole("button", { name, exact: true }).click();
         assert.ok(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
           `${width} ${name} overflow`,

@@ -108,6 +108,10 @@ button { transition: background-color .16s, color .16s, border-color .16s; }
 .nav-badge { display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 4px; border-radius: 6px; font-size: 10px; background: var(--sunken); color: var(--color-muted); }
 .active .nav-badge { background: var(--color-surface); color: var(--color-red); }
 .sidebar-bottom { margin-top: auto; padding-top: 30px; }
+@media (min-width: 761px) {
+  .service-brand, .workspace-profile, .sidebar-bottom { flex-shrink: 0; }
+  .service-nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; scrollbar-width: thin; }
+}
 .support-card { position: relative; padding: 17px 13px 13px; border: 1px solid var(--color-line); border-radius: 12px; background: var(--soft); }
 .support-icon { position: absolute; right: 12px; top: 16px; color: var(--color-muted); }
 .support-card strong { font-size: 12px; font-weight: 500; }
@@ -294,3 +298,12 @@ button { transition: background-color .16s, color .16s, border-color .16s; }
 .crm-card-person strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.crm-card-person > span:nth-child(2) { overflow:hidden; }.crm-card-person small { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.crm-card-person small svg {flex:none}.crm-card-open .crm-card-last { background:#f2f0ed; border-radius:8px 8px 8px 2px; padding:8px 10px; margin:10px 0 2px; color:#5d5852; }.crm-health-filters button svg {display:block;align-self:center;flex:none}.crm-health-filters button {line-height:1;align-items:center}.workbench-list-items {padding-bottom:0}.crm-pipeline .crm-lane > div {padding-bottom:8px}
 
 .crm-card-open .crm-card-last { display:block; overflow:hidden; }.crm-card-last > span { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+
+/* Stable icon sizes and navigation rows when submenus or badges appear. */
+.service-nav { align-content: start; }
+.service-nav > div { min-width: 0; }
+.service-nav-item > svg { flex: 0 0 18px; width: 18px; height: 18px; }
+.service-nav-item > span:first-of-type { min-width: 0; }
+@media(max-width:760px) { .service-nav { align-items: flex-start; } .service-nav > div { flex: 0 0 auto; } .service-nav-item { white-space: nowrap; } .service-nav-item > svg { flex: 0 0 15px; width: 15px; height: 18px; } .settings-subnav { flex-direction:column; } .settings-subnav button { white-space:nowrap; padding:7px 10px; } }
+.workspace-profile { width:100%;text-align:left;color:var(--color-ink);cursor:pointer;font:inherit; }
+.workspace-profile:hover { border-color:var(--color-muted); }
