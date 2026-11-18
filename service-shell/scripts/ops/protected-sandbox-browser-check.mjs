@@ -63,7 +63,9 @@ try {
     const card = page.getByRole("article", { name: "Карточка: Клиент А" }),
       input = card.getByRole("textbox", { name: "Ответ Клиент А" });
     if (width === 390) {
+      await page.getByRole("button", { name: "Открыть меню" }).click();
       assert.equal(await page.getByRole("navigation", { name: "Разделы" }).isVisible(), true);
+      await page.getByRole("button", { name: "Закрыть меню" }).click();
       const navBox = await page.locator(".service-sidebar").boundingBox();
       const chatBox = await card.boundingBox();
       assert.ok(chatBox.y >= navBox.y + navBox.height - 1);
@@ -122,7 +124,10 @@ try {
     await card.getByRole("button", { name: "Отправить сообщение", exact: true }).click();
     await card.getByRole("button", { name: "Слушать голосовое" }).waitFor();
 
-    if (width === 390) await card.getByRole("button", { name: "Все обращения" }).click();
+    if (width === 390) {
+      await card.getByRole("button", { name: "Все обращения" }).click();
+      await page.getByRole("button", { name: "Открыть меню" }).click();
+    }
     await page
       .getByRole("navigation", { name: "Разделы" })
       .getByRole("button", { name: "CRM", exact: true })

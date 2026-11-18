@@ -49,6 +49,7 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base + "/?section=chats", { waitUntil: "networkidle" });
     const nav = page.getByRole("navigation", { name: "Разделы" });
+    if (width === 390) await page.getByRole("button", { name: "Открыть меню" }).click();
     await nav.getByRole("button", { name: "Сообщения", exact: true }).waitFor();
     await page.getByRole("complementary", { name: "Обращения" }).waitFor();
     assert.equal(await page.locator(".workbench-view-switch").count(), 0);
@@ -73,6 +74,7 @@ try {
     }
     await page.reload({ waitUntil: "networkidle" });
     await page.locator('[data-lead-id="test-chat"]').waitFor();
+    if (width === 390) await page.getByRole("button", { name: "Открыть меню" }).click();
     await nav.getByRole("button", { name: "Сообщения", exact: true }).click();
     await page.getByRole("complementary", { name: "Обращения" }).waitFor();
     assert.equal(
