@@ -12,6 +12,7 @@ mkdirSync(output, { recursive: true });
 const names = [
   "Общий заголовок",
   "Общий заголовок",
+  "Очень длинный заголовок объявления который должен обрезаться многоточием и не выходить за пределы выпадающего списка даже на маленьком экране",
   ...Array.from({ length: 12 }, (_, i) => `Заголовок ${i + 1}`),
 ];
 const ads = names.map((title, i) => ({
@@ -111,9 +112,11 @@ try {
     try {
       await page.goto(`${base}/?section=stats`, { waitUntil: "networkidle" });
       const nav = page.locator('[aria-label="Разделы аналитики"]');
+      if (width <= 760) await page.getByRole("button", { name: "Открыть меню" }).click();
       await nav.getByRole("button", { name: "Обзор", exact: true }).waitFor();
       assert.equal(await nav.getByRole("button").count(), 3);
       assert.equal(await nav.getByRole("button", { name: "Объявления", exact: true }).count(), 0);
+      if (width <= 760) await page.getByRole("button", { name: "Закрыть меню" }).click();
       assert.ok(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
         `${width} overview overflow`,
@@ -157,11 +160,17 @@ try {
       assert.ok(rect && rect.y >= -1 && rect.y <= 2, `${width} filters remain at top while scrolling: ${rect?.y}`);
       await page.evaluate(() => window.scrollTo(0, 0));
       const adFilter = page.getByRole("combobox", { name: "Фильтр по объявлению" });
+      const items = await toolbar.locator(":scope > *:visible").evaluateAll((nodes) => nodes.map((n) => ({top: n.getBoundingClientRect().top, bottom: n.getBoundingClientRect().bottom})));
+      assert.ok(items.every((r) => r.top < items[0].bottom && r.bottom > items[0].top), "Filters occupy one row");
       await adFilter.click();
+      const longOption = page.getByRole("option", {name: /Очень длинный заголовок/});
+      const clipping = await longOption.locator("span").first().evaluate((n) => ({overflow: getComputedStyle(n).textOverflow, width: n.clientWidth, scroll: n.scrollWidth, parents: Array.from((function*(e){for(let i=0;e&&i<5;i++,e=e.parentElement)yield e})(n)).map(e=>[e.tagName,e.className,e.clientWidth,getComputedStyle(e).display])}));
+      assert.equal(clipping.overflow, "ellipsis");
+      assert.ok(clipping.scroll > clipping.width, `Long title is clipped: ${JSON.stringify(clipping)}`);
       const groupedTitle = page.getByRole("option", { name: "Общий заголовок", exact: true });
       assert.equal(await groupedTitle.count(), 1, "Identical ad titles share one filter option");
       await groupedTitle.click();
-      assert.match(await adFilter.innerText(), /Общий заголовок/);
+      assert.match(await adFilter.getAttribute("data-value"), /Общий заголовок/);
       const viewsKpi = page.locator(".an-metric").filter({ has: page.getByText("Просмотры", { exact: true }) });
       assert.match(await viewsKpi.innerText(), /110/, "Selected group sums metrics from both ads");
       await page.screenshot({ path: `${output}/overview-${width}.png`, fullPage: true });
@@ -171,13 +180,15 @@ try {
       const week = page.getByRole("button", { name: "7 дней", exact: true });
       await week.click();
       for (const name of ["Диалоги", "Экономика"]) {
+        if (width <= 760) await page.getByRole("button", { name: "Открыть меню" }).click();
         await nav.getByRole("button", { name, exact: true }).click();
-        assert.match(await adFilter.innerText(), /Общий заголовок/, "Ad filter survives navigation");
-        assert.match(await cityFilter.innerText(), /Москва/, "City filter survives navigation");
+        assert.match(await adFilter.getAttribute("data-value"), /Общий заголовок/, "Ad filter survives navigation");
+        assert.equal(await cityFilter.getAttribute("data-value"), "Москва", "City filter survives navigation");
         assert.equal(await week.getAttribute("aria-pressed"), "true", "Date range survives navigation");
       }
       await page.getByRole("button", { name: "Сбросить фильтры" }).click();
       for (const name of ["Диалоги", "Экономика"]) {
+        if (width <= 760) await page.getByRole("button", { name: "Открыть меню" }).click();
         await nav.getByRole("button", { name, exact: true }).click();
         assert.ok(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),

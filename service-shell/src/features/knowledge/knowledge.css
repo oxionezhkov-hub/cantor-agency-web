@@ -32,3 +32,22 @@
 .knowledge-prose .stat b{margin-bottom:8px;line-height:1.5}
 .knowledge-prose .stat>span{display:block;line-height:1.8}
 @media(max-width:760px){.knowledge-prose .scale{padding:14px}.knowledge-prose .scale-track{grid-template-columns:1fr;gap:9px}.knowledge-prose .scale-zone{text-align:left;padding:10px 12px}.knowledge-prose .stats{gap:12px}}
+
+/* Mobile lesson navigation: readable links and comfortable touch targets. */
+@media(max-width:760px){
+  .knowledge-toc-inner{padding:16px;border:1px solid var(--color-line);border-radius:12px;background:var(--color-surface)}
+  .knowledge-toc .knowledge-label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em}
+  .knowledge-toc nav{display:grid;grid-template-columns:minmax(0,1fr);gap:0;max-height:260px;margin:10px 0 0;overflow-y:auto}
+  .knowledge-toc nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:10px 0;font-size:12px;line-height:1.5;color:var(--color-ink);border-bottom:1px solid var(--color-line)}
+  .knowledge-toc nav a:last-child{border-bottom:0}
+  .knowledge-toc nav a::after{content:'↓';flex:none;color:var(--color-muted);font-size:14px}
+  .knowledge-lesson-nav{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'mark mark' 'prev next';gap:10px;margin-top:24px}
+  .knowledge-lesson-nav .knowledge-mark{grid-area:mark;width:100%;max-width:none;min-height:48px;padding:12px 16px;font-size:13px!important;white-space:nowrap;align-items:center}
+  .knowledge-lesson-nav .knowledge-mark svg{width:17px;margin:0}
+  .knowledge-lesson-nav .knowledge-previous,.knowledge-lesson-nav .knowledge-next{min-width:0;min-height:64px;padding:11px 12px;border:1px solid var(--color-line);border-radius:9px;background:var(--soft);font-size:11px;line-height:1.45;align-items:center;overflow-wrap:anywhere}
+  .knowledge-lesson-nav .knowledge-previous{grid-area:prev}
+  .knowledge-lesson-nav .knowledge-next{grid-area:next}
+  .knowledge-lesson-nav button span{min-width:0}
+  .knowledge-lesson-nav button span small{font-size:10px;line-height:1.4}
+  .knowledge-lesson-nav .knowledge-nav-spacer{grid-area:prev}
+}
