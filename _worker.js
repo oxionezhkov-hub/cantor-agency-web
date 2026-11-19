@@ -14373,6 +14373,8 @@ async function feedsReadTabs(env, sheetId, names) {
 function feedsParseTab(rows) {
   const tags = rows[1] || [], marks = rows[2] || [], types = rows[3] || [];
   const cols = [];
+  const imagesCol = tags.findIndex((tag) => String(tag || '').trim() === 'Images');
+  const uploadsImages = String(marks[imagesCol] || '').trim().toLowerCase() === 'грузим в xml';
   let idCol = -1, availCol = -1, folderCol = -1;
   for (let i = 0; i < tags.length; i++) {
     const tag = String(tags[i] || '').trim();
@@ -14412,7 +14414,8 @@ function feedsParseTab(rows) {
     const missingCategory = !fields.some((f) => f.tag === 'Category' && f.value.trim());
     if (missingCategory) problems.push({ row: r + 1, id, tag: 'Category', skipped: true, msg: 'Объявление не включено в XML: отсутствует Category («Категория»). Если BananLab убрал категорию на время обработки фото, дождитесь её восстановления.' });
     const folder = folderCol >= 0 ? String(row[folderCol] || '').trim() : '';
-    ads.push({ row: r + 1, id, fields, blocked: photoUnavailable || missingCategory, folder: /^https?:\/\//i.test(folder) ? folder : '' });
+    const preservePublishedPhotos = imagesCol === -1 || (uploadsImages && !String(row[imagesCol] || '').trim());
+    ads.push({ row: r + 1, id, fields, preservePublishedPhotos, blocked: photoUnavailable || missingCategory, folder: /^https?:\/\//i.test(folder) ? folder : '' });
   }
   return { ads, problems };
 }
@@ -14473,7 +14476,16 @@ function feedsNested(fields, wrap, item, tags, tagOf) {
   return out.length ? [`    <${wrap}>`, ...out, `    </${wrap}>`] : [];
 }
 
-function feedsBuildXml(ads, imageUrl) {
+function feedsXmlImageLines(urls) {
+  if (!urls.length) return [];
+  return [
+    '    <Images>',
+    ...[...new Set(urls)].slice(0, 30).map((u) => `      <Image url="${feedsXmlText(u)}"/>`),
+    '    </Images>',
+  ];
+}
+
+function feedsBuildXml(ads, imageUrl, publishedPhotos = new Map()) {
   const out = ['<?xml version="1.0" encoding="UTF-8"?>', '<Ads formatVersion="3" target="Avito.ru">'];
   const problems = [];
   let count = 0, skipped = 0;
@@ -14510,10 +14522,7 @@ function feedsBuildXml(ads, imageUrl) {
           if (u) urls.push(u);
           else problems.push({ tab: ad.tab, row: ad.row, id: ad.id, msg: 'Не понятна ссылка на фото: ' + src.slice(0, 120) });
         }
-        if (!urls.length) continue;
-        out.push('    <Images>');
-        for (const u of [...new Set(urls)].slice(0, 30)) out.push(`      <Image url="${feedsXmlText(u)}"/>`);
-        out.push('    </Images>');
+        out.push(...feedsXmlImageLines(urls));
       } else if (t === 'Description') {
         // Line breaks become <br /> (as BananLab does), otherwise Avito glues the lines together.
         out.push(`    <Description><![CDATA[${String(f.value).replace(/\n/g, '<br />').replace(/]]>/g, ']]]]><![CDATA[>')}]]></Description>`);
@@ -14527,6 +14536,7 @@ function feedsBuildXml(ads, imageUrl) {
         out.push(`    <${t}>${feedsXmlText(feedsValue(t, f.value))}</${t}>`);
       }
     }
+    if (!images) out.push(...feedsXmlImageLines(publishedPhotos.get(ad.id) || []));
     out.push('  </Ad>');
   }
   out.push('</Ads>', '');
@@ -14685,6 +14695,23 @@ async function feedsBuild(env, feed) {
   stat.skipped = ads.filter((a) => a.blocked).length;
   ads = ads.filter((a) => !a.blocked);
 
+  const publishedPhotos = new Map();
+  if (previousXml && !feed.photoReadyXml && ads.some((ad) => ad.preservePublishedPhotos)) {
+    const current = feedsAdsIndex(previousXml, true);
+    const withoutPhotos = ads.filter((ad) => ad.preservePublishedPhotos && current.has(ad.id));
+    const backup = withoutPhotos.some((ad) => !current.get(ad.id).Images?.length)
+      ? feedsAdsIndex(await kv.get(feedsKey(feed, 'xml') + ':previous'), true)
+      : new Map();
+    for (const ad of withoutPhotos) {
+      const saved = current.get(ad.id).Images;
+      const urls = saved?.length ? saved : backup.get(ad.id)?.Images;
+      if (urls?.length) publishedPhotos.set(ad.id, urls);
+    }
+    if (publishedPhotos.size) {
+      stat.problems.push({ tag: 'Images', msg: `Сохранены ранее опубликованные фото для ${publishedPhotos.size} объявлений с пустым полем Images. Укажите актуальные фото в таблице.` });
+    }
+  }
+
   // Values Avito doesn't know (subject, experience, time…) — checked against Avito's own catalog.
   try {
     await feedsValidate(env, feed, ads, stat);
@@ -14744,7 +14771,7 @@ async function feedsBuild(env, feed) {
   }
   stat.fixes = (stat.fixes || []).concat([...moved.values()]);
   for (const x of lost.values()) stat.problems.push({ id: x.ids[0], ids: x.ids, n: x.n, tag: 'Images', msg: `Фото нет на Яндекс.Диске: ${x.path.replace(/^disk:/, '')} — файл удалён или переименован` });
-  const { xml, problems, count, skipped } = feedsBuildXml(ads, (src) => signed.get(src) || null);
+  const { xml, problems, count, skipped } = feedsBuildXml(ads, (src) => signed.get(src) || null, publishedPhotos);
   if (!stat.yandexToken && [...signed.entries()].some(([src, u]) => !u && feedsYandexSource(src))) {
     stat.problems.unshift({ msg: `Ссылки на закрытые файлы Яндекс.Диска есть, а токена нет: вставьте его в ячейку A2 вкладки «${FEEDS_YD_TAB}».` });
   }
@@ -15394,7 +15421,7 @@ async function feedsImport(env, body, who) {
 // { id -> { tag -> normalized value } } from an autoload XML: every top-level tag of each <Ad>; nested
 // ones (PriceList, PromoAutoOptions, Option lists…) compared as text with whitespace between tags dropped,
 // Images as the number of photos (the links themselves always differ).
-function feedsAdsIndex(xml) {
+function feedsAdsIndex(xml, includeImageUrls = false) {
   const dec = (s) => String(s || '').replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;|&#34;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&amp;/g, '&').replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim();
   const out = new Map();
@@ -15403,7 +15430,14 @@ function feedsAdsIndex(xml) {
     const tags = {};
     for (const m of body.matchAll(/<([A-Za-z]+)>([\s\S]*?)<\/\1>|<([A-Za-z]+)\/>/g)) {
       const t = m[1] || m[3];
-      tags[t] = t === 'Images' ? String((String(m[2]).match(/<Image\s/g) || []).length) : dec(m[2]);
+      if (t !== 'Images') {
+        tags[t] = dec(m[2]);
+      } else if (includeImageUrls) {
+        tags[t] = [...String(m[2] || '').matchAll(/<Image\s+[^>]*url=(['"])(.*?)\1/g)]
+          .map((image) => dec(image[2])).filter((url) => /^https?:\/\//i.test(url));
+      } else {
+        tags[t] = String((String(m[2]).match(/<Image\s/g) || []).length);
+      }
     }
     if (tags.id) out.set(tags.id, tags);
   }
