@@ -21,6 +21,7 @@ test('relay refuses unauthenticated requests before calling Telegram', async () 
 test('relay delivers to remaining recipient after one rejects, without exposing secrets', async () => {
   const handle = relay(async (url, options) => {
     assert.match(url, /^https:\/\/api.telegram.org\/bot123:/);
+    assert.equal(options.redirect, 'manual');
     const { chat_id } = JSON.parse(options.body);
     return Response.json({ ok: chat_id === '456' }, { status: chat_id === '456' ? 200 : 403 });
   });
@@ -88,4 +89,13 @@ test('Yandex diagnostic codes never disclose network error text or credentials',
     assert.equal(JSON.parse(res.body).diagnostics.telegram, expected);
     assert.ok(!res.body.includes('private-'));
   }
+});
+
+test('email API rejection returns a safe diagnostic independently of Telegram', async () => {
+  const handle = yandex({RESEND_API_KEY:'secret',ADMIN_EMAIL:'test@example.com',MAIL_FROM:'test@example.com'}, async()=>new Response('private provider response',{status:429}));
+  const res = await handle(event);
+  const body = JSON.parse(res.body);
+  assert.equal(body.diagnostics.email,'resend_http_429');
+  assert.equal(body.result.email,'failed');
+  assert.ok(!res.body.includes('secret') && !res.body.includes('private provider'));
 });

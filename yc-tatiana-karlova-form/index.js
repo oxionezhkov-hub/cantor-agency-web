@@ -89,7 +89,7 @@ async function appendToSheet(fields) {
 }
 
 async function sendEmail(fields) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
   const to = list(process.env.ADMIN_EMAIL);
   const from = process.env.MAIL_FROM?.trim();
   if (!apiKey?.trim() || !to.length || !from) return 'skipped';
@@ -197,7 +197,11 @@ module.exports.handler = async function (event) {
       if (names[i] === 'telegram') {
         diagnostics.telegram = /^(relay_(url_invalid|https_required|timeout|unreachable|invalid_response|http_[0-9]{3})|bot_unauthorized|chat_not_found|bot_blocked|telegram_(forbidden|rate_limited|rejected|unreachable|timeout))$/.test(code) ? code : 'telegram_failed';
       }
-      console.error(`${names[i]}_failed`, names[i] === 'telegram' ? diagnostics.telegram : 'delivery_failed');
+      if (names[i] === 'email') {
+        diagnostics.email = /^resend_http_[0-9]{3}$/.test(code) ? code
+          : ['TimeoutError', 'AbortError'].includes(r.reason?.name) ? 'email_timeout' : 'email_delivery_failed';
+      }
+      console.error(`${names[i]}_failed`, diagnostics[names[i]] || 'delivery_failed');
     }
   });
 
