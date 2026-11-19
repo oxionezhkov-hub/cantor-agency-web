@@ -49,7 +49,7 @@ export default {
       for (const chunk of chunks) {
         let res;
         try { res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method: 'POST', redirect: 'error',
+          method: 'POST', redirect: 'manual',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: chatId, text: chunk, disable_web_page_preview: true }),
           signal: deadline,

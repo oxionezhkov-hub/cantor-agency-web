@@ -16,7 +16,7 @@
 
 `TELEGRAM_CHAT_ID` и `ADMIN_EMAIL` поддерживают несколько значений через запятую.
 `SHEET_NAME` необязателен: по умолчанию `Заявки`.
-`TELEGRAM_RELAY_URL`: `https://karlova-telegram-relay.oxion-ezhkov.workers.dev/telegram`.
+`TELEGRAM_RELAY_URL`: `https://karlova-relay.helpmedoctor.ru/telegram`.
 `TELEGRAM_RELAY_SECRET` должен совпадать с одноимённым секретом Worker.
 Токены, ключи и общий секрет нельзя помещать в HTML, Git или параметры URL.
 Яндекс передаёт токен бота и ID получателей только в HTTPS-теле запроса к Worker.
@@ -54,3 +54,5 @@ Worker не хранит их и не пишет содержимое заявк
 ```sh
 node --test tests/karlova-form.test.cjs
 ```
+
+Диагностика ошибок: `diagnostics.telegram` и `diagnostics.email` содержат только безопасные коды; например `resend_http_429` — ограничение Resend.
