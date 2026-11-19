@@ -97,7 +97,6 @@ p { margin: 0; }
 .btn-line:hover { border-color: var(--ink); transform: translateY(-2px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--green); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr {
   position: fixed; inset: 0 0 auto 0; z-index: 300;
   padding-top: env(safe-area-inset-top, 0px);
@@ -563,10 +562,9 @@ p { margin: 0; }
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
-
-<div class="progress" aria-hidden="true"></div>
+<body data-client-layout="bento" data-hero="text">
 
 <header class="hdr">
   <div class="wrap hdr-in">
@@ -577,7 +575,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#reviews">Отзывы</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
@@ -594,7 +592,7 @@ p { margin: 0; }
         <a href="#contact" class="btn btn-line">Связаться</a>
       </div>
     </div>
-    <figure class="tile h-photo x-nophoto"></figure>
+
     <div class="h-facts"><div class="tile fact"><span class="fact-num">23 года</span><p>преподаю английский — с 15 лет</p></div><div class="tile fact"><span class="fact-num">2000+</span><p>учеников прошли через мои школы</p></div><div class="tile fact"><span class="fact-num">17 лет</span><p>в предпринимательстве — первый бизнес в 2009 году</p></div></div>
   </div>
 </section>
@@ -602,14 +600,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Acing English — онлайн-школа живого английского</h3></div></div><p class="proj-desc">Школа для подростков и взрослых, которым английский нужен для жизни: работы, учёбы и жизни за границей, путешествий. На занятиях 100% времени мы говорим на английском — даже на начальных уровнях. Готовим и к экзаменам: ЕГЭ, ОГЭ, IELTS. Ученики занимаются онлайн из России и других стран, индивидуально и в группах.</p><div class="proj-stats"><div><div class="ps-num">16</div><div class="ps-label">преподавателей и 4 администратора</div></div><div><div class="ps-num">B2–C1+</div><div class="ps-label">уровни, до которых доходят наши ученики</div></div><div><div class="ps-num">IELTS 8</div><div class="ps-label">лучший результат учеников на международном экзамене</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Baker Street — офлайн-школа английского</h3></div></div><p class="proj-desc">Школа, которую мы строили с нуля — буквально сами делали ремонт и красили стены. Она выросла из моего детского образовательного центра: там было отделение английского, там же мы начали проводить лагеря и поездки. В 2015 году мы сузили направление до языков и переименовались в Baker Street. Школа выросла до площадки в Протвино и двух филиалов в Серпухове. Летние лагеря с носителями языка мы проводили восемь лет — около 120 детей за сезон, а каждый год возили небольшие группы по 5–7 человек на языковую практику в Англию. В 2021 году, когда я поняла, что хочу большего, чем позволяет город на 40 000 человек, я продала школу — и она работает до сих пор.</p><div class="proj-stats"><div><div class="ps-num">3</div><div class="ps-label">площадки: Протвино и 2 филиала в Серпухове</div></div><div><div class="ps-num">5 лет</div><div class="ps-label">школа работает после продажи — уже без меня</div></div></div></article><article class="proj rv proj-school"><div class="proj-top"><div><h3>Детский образовательный центр</h3></div></div><p class="proj-desc">Мой первый бизнес — открыла через год после университета. В центре было отделение английского, лагеря и поездки, а в 2015 году мы сосредоточились на языках и стали Baker Street.</p></article></div>
+    <div class="projects" data-items="3"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Acing English — онлайн-школа живого английского</h3></div></div><p class="proj-desc">Школа для подростков и взрослых, которым английский нужен для жизни: работы, учёбы и жизни за границей, путешествий. На занятиях 100% времени мы говорим на английском — даже на начальных уровнях. Готовим и к экзаменам: ЕГЭ, ОГЭ, IELTS. Ученики занимаются онлайн из России и других стран, индивидуально и в группах.</p><div class="proj-stats"><div><div class="ps-num">16</div><div class="ps-label">преподавателей и 4 администратора</div></div><div><div class="ps-num">B2–C1+</div><div class="ps-label">уровни, до которых доходят наши ученики</div></div><div><div class="ps-num">IELTS 8</div><div class="ps-label">лучший результат учеников на международном экзамене</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Baker Street — офлайн-школа английского</h3></div></div><p class="proj-desc">Школа, которую мы строили с нуля — буквально сами делали ремонт и красили стены. Она выросла из моего детского образовательного центра: там было отделение английского, там же мы начали проводить лагеря и поездки. В 2015 году мы сузили направление до языков и переименовались в Baker Street. Школа выросла до площадки в Протвино и двух филиалов в Серпухове. Летние лагеря с носителями языка мы проводили восемь лет — около 120 детей за сезон, а каждый год возили небольшие группы по 5–7 человек на языковую практику в Англию. В 2021 году, когда я поняла, что хочу большего, чем позволяет город на 40 000 человек, я продала школу — и она работает до сих пор.</p><div class="proj-stats"><div><div class="ps-num">3</div><div class="ps-label">площадки: Протвино и 2 филиала в Серпухове</div></div><div><div class="ps-num">5 <span class="metric-unit">лет</span></div><div class="ps-label">школа работает после продажи — уже без меня</div></div></div></article><article class="proj rv proj-school"><div class="proj-top"><div><h3>Детский образовательный центр</h3></div></div><p class="proj-desc">Мой первый бизнес — открыла через год после университета. В центре было отделение английского, лагеря и поездки, а в 2015 году мы сосредоточились на языках и стали Baker Street.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap"><div class="sec-head"><div><h2 class="sec-title">Обо мне</h2></div></div></div>
   <div class="wrap about">
-    <div class="about-photo rv"><img src="images/marina-mitkaleva/about-1.jpg" alt="Марина Миткалева" loading="lazy"></div>
+    <div class="about-photo rv photo-landscape"><img width="1280" height="960" src="images/marina-mitkaleva/about-1.jpg" alt="Марина Миткалева" loading="lazy"></div>
     <div>
       <p class="about-lead">На английском может говорить любой. Моя задача — вести туда бережно, но целеустремлённо.</p>
       <p class="about-body">Почти вся моя семья — педагоги, так что выбор профессии был естественным. С 5 до 7 лет и с 12 до 14 я жила в Америке и стала по-настоящему билингвом. Родители отдали меня в школу сразу в 3 класс — я была на два года младше всех. Учительница не давила и не ставила оценок: проверяла, давала обратную связь и учила дальше. За год я вышла в отличницы, окончила школу с медалью и в 15 лет поступила в МГЛУ.</p><p class="about-body">В те же 15 я начала преподавать — и не останавливаюсь уже 23 года. Папа-программист уговаривал меня выбрать «более перспективную» профессию, а я после университета год проработала в компании и поняла: моё — это преподавание. Через год открыла свой первый бизнес.</p><blockquote class="x-quote"><p>Какой смысл знать перфект и при этом не уметь заказать себе кофе?</p><cite>Марина Миткалева</cite></blockquote><p class="about-body">Я живу в Португалии и постоянно путешествую. Португальского пока не знаю — и это помогает: я на себе чувствую то, что чувствуют мои ученики, когда язык нужен прямо сейчас. Ещё люблю ЗОЖ — правильное питание и спорт.</p>
@@ -621,14 +619,14 @@ p { margin: 0; }
 <section class="sec" id="approach">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подход</h2></div></div>
-    <p class="sec-lead x-lead">Краеугольный навык в языке — общение. Чтобы научиться говорить, надо говорить на уроке. Поэтому 100% занятия — на английском, даже на начальных уровнях.</p><div class="x-text"><p class="x-p">Это не значит, что мы просто болтаем. Мы работаем комплексно — с грамматикой и лексикой, но речь ставим в основу. Ошибки на старте нас не пугают: главное, чтобы появилась речь, а с ошибками разберёмся по ходу. Никакого осуждения — только поддержка.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как устроен тематический блок</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>5 минут разговора</strong><span>каждое занятие начинается с беседы о самом ученике</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Лексика в диалоге</strong><span>не скучные списки, а обсуждение слов и их значений — на английском</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Оригинальные тексты</strong><span>слушаем аутентичные материалы по теме, обсуждаем, высказываем мнение</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Грамматика из контекста</strong><span>разбираем важное правило из того же текста и сразу выводим в речь</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Всё вместе в разговоре</strong><span>на последнем занятии блока соединяем лексику и грамматику в живую беседу</span></div></li></ol></div><div class="x-cards"><article class="x-card rv"><h3>Говорим с первого занятия</h3><p class="x-p">Даже с полного нуля: пара предметов, картинки, «there is / there are» — и в тот же день ученик проводит экскурсию по своему дому на английском.</p></article><article class="x-card rv"><h3>Сначала уровень, потом экзамен</h3><p class="x-p">С хорошим уровнем можно сдать и ЕГЭ, и IELTS, и работать. А «натаскивание» на тест учит только тесту.</p></article><article class="x-card rv"><h3>Поддержка вместо критики</h3><p class="x-p">Посильный челлендж и вера в ученика. Так когда-то учила меня моя первая учительница.</p></article><article class="x-card rv"><h3>Преподаватели с живым языком</h3><p class="x-p">Большинство жили за границей. Их английский — настоящий, не переводной.</p></article></div>
+    <p class="sec-lead x-lead">Краеугольный навык в языке — общение. Чтобы научиться говорить, надо говорить на уроке. Поэтому 100% занятия — на английском, даже на начальных уровнях.</p><div class="x-text"><p class="x-p">Это не значит, что мы просто болтаем. Мы работаем комплексно — с грамматикой и лексикой, но речь ставим в основу. Ошибки на старте нас не пугают: главное, чтобы появилась речь, а с ошибками разберёмся по ходу. Никакого осуждения — только поддержка.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как устроен тематический блок</h3><ol class="x-steps" data-items="5"><li class="rv"><span class="x-n">01</span><div><strong>5 минут разговора</strong><span>каждое занятие начинается с беседы о самом ученике</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Лексика в диалоге</strong><span>не скучные списки, а обсуждение слов и их значений — на английском</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Оригинальные тексты</strong><span>слушаем аутентичные материалы по теме, обсуждаем, высказываем мнение</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Грамматика из контекста</strong><span>разбираем важное правило из того же текста и сразу выводим в речь</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Всё вместе в разговоре</strong><span>на последнем занятии блока соединяем лексику и грамматику в живую беседу</span></div></li></ol></div><div class="x-cards" data-items="4"><article class="x-card rv"><h3>Говорим с первого занятия</h3><p class="x-p">Даже с полного нуля: пара предметов, картинки, «there is / there are» — и в тот же день ученик проводит экскурсию по своему дому на английском.</p></article><article class="x-card rv"><h3>Сначала уровень, потом экзамен</h3><p class="x-p">С хорошим уровнем можно сдать и ЕГЭ, и IELTS, и работать. А «натаскивание» на тест учит только тесту.</p></article><article class="x-card rv"><h3>Поддержка вместо критики</h3><p class="x-p">Посильный челлендж и вера в ученика. Так когда-то учила меня моя первая учительница.</p></article><article class="x-card rv"><h3>Преподаватели с живым языком</h3><p class="x-p">Большинство жили за границей. Их английский — настоящий, не переводной.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">90+</div><p>баллов на ЕГЭ</p></div><div class="tile x-stat rv"><div class="big-num">6–8</div><p>баллов IELTS</p></div><div class="tile x-stat rv"><div class="big-num">B2, C1+</div><p>уровни, с которыми ученики переезжают и работают в иностранных компаниях</p></div></div><div class="x-cards"><article class="x-card rv"><span class="x-meta">ЕГЭ · за год</span><h3>Говорили «максимум 60» — сдала на 91</h3><p class="x-p">За год до экзамена в школе сказали, что выше 60 баллов не получится. Мы подняли уровень и разобрали формат экзамена, а я всё время повторяла: пока есть время, ничего не решено. Она поступила в топовый лингвистический вуз страны.</p><span class="x-res">91 балл</span></article><article class="x-card rv"><span class="x-meta">Подросток, 16 лет · 1,5 года</span><h3>Не хотел учить английский — вышел на B2</h3><p class="x-p">Мы говорили о том, что ему правда интересно: жизнь, игры, песни. Он так втянулся, что не пропустил ни одного занятия.</p><span class="x-res">уровень B2</span></article><article class="x-card rv"><span class="x-meta">Взрослая ученица · с нуля · 2 года</span><h3>От первого слова до работы на английском</h3><p class="x-p">Никогда не учила язык и думала, что уже поздно. Заговорили простыми диалогами с первого занятия. Через два года она работала на английском.</p><span class="x-res">работает на английском</span></article></div>
+    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">90+</div><p>баллов на ЕГЭ</p></div><div class="tile x-stat rv"><div class="big-num">6–8</div><p>баллов IELTS</p></div><div class="tile x-stat rv"><div class="big-num">B2, C1+</div><p>уровни, с которыми ученики переезжают и работают в иностранных компаниях</p></div></div><div class="x-cards" data-items="3"><article class="x-card rv"><span class="x-meta">ЕГЭ · за год</span><h3>Говорили «максимум 60» — сдала на 91</h3><p class="x-p">За год до экзамена в школе сказали, что выше 60 баллов не получится. Мы подняли уровень и разобрали формат экзамена, а я всё время повторяла: пока есть время, ничего не решено. Она поступила в топовый лингвистический вуз страны.</p><span class="x-res">91 балл</span></article><article class="x-card rv"><span class="x-meta">Подросток, 16 лет · 1,5 года</span><h3>Не хотел учить английский — вышел на B2</h3><p class="x-p">Мы говорили о том, что ему правда интересно: жизнь, игры, песни. Он так втянулся, что не пропустил ни одного занятия.</p><span class="x-res">уровень B2</span></article><article class="x-card rv"><span class="x-meta">Взрослая ученица · с нуля · 2 года</span><h3>От первого слова до работы на английском</h3><p class="x-p">Никогда не учила язык и думала, что уже поздно. Заговорили простыми диалогами с первого занятия. Через два года она работала на английском.</p><span class="x-res">работает на английском</span></article></div>
   </div>
 </section>
 
@@ -641,9 +639,9 @@ p { margin: 0; }
         <button class="car-btn" type="button" data-next aria-label="Следующие отзывы"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
     </div>
-    <div class="car-viewport"><div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/marina-mitkaleva/reviews-1.jpg" data-lb="reviews" data-caption="Результат IELTS ученицы: 8.0"><img src="images/marina-mitkaleva/reviews-1.jpg" alt="Результат IELTS ученицы: 8.0" loading="lazy"></a><div class="rev-foot"><span>Результат IELTS ученицы: 8.0</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/marina-mitkaleva/reviews-2.jpg" data-lb="reviews" data-caption="Сообщение ученицы"><img src="images/marina-mitkaleva/reviews-2.jpg" alt="Сообщение ученицы" loading="lazy"></a><div class="rev-foot"><span>Сообщение ученицы</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/marina-mitkaleva/reviews-3.jpg" data-lb="reviews" data-caption="Результат ЕГЭ: 96 баллов"><img src="images/marina-mitkaleva/reviews-3.jpg" alt="Результат ЕГЭ: 96 баллов" loading="lazy"></a><div class="rev-foot"><span>Результат ЕГЭ: 96 баллов</span></div></article></div></div>
+    <div class="car-viewport"><div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/marina-mitkaleva/reviews-1.jpg" data-lb="reviews" data-caption="Результат IELTS ученицы: 8.0"><img width="1000" height="569" src="images/marina-mitkaleva/reviews-1.jpg" alt="Результат IELTS ученицы: 8.0" loading="lazy"></a><div class="rev-foot"><span>Результат IELTS ученицы: 8.0</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/marina-mitkaleva/reviews-2.jpg" data-lb="reviews" data-caption="Сообщение ученицы"><img width="826" height="436" src="images/marina-mitkaleva/reviews-2.jpg" alt="Сообщение ученицы" loading="lazy"></a><div class="rev-foot"><span>Сообщение ученицы</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/marina-mitkaleva/reviews-3.jpg" data-lb="reviews" data-caption="Результат ЕГЭ: 96 баллов"><img width="912" height="396" src="images/marina-mitkaleva/reviews-3.jpg" alt="Результат ЕГЭ: 96 баллов" loading="lazy"></a><div class="rev-foot"><span>Результат ЕГЭ: 96 баллов</span></div></article></div></div>
     <div class="car-bar"><div><span class="car-thumb"></span></div></div>
-    
+
   </div>
 </section>
 
@@ -651,7 +649,7 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media x-media rv">
       <div class="x-mhead"><h2 class="sec-title">Подкасты</h2></div>
-      <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223265444?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/marina-mitkaleva/pod-1223265444.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1237901029?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/marina-mitkaleva/pod-1237901029.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div></div>
+      <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223265444?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Как передать управление школой и двигаться дальше"><img width="1280" height="720" src="images/marina-mitkaleva/pod-1223265444.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Как передать управление школой и двигаться дальше"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Как передать управление школой и двигаться дальше</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1237901029?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Живой английский: разговор с первого занятия"><img width="1280" height="720" src="images/marina-mitkaleva/pod-1237901029.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Живой английский: разговор с первого занятия"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Живой английский: разговор с первого занятия</h3></div></div>
       <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://t.me/mmitkaleva_english" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал</strong><span>@mmitkaleva_english</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
     </div>
   </div>
@@ -659,11 +657,11 @@ p { margin: 0; }
 
 <section class="sec" id="contact">
   <div class="wrap contact x-nophoto">
-    
+
     <div class="tile form-tile rv">
       <h2 class="form-title">Связаться с Мариной</h2>
       <p class="form-lead">Партнёрство, инвестиции, интервью или работа преподавателем в школе — напишите, и я свяжусь с вами.</p>
-      
+
       <div class="socials x-contacts"><a class="social" href="https://t.me/acing_english_trial" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram школы</strong><span>@acing_english_trial — для заявок</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://t.me/mmitkaleva_english" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал</strong><span>@mmitkaleva_english</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:marina.maiyorova@gmail.com"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>marina.maiyorova@gmail.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
     </div>
   </div>
@@ -695,17 +693,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -715,12 +708,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -895,7 +892,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

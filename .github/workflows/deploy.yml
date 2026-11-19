@@ -12,10 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check landing build and cache regression
+      - name: Check landing and client page regressions
         run: |
           node scripts/build-promo-platform.cjs --check
-          node --test tests/promo-platform.test.cjs
+          node --test tests/promo-platform.test.cjs tests/client-pages.test.cjs
 
       - name: Deploy via rsync over SSH
         uses: burnett01/rsync-deployments@7.0.1

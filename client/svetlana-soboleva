@@ -97,7 +97,6 @@ p { margin: 0; }
 .btn-line:hover { border-color: var(--ink); transform: translateY(-2px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--green); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr {
   position: fixed; inset: 0 0 auto 0; z-index: 300;
   padding-top: env(safe-area-inset-top, 0px);
@@ -563,10 +562,9 @@ p { margin: 0; }
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
-
-<div class="progress" aria-hidden="true"></div>
+<body data-client-layout="bento">
 
 <header class="hdr">
   <div class="wrap hdr-in">
@@ -577,7 +575,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#reviews">Отзывы</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
@@ -594,7 +592,7 @@ p { margin: 0; }
         <a href="#contact" class="btn btn-line">Связаться</a>
       </div>
     </div>
-    <figure class="tile h-photo"><img src="images/svetlana-soboleva/hero-1.jpg" alt="Светлана Соболева" fetchpriority="high"></figure>
+    <figure class="tile h-photo"><img width="853" height="1280" src="images/svetlana-soboleva/hero-1.jpg" alt="Светлана Соболева" fetchpriority="high"></figure>
     <div class="h-facts"><div class="tile fact"><span class="fact-num">500+</span><p>учеников прошли через меня и школу</p></div><div class="tile fact"><span class="fact-num">13 лет</span><p>в преподавании — с первого урока в 2013 году</p></div><div class="tile fact"><span class="fact-num">6+</span><p>предметов в школе: английский, русский, математика, информатика, химия, физика</p></div></div>
   </div>
 </section>
@@ -602,14 +600,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><span class="x-plogo"><img src="images/svetlana-soboleva/logo-1.jpg" alt="Логотип" loading="lazy"></span><div class="proj-top"><div><h3>Онлайн-школа «Результат ТУТ»</h3></div><a href="https://english-with-tempus.ru" target="_blank" rel="noopener" class="arrow" aria-label="Сайт школы"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div><p class="proj-desc">В 2024 году я начинала со школы английского для школьников и взрослых. Потом ученики стали спрашивать: «Светлана, а можете порекомендовать математика?» Я пошла на пробное занятие к знакомому преподавателю и поняла: то, чему нас учили на CELTA, — как исправлять ошибки, как давать материал, как вовлекать ребёнка — работает в любом предмете. Так в школе появились математика, русский язык, информатика, химия и физика, а по необходимости вводим и другие предметы. Для каждого предмета есть инструкции, образцы уроков и разборы занятий с рекомендациями.</p><div class="proj-stats"><div><div class="ps-num">2024</div><div class="ps-label">год запуска школы</div></div><div><div class="ps-num">10–15</div><div class="ps-label">человек в команде</div></div><div><div class="ps-num">4</div><div class="ps-label">предмета на одной методике</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Авторский курс интерактивного чтения</h3></div></div><p class="proj-desc">Курс, который я развиваю с 2011 года. Начиналось с карточек со словами, которые дети просто отчитывали, — им было скучно. Потом появились игры с кубиками за столом, а с переходом в онлайн я полностью перевела курс в интерактив: «ходилки», морской бой, где чтобы выстрелить, нужно прочитать два слова, смена героев и пейзажей. Родители признаются, что играют вместе с детьми.</p><div class="proj-stats"><div><div class="ps-num">25</div><div class="ps-label">занятий — и ребёнок готов к школе</div></div><div><div class="ps-num">90%</div><div class="ps-label">детей после курса не нужен репетитор по чтению</div></div></div></article></div>
+    <div class="projects" data-items="2"><article class="proj rv proj-school"><span class="x-plogo"><img width="1000" height="1000" src="images/svetlana-soboleva/logo-1.jpg" alt="Логотип" loading="lazy"></span><div class="proj-top"><div><h3>Онлайн-школа «Результат ТУТ»</h3></div><a href="https://english-with-tempus.ru" target="_blank" rel="noopener" class="arrow" aria-label="Сайт школы"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div><p class="proj-desc">В 2024 году я начинала со школы английского для школьников и взрослых. Потом ученики стали спрашивать: «Светлана, а можете порекомендовать математика?» Я пошла на пробное занятие к знакомому преподавателю и поняла: то, чему нас учили на CELTA, — как исправлять ошибки, как давать материал, как вовлекать ребёнка — работает в любом предмете. Так в школе появились математика, русский язык, информатика, химия и физика, а по необходимости вводим и другие предметы. Для каждого предмета есть инструкции, образцы уроков и разборы занятий с рекомендациями.</p><div class="proj-stats"><div><div class="ps-num">2024</div><div class="ps-label">год запуска школы</div></div><div><div class="ps-num">10–15</div><div class="ps-label">человек в команде</div></div><div><div class="ps-num">4</div><div class="ps-label">предмета на одной методике</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Авторский курс интерактивного чтения</h3></div></div><p class="proj-desc">Курс, который я развиваю с 2011 года. Начиналось с карточек со словами, которые дети просто отчитывали, — им было скучно. Потом появились игры с кубиками за столом, а с переходом в онлайн я полностью перевела курс в интерактив: «ходилки», морской бой, где чтобы выстрелить, нужно прочитать два слова, смена героев и пейзажей. Родители признаются, что играют вместе с детьми.</p><div class="proj-stats"><div><div class="ps-num">25</div><div class="ps-label">занятий — и ребёнок готов к школе</div></div><div><div class="ps-num">90%</div><div class="ps-label">детей после курса не нужен репетитор по чтению</div></div></div></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap"><div class="sec-head"><div><h2 class="sec-title">Обо мне</h2></div></div></div>
   <div class="wrap about">
-    <div class="about-photo rv"><img src="images/svetlana-soboleva/about-1.jpg" alt="Светлана Соболева" loading="lazy"></div>
+    <div class="about-photo rv"><img width="853" height="1280" src="images/svetlana-soboleva/about-1.jpg" alt="Светлана Соболева" loading="lazy"></div>
     <div>
       <p class="about-lead">Преподаватель, который научился быть предпринимателем.</p>
       <p class="about-body">Обычная школа меня никогда не привлекала: там учитель зажат программой и не может остановиться, если ребёнок не понял тему. В 2013 году я пришла в частную языковую школу. Там же подготовила своего первого ученика к ЕГЭ — он набрал 99 баллов. Иногда все кабинеты были заняты, и мы занимались прямо на подоконнике.</p><p class="about-body">В том же году в одной школе мне отказали — только потому, что у меня не было сертификата. Это задело, и я пошла учиться. Подготовка к TKT, а потом CELTA перевернули моё преподавание: я поняла, что учитель не должен говорить 90% урока. Когда я оглянулась назад, мне даже стало неловко перед прежними учениками — это был совсем другой уровень.</p><p class="about-body">Потом были две мои офлайн-школы — «Студия английского языка» и Second Language. Обе закрылись: я смотрела на них глазами преподавателя, а не руководителя, ничего не знала о маркетинге и продажах и не умела работать с людьми. Всё изменило обучение у наставника: я увидела, что можно не только учить самой, но и передавать методику другим преподавателям — и помогать гораздо большему числу учеников. Так в 2024 году появилась моя онлайн-школа.</p><blockquote class="x-quote"><p>Всё возможно, и я всё смогу — стоит только искренне этого захотеть!</p><cite>Светлана Соболева</cite></blockquote><p class="about-body">Люблю путешествовать и узнавать культуры разных стран: была в Германии, Англии, Дубае и на Мальте, мечтаю о Франции и Мальдивах. Увлекаюсь эфирными маслами. Профессиональные конференции стараюсь совмещать с поездками по новым городам.</p>
@@ -628,14 +626,14 @@ p { margin: 0; }
 <section class="sec" id="approach">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Методика школы</h2></div></div>
-    <p class="sec-lead x-lead">Преподаватель не должен говорить 90% урока. Ученик думает, спрашивает и сам приходит к ответу.</p><div class="x-cards"><article class="x-card rv"><h3>Сначала диагностика</h3><p class="x-p">Перед стартом смотрим исходный уровень: в английском — грамматику и речь, в любом предмете — пробелы и скорость усвоения.</p></article><article class="x-card rv"><h3>Наводящие вопросы</h3><p class="x-p">Я не даю материал целиком — задаю вопросы, чтобы ученик думал и был вовлечён. Поэтому у нас нельзя просто «отсидеться».</p></article><article class="x-card rv"><h3>Ученик сам находит ошибки</h3><p class="x-p">Метод из CELTA: я направляю и показываю разные способы исправления, а находит и исправляет ученик.</p></article><article class="x-card rv"><h3>Отступаем от плана ради понимания</h3><p class="x-p">Если тема не далась — останавливаемся и прорабатываем. План не важнее понимания.</p></article><article class="x-card rv"><h3>Одна методика на все предметы</h3><p class="x-p">У каждого предмета свои примеры, но структура урока и подход одни. Преподаватели получают инструкции, образцы и разборы своих занятий.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит урок — по стандарту CELTA</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Warm-up</strong><span>разговорная разминка, снимаем напряжение</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Lead-in</strong><span>подводим к теме вопросами</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Новая тема</strong><span>иногда с презентацией для лучшего запоминания</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Закрепление</strong><span>через игровую активность</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Cool down</strong><span>снова разговор: закрепляем пройденное и узнаём самочувствие ученика</span></div></li></ol></div>
+    <p class="sec-lead x-lead">Преподаватель не должен говорить 90% урока. Ученик думает, спрашивает и сам приходит к ответу.</p><div class="x-cards" data-items="5"><article class="x-card rv"><h3>Сначала диагностика</h3><p class="x-p">Перед стартом смотрим исходный уровень: в английском — грамматику и речь, в любом предмете — пробелы и скорость усвоения.</p></article><article class="x-card rv"><h3>Наводящие вопросы</h3><p class="x-p">Я не даю материал целиком — задаю вопросы, чтобы ученик думал и был вовлечён. Поэтому у нас нельзя просто «отсидеться».</p></article><article class="x-card rv"><h3>Ученик сам находит ошибки</h3><p class="x-p">Метод из CELTA: я направляю и показываю разные способы исправления, а находит и исправляет ученик.</p></article><article class="x-card rv"><h3>Отступаем от плана ради понимания</h3><p class="x-p">Если тема не далась — останавливаемся и прорабатываем. План не важнее понимания.</p></article><article class="x-card rv"><h3>Одна методика на все предметы</h3><p class="x-p">У каждого предмета свои примеры, но структура урока и подход одни. Преподаватели получают инструкции, образцы и разборы своих занятий.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит урок — по стандарту CELTA</h3><ol class="x-steps" data-items="5"><li class="rv"><span class="x-n">01</span><div><strong>Warm-up</strong><span>разговорная разминка, снимаем напряжение</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Lead-in</strong><span>подводим к теме вопросами</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Новая тема</strong><span>иногда с презентацией для лучшего запоминания</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Закрепление</strong><span>через игровую активность</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Cool down</strong><span>снова разговор: закрепляем пройденное и узнаём самочувствие ученика</span></div></li></ol></div>
   </div>
 </section>
 
 <section class="sec" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">90%</div><p>учеников уже через 2 месяца улучшают оценки в школе</p></div><div class="tile x-stat rv"><div class="big-num">99</div><p>баллов ЕГЭ — мой первый ученик</p></div></div><div class="x-cards"><article class="x-card rv"><span class="x-meta">ЕГЭ · английский с нуля</span><h3>Учителя отговаривали сдавать</h3><p class="x-p">Школьные учителя говорили, что девочка не сдаст. Мы договорились с папой о цели — хотя бы проходной балл — и за два года подготовились. Она поступила на переводчика, окончила вуз и сейчас работает переводчиком. Потом с нуля я подготовила и её брата — больше 60 баллов.</p><span class="x-res">70 баллов</span></article><article class="x-card rv"><span class="x-meta">Разговорный английский · 9 лет</span><h3>Переводчик для всей семьи</h3><p class="x-p">За год занятий девятилетний ребёнок свободно заговорил по-английски. Родители языка не знают, поэтому в путешествиях все вопросы решает он.</p><span class="x-res">свободная речь за год</span></article><article class="x-card rv"><span class="x-meta">Разговорный английский · подросток</span><h3>Заговорила за два занятия</h3><p class="x-p">Хороший пассивный запас, но говорить не получалось. Методика вовлечения сработала с первых уроков.</p><span class="x-res">речь за 2 занятия</span></article></div>
+    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">90%</div><p>учеников уже через 2 месяца улучшают оценки в школе</p></div><div class="tile x-stat rv"><div class="big-num">99</div><p>баллов ЕГЭ — мой первый ученик</p></div></div><div class="x-cards" data-items="3"><article class="x-card rv"><span class="x-meta">ЕГЭ · английский с нуля</span><h3>Учителя отговаривали сдавать</h3><p class="x-p">Школьные учителя говорили, что девочка не сдаст. Мы договорились с папой о цели — хотя бы проходной балл — и за два года подготовились. Она поступила на переводчика, окончила вуз и сейчас работает переводчиком. Потом с нуля я подготовила и её брата — больше 60 баллов.</p><span class="x-res">70 баллов</span></article><article class="x-card rv"><span class="x-meta">Разговорный английский · 9 лет</span><h3>Переводчик для всей семьи</h3><p class="x-p">За год занятий девятилетний ребёнок свободно заговорил по-английски. Родители языка не знают, поэтому в путешествиях все вопросы решает он.</p><span class="x-res">свободная речь за год</span></article><article class="x-card rv"><span class="x-meta">Разговорный английский · подросток</span><h3>Заговорила за два занятия</h3><p class="x-p">Хороший пассивный запас, но говорить не получалось. Методика вовлечения сработала с первых уроков.</p><span class="x-res">речь за 2 занятия</span></article></div>
   </div>
 </section>
 
@@ -648,9 +646,9 @@ p { margin: 0; }
         <button class="car-btn" type="button" data-next aria-label="Следующие отзывы"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
     </div>
-    <div class="car-viewport"><div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-1.jpg" data-lb="reviews" data-caption="Отзыв"><img src="images/svetlana-soboleva/reviews-1.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-2.jpg" data-lb="reviews" data-caption="Отзыв"><img src="images/svetlana-soboleva/reviews-2.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-3.jpg" data-lb="reviews" data-caption="Отзыв"><img src="images/svetlana-soboleva/reviews-3.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-4.jpg" data-lb="reviews" data-caption="Отзыв"><img src="images/svetlana-soboleva/reviews-4.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article></div></div>
+    <div class="car-viewport"><div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-1.jpg" data-lb="reviews" data-caption="Отзыв"><img width="564" height="1000" src="images/svetlana-soboleva/reviews-1.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-2.jpg" data-lb="reviews" data-caption="Отзыв"><img width="1000" height="839" src="images/svetlana-soboleva/reviews-2.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-3.jpg" data-lb="reviews" data-caption="Отзыв"><img width="1000" height="562" src="images/svetlana-soboleva/reviews-3.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/svetlana-soboleva/reviews-4.jpg" data-lb="reviews" data-caption="Отзыв"><img width="839" height="1000" src="images/svetlana-soboleva/reviews-4.jpg" alt="Отзыв" loading="lazy"></a><div class="rev-foot"><span>Отзыв</span></div></article></div></div>
     <div class="car-bar"><div><span class="car-thumb"></span></div></div>
-    
+
   </div>
 </section>
 
@@ -658,7 +656,7 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media x-media rv">
       <div class="x-mhead"><h2 class="sec-title">Подкасты</h2></div>
-      <div class="x-pods x-pods-1"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223256742?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/svetlana-soboleva/pod-1223256742.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div></div>
+      <div class="x-pods x-pods-1"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223256742?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="От личной практики к школе «Результат ТУТ»"><img width="1280" height="720" src="images/svetlana-soboleva/pod-1223256742.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: От личной практики к школе «Результат ТУТ»"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">От личной практики к школе «Результат ТУТ»</h3></div></div>
       <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://t.me/English_with_Tempus" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал</strong><span>t.me/English_with_Tempus</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://vk.com/englishclub226972821" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>vk.com/englishclub226972821</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://english-with-tempus.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Сайт школы</strong><span>english-with-tempus.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
     </div>
   </div>
@@ -666,11 +664,11 @@ p { margin: 0; }
 
 <section class="sec" id="contact">
   <div class="wrap contact">
-    <div class="contact-side rv"><img src="images/svetlana-soboleva/contact-1.jpg" alt="Светлана Соболева" loading="lazy"></div>
+    <div class="contact-side rv"><img width="853" height="1280" src="images/svetlana-soboleva/contact-1.jpg" alt="Светлана Соболева" loading="lazy"></div>
     <div class="tile form-tile rv">
       <h2 class="form-title">Связаться со Светланой</h2>
       <p class="form-lead">Партнёрство, интервью, работа в команде или вопрос о школе — напишите в Telegram, я отвечу.</p>
-      
+
       <div class="socials x-contacts"><a class="social" href="https://t.me/Svetlana_English_Admin" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@Svetlana_English_Admin</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="tel:+79017768285"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></span><span><strong>Телефон</strong><span>+7 901 776-82-85</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:english_tempus@mail.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>english_tempus@mail.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
     </div>
   </div>
@@ -702,17 +700,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -722,12 +715,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -902,7 +899,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

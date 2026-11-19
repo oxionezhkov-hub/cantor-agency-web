@@ -97,7 +97,6 @@ p { margin: 0; }
 .btn-line:hover { border-color: var(--ink); transform: translateY(-2px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--green); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr {
   position: fixed; inset: 0 0 auto 0; z-index: 300;
   padding-top: env(safe-area-inset-top, 0px);
@@ -563,23 +562,20 @@ p { margin: 0; }
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
-
-<div class="progress" aria-hidden="true"></div>
+<body data-client-layout="bento" data-about="text" data-hero="text">
 
 <header class="hdr">
   <div class="wrap hdr-in">
     <a href="#top" class="logo">Диля Шайхисламова</a>
     <nav class="nav" aria-label="Разделы"><a href="#projects">Проекты</a><a href="#about">Обо мне</a></nav>
-    <a href="#contact" class="btn btn-primary hdr-cta">Связаться</a>
     <button class="burger" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Открыть меню"><span></span><span></span><span></span></button>
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a>
-  <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
 
 <main>
@@ -591,10 +587,10 @@ p { margin: 0; }
       <p class="h-desc">Основатель онлайн-команды репетиторов и бывший инженер-сметчик «Роснефти». Строю образовательный проект, где учат без давления и всегда по плану: от дошкольников до студентов, по восьми предметам.</p>
       <div class="h-actions">
         <a href="#projects" class="btn btn-primary">Мои проекты <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <a href="#contact" class="btn btn-line">Связаться</a>
+        <a href="#method" class="btn btn-line">Как мы учим</a>
       </div>
     </div>
-    <figure class="tile h-photo x-nophoto"></figure>
+
     <div class="h-facts"><div class="tile fact"><span class="fact-num">200+</span><p>учеников прошли через нашу команду</p></div><div class="tile fact"><span class="fact-num">14</span><p>преподавателей в команде</p></div><div class="tile fact"><span class="fact-num">8</span><p>предметов — от математики до истории</p></div></div>
   </div>
 </section>
@@ -602,7 +598,7 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Онлайн-команда репетиторов</h3></div></div><p class="proj-desc">С 2025 года мы работаем как команда репетиторов, а сейчас я оформляю образовательную лицензию. Готовим к ОГЭ и ЕГЭ по всем основным предметам — математике, информатике, физике, русскому и английскому, биологии, обществознанию и истории, — помогаем школьникам с учёбой и студентам с вузовскими предметами. Занятия онлайн, индивидуально и в группах. Моя роль — собеседую и подбираю преподавателей, держу план и качество занятий.</p><div class="proj-stats"><div><div class="ps-num">с 2025</div><div class="ps-label">года работаем командой</div></div><div><div class="ps-num">14</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num x-long">от дошкольников до студентов</div><div class="ps-label">с кем работаем</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Опыт в бизнесе до образования</h3></div></div><p class="proj-desc">До преподавания я работала инженером-сметчиком в «Роснефти», закупщиком и экономистом, немного выстраивала процессы в строительной компании, параллельно училась в аспирантуре и писала научные статьи. Этот опыт помогает мне смотреть на образовательный проект как на бизнес: со сметой, процессами и цифрами.</p></article></div>
+    <div class="projects" data-items="2"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Онлайн-команда репетиторов</h3></div></div><p class="proj-desc">С 2025 года мы работаем как команда репетиторов, а сейчас я оформляю образовательную лицензию. Готовим к ОГЭ и ЕГЭ по всем основным предметам — математике, информатике, физике, русскому и английскому, биологии, обществознанию и истории, — помогаем школьникам с учёбой и студентам с вузовскими предметами. Занятия онлайн, индивидуально и в группах. Моя роль — собеседую и подбираю преподавателей, держу план и качество занятий.</p><div class="proj-stats"><div><div class="ps-num">с 2025</div><div class="ps-label">года работаем командой</div></div><div><div class="ps-num">14</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num metric-prose">от дошкольников до студентов</div><div class="ps-label">с кем работаем</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Опыт в бизнесе до образования</h3></div></div><p class="proj-desc">До преподавания я работала инженером-сметчиком в «Роснефти», закупщиком и экономистом, немного выстраивала процессы в строительной компании, параллельно училась в аспирантуре и писала научные статьи. Этот опыт помогает мне смотреть на образовательный проект как на бизнес: со сметой, процессами и цифрами.</p></article></div>
   </div>
 </section>
 
@@ -621,21 +617,11 @@ p { margin: 0; }
 <section class="sec" id="method">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Как мы учим</h2></div></div>
-    <p class="sec-lead x-lead">Мягко, но по плану. Без криков, давления и упрёков — и никогда бесцельно.</p><div class="x-text"><p class="x-p">Я знаю на себе, что делает с ребёнком давление учителя. Поэтому у нас другое правило: если ученик не понял так — объясни иначе. Терпение не отменяет результата: у каждого ученика есть программа и цель.</p></div><div class="x-cards"><article class="x-card rv"><h3>Всегда есть план</h3><p class="x-p">Занятия не идут бесцельно: у каждого ученика программа под его задачу — экзамен, оценки или вузовский предмет.</p></article><article class="x-card rv"><h3>Без давления</h3><p class="x-p">Без криков, упрёков и насмешек. По-доброму и терпеливо.</p></article><article class="x-card rv"><h3>Не понял — объясним иначе</h3><p class="x-p">Ищем объяснение, которое подойдёт именно этому ребёнку.</p></article><article class="x-card rv"><h3>После плохого опыта</h3><p class="x-p">Особенно хорошо работаем с детьми, которые боятся предмета из-за давления в школе.</p></article><article class="x-card rv"><h3>Честные и открытые преподаватели</h3><p class="x-p">Каждого я собеседую сама. Кроме знания предмета ценю честность, гибкость и открытость.</p></article></div>
+    <p class="sec-lead x-lead">Мягко, но по плану. Без криков, давления и упрёков — и никогда бесцельно.</p><div class="x-text"><p class="x-p">Я знаю на себе, что делает с ребёнком давление учителя. Поэтому у нас другое правило: если ученик не понял так — объясни иначе. Терпение не отменяет результата: у каждого ученика есть программа и цель.</p></div><div class="x-cards" data-items="5"><article class="x-card rv"><h3>Всегда есть план</h3><p class="x-p">Занятия не идут бесцельно: у каждого ученика программа под его задачу — экзамен, оценки или вузовский предмет.</p></article><article class="x-card rv"><h3>Без давления</h3><p class="x-p">Без криков, упрёков и насмешек. По-доброму и терпеливо.</p></article><article class="x-card rv"><h3>Не понял — объясним иначе</h3><p class="x-p">Ищем объяснение, которое подойдёт именно этому ребёнку.</p></article><article class="x-card rv"><h3>После плохого опыта</h3><p class="x-p">Особенно хорошо работаем с детьми, которые боятся предмета из-за давления в школе.</p></article><article class="x-card rv"><h3>Честные и открытые преподаватели</h3><p class="x-p">Каждого я собеседую сама. Кроме знания предмета ценю честность, гибкость и открытость.</p></article></div>
   </div>
 </section>
 
-<section class="sec" id="contact">
-  <div class="wrap contact x-nophoto">
-    
-    <div class="tile form-tile rv">
-      <h2 class="form-title">Связаться с Дилей</h2>
-      <p class="form-lead">Партнёрство, интервью или работа в команде — напишите, я отвечу.</p>
-      
-      <div class="socials x-contacts"></div>
-    </div>
-  </div>
-</section>
+
 
 </main>
 
@@ -643,8 +629,8 @@ p { margin: 0; }
   <div class="wrap">
     <div class="foot-in">
       <div><div class="foot-name">Диля<br>Шайхисламова</div><p>Основатель онлайн-команды репетиторов и бывший инженер-сметчик «Роснефти». Строю образовательный проект, где учат без давления и всегда по плану: от дошкольников до студентов, по восьми предметам.</p></div>
-      <div class="foot-col"><h4 class="mono">Разделы</h4><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#contact">Контакты</a></div>
-      
+      <div class="foot-col"><h4 class="mono">Разделы</h4><a href="#projects">Проекты</a><a href="#about">Обо мне</a></div>
+
     </div>
     <div class="foot-bottom"><span>© <span data-year>2026</span> Диля Шайхисламова</span><span class="x-req"></span></div>
   </div>
@@ -663,17 +649,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -683,12 +664,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -863,7 +848,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

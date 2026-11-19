@@ -74,7 +74,6 @@ p { margin: 0; }
 .link:hover { background-size: 35% 1px; color: var(--ink); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .3s, box-shadow .3s; }
 .hdr.is-solid { background: rgba(243, 238, 230, .9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
 .hdr.is-away { transform: translateY(-110%); }
@@ -448,12 +447,11 @@ p { margin: 0; }
 :root{--x-surface:var(--card);--x-line:var(--line);--x-ink:var(--ink);--x-muted:var(--ink-2);--x-accent:var(--accent);--x-r:var(--r)}
 .band .x-card,.band .x-steps li{background:var(--bg)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
+<body data-client-layout="editorial">
 
-<div class="progress" aria-hidden="true"></div>
-
-<header class="hdr" data-reveal>
+<header class="hdr">
   <div class="wrap hdr-in">
     <a href="#top" class="logo">Лариса Ромашова</a>
     <nav class="nav" aria-label="Разделы"><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a></nav>
@@ -462,7 +460,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-dark">Связаться</a>
 </div>
@@ -474,14 +472,14 @@ p { margin: 0; }
     <div class="hero-grid">
       <div>
         <h1 class="hero-name"><span>Лариса</span><span>Ромашова</span></h1>
-        
+
         <p class="hero-desc">Основатель онлайн-школы итальянского языка Italiano Bello («Итальяно Белло»). Пианистка по образованию, педагог по призванию. Строю школу, где на итальянском начинают говорить с первого урока и сдают международные экзамены в короткие сроки.</p>
         <div class="hero-actions">
           <a href="#contact" class="btn btn-dark">Связаться <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           <a href="#projects" class="btn btn-line">Мои проекты</a>
         </div>
       </div>
-      <figure class="frame hero-photo"><img src="images/larisa-romashova/hero-1.jpg" alt="Лариса Ромашова" fetchpriority="high"></figure>
+      <figure class="frame hero-photo"><img width="854" height="1280" src="images/larisa-romashova/hero-1.jpg" alt="Лариса Ромашова" fetchpriority="high"></figure>
     </div>
     <dl class="facts"><div class="fact"><dt>10 лет</dt><dd>Italiano Bello работает с 2016 года</dd></div><div class="fact"><dt>600+</dt><dd>учеников прошли через школу</dd></div><div class="fact"><dt>0 → B2</dt><dd>за 4,5 месяца — мой рекорд подготовки к экзамену</dd></div></dl>
   </div>
@@ -490,13 +488,13 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv"><span class="x-plogo"><img src="images/larisa-romashova/logo-1.jpg" alt="Логотип" loading="lazy"></span><h3>Онлайн-школа итальянского языка Italiano Bello</h3><p class="x-p">Проект родился в 2016 году из желания помочь людям осуществить мечту: переехать в Италию, поступить в итальянский вуз, свободно общаться с носителями в путешествиях. Сегодня мы учим школьников 9–11 классов, студентов и взрослых — есть ученики и 60+. Помогаем заговорить в самые короткие сроки, подготовиться к поступлению, международным экзаменам CELI, CILS и PLIDA от B1 до C2 и к экзамену на гражданство. Я выстраиваю методику, обучаю преподавателей и сама веду учеников.</p><a class="link" href="https://romitalia.ru" target="_blank" rel="noopener">Сайт школы <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">5</div><div class="ps-label">преподавателей, среди них два носителя языка</div></div><div><div class="ps-num">80+</div><div class="ps-label">баллов — уровень, на который мы готовим к экзамену B2, а не просто проходной</div></div><div><div class="ps-num">3</div><div class="ps-label">международных экзамена: CELI, CILS, PLIDA</div></div></div></article><article class="proj rv"><h3>Музыка, детское развитие и волонтёрство</h3><p class="x-p">До итальянского я много лет преподавала музыку: фортепиано, сольфеджио, а ещё английский язык школьникам и студентам. В детской студии «Крошка Ру» занималась с малышами от года — музыка, рисование, лего, театр, английский, спорт. Участвую в волонтёрских культурных проектах: в Санкт-Петербурге организовывала концерты в домах престарелых и театральные постановки в детских домах, а сейчас веду такие проекты в Турине.</p></article></div>
+    <div class="projects" data-items="2"><article class="proj rv"><span class="x-plogo"><img width="1000" height="1000" src="images/larisa-romashova/logo-1.jpg" alt="Логотип" loading="lazy"></span><h3>Онлайн-школа итальянского языка Italiano Bello</h3><p class="x-p">Проект родился в 2016 году из желания помочь людям осуществить мечту: переехать в Италию, поступить в итальянский вуз, свободно общаться с носителями в путешествиях. Сегодня мы учим школьников 9–11 классов, студентов и взрослых — есть ученики и 60+. Помогаем заговорить в самые короткие сроки, подготовиться к поступлению, международным экзаменам CELI, CILS и PLIDA от B1 до C2 и к экзамену на гражданство. Я выстраиваю методику, обучаю преподавателей и сама веду учеников.</p><a class="link" href="https://romitalia.ru" target="_blank" rel="noopener">Сайт школы <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">5</div><div class="ps-label">преподавателей, среди них два носителя языка</div></div><div><div class="ps-num">80+</div><div class="ps-label">баллов — уровень, на который мы готовим к экзамену B2, а не просто проходной</div></div><div><div class="ps-num">3</div><div class="ps-label">международных экзамена: CELI, CILS, PLIDA</div></div></div></article><article class="proj rv"><h3>Музыка, детское развитие и волонтёрство</h3><p class="x-p">До итальянского я много лет преподавала музыку: фортепиано, сольфеджио, а ещё английский язык школьникам и студентам. В детской студии «Крошка Ру» занималась с малышами от года — музыка, рисование, лего, театр, английский, спорт. Участвую в волонтёрских культурных проектах: в Санкт-Петербурге организовывала концерты в домах престарелых и театральные постановки в детских домах, а сейчас веду такие проекты в Турине.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap about">
-    <figure class="frame about-photo rv"><img src="images/larisa-romashova/about-1.jpg" alt="Лариса Ромашова" loading="lazy"></figure>
+    <figure class="frame about-photo rv photo-landscape"><img width="1280" height="960" src="images/larisa-romashova/about-1.jpg" alt="Лариса Ромашова" loading="lazy"></figure>
     <div>
       <h2 class="sec-title">Обо мне</h2>
       <p class="about-body x-leadp">С детства мне нравилось учить других тому, что умею сама. Музыка показала, что я прежде всего педагог.</p>
@@ -509,21 +507,21 @@ p { margin: 0; }
 <section class="sec" id="method">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Метод «20 на 80»</h2></div></div>
-    <p class="sec-lead x-lead">Говорить на итальянском могут все. 20% теории и 80% разговорной практики — с первого урока.</p><div class="x-text"><p class="x-p">Ко мне часто приходят со словами: «Я год учу итальянский — или даже живу в Италии, — а говорить так и не начал». Язык дан нам, чтобы на нём говорить, поэтому практиковаться нужно сразу. Теория должна быть системной, но если её тут же не применить, она забывается или превращается в перевод в голове. У меня есть инструменты, с которыми через два-три месяца человек общается мини-диалогами в любом общественном месте в Италии. А ещё, изучая итальянский, неожиданно начинаешь лучше понимать свой русский.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит урок</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>5–7 минут разговора</strong><span>разогрев и задача урока.</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Новая грамматика</strong><span>объясняю сложное простым языком и сразу отрабатываем: упражнения, перевод с русского на итальянский.</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Текст или диалог</strong><span>слушаем, читаем, переводим и слушаем снова — до 100% понимания.</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Разговорная практика</strong><span>обсуждаем текст, отвечаю на вопросы.</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Рефлексия</strong><span>подводим итог занятия.</span></div></li></ol></div><div class="x-cards"><article class="x-card rv"><h3>Практика с первого урока</h3><p class="x-p">Бар, супермаркет, ресторан, транспорт — темы, которые реально пригодятся в Италии.</p></article><article class="x-card rv"><h3>Встречи с носителем</h3><p class="x-p">Через несколько уроков группа разыгрывает диалог с носителем языка — это и цель, и проверка.</p></article><article class="x-card rv"><h3>Грамматика как система</h3><p class="x-p">Показываю красоту и логику структуры языка, а не набор правил.</p></article><article class="x-card rv"><h3>Срезы и экзамены</h3><p class="x-p">Тесты в игровой форме и пробные международные экзамены, обратная связь каждому ученику.</p></article></div>
+    <p class="sec-lead x-lead">Говорить на итальянском могут все. 20% теории и 80% разговорной практики — с первого урока.</p><div class="x-text"><p class="x-p">Ко мне часто приходят со словами: «Я год учу итальянский — или даже живу в Италии, — а говорить так и не начал». Язык дан нам, чтобы на нём говорить, поэтому практиковаться нужно сразу. Теория должна быть системной, но если её тут же не применить, она забывается или превращается в перевод в голове. У меня есть инструменты, с которыми через два-три месяца человек общается мини-диалогами в любом общественном месте в Италии. А ещё, изучая итальянский, неожиданно начинаешь лучше понимать свой русский.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит урок</h3><ol class="x-steps" data-items="5"><li class="rv"><span class="x-n">01</span><div><strong>5–7 минут разговора</strong><span>разогрев и задача урока.</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Новая грамматика</strong><span>объясняю сложное простым языком и сразу отрабатываем: упражнения, перевод с русского на итальянский.</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Текст или диалог</strong><span>слушаем, читаем, переводим и слушаем снова — до 100% понимания.</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Разговорная практика</strong><span>обсуждаем текст, отвечаю на вопросы.</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Рефлексия</strong><span>подводим итог занятия.</span></div></li></ol></div><div class="x-cards" data-items="4"><article class="x-card rv"><h3>Практика с первого урока</h3><p class="x-p">Бар, супермаркет, ресторан, транспорт — темы, которые реально пригодятся в Италии.</p></article><article class="x-card rv"><h3>Встречи с носителем</h3><p class="x-p">Через несколько уроков группа разыгрывает диалог с носителем языка — это и цель, и проверка.</p></article><article class="x-card rv"><h3>Грамматика как система</h3><p class="x-p">Показываю красоту и логику структуры языка, а не набор правил.</p></article><article class="x-card rv"><h3>Срезы и экзамены</h3><p class="x-p">Тесты в игровой форме и пробные международные экзамены, обратная связь каждому ученику.</p></article></div>
   </div>
 </section>
 
 <section class="sec band" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">Поступление в Италию · с нуля</span><h3>София: от нуля до B2 за 4,5 месяца</h3><p class="x-p">Ушла из своего университета посреди года и решила поступать в Италию. Пришла в начале февраля, начинали с нуля. Сдала международный экзамен CELI B2 и поступила на экономический факультет Università degli Studi di Milano.</p><span class="x-res">CELI B2 и Миланский университет</span></article><article class="x-card rv"><span class="x-meta">Экзамен B2 · 5 месяцев</span><h3>Галина</h3><p class="x-p">Год занималась с двумя преподавателями, которые уверяли, что она готова к B2. Тест показал A1 — говорить она не могла. Мой инструмент: ровно час каждый день, без пропусков. Через две недели заговорила.</p><span class="x-res">B2 через 5 месяцев</span></article><article class="x-card rv"><span class="x-meta">Группа · 4 месяца</span><h3>Цель — A2 за 4 месяца</h3><p class="x-p">Студент Высшей школы математики задал темп, две девушки из группы решили идти вместе с ним. Все домашние задания — и международный экзамен A2.</p><span class="x-res">Высокие баллы у всех троих</span></article><article class="x-card rv"><span class="x-meta">Интенсив · 1 месяц</span><h3>С нуля до A1 за месяц</h3><p class="x-p">Владела французским на уровне C1–C2, и ни один преподаватель не брался за такой срок. Другая ученица-полиглот за месяц дошла до A2 перед поездкой в Италию.</p><span class="x-res">A1 и A2 за месяц</span></article><article class="x-card rv"><span class="x-meta">Для путешествий · 4 месяца</span><h3>Не повторить историю с английским</h3><p class="x-p">10 лет учила английский в школе и так и не заговорила. С итальянским за 4 месяца дошла до A1–A2 и уверенно путешествовала по Италии — и учит язык до сих пор.</p><span class="x-res">A2 и поездка в Италию</span></article></div>
+    <div class="x-cards" data-items="5"><article class="x-card rv"><span class="x-meta">Поступление в Италию · с нуля</span><h3>София: от нуля до B2 за 4,5 месяца</h3><p class="x-p">Ушла из своего университета посреди года и решила поступать в Италию. Пришла в начале февраля, начинали с нуля. Сдала международный экзамен CELI B2 и поступила на экономический факультет Università degli Studi di Milano.</p><span class="x-res">CELI B2 и Миланский университет</span></article><article class="x-card rv"><span class="x-meta">Экзамен B2 · 5 месяцев</span><h3>Галина</h3><p class="x-p">Год занималась с двумя преподавателями, которые уверяли, что она готова к B2. Тест показал A1 — говорить она не могла. Мой инструмент: ровно час каждый день, без пропусков. Через две недели заговорила.</p><span class="x-res">B2 через 5 месяцев</span></article><article class="x-card rv"><span class="x-meta">Группа · 4 месяца</span><h3>Цель — A2 за 4 месяца</h3><p class="x-p">Студент Высшей школы математики задал темп, две девушки из группы решили идти вместе с ним. Все домашние задания — и международный экзамен A2.</p><span class="x-res">Высокие баллы у всех троих</span></article><article class="x-card rv"><span class="x-meta">Интенсив · 1 месяц</span><h3>С нуля до A1 за месяц</h3><p class="x-p">Владела французским на уровне C1–C2, и ни один преподаватель не брался за такой срок. Другая ученица-полиглот за месяц дошла до A2 перед поездкой в Италию.</p><span class="x-res">A1 и A2 за месяц</span></article><article class="x-card rv"><span class="x-meta">Для путешествий · 4 месяца</span><h3>Не повторить историю с английским</h3><p class="x-p">10 лет учила английский в школе и так и не заговорила. С итальянским за 4 месяца дошла до A1–A2 и уверенно путешествовала по Италии — и учит язык до сих пор.</p><span class="x-res">A2 и поездка в Италию</span></article></div>
   </div>
 </section>
 
 <section class="sec" id="media">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подкасты</h2></div></div>
-    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1237903264?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/larisa-romashova/pod-1237903264.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223670076?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст с Николаем Полещуком"><img src="images/larisa-romashova/pod-1223670076.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст с Николаем Полещуком"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст с Николаем Полещуком</strong></button></div></div></div>
+    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1237903264?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="От музыки к Italiano Bello: история школы"><img width="1280" height="720" src="images/larisa-romashova/pod-1237903264.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: От музыки к Italiano Bello: история школы"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">От музыки к Italiano Bello: история школы</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223670076?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="80% практики: итальянский с первого урока"><img width="1280" height="720" src="images/larisa-romashova/pod-1223670076.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: 80% практики: итальянский с первого урока"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">80% практики: итальянский с первого урока</h3></div></div>
     <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://t.me/romitalia" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@romitalia</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://vk.ru/im/channels/-237399067" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>Канал школы</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://profi.ru/profile/RomashovaLN" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h9a6 6 0 0 1 0 12H9v6H5V3zm4 4v4h5a2 2 0 0 0 0-4H9z"/></svg></span><span><strong>Профи.ру</strong><span>profi.ru/profile/RomashovaLN</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://www.avito.ru/brands/e2aca1014c2486f39f8c522588f0cccb/all/predlozheniya_uslug?sellerId=2e5e089a6f024311fcc92d204d60b43d" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="7" cy="16" r="4"/><circle cx="16.5" cy="7.5" r="3"/><circle cx="17" cy="17" r="2.2"/><circle cx="7.5" cy="6.5" r="1.8"/></svg></span><span><strong>Авито</strong><span>Услуги на Авито</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://romitalia.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Сайт школы</strong><span>romitalia.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
 </section>
@@ -533,8 +531,8 @@ p { margin: 0; }
     <div>
       <h2 class="sec-title">Связаться с Ларисой</h2>
       <p class="sec-lead">Партнёрство, интервью, работа преподавателем в команде или культурные проекты — напишите, я с удовольствием отвечу.</p>
-      
-      <figure class="x-cphoto rv"><img src="images/larisa-romashova/contact-1.jpg" alt="Лариса Ромашова" loading="lazy"></figure>
+
+      <figure class="x-cphoto rv"><img width="854" height="1280" src="images/larisa-romashova/contact-1.jpg" alt="Лариса Ромашова" loading="lazy"></figure>
     </div>
     <div><div class="card rv"><div class="socials x-contacts"><a class="social" href="https://t.me/romashova_admin" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram школы</strong><span>@romashova_admin — для заявок</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/393381873833" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+39 338 187 3833</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/393661968956" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+39 366 196 8956</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="tel:+79080027495"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></span><span><strong>Телефон в России</strong><span>+7 908 002-74-95</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div></div>
   </div>
@@ -566,17 +564,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -586,12 +579,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -766,7 +763,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

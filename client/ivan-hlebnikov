@@ -84,7 +84,6 @@ p { margin: 0; }
 .btn:hover svg { transform: translateX(4px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .4s, border-color .4s; border-bottom: 1px solid transparent; }
 .hdr.is-solid { background: rgba(12, 19, 34, .82); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom-color: var(--line); }
 .hdr.is-away { transform: translateY(-110%); }
@@ -469,12 +468,11 @@ p { margin: 0; }
 .x-logo,.x-plogo{background:var(--parch)}
 .x-revimg{background:var(--parch)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
+<body data-client-layout="academic" data-about="text" data-hero="text">
 
-<div class="progress" aria-hidden="true"></div>
-
-<header class="hdr" data-reveal>
+<header class="hdr">
   <div class="wrap hdr-in">
     <a href="#top" class="logo">Иван Хлебников</a>
     <nav class="nav" aria-label="Разделы"><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a></nav>
@@ -483,7 +481,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-gold">Связаться</a>
 </div>
@@ -491,7 +489,7 @@ p { margin: 0; }
 <main>
 
 <section class="hero" id="top">
-  
+
   <div class="wrap hero-in">
     <h1 class="hero-name"><span class="ln"><span>Иван</span></span><span class="ln"><span>Хлебников</span></span></h1>
     <div class="hero-rule"></div>
@@ -512,14 +510,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv"><h3>Школа гитары и укулеле «Амиго»</h3><p class="x-p">Школа гитары и укулеле в Екатеринбурге: два филиала, онлайн-формат и записанные курсы. Её основала моя жена Екатерина в 2014 году, я пришёл в 2019-м. Вместе мы разобрали её авторский подход на шаги и превратили в методику, которую можно передать другому преподавателю. Сейчас найм, адаптация и обучение полностью описаны и работают без моего постоянного участия.</p><a class="link" href="https://amigomusic.ru" target="_blank" rel="noopener">amigomusic.ru <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">6</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num">3000+</div><div class="ps-label">учеников за всё время</div></div><div><div class="ps-num">≈30%</div><div class="ps-label">новых учеников приходят по рекомендации</div></div></div></article><article class="proj rv"><h3>Школа подготовки «105 баллов»</h3><p class="x-p">Онлайн-школа по школьным предметам, открыта в 2025 году: подтягиваем успеваемость в 5–8 классах и целенаправленно готовим к ОГЭ и ЕГЭ. Администрирование и подход к преподаванию перенесли из «Амиго», а маркетинг для онлайна строили заново. Учитель работает на своём уровне мастерства, без навязанного шаблона, а вся организация — на команде.</p><a class="link" href="https://105ballov.ru" target="_blank" rel="noopener">105ballov.ru <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">12</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num">30+</div><div class="ps-label">концепций подачи школы протестировали за первые 8 месяцев</div></div><div><div class="ps-num">5–8</div><div class="ps-label">классы — подтягиваем успеваемость, плюс подготовка к ОГЭ и ЕГЭ</div></div></div></article><article class="proj rv"><h3>Юридическая компания «Хлебников и Партнёры»</h3><p class="x-p">15 лет я работал юристом и основал свою компанию. С нуля построил отдел продаж: скрипты звонков, бесплатная диагностика документов, обучил два отдела и руководителя — дальше система работала сама. В 2019 году, на пике, продал свою долю партнёрам и ушёл в образование.</p><p class="x-p">Ко мне часто приходят руководители других школ — обсудить бизнес, отделы, найм. Готовых советов я обычно не даю: задаю вопросы, чтобы человек сам увидел решение, которое у него уже есть.</p></article><article class="proj rv"><h3>Вин Чун</h3><p class="x-p">7 лет был инструктором — вёл тренировки по боевому искусству Вин Чун. Имею инструкторскую степень и вымпел на открытие школы.</p></article><article class="proj rv"><h3>Schoolsmart и обучение предпринимателей</h3><p class="x-p">Участник Schoolsmart. С 2022 по 2024 год входил в мастер-группу сообщества «Ближний круг Ксении Акушевой» в Екатеринбурге. Регулярно консультировался по ведению бизнеса с Дмитрием Черезовым, руководителем юридической компании, и с Максимом Симуковым, основателем сети школ гитары из Ульяновска.</p></article></div>
+    <div class="projects" data-items="5"><article class="proj rv"><h3>Школа гитары и укулеле «Амиго»</h3><p class="x-p">Школа гитары и укулеле в Екатеринбурге: два филиала, онлайн-формат и записанные курсы. Её основала моя жена Екатерина в 2014 году, я пришёл в 2019-м. Вместе мы разобрали её авторский подход на шаги и превратили в методику, которую можно передать другому преподавателю. Сейчас найм, адаптация и обучение полностью описаны и работают без моего постоянного участия.</p><a class="link" href="https://amigomusic.ru" target="_blank" rel="noopener">amigomusic.ru <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">6</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num">3000+</div><div class="ps-label">учеников за всё время</div></div><div><div class="ps-num">≈30%</div><div class="ps-label">новых учеников приходят по рекомендации</div></div></div></article><article class="proj rv"><h3>Школа подготовки «105 баллов»</h3><p class="x-p">Онлайн-школа по школьным предметам, открыта в 2025 году: подтягиваем успеваемость в 5–8 классах и целенаправленно готовим к ОГЭ и ЕГЭ. Администрирование и подход к преподаванию перенесли из «Амиго», а маркетинг для онлайна строили заново. Учитель работает на своём уровне мастерства, без навязанного шаблона, а вся организация — на команде.</p><a class="link" href="https://105ballov.ru" target="_blank" rel="noopener">105ballov.ru <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><div class="proj-stats"><div><div class="ps-num">12</div><div class="ps-label">преподавателей</div></div><div><div class="ps-num">30+</div><div class="ps-label">концепций подачи школы протестировали за первые 8 месяцев</div></div><div><div class="ps-num">5–8</div><div class="ps-label">классы — подтягиваем успеваемость, плюс подготовка к ОГЭ и ЕГЭ</div></div></div></article><article class="proj rv"><h3>Юридическая компания «Хлебников и Партнёры»</h3><p class="x-p">15 лет я работал юристом и основал свою компанию. С нуля построил отдел продаж: скрипты звонков, бесплатная диагностика документов, обучил два отдела и руководителя — дальше система работала сама. В 2019 году, на пике, продал свою долю партнёрам и ушёл в образование.</p><p class="x-p">Ко мне часто приходят руководители других школ — обсудить бизнес, отделы, найм. Готовых советов я обычно не даю: задаю вопросы, чтобы человек сам увидел решение, которое у него уже есть.</p></article><article class="proj rv"><h3>Вин Чун</h3><p class="x-p">7 лет был инструктором — вёл тренировки по боевому искусству Вин Чун. Имею инструкторскую степень и вымпел на открытие школы.</p></article><article class="proj rv"><h3>Schoolsmart и обучение предпринимателей</h3><p class="x-p">Участник Schoolsmart. С 2022 по 2024 год входил в мастер-группу сообщества «Ближний круг Ксении Акушевой» в Екатеринбурге. Регулярно консультировался по ведению бизнеса с Дмитрием Черезовым, руководителем юридической компании, и с Максимом Симуковым, основателем сети школ гитары из Ульяновска.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap">
     <h2 class="sec-title x-mb">Обо мне</h2>
-    
+
     <div class="about">
       <div>
         <p class="quote">Юрист по образованию, гитарист по училищу, предприниматель в образовании — с 2019 года.</p>
@@ -533,21 +531,21 @@ p { margin: 0; }
 <section class="sec" id="system">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Система школ</h2></div></div>
-    <p class="sec-lead x-lead">Если описать наши школы одним словом, это будет «поддержка». Требовательность — да, критика за ошибку — нет.</p><div class="x-text"><p class="x-p">Двадцать лет назад Екатерина была на летней школе классической гитары в Италии. Урок там начинался с беседы о настроении и жизни, учитель играл вместе с ней — и за весь урок не сделал ни одного замечания. Этот интуитивный подход мы разложили на шаги и превратили в систему. Если ученик ошибся, мы не говорим «ты ошибся», а говорим «вот здесь ты сыграл хорошо — давай так же тут». Так у ученика складывается привязка к хорошему результату, а не страх ошибиться.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как я строю систему</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Разобрать</strong><span>задаю вопросы лучшему преподавателю: что говорит, что делает ученик и почему</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Найти логику</strong><span>нахожу закономерности, из которых складывается яркий урок без ошибок</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Описать</strong><span>собираю понятную методику — например, авторскую систему из пяти шагов для групповых уроков музыки</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Обучить</strong><span>видеокурсы и сопровождение: даже без опыта за два месяца можно стать сильным педагогом</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Контролировать качество</strong><span>еженедельный методический разбор уроков и экзамены по уровням гитары</span></div></li></ol></div><div class="x-cards"><article class="x-card rv"><h3>Учитель только учит</h3><p class="x-p">Расписание, переносы, отработки, оплаты, пробные уроки — всё берёт на себя отдел администрирования.</p></article><article class="x-card rv"><h3>Свобода внутри системы</h3><p class="x-p">Как танцор в переходе метро: маршрут задан, а как объяснить дроби — десятками способов — выбирает сам преподаватель.</p></article><article class="x-card rv"><h3>Карта пробелов</h3><p class="x-p">В «105 баллов» у каждого ученика есть карта пробелов и план на год под критерии экзамена.</p></article><article class="x-card rv"><h3>Выходные — неприкосновенны</h3><p class="x-p">Свободное время преподавателя — закон. Зарплата — всегда вовремя и в том размере, о котором договорились.</p></article><article class="x-card rv"><h3>Регламенты и показатели</h3><p class="x-p">Отток, отработки, финансовый план. Еженедельные созвоны с администраторами и разбор каждого пробного урока.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Пять шагов разучивания песни на групповом уроке</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Ритм</strong><span>проговариваем слова песни и отмечаем правой рукой сильные доли</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Ритм на струнах</strong><span>проговариваем слова и отмечаем сильные доли уже по струнам</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Аккорды</strong><span>ставим аккорд — проговариваем слова до следующего аккорда — ставим следующий</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Каркас песни</strong><span>проговариваем слова и играем аккорды боем «однёрка»: правая и левая рука собраны, ученик уже «в структуре музыки»</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Аккомпанемент</strong><span>добавляем любой аккомпанемент по желанию</span></div></li></ol></div>
+    <p class="sec-lead x-lead">Если описать наши школы одним словом, это будет «поддержка». Требовательность — да, критика за ошибку — нет.</p><div class="x-text"><p class="x-p">Двадцать лет назад Екатерина была на летней школе классической гитары в Италии. Урок там начинался с беседы о настроении и жизни, учитель играл вместе с ней — и за весь урок не сделал ни одного замечания. Этот интуитивный подход мы разложили на шаги и превратили в систему. Если ученик ошибся, мы не говорим «ты ошибся», а говорим «вот здесь ты сыграл хорошо — давай так же тут». Так у ученика складывается привязка к хорошему результату, а не страх ошибиться.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как я строю систему</h3><ol class="x-steps" data-items="5"><li class="rv"><span class="x-n">01</span><div><strong>Разобрать</strong><span>задаю вопросы лучшему преподавателю: что говорит, что делает ученик и почему</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Найти логику</strong><span>нахожу закономерности, из которых складывается яркий урок без ошибок</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Описать</strong><span>собираю понятную методику — например, авторскую систему из пяти шагов для групповых уроков музыки</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Обучить</strong><span>видеокурсы и сопровождение: даже без опыта за два месяца можно стать сильным педагогом</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Контролировать качество</strong><span>еженедельный методический разбор уроков и экзамены по уровням гитары</span></div></li></ol></div><div class="x-cards" data-items="5"><article class="x-card rv"><h3>Учитель только учит</h3><p class="x-p">Расписание, переносы, отработки, оплаты, пробные уроки — всё берёт на себя отдел администрирования.</p></article><article class="x-card rv"><h3>Свобода внутри системы</h3><p class="x-p">Как танцор в переходе метро: маршрут задан, а как объяснить дроби — десятками способов — выбирает сам преподаватель.</p></article><article class="x-card rv"><h3>Карта пробелов</h3><p class="x-p">В «105 баллов» у каждого ученика есть карта пробелов и план на год под критерии экзамена.</p></article><article class="x-card rv"><h3>Выходные — неприкосновенны</h3><p class="x-p">Свободное время преподавателя — закон. Зарплата — всегда вовремя и в том размере, о котором договорились.</p></article><article class="x-card rv"><h3>Регламенты и показатели</h3><p class="x-p">Отток, отработки, финансовый план. Еженедельные созвоны с администраторами и разбор каждого пробного урока.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Пять шагов разучивания песни на групповом уроке</h3><ol class="x-steps" data-items="5"><li class="rv"><span class="x-n">01</span><div><strong>Ритм</strong><span>проговариваем слова песни и отмечаем правой рукой сильные доли</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Ритм на струнах</strong><span>проговариваем слова и отмечаем сильные доли уже по струнам</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Аккорды</strong><span>ставим аккорд — проговариваем слова до следующего аккорда — ставим следующий</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Каркас песни</strong><span>проговариваем слова и играем аккорды боем «однёрка»: правая и левая рука собраны, ученик уже «в структуре музыки»</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Аккомпанемент</strong><span>добавляем любой аккомпанемент по желанию</span></div></li></ol></div>
   </div>
 </section>
 
 <section class="sec results" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">«105 баллов» · физика · 8 класс</span><h3>От двоек к лучшим в классе</h3><p class="x-p">Ученик пришёл с твёрдой двойкой и уже записал себя в двоечники. Преподаватель с первого урока говорил с ним как с уверенным хорошистом: «Я знаю, что ты знаешь. Давай посмотрим на тему». Ребёнок поверил в себя.</p><span class="x-res">один из лучших в классе</span></article><article class="x-card rv"><span class="x-meta">«Амиго» · концертные группы</span><h3>Элита школы — на сцене</h3><p class="x-p">Четыре концертные группы занимаются больше остальных, оттачивают номера, выступают на отчётных концертах и конкурсах.</p><span class="x-res">4 группы</span></article></div>
+    <div class="x-cards" data-items="2"><article class="x-card rv"><span class="x-meta">«105 баллов» · физика · 8 класс</span><h3>От двоек к лучшим в классе</h3><p class="x-p">Ученик пришёл с твёрдой двойкой и уже записал себя в двоечники. Преподаватель с первого урока говорил с ним как с уверенным хорошистом: «Я знаю, что ты знаешь. Давай посмотрим на тему». Ребёнок поверил в себя.</p><span class="x-res">один из лучших в классе</span></article><article class="x-card rv"><span class="x-meta">«Амиго» · концертные группы</span><h3>Элита школы — на сцене</h3><p class="x-p">Четыре концертные группы занимаются больше остальных, оттачивают номера, выступают на отчётных концертах и конкурсах.</p><span class="x-res">4 группы</span></article></div>
   </div>
 </section>
 
 <section class="sec" id="media">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подкасты</h2></div></div>
-    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1221159992?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/ivan-hlebnikov/pod-1221159992.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226954909?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/ivan-hlebnikov/pod-1226954909.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div></div>
+    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1221159992?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="От юриспруденции к двум школам: история «Амиго»"><img width="1280" height="720" src="images/ivan-hlebnikov/pod-1221159992.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: От юриспруденции к двум школам: история «Амиго»"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">От юриспруденции к двум школам: история «Амиго»</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226954909?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Доверие в команде: найм и работа преподавателей"><img width="1280" height="720" src="images/ivan-hlebnikov/pod-1226954909.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Доверие в команде: найм и работа преподавателей"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Доверие в команде: найм и работа преподавателей</h3></div></div>
     <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://vk.com/ivan.khlebnikov" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>vk.com/ivan.khlebnikov</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://amigomusic.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>«Амиго»</strong><span>amigomusic.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://105ballov.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>«105 баллов»</strong><span>105ballov.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
 </section>
@@ -557,8 +555,8 @@ p { margin: 0; }
     <div>
       <h2 class="sec-title">Связаться с Иваном</h2>
       <p class="sec-lead">Партнёрство, обмен опытом или вопрос о школах — напишите на почту, администратор передаст мне.</p>
-      
-      
+
+
     </div>
     <div><div class="socials x-contacts"><a class="social" href="mailto:gitar-class@mail.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>gitar-class@mail.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://amigomusic.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Школа гитары «Амиго»</strong><span>amigomusic.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://105ballov.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Школа «105 баллов»</strong><span>105ballov.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
@@ -590,17 +588,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -610,12 +603,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -790,7 +787,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */
