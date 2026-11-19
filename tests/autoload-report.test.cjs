@@ -109,9 +109,9 @@ test('provider Category controls readiness even if the sheet Category is filled'
  c.fetch=async()=>new Response('<Ads><Ad><id>one</id><Category>Предложение услуг</Category><Images><Image url="https://prepared.test/new.jpg"/></Images></Ad></Ads>');
  await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,false);assert.equal(c.ads[0].fields[1].value,'https://prepared.test/new.jpg');
 });
-test('new ad absent from provider output is held back',async()=>{
+test('missing provider IDs stop the build instead of silently shrinking the feed',async()=>{
  const c=setup();c.feed={photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};c.ads=[{id:'new',fields:[]}];c.stat={problems:[]};c.fetch=async()=>new Response('<Ads></Ads>');
- await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,true);
+ await assert.rejects(vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c),/не соответствует выбранной таблице/);assert.equal(c.ads[0].blocked,undefined);
 });
 test('failure to check readiness preserves the previous XML',async()=>{
  const c=setup();c.records['feedxml:test-feed']='<Ads>previous</Ads>';
@@ -144,3 +144,27 @@ for (const [file,name] of [['avito-bids','renderReport'],['zagruzka-extra','pain
   assert.match(body.innerHTML,/351 объявлений/);assert.doesNotMatch(body.innerHTML,/всего 0 объявлений/);assert.match(body.innerHTML,/Сводка ниже предварительная/);
  });
 }
+test('mismatched provider IDs preserve the existing XML and never upload a shortened file',async()=>{
+ const c=setup();c.records['feedxml:guard']='<Ads><Ad><id>one</id><Category>Услуги</Category></Ad><Ad><id>two</id><Category>Услуги</Category></Ad></Ads>';
+ const old=c.records['feedxml:guard'];c.env.AVITO_KV.put=async(k,v)=>{c.records[k]=k.startsWith('feedxml:')?v:JSON.parse(v);};
+ c.feed={slug:'guard',tabs:['Ads'],photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};
+ c.rows=[[],['id','Category'],['Грузим в xml','Грузим в xml'],[],['one','Услуги'],['two','Услуги']];
+ vm.runInContext(`feedsReadTabs=async()=>({tabs:{Ads:rows},missing:[],allTabs:['Ads']});feedsS3Put=async()=>{throw Error('must not publish')};`,c);
+ c.fetch=async()=>new Response('<Ads><Ad><id>one</id><Category>Услуги</Category><Images><Image url="https://ready.test/one.jpg"/></Images></Ad></Ads>');
+ const stat=await vm.runInContext('feedsBuild(env,feed)',c);
+ assert.match(stat.error,/не соответствует/);assert.equal(c.records['feedxml:guard'],old);assert.equal(c.records['feedxml:guard:previous'],undefined);
+});
+test('photo processing cannot remove an existing listing from a published feed',async()=>{
+ const c=setup();const old='<Ads><Ad><id>one</id><Category>Услуги</Category></Ad></Ads>';c.records['feedxml:guard']=old;
+ c.env.AVITO_KV.put=async(k,v)=>{c.records[k]=k.startsWith('feedxml:')?v:JSON.parse(v);};
+ c.feed={slug:'guard',tabs:['Ads']};c.rows=[[],['id','Category','Фото'],['Грузим в xml','Грузим в xml','Не грузим'],[],['one','Услуги','Картинки редактируются']];
+ vm.runInContext(`feedsReadTabs=async()=>({tabs:{Ads:rows},missing:[],allTabs:['Ads']});`,c);
+ const stat=await vm.runInContext('feedsBuild(env,feed)',c);assert.match(stat.error,/ранее выгруженных/);assert.equal(c.records['feedxml:guard'],old);
+});
+test('explicitly disabled rows may be removed and the previous XML is saved',async()=>{
+ const c=setup();const old='<Ads><Ad><id>one</id><Category>Услуги</Category></Ad></Ads>';c.records['feedxml:guard']=old;
+ c.env.AVITO_KV.put=async(k,v)=>{c.records[k]=k.startsWith('feedxml:')?v:JSON.parse(v);};
+ c.feed={slug:'guard',tabs:['Ads']};c.rows=[[],['id','Category','Товар доступен?'],['Грузим в xml','Грузим в xml','Не грузим'],[],['one','Услуги','Нет']];
+ vm.runInContext(`feedsReadTabs=async()=>({tabs:{Ads:rows},missing:[],allTabs:['Ads']});feedsValidate=async()=>{};`,c);
+ const stat=await vm.runInContext('feedsBuild(env,feed)',c);assert.equal(stat.error,undefined);assert.equal(stat.ads,0);assert.equal(c.records['feedxml:guard:previous'],old);assert.ok(!c.records['feedxml:guard'].includes('<Ad>'));
+});

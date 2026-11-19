@@ -14582,6 +14582,12 @@ async function feedsApplyPhotoReadiness(feed, ads, stat) {
     preparedImages.set(id.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/<!\[CDATA\[|\]\]>/g, '').trim(), urls);
   }
   stat.photoReadiness = { checkedAt: new Date().toISOString(), source: url };
+  const eligible = ads.filter((ad) => !ad.blocked);
+  const missing = eligible.filter((ad) => !reference.has(ad.id));
+  if (missing.length) {
+    stat.photoReadiness.missingIds = missing.map((ad) => ad.id).slice(0, 300);
+    throw new Error(`XML BananLab не соответствует выбранной таблице: в нём отсутствуют ${missing.length} из ${eligible.length} включённых id. Отсутствие id не подтверждает обработку фото. Обновите XML BananLab для этой таблицы; урезанная выгрузка не опубликована`);
+  }
   for (const ad of ads) {
     if (ad.blocked) continue;
     const ready = reference.get(ad.id);
@@ -14654,8 +14660,22 @@ async function feedsBuild(env, feed) {
     return false;
   });
 
-  try { await feedsApplyPhotoReadiness(feed, ads, stat); } catch (err) {
+  const previousXml = await kv.get(feedsKey(feed, 'xml'));
+  try {
+    await feedsApplyPhotoReadiness(feed, ads, stat);
+    // An existing listing awaiting photos must not disappear from the feed:
+    // Avito interprets its omission as removal. Hold the whole update instead.
+    if (previousXml) {
+      const previousIds = feedsAdsIndex(previousXml);
+      const held = ads.filter((ad) => ad.blocked && previousIds.has(ad.id));
+      if (held.length) throw new Error(`Обновление приостановлено: ${held.length} ранее выгруженных объявлений ожидают готовых фото или категории. Их удаление из XML не опубликовано`);
+    }
+  } catch (err) {
     stat.error = 'Сборка остановлена: ' + String(err.message || err) + '. Предыдущий XML сохранён.';
+    if (previousXml) {
+      stat.ads = feedsAdsIndex(previousXml).size;
+      stat.previousXmlPreserved = true;
+    }
     stat.ms = Date.now() - t0;
     await kv.put(feedsKey(feed, 'stat'), JSON.stringify(stat));
     return stat;
@@ -14730,6 +14750,7 @@ async function feedsBuild(env, feed) {
   stat.ads = count;
   stat.skipped += skipped;
   stat.ms = Date.now() - t0;
+  if (previousXml && previousXml !== xml) await kv.put(feedsKey(feed, 'xml') + ':previous', previousXml);
   await kv.put(feedsKey(feed, 'xml'), xml);
   if (feedsS3(env)) {
     try {
