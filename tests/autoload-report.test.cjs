@@ -174,3 +174,26 @@ test('an imported historical BananLab URL never enables external readiness impli
  await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,undefined);assert.equal(c.stat.photoReadiness,undefined);
  c.feed.photoReadyXml='';await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);
 });
+
+test('empty photo cells keep previously published photos, including recovery from the backup', async () => {
+ const c = setup();
+ c.records['feedxml:guard'] = '<Ads><Ad><id>current</id><Images><Image url="https://images.test/current.jpg?a=1&amp;b=2"/></Images></Ad><Ad><id>recover</id></Ad><Ad><id>clear</id><Images><Image url="https://images.test/clear.jpg"/></Images></Ad></Ads>';
+ c.records['feedxml:guard:previous'] = '<Ads><Ad><id>recover</id><Images><Image url="https://images.test/recover.jpg"/></Images></Ad><Ad><id>new</id><Images><Image url="https://images.test/stale.jpg"/></Images></Ad></Ads>';
+ c.env.AVITO_KV.put = async (key, value) => {
+   c.records[key] = key.startsWith('feedxml:') ? value : JSON.parse(value);
+ };
+ c.feed = { slug: 'guard', tabs: ['Ads'] };
+ c.rows = [
+   [], ['id', 'Category', 'Images'], ['Грузим в xml', 'Грузим в xml', 'Грузим в xml'], [],
+   ['current', 'Услуги', ''], ['recover', 'Услуги', ''], ['clear', 'Услуги', '-'], ['new', 'Услуги', ''],
+ ];
+ vm.runInContext("feedsReadTabs = async () => ({ tabs: { Ads: rows }, missing: [], allTabs: ['Ads'] }); feedsValidate = async () => {};", c);
+ c.fetch = async () => { throw new Error('must not fetch the historical provider'); };
+ const stat = await vm.runInContext('feedsBuild(env, feed)', c);
+ const xml = c.records['feedxml:guard'];
+ assert.equal(stat.ads, 4);
+ assert.match(xml, /current\.jpg\?a=1&amp;b=2/);
+ assert.match(xml, /recover\.jpg/);
+ assert.doesNotMatch(xml, /clear\.jpg|stale\.jpg/);
+ assert.ok(stat.problems.some(({msg}) => /Сохранены ранее опубликованные фото для 2 объявлений/.test(msg)));
+});
