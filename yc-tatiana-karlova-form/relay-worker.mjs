@@ -47,18 +47,28 @@ export default {
     const deadline = AbortSignal.timeout(17000);
     const results = await Promise.allSettled([...new Set(chatIds)].map(async chatId => {
       for (const chunk of chunks) {
-        const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        let res;
+        try { res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: 'POST', redirect: 'error',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: chatId, text: chunk, disable_web_page_preview: true }),
           signal: deadline,
-        });
+        }); } catch (error) { throw new Error(error.name === 'TimeoutError' || error.name === 'AbortError' ? 'telegram_timeout' : 'telegram_unreachable'); }
         const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.ok) throw new Error('telegram_rejected');
+        if (!res.ok || !data?.ok) {
+          const description = String(data?.description || '').toLowerCase();
+          const code = res.status === 401 ? 'bot_unauthorized'
+            : description.includes('chat not found') ? 'chat_not_found'
+            : description.includes('blocked by the user') ? 'bot_blocked'
+            : res.status === 403 ? 'telegram_forbidden'
+            : res.status === 429 ? 'telegram_rate_limited' : 'telegram_rejected';
+          throw new Error(code);
+        }
       }
     }));
     const delivered = results.filter(result => result.status === 'fulfilled').length;
     // Do not return or log Telegram responses: they contain recipient details.
-    return reply(delivered ? 200 : 502, { ok: delivered > 0, delivered, failed: results.length - delivered });
+    const failureCodes = [...new Set(results.filter(result => result.status === 'rejected').map(result => result.reason.message))];
+    return reply(delivered ? 200 : 502, { ok: delivered > 0, delivered, failed: results.length - delivered, ...(failureCodes.length ? { failureCodes } : {}) });
   },
 };
