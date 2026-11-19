@@ -133,11 +133,13 @@ async function sendTelegram(fields) {
   const relayUrl = process.env.TELEGRAM_RELAY_URL?.trim();
   const relaySecret = process.env.TELEGRAM_RELAY_SECRET?.trim();
   if (!token || !chatIds.length || !relayUrl || !relaySecret) return 'skipped';
-  const url = new URL(relayUrl);
+  let url;
+  try { url = new URL(relayUrl); } catch { throw new Error('relay_url_invalid'); }
   if (url.protocol !== 'https:') throw new Error('relay_https_required');
   const text = 'Новая заявка на диагностику — Карлова\n\n'
     + orderedEntries(fields).map(([key, value]) => `${key}: ${value}`).join('\n');
-  const res = await fetch(url, {
+  let res;
+  try { res = await fetch(url, {
     method: 'POST',
     redirect: 'error',
     headers: {
@@ -146,9 +148,17 @@ async function sendTelegram(fields) {
     },
     body: JSON.stringify({ token, chatIds, text }),
     signal: AbortSignal.timeout(20000),
-  });
+  }); } catch (error) {
+    throw new Error(error.name === 'TimeoutError' || error.name === 'AbortError' ? 'relay_timeout' : 'relay_unreachable');
+  }
   const data = await res.json().catch(() => null);
-  if (!res.ok || !data?.ok) throw new Error('telegram_relay_failed');
+  if (!res.ok) {
+    const codes = Array.isArray(data?.failureCodes) ? data.failureCodes : [];
+    const allowed = ['bot_unauthorized', 'chat_not_found', 'bot_blocked', 'telegram_forbidden', 'telegram_rate_limited', 'telegram_rejected', 'telegram_unreachable', 'telegram_timeout'];
+    const reason = codes.find(code => allowed.includes(code));
+    throw new Error(reason || `relay_http_${res.status}`);
+  }
+  if (!data?.ok) throw new Error('relay_invalid_response');
   return 'sent';
 }
 
@@ -178,16 +188,21 @@ module.exports.handler = async function (event) {
   const settled = await Promise.allSettled(names.map((n) => channels[n](cleanFields)));
 
   const result = {};
+  const diagnostics = {};
   settled.forEach((r, i) => {
     if (r.status === 'fulfilled') result[names[i]] = r.value;
     else {
       result[names[i]] = 'failed';
-      console.error(`${names[i]}_failed`, r.reason && r.reason.message);
+      const code = String(r.reason?.message || '');
+      if (names[i] === 'telegram') {
+        diagnostics.telegram = /^(relay_(url_invalid|https_required|timeout|unreachable|invalid_response|http_[0-9]{3})|bot_unauthorized|chat_not_found|bot_blocked|telegram_(forbidden|rate_limited|rejected|unreachable|timeout))$/.test(code) ? code : 'telegram_failed';
+      }
+      console.error(`${names[i]}_failed`, names[i] === 'telegram' ? diagnostics.telegram : 'delivery_failed');
     }
   });
 
   if (!Object.values(result).includes('sent')) {
-    return jsonResponse(502, { error: 'delivery_failed', result });
+    return jsonResponse(502, { error: 'delivery_failed', result, diagnostics });
   }
-  return jsonResponse(200, { ok: true, result });
+  return jsonResponse(200, { ok: true, result, diagnostics });
 };

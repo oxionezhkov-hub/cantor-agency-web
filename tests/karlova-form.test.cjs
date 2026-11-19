@@ -26,7 +26,7 @@ test('relay delivers to remaining recipient after one rejects, without exposing 
   });
   const res = await handle(request(payload));
   assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { ok: true, delivered: 1, failed: 1 });
+  assert.deepEqual(await res.json(), { ok: true, delivered: 1, failed: 1, failureCodes: ['telegram_forbidden'] });
 });
 test('relay splits long messages and reports failure when nobody received the full message', async () => {
   const chunks = [];
@@ -74,4 +74,18 @@ test('Yandex passes Telegram credentials only to HTTPS relay; email survives rel
   assert.equal(res.statusCode, 200);
   assert.deepEqual(JSON.parse(res.body).result, { sheet: 'skipped', email: 'sent', telegram: 'failed' });
   assert.ok(calls.every(url => !url.includes('api.telegram.org')));
+  assert.equal(JSON.parse(res.body).diagnostics.telegram, 'relay_http_502');
+});
+
+test('Yandex diagnostic codes never disclose network error text or credentials', async () => {
+  const env = { TELEGRAM_BOT_TOKEN: 'private-token', TELEGRAM_CHAT_ID: '123', TELEGRAM_RELAY_URL: 'https://relay.test/telegram', TELEGRAM_RELAY_SECRET: 'private-secret' };
+  for (const [fetch, expected] of [
+    [async () => { throw Error('private-token private-secret'); }, 'relay_unreachable'],
+    [async () => Response.json({error:'unauthorized'}, {status:401}), 'relay_http_401'],
+    [async () => Response.json({failureCodes:['bot_blocked']}, {status:502}), 'bot_blocked'],
+  ]) {
+    const res = await yandex(env, fetch)(event);
+    assert.equal(JSON.parse(res.body).diagnostics.telegram, expected);
+    assert.ok(!res.body.includes('private-'));
+  }
 });
