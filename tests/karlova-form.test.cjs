@@ -99,3 +99,20 @@ test('email API rejection returns a safe diagnostic independently of Telegram', 
   assert.equal(body.result.email,'failed');
   assert.ok(!res.body.includes('secret') && !res.body.includes('private provider'));
 });
+
+test('invalid optional form email cannot invalidate the Resend reply-to header', async () => {
+  const handle=yandex({RESEND_API_KEY:'test',ADMIN_EMAIL:'test@example.com',MAIL_FROM:'test@example.com'},async(_url,options)=>{
+    const mail=JSON.parse(options.body);
+    assert.equal(mail.reply_to,undefined);
+    assert.ok(mail.text.includes('Email: тест'));
+    return Response.json({id:'mock'});
+  });
+  const res=await handle({httpMethod:'POST',body:JSON.stringify({fields:{'Имя ученика':'Тест','Email':'тест'}})});
+  assert.equal(JSON.parse(res.body).result.email,'sent');
+});
+test('provider validation names a rejected field without disclosing its contents', async () => {
+  const handle=yandex({RESEND_API_KEY:'test',ADMIN_EMAIL:'test@example.com',MAIL_FROM:'test@example.com'},async()=>Response.json({message:'Invalid from field: private-value'},{status:422}));
+  const res=await handle(event);
+  assert.equal(JSON.parse(res.body).diagnostics.email,'resend_http_422_from');
+  assert.ok(!res.body.includes('private-value'));
+});
