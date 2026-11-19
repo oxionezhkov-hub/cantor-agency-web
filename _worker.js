@@ -14541,7 +14541,8 @@ async function feedsApplyPhotoReadiness(feed, ads, stat) {
   const source = feed.photoReadyXml === undefined ? feed.bananlabXml : feed.photoReadyXml;
   if (!source) return;
   const url = feedsPhotoReadyUrl(source);
-  const res = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(15000) });
+  const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
+  if (res.status >= 300 && res.status < 400) throw new Error('XML BananLab вернул перенаправление. Укажите прямую ссылку; готовность фото не подтверждена');
   if (!res.ok) throw new Error(`XML BananLab недоступен (${res.status}). Готовность фото не подтверждена`);
   const xml = await res.text();
   if (!/<Ads(?:\s|>)/.test(xml) || !/<\/Ads>/.test(xml)) throw new Error('BananLab вернул некорректный XML. Готовность фото не подтверждена');

@@ -1585,7 +1585,7 @@ function feedProbs(slug) {
     + `<div class="pc-w">${x.ids.slice(0, 20).map((id) => `<span class="pill"><b>${esc(id)}</b></span>`).join('')}${x.n > 20 ? `<span class="pill">ещё ${int(x.n - 20)}</span>` : ''}</div></div>`;
   const fixes = (s.fixes || []).map(fixCard).join('');
   openModal(`${mHead('Ошибки XML — ' + f.name)}<div class="m-b">
-    <div class="psum">${items.length ? `<div><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${items.some((x) => x.kind === 'err') ? 'XML не собран — исправьте таблицу' : 'строк с замечаниями — эти строки или фото не попали в XML'}</div></div>` : '<div class="ok-box">Ошибок нет</div>'}
+    <div class="psum">${items.length ? `<div><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${items.some((x) => x.kind === 'err') ? 'Сборка не завершена — причина ниже' : 'строк с замечаниями — эти строки или фото не попали в XML'}</div></div>` : '<div class="ok-box">Ошибок нет</div>'}
       ${s.builtAt ? `<div class="note">Сборка ${esc(ago(Date.parse(s.builtAt)))} · в XML ${int(s.ads)} объявлений</div>` : ''}</div>
     ${probCards(groups)}
     ${fixes ? `<h3 class="ph2">Исправлено автоматически — Авито не принимает эти значения</h3><div class="note">Сервис сверил таблицу со справочником Авито и в XML поставил правильные значения. Таблица не меняется — поправьте её так же, чтобы не путаться (номера — id объявлений).</div>${fixes}` : ''}
@@ -1650,7 +1650,8 @@ function renderReport(slug) {
   $('#repCsv').disabled = !d.problems.length || !s.complete || !!s.warning;
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
-    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.items)} объявлений</div>
+    ${s.status === 'processing' ? '<div class="note">Сводка ниже предварительная: Авито ещё обрабатывает файл. Причины по отдельным объявлениям можно проверить после завершения отчёта.</div>' : ''}
+    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.totalItems ?? (s.sectionStats && s.sectionStats.count) ?? s.items)} объявлений</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div>${(x.sections || []).filter((y) => y.count).map((y) => `<div class="t-s">${esc(y.title)} — ${int(y.count)}</div>`).join('')}</div>`).join('')}</div>
     ${items.length ? `<h3 class="ph2">Что не так — ${d.problems.length} объявлений</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }

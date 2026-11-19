@@ -640,7 +640,8 @@ function paintReport(slug) {
   if ($('#repCsv')) $('#repCsv').disabled = !(d.problems || []).length || !s.complete || !!s.warning;
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
-    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${int(s.items)} объявлений</div>
+    ${s.status === 'processing' ? '<div class="note">Сводка ниже предварительная: Авито ещё обрабатывает файл. Причины по отдельным объявлениям можно проверить после завершения отчёта.</div>' : ''}
+    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${int(s.totalItems ?? (s.sectionStats && s.sectionStats.count) ?? s.items)} объявлений</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug)}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title || '')}</div></div>`).join('')}</div>
     ${items.length ? `<h3 class="ph2">Проблемы — ${(d.problems || []).length}</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений в отчёте нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }
