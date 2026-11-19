@@ -1,23 +1,5 @@
 'use strict';
 
-const { google } = require('googleapis');
-
-// ── env vars you set in Yandex Cloud Console → your function → Редактор → Переменные окружения ──
-// Таблица (необязательно — если не заданы, строка в таблицу не пишется):
-//   GOOGLE_SERVICE_ACCOUNT_KEY  — весь JSON-ключ сервисного аккаунта, в одну строку (тот же, что у Анны Дейнеги)
-//   SPREADSHEET_ID              — ID таблицы Светланы (из её ссылки, между /d/ и /edit)
-//   SHEET_NAME                  — название листа, по умолчанию "Заявки"
-// Письмо (через Resend, как у Юлии Янсон):
-//   RESEND_API_KEY              — ключ Resend (тот же, что в функции yulia-yanson-api)
-//   ADMIN_EMAIL                 — кому (можно несколько через запятую), для Светланы kotenok8595@mail.ru
-//   MAIL_FROM                   — от кого; адрес на домене, подтверждённом в Resend
-//                                 (тот же, что в функции yulia-yanson-api)
-// Telegram:
-//   TELEGRAM_BOT_TOKEN          — токен бота (от @BotFather)
-//   TELEGRAM_CHAT_ID            — кому слать (можно несколько через запятую), для Светланы 1761494459
-//
-// Заявка считается принятой, если она дошла хотя бы по одному каналу
-// (таблица, почта или Telegram) — иначе форма покажет ошибку.
 
 const COLUMNS = [
   'Имя ученика',
@@ -82,10 +64,11 @@ function orderedEntries(fields) {
 }
 
 async function appendToSheet(fields) {
-  const keyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-  const spreadsheetId = process.env.SPREADSHEET_ID;
+  const keyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
+  const spreadsheetId = process.env.SPREADSHEET_ID?.trim();
   if (!keyJson || !spreadsheetId) return 'skipped';
 
+  const { google } = require('googleapis');
   const credentials = JSON.parse(keyJson);
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -93,24 +76,28 @@ async function appendToSheet(fields) {
   });
   const sheets = google.sheets({ version: 'v4', auth });
 
-  const sheetName = process.env.SHEET_NAME || 'Заявки';
+  const sheetName = process.env.SHEET_NAME?.trim() || 'Заявки';
   const row = [mskNow(), ...COLUMNS.map((k) => fields[k] || '')];
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `${sheetName}!A:J`,
-    valueInputOption: 'USER_ENTERED',
+    range: `'${sheetName.replace(/'/g, "''")}'!A:J`,
+    valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [row] },
-  });
+  }, { timeout: 7000, retry: false });
   return 'sent';
 }
 
 async function sendEmail(fields) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
   const to = list(process.env.ADMIN_EMAIL);
-  if (!apiKey || !to.length) return 'skipped';
+  const from = process.env.MAIL_FROM?.trim();
+  if (!apiKey?.trim() || !to.length || !from) return 'skipped';
 
+  // Keep an optional, unvalidated form value in the letter body, not mail headers.
+  const replyTo = String(fields['Email'] || '').trim();
+  const validReplyTo = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(replyTo);
   const entries = orderedEntries(fields);
   const name = [fields['Имя ученика'], fields['Фамилия ученика']].filter(Boolean).join(' ');
   const text = `Новая заявка с сайта (${mskNow()} МСК)\n\n`
@@ -128,16 +115,21 @@ async function sendEmail(fields) {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: process.env.MAIL_FROM || 'onboarding@resend.dev',
+        from,
         to,
-        ...(fields['Email'] ? { reply_to: fields['Email'] } : {}),
-        subject: `Новая заявка на пробное занятие${name ? ` — ${name}` : ''}`,
+        ...(validReplyTo ? { reply_to: replyTo } : {}),
+        subject: `Новая заявка на пробное занятие — Светлана Идрисова${name ? ` — ${name}` : ''}`,
         text,
         html,
       }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`resend ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    if (!res.ok) {
+      const rejection = await res.json().catch(() => null);
+      const message = String(rejection?.message || '').toLowerCase();
+      const field = ['reply_to', 'from', 'to', 'subject'].find(key => new RegExp(`\\b${key}\\b`).test(message));
+      throw new Error(`resend_http_${res.status}${field ? '_' + field : ''}`);
+    }
   } finally {
     clearTimeout(timer);
   }
@@ -145,32 +137,37 @@ async function sendEmail(fields) {
 }
 
 async function sendTelegram(fields) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
   const chatIds = list(process.env.TELEGRAM_CHAT_ID);
-  if (!token || !chatIds.length) return 'skipped';
-
-  const text = '<b>Новая заявка на пробное занятие</b>\n\n'
-    + orderedEntries(fields).map(([k, v]) => `<b>${escapeHtml(k)}:</b> ${escapeHtml(v)}`).join('\n');
-
-  const results = await Promise.allSettled(chatIds.map(async (chatId) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 7000);
-    try {
-      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
-        signal: controller.signal,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!data.ok) throw new Error(`telegram ${chatId}: ${data.description || res.status}`);
-    } finally {
-      clearTimeout(timer);
-    }
-  }));
-  const failed = results.filter((r) => r.status === 'rejected');
-  failed.forEach((r) => console.error('telegram_failed', r.reason && r.reason.message));
-  if (failed.length === results.length) throw new Error('telegram_failed');
+  const relayUrl = process.env.TELEGRAM_RELAY_URL?.trim();
+  const relaySecret = process.env.TELEGRAM_RELAY_SECRET?.trim();
+  if (!token || !chatIds.length || !relayUrl || !relaySecret) return 'skipped';
+  let url;
+  try { url = new URL(relayUrl); } catch { throw new Error('relay_url_invalid'); }
+  if (url.protocol !== 'https:') throw new Error('relay_https_required');
+  const text = 'Новая заявка на пробное занятие — Светлана Идрисова\n\n'
+    + orderedEntries(fields).map(([key, value]) => `${key}: ${value}`).join('\n');
+  let res;
+  try { res = await fetch(url, {
+    method: 'POST',
+    redirect: 'error',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${relaySecret}`,
+    },
+    body: JSON.stringify({ token, chatIds, text }),
+    signal: AbortSignal.timeout(20000),
+  }); } catch (error) {
+    throw new Error(error.name === 'TimeoutError' || error.name === 'AbortError' ? 'relay_timeout' : 'relay_unreachable');
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const codes = Array.isArray(data?.failureCodes) ? data.failureCodes : [];
+    const allowed = ['bot_unauthorized', 'chat_not_found', 'bot_blocked', 'telegram_forbidden', 'telegram_rate_limited', 'telegram_rejected', 'telegram_unreachable', 'telegram_timeout'];
+    const reason = codes.find(code => allowed.includes(code));
+    throw new Error(reason || `relay_http_${res.status}`);
+  }
+  if (!data?.ok) throw new Error('relay_invalid_response');
   return 'sent';
 }
 
@@ -183,9 +180,9 @@ module.exports.handler = async function (event) {
   }
 
   const body = parseBody(event);
-  const fields = body && typeof body.fields === 'object' && body.fields ? body.fields : {};
+  const fields = body && typeof body.fields === 'object' && body.fields && !Array.isArray(body.fields) ? body.fields : {};
 
-  const cleanFields = {};
+  const cleanFields = Object.create(null);
   for (const [label, value] of Object.entries(fields)) {
     const clean = String(value || '').trim().slice(0, 4000);
     if (clean) cleanFields[String(label).slice(0, 100)] = clean;
@@ -200,16 +197,25 @@ module.exports.handler = async function (event) {
   const settled = await Promise.allSettled(names.map((n) => channels[n](cleanFields)));
 
   const result = {};
+  const diagnostics = {};
   settled.forEach((r, i) => {
     if (r.status === 'fulfilled') result[names[i]] = r.value;
     else {
       result[names[i]] = 'failed';
-      console.error(`${names[i]}_failed`, r.reason && r.reason.message);
+      const code = String(r.reason?.message || '');
+      if (names[i] === 'telegram') {
+        diagnostics.telegram = /^(relay_(url_invalid|https_required|timeout|unreachable|invalid_response|http_[0-9]{3})|bot_unauthorized|chat_not_found|bot_blocked|telegram_(forbidden|rate_limited|rejected|unreachable|timeout))$/.test(code) ? code : 'telegram_failed';
+      }
+      if (names[i] === 'email') {
+        diagnostics.email = /^resend_http_[0-9]{3}(_(from|to|reply_to|subject))?$/.test(code) ? code
+          : ['TimeoutError', 'AbortError'].includes(r.reason?.name) ? 'email_timeout' : 'email_delivery_failed';
+      }
+      console.error(`${names[i]}_failed`, diagnostics[names[i]] || 'delivery_failed');
     }
   });
 
   if (!Object.values(result).includes('sent')) {
-    return jsonResponse(502, { error: 'delivery_failed', result });
+    return jsonResponse(502, { error: 'delivery_failed', result, diagnostics });
   }
-  return jsonResponse(200, { ok: true, result });
+  return jsonResponse(200, { ok: true, result, diagnostics });
 };
