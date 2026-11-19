@@ -14647,7 +14647,11 @@ async function feedsBuild(env, feed) {
 
   // Private Disk links whose file was moved: find it by name (see feedsDiskResolve).
   let disk = null;
-  if (stat.yandexToken) {
+  // BananLab's prepared photos already use direct Object Storage URLs. Listing
+  // the entire private Disk in that case is unnecessary and can time out builds.
+  const needsPrivateDisk = ads.some((a) => a.fields.some((f) => f.tag === 'Images'
+    && feedsLines(f.value).some((src) => feedsYandexSource(feedsImageSrc(src, a.folder))?.kind === 'p')));
+  if (stat.yandexToken && needsPrivateDisk) {
     try {
       const token = await kv.get(feedsKey(feed, 'ytok'));
       const all = await feedsDiskIndex(token);
