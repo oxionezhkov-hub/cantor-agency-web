@@ -154,7 +154,9 @@
   let scheduled = false;
   function syncHeader() {
     scheduled = false;
-    const visible = hero.getBoundingClientRect().bottom <= header.offsetHeight + 20;
+    const anchorOffset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    const revealAt = Math.max(anchorOffset, header.offsetHeight) + 2;
+    const visible = hero.getBoundingClientRect().bottom <= revealAt;
     header.classList.toggle('is-visible', visible);
     header.inert = !visible;
     header.setAttribute('aria-hidden', String(!visible));
