@@ -13219,7 +13219,7 @@ function mbidsLogEntry(route, body, res) {
   if (route === 'POST items/update') {
     const what = [];
     if (set.on !== undefined) what.push(set.on ? 'включил' : 'выключил');
-    if (set.bid !== undefined) what.push(set.bid && set.bid.min ? 'ставка = минимальная' : `ставка ${typeof set.bid === 'object' ? `${set.bid.op || ''}${set.bid.value ?? ''}` : set.bid}`);
+    if (set.bid !== undefined) what.push(set.bid && set.bid.recommended ? 'ставка = рекомендованная Авито (разово)' : set.bid && set.bid.min ? 'ставка = минимальная' : `ставка ${typeof set.bid === 'object' ? `${set.bid.op || ''}${set.bid.value ?? ''}` : set.bid}`);
     if (set.hours !== undefined) what.push(set.hours ? `часы ${set.hours.length}` : 'часы — все');
     if (set.days !== undefined) what.push(set.days ? `дни ${set.days.length}` : 'дни — все');
     if (set.lim) what.push('лимиты: ' + Object.keys(set.lim).join(', '));
@@ -13830,14 +13830,17 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
   if (route === 'POST items/update') {
     const m = byAccount(body.refs);
     const set = body.set || {};
+    if (set.bid && set.bid.min && set.bid.recommended) return json({ error: 'Выберите минимальную или рекомендованную ставку' }, 400);
     if (set.hours !== undefined && set.hours !== null && (!Array.isArray(set.hours) || !set.hours.length)) return json({ error: 'Выберите хотя бы один час' }, 400);
     if (set.days !== undefined && set.days !== null && (!Array.isArray(set.days) || !set.days.length)) return json({ error: 'Выберите хотя бы один день' }, 400);
     const note = String(body.note || '').trim().slice(0, 300);
     let changed = 0;
     const skipped = [];
+    const appliedBids = {};
     for (const [acc, ids] of Object.entries(m)) {
       const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
-      const st = set.bid && set.bid.min ? await mbidsGet(kv, `mbids:state:${acc}`, { items: {} }) : null;
+      const affected = [];
+      const st = set.bid && (set.bid.min || set.bid.recommended) ? await mbidsGet(kv, `mbids:state:${acc}`, { items: {} }) : null;
       // «Минимальная ставка» для объявлений, чью шкалу движок ещё не читал (только что включили,
       // или Авито ответил 429), — спрашиваем Авито сразу, а не пропускаем (иначе ставка остаётся пустой).
       let minToken = null;
@@ -13858,9 +13861,29 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
       for (const id of ids) {
         const c = cfg.items[id];
         if (!c) continue;
+        if (set.bid && set.bid.recommended) {
+          const source = (st.items || {})[id];
+          const recommendation = source && Number(source.recPenny);
+          const min = source && Number(source.minPromoPenny);
+          const max = source && Number(source.maxPenny);
+          if (!Number.isFinite(recommendation) || recommendation <= 0) {
+            skipped.push({ key: `${acc}:${id}`, reason: 'Авито не прислал рекомендованную ставку; объявление не изменено' });
+            continue;
+          }
+          const rubles = Math.ceil(recommendation / 100);
+          if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0 || rubles * 100 < min || rubles * 100 > max) {
+            skipped.push({ key: `${acc}:${id}`, reason: 'Рекомендованная ставка после округления вне допустимого диапазона или диапазон не получен; объявление не изменено' });
+            continue;
+          }
+          // One-time snapshot of each listing's recommendation. Never store a
+          // follow-recommendation mode or enable a listing just by setting its bid.
+          c.bid = rubles;
+        }
         if (set.on !== undefined) c.on = !!set.on;
         if (set.bid !== undefined) {
-          if (set.bid && set.bid.min) {
+          if (set.bid && set.bid.recommended) {
+            // The per-listing snapshot was validated before any changes above.
+          } else if (set.bid && set.bid.min) {
             const minPenny = await minFor(id);
             if (minPenny != null) c.bid = Math.ceil(minPenny / 100);
             else skipped.push({ key: `${acc}:${id}`, reason: 'Авито не прислал минимальную ставку — повторите через 10 минут' });
@@ -13884,15 +13907,17 @@ async function handleMbidsRoutes(request, env, url, ctx, who) {
         if (note) c.notes = [...(c.notes || []), { at: Date.now(), text: note, by: who.name }].slice(-100);
         c.by = who.name; c.byAt = Date.now();
         if (body.removeNoteAt) c.notes = (c.notes || []).filter((n) => n.at !== body.removeNoteAt);
-        changed++;
+        changed++; affected.push(id);
+        if (set.bid !== undefined) appliedBids[`${acc}:${id}`] = c.bid;
       }
+      if (!affected.length) continue;
       cfg.updatedAt = Date.now();
       await kv.put(`mbids:cfg:${acc}`, JSON.stringify(cfg));
       if (set.on !== undefined || set.bid !== undefined || set.hours !== undefined || set.days !== undefined || set.lim) {
-        later(mbidsProcess(env, acc, { ids: ids.slice(0, 60), budgetMs: 25000 }));
+        later(mbidsProcess(env, acc, { ids: affected.slice(0, 60), budgetMs: 25000 }));
       }
     }
-    return json({ ok: true, changed, skipped });
+    return json({ ok: true, changed, skipped, appliedBids });
   }
 
   if (route === 'POST refresh') {
