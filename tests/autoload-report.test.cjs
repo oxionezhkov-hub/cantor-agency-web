@@ -168,3 +168,9 @@ test('explicitly disabled rows may be removed and the previous XML is saved',asy
  vm.runInContext(`feedsReadTabs=async()=>({tabs:{Ads:rows},missing:[],allTabs:['Ads']});feedsValidate=async()=>{};`,c);
  const stat=await vm.runInContext('feedsBuild(env,feed)',c);assert.equal(stat.error,undefined);assert.equal(stat.ads,0);assert.equal(c.records['feedxml:guard:previous'],old);assert.ok(!c.records['feedxml:guard'].includes('<Ad>'));
 });
+test('an imported historical BananLab URL never enables external readiness implicitly',async()=>{
+ const c=setup();c.feed={bananlabXml:'https://storage.yandexcloud.net/server1/avito/clients/old/old.xml'};c.ads=[{id:'new',fields:[]}];c.stat={problems:[]};
+ c.fetch=async()=>{throw Error('external service must not be called')};
+ await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,undefined);assert.equal(c.stat.photoReadiness,undefined);
+ c.feed.photoReadyXml='';await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);
+});

@@ -14563,7 +14563,9 @@ function feedsPhotoReadyUrl(raw) {
 }
 
 async function feedsApplyPhotoReadiness(feed, ads, stat) {
-  const source = feed.photoReadyXml === undefined ? feed.bananlabXml : feed.photoReadyXml;
+  // A historical import URL is not an active dependency. Only explicit opt-in
+  // enables the external readiness check. Sheet status and Category are checked independently.
+  const source = feed.photoReadyXml;
   if (!source) return;
   const url = feedsPhotoReadyUrl(source);
   const res = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
