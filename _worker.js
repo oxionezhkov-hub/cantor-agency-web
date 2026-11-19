@@ -1111,7 +1111,7 @@ async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = 
   }
   // Statistics limits last much longer than our exponential retry delay. Retrying a
   // stats 429 four times only consumes the same quota again (including during edits).
-  if (res.status === 429 && /^(?:\/stats\/v2\/|\/autoload\/)/.test(path)) return res;
+  if (res.status === 429 && /^(?:\/stats\/v2\/|\/autoload\/|\/cpxpromo\/)/.test(path)) return res;
   // The proxy's own «Avito didn't answer» (it already waited 25 s) isn't worth three more tries.
   if ((res.status === 429 || res.status >= 500) && attempt < 3 && !res.headers.get('X-Avito-Proxy-Error')) {
     await sleep(500 * 2 ** attempt);
@@ -13124,7 +13124,7 @@ function withHtmlContentType(response) {
  * график (часы и дни недели по МСК) и отключение по метрикам за текущие сутки МСК (показы, просмотры,
  * контакты, расходы, CPV, CPA). mbidsProcess на каждом тике cron (раз в 10 минут) решает, какая ставка
  * должна стоять сейчас: настроенная — или базовая, если вне графика / сработал лимит / закончились деньги,
- * — и ставит её через POST /cpxpromo/1/setManual. Выключенное объявление сервис не трогает.
+ * — ставит ручную через POST /cpxpromo/1/setManual, а паузу применяет через POST /cpxpromo/1/remove. Выключенное объявление сервис не трогает.
  *
  * Шкала ставок — GET /cpxpromo/1/getBids/{itemId}: manual.bids = [{ valuePenny, compare }, …].
  * Первая ступень (compare 0, = minBidPenny) — «базовая ставка» (продвижения нет), следующая —
@@ -13391,22 +13391,129 @@ async function mbidsLoadBids(token, id, st) {
 }
 
 // Какая ставка должна стоять сейчас и почему. Возвращает { status, reason, wantPenny } (wantPenny null — не трогать).
+function mbidsOutsideSchedule(c, now) {
+  const hours = Array.isArray(c.hours) && c.hours.length ? c.hours : null;
+  const days = Array.isArray(c.days) && c.days.length ? c.days : null;
+  return !!((hours && !hours.includes(now.hour)) || (days && !days.includes(now.dow)));
+}
+
+async function mbidsApplyDecision(env, accountId, token, id, st, decision, control) {
+  st.status = decision.status; st.reason = decision.reason;
+  const remove = decision.action === 'remove';
+  const operation = remove ? 'remove' : 'setManual';
+  if (remove && st.promotionStopped && st.selectedType === 'none') { st.setError = null; st.cmp = 0; return; }
+  if (!remove && decision.wantPenny == null) return;
+  if (!remove && st.nowPenny === decision.wantPenny && st.selectedType === 'manual') return;
+  // A pending manual write must not suppress a pause or a later resume.
+  if (!remove && st.setPenny === decision.wantPenny && st.setAt && Date.now() - st.setAt < MBIDS_REAPPLY_MS && !st.promotionStopped) return;
+  const cooldown = control[operation] || 0;
+  if (cooldown > Date.now()) {
+    st.status = 'pending'; st.reason = remove ? 'Ожидаем снятия продвижения: лимит запросов Авито' : 'Ожидаем применения ставки: лимит запросов Авито';
+    return;
+  }
+  // Separate endpoint quotas: remove 300/minute, setManual 20/minute.
+  // Slots are shared by this account's concurrent workers within the pass.
+  const slotKey = operation + 'Next';
+  const start = Math.max(Date.now(), control[slotKey] || 0);
+  control[slotKey] = start + (remove ? 250 : 3100);
+  if (start > Date.now()) await sleep(start - Date.now());
+  if ((control[operation] || 0) > Date.now()) {
+    st.status = 'pending'; st.reason = 'Авито ограничил запросы; действие будет повторено'; return;
+  }
+  const config = control.items && control.items[id];
+  if (config && (!config.on || remove && decision.reason === MBIDS_REASONS.time && !mbidsOutsideSchedule(config, mbidsMsk()) || !remove && mbidsOutsideSchedule(config, mbidsMsk()))) {
+    st.status = 'pending'; st.reason = 'Рабочее время изменилось; действие будет проверено заново'; return;
+  }
+  try {
+    const body = remove ? { itemID: Number(id) } : { itemID: Number(id), actionTypeID: st.actionTypeID || MBIDS_ACTION_TYPE, bidPenny: decision.wantPenny };
+    const res = await avitoRequest(token, `/cpxpromo/1/${operation}`, { method: 'POST', body: JSON.stringify(body) });
+    const text = await res.text();
+    if (res.status === 429) {
+      const retry = res.headers.get('Retry-After');
+      const seconds = Number(retry);
+      const until = Math.max(Date.now() + 60000, retry && !Number.isFinite(seconds) ? Date.parse(retry) || 0 : Date.now() + (seconds || 60) * 1000);
+      control[operation] = until;
+      await env.AVITO_KV.put(`mbids:control-cooldown:${accountId}:${operation}`, JSON.stringify({ until }), { expirationTtl: Math.ceil((until - Date.now()) / 1000) + 60 });
+      st.status = 'pending'; st.reason = remove ? 'Ожидаем снятия продвижения: лимит запросов Авито' : 'Ожидаем применения ставки: лимит запросов Авито';
+      return;
+    }
+    if (!res.ok) throw new Error(`${res.status} ${text.slice(0, 160)}`);
+    if (remove) {
+      st.promotionStopped = true; st.stoppedAt = Date.now(); st.selectedType = 'none';
+      st.nowPenny = st.basePenny ?? null; st.cmp = 0; st.setPenny = null; st.setAt = null;
+    } else {
+      st.promotionStopped = false; st.stoppedAt = null; st.selectedType = 'manual';
+      st.nowPenny = decision.wantPenny; st.setPenny = decision.wantPenny; st.setAt = Date.now();
+    }
+    st.setError = null;
+  } catch (err) {
+    st.status = 'err'; st.reason = `${MBIDS_REASONS.setfail}: ${String(err.message).slice(0, 180)}`; st.setError = st.reason;
+    // A failed write does not invalidate the cached scale. Doing so previously
+    // spent the whole next pass reloading getBids before retrying a pause.
+  }
+}
+
+async function mbidsScheduleStops(env, accountId, account, cfg, state, token, budgetMs) {
+  const kv = env.AVITO_KV, started = Date.now();
+  const cached = await kv.get(`mbids:control-cooldown:${accountId}:remove`, 'json');
+  const control = { remove: cached && cached.until || 0, items: cfg.items };
+  const now = mbidsMsk();
+  const candidates = Object.keys(cfg.items).filter((id) => cfg.items[id].on && mbidsOutsideSchedule(cfg.items[id], now));
+  // A bulk read confirms the real mode without spending the 20/min getBids quota.
+  // Never trust a previous remove forever: promotion may be enabled outside us.
+  const verified = new Set();
+  for (let i = 0; i < candidates.length && Date.now() - started < budgetMs; i += 200) {
+    try {
+      const data = await avitoJson(token, '/cpxpromo/1/getPromotionsByItemIds', { method: 'POST', body: JSON.stringify({ itemIDs: candidates.slice(i, i + 200).map(Number) }) });
+      for (const item of data.items || []) {
+        const id = String(item.itemID);
+        if (!candidates.includes(id)) continue;
+        const st = state.items[id] = { ...(state.items[id] || {}) };
+        st.promotionStopped = !item.manualPromotion && !item.autoPromotion;
+        st.selectedType = item.manualPromotion ? 'manual' : item.autoPromotion ? 'auto' : 'none';
+        if (item.manualPromotion) st.nowPenny = item.manualPromotion.bidPenny;
+        if (st.promotionStopped) { st.stoppedAt = Date.now(); st.nowPenny = st.basePenny ?? null; st.cmp = 0; st.setPenny = null; st.setAt = null; }
+        verified.add(id);
+      }
+    } catch { /* Read failure must not prevent stopping promotion. */ }
+  }
+  for (const id of candidates) {
+    const st = state.items[id];
+    if (st && st.promotionStopped && !verified.has(id)) st.promotionStopped = false;
+  }
+  const queue = candidates.sort((a, b) => ((state.items[a] || {}).checkedAt || 0) - ((state.items[b] || {}).checkedAt || 0));
+  let changes = {}, processed = 0, lastCheckpointAt = 0, saveChain = Promise.resolve();
+  const checkpoint = () => {
+    const batch = changes; changes = {};
+    if (!Object.keys(batch).length) return;
+    saveChain = saveChain.then(async () => {
+      if (lastCheckpointAt && Date.now() - lastCheckpointAt < 1100) await sleep(1100 - (Date.now() - lastCheckpointAt));
+      const latest = await mbidsGet(kv, `mbids:state:${accountId}`, { items: {} });
+      latest.items = { ...(latest.items || {}), ...batch }; latest.scheduleCheckedAt = Date.now();
+      await kv.put(`mbids:state:${accountId}`, JSON.stringify(latest));
+      lastCheckpointAt = Date.now();
+    });
+  };
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (queue.length && Date.now() - started < budgetMs && (control.remove || 0) <= Date.now()) {
+      const id = queue.shift(), c = cfg.items[id];
+      if (!mbidsOutsideSchedule(c, mbidsMsk())) continue;
+      const st = { ...(state.items[id] || {}) };
+      await mbidsApplyDecision(env, accountId, token, id, st, { status: 'stop', reason: MBIDS_REASONS.time, action: 'remove', wantPenny: null }, control);
+      st.checkedAt = Date.now(); changes[id] = st; processed++;
+      if (processed % 10 === 0) checkpoint();
+    }
+  }));
+  checkpoint(); await saveChain;
+  return { processed, left: queue.length };
+}
+
 function mbidsDecide(c, st, ctx) {
   if (!c.on) return { status: 'off', reason: MBIDS_REASONS.off, wantPenny: null };
   if (ctx.active && !ctx.active.has(String(c.id))) return { status: 'err', reason: MBIDS_REASONS.inactive, wantPenny: null };
-  // Шкалы ещё нет, а Авито временно не ответил — это не ошибка настроек: ждём следующей проверки.
-  if (st.basePenny == null && st.bidsTemp) return { status: 'pending', reason: `${MBIDS_REASONS.wait} (${st.bidsError || 'Авито не ответил'})`, wantPenny: null };
-  if (c.bid == null) return { status: 'err', reason: MBIDS_REASONS.nobid, wantPenny: null };
-  if (st.unavailable) return { status: 'err', reason: MBIDS_REASONS.unavailable, wantPenny: null };
-  if (st.basePenny == null) return { status: 'err', reason: st.bidsError || MBIDS_REASONS.unavailable, wantPenny: null };
-  const bidPenny = Math.round(c.bid * 100);
-  if (bidPenny < st.minPromoPenny) return { status: 'err', reason: `${MBIDS_REASONS.low} (${Math.ceil(st.minPromoPenny / 100)} ₽)`, wantPenny: null };
-  if (bidPenny > st.maxPenny) return { status: 'err', reason: `${MBIDS_REASONS.high} (${Math.floor(st.maxPenny / 100)} ₽)`, wantPenny: null };
-  const stop = (key) => ({ status: 'stop', reason: MBIDS_REASONS[key], wantPenny: st.basePenny });
+  const stop = (key) => ({ status: 'stop', reason: MBIDS_REASONS[key], action: 'remove', wantPenny: null });
   if (ctx.noMoney) return stop('money');
-  const hours = Array.isArray(c.hours) && c.hours.length ? c.hours : null;
-  const days = Array.isArray(c.days) && c.days.length ? c.days : null;
-  if ((hours && !hours.includes(ctx.now.hour)) || (days && !days.includes(ctx.now.dow))) return stop('time');
+  if (mbidsOutsideSchedule(c, ctx.now)) return stop('time');
   const t = (ctx.today && ctx.today[c.id]) || null;
   const lim = c.lim || {};
   if (t) {
@@ -13417,11 +13524,19 @@ function mbidsDecide(c, st, ctx) {
     if (lim.cpv != null && t.v > 0 && t.s / t.v >= lim.cpv) return stop('cpv');
     if (lim.cpa != null && t.c > 0 && t.s / t.c >= lim.cpa) return stop('cpa');
   }
+  // Шкалы ещё нет, а Авито временно не ответил — это не ошибка настроек: ждём следующей проверки.
+  if (st.basePenny == null && st.bidsTemp) return { status: 'pending', reason: `${MBIDS_REASONS.wait} (${st.bidsError || 'Авито не ответил'})`, wantPenny: null };
+  if (c.bid == null) return { status: 'err', reason: MBIDS_REASONS.nobid, wantPenny: null };
+  if (st.unavailable) return { status: 'err', reason: MBIDS_REASONS.unavailable, wantPenny: null };
+  if (st.basePenny == null) return { status: 'err', reason: st.bidsError || MBIDS_REASONS.unavailable, wantPenny: null };
+  const bidPenny = Math.round(c.bid * 100);
+  if (bidPenny < st.minPromoPenny) return { status: 'err', reason: `${MBIDS_REASONS.low} (${Math.ceil(st.minPromoPenny / 100)} ₽)`, wantPenny: null };
+  if (bidPenny > st.maxPenny) return { status: 'err', reason: `${MBIDS_REASONS.high} (${Math.floor(st.maxPenny / 100)} ₽)`, wantPenny: null };
   return { status: 'ok', reason: '', wantPenny: bidPenny };
 }
 
 // Один проход по кабинету. ids — только эти объявления (после правки на странице), force — перечитать шкалу.
-async function mbidsProcess(env, accountId, { ids = null, force = false, budgetMs = 50000 } = {}) {
+async function mbidsProcess(env, accountId, { ids = null, force = false, budgetMs = 50000, scheduleStopsOnly = false } = {}) {
   const kv = env.AVITO_KV;
   const started = Date.now();
   const cfg = await mbidsGet(kv, `mbids:cfg:${accountId}`, { items: {} });
@@ -13442,6 +13557,12 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
     allIds.forEach((id) => { if (cfg.items[id].on) state.items[id] = { ...(state.items[id] || {}), status: 'err', reason: MBIDS_REASONS.auth, checkedAt: Date.now() }; });
     await kv.put(`mbids:state:${accountId}`, JSON.stringify(state));
     return { processed: 0, error: 'auth' };
+  }
+  if (scheduleStopsOnly) return mbidsScheduleStops(env, accountId, account, cfg, state, token, budgetMs);
+  const control = { items: cfg.items };
+  for (const op of ['remove', 'setManual']) {
+    const cached = await kv.get(`mbids:control-cooldown:${accountId}:${op}`, 'json');
+    control[op] = cached && cached.until || 0;
   }
   const now = mbidsMsk();
   const onIds = allIds.filter((id) => cfg.items[id].on);
@@ -13494,6 +13615,8 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
   // потом те, кого дольше не проверяли.
   const rank = (id) => {
     const st = state.items[id] || {}, c = cfg.items[id] || {};
+    if (c.on && mbidsOutsideSchedule(c, mbidsMsk()) && !st.promotionStopped) return -2;
+    if (c.on && st.promotionStopped && !mbidsOutsideSchedule(c, mbidsMsk())) return -1;
     if (st.basePenny == null) return 0;
     return c.byAt && (!st.checkedAt || c.byAt > st.checkedAt) ? 1 : 2; // правили после проверки — раньше остальных
   };
@@ -13504,36 +13627,18 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
     const c = { ...cfg.items[id], id };
     const st = { ...(state.items[id] || {}) };
     // Снятое с публикации объявление получит «Объявление не активно» и без шкалы — не тратим на него запрос.
-    if ((c.on || force) && !(active && !active.has(String(id)))) {
+    const transition = c.on && (mbidsOutsideSchedule(c, mbidsMsk()) || st.promotionStopped && st.basePenny != null);
+    if (!transition && (c.on || force) && !(active && !active.has(String(id)))) {
       // Авито подряд отвечает 429 — дальше в этом тике шкалы не спрашиваем (только хуже), старые остаются.
       if ((force || !st.bidsAt || Date.now() - st.bidsAt > MBIDS_BIDS_TTL_MS) && refused < 5) {
         await mbidsLoadBids(token, id, st);
         refused = st.bidsTemp ? refused + 1 : 0;
       }
     }
-    const d = mbidsDecide(c, st, { active, noMoney, now, today });
-    st.status = d.status;
-    st.reason = d.reason;
-    if (d.wantPenny != null && (st.nowPenny !== d.wantPenny || st.selectedType !== 'manual')) {
-      const pending = st.setPenny === d.wantPenny && st.setAt && Date.now() - st.setAt < MBIDS_REAPPLY_MS;
-      if (!pending) {
-        try {
-          const res = await avitoRequest(token, '/cpxpromo/1/setManual', {
-            method: 'POST',
-            body: JSON.stringify({ itemID: Number(id), actionTypeID: st.actionTypeID || MBIDS_ACTION_TYPE, bidPenny: d.wantPenny }),
-          });
-          const text = await res.text();
-          if (res.ok) {
-            st.setPenny = d.wantPenny; st.setAt = Date.now(); st.nowPenny = d.wantPenny; st.selectedType = 'manual'; st.setError = null;
-          } else {
-            st.status = 'err'; st.reason = `${MBIDS_REASONS.setfail}: ${res.status} ${text.slice(0, 160)}`; st.setError = st.reason; st.bidsAt = 0;
-          }
-        } catch (e) {
-          st.status = 'err'; st.reason = `${MBIDS_REASONS.setfail}: ${String(e.message).slice(0, 120)}`; st.bidsAt = 0;
-        }
-      }
-    }
-    st.cmp = mbidsCompare(st.scale, st.nowPenny);
+    const freshNow = mbidsMsk();
+    const d = mbidsDecide(c, st, { active, noMoney, now: freshNow, today: state.today && state.today.date === freshNow.date ? today : null });
+    await mbidsApplyDecision(env, accountId, token, id, st, d, control);
+    st.cmp = st.promotionStopped ? 0 : mbidsCompare(st.scale, st.nowPenny);
     st.checkedAt = Date.now();
     state.items[id] = st;
     processed++;
@@ -13551,13 +13656,30 @@ async function mbidsProcess(env, accountId, { ids = null, force = false, budgetM
 }
 
 async function mbidsCron(env) {
-  const accIds = await mbidsCfgAccountIds(env.AVITO_KV);
+  const kv = env.AVITO_KV;
+  const accIds = (await mbidsCfgAccountIds(kv)).sort();
   const started = Date.now();
+  // Schedule stops run first, independently of stats/catalog/scale quotas.
+  const urgent = [];
   for (const acc of accIds) {
+    const cfg = await mbidsGet(kv, `mbids:cfg:${acc}`, { items: {} });
+    if (Object.values(cfg.items).some((c) => c.on && mbidsOutsideSchedule(c, mbidsMsk()))) urgent.push(acc);
+  }
+  await Promise.all(Array.from({ length: 2 }, async () => {
+    while (urgent.length) {
+      const acc = urgent.shift();
+      await mbidsProcess(env, acc, { scheduleStopsOnly: true, budgetMs: 180000 }).catch((e) => console.error('mbids schedule stop failed', acc, e && e.stack));
+      if (Date.now() - started > 6 * 60 * 1000) break;
+    }
+  }));
+  const next = await kv.get('mbids:cron-next');
+  const offset = Math.max(0, accIds.indexOf(next));
+  const ordered = accIds.slice(offset).concat(accIds.slice(0, offset));
+  for (let i = 0; i < ordered.length; i++) {
     if (Date.now() - started > 8 * 60 * 1000) break;
-    // 50 с на кабинет. Пробовали до 3 минут на большой кабинет — тик обрывался на середине (11.11, 23:32),
-    // и кабинеты после него не проверялись.
+    const acc = ordered[i];
     await mbidsProcess(env, acc).catch((e) => console.error('mbids process failed', acc, e && e.stack));
+    await kv.put('mbids:cron-next', ordered[(i + 1) % ordered.length]);
   }
 }
 
