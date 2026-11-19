@@ -1034,6 +1034,8 @@ async function update(keys, set, note, extra = {}) {
   keys.forEach((k) => {
     const x = B.items.find((i) => i.key === k);
     if (!x) return;
+    if (set.bid && set.bid.recommended && (r.data.skipped || []).some((s) => s.key === k)) return;
+    if (Object.prototype.hasOwnProperty.call(r.data.appliedBids || {}, k)) x.bid = r.data.appliedBids[k];
     if (set.on !== undefined) { x.on = !!set.on; x.status = x.on ? 'pending' : 'off'; x.reason = ''; }
     if (set.bid !== undefined && (set.bid === null || typeof set.bid !== 'object')) x.bid = set.bid;
     if (set.hours !== undefined) x.hours = set.hours && set.hours.length < 24 ? set.hours : null;
@@ -1216,7 +1218,7 @@ function openBulk() {
     <div>${BULK.map((b) => {
       let ctl;
       if (b.id === 'on') ctl = `<label class="switch"><input type="checkbox" id="bv_on" checked aria-label="Состояние"><i></i></label><span class="small muted" id="bv_on_t">включить</span>`;
-      else if (b.num) ctl = `<select class="select" id="bo_${b.id}"><option value="set">Заменить на</option><option value="add">Прибавить</option><option value="sub">Вычесть</option></select><input class="input" inputmode="decimal" id="bv_${b.id}" placeholder="${b.id === 'bid' ? '₽' : 'пусто — снять'}">${b.id === 'bid' ? `<label class="ck small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" class="cb" id="bv_bidmin">Минимальная для продвижения</label>` : ''}`;
+      else if (b.num) ctl = `<select class="select" id="bo_${b.id}"><option value="set">Заменить на</option><option value="add">Прибавить</option><option value="sub">Вычесть</option></select><input class="input" inputmode="decimal" id="bv_${b.id}" placeholder="${b.id === 'bid' ? '₽' : 'пусто — снять'}">${b.id === 'bid' ? `<label class="ck small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" class="cb" id="bv_bidmin">Минимальная для продвижения</label><label class="ck small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" class="cb" id="bv_bidrec">Рекомендованная Авито</label><div class="small muted">Разово: каждому объявлению — его последняя полученная рекомендация, с округлением вверх до рубля. Без рекомендации объявление пропускается. Включение продвижения задаётся отдельно.</div>` : ''}`;
       else ctl = `<button class="lnkb" type="button" data-bsched="${b.id}" id="bs_${b.id}" data-pop="1">${b.id === 'hours' ? 'Весь день' : 'Вся неделя'}</button>`;
       return `<div class="be-row dis"><label class="switch"><input type="checkbox" data-ben="${b.id}" aria-label="Изменять «${esc(b.t)}»"><i></i></label><div class="lbl"${b.tip ? ` data-tip="${esc(b.tip)}"` : ''}>${b.t}</div><div class="ctl">${ctl}</div></div>`;
     }).join('')}</div>
@@ -1226,7 +1228,12 @@ function openBulk() {
     <div class="m-f"><button class="btn" type="button" data-close>Отмена</button><button class="btn" type="button" id="bCheck">Проверить</button><button class="btn primary" type="button" id="bApply">Применить</button></div>`);
   m.addEventListener('change', (e) => {
     if (e.target.dataset.ben) e.target.closest('.be-row').classList.toggle('dis', !e.target.checked);
-    if (e.target.id === 'bv_bidmin') { $('#bv_bid').disabled = e.target.checked; }
+    if (e.target.id === 'bv_bidmin' || e.target.id === 'bv_bidrec') {
+      if (e.target.checked) $(e.target.id === 'bv_bidmin' ? '#bv_bidrec' : '#bv_bidmin').checked = false;
+      const automatic = $('#bv_bidmin').checked || $('#bv_bidrec').checked;
+      $('#bv_bid').disabled = automatic; $('#bo_bid').disabled = automatic;
+      if ($('#bo_bid_fs')) $('#bo_bid_fs').disabled = automatic;
+    }
     if (e.target.id === 'bv_on') $('#bv_on_t').textContent = e.target.checked ? 'включить' : 'выключить';
   });
   m.addEventListener('click', (e) => {
@@ -1242,7 +1249,8 @@ function openBulk() {
     const on = (id) => $(`[data-ben="${id}"]`).checked;
     if (on('on')) set.on = $('#bv_on').checked;
     if (on('bid')) {
-      if ($('#bv_bidmin').checked) set.bid = { min: true };
+      if ($('#bv_bidrec').checked) set.bid = { recommended: true };
+      else if ($('#bv_bidmin').checked) set.bid = { min: true };
       else { const v = $('#bv_bid').value.trim(); if (!/^\d+$/.test(v)) throw new Error('Ставка — целое число рублей'); set.bid = { op: $('#bo_bid').value, value: Number(v) }; }
     }
     const lim = {};
@@ -1257,7 +1265,7 @@ function openBulk() {
     if (on('days')) set.days = sch.days;
     return set;
   };
-  const opText = (o) => o.min ? 'минимальная для продвижения' : `${{ set: '=', add: '+', sub: '−' }[o.op]} ${o.value}`;
+  const opText = (o) => o.recommended ? 'рекомендованная Авито, своя для каждого объявления, разово' : o.min ? 'минимальная для продвижения' : `${{ set: '=', add: '+', sub: '−' }[o.op]} ${o.value}`;
   $('#bCheck').onclick = () => {
     err('');
     let set; try { set = build(); } catch (ex) { return err(ex.message); }
@@ -1266,11 +1274,12 @@ function openBulk() {
     if (set.bid) {
       lines.push(`Ставка: ${opText(set.bid)}`);
       const bad = [...sel].map((k) => B.items.find((i) => i.key === k)).filter(Boolean).filter((x) => {
+        if (set.bid.recommended) return x.rec == null || x.rec <= 0 || x.minPromo == null || x.max == null || Math.ceil(x.rec) < x.minPromo || Math.ceil(x.rec) > x.max;
         if (set.bid.min) return x.minPromo == null;
         const nv = set.bid.op === 'add' ? (x.bid || 0) + set.bid.value : set.bid.op === 'sub' ? (x.bid || 0) - set.bid.value : set.bid.value;
         return x.minPromo != null && (nv < x.minPromo || nv > x.max);
       });
-      if (bad.length) lines.push(`⚠ У ${bad.length} объявл. ставка выйдет за диапазон Авито — у них будет «Ошибка»`);
+      if (bad.length) lines.push(set.bid.recommended ? `⚠ ${bad.length} объявл. будут пропущены: нет рекомендации или она не подходит по диапазону. Остальные получат свои рекомендованные ставки.` : `⚠ У ${bad.length} объявл. ставка выйдет за диапазон Авито — у них будет «Ошибка»`);
     }
     if (set.lim) Object.entries(set.lim).forEach(([k, v]) => lines.push(`${LIMS.find((l) => l[0] === k)[1]}: ${v === null ? 'снять ограничение' : opText(v)}`));
     if (set.hours) lines.push(`Часы: ${hoursText(set.hours.length === 24 ? null : set.hours)}`);
