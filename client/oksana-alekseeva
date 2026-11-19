@@ -17,7 +17,7 @@
   --tile:       #FFFFFF;
   --ink:        #13201A;
   --ink-2:      #47554C;
-  --ink-3:      #7F8B83;
+  --ink-3:      #627168;
   --green:      #6BC043;
   --green-ink:  #2B6B16;
   --green-soft: #E2F1D6;
@@ -124,7 +124,7 @@ p { margin: 0; }
   position: fixed; inset: 0; z-index: 290; background: var(--paper);
   padding: calc(96px + env(safe-area-inset-top, 0px)) var(--gut) calc(32px + env(safe-area-inset-bottom, 0px));
   display: flex; flex-direction: column; gap: 6px;
-  visibility: hidden; opacity: 0; transition: opacity .3s, visibility .3s;
+  visibility: hidden; opacity: 0; transition: opacity .3s;
 }
 .mnav.is-open { visibility: visible; opacity: 1; }
 .mnav a:not(.btn) { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); font-family: var(--f-display); font-size: clamp(28px, 8vw, 40px); font-weight: 700; letter-spacing: -.03em; opacity: 0; transform: translateY(16px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
@@ -148,9 +148,9 @@ p { margin: 0; }
 .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
 .tile { background: var(--tile); border-radius: var(--r-l); box-shadow: 0 0 0 1px var(--line), 0 24px 48px -32px rgba(19, 32, 26, .25); }
 .h-intro { grid-column: span 7; padding: clamp(28px, 3.4vw, 44px); display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-.h-name { font-size: clamp(46px, 6.2vw, 88px); font-weight: 800; line-height: .9; letter-spacing: -.05em; }
+.h-name { font-size: clamp(40px, 5.8vw, 80px); font-weight: 800; line-height: 1; letter-spacing: -.045em; }
 .h-name span { display: block; }
-.h-name .ln { overflow: hidden; padding-bottom: .06em; }
+.h-name .ln { overflow: hidden; padding-bottom: .08em; margin-bottom: -.08em; }
 .h-name .ln > span { animation: rise 1s var(--ease) both; }
 .h-name .ln:nth-child(2) > span { animation-delay: .08s; color: var(--green-ink); }
 .h-desc { font-size: clamp(17px, 1.5vw, 19px); color: var(--ink-2); max-width: 44ch; animation: fade .9s .25s var(--ease) both; }
@@ -421,7 +421,7 @@ p { margin: 0; }
 @media (min-width: 981px) and (max-height: 820px) {
   .hero { padding-top: 84px; }
   .h-intro { padding: 32px 36px; gap: 16px; }
-  .h-name { font-size: clamp(46px, 5.4vw, 72px); }
+  .h-name { font-size: clamp(40px, 5.4vw, 72px); }
   .h-desc { font-size: 16px; }
   .h-actions .btn { min-height: 48px; }
   .score { padding-top: 14px; }
@@ -440,7 +440,7 @@ p { margin: 0; }
   .nav, .hdr-cta { display: none; }
   .burger { display: block; }
   .h-intro, .h-photo { grid-column: 1 / -1; grid-row: auto; }
-  .h-photo { aspect-ratio: 4 / 5; max-height: 72vh; order: -1; }
+  .h-photo { aspect-ratio: 4 / 5; max-height: 560px; }
   .contact-side { display: none; }
   .h-photo img { object-position: 50% 18%; }
   .projects { grid-template-columns: 1fr; }
@@ -457,7 +457,7 @@ p { margin: 0; }
   .hdr-in { height: 64px; }
   .hero { padding-top: calc(76px + env(safe-area-inset-top, 0px)); }
   .hero-grid { gap: 12px; }
-  .h-photo { aspect-ratio: 1 / 1.05; }
+  .h-photo { aspect-ratio: 4 / 5; max-height: 440px; }
   .h-photo figcaption { padding: 12px 14px; font-size: 13px; }
   .h-intro { gap: 22px; }
   .h-actions .btn { flex: 1 1 100%; }
@@ -562,6 +562,90 @@ p { margin: 0; }
 .contact.x-nophoto{grid-template-columns:1fr}
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
+
+/* ── Oksana: balanced cards, readable figures and compact mobile layouts ── */
+#approach .x-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#results .x-cards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+#results .x-card { grid-column: span 2; }
+#results .x-card:nth-last-child(-n+2) { grid-column: span 3; }
+@media (max-width: 1100px) {
+  #approach .x-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  #approach .x-cards, #results .x-cards { grid-template-columns: 1fr; }
+  #results .x-card, #results .x-card:nth-last-child(-n+2) { grid-column: auto; }
+}
+.h-intro { justify-content: center; }
+.h-principle { max-width: 30ch; padding-left: 16px; border-left: 3px solid var(--green); font-size: clamp(18px, 1.6vw, 21px); line-height: 1.45; }
+.h-photo { min-height: 480px; }
+.h-facts .fact { align-items: flex-start; flex-direction: column; gap: 10px; padding: 24px 28px; }
+.fact-num { font-size: clamp(30px, 3vw, 40px); }
+.sec + .sec { padding-top: 0; }
+.proj { gap: 22px; }
+.proj h3 { hyphens: none; }
+.proj-school .proj-stats { order: 1; }
+.project-link { display: inline-flex; align-items: center; gap: 14px; padding-block: 8px; font-weight: 600; border-bottom: 1px solid currentColor; }
+.project-link:hover { color: var(--green-ink); }
+.proj-science .project-link:hover { color: var(--green); }
+.proj-science .x-plinks { margin-top: auto; }
+.proj-university { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px 48px; background: var(--tile); box-shadow: 0 0 0 1px var(--line); }
+.proj-university .proj-top { grid-column: 1; }
+.proj-university .proj-desc { grid-column: 1; }
+.proj-university .proj-stats { grid-column: 2; grid-row: 1 / 3; grid-template-columns: 1fr 1fr; align-self: center; margin: 0; padding: 0 0 0 32px; border-top: 0; border-left: 1px solid var(--line); gap: 24px; }
+.ps-degree { font-size: clamp(20px, 2vw, 26px); line-height: 1.2; }
+.proj-stats { align-items: start; }
+.proj-stats > div { min-width: 0; }
+.ps-num { font-size: clamp(26px, 2.6vw, 36px); line-height: 1.15; }
+.about-photo { margin: 0; }
+.about-photo img { object-position: 55% 35%; }
+.x-stats .big-num { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; font-size: clamp(42px, 4.5vw, 60px); line-height: 1.1; color: var(--green-ink); }
+.x-stats .big-num span { font-size: clamp(20px, 2vw, 26px); letter-spacing: -.02em; }
+.x-stats .x-stat { padding: 28px; }
+.x-stats p { font-size: 15px; color: var(--ink-2); max-width: 30ch; }
+.x-pods { margin-top: 8px; }
+.x-msoc { margin-top: 8px; }
+.social > span:nth-child(2) { min-width: 0; }
+.social strong { overflow-wrap: anywhere; line-height: 1.35; }
+.social { gap: 12px; }
+.video-play .pbtn { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
+.foot p { max-width: 48ch; }
+.mnav { overflow-y: auto; overscroll-behavior: contain; }
+@media (min-width: 641px) and (max-width: 980px) {
+  .h-intro { grid-column: span 7; padding: 28px; gap: 20px; }
+  .h-photo { grid-column: span 5; aspect-ratio: auto; max-height: none; }
+  .h-name { font-size: clamp(40px, 5.8vw, 56px); }
+  .h-actions .btn { flex: 1 1 100%; }
+  .h-facts .fact { padding: 20px; }
+}
+@media (max-width: 760px) {
+  .proj-university { grid-template-columns: 1fr; gap: 22px; }
+  .proj-university .proj-stats { grid-column: 1; grid-row: auto; padding: 24px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .proj-stats { grid-template-columns: 1fr; gap: 16px; }
+  .proj-stats > div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .ps-label { margin: 0; font-size: 13px; }
+  .proj-university .proj-stats { grid-template-columns: 1fr; }
+  .proj-university .ps-degree { font-size: 20px; }
+}
+@media (max-width: 640px) {
+  .h-photo { min-height: 0; }
+  .h-intro { padding: 28px 24px; gap: 20px; }
+  .h-facts .fact { flex-direction: row; align-items: center; gap: 16px; padding: 20px; }
+  .fact-num { min-width: 110px; font-size: 30px; }
+  .fact p { font-size: 14px; }
+  .sec-title { font-size: clamp(30px, 8.5vw, 42px); line-height: 1.1; }
+  .sec-head { margin-bottom: 28px; }
+  .about { gap: 28px; }
+  .about-photo { max-width: 100%; }
+  .x-stat { padding: 24px; }
+  .media { padding: 24px 20px; }
+  .social { padding: 16px; }
+  .social strong { font-size: 15px; }
+  .social-ic { width: 40px; height: 40px; border-radius: 12px; }
+  .video-play .pbtn { width: 48px; height: 48px; margin: 0; }
+  .video-play strong { padding-right: 0; }
+  .foot { padding-top: 8px; }
+}
+
 </style>
 </head>
 <body>
@@ -577,7 +661,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
@@ -588,13 +672,14 @@ p { margin: 0; }
   <div class="wrap hero-grid">
     <div class="tile h-intro">
       <h1 class="h-name"><span class="ln"><span>Оксана</span></span><span class="ln"><span>Алексеева</span></span></h1>
-      <p class="h-desc">Основательница онлайн-школы русского языка «От А до Я» и направления Just Speak Russian, кандидат филологических наук. Строю школу, где язык не зубрят, а понимают: ученики сами выводят правила, а высокие баллы становятся следствием, а не целью.</p>
+      <p class="h-desc">Основательница онлайн-школы «От А до Я» и направления Just Speak Russian. Кандидат филологических наук.</p>
+      <p class="h-principle">Учу понимать язык. Высокие баллы — следствие, а не цель.</p>
       <div class="h-actions">
         <a href="#projects" class="btn btn-primary">Мои проекты <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         <a href="#contact" class="btn btn-line">Связаться</a>
       </div>
     </div>
-    <figure class="tile h-photo"><img src="images/oksana-alekseeva/hero-1.jpg" alt="Оксана Алексеева" fetchpriority="high"></figure>
+    <figure class="tile h-photo"><img src="images/oksana-alekseeva/hero-1.jpg" width="1067" height="1600" alt="Оксана Алексеева" fetchpriority="high"></figure>
     <div class="h-facts"><div class="tile fact"><span class="fact-num">22 года</span><p>преподаю — в школе, вузе и своей онлайн-школе</p></div><div class="tile fact"><span class="fact-num">200+</span><p>учеников прошли через меня и школу «От А до Я»</p></div><div class="tile fact"><span class="fact-num">70%</span><p>учеников поступают в выбранную школу с экзаменом по русскому</p></div></div>
   </div>
 </section>
@@ -602,17 +687,17 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><span class="x-plogo"><img src="images/oksana-alekseeva/logo-1.jpg" alt="Логотип" loading="lazy"></span><div class="proj-top"><div><h3>Онлайн-школа русского языка «От А до Я»</h3></div></div><p class="proj-desc">Онлайн-школа для школьников 5–11 классов. Наши ученики — ребята, которые хотят владеть родным языком идеально и готовятся к поступлению в топовые школы и вузы, и те, кому русский даётся тяжело: мы помогаем им справиться с трудностями и полюбить язык. Три программы: поступление в сильные школы и вузы, подготовка к ОГЭ и ЕГЭ, «подтянуть русский». С этого года в школе появились и иностранные языки.</p><div class="x-plinks"></div><div class="proj-stats"><div><div class="ps-num">7</div><div class="ps-label">преподавателей — из вузов и лицеев</div></div><div><div class="ps-num">6 из 9</div><div class="ps-label">учеников за последний год поступили в топовые школы</div></div><div><div class="ps-num">3 года</div><div class="ps-label">работает школа</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Just Speak Russian — русский как иностранный</h3></div></div><p class="proj-desc">Направление для иностранцев, которые живут, работают или ведут дела с Россией, и для детей русских семей за рубежом, которые не хотят забыть родной язык. Это моя большая любовь: видеть, как человек, знавший только «привет, как дела», за считанные месяцы начинает свободно говорить по-русски.</p><div class="x-plinks"></div></article><article class="proj rv proj-school"><div class="proj-top"><div><h3>Северный государственный медицинский университет</h3></div></div><p class="proj-desc">Преподаю на кафедре иностранных языков и русского как иностранного: учу студентов-медиков английскому и культуре речи — как говорить с пациентом и его родными. Пишу учебные пособия по русскому языку для иностранцев. До этого работала в САФУ.</p><div class="proj-stats"><div><div class="ps-num">3 года</div><div class="ps-label">председатель приёмной комиссии по русскому языку в СГМУ</div></div><div><div class="ps-num x-long">к. филол. н.</div><div class="ps-label">кандидат филологических наук с 2008 года</div></div></div></article></div>
+    <div class="projects"><article class="proj rv proj-school"><span class="x-plogo"><img src="images/oksana-alekseeva/logo-1.jpg" width="1000" height="1000" alt="Онлайн-школа «От А до Я»" loading="lazy"></span><div class="proj-top"><div><h3>Онлайн-школа русского языка «От А до Я»</h3></div></div><p class="proj-desc">Онлайн-школа для школьников 5–11 классов. Наши ученики — ребята, которые хотят владеть родным языком идеально и готовятся к поступлению в топовые школы и вузы, и те, кому русский даётся тяжело: мы помогаем им справиться с трудностями и полюбить язык. Три программы: поступление в сильные школы и вузы, подготовка к ОГЭ и ЕГЭ, «подтянуть русский». С этого года в школе появились и иностранные языки.</p><div class="x-plinks"><a class="project-link" href="https://russianlanguagepro.ru" target="_blank" rel="noopener">Сайт школы <span aria-hidden="true">↗</span></a></div><div class="proj-stats"><div><div class="ps-num">7</div><div class="ps-label">преподавателей — из вузов и лицеев</div></div><div><div class="ps-num">6 из 9</div><div class="ps-label">учеников за последний год поступили в топовые школы</div></div><div><div class="ps-num">3 года</div><div class="ps-label">работает школа</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Just Speak Russian — русский как иностранный</h3></div></div><p class="proj-desc">Направление для иностранцев, которые живут, работают или ведут дела с Россией, и для детей русских семей за рубежом, которые не хотят забыть родной язык. Это моя большая любовь: видеть, как человек, знавший только «привет, как дела», за считанные месяцы начинает свободно говорить по-русски.</p><div class="x-plinks"><a class="project-link" href="https://t.me/JustSpeakRussian" target="_blank" rel="noopener">Канал Just Speak Russian <span aria-hidden="true">↗</span></a></div></article><article class="proj rv proj-university"><div class="proj-top"><div><h3>Северный государственный медицинский университет</h3></div></div><p class="proj-desc">Преподаю на кафедре иностранных языков и русского как иностранного: учу студентов-медиков английскому и культуре речи — как говорить с пациентом и его родными. Пишу учебные пособия по русскому языку для иностранцев. До этого работала в САФУ.</p><div class="proj-stats"><div><div class="ps-num">3 года</div><div class="ps-label">председатель приёмной комиссии по русскому языку в СГМУ</div></div><div><div class="ps-num ps-degree">к. филол. н.</div><div class="ps-label">кандидат филологических наук с 2008 года</div></div></div></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap"><div class="sec-head"><div><h2 class="sec-title">Обо мне</h2></div></div></div>
   <div class="wrap about">
-    <div class="about-photo rv"><img src="images/oksana-alekseeva/about-1.jpg" alt="Оксана Алексеева" loading="lazy"></div>
+    <div class="about-photo rv"><img src="images/oksana-alekseeva/about-1.jpg" width="1169" height="1600" alt="Оксана Алексеева" loading="lazy"></div>
     <div>
       <p class="about-lead">Филолог по образованию, учёный по складу ума, предприниматель по выбору.</p>
-      <p class="about-body">Всё детство я была уверена, что стану музыкантом: десять лет музыкальной школы, концерты, мечты о консерватории. С десятого класса музыки в моей жизни не стало, и я так обрадовалась свободе, что скатилась по всем предметам. На вручении аттестата мама плакала: тройки по физике, математике, геометрии — и уверенные пятёрки только по русскому и литературе. Так решилось: прямая дорога на филфак.</p><p class="about-body">И ни одного дня я об этом не пожалела. Все пять лет в университете я была абсолютно счастлива — мне нравилось всё. Потом аспирантура в Герценовском, степень кандидата филологических наук, научные статьи по литературе XVIII века, диплом переводчика английского. А потом я задала себе вопрос: почему со школьниками нельзя общаться так же на равных, как со студентами? И ответила себе — можно. Так появилась школа «От А до Я».</p><p class="about-body">Своего отношения к ученикам я научилась у двух учителей музыки. Первая повторяла «стену лбом не прошибёшь» — и все её ученики, включая меня, были троечниками. Вторая была требовательной, уважительной и очень любила музыку: через полгода у неё я уже занимала места на региональных конкурсах. С тех пор я знаю: если для учителя все вокруг дураки, он превратит в посредственность даже самых ярких.</p><blockquote class="x-quote"><p>Вставайте, сир, вас ждут великие дела. Эту фразу я говорю себе сама — я сама себе и сир, и слуга</p><cite>Оксана Алексеева</cite></blockquote><p class="about-body">Зимой кормлю птиц, играю на барабанной установке — не на пианино, так хоть на барабанах. Учу турецкий: это уже мой третий иностранный язык. И до сих пор иногда не успеваю сделать домашнее задание — поэтому очень хорошо понимаю своих учеников.</p>
+      <p class="about-body">Всё детство я была уверена, что стану музыкантом: десять лет музыкальной школы, концерты, мечты о консерватории. С десятого класса музыки в моей жизни не стало, и я так обрадовалась свободе, что скатилась по всем предметам. На вручении аттестата мама плакала: тройки по физике, математике, геометрии — и уверенные пятёрки только по русскому и литературе. Так решилось: прямая дорога на филфак.</p><p class="about-body">И ни одного дня я об этом не пожалела. Все пять лет в университете я была абсолютно счастлива — мне нравилось всё. Потом аспирантура в Герценовском, степень кандидата филологических наук, научные статьи по литературе XVIII века, диплом переводчика английского. А потом я задала себе вопрос: почему со школьниками нельзя общаться так же на равных, как со студентами? И ответила себе — можно. Так появилась школа «От А до Я».</p><p class="about-body">Своего отношения к ученикам я научилась у двух учителей музыки. Первая повторяла «стену лбом не прошибёшь» — и все её ученики, включая меня, были троечниками. Вторая была требовательной, уважительной и очень любила музыку: через полгода у неё я уже занимала места на региональных конкурсах. С тех пор я знаю: если для учителя все вокруг дураки, он превратит в посредственность даже самых ярких.</p><blockquote class="x-quote"><p>«Вставайте, сир, вас ждут великие дела». Эту фразу я говорю себе сама — я сама себе и сир, и слуга.</p><cite>Оксана Алексеева</cite></blockquote><p class="about-body">Зимой кормлю птиц, играю на барабанной установке — не на пианино, так хоть на барабанах. Учу турецкий: это уже мой третий иностранный язык. И до сих пор иногда не успеваю сделать домашнее задание — поэтому очень хорошо понимаю своих учеников.</p>
       <ol class="timeline"><li class="tl rv"><span class="tl-year">2003</span><div><h3>Поморский государственный университет им. М. В. Ломоносова</h3><p>Филологический факультет, диплом учителя русского языка и литературы.</p></div></li><li class="tl rv"><span class="tl-year">2006</span><div><h3>Аспирантура РГПУ им. А. И. Герцена</h3><p>Филология.</p></div></li><li class="tl rv"><span class="tl-year">2008</span><div><h3>Кандидат филологических наук</h3><p>Научные статьи по литературе XVIII века и методике преподавания РКИ.</p></div></li><li class="tl rv"><span class="tl-year"></span><div><h3>Диплом переводчика</h3><p>Английский язык в сфере профессиональной коммуникации: днём — за кафедрой, по субботам — снова за партой.</p></div></li><li class="tl rv"><span class="tl-year"></span><div><h3>СГМУ</h3><p>Преподаватель РКИ и культуры речи, три года — председатель приёмной комиссии по русскому языку.</p></div></li><li class="tl rv"><span class="tl-year"></span><div><h3>Школа «От А до Я»</h3><p>Своя онлайн-школа русского языка, сегодня — 7 преподавателей.</p></div></li><li class="tl rv"><span class="tl-year">сейчас</span><div><h3>Многопредметная школа</h3><p>В школе появились иностранные языки, развиваю направление Just Speak Russian.</p></div></li></ol>
     </div>
   </div>
@@ -621,21 +706,21 @@ p { margin: 0; }
 <section class="sec" id="approach">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подход школы</h2></div></div>
-    <p class="sec-lead x-lead">У нас нет натаскивания на экзамен. Есть обучение предмету — а высокие баллы приходят как его результат.</p><div class="x-text"><p class="x-p">Правило — это вывод лингвистов, которые наблюдали за языком. Если ребёнок пройдёт тот же путь, он выведет правило сам, а иногда сформулирует его точнее учебника. Я даю ученику «собирать», «соберу», «подбери», раскладываю их на две колонки и спрашиваю: почему здесь «и», а здесь «е»? После такого открытия правило не забывается никогда.</p></div><div class="x-cards"><article class="x-card rv"><h3>Ученики выводят правила сами</h3><p class="x-p">Показываем внутреннюю логику языка. Вопроса «кто придумал эти дурацкие правила?» у наших учеников не возникает.</p></article><article class="x-card rv"><h3>Ошибка — путь роста</h3><p class="x-p">Ошибка не делает тебя ни плохим, ни хорошим. На ошибках я показываю возможности языка — и именно те, кто боялся ошибаться, первыми начинают задавать вопросы о языке.</p></article><article class="x-card rv"><h3>Разговор на равных</h3><p class="x-p">Я обращаюсь к каждому ученику на «вы», с пятого класса. Ребята растут в собственных глазах, а вместе с этим растёт и планка требований к себе.</p></article><article class="x-card rv"><h3>Урок как продолжение диалога</h3><p class="x-p">Домашнее задание приходит заранее, ученик подчёркивает, где сомневался. На уроке разбираем именно эти места, а в конце ребёнок сам объясняет тему как методист — эти видеокарточки становятся предметом гордости.</p></article><article class="x-card rv"><h3>Пробники и отчёты родителям</h3><p class="x-p">Бесплатная входная диагностика, ежемесячный пробник для выпускников, отчёты и общий чат с родителями на время подготовки к экзамену.</p></article><article class="x-card rv"><h3>Спокойствие на экзамене</h3><p class="x-p">Три года в приёмной комиссии показали: самые нелепые ошибки — от суеты. Учим концентрироваться, а на последнее занятие перед экзаменом приходит психолог.</p></article><article class="x-card rv"><h3>Свои тренажёры</h3><p class="x-p">Авторские тренажёры для быстрой и точной отработки нужных тем.</p></article><article class="x-card rv"><h3>Подбор преподавателя</h3><p class="x-p">Первое знакомство с семьёй провожу я и подбираю преподавателя под ребёнка. Можно попробовать занятия с несколькими преподавателями школы и выбрать своего.</p></article></div><blockquote class="x-quote"><p>Я горжусь собой, я горжусь вами</p><cite>так я часто заканчиваю занятия</cite></blockquote>
+    <p class="sec-lead x-lead">У нас нет натаскивания на экзамен. Есть обучение предмету — а высокие баллы приходят как его результат.</p><div class="x-text"><p class="x-p">Правило — это вывод лингвистов, которые наблюдали за языком. Если ребёнок пройдёт тот же путь, он выведет правило сам, а иногда сформулирует его точнее учебника. Я даю ученику «собирать», «соберу», «подбери», раскладываю их на две колонки и спрашиваю: почему здесь «и», а здесь «е»? После такого открытия правило не забывается никогда.</p></div><div class="x-cards"><article class="x-card rv"><h3>Ученики выводят правила сами</h3><p class="x-p">Показываем внутреннюю логику языка. Вопроса «кто придумал эти дурацкие правила?» у наших учеников не возникает.</p></article><article class="x-card rv"><h3>Ошибка — путь роста</h3><p class="x-p">Ошибка не делает тебя ни плохим, ни хорошим. На ошибках я показываю возможности языка — и именно те, кто боялся ошибаться, первыми начинают задавать вопросы о языке.</p></article><article class="x-card rv"><h3>Разговор на равных</h3><p class="x-p">Я обращаюсь к каждому ученику на «вы», с пятого класса. Ребята растут в собственных глазах, а вместе с этим растёт и планка требований к себе.</p></article><article class="x-card rv"><h3>Урок как продолжение диалога</h3><p class="x-p">Домашнее задание приходит заранее, ученик подчёркивает, где сомневался. На уроке разбираем именно эти места, а в конце ребёнок сам объясняет тему как методист — эти видеокарточки становятся предметом гордости.</p></article><article class="x-card rv"><h3>Пробники и отчёты родителям</h3><p class="x-p">Бесплатная входная диагностика, ежемесячный пробник для выпускников, отчёты и общий чат с родителями на время подготовки к экзамену.</p></article><article class="x-card rv"><h3>Спокойствие на экзамене</h3><p class="x-p">Три года в приёмной комиссии показали: самые нелепые ошибки — от суеты. Учим концентрироваться, а на последнее занятие перед экзаменом приходит психолог.</p></article><article class="x-card rv"><h3>Свои тренажёры</h3><p class="x-p">Авторские тренажёры для быстрой и точной отработки нужных тем.</p></article><article class="x-card rv"><h3>Подбор преподавателя</h3><p class="x-p">Первое знакомство с семьёй провожу я и подбираю преподавателя под ребёнка. Можно попробовать занятия с несколькими преподавателями школы и выбрать своего.</p></article></div><blockquote class="x-quote"><p>«Я горжусь собой, я горжусь вами»</p><cite>так я часто заканчиваю занятия</cite></blockquote>
   </div>
 </section>
 
 <section class="sec" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">6 из 9</div><p>поступили в топовые школы за последний год</p></div><div class="tile x-stat rv"><div class="big-num">20 встреч</div><p>рекордный срок подготовки к поступлению в школу 1535</p></div><div class="tile x-stat rv"><div class="big-num x-long">32 занятия</div><p>рекорд подготовки в Летово — русский и литература</p></div></div><div class="x-cards"><article class="x-card rv"><span class="x-meta">7 класс · ВШЭ</span><h3>Нина: ВШЭ и олимпиада</h3><p class="x-p">Готовились к поступлению в 7 класс — поступила и стала призёром олимпиады ВШЭ по русскому языку для 7–8 классов.</p><span class="x-res">поступление + призёр</span></article><article class="x-card rv"><span class="x-meta">Летово</span><h3>Полина и Маша</h3><p class="x-p">Полина поступила в Летово в 7 класс, Маша — в 9 класс. Младший брат Маши пришёл на летние занятия и сам просит маму добавить ещё.</p><span class="x-res">Летово</span></article><article class="x-card rv"><span class="x-meta">7 класс · школа 1535</span><h3>Настя: в десятке лучших</h3><p class="x-p">Поступила в школу 1535 в первой десятке, на следующий год планирует готовиться к олимпиадам.</p><span class="x-res">1535, топ-10</span></article><article class="x-card rv"><span class="x-meta">из Летово в ВШЭ</span><h3>Не поступила — и всё равно победила</h3><p class="x-p">Не прошла в Летово, но мама решила не бросать подготовку. За год добавили литературу, стали призёрами языковой олимпиады ВШЭ, поступили в ВШЭ. А потом, чтобы закрыть гештальт, ученица с лёгкостью сдала экзамен по русскому в Летово.</p><span class="x-res">ВШЭ</span></article><article class="x-card rv"><span class="x-meta">из тройки в топовую школу</span><h3>Пятёрки через пять занятий</h3><p class="x-p">Пришла со слабой тройкой и амбициозной целью. Мы строили систему с азов — и через 4–5 занятий в школе пошли пятёрки. В августовском доборе поступила в школу мечты.</p><span class="x-res">поступила</span></article></div>
+    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">6 из 9</div><p>поступили в топовые школы за последний год</p></div><div class="tile x-stat rv"><div class="big-num">20 <span>встреч</span></div><p>рекордный срок подготовки к поступлению в школу № 1535</p></div><div class="tile x-stat rv"><div class="big-num">32 <span>занятия</span></div><p>рекорд подготовки в Летово — русский и литература</p></div></div><div class="x-cards"><article class="x-card rv"><span class="x-meta">7 класс · ВШЭ</span><h3>Нина: ВШЭ и олимпиада</h3><p class="x-p">Готовились к поступлению в 7 класс — поступила и стала призёром олимпиады ВШЭ по русскому языку для 7–8 классов.</p><span class="x-res">поступление + призёр</span></article><article class="x-card rv"><span class="x-meta">Летово</span><h3>Полина и Маша</h3><p class="x-p">Полина поступила в Летово в 7 класс, Маша — в 9 класс. Младший брат Маши пришёл на летние занятия и сам просит маму добавить ещё.</p><span class="x-res">Летово</span></article><article class="x-card rv"><span class="x-meta">7 класс · школа 1535</span><h3>Настя: в десятке лучших</h3><p class="x-p">Поступила в школу № 1535 в первой десятке, на следующий год планирует готовиться к олимпиадам.</p><span class="x-res">1535, топ-10</span></article><article class="x-card rv"><span class="x-meta">из Летово в ВШЭ</span><h3>Не поступила — и всё равно победила</h3><p class="x-p">Не прошла в Летово, но мама решила не бросать подготовку. За год добавили литературу, стали призёрами языковой олимпиады ВШЭ, поступили в ВШЭ. А потом, чтобы закрыть гештальт, ученица с лёгкостью сдала экзамен по русскому в Летово.</p><span class="x-res">ВШЭ</span></article><article class="x-card rv"><span class="x-meta">из тройки в топовую школу</span><h3>Пятёрки через пять занятий</h3><p class="x-p">Пришла со слабой тройкой и амбициозной целью. Мы строили систему с азов — и через 4–5 занятий в школе пошли пятёрки. В августовском доборе поступила в школу мечты.</p><span class="x-res">поступила</span></article></div>
   </div>
 </section>
 
 <section class="sec" id="publications">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Публикации и пособия</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">eLibrary</span><h3>Научные статьи</h3><p class="x-p">Литература XVIII века и методика преподавания русского как иностранного.</p></article><article class="x-card rv"><span class="x-meta">РКИ</span><h3>Учебные пособия</h3><p class="x-p">Пособия по русскому языку для иностранных студентов.</p></article><article class="x-card rv"><span class="x-meta">журнал «Уютный дом»</span><h3>Статьи о школе</h3><p class="x-p">Публикации в архангельском журнале — 2–3 материала.</p></article></div>
+    <div class="x-cards"><article class="x-card rv"><span class="x-meta">eLibrary</span><h3>Научные статьи</h3><p class="x-p">Литература XVIII века и методика преподавания русского как иностранного.</p></article><article class="x-card rv"><span class="x-meta">РКИ</span><h3>Учебные пособия</h3><p class="x-p">Пособия по русскому языку для иностранных студентов.</p></article><article class="x-card rv"><span class="x-meta">журнал «Уютный дом»</span><h3>Статьи о школе</h3><p class="x-p">Публикации в архангельском журнале о работе школы.</p></article></div>
   </div>
 </section>
 
@@ -643,7 +728,7 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media x-media rv">
       <div class="x-mhead"><h2 class="sec-title">Подкасты</h2></div>
-      <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226020640?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/oksana-alekseeva/pod-1226020640.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226928641?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/oksana-alekseeva/pod-1226928641.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div></div>
+      <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226020640?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/oksana-alekseeva/pod-1226020640.jpg" width="1280" height="720" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226928641?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/oksana-alekseeva/pod-1226928641.jpg" width="1280" height="720" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div></div>
       <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://t.me/noproblemRL" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал школы</strong><span>t.me/noproblemRL</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://t.me/JustSpeakRussian" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал Just Speak Russian</strong><span>t.me/JustSpeakRussian</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://vk.ru/id22263276" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>vk.ru/id22263276</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://profi.ru/profile/AlekseevaOV3" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h9a6 6 0 0 1 0 12H9v6H5V3zm4 4v4h5a2 2 0 0 0 0-4H9z"/></svg></span><span><strong>Профи.ру</strong><span>profi.ru/profile/AlekseevaOV3</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://russianlanguagepro.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Сайт школы</strong><span>russianlanguagepro.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
     </div>
   </div>
@@ -651,12 +736,12 @@ p { margin: 0; }
 
 <section class="sec" id="contact">
   <div class="wrap contact">
-    <div class="contact-side rv"><img src="images/oksana-alekseeva/contact-1.jpg" alt="Оксана Алексеева" loading="lazy"></div>
+    <div class="contact-side rv"><img src="images/oksana-alekseeva/contact-1.jpg" width="600" height="900" alt="Оксана Алексеева" loading="lazy"></div>
     <div class="tile form-tile rv">
       <h2 class="form-title">Связаться с Оксаной</h2>
       <p class="form-lead">Партнёрство, совместные проекты, интервью или работа в команде школы — напишите, и я или администратор школы обязательно ответим.</p>
       
-      <div class="socials x-contacts"><a class="social" href="https://t.me/san_oksana" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@san_oksana</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/79937519276" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+79937519276</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:je1vu@yandex.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>je1vu@yandex.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
+      <div class="socials x-contacts"><a class="social" href="https://t.me/san_oksana" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@san_oksana</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/79937519276" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+7 993 751-92-76</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:je1vu@yandex.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>je1vu@yandex.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
     </div>
   </div>
 </section>
@@ -707,12 +792,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -887,7 +976,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const index = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(index + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */
