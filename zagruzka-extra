@@ -335,13 +335,13 @@ function render() {
   const rows = F.feeds.map((f) => {
     const s = f.stat;
     const n = errCount(s);
-    const pill = s && s.building ? '<span class="chip amber">собирается</span>' : !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${esc(f.slug)}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${esc(f.slug)}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
+    const pill = s && s.building ? '<span class="chip amber">собирается</span>' : !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${esc(f.slug)}" type="button">${s.s3At ? 'не обновлён' : 'не собран'}</button>` : n ? `<button class="chip amber" data-probs="${esc(f.slug)}" type="button">${n}</button>` : '<span class="chip green">нет</span>';
     const acc = accName(f.avitoAccountId);
     const tags = [!acc && '<span class="chip amber">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>'].filter(Boolean).join(' ');
     return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname"><b>${esc(f.name)}</b>${tags}${acc && acc !== f.name ? `<div class="small muted">${esc(acc)}</div>` : ''}</td>
       <td>${f.sheetUrl ? `<a class="lnkb" href="${esc(f.sheetUrl)}" target="_blank" rel="noopener">Открыть</a>` : '—'}</td>
       <td class="r num">${s && !s.error && !s.building ? int(s.ads) : '—'}</td><td>${pill}</td>
-      <td class="num small muted">${s && s.builtAt ? esc(ago(Date.parse(s.builtAt))) : '—'}</td>
+      <td class="num small muted">${s && (s.s3At || s.builtAt) ? esc(ago(Date.parse(s.s3At || s.builtAt))) : '—'}</td>
       <td><div class="fact">
         ${acc ? fb('data-report', f.slug, 'list', 'Отчёт', 'Последний отчёт автозагрузки Авито') : ''}
         ${fb('data-copy', f.slug, 'link', 'Ссылка', 'Скопировать ссылку на XML')}
@@ -640,7 +640,7 @@ function paintReport(slug) {
   if ($('#repCsv')) $('#repCsv').disabled = !(d.problems || []).length || !s.complete || !!s.warning;
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
-    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${int(s.items)} объявлений</div>
+    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${s.totalItems != null ? `получено ${int(s.items)} из ${int(s.totalItems)} объявлений` : `${int(s.items)} объявлений`}</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug)}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title || '')}</div></div>`).join('')}</div>
     ${items.length ? `<h3 class="ph2">Проблемы — ${(d.problems || []).length}</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений в отчёте нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }

@@ -55,8 +55,8 @@ test('BananLab processing status is exposed',()=>{
 });
 for(const [file,name] of [['avito-bids','renderReport'],['zagruzka-extra','paintReport']])test(`${file} does not display no-problems for an incomplete report`,()=>{
  const s=fs.readFileSync(`${__dirname}/../${file}`,'utf8');const a=s.indexOf('function '+name+'(');const b=s.indexOf('\n}',a)+2;
- const body={innerHTML:''},csv={disabled:false};const c=vm.createContext({R:{x:{summary:{items:0,complete:false,warning:'Waiting'},problems:[]}},$:q=>q==='#repBody'?body:csv,esc:String,int:String,I:()=>'',probCards:()=>'',probGroups:x=>x});
- vm.runInContext(s.slice(a,b),c);vm.runInContext(`${name}('x')`,c);assert.equal(csv.disabled,true);assert.ok(body.innerHTML.includes('Waiting'));assert.ok(!body.innerHTML.includes('Проблемных объявлений нет'));assert.ok(!body.innerHTML.includes('Проблемных объявлений в отчёте нет'));
+ const body={innerHTML:''},csv={disabled:false};const c=vm.createContext({R:{x:{summary:{items:0,totalItems:2134,complete:false,warning:'Waiting'},problems:[]}},$:q=>q==='#repBody'?body:csv,esc:String,int:String,I:()=>'',probCards:()=>'',probGroups:x=>x});
+ vm.runInContext(s.slice(a,b),c);vm.runInContext(`${name}('x')`,c);assert.equal(csv.disabled,true);assert.ok(body.innerHTML.includes('Waiting'));assert.match(body.innerHTML,/получено 0 из 2134/);assert.ok(!body.innerHTML.includes('Проблемных объявлений нет'));assert.ok(!body.innerHTML.includes('Проблемных объявлений в отчёте нет'));
 });
 test('manual refresh checks a new upload even if a complete report is cached',async()=>{
  const c=setup([upload('a'),page(1,1),upload('b'),page(2,1)]);await c.run();
@@ -124,4 +124,9 @@ test('failure to check readiness preserves the previous XML',async()=>{
 });
 test('readiness source rejects arbitrary hosts and redirects are disallowed',()=>{
  const c=setup();assert.throws(()=>vm.runInContext("feedsPhotoReadyUrl('https://internal.test/feed.xml')",c));assert.throws(()=>vm.runInContext("feedsPhotoReadyUrl('https://storage.yandexcloud.net/other/feed.xml')",c));
+});
+test('readiness uses Workers-compatible manual redirect mode and rejects redirect responses',async()=>{
+ const c=setup();c.feed={photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};c.ads=[{id:'one',fields:[]}];c.stat={problems:[]};let calls=0;
+ c.fetch=async(u,opts)=>{calls++;assert.equal(opts.redirect,'manual');return new Response('',{status:302,headers:{Location:'https://outside.test/'}});};
+ await assert.rejects(vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c),/перенаправляет запрос/);assert.equal(calls,1);
 });

@@ -1500,7 +1500,7 @@ function feedsRender() {
   $('#fRows').innerHTML = list.map((f) => {
     const s = f.stat, n = feedErrCount(s);
     const fx = s && s.fixes ? s.fixes.reduce((t, x) => t + x.n, 0) : 0;
-    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">не собран</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : fx ? `<button class="chip green" data-probs="${f.slug}" type="button" data-tip="Ошибок нет; сервис сам поправил значения, которые Авито не принимает — нажмите, чтобы посмотреть">нет · испр.</button>` : '<span class="chip green">нет</span>';
+    const pill = !s ? '<span class="chip">не собран</span>' : s.error ? `<button class="chip red" data-probs="${f.slug}" type="button">${s.s3At ? 'не обновлён' : 'не собран'}</button>` : n ? `<button class="chip amber" data-probs="${f.slug}" type="button">${n}</button>` : fx ? `<button class="chip green" data-probs="${f.slug}" type="button" data-tip="Ошибок нет; сервис сам поправил значения, которые Авито не принимает — нажмите, чтобы посмотреть">нет · испр.</button>` : '<span class="chip green">нет</span>';
     const acc = feedAccName(f.avitoAccountId);
     const tags = [!acc && '<span class="chip amber" data-tip="Выберите кабинет в «Изменить»">нет кабинета</span>', !f.enabled && '<span class="chip">выключен</span>', !fMineOn() && f.ownerName && `<span class="small muted" data-tip="Ответственный в трекере задач">${esc(f.ownerName)}</span>`].filter(Boolean).join('');
     return `<tr class="${f.enabled ? '' : 'off'}"><td class="fname" title="${esc(acc && acc !== f.name ? 'Кабинет: ' + acc : '')}"><b>${esc(f.name)}</b>${tags}</td>
@@ -1585,7 +1585,7 @@ function feedProbs(slug) {
     + `<div class="pc-w">${x.ids.slice(0, 20).map((id) => `<span class="pill"><b>${esc(id)}</b></span>`).join('')}${x.n > 20 ? `<span class="pill">ещё ${int(x.n - 20)}</span>` : ''}</div></div>`;
   const fixes = (s.fixes || []).map(fixCard).join('');
   openModal(`${mHead('Ошибки XML — ' + f.name)}<div class="m-b">
-    <div class="psum">${items.length ? `<div><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${items.some((x) => x.kind === 'err') ? 'XML не собран — исправьте таблицу' : 'строк с замечаниями — эти строки или фото не попали в XML'}</div></div>` : '<div class="ok-box">Ошибок нет</div>'}
+    <div class="psum">${items.length ? `<div><div class="big ${items.some((x) => x.kind === 'err') ? 'red' : 'amber'}">${items.length}</div><div class="note">${items.some((x) => x.kind === 'err') ? 'Обновление XML остановлено — причина ниже' : 'строк с замечаниями — эти строки или фото не попали в XML'}</div></div>` : '<div class="ok-box">Ошибок нет</div>'}
       ${s.builtAt ? `<div class="note">Сборка ${esc(ago(Date.parse(s.builtAt)))} · в XML ${int(s.ads)} объявлений</div>` : ''}</div>
     ${probCards(groups)}
     ${fixes ? `<h3 class="ph2">Исправлено автоматически — Авито не принимает эти значения</h3><div class="note">Сервис сверил таблицу со справочником Авито и в XML поставил правильные значения. Таблица не меняется — поправьте её так же, чтобы не путаться (номера — id объявлений).</div>${fixes}` : ''}
@@ -1650,7 +1650,7 @@ function renderReport(slug) {
   $('#repCsv').disabled = !d.problems.length || !s.complete || !!s.warning;
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
-    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.items)} объявлений</div>
+    <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · ${s.totalItems != null ? `получено ${int(s.items)} из ${int(s.totalItems)} объявлений` : `${int(s.items)} объявлений`}</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div>${(x.sections || []).filter((y) => y.count).map((y) => `<div class="t-s">${esc(y.title)} — ${int(y.count)}</div>`).join('')}</div>`).join('')}</div>
     ${items.length ? `<h3 class="ph2">Что не так — ${d.problems.length} объявлений</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }
