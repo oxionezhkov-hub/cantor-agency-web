@@ -125,3 +125,22 @@ test('failure to check readiness preserves the previous XML',async()=>{
 test('readiness source rejects arbitrary hosts and redirects are disallowed',()=>{
  const c=setup();assert.throws(()=>vm.runInContext("feedsPhotoReadyUrl('https://internal.test/feed.xml')",c));assert.throws(()=>vm.runInContext("feedsPhotoReadyUrl('https://storage.yandexcloud.net/other/feed.xml')",c));
 });
+
+test('photo readiness uses Worker-supported manual redirects and refuses redirected XML',async()=>{
+ const c=setup();c.feed={photoReadyXml:'https://storage.yandexcloud.net/server1/avito/clients/test/test.xml'};c.ads=[{id:'one',fields:[]}];c.stat={problems:[]};
+ let calls=0;c.fetch=async(url,opts)=>{calls++;assert.equal(opts.redirect,'manual');return new Response('',{status:302,headers:{Location:'https://other.test/feed.xml'}});};
+ await assert.rejects(vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c),/перенаправление/);assert.equal(calls,1);
+ c.fetch=async(url,opts)=>{assert.equal(opts.redirect,'manual');return new Response('<Ads><Ad><id>one</id><Category>Услуги</Category><Images><Image url="https://prepared.test/one.jpg"/></Images></Ad></Ads>');};
+ await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,undefined);
+});
+for (const [file,name] of [['avito-bids','renderReport'],['zagruzka-extra','paintReport']]) {
+ test(`${file} renders upstream total and marks processing summary as provisional`,()=>{
+  const html=fs.readFileSync(`${__dirname}/../${file}`,'utf8');
+  const start=html.indexOf(`function ${name}(slug) {`),end=html.indexOf('\n}',start)+2;
+  const body={},button={};
+  const c=vm.createContext({R:{test:{summary:{reportId:1,totalItems:351,items:0,status:'processing'},problems:[]}},
+   $:id=>id==='#repCsv'?button:body,int:String,esc:String,I:()=>'',probCards:()=>'',probGroups:()=>[]});
+  vm.runInContext(html.slice(start,end),c);vm.runInContext(`${name}('test')`,c);
+  assert.match(body.innerHTML,/351 объявлений/);assert.doesNotMatch(body.innerHTML,/всего 0 объявлений/);assert.match(body.innerHTML,/Сводка ниже предварительная/);
+ });
+}
