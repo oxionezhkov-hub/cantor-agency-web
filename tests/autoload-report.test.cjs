@@ -201,7 +201,7 @@ test('empty photo cells keep previously published photos, including recovery fro
 test('feed panels show a completed downloadable report while the next upload is processing', async () => {
  const current = () => ok({upload_id:'current',status:'processing'});
  const c = setup([current(), upload('previous'), page(3,1), upload('previous'),
-  current(), upload('previous'), upload('current'), page(2,1)]);
+  current(), upload('previous'), upload('current'), page(2,1), upload('current')]);
  const panel = (refresh = false) => vm.runInContext(
   `fetchAvitoAutoloadReport(env,account,null,{showCompletedWhileProcessing:true,refresh:${refresh}})`, c);
  const ready = await panel();
@@ -219,6 +219,7 @@ test('feed panels show a completed downloadable report while the next upload is 
  assert.equal(next.summary.reportId, 'current');
  assert.equal(next.summary.processingReportId, null);
  assert.equal(next.items.length, 2);
+ assert.match(c.called[7], /current\/items\?perPage=100/);
 });
 
 test('feed panels discard a completed-report page if the selected upload changed during the request', async () => {

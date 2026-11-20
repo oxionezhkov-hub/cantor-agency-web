@@ -1227,7 +1227,7 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
 async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
   if (reportId) throw new Error('Доступен только последний отчёт автозагрузки');
   const kv = env.AVITO_KV;
-  const key = `autoload-report:${options.showCompletedWhileProcessing ? 'panel' : 'v3'}:${account.id}`;
+  const key = `autoload-report:${options.showCompletedWhileProcessing ? 'panel-v2' : 'v3'}:${account.id}`;
   const cooldownKey = `autoload-report-cooldown:${account.id}`;
   let state = await kv.get(key, 'json');
   const cooldown = await kv.get(cooldownKey, 'json');
@@ -1316,12 +1316,12 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
     }
     if (!state.complete) {
       const page = state.page;
-      const pageSize = options.showCompletedWhileProcessing && source === 'last_successful' && !state.fallbackId ? 100 : 50;
+      const pageSize = options.showCompletedWhileProcessing && !state.fallbackId ? 100 : 50;
       const path = state.fallbackId ? `/autoload/v2/reports/${state.fallbackId}/items?per_page=50&page=${page - 1}` : `/autoload/v4/uploads/${state.source}/items?perPage=${pageSize}&page=${page}`;
       const data = await get(path);
       if (!Array.isArray(data.items)) throw new Error(`В ответе Авито нет списка объявлений: страница ${page}`);
       if (pageSize === 100) {
-        const confirmed = await get('/autoload/v4/uploads/last_successful');
+        const confirmed = await get(`/autoload/v4/uploads/${state.source}`);
         if (String(uploadId(confirmed)) !== String(id)) throw new Error('Авито завершило следующую загрузку. Запрашиваем её отчёт.');
       }
       const batch = data.items;
