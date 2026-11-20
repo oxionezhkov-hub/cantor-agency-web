@@ -322,7 +322,6 @@ main:has(#pg-feeds:not(.hide)){padding-bottom:10px}
 .tile{border-radius:14px;padding:12px 14px;background:var(--sunken)}
 .tile .t-v{font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
 .tile .t-l{font-size:12.5px;font-weight:600;margin-top:2px}
-.tile .t-s{font-size:11.5px;color:var(--muted);margin-top:3px}
 .tile.green{background:var(--green-bg)}.tile.green .t-v,.tile.green .t-l{color:var(--green)}
 .tile.amber{background:var(--amber-bg)}.tile.amber .t-v,.tile.amber .t-l{color:var(--amber)}
 .tile.red{background:var(--red-bg)}.tile.red .t-v,.tile.red .t-l{color:var(--red)}
@@ -1646,7 +1645,7 @@ async function feedReport(slug) {
 }
 function renderReport(slug) {
   const d = R[slug], s = d.summary || {}, src = d.source;
-  const secs = s.sectionStats && Array.isArray(s.sectionStats.sections) ? s.sectionStats.sections : [];
+  const secs = s.complete && Array.isArray(s.sectionStats?.sections) ? s.sectionStats.sections : [];
   const tone = (slug2) => /^success|successful/.test(slug2) ? 'green' : /error|fail/.test(slug2) ? 'red' : 'amber';
   const srcBox = !src ? '' : src.kind === 'cantor' ? `<div class="ok-box">${I('check', 'ic-sm')} Кабинет грузится из нашего XML${src.enabled ? '' : ' — но автозагрузка в кабинете выключена'}</div>`
     : `<div class="warn-box">${src.kind === 'bananlab' ? 'Кабинет пока грузится из BananLab' : src.kind === 'none' ? 'В кабинете не указана ссылка на фид' : 'Кабинет грузится из другой ссылки'}${src.urls.length ? `: <span class="mono">${esc(src.urls[0])}</span>` : ''}. Наш XML начнёт работать после «Подключить».</div>`;
@@ -1660,9 +1659,8 @@ function renderReport(slug) {
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
     ${s.processingReportId != null ? `<div class="warn-box">Авито обрабатывает загрузку №${esc(String(s.processingReportId))}. Ниже последний завершённый отчёт.</div>` : ''}
-    ${s.status === 'processing' ? '<div class="note">Сводка ниже предварительная: Авито ещё обрабатывает файл. Причины по отдельным объявлениям можно проверить после завершения отчёта.</div>' : ''}
     <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.totalItems ?? (s.sectionStats && s.sectionStats.count) ?? s.items)} объявлений</div>
-    <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div>${(x.sections || []).filter((y) => y.count).map((y) => `<div class="t-s">${esc(y.title)} — ${int(y.count)}</div>`).join('')}</div>`).join('')}</div>
+    ${secs.length ? `<div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div></div>`).join('')}</div>` : ''}
     ${items.length ? `<h3 class="ph2">Что не так — ${d.problems.length} объявлений</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }
 

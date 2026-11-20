@@ -623,7 +623,7 @@ function paintReport(slug) {
   const d = R[slug]; if (!d || !$('#repBody')) return;
   const s = d.summary || {};
   const src = d.source;
-  const secs = s.sectionStats && Array.isArray(s.sectionStats.sections) ? s.sectionStats.sections : [];
+  const secs = s.complete && Array.isArray(s.sectionStats?.sections) ? s.sectionStats.sections : [];
   const tone = (x) => /^success|successful/.test(x || '') ? 'green' : /error|fail/.test(x || '') ? 'red' : 'amber';
   const srcBox = !src ? '' : src.kind === 'cantor'
     ? `<div class="ok-box">Кабинет грузится из XML этого раздела${src.enabled ? '' : ' — но автозагрузка в кабинете выключена'}</div>`
@@ -641,9 +641,8 @@ function paintReport(slug) {
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
     ${s.processingReportId != null ? `<div class="warn-box">Авито обрабатывает загрузку №${esc(String(s.processingReportId))}. Ниже последний завершённый отчёт.</div>` : ''}
-    ${s.status === 'processing' ? '<div class="note">Сводка ниже предварительная: Авито ещё обрабатывает файл. Причины по отдельным объявлениям можно проверить после завершения отчёта.</div>' : ''}
     <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ' · ' + esc(fmtAt(Date.parse(s.finishedAt))) : ''} · ${int(s.totalItems ?? (s.sectionStats && s.sectionStats.count) ?? s.items)} объявлений</div>
-    <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug)}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title || '')}</div></div>`).join('')}</div>
+    ${secs.length ? `<div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug)}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title || '')}</div></div>`).join('')}</div>` : ''}
     ${items.length ? `<h3 class="ph2">Проблемы — ${(d.problems || []).length}</h3>${probCards(probGroups(items))}` : s.complete && !s.warning ? '<div class="ok-box">Проблемных объявлений в отчёте нет</div>' : '<div class="note">Полный список ошибок ещё не получен</div>'}`;
 }
 
