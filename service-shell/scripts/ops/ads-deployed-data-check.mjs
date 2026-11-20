@@ -3,16 +3,24 @@ import assert from "node:assert/strict";
 import { setGlobalProxyFromEnv } from "node:http";
 import { mkdirSync } from "node:fs";
 setGlobalProxyFromEnv();
-const base = "https://cantor-service-preview.oxion-ezhkov.workers.dev";
+const remote = "https://cantor-service-preview.oxion-ezhkov.workers.dev";
+const base = process.argv.includes("--local") ? "http://127.0.0.1:9162" : remote;
 mkdirSync("/tmp/cantor-ads-deployed", { recursive: true });
 const b = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox"] });
 try {
-  const c = await b.newContext({ viewport: { width: 1440, height: 1000 } });
+  const c = await b.newContext({
+    viewport: { width: process.argv.includes("--wide") ? 1920 : 1440, height: 1000 },
+  });
   await c.route(base + "/**", async (route) => {
     const q = route.request(),
       h = { ...q.headers() };
     delete h.host;
-    const r = await fetch(q.url(), { headers: h, signal: AbortSignal.timeout(60000) });
+    const url = new URL(q.url());
+    if (base !== remote && !url.pathname.startsWith("/api/")) return route.continue();
+    const r = await fetch(remote + url.pathname + url.search, {
+      headers: h,
+      signal: AbortSignal.timeout(60000),
+    });
     const headers = Object.fromEntries(r.headers);
     for (const k of ["content-length", "content-encoding", "transfer-encoding"]) delete headers[k];
     await route.fulfill({ status: r.status, headers, body: Buffer.from(await r.arrayBuffer()) });
@@ -45,10 +53,16 @@ try {
     loaded: [...el.querySelectorAll("img")].filter((x) => x.naturalWidth > 0).length,
     viewsX: el.querySelector("thead th:nth-child(5)").getBoundingClientRect().right,
     window: innerWidth,
+    titleColumn: el.querySelector("tbody td:nth-child(2)").getBoundingClientRect().width,
+    statusColumn: el.querySelector("tbody td:nth-child(3)").getBoundingClientRect().width,
   }));
   assert.ok(shape.viewsX < shape.window, "views pushed off screen");
+  assert.ok(shape.titleColumn < 420, "unused space after ad title");
+  assert.ok(shape.statusColumn < 180, "status column too wide");
   assert.deepEqual(errors, []);
   await p.screenshot({ path: "/tmp/cantor-ads-deployed/list.png" });
+  await p.getByRole("button", { name: "Подробнее", exact: true }).click();
+  await p.screenshot({ path: "/tmp/cantor-ads-deployed/details.png" });
   console.log(
     JSON.stringify({
       publishedFirst: true,
