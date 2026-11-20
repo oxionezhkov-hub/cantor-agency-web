@@ -4,9 +4,9 @@
   "main": "scripts/ops/preview-worker.mjs",
   "compatibility_date": "2026-11-16",
   "ai": { "binding": "AI" },
-  "services": [{"binding":"AVITO_AUDIT_SOURCE","service":"cantor-avito-audit-source"}],
-  "vars": {"AVITO_AUDIT_ENABLED":"dobrynina-read-v1","AVITO_AUDIT_USER_ID":"388298238"},
-  "ratelimits": [{"name":"AVITO_AUDIT_LIMIT","namespace_id":"8328329","simple":{"limit":12,"period":60}},{ "name": "CAMPAIGN_LIMIT", "namespace_id": "8328328", "simple": { "limit": 4, "period": 60 } }],
+  "services": [{"binding":"AVITO_AUDIT_SOURCE","service":"cantor-avito-audit-source"},{"binding":"LIVE_READ_SOURCE","service":"cantor-avito-live-direct"}],
+  "vars": {"LIVE_READ_ENABLED":"direct-v1","AVITO_AUDIT_ENABLED":"dobrynina-read-v1","AVITO_AUDIT_USER_ID":"388298238"},
+  "ratelimits": [{"name":"LIVE_READ_LIMIT","namespace_id":"8328331","simple":{"limit":30,"period":60}},{"name":"AVITO_AUDIT_LIMIT","namespace_id":"8328329","simple":{"limit":12,"period":60}},{ "name": "CAMPAIGN_LIMIT", "namespace_id": "8328328", "simple": { "limit": 4, "period": 60 } }],
   "assets": {
     "directory": "dist/client",
     "binding": "ASSETS",

@@ -203,7 +203,7 @@ const exampleWindows: WindowSlot[] = [
   { id: "sat-12", label: "Сб 12:00", startsAt: "2026-11-21T09:00:00.000Z", takenBy: null },
   { id: "sat-16", label: "Сб 16:00", startsAt: "2026-11-21T13:00:00.000Z", takenBy: null },
 ];
-const preview = getPreviewData();
+let preview = getPreviewData();
 export const ads: Ad[] = preview
   ? preview.ads.map((a) => {
       const traffic = previewAdTotals(a.id);
@@ -243,3 +243,52 @@ export const dialogs: Dialog[] = preview
     }))
   : exampleDialogs;
 export const windows: WindowSlot[] = preview ? [] : exampleWindows;
+
+export function refreshPreviewRows() {
+  preview = getPreviewData();
+  if (!preview) return;
+  ads.splice(
+    0,
+    ads.length,
+    ...preview.ads.map((a) => {
+      const traffic = previewAdTotals(a.id);
+      return {
+        id: a.id,
+        title: a.title,
+        text: a.description || "",
+        photos: (a.photos || []).map((_, i) => previewImageUrl(a.id, i)),
+        offerHasDiagnostic: /диагност/i.test(a.description || ""),
+        shows: traffic.shows,
+        views: traffic.views,
+        contacts: traffic.contacts,
+        spendRub: traffic.spendRub,
+        cities: a.city ? [{ city: a.city, bidRub: a.bidding?.currentRub ?? NaN, place: NaN }] : [],
+        autobidder: a.bidding?.mode === "2",
+        status: a.status,
+        price: a.price,
+        bidding: a.bidding,
+        address: a.address,
+        autoloadId: a.autoloadId,
+        startsAt: a.startsAt,
+        finishesAt: a.finishesAt,
+        attributes: a.attributes,
+        source: a.source,
+      };
+    }),
+  );
+  dialogs.splice(
+    0,
+    dialogs.length,
+    ...preview.chats.map((c) => ({
+      id: c.id,
+      name: c.name || "Собеседник",
+      topic: c.itemTitle || "",
+      reply: "",
+      messages: [],
+      waitingSince: c.lastAuthor === "client" && c.lastAt ? new Date(c.lastAt).toISOString() : null,
+      silentSince: null,
+    })),
+  );
+}
+if (typeof window !== "undefined")
+  window.addEventListener("cantor-preview-live", refreshPreviewRows);

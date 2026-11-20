@@ -9,6 +9,8 @@ export type PreviewDaily = {
 };
 export type PreviewAd = {
   id: string;
+  liveConfirmedAt?: string;
+  autoloadError?: string;
   title: string;
   city: string;
   price: number | null;
@@ -48,6 +50,7 @@ export type PreviewChat = {
   itemId?: string;
   itemTitle?: string;
   lastAt: number;
+  lastMessageId?: string;
   lastText?: string;
   lastAuthor?: string;
   messageCount?: number;
@@ -59,6 +62,8 @@ export type PreviewChat = {
 };
 export type PreviewMessage = { id: string; at: number; author: string; type: string; text: string };
 export type PreviewSnapshot = {
+  live?: Record<string, LiveMeta>;
+  liveMoney?: LiveMoney;
   tutor: string;
   tutorAvatarUrl?: string;
   subject: string;
@@ -166,3 +171,169 @@ export function previewAdTotals(id: string) {
 }
 export const previewImageUrl = (adId: string, index: number) =>
   `/api/demo/image?adId=${encodeURIComponent(adId)}&index=${index}`;
+
+export const PREVIEW_EVENT = "cantor-preview-live";
+export type LiveMeta = {
+  observedAt?: string;
+  error?: string;
+  origin?: string;
+  coverage?: { complete?: boolean; truncated?: boolean; repeated?: boolean; nextOffset?:number|null };
+  historical?: boolean;
+};
+export type LiveMoney = {
+  wallet: {
+    realRub: number | null;
+    bonusRub: number | null;
+    observedAt?: string;
+    stale?: boolean;
+  } | null;
+  advance: { rub: number | null; observedAt?: string; stale?: boolean } | null;
+  days: {
+    date: string;
+    shows: number | null;
+    views: number | null;
+    contacts: number | null;
+    spendRub: number | null;
+  }[];
+  expenses?: { date: string; spendings: { type: string; rub: number | null }[] }[];
+  errors?: { part: string; code: string; origin?: string }[];
+  coverage: { complete: boolean; from?: string; to?: string; eligibleBalance?: string };
+};
+let liveRunning = false;
+export async function refreshLivePreview(signal?: AbortSignal) {
+  if (liveRunning || !snapshot) return;
+  liveRunning = true;
+  try {
+    for (const section of ["ads", "autoload", "chats", "metrics"]) {
+      if (signal?.aborted) return;
+      try {
+        const response = await fetch(`/api/demo/live?section=${section}`, {
+          headers: { "x-demo-password": password },
+          cache: "no-store",
+          credentials: "same-origin",
+          signal,
+        });
+        const body = await response.json(),
+          value = response.ok ? body : body.lastGood;
+        snapshot.live ??= {};
+        snapshot.live[section] = {
+          observedAt: value?.observedAt,
+          error: response.ok ? undefined : body.error,
+          origin: body.origin,
+          coverage: value?.data?.coverage,
+        };
+        if (value?.data) {
+          const data = value.data;
+          if (section === "ads") {
+            const old = new Map(snapshot.ads.map((a) => [a.id, a]));
+            const fresh = data.ads.map((a: PreviewAd) => ({
+              ...old.get(a.id),
+              ...a,
+              description: a.description ?? old.get(a.id)?.description ?? null,
+              city: a.city || old.get(a.id)?.city || "",
+              photos: old.get(a.id)?.photos,
+              liveConfirmedAt: value.observedAt,
+            }));
+            const ids = new Set(fresh.map((a: PreviewAd) => a.id));
+            snapshot.ads = [
+              ...fresh,
+              ...snapshot.ads
+                .filter((a) => !ids.has(a.id))
+                .map((a) => ({ ...a, liveConfirmedAt: undefined })),
+            ];
+            snapshot.catalogAt = Date.parse(value.observedAt);
+          }
+          if (section === "autoload") {
+            const problems = (data.rows || []).flatMap(
+              (r: { id: string; autoloadId: string; errors: string[] }) =>
+                r.errors.map((msg) => ({ id: r.id || r.autoloadId, msg })),
+            );
+            snapshot.ads = snapshot.ads.map((a) => {
+              const row = data.rows.find(
+                (r: { id: string; autoloadId: string }) =>
+                  (r.id && r.id === a.id) || (r.autoloadId && r.autoloadId === a.autoloadId),
+              );
+              return row
+                ? { ...a, status: row.status || a.status, autoloadError: row.errors.join("; ") }
+                : a;
+            });
+            snapshot.feed = {
+              sheetUrl: snapshot.feed?.sheetUrl || "",
+              tabs: snapshot.feed?.tabs || [],
+              enabled: snapshot.feed?.enabled ?? false,
+              xmlUrl: snapshot.feed?.xmlUrl || null,
+              builtAt: value.observedAt,
+              adCount: data.rows.length,
+              problems,
+              report: {
+                status: data.report.status,
+                finishedAt: data.report.finishedAt,
+                errors: problems.length,
+              },
+              schedule: snapshot.feed?.schedule,
+            };
+          }
+          if (section === "chats") {
+            const old = new Map(snapshot.chats.map((c) => [c.id, c]));
+            const fresh = data.chats.map((c: PreviewChat) => ({
+              ...old.get(c.id),
+              ...c,
+              messages: old.get(c.id)?.messages || [],
+            }));
+            const ids = new Set(fresh.map((c: PreviewChat) => c.id));
+            snapshot.chats = [...fresh, ...snapshot.chats.filter((c) => !ids.has(c.id))];
+            snapshot.chatsAt = Date.parse(value.observedAt);
+          }
+          if (section === "metrics") {
+            snapshot.liveMoney = data;
+            const verified=data.days.filter((d:LiveMoney["days"][number])=>[d.shows,d.views,d.contacts,d.spendRub].every(v=>v!==null&&Number.isFinite(v))).map((d:LiveMoney["days"][number])=>({date:d.date,shows:d.shows!,views:d.views!,contacts:d.contacts!,spendRub:d.spendRub!}));
+            const rows=new Map((snapshot.accountDaily||[]).map(r=>[r.date,r]));for(const row of verified)rows.set(row.date,row);snapshot.accountDaily=[...rows.values()].sort((a,b)=>a.date.localeCompare(b.date));
+          }
+        }
+        // Arrays are shared by existing screens; update provider rows without remounting editors.
+        if (typeof window !== "undefined") window.dispatchEvent(new Event(PREVIEW_EVENT));
+      } catch {
+        if (signal?.aborted) return;
+        snapshot.live ??= {};
+        snapshot.live[section] = { ...snapshot.live[section], error: "network" };
+        if (typeof window !== "undefined") window.dispatchEvent(new Event(PREVIEW_EVENT));
+      }
+    }
+  } finally {
+    liveRunning = false;
+  }
+}
+export async function readLiveMessages(id: string, offset = 0, signal?: AbortSignal) {
+  const response = await fetch(
+    `/api/demo/live?section=messages&id=${encodeURIComponent(id)}&offset=${offset}`,
+    {
+      headers: { "x-demo-password": password },
+      cache: "no-store",
+      credentials: "same-origin",
+      signal,
+    },
+  );
+  const body = await response.json();
+  if (!response.ok) {
+    if (body.lastGood) return { ...body.lastGood, stale: true };
+    throw new Error(
+      body.error === "http_403"
+        ? "Авито не разрешил чтение этой переписки"
+        : "Не удалось обновить переписку; сохранённая история доступна",
+    );
+  }
+  return body as {
+    messages: PreviewMessage[];
+    observedAt: string;
+    stale?: boolean;
+    coverage: { complete: boolean; nextOffset: number | null; truncated: boolean };
+  };
+}
+
+export async function moreLiveChats(){
+ if(!snapshot)return;const offset=snapshot.live?.chats?.coverage?.nextOffset;if(offset==null)return;
+ const response=await fetch(`/api/demo/live?section=chats&offset=${offset}`,{headers:{"x-demo-password":password},credentials:"same-origin",cache:"no-store"});
+ if(!response.ok)throw Error("Не удалось загрузить более ранние диалоги");const result=await response.json();
+ const rows=new Map(snapshot.chats.map(c=>[c.id,c]));for(const c of result.data.chats)rows.set(c.id,{...rows.get(c.id),...c});snapshot.chats=[...rows.values()];
+ snapshot.live!.chats={observedAt:result.observedAt,coverage:result.data.coverage};window.dispatchEvent(new Event(PREVIEW_EVENT));
+}

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { setPreviewData } from "./preview-data";
+import { refreshLivePreview, setPreviewData } from "./preview-data";
 import type { SectionId } from "./sections";
 import { ServiceLoading } from "./ServiceLoading";
 const Shell = lazy(() => import("./Shell").then((m) => ({ default: m.Shell })));
@@ -31,6 +31,19 @@ export function PreviewAccess({
       });
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    const run = () => {
+      if (!document.hidden) void refreshLivePreview(controller.signal);
+    };
+    run();
+    const timer = setInterval(run, 60000);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [ready]);
   async function login() {
     setLoading(true);
     setError("");

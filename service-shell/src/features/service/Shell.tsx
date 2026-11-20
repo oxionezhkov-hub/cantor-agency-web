@@ -1,3 +1,4 @@
+import { LiveFreshness } from "./LiveFreshness";
 import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ServiceLoading } from "./ServiceLoading";
@@ -26,7 +27,7 @@ import { monthRangeMsk, periodMetrics } from "./crm.ts";
 import { AdsSection, DashboardSection, DialogsSection } from "./views.tsx";
 import { AnalyticsSection } from "./AnalyticsSection.tsx";
 import { ANALYTICS_TABS, analyticsTabFromFocus } from "./analytics-navigation.ts";
-import { getPreviewData } from "./preview-data.ts";
+import { PREVIEW_EVENT, getPreviewData } from "./preview-data.ts";
 
 const KnowledgeSection = lazy(() =>
   import("@/features/knowledge/KnowledgeSection").then((module) => ({
@@ -56,6 +57,11 @@ export function Shell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    window.addEventListener(PREVIEW_EVENT, update);
+    return () => window.removeEventListener(PREVIEW_EVENT, update);
+  }, []);
   const { state: crm, storageError } = useDemoCrm();
   const tutorAvatarUrl = getPreviewData()?.tutorAvatarUrl;
 
@@ -325,6 +331,7 @@ export function Shell({
       </aside>
       <div className="service-body">
         <main id="service-content" className="service-content" tabIndex={-1}>
+          <LiveFreshness section={section} />
           <h1 className="sr-only">{selected.label}</h1>
           {storageError ? (
             <p role="alert" className="crm-error">

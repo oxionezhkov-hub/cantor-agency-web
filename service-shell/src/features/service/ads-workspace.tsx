@@ -30,7 +30,7 @@ import { ads as samples } from "./data";
 import "./ads-workspace.css";
 import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
-import { getPreviewData } from "./preview-data";
+import { PREVIEW_EVENT, getPreviewData } from "./preview-data";
 import { AdCampaign } from "./ad-campaign";
 import { getAdPreflightWarnings } from "./ad-preflight";
 import { AdComparison } from "./ad-comparison";
@@ -211,6 +211,60 @@ function newListing(): Listing {
 }
 export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
+  useEffect(() => {
+    const sync = () => {
+      const p = getPreviewData();
+      if (!p) return;
+      setState((current) => ({
+        ...current,
+        items: p.ads.map((a) => {
+          const old = current.items.find((v) => v.id === a.id) || initial.items[0];
+          return {
+            ...old,
+            ...(old?.id === a.id
+              ? {}
+              : {
+                  shows: NaN,
+                  views: NaN,
+                  contacts: NaN,
+                  spend: NaN,
+                  bid: NaN,
+                  max: NaN,
+                  budget: NaN,
+                  target: NaN,
+                  mode: "",
+                  query: "",
+                  start: "",
+                  end: "",
+                  source: "cantor" as const,
+                }),
+            id: a.id,
+            title: a.title,
+            text: a.description ?? (old?.id===a.id?old.text:"") ,
+            city: a.city || (old?.id===a.id?old.city:"") ,
+            price: a.price ?? NaN,
+            status:
+              (
+                {
+                  active: "published",
+                  old: "archived",
+                  blocked: "blocked",
+                  rejected: "rejected",
+                  removed: "removed",
+                } as Record<string, string>
+              )[a.status] || "unknown",
+            autoloadId: a.autoloadId,
+            photos: old?.id === a.id ? old.photos : [],
+            bidding: a.bidding,
+          };
+        }),
+      }));
+    };
+    window.addEventListener(PREVIEW_EVENT, sync);
+    sync();
+    return () => window.removeEventListener(PREVIEW_EVENT, sync);
+  }, []);
+
   const [tab, setTab] = useState(
     focus === "feeds" || focus === "history"
       ? "feeds"
@@ -1282,6 +1336,14 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           removed: "Снято",
                         }[a.status] || a.status}
                       </span>
+                      {getPreviewData()?.ads.find((item) => item.id === a.id)?.autoloadError && (
+                        <a className="aw-text-link" href="/?section=ads&focus=feeds">
+                          {getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError}
+                        </a>
+                      )}
+                      {getPreviewData()?.live?.ads &&
+                        !getPreviewData()?.ads.find((item) => item.id === a.id)
+                          ?.liveConfirmedAt && <small>Последнее сохранённое состояние</small>}
                     </td>
                     <td>{Number.isFinite(a.shows) ? a.shows?.toLocaleString("ru-RU") : "—"}</td>
                     {details && (

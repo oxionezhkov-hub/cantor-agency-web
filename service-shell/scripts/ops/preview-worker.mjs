@@ -1,3 +1,4 @@
+import {liveRead} from "./avito-live.mjs";
 import { avitoAudit } from "./avito-audit.mjs";
 import { aiManager } from "./ai-manager.mjs";
 import { readDobrynina } from "./dobrynina-source.mjs";
@@ -8,6 +9,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    if (path === "/api/demo/live") return liveRead(request,env);
     if (path === "/api/demo/avito-audit") return avitoAudit(request, env);
     if (path === "/api/campaign/suggest") return campaignSuggestion(request, env);
     const headers = {
@@ -77,6 +79,8 @@ export default {
             const key = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
             return `${url.origin}/api/demo/image?key=${key}`;
           };
+          data.live = {};
+          data.chats = data.chats.map(({messages,...chat})=>{const last=(messages||[]).at(-1);return {...chat,lastText:chat.lastText||last?.text||"",lastAuthor:chat.lastAuthor||last?.author,lastMessageId:last?.id};});
           data.tutorAvatarUrl = await localAvatar(data.tutorAvatarUrl);
           await Promise.all(data.chats.map(async (chat) => {
             chat.avatarUrl = await localAvatar(chat.avatarUrl);

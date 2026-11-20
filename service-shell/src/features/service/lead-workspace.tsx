@@ -61,7 +61,7 @@ import {
   type MessageAdapter,
 } from "./communication.ts";
 import { useDraftCache } from "./use-draft-cache.ts";
-import { getPreviewData } from "./preview-data.ts";
+import { readLiveMessages, getPreviewData } from "./preview-data.ts";
 import type { CrmState, Lead } from "./crm.ts";
 const stamp = (at: string) =>
   new Date(at).toLocaleString("ru-RU", {
@@ -91,11 +91,13 @@ export function LeadWorkspace({
   const { state, storageError } = useDemoCrm();
   const activeAdapter =
     adapter ??
-    (import.meta.env.VITE_SERVICE_PREVIEW === "true" &&
-    (state.workspaceId === "cantor-demo-anna" ||
-      (state.workspaceId === "cantor-elena-dobrynina" && Boolean(getPreviewData())))
-      ? createExampleAdapter(state.workspaceId)
-      : disconnectedAdapter);
+    (getPreviewData()
+      ? disconnectedAdapter
+      : import.meta.env.VITE_SERVICE_PREVIEW === "true" &&
+          (state.workspaceId === "cantor-demo-anna" ||
+            (state.workspaceId === "cantor-elena-dobrynina" && Boolean(getPreviewData())))
+        ? createExampleAdapter(state.workspaceId)
+        : disconnectedAdapter);
   const [, refreshReplyState] = useState(0);
   const [startPanel, setStartPanel] = useState<Panel>("conversation");
   const [moveError, setMoveError] = useState("");
@@ -109,6 +111,68 @@ export function LeadWorkspace({
   }
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(focus ?? null);
+  const [historyState, setHistoryState] = useState<{
+    id: string;
+    at?: string;
+    next: number | null;
+    busy: boolean;
+    error: string;
+    stale?: boolean;
+  }>({ id: "", next: null, busy: false, error: "" });
+  async function loadHistory(id: string, offset = 0, signal?: AbortSignal) {
+    setHistoryState((h) => h.id===id?({ ...h, busy: true, error: "" }):({id,busy:true,error:"",next:null}));
+    try {
+      const page = await readLiveMessages(id, offset, signal);
+      if (signal?.aborted) return;
+      changeDemoCrm((current) => {
+        const rows = new Map((current.messages || []).map((m) => [m.id, m]));
+        for (const m of page.messages) {
+          rows.set(`${id}:${m.id}`, {
+            id: `${id}:${m.id}`,
+            leadId: id,
+            author:
+              m.author === "manager" ? "manager" : m.author === "system" ? "system" : "client",
+            text: m.text,
+            at: new Date(m.at).toISOString(),
+            kind: ["text", "image", "voice", "file", "call", "video"].includes(m.type)
+              ? (m.type as "text" | "image" | "voice" | "file" | "call" | "video")
+              : "text",
+            delivery: "provider",
+          });
+        }
+        return { ...current, messages: [...rows.values()] };
+      });
+      setHistoryState(previous=>({
+        id,
+        at: page.observedAt,
+        next: offset===0&&previous.id===id&&previous.at?previous.next:page.coverage.nextOffset,
+        busy: false,
+        error: "",
+        stale: page.stale,
+      }));
+    } catch (e) {
+      if (!signal?.aborted)
+        setHistoryState((h) => ({
+          ...h,
+          id,
+          busy: false,
+          error: e instanceof Error ? e.message : "Ошибка чтения",
+        }));
+    }
+  }
+  useEffect(() => {
+    if (!selectedId || !getPreviewData()) return;
+    const controller = new AbortController();
+    void loadHistory(selectedId, 0, controller.signal);
+    const timer = setInterval(() => {
+      if (!document.hidden) void loadHistory(selectedId, 0, controller.signal);
+    }, 30000);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [selectedId]);
+
   const [filter, setFilter] = useState<"unanswered" | "reminders" | null>(null),
     [searching, setSearching] = useState(false),
     [query, setQuery] = useState("");
@@ -170,6 +234,22 @@ export function LeadWorkspace({
   };
   return (
     <div className={`dialog-workbench ${selected ? "contact-open" : ""} view-${view}`}>
+      {selectedId && getPreviewData() && (
+        <div className="live-chat-status" role="status">
+          {historyState.busy
+            ? "Обновляем переписку…"
+            : historyState.error ||
+              `${historyState.stale ? "Сохранённая история" : "Проверено"} ${historyState.at ? new Date(historyState.at).toLocaleString("ru-RU") : ""}`}
+          {historyState.next !== null && !historyState.busy && (
+            <button
+              className="st-button"
+              onClick={() => void loadHistory(selectedId, historyState.next!)}
+            >
+              Загрузить более ранние сообщения
+            </button>
+          )}
+        </div>
+      )}
       {moveError ? (
         <p role="alert" className="crm-error">
           {moveError}

@@ -1,3 +1,4 @@
+import { LiveFunds } from "./LiveFunds";
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ArrowUpRight, BookOpen, Check, MessageSquare, PanelTop } from "lucide-react";
@@ -135,6 +136,7 @@ export function DashboardSection() {
   ];
   return (
     <div className="daily-brief">
+      <LiveFunds />
       <section className="brief-promotion" aria-label="Сводка продвижения">
         <div className="brief-section-heading">
           <div>
