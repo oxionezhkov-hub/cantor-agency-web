@@ -10,7 +10,9 @@ export function SidebarFunds({
   mobileOpen: boolean;
   onNavigate: () => void;
 }) {
-  const money = getPreviewData()?.liveMoney;
+  const preview = getPreviewData();
+  const money = preview?.liveMoney;
+  const loading = Boolean(preview && !money && !preview.live?.metrics);
   const items = [
     {
       id: "wallet",
@@ -33,9 +35,11 @@ export function SidebarFunds({
     <div className={`sidebar-funds ${mobileOpen ? "mobile-open" : ""}`}>
       {items.map(({ id, name, value, observedAt, stale, Icon }) => {
         const validDate = observedAt && Number.isFinite(Date.parse(observedAt));
-        const updated = validDate
-          ? `Обновлено ${new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" }).format(new Date(observedAt))}${stale ? " · данные устарели" : ""}`
-          : "Время обновления неизвестно";
+        const updated = loading
+          ? "Загружаем данные"
+          : validDate
+            ? `Обновлено ${new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" }).format(new Date(observedAt))}${stale ? " · данные устарели" : ""}`
+            : "Время обновления неизвестно";
         const amount =
           value != null && Number.isFinite(value)
             ? `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`
@@ -47,10 +51,14 @@ export function SidebarFunds({
             search={{ section: "stats", focus: "overview" }}
             onClick={onNavigate}
             className="sidebar-fund"
-            aria-label={`${name}: ${amount}. ${updated}`}
+            aria-label={loading ? `${name}: загрузка данных` : `${name}: ${amount}. ${updated}`}
           >
             <Icon size={16} aria-hidden="true" />
-            <span className="sidebar-fund-amount">{amount.replace(/\u00a0/g, " ")}</span>
+            {loading ? (
+              <span className="sidebar-fund-skeleton" aria-hidden="true" />
+            ) : (
+              <span className="sidebar-fund-amount">{amount.replace(/\u00a0/g, " ")}</span>
+            )}
             <span className="sidebar-fund-tooltip" role="tooltip">
               <strong>{name}</strong>
               <small>{updated}</small>
