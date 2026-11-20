@@ -33,6 +33,7 @@ import { bidModes, timeOptions } from "./ads-options";
 import { getPreviewData } from "./preview-data";
 import { AdCampaign } from "./ad-campaign";
 import { getAdPreflightWarnings } from "./ad-preflight";
+import { AdComparison } from "./ad-comparison";
 import { OfferMailings } from "./offer-mailings";
 
 type Listing = {
@@ -257,6 +258,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   }, [mobileSearchOpen]);
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [edit, setEdit] = useState<Listing | null>(() =>
     focus ? (load().items.find((a) => a.id === focus) ?? null) : null,
   );
@@ -1124,6 +1126,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             {selected.length > 0 && (
               <div className="aw-bulk">
                 <strong>Выбрано: {selected.length}</strong>
+                {selected.length >= 2 && (
+                  <button onClick={() => setComparisonOpen(true)}>Сравнить</button>
+                )}
                 <button
                   onClick={() => {
                     if (
@@ -1752,6 +1757,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         <button className="aw-text-button" onClick={() => setSingleCreation(false)}>
           К массовому созданию
         </button>
+      )}
+      {comparisonOpen && (
+        <AdComparison
+          items={state.items.filter((a) => selected.includes(a.id))}
+          onClose={() => setComparisonOpen(false)}
+        />
       )}
       {edit &&
         (tab !== "generate" || singleCreation) &&
