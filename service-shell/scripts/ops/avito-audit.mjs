@@ -151,6 +151,7 @@ export async function avitoAudit(request, env, options = {}) {
   if (
     env.AVITO_AUDIT_ENABLED !== "dobrynina-read-v1" ||
     !env.AVITO_AUDIT_SOURCE?.fetch ||
+    !env.AVITO_AUDIT_GATE ||
     !/^\d{1,20}$/.test(env.AVITO_AUDIT_USER_ID || "")
   )
     return json(
@@ -218,10 +219,11 @@ export async function avitoAudit(request, env, options = {}) {
               "content-type": "application/json",
               "x-cantor-workspace": WORKSPACE,
               "x-cantor-account": ACCOUNT,
+              "x-cantor-audit-gate": env.AVITO_AUDIT_GATE,
             },
             body: body ? JSON.stringify(body) : undefined,
             signal: AbortSignal.timeout(5000),
-            redirect: "error",
+            redirect: "manual",
           }),
         ),
         Math.max(1, Math.min(5000, 20000 - (Date.now() - started))),

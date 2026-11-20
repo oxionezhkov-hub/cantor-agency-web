@@ -9,6 +9,7 @@ async function fixture(source) {
   return {
     DEMO_PASSWORD_SHA256: await digest("demo"),
     AVITO_AUDIT_ADMIN_SHA256: await digest("admin"),
+    AVITO_AUDIT_GATE: "synthetic",
     AVITO_AUDIT_ENABLED: "dobrynina-read-v1",
     AVITO_AUDIT_USER_ID: "12345",
     AVITO_AUDIT_LIMIT: { limit: async () => ({ success: true }) },
