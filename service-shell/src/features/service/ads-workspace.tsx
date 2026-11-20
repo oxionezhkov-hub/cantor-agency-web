@@ -240,8 +240,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 }),
             id: a.id,
             title: a.title,
-            text: a.description ?? (old?.id===a.id?old.text:"") ,
-            city: a.city || (old?.id===a.id?old.city:"") ,
+            text: a.description ?? (old?.id === a.id ? old.text : ""),
+            city: a.city || (old?.id === a.id ? old.city : ""),
             price: a.price ?? NaN,
             status:
               (

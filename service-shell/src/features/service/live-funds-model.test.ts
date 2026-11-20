@@ -53,4 +53,15 @@ test("missing, zero, stale and incomplete data do not invent estimates", () => {
   assert.equal(zero.available, true);
   if (zero.available) assert.equal(zero.remainingDays, 0);
 });
-test('stale individual wallet cannot borrow freshness from advance',()=>{const r=fundsEstimate({...data,wallet:{realRub:1000,bonusRub:0,stale:true},coverage:{complete:true,eligibleBalance:'wallet_real'}},at,now);assert.equal(r.available,false);});
+test("stale individual wallet cannot borrow freshness from advance", () => {
+  const r = fundsEstimate(
+    {
+      ...data,
+      wallet: { realRub: 1000, bonusRub: 0, stale: true },
+      coverage: { complete: true, eligibleBalance: "wallet_real" },
+    },
+    at,
+    now,
+  );
+  assert.equal(r.available, false);
+});

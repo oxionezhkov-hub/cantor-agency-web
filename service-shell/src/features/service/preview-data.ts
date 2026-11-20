@@ -177,7 +177,12 @@ export type LiveMeta = {
   observedAt?: string;
   error?: string;
   origin?: string;
-  coverage?: { complete?: boolean; truncated?: boolean; repeated?: boolean; nextOffset?:number|null };
+  coverage?: {
+    complete?: boolean;
+    truncated?: boolean;
+    repeated?: boolean;
+    nextOffset?: number | null;
+  };
   historical?: boolean;
 };
 export type LiveMoney = {
@@ -286,8 +291,22 @@ export async function refreshLivePreview(signal?: AbortSignal) {
           }
           if (section === "metrics") {
             snapshot.liveMoney = data;
-            const verified=data.days.filter((d:LiveMoney["days"][number])=>[d.shows,d.views,d.contacts,d.spendRub].every(v=>v!==null&&Number.isFinite(v))).map((d:LiveMoney["days"][number])=>({date:d.date,shows:d.shows!,views:d.views!,contacts:d.contacts!,spendRub:d.spendRub!}));
-            const rows=new Map((snapshot.accountDaily||[]).map(r=>[r.date,r]));for(const row of verified)rows.set(row.date,row);snapshot.accountDaily=[...rows.values()].sort((a,b)=>a.date.localeCompare(b.date));
+            const verified = data.days
+              .filter((d: LiveMoney["days"][number]) =>
+                [d.shows, d.views, d.contacts, d.spendRub].every(
+                  (v) => v !== null && Number.isFinite(v),
+                ),
+              )
+              .map((d: LiveMoney["days"][number]) => ({
+                date: d.date,
+                shows: d.shows!,
+                views: d.views!,
+                contacts: d.contacts!,
+                spendRub: d.spendRub!,
+              }));
+            const rows = new Map((snapshot.accountDaily || []).map((r) => [r.date, r]));
+            for (const row of verified) rows.set(row.date, row);
+            snapshot.accountDaily = [...rows.values()].sort((a, b) => a.date.localeCompare(b.date));
           }
         }
         // Arrays are shared by existing screens; update provider rows without remounting editors.
@@ -330,10 +349,20 @@ export async function readLiveMessages(id: string, offset = 0, signal?: AbortSig
   };
 }
 
-export async function moreLiveChats(){
- if(!snapshot)return;const offset=snapshot.live?.chats?.coverage?.nextOffset;if(offset==null)return;
- const response=await fetch(`/api/demo/live?section=chats&offset=${offset}`,{headers:{"x-demo-password":password},credentials:"same-origin",cache:"no-store"});
- if(!response.ok)throw Error("Не удалось загрузить более ранние диалоги");const result=await response.json();
- const rows=new Map(snapshot.chats.map(c=>[c.id,c]));for(const c of result.data.chats)rows.set(c.id,{...rows.get(c.id),...c});snapshot.chats=[...rows.values()];
- snapshot.live!.chats={observedAt:result.observedAt,coverage:result.data.coverage};window.dispatchEvent(new Event(PREVIEW_EVENT));
+export async function moreLiveChats() {
+  if (!snapshot) return;
+  const offset = snapshot.live?.chats?.coverage?.nextOffset;
+  if (offset == null) return;
+  const response = await fetch(`/api/demo/live?section=chats&offset=${offset}`, {
+    headers: { "x-demo-password": password },
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  if (!response.ok) throw Error("Не удалось загрузить более ранние диалоги");
+  const result = await response.json();
+  const rows = new Map(snapshot.chats.map((c) => [c.id, c]));
+  for (const c of result.data.chats) rows.set(c.id, { ...rows.get(c.id), ...c });
+  snapshot.chats = [...rows.values()];
+  snapshot.live!.chats = { observedAt: result.observedAt, coverage: result.data.coverage };
+  window.dispatchEvent(new Event(PREVIEW_EVENT));
 }

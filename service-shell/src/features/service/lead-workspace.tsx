@@ -79,6 +79,13 @@ const hour = (at: string) =>
   });
 const day = (at: string) => new Date(Date.parse(at) + 3 * 3600000).toISOString().slice(0, 10);
 type Panel = "conversation" | "appointment" | "payments" | "history" | "tasks";
+const liveReadOnlyAdapter: MessageAdapter = {
+  async send() {
+    throw new Error(
+      "Отправка отключена для этого подключения. Текст не отправлен и остаётся в редакторе.",
+    );
+  },
+};
 export function LeadWorkspace({
   focus,
   adapter,
@@ -92,7 +99,7 @@ export function LeadWorkspace({
   const activeAdapter =
     adapter ??
     (getPreviewData()
-      ? disconnectedAdapter
+      ? liveReadOnlyAdapter
       : import.meta.env.VITE_SERVICE_PREVIEW === "true" &&
           (state.workspaceId === "cantor-demo-anna" ||
             (state.workspaceId === "cantor-elena-dobrynina" && Boolean(getPreviewData())))
@@ -111,6 +118,7 @@ export function LeadWorkspace({
   }
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(focus ?? null);
+  const historyLeadReady = state.leads.some((lead) => lead.id === selectedId);
   const [historyState, setHistoryState] = useState<{
     id: string;
     at?: string;
@@ -120,7 +128,9 @@ export function LeadWorkspace({
     stale?: boolean;
   }>({ id: "", next: null, busy: false, error: "" });
   async function loadHistory(id: string, offset = 0, signal?: AbortSignal) {
-    setHistoryState((h) => h.id===id?({ ...h, busy: true, error: "" }):({id,busy:true,error:"",next:null}));
+    setHistoryState((h) =>
+      h.id === id ? { ...h, busy: true, error: "" } : { id, busy: true, error: "", next: null },
+    );
     try {
       const page = await readLiveMessages(id, offset, signal);
       if (signal?.aborted) return;
@@ -142,10 +152,13 @@ export function LeadWorkspace({
         }
         return { ...current, messages: [...rows.values()] };
       });
-      setHistoryState(previous=>({
+      setHistoryState((previous) => ({
         id,
         at: page.observedAt,
-        next: offset===0&&previous.id===id&&previous.at?previous.next:page.coverage.nextOffset,
+        next:
+          offset === 0 && previous.id === id && previous.at
+            ? previous.next
+            : page.coverage.nextOffset,
         busy: false,
         error: "",
         stale: page.stale,
@@ -161,7 +174,7 @@ export function LeadWorkspace({
     }
   }
   useEffect(() => {
-    if (!selectedId || !getPreviewData()) return;
+    if (!selectedId || !historyLeadReady || !getPreviewData()) return;
     const controller = new AbortController();
     void loadHistory(selectedId, 0, controller.signal);
     const timer = setInterval(() => {
@@ -171,7 +184,7 @@ export function LeadWorkspace({
       controller.abort();
       clearInterval(timer);
     };
-  }, [selectedId]);
+  }, [selectedId, historyLeadReady]);
 
   const [filter, setFilter] = useState<"unanswered" | "reminders" | null>(null),
     [searching, setSearching] = useState(false),

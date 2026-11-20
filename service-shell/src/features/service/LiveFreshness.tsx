@@ -1,7 +1,8 @@
-import {useState} from "react";
+import { useState } from "react";
 import { moreLiveChats, getPreviewData } from "./preview-data";
-export function LiveFreshness({section}:{section?:string}) {
- const [busy,setBusy]=useState(false),[error,setError]=useState("");
+export function LiveFreshness({ section }: { section?: string }) {
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
   const p = getPreviewData();
   if (!p) return null;
   const labels: Record<string, string> = {
@@ -26,8 +27,26 @@ export function LiveFreshness({section}:{section?:string}) {
           </p>
         );
       })}
-      {section==="chats"&&p.live?.chats?.coverage?.nextOffset!=null&&<button className="st-button" disabled={busy} onClick={async()=>{setBusy(true);setError("");try{await moreLiveChats();}catch(e){setError(e instanceof Error?e.message:"Ошибка загрузки");}finally{setBusy(false);}}}>{busy?"Загружаем…":"Показать более ранние диалоги"}</button>}
-      {error&&<p role="alert">{error}</p>}
+      {section === "chats" && p.live?.chats?.coverage?.nextOffset != null && (
+        <button
+          className="st-button"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setError("");
+            try {
+              await moreLiveChats();
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Ошибка загрузки");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {busy ? "Загружаем…" : "Показать более ранние диалоги"}
+        </button>
+      )}
+      {error && <p role="alert">{error}</p>}
       <p>
         Тексты и фотографии старых карточек сохраняются из предыдущего снимка, если API не вернул
         обновление. Диагностики и оплаты — учёт Cantor.

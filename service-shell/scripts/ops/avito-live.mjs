@@ -103,7 +103,7 @@ export function mapMessage(m) {
     text: text(m.content?.text || m.content?.call?.status || "", 10000),
   };
 }
-export async function collect(env, section,offset=0) {
+export async function collect(env, section, offset = 0) {
   if (section === "ads") {
     const p = await pages(
       env,
@@ -129,16 +129,20 @@ export async function collect(env, section,offset=0) {
   if (section === "chats") {
     const p = await pages(
       env,
-      (n) => `/messenger/v2/accounts/${USER}/chats?limit=50&offset=${offset+n * 50}`,
+      (n) => `/messenger/v2/accounts/${USER}/chats?limit=50&offset=${offset + n * 50}`,
       "chats",
-      offset?1:2,
+      offset ? 1 : 2,
     );
     return {
       chats: p.rows
         .filter((c) => c.id)
         .map(mapChat)
         .filter((c) => c.lastAt),
-      coverage: {...p.coverage,nextOffset:!p.coverage.complete&&offset+p.rows.length<=950?offset+p.rows.length:null},
+      coverage: {
+        ...p.coverage,
+        nextOffset:
+          !p.coverage.complete && offset + p.rows.length <= 950 ? offset + p.rows.length : null,
+      },
     };
   }
   if (section === "autoload") {
@@ -266,10 +270,18 @@ export async function liveRead(request, env) {
     return json({ error: "invalid_query" }, 400);
   if (section === "messages")
     return messages(request, env, chatId, url.searchParams.get("offset") || "0");
-  const offset=Number(url.searchParams.get("offset")||"0");
-  if (!Object.hasOwn(TTL,section) || chatId || (url.searchParams.has("offset")&&(section!=="chats"||!/^\d{1,3}$/.test(url.searchParams.get("offset"))||offset>950||offset%50)))
+  const offset = Number(url.searchParams.get("offset") || "0");
+  if (
+    !Object.hasOwn(TTL, section) ||
+    chatId ||
+    (url.searchParams.has("offset") &&
+      (section !== "chats" ||
+        !/^\d{1,3}$/.test(url.searchParams.get("offset")) ||
+        offset > 950 ||
+        offset % 50))
+  )
     return json({ error: "invalid_query" }, 400);
-  const key = `live:v2:${section}${offset?`:${offset}`:""}`,
+  const key = `live:v2:${section}${offset ? `:${offset}` : ""}`,
     cached = await env.DEMO_DATA?.get(key, "json");
   if (cached && Date.now() - Date.parse(cached.observedAt) < TTL[section] * 1000)
     return json({ ...cached, cached: true });
@@ -278,7 +290,7 @@ export async function liveRead(request, env) {
   if (!env.LIVE_READ_LIMIT?.limit || !(await env.LIVE_READ_LIMIT.limit({ key: WORKSPACE })).success)
     return json({ error: "rate_limit", origin: "preview_limiter", lastGood: cached || null }, 429);
   try {
-    const data = await collect(env, section,offset);
+    const data = await collect(env, section, offset);
     if (section === "metrics" && cached?.data) {
       for (const field of ["wallet", "advance"])
         if (data[field] === null && cached.data[field])
@@ -288,9 +300,13 @@ export async function liveRead(request, env) {
     if (JSON.stringify(value).length > 300000)
       throw { code: "projection_budget", origin: "mapping" };
     // Only the isolated preview cache is written; no production KV write occurs.
-    if(section==="chats"){
-      const prior=await env.DEMO_DATA.get("live:v2:known-chats","json")||[];
-      await env.DEMO_DATA.put("live:v2:known-chats",JSON.stringify([...new Set([...data.chats.map(c=>c.id),...prior])].slice(0,1000)),{expirationTtl:86400});
+    if (section === "chats") {
+      const prior = (await env.DEMO_DATA.get("live:v2:known-chats", "json")) || [];
+      await env.DEMO_DATA.put(
+        "live:v2:known-chats",
+        JSON.stringify([...new Set([...data.chats.map((c) => c.id), ...prior])].slice(0, 1000)),
+        { expirationTtl: 86400 },
+      );
     }
     await env.DEMO_DATA.put(key, JSON.stringify(value), { expirationTtl: 86400 });
     return json(value);
@@ -318,7 +334,7 @@ async function messages(request, env, id, offsetText) {
     return json({ error: "live_not_enabled" }, 503);
   const cachedChats = await env.DEMO_DATA.get("live:v2:chats", "json");
   let known = cachedChats?.data?.chats.some((c) => c.id === id);
-  if(!known)known=(await env.DEMO_DATA.get("live:v2:known-chats","json")||[]).includes(id);
+  if (!known) known = ((await env.DEMO_DATA.get("live:v2:known-chats", "json")) || []).includes(id);
   if (!known) {
     const old = await readDobrynina(env);
     known = old.chats.some((c) => c.id === id);

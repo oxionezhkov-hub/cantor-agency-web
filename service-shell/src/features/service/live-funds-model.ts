@@ -19,7 +19,11 @@ export function fundsEstimate(
     } as const;
   const kind = data.coverage.eligibleBalance;
   if (kind === "wallet_real" || kind === "advance_cpa") {
-    if(kind==="wallet_real"?data.wallet?.stale:data.advance?.stale)return {available:false,reason:"Остаток этого баланса устарел; расчёт недоступен"} as const;
+    if (kind === "wallet_real" ? data.wallet?.stale : data.advance?.stale)
+      return {
+        available: false,
+        reason: "Остаток этого баланса устарел; расчёт недоступен",
+      } as const;
     const balance = kind === "wallet_real" ? data.wallet?.realRub : data.advance?.rub;
     if (balance == null)
       return { available: false, reason: "Баланс этого источника недоступен" } as const;
