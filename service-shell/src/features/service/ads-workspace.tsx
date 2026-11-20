@@ -1156,12 +1156,6 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             >
               Ставки
             </button>
-            {showBids && (
-              <AdsHelp label="О режиме ставок">
-                «Авто · источник» — обозначение из исходных данных. Как именно работает этот режим,
-                пока не подтверждено. Настройки в превью не отправляются в Авито.
-              </AdsHelp>
-            )}
             {selected.length > 0 && (
               <div className="aw-bulk">
                 <strong>Выбрано: {selected.length}</strong>
