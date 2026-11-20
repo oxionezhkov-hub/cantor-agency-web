@@ -32,6 +32,7 @@ import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
 import { getPreviewData } from "./preview-data";
 import { AdCampaign } from "./ad-campaign";
+import { getAdPreflightWarnings } from "./ad-preflight";
 import { OfferMailings } from "./offer-mailings";
 
 type Listing = {
@@ -558,6 +559,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       </div>
     </div>
   );
+  const preflightWarnings = edit ? getAdPreflightWarnings(edit) : [];
   const editorContent = edit && (
     <section
       ref={dialogRef}
@@ -595,6 +597,16 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
             <div className="aw-notice" role="status">
               {notice}
             </div>
+          )}
+          {preflightWarnings.length > 0 && (
+            <section className="aw-preflight" aria-label="Проверка объявления">
+              <strong>Проверьте перед публикацией</strong>
+              <ul>
+                {preflightWarnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </section>
           )}
           {editorTab === "content" && (
             <div className="aw-form">

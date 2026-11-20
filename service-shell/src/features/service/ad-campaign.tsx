@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, X } from "lucide-react";
 import { AdsSelect } from "./ads-controls";
+import { getAdPreflightWarnings } from "./ad-preflight";
 import "./ad-campaign.css";
 
 type Source = {
@@ -142,6 +143,10 @@ export function AdCampaign({
     setMessage("");
   }
   const active = drafts.filter((_, i) => !excluded.includes(i));
+  const draftWarnings = useMemo(() => drafts.map(getAdPreflightWarnings), [drafts]);
+  const flagged = draftWarnings.filter(
+    (warnings, i) => !excluded.includes(i) && warnings.length,
+  ).length;
   const duplicates = active.filter((d) =>
     sources.some(
       (s) =>
@@ -368,6 +373,11 @@ export function AdCampaign({
               Исключите ненужные повторы.
             </p>
           )}
+          {flagged > 0 && (
+            <p role="status">
+              Найдены расхождения в выбранных черновиках: {flagged}. Сверьте их в таблице.
+            </p>
+          )}
           {!photos.length && (
             <p>Фотографии не добавлены. Их можно добавить в объявлениях до публикации.</p>
           )}
@@ -379,6 +389,7 @@ export function AdCampaign({
                   <th>Город</th>
                   <th>Заголовок</th>
                   <th>Цена</th>
+                  {flagged > 0 && <th>Проверка</th>}
                 </tr>
               </thead>
               <tbody>
@@ -413,6 +424,17 @@ export function AdCampaign({
                         />
                       </td>
                       <td>{d.price} ₽</td>
+                      {flagged > 0 && (
+                        <td>
+                          {!excluded.includes(i) && draftWarnings[i].length > 0 && (
+                            <ul className="aw-preflight ac-preflight">
+                              {draftWarnings[i].map((warning) => (
+                                <li key={warning}>{warning}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
