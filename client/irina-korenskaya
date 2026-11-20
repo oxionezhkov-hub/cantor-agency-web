@@ -97,7 +97,6 @@ p { margin: 0; }
 .btn-line:hover { border-color: var(--ink); transform: translateY(-2px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--green); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr {
   position: fixed; inset: 0 0 auto 0; z-index: 300;
   padding-top: env(safe-area-inset-top, 0px);
@@ -563,10 +562,9 @@ p { margin: 0; }
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
-
-<div class="progress" aria-hidden="true"></div>
+<body data-client-layout="bento">
 
 <header class="hdr">
   <div class="wrap hdr-in">
@@ -577,7 +575,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#reviews">Отзывы</a><a href="#books">Книги</a><a href="#media">Соцсети</a>
   <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
@@ -594,7 +592,7 @@ p { margin: 0; }
         <a href="#contact" class="btn btn-line">Связаться</a>
       </div>
     </div>
-    <figure class="tile h-photo"><img src="images/irina-korenskaya/hero-1.jpg" alt="Ирина Коренская" fetchpriority="high"></figure>
+    <figure class="tile h-photo"><img width="852" height="1280" src="images/irina-korenskaya/hero-1.jpg" alt="Ирина Коренская" fetchpriority="high"></figure>
     <div class="h-facts"><div class="tile fact"><span class="fact-num">27+</span><p>лет в преподавании</p></div><div class="tile fact"><span class="fact-num">3000+</span><p>учеников прошли через мои занятия</p></div><div class="tile fact"><span class="fact-num">700 000+ ₽</span><p>доход за месяц — планка, которую я взяла</p></div></div>
   </div>
 </section>
@@ -602,14 +600,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Преподавание и экспертная работа</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Частная практика</h3></div></div><p class="proj-desc">Веду информатику и программирование для школьников, студентов и взрослых: школьная программа, ОГЭ и ЕГЭ, вузовские курсы. Занимаюсь индивидуально и в группах.</p><p class="proj-desc">После выпуска меня оставили преподавать на кафедре БГУИР. С тех пор я читала лекции в вузах и колледжах, вела занятия и мастер-классы в лицее, гимназиях и школах, выступала на конференциях и работала на олимпиадах. Была председателем предметной комиссии по информатике для поступающих в вуз и разрабатывала вступительные тесты.</p><ul class="x-minis"><li><strong>Председатель предметной комиссии</strong> — Вступительные экзамены по информатике в вуз.</li><li><strong>Автор вступительных тестов</strong> — Разработка тестов для поступающих.</li><li><strong>Лектор и спикер</strong> — Вузы, колледжи, лицей, гимназии, курсы, конференции.</li></ul><div class="proj-stats"><div><div class="ps-num">5</div><div class="ps-label">стран: Беларусь, Россия, Литва, Польша, Израиль</div></div><div><div class="ps-num">3</div><div class="ps-label">аудитории: школьники, студенты и взрослые</div></div></div></article></div>
+    <div class="projects" data-items="1"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Частная практика</h3></div></div><p class="proj-desc">Веду информатику и программирование для школьников, студентов и взрослых: школьная программа, ОГЭ и ЕГЭ, вузовские курсы. Занимаюсь индивидуально и в группах.</p><p class="proj-desc">После выпуска меня оставили преподавать на кафедре БГУИР. С тех пор я читала лекции в вузах и колледжах, вела занятия и мастер-классы в лицее, гимназиях и школах, выступала на конференциях и работала на олимпиадах. Была председателем предметной комиссии по информатике для поступающих в вуз и разрабатывала вступительные тесты.</p><ul class="x-minis"><li><strong>Председатель предметной комиссии</strong> — Вступительные экзамены по информатике в вуз.</li><li><strong>Автор вступительных тестов</strong> — Разработка тестов для поступающих.</li><li><strong>Лектор и спикер</strong> — Вузы, колледжи, лицей, гимназии, курсы, конференции.</li></ul><div class="proj-stats"><div><div class="ps-num">5</div><div class="ps-label">стран: Беларусь, Россия, Литва, Польша, Израиль</div></div><div><div class="ps-num">3</div><div class="ps-label">аудитории: школьники, студенты и взрослые</div></div></div></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap"><div class="sec-head"><div><h2 class="sec-title">Обо мне</h2></div></div></div>
   <div class="wrap about">
-    <div class="about-photo rv"><img src="images/irina-korenskaya/about-1.jpg" alt="Ирина Коренская" loading="lazy"></div>
+    <div class="about-photo rv photo-landscape"><img width="1280" height="853" src="images/irina-korenskaya/about-1.jpg" alt="Ирина Коренская" loading="lazy"></div>
     <div>
       <p class="about-lead">Инженер-системотехник по образованию, преподаватель по призванию.</p>
       <p class="about-body">Всё началось на студенческой картошке. Хозяйка дома, где мы жили, попросила помочь её сыну с математикой. Потом стали просить знакомые родителей, а одногруппники — помочь с программированием. После университета меня оставили преподавать на кафедре, и уже коллеги приводили ко мне своих знакомых. Так из просьб помочь выросла профессия.</p><p class="about-body">Есть история, которая разделила мою жизнь на «до» и «после». Во время беременности у меня начался тромбоз, и врачи предупредили маму, что я не выживу. Мама впервые в жизни пошла в церковь, к отцу Алексею. После молебна о здравии анализы стали идеальными, и я родила здорового ребёнка. С тех пор я точно знаю: всё даётся по силам.</p><blockquote class="x-quote"><p>Успех сквозь преграды. Всё даётся по силам. Жизнь прекрасна</p><cite>Ирина Коренская</cite></blockquote><p class="about-body">Люблю путешествовать и выращивать растения. И то и другое учит тому же, чему и преподавание: терпению, вниманию и радости от того, как что-то растёт.</p>
@@ -621,21 +619,21 @@ p { margin: 0; }
 <section class="sec" id="certificates">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Дипломы и сертификаты</h2></div></div>
-    <ul class="x-list"><li>Минский радиотехнический колледж, 1983</li><li>БГУИР — инженер-системотехник, 1988</li><li>БГУИР — аспирантура, радиофизика, 1991</li><li>Республиканский институт высшей школы — компьютерная графика и веб-мастеринг, 2005</li><li>Республиканский институт высшей школы — статистический анализ и обработка данных на ПК, 2010</li><li>БГУИР — основы создания электронных учебно-методических комплексов, 2010</li></ul><div class="x-gallery x-docs"><a class="x-shot rv" href="images/irina-korenskaya/diplomas-1.jpg" data-lb="certificates" data-caption="Сертификат: 3 место в республиканском конкурсе «Компьютер. Образование. Интернет»"><img src="images/irina-korenskaya/diplomas-1.jpg" alt="Сертификат: 3 место в республиканском конкурсе «Компьютер. Образование. Интернет»" loading="lazy"><span>Сертификат: 3 место в республиканском конкурсе «Компьютер. Образование. Интернет»</span></a><a class="x-shot rv" href="images/irina-korenskaya/diplomas-2.jpg" data-lb="certificates" data-caption="Похвальный лист VI республиканского конкурса"><img src="images/irina-korenskaya/diplomas-2.jpg" alt="Похвальный лист VI республиканского конкурса" loading="lazy"><span>Похвальный лист VI республиканского конкурса</span></a><a class="x-shot rv" href="images/irina-korenskaya/diplomas-3.jpg" data-lb="certificates" data-caption="Свидетельство о повышении квалификации"><img src="images/irina-korenskaya/diplomas-3.jpg" alt="Свидетельство о повышении квалификации" loading="lazy"><span>Свидетельство о повышении квалификации</span></a><a class="x-shot rv" href="images/irina-korenskaya/diplomas-4.jpg" data-lb="certificates" data-caption="Сертификат: 3 место в номинации конкурса"><img src="images/irina-korenskaya/diplomas-4.jpg" alt="Сертификат: 3 место в номинации конкурса" loading="lazy"><span>Сертификат: 3 место в номинации конкурса</span></a></div>
+    <ul class="x-list"><li>Минский радиотехнический колледж, 1983</li><li>БГУИР — инженер-системотехник, 1988</li><li>БГУИР — аспирантура, радиофизика, 1991</li><li>Республиканский институт высшей школы — компьютерная графика и веб-мастеринг, 2005</li><li>Республиканский институт высшей школы — статистический анализ и обработка данных на ПК, 2010</li><li>БГУИР — основы создания электронных учебно-методических комплексов, 2010</li></ul><div class="x-gallery x-docs"><a class="x-shot rv" href="images/irina-korenskaya/diplomas-1.jpg" data-lb="certificates" data-caption="Сертификат: 3 место в республиканском конкурсе «Компьютер. Образование. Интернет»"><img width="505" height="719" src="images/irina-korenskaya/diplomas-1.jpg" alt="Сертификат: 3 место в республиканском конкурсе «Компьютер. Образование. Интернет»" loading="lazy"><span>Сертификат: 3 место в республиканском конкурсе «Компьютер. Образование. Интернет»</span></a><a class="x-shot rv" href="images/irina-korenskaya/diplomas-2.jpg" data-lb="certificates" data-caption="Похвальный лист VI республиканского конкурса"><img width="505" height="719" src="images/irina-korenskaya/diplomas-2.jpg" alt="Похвальный лист VI республиканского конкурса" loading="lazy"><span>Похвальный лист VI республиканского конкурса</span></a><a class="x-shot rv" href="images/irina-korenskaya/diplomas-3.jpg" data-lb="certificates" data-caption="Свидетельство о повышении квалификации"><img width="1000" height="563" src="images/irina-korenskaya/diplomas-3.jpg" alt="Свидетельство о повышении квалификации" loading="lazy"><span>Свидетельство о повышении квалификации</span></a><a class="x-shot rv" href="images/irina-korenskaya/diplomas-4.jpg" data-lb="certificates" data-caption="Сертификат: 3 место в номинации конкурса"><img width="505" height="719" src="images/irina-korenskaya/diplomas-4.jpg" alt="Сертификат: 3 место в номинации конкурса" loading="lazy"><span>Сертификат: 3 место в номинации конкурса</span></a></div>
   </div>
 </section>
 
 <section class="sec" id="approach">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подход</h2></div></div>
-    <p class="sec-lead x-lead">Без зубрёжки. Логическая система запоминания, вера в себя и отношение к ученику как к равному.</p><div class="x-text"><p class="x-p">Меня злят три вещи в образовании: когда учитель не знает свой предмет, равнодушие и плагиат. На моих занятиях всё наоборот. Я выстраиваю логическую систему, в которой материал не заучивается, а понимается и запоминается сам. Раскрываю креативность ученика — в информатике её больше, чем кажется. И прошу одного: выполнять мои рекомендации. Тогда даже 30 минут два раза в неделю дают результат.</p></div><div class="x-cards"><article class="x-card rv"><h3>Как с равным</h3><p class="x-p">Ученик — партнёр, а не объект воспитания. Так ему легче поверить в себя.</p></article><article class="x-card rv"><h3>Логика вместо зубрёжки</h3><p class="x-p">Система, в которой одно вытекает из другого, — и ничего не нужно учить наизусть.</p></article><article class="x-card rv"><h3>Творчество</h3><p class="x-p">Раскрываю креативность: информатика — это не только правила, но и придумывание решений.</p></article><article class="x-card rv"><h3>Короткие, но точные занятия</h3><p class="x-p">Работаем на результат, а не на время: иногда хватает получаса.</p></article></div>
+    <p class="sec-lead x-lead">Без зубрёжки. Логическая система запоминания, вера в себя и отношение к ученику как к равному.</p><div class="x-text"><p class="x-p">Меня злят три вещи в образовании: когда учитель не знает свой предмет, равнодушие и плагиат. На моих занятиях всё наоборот. Я выстраиваю логическую систему, в которой материал не заучивается, а понимается и запоминается сам. Раскрываю креативность ученика — в информатике её больше, чем кажется. И прошу одного: выполнять мои рекомендации. Тогда даже 30 минут два раза в неделю дают результат.</p></div><div class="x-cards" data-items="4"><article class="x-card rv"><h3>Как с равным</h3><p class="x-p">Ученик — партнёр, а не объект воспитания. Так ему легче поверить в себя.</p></article><article class="x-card rv"><h3>Логика вместо зубрёжки</h3><p class="x-p">Система, в которой одно вытекает из другого, — и ничего не нужно учить наизусть.</p></article><article class="x-card rv"><h3>Творчество</h3><p class="x-p">Раскрываю креативность: информатика — это не только правила, но и придумывание решений.</p></article><article class="x-card rv"><h3>Короткие, но точные занятия</h3><p class="x-p">Работаем на результат, а не на время: иногда хватает получаса.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">ЕГЭ · информатика · Никита, 11 класс</span><h3>С 16 до 70 баллов за 4 месяца</h3><p class="x-p">Занимались всего два раза в неделю по 30 минут. Короткие, но точные занятия по логической системе.</p><span class="x-res">70 баллов</span></article><article class="x-card rv"><span class="x-meta">Школа · информатика · 2 месяца</span><h3>Твёрдая двойка → четвёрка</h3><p class="x-p">За пару месяцев ученик закрыл пробелы и перестал бояться предмета.</p><span class="x-res">«2» → «4»</span></article><article class="x-card rv"><span class="x-meta">Школа · 1,5 месяца</span><h3>Ненавистный предмет стал любимым</h3><p class="x-p">Двойки сменились пятёрками, а главное — появился интерес.</p><span class="x-res">«2» → «5»</span></article></div>
+    <div class="x-cards" data-items="3"><article class="x-card rv"><span class="x-meta">ЕГЭ · информатика · Никита, 11 класс</span><h3>С 16 до 70 баллов за 4 месяца</h3><p class="x-p">Занимались всего два раза в неделю по 30 минут. Короткие, но точные занятия по логической системе.</p><span class="x-res">70 баллов</span></article><article class="x-card rv"><span class="x-meta">Школа · информатика · 2 месяца</span><h3>Твёрдая двойка → четвёрка</h3><p class="x-p">За пару месяцев ученик закрыл пробелы и перестал бояться предмета.</p><span class="x-res">«2» → «4»</span></article><article class="x-card rv"><span class="x-meta">Школа · 1,5 месяца</span><h3>Ненавистный предмет стал любимым</h3><p class="x-p">Двойки сменились пятёрками, а главное — появился интерес.</p><span class="x-res">«2» → «5»</span></article></div>
   </div>
 </section>
 
@@ -648,7 +646,7 @@ p { margin: 0; }
         <button class="car-btn" type="button" data-next aria-label="Следующие отзывы"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
     </div>
-    <div class="car-viewport"><div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-1.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img src="images/irina-korenskaya/reviews-1.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-2.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img src="images/irina-korenskaya/reviews-2.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-3.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img src="images/irina-korenskaya/reviews-3.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-4.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img src="images/irina-korenskaya/reviews-4.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-5.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img src="images/irina-korenskaya/reviews-5.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-6.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img src="images/irina-korenskaya/reviews-6.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article></div></div>
+    <div class="car-viewport"><div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-1.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img width="449" height="1000" src="images/irina-korenskaya/reviews-1.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-2.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img width="449" height="1000" src="images/irina-korenskaya/reviews-2.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-3.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img width="449" height="1000" src="images/irina-korenskaya/reviews-3.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-4.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img width="449" height="1000" src="images/irina-korenskaya/reviews-4.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-5.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img width="449" height="1000" src="images/irina-korenskaya/reviews-5.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/irina-korenskaya/reviews-6.jpg" data-lb="reviews" data-caption="Отзыв на Профи.ру"><img width="449" height="1000" src="images/irina-korenskaya/reviews-6.jpg" alt="Отзыв на Профи.ру" loading="lazy"></a><div class="rev-foot"><span>Отзыв на Профи.ру</span></div></article></div></div>
     <div class="car-bar"><div><span class="car-thumb"></span></div></div>
     <div class="wrap"><div class="socials x-links"><a class="social" href="https://profi.ru/profile/KorenskayaIN2" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h9a6 6 0 0 1 0 12H9v6H5V3zm4 4v4h5a2 2 0 0 0 0-4H9z"/></svg></span><span><strong>Профи.ру</strong><span>Все отзывы в профиле</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
@@ -657,7 +655,7 @@ p { margin: 0; }
 <section class="sec" id="books">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Учебное пособие</h2></div></div>
-    <div class="books"><div class="book rv"><a class="book-3d" href="images/irina-korenskaya/books-1.jpg" data-lb="books" data-caption="Основы алгоритмизации и программирования на языке Паскаль"><span class="book-cover"><img src="images/irina-korenskaya/books-1.jpg" alt="Обложка: Основы алгоритмизации и программирования на языке Паскаль" loading="lazy"></span></a><div><div class="book-title">Основы алгоритмизации и программирования на языке Паскаль</div><div class="book-meta">Лабораторный практикум · среднее профессиональное образование · издательство «Лань»</div></div></div></div>
+    <div class="books"><div class="book rv"><a class="book-3d" href="images/irina-korenskaya/books-1.jpg" data-lb="books" data-caption="Основы алгоритмизации и программирования на языке Паскаль"><span class="book-cover"><img width="400" height="637" src="images/irina-korenskaya/books-1.jpg" alt="Обложка: Основы алгоритмизации и программирования на языке Паскаль" loading="lazy"></span></a><div><div class="book-title">Основы алгоритмизации и программирования на языке Паскаль</div><div class="book-meta">Лабораторный практикум · среднее профессиональное образование · издательство «Лань»</div></div></div></div>
   </div>
 </section>
 
@@ -665,7 +663,7 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media x-media rv">
       <div class="x-mhead"><h2 class="sec-title">Публикации и соцсети</h2></div>
-      
+
       <div class="x-msoc"><div class="socials"><a class="social" href="https://t.me/irinika_st" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@irinika_st</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://vk.com/id649767418" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>vk.com/id649767418</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://profi.ru/profile/KorenskayaIN2" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h9a6 6 0 0 1 0 12H9v6H5V3zm4 4v4h5a2 2 0 0 0 0-4H9z"/></svg></span><span><strong>Профи.ру</strong><span>profi.ru/profile/KorenskayaIN2</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
     </div>
   </div>
@@ -673,11 +671,11 @@ p { margin: 0; }
 
 <section class="sec" id="contact">
   <div class="wrap contact">
-    <div class="contact-side rv"><img src="images/irina-korenskaya/contact-1.jpg" alt="Ирина Коренская" loading="lazy"></div>
+    <div class="contact-side rv"><img width="853" height="1280" src="images/irina-korenskaya/contact-1.jpg" alt="Ирина Коренская" loading="lazy"></div>
     <div class="tile form-tile rv">
       <h2 class="form-title">Связаться с Ириной</h2>
       <p class="form-lead">Партнёрство, преподавание, интервью или занятия — напишите в Telegram или WhatsApp, я отвечу.</p>
-      
+
       <div class="socials x-contacts"><a class="social" href="https://t.me/irinika_st" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@irinika_st</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/375447309588" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+375447309588</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:irinik22@mail.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>irinik22@mail.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
     </div>
   </div>
@@ -709,17 +707,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -729,12 +722,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -909,7 +906,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

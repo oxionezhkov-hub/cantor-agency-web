@@ -97,7 +97,6 @@ p { margin: 0; }
 .btn-line:hover { border-color: var(--ink); transform: translateY(-2px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--green); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr {
   position: fixed; inset: 0 0 auto 0; z-index: 300;
   padding-top: env(safe-area-inset-top, 0px);
@@ -563,10 +562,9 @@ p { margin: 0; }
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
-
-<div class="progress" aria-hidden="true"></div>
+<body data-client-layout="bento">
 
 <header class="hdr">
   <div class="wrap hdr-in">
@@ -577,7 +575,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
@@ -594,7 +592,7 @@ p { margin: 0; }
         <a href="#contact" class="btn btn-line">Связаться</a>
       </div>
     </div>
-    <figure class="tile h-photo"><img src="images/maria-dudorova/hero-1.jpg" alt="Мария Дудорова" fetchpriority="high"></figure>
+    <figure class="tile h-photo"><img width="1067" height="1600" src="images/maria-dudorova/hero-1.jpg" alt="Мария Дудорова" fetchpriority="high"></figure>
     <div class="h-facts"><div class="tile fact"><span class="fact-num">17 лет</span><p>в преподавании — с первого ученика в 2009 году</p></div><div class="tile fact"><span class="fact-num">400+</span><p>учеников прошли через мои занятия и школу</p></div><div class="tile fact"><span class="fact-num">100</span><p>баллов ЕГЭ по математике — лучший результат ученицы</p></div></div>
   </div>
 </section>
@@ -602,14 +600,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><span class="x-plogo"><img src="images/maria-dudorova/logo-1.jpg" alt="Логотип" loading="lazy"></span><div class="proj-top"><div><h3>Онлайн-школа «Формула будущего»</h3></div><a href="https://formulabudushego.ru" target="_blank" rel="noopener" class="arrow" aria-label="Сайт школы"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div><p class="proj-desc">Онлайн-школа для учеников 1–11 классов по четырём направлениям: математика (включая базовый и профильный ЕГЭ), информатика, физика и русский язык. Повышаем успеваемость, разбираем сложные темы, готовим к ОГЭ и ЕГЭ. Каждый ученик начинает с бесплатной диагностики, потом мы подбираем преподавателя и составляем индивидуальный план. Занятия индивидуальные и в мини-группах до пяти человек.</p><p class="proj-desc">Административную часть — общение с семьями и расписание — ведут помощники. Преподаватели сосредоточены на уроках, а я — на методике и качестве: слежу, чтобы каждый ученик шёл к своей цели.</p><div class="proj-stats"><div><div class="ps-num">4</div><div class="ps-label">направления: математика, информатика, физика, русский язык</div></div><div><div class="ps-num">до 5</div><div class="ps-label">человек в мини-группе — у каждого свой трек</div></div><div><div class="ps-num">2025</div><div class="ps-label">год, когда частная практика стала школой</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Частная практика, 2009–2025</h3></div></div><p class="proj-desc">Начала заниматься с учениками на пятом курсе университета и после выпуска осталась в частном формате. За эти годы собрала свою методику и опыт многих коллег, прошла около 15 курсов повышения квалификации. Из этой практики и выросла «Формула будущего».</p><div class="proj-stats"><div><div class="ps-num">16 лет</div><div class="ps-label">частной практики до запуска школы</div></div><div><div class="ps-num">11 → 90</div><div class="ps-label">баллов ЕГЭ — самый большой рост ученика</div></div></div></article></div>
+    <div class="projects" data-items="2"><article class="proj rv proj-school"><span class="x-plogo"><img width="370" height="370" src="images/maria-dudorova/logo-1.jpg" alt="Логотип" loading="lazy"></span><div class="proj-top"><div><h3>Онлайн-школа «Формула будущего»</h3></div><a href="https://formulabudushego.ru" target="_blank" rel="noopener" class="arrow" aria-label="Сайт школы"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div><p class="proj-desc">Онлайн-школа для учеников 1–11 классов по четырём направлениям: математика (включая базовый и профильный ЕГЭ), информатика, физика и русский язык. Повышаем успеваемость, разбираем сложные темы, готовим к ОГЭ и ЕГЭ. Каждый ученик начинает с бесплатной диагностики, потом мы подбираем преподавателя и составляем индивидуальный план. Занятия индивидуальные и в мини-группах до пяти человек.</p><p class="proj-desc">Административную часть — общение с семьями и расписание — ведут помощники. Преподаватели сосредоточены на уроках, а я — на методике и качестве: слежу, чтобы каждый ученик шёл к своей цели.</p><div class="proj-stats"><div><div class="ps-num">4</div><div class="ps-label">направления: математика, информатика, физика, русский язык</div></div><div><div class="ps-num">до 5</div><div class="ps-label">человек в мини-группе — у каждого свой трек</div></div><div><div class="ps-num">2025</div><div class="ps-label">год, когда частная практика стала школой</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Частная практика, 2009–2025</h3></div></div><p class="proj-desc">Начала заниматься с учениками на пятом курсе университета и после выпуска осталась в частном формате. За эти годы собрала свою методику и опыт многих коллег, прошла около 15 курсов повышения квалификации. Из этой практики и выросла «Формула будущего».</p><div class="proj-stats"><div><div class="ps-num">16 <span class="metric-unit">лет</span></div><div class="ps-label">частной практики до запуска школы</div></div><div><div class="ps-num">11 → 90</div><div class="ps-label">баллов ЕГЭ — самый большой рост ученика</div></div></div></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap"><div class="sec-head"><div><h2 class="sec-title">Обо мне</h2></div></div></div>
   <div class="wrap about">
-    <div class="about-photo rv"><img src="images/maria-dudorova/about-1.jpg" alt="Мария Дудорова" loading="lazy"></div>
+    <div class="about-photo rv"><img width="1067" height="1600" src="images/maria-dudorova/about-1.jpg" alt="Мария Дудорова" loading="lazy"></div>
     <div>
       <p class="about-lead">Учитель математики по образованию, преподаватель по призванию, предприниматель — с 2025 года.</p>
       <p class="about-body">Первый курс я училась платно: до бюджета не хватило двух баллов. После первого курса перепоступила и продолжила обучение бесплатно на втором. Из 70 человек на нашем физмате до диплома дошли 35. Тогда я поняла: варианты есть всегда, их нужно только искать. Теперь говорю это ученикам, для которых слабый экзамен кажется концом света.</p><p class="about-body">На пятом курсе я искала подработку и выбрала репетиторство — и меня захватило: тот самый блеск в глазах, когда ребёнок говорит «О, я понял». С тех пор я преподаю в частном формате и продолжаю заниматься с учениками лично.</p><p class="about-body">17 лет я росла как преподаватель, а школу начала развивать только в 2025-м — нужно было дорасти и поверить в себя. Поняла главное: качественно учить можно, когда есть команда и преподаватель не тонет в административных задачах.</p><blockquote class="x-quote"><p>С любой проблемой можно справиться, если есть желание разобраться и найти решение</p><cite>Мария Дудорова</cite></blockquote><p class="about-body">Несколько лет осваивала катание на вейкборде и сноуборде и училась трюкам. Любой трюк нужно разложить на навыки и пережить много падений. В бизнесе и в учёбе так же: разбиваешь задачу на шаги — и если не бросать, приходишь к результату. Ещё люблю путешествовать и выращиваю домашние растения.</p>
@@ -621,14 +619,14 @@ p { margin: 0; }
 <section class="sec" id="system">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Система школы</h2></div></div>
-    <p class="sec-lead x-lead">Мы работаем с причиной, а не со следствием. Плохая оценка — только сигнал, а причин у неё может быть много.</p><div class="x-text"><p class="x-p">На диагностике мы оцениваем не только ответы, но и ход рассуждений, причины ошибок и пробелы. Разговариваем с учеником: что он понимает, какие алгоритмы помнит наизусть, а какие — с пониманием, где честно говорит «не знаю». Часто проблема тянется снежным комом с младших классов — например, в седьмом классе не поставили логику доказательства в геометрии. Мы не подстраиваем ученика под формат, а подбираем формат под ученика.</p></div><div class="x-steps-wrap"><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Бесплатная диагностика</strong><span>уровень, причины пробелов, особенности восприятия и цель</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Подбор преподавателя и формата</strong><span>индивидуально или мини-группа с учениками того же уровня и цели</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Индивидуальный план</strong><span>преподаватель получает от меня разбор ученика и методические рекомендации</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Урок 60 минут</strong><span>проверка прошлой темы и домашки, новый материал через логику и примеры, практика</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Срезы и пробники каждый месяц</strong><span>с разбором — ученик привыкает к формату экзамена и меньше волнуется</span></div></li><li class="rv"><span class="x-n">06</span><div><strong>Обратная связь родителям</strong><span>что получается, где трудности и как корректируем программу</span></div></li></ol></div><div class="x-cards"><article class="x-card rv"><h3>Понимание вместо зубрёжки</h3><p class="x-p">Учим рассуждать и обосновывать: не «я так вижу», а «вот почему». Это главный навык, которому учит математика.</p></article><article class="x-card rv"><h3>Мини-группы до пяти человек</h3><p class="x-p">Годовая методика для группы и индивидуальный трек каждого — особенно в последние два месяца перед экзаменом.</p></article><article class="x-card rv"><h3>Как научиться учиться</h3><p class="x-p">Показываем, как запоминать надолго: по 2 минуты в день вспоминать формулу по памяти — и на экзамене никаких сомнений.</p></article><article class="x-card rv"><h3>Единая платформа</h3><p class="x-p">Материалы для учеников и преподавателей и прогресс каждого: что изучено, как идут домашки, какие результаты за месяц.</p></article></div>
+    <p class="sec-lead x-lead">Мы работаем с причиной, а не со следствием. Плохая оценка — только сигнал, а причин у неё может быть много.</p><div class="x-text"><p class="x-p">На диагностике мы оцениваем не только ответы, но и ход рассуждений, причины ошибок и пробелы. Разговариваем с учеником: что он понимает, какие алгоритмы помнит наизусть, а какие — с пониманием, где честно говорит «не знаю». Часто проблема тянется снежным комом с младших классов — например, в седьмом классе не поставили логику доказательства в геометрии. Мы не подстраиваем ученика под формат, а подбираем формат под ученика.</p></div><div class="x-steps-wrap"><ol class="x-steps" data-items="6"><li class="rv"><span class="x-n">01</span><div><strong>Бесплатная диагностика</strong><span>уровень, причины пробелов, особенности восприятия и цель</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Подбор преподавателя и формата</strong><span>индивидуально или мини-группа с учениками того же уровня и цели</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Индивидуальный план</strong><span>преподаватель получает от меня разбор ученика и методические рекомендации</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Урок 60 минут</strong><span>проверка прошлой темы и домашки, новый материал через логику и примеры, практика</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Срезы и пробники каждый месяц</strong><span>с разбором — ученик привыкает к формату экзамена и меньше волнуется</span></div></li><li class="rv"><span class="x-n">06</span><div><strong>Обратная связь родителям</strong><span>что получается, где трудности и как корректируем программу</span></div></li></ol></div><div class="x-cards" data-items="4"><article class="x-card rv"><h3>Понимание вместо зубрёжки</h3><p class="x-p">Учим рассуждать и обосновывать: не «я так вижу», а «вот почему». Это главный навык, которому учит математика.</p></article><article class="x-card rv"><h3>Мини-группы до пяти человек</h3><p class="x-p">Годовая методика для группы и индивидуальный трек каждого — особенно в последние два месяца перед экзаменом.</p></article><article class="x-card rv"><h3>Как научиться учиться</h3><p class="x-p">Показываем, как запоминать надолго: по 2 минуты в день вспоминать формулу по памяти — и на экзамене никаких сомнений.</p></article><article class="x-card rv"><h3>Единая платформа</h3><p class="x-p">Материалы для учеников и преподавателей и прогресс каждого: что изучено, как идут домашки, какие результаты за месяц.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">ЕГЭ · профиль · полтора года</span><h3>Ученица: 100 баллов ЕГЭ</h3><p class="x-p">Пришла в середине 10 класса на индивидуальные занятия, потом перешла в пару. Стеснялась говорить, что не получается, — учились не бояться. Вышла с экзамена со словами «кажется, у меня всё».</p><span class="x-res">100 баллов</span></article><article class="x-card rv"><span class="x-meta">ЕГЭ · профиль · мини-группа</span><h3>Ученик: с 11 до 90 баллов</h3><p class="x-p">В августе 2025-го на входном тесте решил две задачи. Зимой забросил домашку, в марте взялся за голову — и с индивидуальным треком внутри группы наверстал всё.</p><span class="x-res">90 баллов</span></article><article class="x-card rv"><span class="x-meta">Геометрия · 7–8 класс</span><h3>От нуля до олимпиадной геометрии</h3><p class="x-p">Ученик пришёл в конце 7 класса без понимания геометрии. Восстановили базу и научились рассуждать — стал одним из сильнейших в классе и ушёл в олимпиадную геометрию.</p><span class="x-res">углублённый уровень</span></article><article class="x-card rv"><span class="x-meta">Уверенность в себе</span><h3>Уверенность в себе</h3><p class="x-p">Тихая и закрытая ученица. После выпуска поступила в университет, начала писать свои произведения — и до сих пор делится со мной успехами.</p><span class="x-res">поступила в вуз</span></article></div>
+    <div class="x-cards" data-items="4"><article class="x-card rv"><span class="x-meta">ЕГЭ · профиль · полтора года</span><h3>Ученица: 100 баллов ЕГЭ</h3><p class="x-p">Пришла в середине 10 класса на индивидуальные занятия, потом перешла в пару. Стеснялась говорить, что не получается, — учились не бояться. Вышла с экзамена со словами «кажется, у меня всё».</p><span class="x-res">100 баллов</span></article><article class="x-card rv"><span class="x-meta">ЕГЭ · профиль · мини-группа</span><h3>Ученик: с 11 до 90 баллов</h3><p class="x-p">В августе 2025-го на входном тесте решил две задачи. Зимой забросил домашку, в марте взялся за голову — и с индивидуальным треком внутри группы наверстал всё.</p><span class="x-res">90 баллов</span></article><article class="x-card rv"><span class="x-meta">Геометрия · 7–8 класс</span><h3>От нуля до олимпиадной геометрии</h3><p class="x-p">Ученик пришёл в конце 7 класса без понимания геометрии. Восстановили базу и научились рассуждать — стал одним из сильнейших в классе и ушёл в олимпиадную геометрию.</p><span class="x-res">углублённый уровень</span></article><article class="x-card rv"><span class="x-meta">Уверенность в себе</span><h3>Уверенность в себе</h3><p class="x-p">Тихая и закрытая ученица. После выпуска поступила в университет, начала писать свои произведения — и до сих пор делится со мной успехами.</p><span class="x-res">поступила в вуз</span></article></div>
   </div>
 </section>
 
@@ -636,7 +634,7 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media x-media rv">
       <div class="x-mhead"><h2 class="sec-title">Подкасты</h2></div>
-      <div class="x-pods x-pods-3"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223095337?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/maria-dudorova/pod-1223095337.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226939363?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/maria-dudorova/pod-1226939363.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226941374?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 3"><img src="images/maria-dudorova/pod-1226941374.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 3"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 3</strong></button></div></div></div>
+      <div class="x-pods x-pods-3"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1223095337?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="От частной практики к «Формуле будущего»"><img width="1280" height="720" src="images/maria-dudorova/pod-1223095337.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: От частной практики к «Формуле будущего»"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">От частной практики к «Формуле будущего»</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226939363?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Каких преподавателей я ищу в команду"><img width="1280" height="720" src="images/maria-dudorova/pod-1226939363.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Каких преподавателей я ищу в команду"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Каких преподавателей я ищу в команду</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226941374?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="От 11 до 90 баллов: подготовка к ЕГЭ"><img width="1280" height="720" src="images/maria-dudorova/pod-1226941374.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: От 11 до 90 баллов: подготовка к ЕГЭ"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">От 11 до 90 баллов: подготовка к ЕГЭ</h3></div></div>
       <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://t.me/formulabudushego" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал школы</strong><span>t.me/formulabudushego</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://max.ru/join/KsyqVLu0HTLxljlaW4SWrW3i4UcibX-IacguRTv7-ko" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 0 0-8.2 14.3L2.8 21l4.4-1.1A9.5 9.5 0 1 0 12 2.5zm3.9 13.1h-1.8v-4.4l-2.1 3h-.1l-2.1-3v4.4H8V8.4h1.7l2.3 3.4 2.3-3.4h1.7v7.2z"/></svg></span><span><strong>Канал в MAX</strong><span>Канал школы</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://profi.ru/profile/DudorovaMA3" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h9a6 6 0 0 1 0 12H9v6H5V3zm4 4v4h5a2 2 0 0 0 0-4H9z"/></svg></span><span><strong>Профи.ру</strong><span>profi.ru/profile/DudorovaMA3</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://repetit.ru/repetitor.aspx?id=70118" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Repetit.ru</strong><span>repetit.ru/repetitor.aspx?id=70118</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://formulabudushego.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Сайт школы</strong><span>formulabudushego.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
     </div>
   </div>
@@ -644,11 +642,11 @@ p { margin: 0; }
 
 <section class="sec" id="contact">
   <div class="wrap contact">
-    <div class="contact-side rv"><img src="images/maria-dudorova/contact-1.jpg" alt="Мария Дудорова" loading="lazy"></div>
+    <div class="contact-side rv"><img width="1067" height="1600" src="images/maria-dudorova/contact-1.jpg" alt="Мария Дудорова" loading="lazy"></div>
     <div class="tile form-tile rv">
       <h2 class="form-title">Связаться с Марией</h2>
       <p class="form-lead">Партнёрство, интервью, работа в команде или подготовка ученика — напишите, я отвечу лично.</p>
-      
+
       <div class="socials x-contacts"><a class="social" href="https://t.me/fb_school" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@fb_school — для сообщений</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="tel:+79933566619"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></span><span><strong>Телефон для звонков</strong><span>+7 (993) 356-66-19</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:formulabudushego@mail.ru"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>formulabudushego@mail.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
     </div>
   </div>
@@ -680,17 +678,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -700,12 +693,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -880,7 +877,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

@@ -74,7 +74,6 @@ p { margin: 0; }
 .link:hover { background-size: 35% 1px; color: var(--ink); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .3s, box-shadow .3s; }
 .hdr.is-solid { background: rgba(243, 238, 230, .9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
 .hdr.is-away { transform: translateY(-110%); }
@@ -448,12 +447,11 @@ p { margin: 0; }
 :root{--x-surface:var(--card);--x-line:var(--line);--x-ink:var(--ink);--x-muted:var(--ink-2);--x-accent:var(--accent);--x-r:var(--r)}
 .band .x-card,.band .x-steps li{background:var(--bg)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
+<body data-client-layout="editorial" data-about="text" data-hero="text">
 
-<div class="progress" aria-hidden="true"></div>
-
-<header class="hdr" data-reveal>
+<header class="hdr">
   <div class="wrap hdr-in">
     <a href="#top" class="logo">Елена Лимперис</a>
     <nav class="nav" aria-label="Разделы"><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a></nav>
@@ -462,7 +460,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-dark">Связаться</a>
 </div>
@@ -474,14 +472,14 @@ p { margin: 0; }
     <div class="hero-grid">
       <div>
         <h1 class="hero-name"><span>Елена</span><span>Лимперис</span></h1>
-        
+
         <p class="hero-desc">Основательница онлайн-школы иностранных языков LINGRAVIA. Почти 20 лет преподаю английский и греческий, живу в Греции и строю школу, где язык учат как живой инструмент для работы и жизни, а не как набор правил.</p>
         <div class="hero-actions">
           <a href="#contact" class="btn btn-dark">Связаться <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           <a href="#projects" class="btn btn-line">Мои проекты</a>
         </div>
       </div>
-      
+
     </div>
     <dl class="facts"><div class="fact"><dt>≈20 лет</dt><dd>преподаю иностранные языки — со студенчества</dd></div><div class="fact"><dt>≈200</dt><dd>учеников прошли через LINGRAVIA за первый год</dd></div><div class="fact"><dt>7</dt><dd>преподавателей в команде школы</dd></div></dl>
   </div>
@@ -490,7 +488,7 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv"><h3>Онлайн-школа LINGRAVIA</h3><p class="x-p">Онлайн-школа иностранных языков с сильной методикой и поддержкой наставников. Мы начали с греческого: большинство наших учеников — русскоязычные экспаты на Кипре и в Греции, которым язык нужен для экзаменов, работы и жизни в стране. Школа работает с сентября 2025 года, учим индивидуально и в группах.</p><div class="x-plinks"></div><div class="proj-stats"><div><div class="ps-num">≈200</div><div class="ps-label">учеников за первый год</div></div><div><div class="ps-num">≈70</div><div class="ps-label">постоянных учеников даже летом, в низкий сезон</div></div><div><div class="ps-num">12–15</div><div class="ps-label">человек в команде: преподаватели, администратор, маркетологи</div></div></div></article><article class="proj rv"><h3>«Греческий шаг за шагом»</h3><p class="x-p">Мой YouTube-канал и Telegram-канал о греческом языке. На YouTube — мини-уроки, где я объясняю грамматику просто и по-человечески: мы учим не филологов, а IT-специалистов и других экспертов из числа экспатов. В Telegram — живой язык: греческие праздники, жизнь страны, юмор.</p><div class="x-plinks"><a class="link" href="https://youtube.com/@elena.limperis" target="_blank" rel="noopener">YouTube <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="link" href="https://t.me/greek_stepbystep" target="_blank" rel="noopener">Telegram <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></article><article class="proj rv"><h3>Частная практика, ≈20 лет</h3><p class="x-p">Начала преподавать английский ещё студенткой, на четвёртом курсе работала в частной школе. После переезда в Грецию добавила греческий и много лет вела его офлайн и онлайн. В какой-то момент свободных часов просто не осталось — и, чтобы помогать большему числу людей, я открыла школу.</p></article><article class="proj rv"><h3>Авторский курс и Greek Together Club</h3><p class="x-p">Онлайн-платформа с моим курсом греческого уже открыта: на ней учатся ученики с нуля. Курс входит в программу Greek Together Club — ученики проходят его на платформе в удобное время и приходят на регулярные coach-встречи в Zoom: задают вопросы, практикуют устную речь и получают обратную связь от преподавателя по своему обучению и цели сдать экзамен.</p></article><article class="proj rv"><h3>Schoolsmart</h3><p class="x-p">Участница нескольких программ Schoolsmart: «Онлайн-школа под ключ», МБА и «Фабрика звёздных преподавателей».</p></article></div>
+    <div class="projects" data-items="5"><article class="proj rv"><h3>Онлайн-школа LINGRAVIA</h3><p class="x-p">Онлайн-школа иностранных языков с сильной методикой и поддержкой наставников. Мы начали с греческого: большинство наших учеников — русскоязычные экспаты на Кипре и в Греции, которым язык нужен для экзаменов, работы и жизни в стране. Школа работает с сентября 2025 года, учим индивидуально и в группах.</p><div class="proj-stats"><div><div class="ps-num">≈200</div><div class="ps-label">учеников за первый год</div></div><div><div class="ps-num">≈70</div><div class="ps-label">постоянных учеников даже летом, в низкий сезон</div></div><div><div class="ps-num">12–15</div><div class="ps-label">человек в команде: преподаватели, администратор, маркетологи</div></div></div></article><article class="proj rv"><h3>«Греческий шаг за шагом»</h3><p class="x-p">Мой YouTube-канал и Telegram-канал о греческом языке. На YouTube — мини-уроки, где я объясняю грамматику просто и по-человечески: мы учим не филологов, а IT-специалистов и других экспертов из числа экспатов. В Telegram — живой язык: греческие праздники, жизнь страны, юмор.</p><div class="x-plinks"><a class="link" href="https://youtube.com/@elena.limperis" target="_blank" rel="noopener">YouTube <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="link" href="https://t.me/greek_stepbystep" target="_blank" rel="noopener">Telegram <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></article><article class="proj rv"><h3>Частная практика, ≈20 лет</h3><p class="x-p">Начала преподавать английский ещё студенткой, на четвёртом курсе работала в частной школе. После переезда в Грецию добавила греческий и много лет вела его офлайн и онлайн. В какой-то момент свободных часов просто не осталось — и, чтобы помогать большему числу людей, я открыла школу.</p></article><article class="proj rv"><h3>Авторский курс и Greek Together Club</h3><p class="x-p">Онлайн-платформа с моим курсом греческого уже открыта: на ней учатся ученики с нуля. Курс входит в программу Greek Together Club — ученики проходят его на платформе в удобное время и приходят на регулярные coach-встречи в Zoom: задают вопросы, практикуют устную речь и получают обратную связь от преподавателя по своему обучению и цели сдать экзамен.</p></article><article class="proj rv"><h3>Schoolsmart</h3><p class="x-p">Участница нескольких программ Schoolsmart: «Онлайн-школа под ключ», МБА и «Фабрика звёздных преподавателей».</p></article></div>
   </div>
 </section>
 
@@ -509,21 +507,21 @@ p { margin: 0; }
 <section class="sec" id="system">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подход школы</h2></div></div>
-    <p class="sec-lead x-lead">Немного теории — и очень много практики. Преподаватель у нас как тренер: следит за техникой и не даёт ошибкам войти в привычку.</p><div class="x-text"><p class="x-p">Мы учим языку комплексно, коммуникативным методом. Грамматика — только часть языка, особенно на старте. Поэтому мы даём её дозированно, сразу отрабатываем в диалогах, упражнениях и разговоре — и человек с первых недель чувствует, что может пользоваться языком, а не просто копит знания.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит урок</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Разминка</strong><span>практикуем изученное в диалогах, близких к реальной жизни</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Новая тема</strong><span>идём по программе учебника, теорию даём небольшими порциями</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Разговорная часть</strong><span>в каждом уроке — применяем теорию на практике</span></div></li></ol></div><div class="x-cards"><article class="x-card rv"><h3>Преподаватель-тренер</h3><p class="x-p">Исправляем ошибки бережно и по одной — чтобы не сломать мотивацию, но и не закрепить неправильное.</p></article><article class="x-card rv"><h3>Билингвы и носители</h3><p class="x-p">Начинающим объясняют билингвы — понятно и на хорошем русском. На высоких уровнях работают носители языка.</p></article><article class="x-card rv"><h3>Забота между уроками</h3><p class="x-p">Общий чат ученика с преподавателем, администратором и мной: полезные видео, ответы на вопросы, поддержка.</p></article><article class="x-card rv"><h3>Своя методическая база</h3><p class="x-p">Записанные мной видеоуроки, таблицы, глоссарии — преподаватель тратит время на ученика, а не на поиск материалов.</p></article><article class="x-card rv"><h3>Взрослые с плотным графиком</h3><p class="x-p">Учитываем, что у учеников работа и семьи: подстраиваемся, объясняем ещё раз, не давим.</p></article></div>
+    <p class="sec-lead x-lead">Немного теории — и очень много практики. Преподаватель у нас как тренер: следит за техникой и не даёт ошибкам войти в привычку.</p><div class="x-text"><p class="x-p">Мы учим языку комплексно, коммуникативным методом. Грамматика — только часть языка, особенно на старте. Поэтому мы даём её дозированно, сразу отрабатываем в диалогах, упражнениях и разговоре — и человек с первых недель чувствует, что может пользоваться языком, а не просто копит знания.</p></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит урок</h3><ol class="x-steps" data-items="3"><li class="rv"><span class="x-n">01</span><div><strong>Разминка</strong><span>практикуем изученное в диалогах, близких к реальной жизни</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Новая тема</strong><span>идём по программе учебника, теорию даём небольшими порциями</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Разговорная часть</strong><span>в каждом уроке — применяем теорию на практике</span></div></li></ol></div><div class="x-cards" data-items="5"><article class="x-card rv"><h3>Преподаватель-тренер</h3><p class="x-p">Исправляем ошибки бережно и по одной — чтобы не сломать мотивацию, но и не закрепить неправильное.</p></article><article class="x-card rv"><h3>Билингвы и носители</h3><p class="x-p">Начинающим объясняют билингвы — понятно и на хорошем русском. На высоких уровнях работают носители языка.</p></article><article class="x-card rv"><h3>Забота между уроками</h3><p class="x-p">Общий чат ученика с преподавателем, администратором и мной: полезные видео, ответы на вопросы, поддержка.</p></article><article class="x-card rv"><h3>Своя методическая база</h3><p class="x-p">Записанные мной видеоуроки, таблицы, глоссарии — преподаватель тратит время на ученика, а не на поиск материалов.</p></article><article class="x-card rv"><h3>Взрослые с плотным графиком</h3><p class="x-p">Учитываем, что у учеников работа и семьи: подстраиваемся, объясняем ещё раз, не давим.</p></article></div>
   </div>
 </section>
 
 <section class="sec band" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">Греческий · после курса «на грамматике»</span><h3>От тонн правил — к живому разговору</h3><p class="x-p">Сильный и мотивированный ученик потерялся в грамматике: каждый урок — новая тема и никакой практики. За несколько месяцев с нами он заговорил по-гречески и снова получает удовольствие от учёбы.</p><span class="x-res">свободное общение</span></article><article class="x-card rv"><span class="x-meta">Греческий · язык для работы</span><h3>Говорить не только быстро, но и правильно</h3><p class="x-p">Ученица была уверена, что уже говорит, — но с кучей ошибок. Замедлили темп, исправляли по одной ошибке за раз. Через пару месяцев к правильности добавилась скорость.</p><span class="x-res">правильно и бегло</span></article><article class="x-card rv"><span class="x-meta">Греческий · без системы</span><h3>Система вместо стресса</h3><p class="x-p">Ученица учила язык урывками и потеряла веру в себя. Мы объяснили, из чего состоит изучение языка и на чём фокусироваться в разные моменты. Стресс ушёл, вернулись интерес и мотивация.</p><span class="x-res">мотивация и результат</span></article></div>
+    <div class="x-cards" data-items="3"><article class="x-card rv"><span class="x-meta">Греческий · после курса «на грамматике»</span><h3>От тонн правил — к живому разговору</h3><p class="x-p">Сильный и мотивированный ученик потерялся в грамматике: каждый урок — новая тема и никакой практики. За несколько месяцев с нами он заговорил по-гречески и снова получает удовольствие от учёбы.</p><span class="x-res">свободное общение</span></article><article class="x-card rv"><span class="x-meta">Греческий · язык для работы</span><h3>Говорить не только быстро, но и правильно</h3><p class="x-p">Ученица была уверена, что уже говорит, — но с кучей ошибок. Замедлили темп, исправляли по одной ошибке за раз. Через пару месяцев к правильности добавилась скорость.</p><span class="x-res">правильно и бегло</span></article><article class="x-card rv"><span class="x-meta">Греческий · без системы</span><h3>Система вместо стресса</h3><p class="x-p">Ученица учила язык урывками и потеряла веру в себя. Мы объяснили, из чего состоит изучение языка и на чём фокусироваться в разные моменты. Стресс ушёл, вернулись интерес и мотивация.</p><span class="x-res">мотивация и результат</span></article></div>
   </div>
 </section>
 
 <section class="sec" id="media">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подкасты</h2></div></div>
-    <div class="x-pods x-pods-3"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1230295402?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 1"><img src="images/elena-limperis/pod-1230295402.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 1"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 1</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226953934?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/elena-limperis/pod-1226953934.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1242503804?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 3"><img src="images/elena-limperis/pod-1242503804.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 3"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 3</strong></button></div></div></div>
+    <div class="x-pods x-pods-3"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1230295402?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="LINGRAVIA: первый год своей языковой школы"><img width="1280" height="720" src="images/elena-limperis/pod-1230295402.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: LINGRAVIA: первый год своей языковой школы"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">LINGRAVIA: первый год своей языковой школы</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226953934?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Что удерживает сильных преподавателей в команде"><img width="1280" height="720" src="images/elena-limperis/pod-1226953934.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Что удерживает сильных преподавателей в команде"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Что удерживает сильных преподавателей в команде</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1242503804?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Греческий без страха: от алфавита к разговору"><img width="1280" height="720" src="images/elena-limperis/pod-1242503804.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Греческий без страха: от алфавита к разговору"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Греческий без страха: от алфавита к разговору</h3></div></div>
     <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://youtube.com/@elena.limperis" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg></span><span><strong>YouTube</strong><span>«Греческий шаг за шагом»</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://t.me/greek_stepbystep" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал</strong><span>@greek_stepbystep</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://lingravia.com" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Сайт школы</strong><span>lingravia.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
 </section>
@@ -533,8 +531,8 @@ p { margin: 0; }
     <div>
       <h2 class="sec-title">Связаться с Еленой</h2>
       <p class="sec-lead">Партнёрство, инвестиции, работа преподавателем в команде или изучение языка — напишите, я отвечу лично.</p>
-      
-      
+
+
     </div>
     <div><div class="card rv"><div class="socials x-contacts"><a class="social" href="https://t.me/elena_limperis" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@elena_limperis</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/306944185223" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+306944185223</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:elena.limperis@gmail.com"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>elena.limperis@gmail.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div></div>
   </div>
@@ -566,17 +564,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -586,12 +579,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -766,7 +763,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

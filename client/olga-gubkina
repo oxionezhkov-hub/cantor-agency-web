@@ -97,7 +97,6 @@ p { margin: 0; }
 .btn-line:hover { border-color: var(--ink); transform: translateY(-2px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--green); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr {
   position: fixed; inset: 0 0 auto 0; z-index: 300;
   padding-top: env(safe-area-inset-top, 0px);
@@ -563,10 +562,9 @@ p { margin: 0; }
 .x-steps li{background:var(--tile);box-shadow:0 0 0 1px var(--line)}
 .x-nophoto.h-photo{background:var(--green-soft)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
-
-<div class="progress" aria-hidden="true"></div>
+<body data-client-layout="bento">
 
 <header class="hdr">
   <div class="wrap hdr-in">
@@ -577,7 +575,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#media">Соцсети</a>
   <a href="#contact" class="btn btn-green">Связаться</a>
 </div>
@@ -594,7 +592,7 @@ p { margin: 0; }
         <a href="#contact" class="btn btn-line">Связаться</a>
       </div>
     </div>
-    <figure class="tile h-photo"><img src="images/olga-gubkina/hero-1.jpg" alt="Ольга Губкина" fetchpriority="high"></figure>
+    <figure class="tile h-photo"><img width="853" height="1280" src="images/olga-gubkina/hero-1.jpg" alt="Ольга Губкина" fetchpriority="high"></figure>
     <div class="h-facts"><div class="tile fact"><span class="fact-num">27+ лет</span><p>в образовании — с 1998 года</p></div><div class="tile fact"><span class="fact-num">≈3000</span><p>учеников прошли через мои уроки за 27+ лет</p></div><div class="tile fact"><span class="fact-num">40+</span><p>учеников сдали ЕГЭ по информатике на 80+, среди них — 100 и дважды 98 баллов</p></div></div>
   </div>
 </section>
@@ -602,14 +600,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Онлайн-школа «Про100АйТи школа»</h3></div></div><p class="proj-desc">Школа для учеников 9–11 классов, которые идут в техническую сферу: подготовка к ЕГЭ и ОГЭ по информатике, олимпиадная информатика, а теперь ещё математика и физика. До 2025 года я работала одна, с 2025-го мы — школа: сотрудничаю с преподавателями, помощниками и специалистами по продвижению. Занятия индивидуальные и в мини-группах — и в группах результат не хуже.</p><div class="x-plinks"></div><div class="proj-stats"><div><div class="ps-num">73</div><div class="ps-label">ученика за 2025–2026 учебный год вместе с подготовкой к пересдаче</div></div><div><div class="ps-num">0 → 67</div><div class="ps-label">баллов ЕГЭ за 5 месяцев — результат преподавателя школы</div></div><div><div class="ps-num">до 70%</div><div class="ps-label">рентабельность школы</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Schoolsmart</h3></div></div><p class="proj-desc">Сообщество, где репетиторы строят и масштабируют свою практику. Я в Schoolsmart с марта 2024 года, с сентября 2024-го — в программе по запуску онлайн-школы. Именно здесь частная практика превратилась в школу с системой.</p><div class="proj-stats"><div><div class="ps-num">2024</div><div class="ps-label">вступила в Schoolsmart</div></div><div><div class="ps-num">7</div><div class="ps-label">преподавателей сотрудничали со мной в первый год</div></div></div></article><article class="proj rv proj-school"><div class="proj-top"><div><h3>22 года в государственной школе</h3></div></div><p class="proj-desc">С 2000 по 2022 год я учитель информатики в школе, а с 2023-го меня позвали вести профильные классы на полставки в МОУ «СОШ № 2» города Коряжма: с пятью ребятами из 10–11 классов мы стали победителями областного турнира по программированию 2024 года. Вела профильный класс, готовила призёров олимпиад и конкурсов — вплоть до международного уровня, выпустила первого стобалльника по ЕГЭ. Этот опыт — фундамент методики «Про100АйТи».</p><div class="proj-stats"><div><div class="ps-num">100</div><div class="ps-label">баллов ЕГЭ по информатике — ученик Александр, 2011 год</div></div><div><div class="ps-num">2 место</div><div class="ps-label">на X Международном конкурсе «Старт в науке», 2020 — проект «Определение движений лица в реальном времени с помощью скриптов на Python»</div></div></div></article></div>
+    <div class="projects" data-items="3"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Онлайн-школа «Про100АйТи школа»</h3></div></div><p class="proj-desc">Школа для учеников 9–11 классов, которые идут в техническую сферу: подготовка к ЕГЭ и ОГЭ по информатике, олимпиадная информатика, а теперь ещё математика и физика. До 2025 года я работала одна, с 2025-го мы — школа: сотрудничаю с преподавателями, помощниками и специалистами по продвижению. Занятия индивидуальные и в мини-группах — и в группах результат не хуже.</p><div class="proj-stats"><div><div class="ps-num">73</div><div class="ps-label">ученика за 2025–2026 учебный год вместе с подготовкой к пересдаче</div></div><div><div class="ps-num">0 → 67</div><div class="ps-label">баллов ЕГЭ за 5 месяцев — результат преподавателя школы</div></div><div><div class="ps-num">до 70%</div><div class="ps-label">рентабельность школы</div></div></div></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Schoolsmart</h3></div></div><p class="proj-desc">Сообщество, где репетиторы строят и масштабируют свою практику. Я в Schoolsmart с марта 2024 года, с сентября 2024-го — в программе по запуску онлайн-школы. Именно здесь частная практика превратилась в школу с системой.</p><div class="proj-stats"><div><div class="ps-num">2024</div><div class="ps-label">вступила в Schoolsmart</div></div><div><div class="ps-num">7</div><div class="ps-label">преподавателей сотрудничали со мной в первый год</div></div></div></article><article class="proj rv proj-school"><div class="proj-top"><div><h3>22 года в государственной школе</h3></div></div><p class="proj-desc">С 2000 по 2022 год я учитель информатики в школе, а с 2023-го меня позвали вести профильные классы на полставки в МОУ «СОШ № 2» города Коряжма: с пятью ребятами из 10–11 классов мы стали победителями областного турнира по программированию 2024 года. Вела профильный класс, готовила призёров олимпиад и конкурсов — вплоть до международного уровня, выпустила первого стобалльника по ЕГЭ. Этот опыт — фундамент методики «Про100АйТи».</p><div class="proj-stats"><div><div class="ps-num">100</div><div class="ps-label">баллов ЕГЭ по информатике — ученик Александр, 2011 год</div></div><div><div class="ps-num">2 место</div><div class="ps-label">на X Международном конкурсе «Старт в науке», 2020 — проект «Определение движений лица в реальном времени с помощью скриптов на Python»</div></div></div></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap"><div class="sec-head"><div><h2 class="sec-title">Обо мне</h2></div></div></div>
   <div class="wrap about">
-    <div class="about-photo rv"><img src="images/olga-gubkina/about-1.jpg" alt="Ольга Губкина" loading="lazy"></div>
+    <div class="about-photo rv photo-landscape"><img width="902" height="603" src="images/olga-gubkina/about-1.jpg" alt="Ольга Губкина" loading="lazy"></div>
     <div>
       <p class="about-lead">Учитель по образованию и призванию, предприниматель — с 2022 года.</p>
       <p class="about-body">В детстве я несколько месяцев пролежала в больнице. Там с очень слабыми учениками занимался математикой учитель — спокойно, без крика, раз за разом объяснял одно и то же. Меня восхитила его выдержка, и, наверное, тогда всё и решилось.</p><p class="about-body">В 1998 году я окончила Поморский государственный университет им. М. В. Ломоносова — учитель математики, информатики и вычислительной техники. Два года работала на кафедре информатики, потом 22 года — учителем информатики в школе. Мои ученики брали призовые места на олимпиадах и сдавали ЕГЭ на 100 баллов.</p><p class="about-body">В 2022 году я ушла в частное преподавание. В первый же месяц заработала столько же, сколько в школе, через два месяца удвоила доход, через полгода — ещё раз. Начала собирать группы, в 2024-м пришла в Schoolsmart, а в 2025-м я стала впервые сотрудничать с преподавателем, который получал от меня учеников, — и частная практика стала школой.</p><blockquote class="x-quote"><p>Наша школа — заботливая и тёплая: здесь просто и понятно объясняют сложные вещи и уважают ученика</p><cite>Ольга Губкина</cite></blockquote><p class="about-body">Сама сдала ЕГЭ по информатике на 98 баллов — чтобы знать экзамен изнутри. Вне работы — йога и смехойога, ходьба, плавание, обливание холодной водой, путешествия и гвоздестояние. Изучаю квантовую психологию.</p>
@@ -621,21 +619,21 @@ p { margin: 0; }
 <section class="sec" id="system">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подход школы</h2></div></div>
-    <p class="sec-lead x-lead">Объясняем просто, даём максимум практики и регулярно проверяем, что знания действительно усвоены.</p><div class="x-text"><p class="x-p">На уроке — доброжелательная атмосфера: ученику не страшно ошибиться и переспросить. Неважно, индивидуальное это занятие или группа — объяснения максимально понятные, а результаты ЕГЭ и ОГЭ показывают, что в мини-группах учатся так же эффективно.</p></div><div class="x-cards"><article class="x-card rv"><h3>Понятные объяснения</h3><p class="x-p">Сложные темы ЕГЭ раскладываем на простые шаги — без крика и спешки.</p></article><article class="x-card rv"><h3>Максимум практики</h3><p class="x-p">Решаем много задач всех типов — от базовых до заданий высокой сложности 24–27.</p></article><article class="x-card rv"><h3>Связь между занятиями</h3><p class="x-p">Ученик может написать преподавателю с вопросом, не дожидаясь следующего урока.</p></article><article class="x-card rv"><h3>Пробники и срезы</h3><p class="x-p">Регулярные пробные экзамены с разбором всех заданий: видно, что усвоено, а что нет.</p></article><article class="x-card rv"><h3>Обратная связь родителям</h3><p class="x-p">Родители регулярно получают отчёт о том, как идёт подготовка.</p></article></div>
+    <p class="sec-lead x-lead">Объясняем просто, даём максимум практики и регулярно проверяем, что знания действительно усвоены.</p><div class="x-text"><p class="x-p">На уроке — доброжелательная атмосфера: ученику не страшно ошибиться и переспросить. Неважно, индивидуальное это занятие или группа — объяснения максимально понятные, а результаты ЕГЭ и ОГЭ показывают, что в мини-группах учатся так же эффективно.</p></div><div class="x-cards" data-items="5"><article class="x-card rv"><h3>Понятные объяснения</h3><p class="x-p">Сложные темы ЕГЭ раскладываем на простые шаги — без крика и спешки.</p></article><article class="x-card rv"><h3>Максимум практики</h3><p class="x-p">Решаем много задач всех типов — от базовых до заданий высокой сложности 24–27.</p></article><article class="x-card rv"><h3>Связь между занятиями</h3><p class="x-p">Ученик может написать преподавателю с вопросом, не дожидаясь следующего урока.</p></article><article class="x-card rv"><h3>Пробники и срезы</h3><p class="x-p">Регулярные пробные экзамены с разбором всех заданий: видно, что усвоено, а что нет.</p></article><article class="x-card rv"><h3>Обратная связь родителям</h3><p class="x-p">Родители регулярно получают отчёт о том, как идёт подготовка.</p></article></div>
   </div>
 </section>
 
 <section class="sec" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">100</div><p>баллов ЕГЭ по информатике — лучший результат</p></div><div class="tile x-stat rv"><div class="big-num">98</div><p>баллов — у двух учеников, 2023 и 2026 годы</p></div><div class="tile x-stat rv"><div class="big-num">21 из 21</div><p>на ОГЭ по информатике — в 2025 и 2026 годах</p></div></div><div class="projects"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Учебный год 2025–2026</h3></div></div><ul class="x-minis"><li><strong>Пётр: с 80 до 98 баллов</strong> — Пришёл в ноябре, на пробниках набирал 80. Разобрали сложные для него задания 19–21, 22, 24, 26 — к апрелю писал пробники на 95–100. Поступил на бюджет.</li><li><strong>Николай: с 54 до 93 баллов</strong> — Первый пробник — 54 балла. Информатику сдал лучше остальных трёх предметов. В его группе ещё 93, 90 и 80.</li><li><strong>Александр: с 14 до 70 баллов</strong> — На первом пробнике не набрал даже минимальный порог. Занимался в группе по ЕГЭ и в группе по Питону.</li></ul></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Пересдача за 7–10 дней</h3></div></div><ul class="x-minis"><li><strong>Кира: с 51 до 72 баллов</strong> — Пришла за 10 дней до пересдачи, 18 индивидуальных уроков.</li><li><strong>Алёна: с 54 до 72 баллов</strong> — Пришла за неделю до пересдачи: 12 уроков в группе и 2 индивидуально.</li><li><strong>Никифор: с 27 до 56 баллов</strong> — Пришёл 29 июня, 8 дней по 2 урока в группе.</li></ul><h3 class="x-h3">Стобалльники и высокие баллы по годам</h3><ul class="x-list"><li>2011 — 100 баллов (Александр)</li><li>2023 — 98, 95, 93 и 93 балла (два последних — в группе из 5 учеников)</li><li>2024 — дважды 95 баллов в группе из 5 человек</li><li>2025 — 85 баллов; ОГЭ — 21 из 21</li><li>2026 — 98 баллов и трижды 93 балла в группах по 4–6 человек; ОГЭ — 21 и 20 из 21</li></ul></article></div>
+    <div class="x-stats"><div class="tile x-stat rv"><div class="big-num">100</div><p>баллов ЕГЭ по информатике — лучший результат</p></div><div class="tile x-stat rv"><div class="big-num">98</div><p>баллов — у двух учеников, 2023 и 2026 годы</p></div><div class="tile x-stat rv"><div class="big-num">21 из 21</div><p>на ОГЭ по информатике — в 2025 и 2026 годах</p></div></div><div class="projects" data-items="2"><article class="proj rv proj-school"><div class="proj-top"><div><h3>Учебный год 2025–2026</h3></div></div><ul class="x-minis"><li><strong>Пётр: с 80 до 98 баллов</strong> — Пришёл в ноябре, на пробниках набирал 80. Разобрали сложные для него задания 19–21, 22, 24, 26 — к апрелю писал пробники на 95–100. Поступил на бюджет.</li><li><strong>Николай: с 54 до 93 баллов</strong> — Первый пробник — 54 балла. Информатику сдал лучше остальных трёх предметов. В его группе ещё 93, 90 и 80.</li><li><strong>Александр: с 14 до 70 баллов</strong> — На первом пробнике не набрал даже минимальный порог. Занимался в группе по ЕГЭ и в группе по Питону.</li></ul></article><article class="proj rv proj-science"><div class="proj-top"><div><h3>Пересдача за 7–10 дней</h3></div></div><ul class="x-minis"><li><strong>Кира: с 51 до 72 баллов</strong> — Пришла за 10 дней до пересдачи, 18 индивидуальных уроков.</li><li><strong>Алёна: с 54 до 72 баллов</strong> — Пришла за неделю до пересдачи: 12 уроков в группе и 2 индивидуально.</li><li><strong>Никифор: с 27 до 56 баллов</strong> — Пришёл 29 июня, 8 дней по 2 урока в группе.</li></ul><h3 class="x-h3">Стобалльники и высокие баллы по годам</h3><ul class="x-list"><li>2011 — 100 баллов (Александр)</li><li>2023 — 98, 95, 93 и 93 балла (два последних — в группе из 5 учеников)</li><li>2024 — дважды 95 баллов в группе из 5 человек</li><li>2025 — 85 баллов; ОГЭ — 21 из 21</li><li>2026 — 98 баллов и трижды 93 балла в группах по 4–6 человек; ОГЭ — 21 и 20 из 21</li></ul></article></div>
   </div>
 </section>
 
 <section class="sec" id="press">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Интервью и публикации</h2></div></div>
-    <div class="x-cards"><article class="x-card rv"><span class="x-meta">2025 · ВКонтакте</span><h3>Министерство образования Архангельской области</h3><p class="x-p">Интервью в официальном сообществе министерства.</p><a class="x-more" href="https://vk.ru/wall-186119133_14334" target="_blank" rel="noopener">Читать <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></article><article class="x-card rv"><span class="x-meta">2025 · 29.ru</span><h3>Интервью региональному порталу 29.ru</h3><p class="x-p">Материал в разделе «Образование», июль 2025.</p></article><article class="x-card rv"><span class="x-meta">2024 · ТВ и газета</span><h3>Коряжемское телевидение</h3><p class="x-p">Телеинтервью и публикация в газете.</p><a class="x-more" href="https://vk.ru/wall-150118976_43147" target="_blank" rel="noopener">Смотреть сюжет <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></article><article class="x-card rv"><span class="x-meta">Rutube · Schoolsmart</span><h3>Интервью для Schoolsmart</h3><p class="x-p">Видеоинтервью в сообществе репетиторов Schoolsmart.</p></article></div>
+    <div class="x-cards" data-items="4"><article class="x-card rv"><span class="x-meta">2025 · ВКонтакте</span><h3>Министерство образования Архангельской области</h3><p class="x-p">Интервью в официальном сообществе министерства.</p><a class="x-more" href="https://vk.ru/wall-186119133_14334" target="_blank" rel="noopener">Читать <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></article><article class="x-card rv"><span class="x-meta">2025 · 29.ru</span><h3>Интервью региональному порталу 29.ru</h3><p class="x-p">Материал в разделе «Образование», июль 2025.</p></article><article class="x-card rv"><span class="x-meta">2024 · ТВ и газета</span><h3>Коряжемское телевидение</h3><p class="x-p">Телеинтервью и публикация в газете.</p><a class="x-more" href="https://vk.ru/wall-150118976_43147" target="_blank" rel="noopener">Смотреть сюжет <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></article><article class="x-card rv"><span class="x-meta">Rutube · Schoolsmart</span><h3>Интервью для Schoolsmart</h3><p class="x-p">Видеоинтервью в сообществе репетиторов Schoolsmart.</p></article></div>
   </div>
 </section>
 
@@ -643,7 +641,7 @@ p { margin: 0; }
   <div class="wrap">
     <div class="media x-media rv">
       <div class="x-mhead"><h2 class="sec-title">Публикации и соцсети</h2></div>
-      
+
       <div class="x-msoc"><div class="socials"><a class="social" href="https://t.me/olga_gubkina" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@olga_gubkina</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://t.me/olga_gubkina_otzivi" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Отзывы в Telegram</strong><span>t.me/olga_gubkina_otzivi</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://vk.ru/gubkina_olga" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.8 17.5c-5.5 0-8.6-3.8-8.8-10h2.8c.1 4.6 2.1 6.5 3.7 6.9V7.5h2.6v3.9c1.6-.2 3.3-2 3.8-3.9h2.6c-.4 2.4-2.2 4.2-3.4 4.9 1.2.6 3.2 2.1 4 5.1h-2.9c-.6-1.9-2.2-3.4-4.1-3.6v3.6h-.3z"/></svg></span><span><strong>ВКонтакте</strong><span>vk.ru/gubkina_olga</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://it-sckola.ru" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-3a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h3a15.7 15.7 0 0 0 1.4 3.6A8 8 0 0 1 5.1 16zm3-8h-3a8 8 0 0 1 4.4-3.6C8.9 5.5 8.4 6.7 8.1 8zM12 20c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.2 5.6c.6-1.1 1.1-2.3 1.4-3.6h3a8 8 0 0 1-4.4 3.6zm1.8-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z"/></svg></span><span><strong>Сайт школы</strong><span>it-sckola.ru</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
     </div>
   </div>
@@ -651,12 +649,12 @@ p { margin: 0; }
 
 <section class="sec" id="contact">
   <div class="wrap contact">
-    <div class="contact-side rv"><img src="images/olga-gubkina/contact-1.jpg" alt="Ольга Губкина" loading="lazy"></div>
+    <div class="contact-side rv"><img width="1280" height="960" src="images/olga-gubkina/contact-1.jpg" alt="Ольга Губкина" loading="lazy"></div>
     <div class="tile form-tile rv">
       <h2 class="form-title">Связаться с Ольгой</h2>
       <p class="form-lead">Партнёрство, интервью, сотрудничество со школой или вопрос о подготовке — напишите, я отвечу.</p>
-      
-      <div class="socials x-contacts"><a class="social" href="https://t.me/olga_gubkina" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@olga_gubkina</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/79522593170" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+79522593170</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="tel:+79522593170"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></span><span><strong>Телефон</strong><span>+79522593170</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:olgubkina@gmail.com"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>olgubkina@gmail.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
+
+      <div class="socials x-contacts"><a class="social" href="https://t.me/olga_gubkina" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@olga_gubkina</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/79522593170" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+7 952 259-31-70</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="tel:+79522593170"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></span><span><strong>Телефон</strong><span>+7 952 259-31-70</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:olgubkina@gmail.com"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>olgubkina@gmail.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div>
     </div>
   </div>
 </section>
@@ -687,17 +685,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -707,12 +700,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -887,7 +884,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */

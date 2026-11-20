@@ -84,7 +84,6 @@ p { margin: 0; }
 .btn:hover svg { transform: translateX(4px); }
 
 /* ── Header ── */
-.progress { position: fixed; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transform-origin: 0 50%; transform: scaleX(0); z-index: 320; }
 .hdr { position: fixed; inset: 0 0 auto 0; z-index: 300; padding-top: env(safe-area-inset-top, 0px); transition: transform .5s var(--ease), background-color .4s, border-color .4s; border-bottom: 1px solid transparent; }
 .hdr.is-solid { background: rgba(12, 19, 34, .82); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom-color: var(--line); }
 .hdr.is-away { transform: translateY(-110%); }
@@ -469,12 +468,11 @@ p { margin: 0; }
 .x-logo,.x-plogo{background:var(--parch)}
 .x-revimg{background:var(--parch)}
 </style>
+<link rel="stylesheet" href="client-polish.css?v=20261119-1">
 </head>
-<body>
+<body data-client-layout="academic" data-about="text">
 
-<div class="progress" aria-hidden="true"></div>
-
-<header class="hdr" data-reveal>
+<header class="hdr">
   <div class="wrap hdr-in">
     <a href="#top" class="logo">Оксана Бабушкина</a>
     <nav class="nav" aria-label="Разделы"><a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#reviews">Отзывы</a><a href="#media">Подкасты</a></nav>
@@ -483,7 +481,7 @@ p { margin: 0; }
   </div>
 </header>
 
-<div class="mnav" id="mnav" aria-hidden="true">
+<div class="mnav" id="mnav" aria-hidden="true" inert>
   <a href="#projects">Проекты</a><a href="#about">Обо мне</a><a href="#results">Результаты</a><a href="#reviews">Отзывы</a><a href="#media">Подкасты</a>
   <a href="#contact" class="btn btn-gold">Связаться</a>
 </div>
@@ -491,7 +489,7 @@ p { margin: 0; }
 <main>
 
 <section class="hero" id="top">
-  <div class="hero-photo"><img src="images/oksana-babushkina/hero-1.jpg" alt="Оксана Бабушкина" fetchpriority="high"></div>
+  <div class="hero-photo"><img width="488" height="1024" src="images/oksana-babushkina/hero-1.jpg" alt="Оксана Бабушкина" fetchpriority="high"></div>
   <div class="wrap hero-in">
     <h1 class="hero-name"><span class="ln"><span>Оксана</span></span><span class="ln"><span>Бабушкина</span></span></h1>
     <div class="hero-rule"></div>
@@ -503,7 +501,7 @@ p { margin: 0; }
           <a href="#contact" class="btn btn-line">Связаться</a>
         </div>
       </div>
-      <div class="creds"><div class="cred"><div class="cred-v">25+ лет</div><div class="cred-l mono">в образовании — преподаю с 1998 года</div></div><div class="cred"><div class="cred-v">12</div><div class="cred-l mono">преподавателей в команде «Про100класс»</div></div><div class="cred"><div class="cred-v">98</div><div class="cred-l mono">баллов ЕГЭ по профильной математике — у ученика, который начинал с 40</div></div></div>
+      <div class="creds"><div class="cred"><div class="cred-v">25+ <span class="metric-unit">лет</span></div><div class="cred-l mono">в образовании — преподаю с 1998 года</div></div><div class="cred"><div class="cred-v">12</div><div class="cred-l mono">преподавателей в команде «Про100класс»</div></div><div class="cred"><div class="cred-v">98</div><div class="cred-l mono">баллов ЕГЭ по профильной математике — у ученика, который начинал с 40</div></div></div>
     </div>
   </div>
   <div class="scroll-cue mono" aria-hidden="true">Листайте</div>
@@ -512,14 +510,14 @@ p { margin: 0; }
 <section class="sec" id="projects">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Проекты</h2></div></div>
-    <div class="projects"><article class="proj rv"><span class="x-plogo"><img src="images/oksana-babushkina/logo-1.jpg" alt="Логотип" loading="lazy"></span><h3>Онлайн-школа «Про100класс»</h3><p class="x-p">Онлайн-школа, где школьники 1–11 классов начинают понимать математику, русский, английский, физику, географию и предметы начальной школы. Мы работаем и с теми, кому нужно подтянуть программу, и с ребятами, которые готовятся к ОГЭ и профильному ЕГЭ. Школа выросла из моей многолетней школьной и частной практики: сначала, в 2024 году, это был центр подготовки к ЕГЭ, а с 2025 года «Про100класс» развивается как отдельный проект.</p><ul class="x-minis"><li><strong>Подготовка к ОГЭ и профильному ЕГЭ</strong> — Индивидуально и в мини-группах, разделённых по целям: средний результат или 80+.</li><li><strong>Повышение успеваемости, 5–9 классы</strong> — Находим, где ребёнок «потерялся», закрываем пробелы и возвращаем уверенность.</li><li><strong>Начальная школа</strong> — Занятия для учеников 1–4 классов.</li></ul><div class="proj-stats"><div><div class="ps-num">12 + 3</div><div class="ps-label">преподавателей и сотрудников бэк-офиса</div></div><div><div class="ps-num">≈60</div><div class="ps-label">активных учеников</div></div><div><div class="ps-num">без троек</div><div class="ps-label">сдали ОГЭ в этом году все ученики школы — только «4» и «5»</div></div></div></article></div>
+    <div class="projects" data-items="1"><article class="proj rv"><span class="x-plogo"><img width="1000" height="1000" src="images/oksana-babushkina/logo-1.jpg" alt="Логотип" loading="lazy"></span><h3>Онлайн-школа «Про100класс»</h3><p class="x-p">Онлайн-школа, где школьники 1–11 классов начинают понимать математику, русский, английский, физику, географию и предметы начальной школы. Мы работаем и с теми, кому нужно подтянуть программу, и с ребятами, которые готовятся к ОГЭ и профильному ЕГЭ. Школа выросла из моей многолетней школьной и частной практики: сначала, в 2024 году, это был центр подготовки к ЕГЭ, а с 2025 года «Про100класс» развивается как отдельный проект.</p><ul class="x-minis"><li><strong>Подготовка к ОГЭ и профильному ЕГЭ</strong> — Индивидуально и в мини-группах, разделённых по целям: средний результат или 80+.</li><li><strong>Повышение успеваемости, 5–9 классы</strong> — Находим, где ребёнок «потерялся», закрываем пробелы и возвращаем уверенность.</li><li><strong>Начальная школа</strong> — Занятия для учеников 1–4 классов.</li></ul><div class="proj-stats"><div><div class="ps-num">12 + 3</div><div class="ps-label">преподавателей и сотрудников бэк-офиса</div></div><div><div class="ps-num">≈60</div><div class="ps-label">активных учеников</div></div><div><div class="ps-num">без троек</div><div class="ps-label">сдали ОГЭ в этом году все ученики школы — только «4» и «5»</div></div></div></article></div>
   </div>
 </section>
 
 <section class="sec" id="about">
   <div class="wrap">
     <h2 class="sec-title x-mb">Обо мне</h2>
-    
+
     <div class="about">
       <div>
         <p class="quote">Учитель математики по образованию, мама троих детей, руководитель по выбору.</p>
@@ -533,14 +531,14 @@ p { margin: 0; }
 <section class="sec" id="system">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Система школы</h2></div></div>
-    <p class="sec-lead x-lead">Точка старта, маршрут, точки контроля, финиш. Внутри маршрута — свобода преподавателя, на точках контроля — видимый результат.</p><div class="x-text"><p class="x-p">«Я не понял» ничего не значит. Мы смотрим решение ребёнка и ищем шаг, на котором он потерялся, а потом дробим этот шаг на подшаги — пока не станет понятно. Для стереометрии подключаем GeoGebra: поворачиваем фигуру, разрезаем её, делаем выносной чертёж. Слона едят по кусочкам.</p></div><div class="x-cards"><article class="x-card rv"><h3>Диагностика и маршрут</h3><p class="x-p">Каждый ученик начинает с диагностики и получает индивидуальный маршрут от текущего уровня к цели.</p></article><article class="x-card rv"><h3>План на весь учебный год</h3><p class="x-p">Последовательно разбираем все темы и типы заданий экзамена, отрабатываем алгоритмы, закрепляем на тренировочных вариантах.</p></article><article class="x-card rv"><h3>Мини-группы по целям</h3><p class="x-p">Тем, кому нужен средний результат, и тем, кто идёт на 80+, — разные группы и немного разные программы.</p></article><article class="x-card rv"><h3>Ежемесячный зачёт</h3><p class="x-p">В течение месяца — тесты формата ЕГЭ с автопроверкой, в конце — тематический зачёт: идём дальше или усиливаем.</p></article><article class="x-card rv"><h3>Отчёт родителям каждый месяц</h3><p class="x-p">Скрин журнала с треком ученика плюс текстовое или голосовое сообщение: сколько баллов прибавили, как ребёнок работает, уверен ли он.</p></article><article class="x-card rv"><h3>Видим тетрадь в реальном времени</h3><p class="x-p">Онлайн-доска и тетрадная камера: ребёнок пишет в тетради, преподаватель сразу видит ход решения.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит групповое занятие</h3><ol class="x-steps"><li class="rv"><span class="x-n">01</span><div><strong>Ориентация</strong><span>место темы в курсе и план урока</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Краткая теория</strong><span>только то, что нужно для задач</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Разбор алгоритма</strong><span>как теория работает на практике</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Совместная работа</strong><span>формируем навык вместе</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Практикум</strong><span>каждый решает сам, преподаватель помогает точечно</span></div></li><li class="rv"><span class="x-n">06</span><div><strong>Итог и рефлексия</strong><span>что получилось и где остались вопросы</span></div></li></ol></div>
+    <p class="sec-lead x-lead">Точка старта, маршрут, точки контроля, финиш. Внутри маршрута — свобода преподавателя, на точках контроля — видимый результат.</p><div class="x-text"><p class="x-p">«Я не понял» ничего не значит. Мы смотрим решение ребёнка и ищем шаг, на котором он потерялся, а потом дробим этот шаг на подшаги — пока не станет понятно. Для стереометрии подключаем GeoGebra: поворачиваем фигуру, разрезаем её, делаем выносной чертёж. Слона едят по кусочкам.</p></div><div class="x-cards" data-items="6"><article class="x-card rv"><h3>Диагностика и маршрут</h3><p class="x-p">Каждый ученик начинает с диагностики и получает индивидуальный маршрут от текущего уровня к цели.</p></article><article class="x-card rv"><h3>План на весь учебный год</h3><p class="x-p">Последовательно разбираем все темы и типы заданий экзамена, отрабатываем алгоритмы, закрепляем на тренировочных вариантах.</p></article><article class="x-card rv"><h3>Мини-группы по целям</h3><p class="x-p">Тем, кому нужен средний результат, и тем, кто идёт на 80+, — разные группы и немного разные программы.</p></article><article class="x-card rv"><h3>Ежемесячный зачёт</h3><p class="x-p">В течение месяца — тесты формата ЕГЭ с автопроверкой, в конце — тематический зачёт: идём дальше или усиливаем.</p></article><article class="x-card rv"><h3>Отчёт родителям каждый месяц</h3><p class="x-p">Скрин журнала с треком ученика плюс текстовое или голосовое сообщение: сколько баллов прибавили, как ребёнок работает, уверен ли он.</p></article><article class="x-card rv"><h3>Видим тетрадь в реальном времени</h3><p class="x-p">Онлайн-доска и тетрадная камера: ребёнок пишет в тетради, преподаватель сразу видит ход решения.</p></article></div><div class="x-steps-wrap"><h3 class="x-h3">Как проходит групповое занятие</h3><ol class="x-steps" data-items="6"><li class="rv"><span class="x-n">01</span><div><strong>Ориентация</strong><span>место темы в курсе и план урока</span></div></li><li class="rv"><span class="x-n">02</span><div><strong>Краткая теория</strong><span>только то, что нужно для задач</span></div></li><li class="rv"><span class="x-n">03</span><div><strong>Разбор алгоритма</strong><span>как теория работает на практике</span></div></li><li class="rv"><span class="x-n">04</span><div><strong>Совместная работа</strong><span>формируем навык вместе</span></div></li><li class="rv"><span class="x-n">05</span><div><strong>Практикум</strong><span>каждый решает сам, преподаватель помогает точечно</span></div></li><li class="rv"><span class="x-n">06</span><div><strong>Итог и рефлексия</strong><span>что получилось и где остались вопросы</span></div></li></ol></div>
   </div>
 </section>
 
 <section class="sec results" id="results">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Результаты учеников</h2></div></div>
-    <div class="nums x-nums"><div class="num rv"><div class="num-v x-long">97 · 92 · 90 · 90 · 88</div><p>баллов ЕГЭ по профильной математике в одной мини-группе</p></div><div class="num rv"><div class="num-v">27 → 82</div><p>баллов за 11 класс и поступление на бюджет</p></div><div class="num rv"><div class="num-v">40 → 98</div><p>баллов по профильной математике</p></div></div><div class="x-cards"><article class="x-card rv"><span class="x-meta">ЕГЭ · профильная математика</span><h3>С 27 до 82 баллов</h3><p class="x-p">Пришёл в начале 11 класса с пробником на 27. Восстановили базу, прошли первую и вторую части, писали тренировочные работы и возвращались к пробелам кругами повторения.</p><span class="x-res">82 балла, бюджет</span></article><article class="x-card rv"><span class="x-meta">ЕГЭ · мини-группа</span><h3>97 баллов и ИТМО</h3><p class="x-p">Готовилась в мини-группе на высокий результат, набрала 97 баллов и поступила в ИТМО. Мы умеем работать не только с пробелами, но и с теми, кому нужен максимум.</p><span class="x-res">97 баллов</span><a class="x-more" href="https://egefizmath.ru/story" target="_blank" rel="noopener">История ученицы <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></article><article class="x-card rv"><span class="x-meta">ОГЭ · за два месяца</span><h3>С двойки на «4»</h3><p class="x-p">Девятиклассница пришла после неудачного пробника. Диагностика, ставка на темы, которые можно закрыть быстрее всего, и большая дисциплина ученицы.</p><span class="x-res">«4» на ОГЭ</span></article><article class="x-card rv"><span class="x-meta">ОГЭ · пересдача за две недели</span><h3>Пересдала — и осталась</h3><p class="x-p">Определили темы, где терялись баллы, и интенсивно их отработали. Пересдала на «4» и продолжила заниматься с нашим преподавателем уже к ЕГЭ.</p><span class="x-res">«4» на пересдаче</span></article></div>
+    <div class="nums x-nums"><div class="num rv"><div class="num-v x-long">97 · 92 · 90 · 90 · 88</div><p>баллов ЕГЭ по профильной математике в одной мини-группе</p></div><div class="num rv"><div class="num-v">27 → 82</div><p>баллов за 11 класс и поступление на бюджет</p></div><div class="num rv"><div class="num-v">40 → 98</div><p>баллов по профильной математике</p></div></div><div class="x-cards" data-items="4"><article class="x-card rv"><span class="x-meta">ЕГЭ · профильная математика</span><h3>С 27 до 82 баллов</h3><p class="x-p">Пришёл в начале 11 класса с пробником на 27. Восстановили базу, прошли первую и вторую части, писали тренировочные работы и возвращались к пробелам кругами повторения.</p><span class="x-res">82 балла, бюджет</span></article><article class="x-card rv"><span class="x-meta">ЕГЭ · мини-группа</span><h3>97 баллов и ИТМО</h3><p class="x-p">Готовилась в мини-группе на высокий результат, набрала 97 баллов и поступила в ИТМО. Мы умеем работать не только с пробелами, но и с теми, кому нужен максимум.</p><span class="x-res">97 баллов</span><a class="x-more" href="https://egefizmath.ru/story" target="_blank" rel="noopener">История ученицы <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></article><article class="x-card rv"><span class="x-meta">ОГЭ · за два месяца</span><h3>С двойки на «4»</h3><p class="x-p">Девятиклассница пришла после неудачного пробника. Диагностика, ставка на темы, которые можно закрыть быстрее всего, и большая дисциплина ученицы.</p><span class="x-res">«4» на ОГЭ</span></article><article class="x-card rv"><span class="x-meta">ОГЭ · пересдача за две недели</span><h3>Пересдала — и осталась</h3><p class="x-p">Определили темы, где терялись баллы, и интенсивно их отработали. Пересдала на «4» и продолжила заниматься с нашим преподавателем уже к ЕГЭ.</p><span class="x-res">«4» на пересдаче</span></article></div>
   </div>
 </section>
 
@@ -553,16 +551,16 @@ p { margin: 0; }
         <button class="car-btn" type="button" data-next aria-label="Следующие отзывы"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
       </div>
     </div>
-    <div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/oksana-babushkina/reviews-1.jpg" data-lb="reviews" data-caption="Отчёт родителям"><img src="images/oksana-babushkina/reviews-1.jpg" alt="Отчёт родителям" loading="lazy"></a><div class="rev-foot"><span>Отчёт родителям</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/oksana-babushkina/reviews-2.jpg" data-lb="reviews" data-caption="Отчёт родителям"><img src="images/oksana-babushkina/reviews-2.jpg" alt="Отчёт родителям" loading="lazy"></a><div class="rev-foot"><span>Отчёт родителям</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/oksana-babushkina/reviews-3.jpg" data-lb="reviews" data-caption="Отчёт родителям"><img src="images/oksana-babushkina/reviews-3.jpg" alt="Отчёт родителям" loading="lazy"></a><div class="rev-foot"><span>Отчёт родителям</span></div></article></div>
+    <div class="car-track" tabindex="0" aria-label="Отзывы"><article class="rev x-rev"><a class="x-revimg" href="images/oksana-babushkina/reviews-1.jpg" data-lb="reviews" data-caption="Отчёт родителям"><img width="474" height="639" src="images/oksana-babushkina/reviews-1.jpg" alt="Отчёт родителям" loading="lazy"></a><div class="rev-foot"><span>Отчёт родителям</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/oksana-babushkina/reviews-2.jpg" data-lb="reviews" data-caption="Отчёт родителям"><img width="906" height="246" src="images/oksana-babushkina/reviews-2.jpg" alt="Отчёт родителям" loading="lazy"></a><div class="rev-foot"><span>Отчёт родителям</span></div></article><article class="rev x-rev"><a class="x-revimg" href="images/oksana-babushkina/reviews-3.jpg" data-lb="reviews" data-caption="Отчёт родителям"><img width="713" height="649" src="images/oksana-babushkina/reviews-3.jpg" alt="Отчёт родителям" loading="lazy"></a><div class="rev-foot"><span>Отчёт родителям</span></div></article></div>
     <div class="car-bar"><div><span class="car-thumb"></span></div></div>
-    
+
   </div>
 </section>
 
 <section class="sec" id="media">
   <div class="wrap">
     <div class="sec-head"><div><h2 class="sec-title">Подкасты</h2></div></div>
-    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226936302?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 2"><img src="images/oksana-babushkina/pod-1226936302.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 2"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 2</strong></button></div></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226932977?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Подкаст 3"><img src="images/oksana-babushkina/pod-1226932977.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Подкаст 3"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Подкаст 3</strong></button></div></div></div>
+    <div class="x-pods x-pods-2"><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226936302?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="От пробелов к ЕГЭ: методика «Про100класс»"><img width="1280" height="720" src="images/oksana-babushkina/pod-1226936302.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: От пробелов к ЕГЭ: методика «Про100класс»"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">От пробелов к ЕГЭ: методика «Про100класс»</h3></div><div class="x-pod rv"><div class="video" data-video="https://player.vimeo.com/video/1226932977?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1" data-title="Уважение к ребёнку: как мы выбираем преподавателей"><img width="1280" height="720" src="images/oksana-babushkina/pod-1226932977.jpg" alt="" loading="lazy"><button class="video-play" type="button" aria-label="Смотреть: Уважение к ребёнку: как мы выбираем преподавателей"><span class="pbtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span><strong>Смотреть выпуск</strong></button></div><h3 class="podcast-title">Уважение к ребёнку: как мы выбираем преподавателей</h3></div></div>
     <div class="x-msoc"><h3 class="x-h3">Соцсети и каналы</h3><div class="socials"><a class="social" href="https://t.me/otzivpro100klass" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram-канал с отзывами</strong><span>t.me/otzivpro100klass</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://max.ru/channel_ProSto_fizmat" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 0 0-8.2 14.3L2.8 21l4.4-1.1A9.5 9.5 0 1 0 12 2.5zm3.9 13.1h-1.8v-4.4l-2.1 3h-.1l-2.1-3v4.4H8V8.4h1.7l2.3 3.4 2.3-3.4h1.7v7.2z"/></svg></span><span><strong>MAX</strong><span>Канал «ПроСто физмат»</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://youtube.com/@math-ege" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg></span><span><strong>YouTube</strong><span>youtube.com/@math-ege</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://profi.ru/profile/KuznetsovaOV106" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h9a6 6 0 0 1 0 12H9v6H5V3zm4 4v4h5a2 2 0 0 0 0-4H9z"/></svg></span><span><strong>Профи.ру</strong><span>Профиль Оксаны Бабушкиной</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
 </section>
@@ -572,10 +570,10 @@ p { margin: 0; }
     <div>
       <h2 class="sec-title">Связаться с Оксаной</h2>
       <p class="sec-lead">Партнёрство, интервью или работа в команде «Про100класс» — напишите, я отвечу лично.</p>
-      
-      <figure class="x-cphoto rv"><img src="images/oksana-babushkina/contact-1.jpg" alt="Оксана Бабушкина" loading="lazy"></figure>
+
+      <figure class="x-cphoto rv"><img width="512" height="1024" src="images/oksana-babushkina/contact-1.jpg" alt="Оксана Бабушкина" loading="lazy"></figure>
     </div>
-    <div><div class="socials x-contacts"><a class="social" href="https://t.me/Oksuta_math" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@Oksuta_math</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/79512711749" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+79512711749</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:ksenia.02@gmail.com"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>ksenia.02@gmail.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
+    <div><div class="socials x-contacts"><a class="social" href="https://t.me/Oksuta_math" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2l-11 6.9-4.7-1.5c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg></span><span><strong>Telegram</strong><span>@Oksuta_math</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="https://wa.me/79512711749" target="_blank" rel="noopener"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.7 9.7 0 0 0-8.3 14.7L2.3 21.8l5-1.3A9.7 9.7 0 1 0 12 2.2zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.3 1 2.5.1.2 1.7 2.6 4.2 3.7 1.6.7 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.4z"/></svg></span><span><strong>WhatsApp</strong><span>+7 951 271-17-49</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a><a class="social" href="mailto:ksenia.02@gmail.com"><span class="social-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.4l8 5 8-5V7H4zm16 2.8-7.5 4.7a1 1 0 0 1-1 0L4 9.8V17h16V9.8z"/></svg></span><span><strong>Почта</strong><span>ksenia.02@gmail.com</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a></div></div>
   </div>
 </section>
 
@@ -605,17 +603,12 @@ p { margin: 0; }
 
   /* ── Header: solid after the first scroll, hides while scrolling down ── */
   const hdr = $('.hdr');
-  const progress = $('.progress');
   const revealHdr = hdr && hdr.hasAttribute('data-reveal');
   function onScroll() {
     const y = window.scrollY;
     if (hdr) {
       hdr.classList.toggle('is-solid', y > 24);
       if (revealHdr) hdr.classList.toggle('is-away', window.innerWidth > 980 && y < 40);
-    }
-    if (progress) {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
     }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -625,12 +618,16 @@ p { margin: 0; }
   /* ── Mobile menu ── */
   const burger = $('.burger');
   const menu = $('.mnav');
-  function setMenu(open) {
+  function setMenu(open, restoreFocus = false) {
     if (!burger || !menu) return;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    menu.inert = !open;
+    $$('main, footer').forEach(el => { el.inert = open; });
+    if (open) $('a', menu).focus({ preventScroll: true });
+    else if (restoreFocus) burger.focus();
     document.body.classList.toggle('menu-open', open);
   }
   if (burger && menu) {
@@ -805,7 +802,15 @@ p { margin: 0; }
       if (e.key === 'ArrowLeft') lbStep(-1);
       return;
     }
-    if (e.key === 'Escape') setMenu(false);
+    if (burger && burger.getAttribute('aria-expanded') === 'true') {
+      if (e.key === 'Escape') setMenu(false, true);
+      if (e.key === 'Tab') {
+        const items = [burger, ...$$('a', menu)];
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+      }
+    }
   });
 
   /* ── Video: poster first, the player loads on click ── */
