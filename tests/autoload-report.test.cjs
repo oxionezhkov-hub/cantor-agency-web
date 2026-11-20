@@ -197,3 +197,52 @@ test('empty photo cells keep previously published photos, including recovery fro
  assert.doesNotMatch(xml, /clear\.jpg|stale\.jpg/);
  assert.ok(stat.problems.some(({msg}) => /Сохранены ранее опубликованные фото для 2 объявлений/.test(msg)));
 });
+
+test('feed panels show a completed downloadable report while the next upload is processing', async () => {
+ const current = () => ok({upload_id:'current',status:'processing'});
+ const c = setup([current(), upload('previous'), page(3,1), upload('previous'),
+  current(), upload('previous'), upload('current'), page(2,1)]);
+ const panel = (refresh = false) => vm.runInContext(
+  `fetchAvitoAutoloadReport(env,account,null,{showCompletedWhileProcessing:true,refresh:${refresh}})`, c);
+ const ready = await panel();
+ assert.equal(ready.summary.reportId, 'previous');
+ assert.equal(ready.summary.processingReportId, 'current');
+ assert.equal(ready.summary.complete, true);
+ assert.equal(ready.summary.warning, null);
+ assert.equal(ready.items.length, 3);
+ assert.match(c.called[2], /last_successful\/items\?perPage=100/);
+ assert.equal((await panel()).summary.retryAt, ready.summary.retryAt);
+ assert.equal(c.called.length, 4);
+ assert.equal((await panel(true)).summary.reportId, 'previous');
+ assert.equal(c.called.length, 6);
+ const next = await panel(true);
+ assert.equal(next.summary.reportId, 'current');
+ assert.equal(next.summary.processingReportId, null);
+ assert.equal(next.items.length, 2);
+});
+
+test('feed panels discard a completed-report page if the selected upload changed during the request', async () => {
+ const c = setup([ok({upload_id:'current',status:'processing'}), upload('first'), page(3,1), upload('second')]);
+ const r = await vm.runInContext('fetchAvitoAutoloadReport(env,account,null,{showCompletedWhileProcessing:true})', c);
+ assert.equal(r.summary.complete, false);
+ assert.equal(r.items.length, 0);
+ assert.match(r.summary.warning, /завершило следующую загрузку/);
+});
+
+for (const [file, render] of [['avito-bids','renderReport'],['zagruzka-extra','paintReport']]) {
+ test(`${file} identifies the completed report and enables downloading its errors`, () => {
+  const code = fs.readFileSync(`${__dirname}/../${file}`, 'utf8');
+  const start = code.indexOf('function ' + render + '(');
+  const body = {innerHTML:''};
+  const csv = {disabled:true};
+  const c = vm.createContext({
+   R:{x:{summary:{reportId:'old-42',processingReportId:'new-43',complete:true,items:1},problems:[{messages:[]}]}},
+   $:q=>q==='#repBody'?body:csv, esc:String, int:String, I:()=>'', httpUrl:()=>'', probCards:()=>'', probGroups:x=>x,
+  });
+  vm.runInContext(code.slice(start,code.indexOf('\n}',start)+2),c);
+  vm.runInContext(`${render}('x')`,c);
+  assert.equal(csv.disabled,false);
+  assert.match(body.innerHTML,/загрузку №new-43/);
+  assert.match(body.innerHTML,/Отчёт old-42/);
+ });
+}

@@ -1641,7 +1641,7 @@ async function feedReport(slug) {
     }
   };
   $('#repRe').onclick = () => { $('#repBody').innerHTML = '<div class="note">Запрашиваю отчёт…</div>'; load(true); };
-  $('#repCsv').onclick = () => { const d = R[slug]; if (d) downloadFile(`Oshibki_avtozagruzki_${f.slug}_${(d.summary.finishedAt || '').slice(0, 10) || 'last'}.csv`, reportCsv(d.problems), 'text/csv;charset=utf-8'); };
+  $('#repCsv').onclick = () => { const d = R[slug]; if (d) downloadFile(`Oshibki_avtozagruzki_${f.slug}_${d.summary.reportId || 'last'}.csv`, reportCsv(d.problems), 'text/csv;charset=utf-8'); };
   load();
 }
 function renderReport(slug) {
@@ -1656,9 +1656,10 @@ function renderReport(slug) {
     const ms = bad.length ? bad : it.messages.filter((m) => m.type !== 'info');
     (ms.length ? ms : [{ text: it.section }]).forEach((m) => items.push({ kind: bad.length ? 'err' : 'warn', msg: m.text || it.section, where: it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.adId || it.avitoId)}</a>` : esc(it.adId || it.avitoId) }));
   });
-  $('#repCsv').disabled = !d.problems.length || !s.complete || !!s.warning;
+  $('#repCsv').disabled = !d.problems.length || !s.complete;
   $('#repBody').innerHTML = `${srcBox}
     ${s.warning ? `<div class="warn-box">${esc(s.warning)}</div>` : ''}
+    ${s.processingReportId != null ? `<div class="warn-box">Авито обрабатывает загрузку №${esc(String(s.processingReportId))}. Ниже последний завершённый отчёт.</div>` : ''}
     ${s.status === 'processing' ? '<div class="note">Сводка ниже предварительная: Авито ещё обрабатывает файл. Причины по отдельным объявлениям можно проверить после завершения отчёта.</div>' : ''}
     <div class="note">Отчёт ${esc(String(s.reportId || '—'))}${s.finishedAt ? ` · завершён ${esc(fmtAt(Date.parse(s.finishedAt)))}` : ''} · всего ${int(s.totalItems ?? (s.sectionStats && s.sectionStats.count) ?? s.items)} объявлений</div>
     <div class="tiles">${secs.map((x) => `<div class="tile ${tone(x.slug || '')}"><div class="t-v">${int(x.count)}</div><div class="t-l">${esc(x.title)}</div>${(x.sections || []).filter((y) => y.count).map((y) => `<div class="t-s">${esc(y.title)} — ${int(y.count)}</div>`).join('')}</div>`).join('')}</div>
