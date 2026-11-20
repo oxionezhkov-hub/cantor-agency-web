@@ -4390,7 +4390,9 @@ async function reportNoContactsSent(kv, job) {
 
 const BOT_SETUP_VERSION = '5'; // 2: callback buttons + employees' private chats (Avito Tasks); 3: /activity in the owner's menu; 4: reactions; 5: /errors (autoload report)
 const BOT_WORKER_ORIGIN = 'https://mainweb.oxion-ezhkov.workers.dev';
-const BOT_AI_MODEL_DEFAULT = '@cf/qwen/qwen3-30b-a3b-fp8';
+const WORKERS_AI_GEMMA_4 = '@cf/google/gemma-4-26b-a4b-it';
+const BOT_AI_MODEL_DEFAULT = WORKERS_AI_GEMMA_4;
+const WORKERS_AI_RETIRED_QWEN = '@cf/qwen/qwen3-30b-a3b-fp8';
 const BOT_LOG_TTL = 60 * 60 * 24 * 180;
 const BOT_MSK_OFFSET_MS = 3 * 60 * 60 * 1000;
 const BOT_WORK_START_H = 10;
@@ -5357,7 +5359,7 @@ async function botOnOwnerMessage(env, msg) {
   if (cmd === 'ai') {
     const state = (await kv.get('bot:ai', 'json')) || {};
     const queue = await kv.list({ prefix: 'bot:dirty:' });
-    return reply(`ИИ: ${state.limited ? '🔴 лимит исчерпан с ' + botFmtDate(state.since) : '🟢 работает'}\nМодель: ${escapeHtml(env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT)}\nТопиков/чатов с неразобранными сообщениями: ${queue.keys.length}`);
+    return reply(`ИИ: ${state.limited ? '🔴 лимит исчерпан с ' + botFmtDate(state.since) : '🟢 работает'}\nМодель: ${escapeHtml(currentWorkersAiModel(env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT))}\nТопиков/чатов с неразобранными сообщениями: ${queue.keys.length}`);
   }
   if (cmd === 'done' || cmd === 'informed' || cmd === 'cancel') {
     const task = args[0] && (await kv.get(`task:${args[0]}`, 'json'));
@@ -5580,18 +5582,24 @@ async function botBuildTopicsList(env) {
 }
 
 // ── Workers AI ──
+function currentWorkersAiModel(model) {
+  return model === WORKERS_AI_RETIRED_QWEN ? WORKERS_AI_GEMMA_4 : model;
+}
+
 function botIsLimitError(err) {
   const s = String((err && (err.message || err)) || '');
   return /neuron|allocation|quota|limit|exceeded|4006|capacity|429/i.test(s);
 }
 async function botAi(env, system, user, maxTokens, opts = {}) {
   if (!env.AI) throw new Error('AI binding is not configured');
-  const model = opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT;
+  const model = currentWorkersAiModel(opts.model || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT);
+  const gemma = model === WORKERS_AI_GEMMA_4;
   // OpenAI's gpt-oss models on Workers AI take the Responses API shape (instructions + input).
   const res = /gpt-oss/.test(model)
     ? await env.AI.run(model, { instructions: system, input: user, reasoning: { effort: 'low' } })
     : await env.AI.run(model, {
-      messages: [{ role: 'system', content: system }, { role: 'user', content: `${user}\n\n/no_think` }],
+      messages: [{ role: 'system', content: system }, { role: 'user', content: gemma ? user : `${user}\n\n/no_think` }],
+      ...(gemma ? { chat_template_kwargs: { enable_thinking: false } } : {}),
       max_tokens: maxTokens || 1500,
       temperature: opts.temperature == null ? 0.1 : opts.temperature,
     });
@@ -9340,7 +9348,7 @@ const WAI_GH_BRANCH = 'main';
 const WAI_LIMIT_TEXT = 'Дневной бесплатный лимит Workers AI исчерпан — он обновляется в 03:00 МСК. Отправьте запрос снова после этого.';
 
 function waiModel(env) {
-  return env.WORKERS_AI_MODEL || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT;
+  return currentWorkersAiModel(env.WORKERS_AI_MODEL || env.CONTROL_BOT_AI_MODEL || BOT_AI_MODEL_DEFAULT);
 }
 function waiAi(env, system, user, maxTokens) {
   return botAi(env, system, user, maxTokens, { model: waiModel(env), temperature: 0.3 });
@@ -12001,7 +12009,7 @@ async function handleMbaReportApi(request, env) {
 //   aisales:job:<id>              — фоновые задачи ИИ (черновик, тест, подсказки), 3 дня
 
 const AIS_WORKERS_MODELS = [
-  { ref: 'workers:@cf/qwen/qwen3-30b-a3b-fp8', label: 'Qwen3 30B (Workers AI, бесплатно)' },
+  { ref: `workers:${WORKERS_AI_GEMMA_4}`, label: 'Gemma 4 26B (Workers AI)' },
   { ref: 'workers:@cf/openai/gpt-oss-120b', label: 'GPT-OSS 120B (Workers AI, бесплатно)' },
   { ref: 'workers:@cf/openai/gpt-oss-20b', label: 'GPT-OSS 20B (Workers AI, бесплатно)' },
   { ref: 'workers:@cf/meta/llama-3.3-70b-instruct-fp8-fast', label: 'Llama 3.3 70B (Workers AI, бесплатно)' },
@@ -12022,7 +12030,7 @@ const AIS_STAGES = {
 const AIS_DEFAULT_CABINET = { accountId: '6c974a5d5326', name: 'Елена Добрынина', since: '2026-10-01' };
 const AIS_DEFAULT_CONFIG = {
   cabinets: [AIS_DEFAULT_CABINET],
-  defaultModel: 'workers:@cf/qwen/qwen3-30b-a3b-fp8',
+  defaultModel: `workers:${BOT_AI_MODEL_DEFAULT}`,
   selfCheck: true,
   autoDraft: true,
   autoDraftHours: 48, // черновики сами пишутся только к сообщениям не старше этого
@@ -12086,9 +12094,15 @@ const AIS_DEFAULT_PROMPT = {
 function aisKv(env) { return env.AVITO_KV; }
 function aisId() { return crypto.randomUUID().replace(/-/g, '').slice(0, 12); }
 
+function aisCurrentModelRef(ref) {
+  return ref === `workers:${WORKERS_AI_RETIRED_QWEN}` ? `workers:${WORKERS_AI_GEMMA_4}` : ref;
+}
+
 async function aisConfig(env) {
   const saved = await aisKv(env).get('aisales:config', 'json');
-  return { ...AIS_DEFAULT_CONFIG, ...(saved || {}), sendEnabled: false };
+  const cfg = { ...AIS_DEFAULT_CONFIG, ...(saved || {}), sendEnabled: false };
+  cfg.defaultModel = aisCurrentModelRef(cfg.defaultModel);
+  return cfg;
 }
 async function aisProviders(env) {
   return (await aisKv(env).get('aisales:providers', 'json')) || [];
@@ -12483,7 +12497,7 @@ async function aisGenerate(env, accountId, chat, opts = {}) {
   const cfg = await aisConfig(env);
   const prompt = await aisPrompt(env, accountId);
   const feedback = await aisFeedbackList(env, accountId, 60);
-  const model = opts.model || chat.model || cfg.defaultModel;
+  const model = aisCurrentModelRef(opts.model || chat.model || cfg.defaultModel);
   const system = aisBuildSystem(prompt, feedback);
   const user = aisBuildUser(chat, opts);
   const r1 = await aisCallModel(env, model, system, user, { maxTokens: 1500, temperature: 0.4 });
@@ -12695,7 +12709,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
 
   if (action === 'config' && request.method === 'POST') {
     const next = { ...cfg };
-    if (typeof body.defaultModel === 'string' && body.defaultModel.includes(':')) next.defaultModel = body.defaultModel;
+    if (typeof body.defaultModel === 'string' && body.defaultModel.includes(':')) next.defaultModel = aisCurrentModelRef(body.defaultModel);
     if (typeof body.selfCheck === 'boolean') next.selfCheck = body.selfCheck;
     if (typeof body.autoDraft === 'boolean') next.autoDraft = body.autoDraft;
     if (Number(body.autoDraftHours) > 0) next.autoDraftHours = Math.min(Number(body.autoDraftHours), 24 * 14);
@@ -12718,7 +12732,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
   if (action === 'chats' && isGet) {
     const idx = await aisIndex(env, accountId);
     const now = Date.now();
-    const chats = Object.values(idx.chats).map((c) => ({ ...c, followupDue: aisFollowupDue(c, now) }))
+    const chats = Object.values(idx.chats).map((c) => ({ ...c, model: aisCurrentModelRef(c.model), followupDue: aisFollowupDue(c, now) }))
       .sort((a, b) => (b.lastAt || b.updated * 1000 || 0) - (a.lastAt || a.updated * 1000 || 0));
     return json({ chats, lastSyncAt: idx.lastSyncAt, imported: idx.imported });
   }
@@ -12729,7 +12743,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
     // Город, цена, ссылка приходят со списком чатов и могут быть новее, чем в записи чата.
     const meta = (await aisIndex(env, accountId)).chats[q('chatId')] || {};
     ['itemCity', 'itemPrice', 'itemUrl', 'itemTitle', 'name', 'avatar'].forEach((k) => { if (meta[k] && !rec[k]) rec[k] = meta[k]; });
-    return json({ chat: rec });
+    return json({ chat: { ...rec, model: aisCurrentModelRef(rec.model) } });
   }
 
   if (action === 'sync' && request.method === 'POST') {
@@ -12745,7 +12759,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
     const rec = await kv.get(key, 'json');
     if (!rec) return json({ error: 'not_found' }, 404);
     const patch = {};
-    if ('model' in body) rec.model = body.model || null;
+    if ('model' in body) rec.model = aisCurrentModelRef(body.model || null);
     if ('note' in body) rec.note = String(body.note || '').slice(0, 2000);
     if ('stage' in body) { rec.stage = AIS_STAGES[body.stage] ? body.stage : null; patch.stage = rec.stage; }
     if ('model' in body) patch.model = rec.model;
@@ -12888,19 +12902,19 @@ async function handleAiSalesApi(request, env, url, ctx) {
   if (action === 'sims' && isGet) {
     const list = await kv.list({ prefix: `aisales:sim:${accountId}:` });
     const recs = await Promise.all(list.keys.map((k) => kv.get(k.name, 'json')));
-    return json({ sims: recs.filter(Boolean).map((s) => ({ id: s.id, title: s.title, model: s.model, updatedAt: s.updatedAt, count: s.messages.length })).sort((a, b) => b.updatedAt - a.updatedAt) });
+    return json({ sims: recs.filter(Boolean).map((s) => ({ id: s.id, title: s.title, model: aisCurrentModelRef(s.model), updatedAt: s.updatedAt, count: s.messages.length })).sort((a, b) => b.updatedAt - a.updatedAt) });
   }
   if (action === 'sim' && isGet) {
     const sim = await kv.get(`aisales:sim:${accountId}:${q('id')}`, 'json');
     if (!sim) return json({ error: 'not_found' }, 404);
-    return json({ sim });
+    return json({ sim: { ...sim, model: aisCurrentModelRef(sim.model) } });
   }
   if (action === 'sim' && request.method === 'POST') {
     const key = (id) => `aisales:sim:${accountId}:${id}`;
     let sim = body.id ? await kv.get(key(body.id), 'json') : null;
     if (!sim) sim = { id: aisId(), createdAt: Date.now(), messages: [], title: '', model: cfg.defaultModel };
     if ('title' in body) sim.title = String(body.title || '').slice(0, 120);
-    if ('model' in body && body.model) sim.model = body.model;
+    sim.model = aisCurrentModelRef(body.model || sim.model);
     if ('itemTitle' in body) sim.itemTitle = String(body.itemTitle || '').slice(0, 200);
     if ('clientName' in body) sim.clientName = String(body.clientName || '').slice(0, 80);
     if ('note' in body) sim.note = String(body.note || '').slice(0, 1000);
@@ -12921,7 +12935,7 @@ async function handleAiSalesApi(request, env, url, ctx) {
     if (!sim) return json({ error: 'not_found' }, 404);
     const text = String(body.text || '').trim();
     if (text) sim.messages.push({ id: aisId(), at: Date.now(), author: body.as === 'system' ? 'system' : 'client', type: body.as === 'system' ? 'system' : 'text', text: text.slice(0, 3000) });
-    if (body.model) sim.model = body.model;
+    sim.model = aisCurrentModelRef(body.model || sim.model);
     sim.updatedAt = Date.now();
     await kv.put(key, JSON.stringify(sim));
     const job = await aisStartJob(env, ctx, { kind: 'sim', accountId, simId: sim.id, params: { instruction: String(body.instruction || '').slice(0, 1000) } });
