@@ -1325,6 +1325,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         <a
                           className="aw-text-link aw-autoload-error"
                           href="/?section=ads&focus=feeds"
+                          title={getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError}
                         >
                           {getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError}
                         </a>
