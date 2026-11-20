@@ -40,7 +40,7 @@ export async function validateRead(request) {
     if (/^\/autoload\/v4\/uploads\/(current|last_successful)\/items$/.test(p))
       return exactKeys(q, ["perPage", "page"]) && q.get("perPage") === "50" && page("page");
     if (
-      new RegExp(`^/messenger/v3/accounts/${USER}/chats/[A-Za-z0-9_~\-]{1,150}/messages/$`).test(p)
+      new RegExp(`^/messenger/v3/accounts/${USER}/chats/[A-Za-z0-9_~-]{1,150}/messages/$`).test(p)
     )
       return exactKeys(q, ["limit", "offset"]) && q.get("limit") === "50" && offset();
     if (p === "/ratings/v1/info") return exactKeys(q, ["user_id"]) && q.get("user_id") === USER;

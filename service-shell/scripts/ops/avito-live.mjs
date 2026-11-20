@@ -37,9 +37,13 @@ async function read(env, path, body) {
   )
     throw { code: "connection_mismatch", origin: "binding" };
   if (!response.ok) {
-    await response.body?.cancel();
+    const problem = await response.json().catch(() => ({}));
     throw {
       code: `http_${response.status}`,
+      sourceCode:
+        typeof problem.error === "string" && /^[a-z_]+(?:_\d{3})?$/.test(problem.error)
+          ? problem.error
+          : undefined,
       origin: response.headers.get("x-cantor-error-origin") || "source",
       retryAfter: response.headers.get("retry-after") || null,
     };
@@ -314,6 +318,7 @@ export async function liveRead(request, env) {
     return json(
       {
         error: e.code || "source_unavailable",
+        sourceCode: e.sourceCode,
         origin: e.origin || "network",
         retryAfter: e.retryAfter || null,
         lastGood: cached || null,
@@ -324,7 +329,7 @@ export async function liveRead(request, env) {
 }
 async function messages(request, env, id, offsetText) {
   if (
-    !/^[A-Za-z0-9_~\-]{1,150}$/.test(id || "") ||
+    !/^[A-Za-z0-9_~-]{1,150}$/.test(id || "") ||
     !/^\d{1,3}$/.test(offsetText) ||
     Number(offsetText) > 950 ||
     Number(offsetText) % 50

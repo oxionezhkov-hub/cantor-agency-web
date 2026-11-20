@@ -35,6 +35,8 @@ import { AdCampaign } from "./ad-campaign";
 import { getAdPreflightWarnings } from "./ad-preflight";
 import { AdComparison } from "./ad-comparison";
 import { OfferMailings } from "./offer-mailings";
+import { liveListingFields, statusOrder } from "./ads-live-model";
+import { previewAdTotals } from "./preview-data";
 
 type Listing = {
   id: string;
@@ -211,54 +213,25 @@ function newListing(): Listing {
 }
 export function AdsWorkspace({ focus }: { focus?: string }) {
   const [state, setState] = useState<State>(load);
+  const localChanges = useRef(new Map<string, Partial<Listing>>());
   useEffect(() => {
+    const knownIds = new Set(initial.items.map((item) => item.id));
     const sync = () => {
       const p = getPreviewData();
       if (!p) return;
-      setState((current) => ({
-        ...current,
-        items: p.ads.map((a) => {
-          const old = current.items.find((v) => v.id === a.id) || initial.items[0];
-          return {
-            ...old,
-            ...(old?.id === a.id
-              ? {}
-              : {
-                  shows: NaN,
-                  views: NaN,
-                  contacts: NaN,
-                  spend: NaN,
-                  bid: NaN,
-                  max: NaN,
-                  budget: NaN,
-                  target: NaN,
-                  mode: "",
-                  query: "",
-                  start: "",
-                  end: "",
-                  source: "cantor" as const,
-                }),
-            id: a.id,
-            title: a.title,
-            text: a.description ?? (old?.id === a.id ? old.text : ""),
-            city: a.city || (old?.id === a.id ? old.city : ""),
-            price: a.price ?? NaN,
-            status:
-              (
-                {
-                  active: "published",
-                  old: "archived",
-                  blocked: "blocked",
-                  rejected: "rejected",
-                  removed: "removed",
-                } as Record<string, string>
-              )[a.status] || "unknown",
-            autoloadId: a.autoloadId,
-            photos: old?.id === a.id ? old.photos : [],
-            bidding: a.bidding,
-          };
-        }),
-      }));
+      setState((current) => {
+        const previous = new Map(current.items.map((item) => [item.id, item]));
+        const present = new Set(p.ads.map((item) => item.id));
+        const items: Listing[] = p.ads.map((a) => ({
+          ...liveListingFields(a, knownIds.has(a.id) ? previewAdTotals(a.id) : null),
+          ...localChanges.current.get(a.id),
+        }));
+        for (const [id] of localChanges.current) {
+          const local = previous.get(id);
+          if (!present.has(id) && local) items.push(local);
+        }
+        return { ...current, items };
+      });
     };
     window.addEventListener(PREVIEW_EVENT, sync);
     sync();
@@ -278,7 +251,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   const [bidDrafts, setBidDrafts] = useState<Record<string, string>>({});
   const [details, setDetails] = useState(false);
   const [singleCreation, setSingleCreation] = useState(false);
-  const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "title", asc: true });
+  const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "status", asc: false });
   const [photoIndex, setPhotoIndex] = useState(0);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [feedErrorsOpen, setFeedErrorsOpen] = useState(false);
@@ -378,6 +351,17 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     }
   }
   function commit(items: Listing[], text: string) {
+    if (getPreviewData()) {
+      const before = new Map(state.items.map((item) => [item.id, item]));
+      for (const item of items) {
+        const old = before.get(item.id);
+        const changes = { ...localChanges.current.get(item.id) };
+        for (const key of Object.keys(item) as (keyof Listing)[]) {
+          if (!old || item[key] !== old[key]) Object.assign(changes, { [key]: item[key] });
+        }
+        if (Object.keys(changes).length) localChanges.current.set(item.id, changes);
+      }
+    }
     return persist({
       ...state,
       items,
@@ -440,6 +424,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               denominator > 0
                 ? numerator / denominator
                 : null;
+            if (sort.key === "status") return -statusOrder(x.status);
             if (sort.key === "viewRate") return ratio(x.views, x.shows);
             if (sort.key === "showCost") return ratio(x.spend, x.shows);
             if (sort.key === "conversion") return ratio(x.contacts, x.views);
@@ -1337,7 +1322,10 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         }[a.status] || a.status}
                       </span>
                       {getPreviewData()?.ads.find((item) => item.id === a.id)?.autoloadError && (
-                        <a className="aw-text-link" href="/?section=ads&focus=feeds">
+                        <a
+                          className="aw-text-link aw-autoload-error"
+                          href="/?section=ads&focus=feeds"
+                        >
                           {getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError}
                         </a>
                       )}

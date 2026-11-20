@@ -236,7 +236,8 @@ export async function refreshLivePreview(signal?: AbortSignal) {
               ...a,
               description: a.description ?? old.get(a.id)?.description ?? null,
               city: a.city || old.get(a.id)?.city || "",
-              photos: old.get(a.id)?.photos,
+              price: a.price ?? old.get(a.id)?.price ?? null,
+              photos: a.photos ?? old.get(a.id)?.photos,
               liveConfirmedAt: value.observedAt,
             }));
             const ids = new Set(fresh.map((a: PreviewAd) => a.id));
