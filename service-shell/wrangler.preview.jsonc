@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cantor-service-preview",
+  "main": "scripts/ops/preview-worker.mjs",
+  "compatibility_date": "2026-11-16",
+  "ai": { "binding": "AI" },
+  "services": [{"binding":"AVITO_AUDIT_SOURCE","service":"cantor-avito-audit-source"}],
+  "vars": {"AVITO_AUDIT_ENABLED":"dobrynina-read-v1","AVITO_AUDIT_USER_ID":"388298238"},
+  "ratelimits": [{"name":"AVITO_AUDIT_LIMIT","namespace_id":"8328329","simple":{"limit":12,"period":60}},{ "name": "CAMPAIGN_LIMIT", "namespace_id": "8328328", "simple": { "limit": 4, "period": 60 } }],
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application",
+  },
+  "ai": {"binding":"AI"},
+  "kv_namespaces": [
+    { "binding": "DEMO_AVITO", "id": "ad6fea8159ef48c4b2833620e72c52af" },
+    { "binding": "DEMO_DASHBOARD", "id": "b0921ad0182347b091c7fe4947d91cba" },
+    { "binding": "DEMO_DATA", "id": "258d0f7d3559467585fdef71f0d83cc3" },
+  ],
+  // DEMO_PASSWORD_SHA256 is the SHA-256 digest of the agency password, set as
+  // an encrypted Worker secret. No password or Avito credential belongs here.
+  // Bindings are used only by the fixed-account GET projection in dobrynina-source.mjs.
+  "observability": { "enabled": true, "traces": { "enabled": true } },
+}

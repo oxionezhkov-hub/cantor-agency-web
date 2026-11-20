@@ -1,0 +1,229 @@
+.payments-workspace {
+  min-width: 0;
+}
+.payments-ledger {
+  min-width: 720px;
+}
+.payments-ledger td,
+.payments-ledger th {
+  vertical-align: top;
+  white-space: nowrap;
+}
+.payments-ledger tbody td strong {
+  font-weight: 500;
+}
+.payments-ledger .payments-actions {
+  flex-wrap: nowrap;
+}
+.payments-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.payments-actions .crm-quiet {
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: white;
+  font-size: 12px;
+}
+.payments-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.payments-operation {
+  scroll-margin-block: 20px;
+}
+.payments-operation-title {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.payments-operation-title strong {
+  font-weight: 500;
+}
+.payments-operation-title > span {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.payments-operation > .payments-actions,
+.payments-refund-total {
+  grid-column: 1 / -1;
+}
+.payments-refund-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.payments-refund-history > td {
+  background: var(--soft);
+  white-space: normal;
+}
+.payments-refund-history summary {
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: left;
+}
+.payments-refund-history ul {
+  display: grid;
+  gap: 8px;
+  padding: 10px 0 0;
+  margin: 0;
+  list-style: none;
+  max-width: 420px;
+}
+.payments-refund-history li {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.payments-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.payments-empty svg { flex-shrink: 0; }
+.payments-empty strong { color: var(--color-ink); font-weight: 500; }
+.payments-empty p { margin: 5px 0 0; }
+.payments-workspace .sc-field {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .payments-ledger {
+    min-width: 675px;
+  }
+  .payments-operation-title {
+    line-height: 1.7;
+  }
+}
+.payments-student-field {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+.payments-student-field > span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.payments-ledger th[scope="row"] > strong {
+  display: block;
+  margin-bottom: 9px;
+  font-weight: 500;
+}
+.payments-ledger th[scope="row"] .payments-actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 760px) {
+  .payments-ledger {
+    min-width: 0;
+    width: 100%;
+  }
+  .payments-ledger thead {
+    display: none;
+  }
+  .payments-ledger tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .payments-ledger tbody > tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .payments-ledger tbody > tr > th,
+  .payments-ledger tbody > tr > td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+  }
+  .payments-ledger tbody > tr > th {
+    grid-column: 1 / -1;
+  }
+  .payments-ledger tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--color-muted);
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  .payments-ledger .payments-actions {
+    gap: 7px;
+  }
+  .payments-ledger .payments-actions .crm-quiet {
+    min-height: 40px;
+  }
+  .payments-ledger tbody > .payments-refund-history {
+    margin-top: -12px;
+    background: var(--soft);
+  }
+  .payments-ledger tbody > .payments-refund-history > td {
+    grid-column: 1 / -1;
+  }
+}
+
+.payments-workspace > form[aria-label="Внести оплату ученика"] {
+  grid-template-columns: minmax(150px, 1.3fr) minmax(110px, 1fr) minmax(140px, 1fr) auto;
+  align-items: end;
+}
+.payments-workspace > form[aria-label="Внести оплату ученика"] .sc-date-input,
+.payments-student-trigger {
+  min-height: 44px;
+}
+.payments-student-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+}
+.payments-student-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.payments-student-trigger:focus-visible, .payments-student-popover button:focus-visible, .payments-student-popover input:focus-visible { outline: 2px solid #e8391d; outline-offset: 2px; }
+.payments-student-popover {
+  z-index: 100;
+  width: var(--radix-popover-trigger-width);
+  min-width: 220px;
+  padding: 8px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px #3027191c;
+}
+.payments-student-popover input { box-sizing: border-box; width: 100%; height: 40px; padding: 0 10px; border: 1px solid var(--color-line); border-radius: 7px; background: var(--soft); color: var(--color-ink); font: inherit; font-size: 13px; }
+.payments-student-options { display: grid; max-height: 220px; overflow-y: auto; padding-top: 6px; }
+.payments-student-options button { padding: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--color-ink); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.payments-student-options button:hover, .payments-student-options button[aria-selected="true"] { background: var(--soft); }
+@media (max-width: 900px) {
+  .payments-workspace > form[aria-label="Внести оплату ученика"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 500px) {
+  .payments-workspace > form[aria-label="Внести оплату ученика"] { grid-template-columns: minmax(0, 1fr); }
+}
