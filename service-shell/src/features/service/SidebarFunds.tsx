@@ -50,9 +50,10 @@ export function SidebarFunds({
             aria-label={`${name}: ${amount}. ${updated}`}
           >
             <Icon size={16} aria-hidden="true" />
-            <span>{amount}</span>
+            <span className="sidebar-fund-amount">{amount.replace(/\u00a0/g, " ")}</span>
             <span className="sidebar-fund-tooltip" role="tooltip">
-              {updated}
+              <strong>{name}</strong>
+              <small>{updated}</small>
             </span>
           </Link>
         );
