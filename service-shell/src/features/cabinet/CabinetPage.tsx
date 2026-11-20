@@ -1,3 +1,4 @@
+import { AvitoAudit } from "./AvitoAudit";
 import { useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
@@ -311,6 +312,7 @@ export function CabinetPage({ focus }: { focus?: string }) {
                 <ChevronRight size={15} />
               </button>
             </div>
+            <AvitoAudit />
             {apiOpen && (
               <div className="st-connection-fields">
                 <div className="st-form-grid">
