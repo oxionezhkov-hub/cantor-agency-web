@@ -1227,7 +1227,7 @@ async function fetchAvitoVoiceLinks(token, userId, voiceIds) {
 async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
   if (reportId) throw new Error('Доступен только последний отчёт автозагрузки');
   const kv = env.AVITO_KV;
-  const key = `autoload-report:v3:${account.id}`;
+  const key = `autoload-report:${options.showCompletedWhileProcessing ? 'panel' : 'v3'}:${account.id}`;
   const cooldownKey = `autoload-report-cooldown:${account.id}`;
   let state = await kv.get(key, 'json');
   const cooldown = await kv.get(cooldownKey, 'json');
@@ -1246,12 +1246,15 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
       totalItems: upload.stats && upload.stats.count != null ? upload.stats.count : null,
       items: items.length, problems: items.filter((it) => it.problem).length, bySection,
       complete: !!(state && state.complete), warning: warning || null, retryAt: retryAt || null,
+      processingReportId: state?.processingReportId ?? null,
       cachedAt: state && state.updatedAt || null,
     }, items, report: upload, tried: [] };
   };
   const limited = 'Авито временно ограничил запросы отчёта. Уже загруженные страницы сохранены; загрузка продолжится автоматически.';
   if (cooldown && cooldown.until > now) return result(limited, cooldown.until);
-  if (state && state.complete && state.checkAfter > now && !options.refresh) return result();
+  if (state && state.complete && state.checkAfter > now && !options.refresh) {
+    return result(null, state.processingReportId != null ? state.checkAfter : null);
+  }
   const token = await avitoGetToken(env, account);
   const get = async (path) => {
     const res = await avitoRequest(token, path);
@@ -1282,32 +1285,76 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
         fallbackId = upload.upload_id || upload.id;
       }
     }
-    const id = upload.upload_id || upload.report_id || upload.id;
+    const isProcessing = (u) => /^(processing|pending|running|in_progress|scheduled)$/i.test(u.status || '');
+    const uploadId = (u) => u.upload_id || u.report_id || u.id;
+    let processingReportId = null;
+    if (options.showCompletedWhileProcessing && source === 'current' && isProcessing(upload)) {
+      try {
+        const completed = await get('/autoload/v4/uploads/last_successful');
+        if (!isProcessing(completed) && uploadId(completed) != null && String(uploadId(completed)) !== String(uploadId(upload))) {
+          processingReportId = uploadId(upload);
+          upload = completed;
+          source = 'last_successful';
+        }
+      } catch (err) {
+        if (err.status !== 404) throw err;
+      }
+    }
+    const id = uploadId(upload);
     if (id == null) throw new Error('В ответе Авито отсутствует номер отчёта');
-    if (!state || String(state.id) !== String(id) || state.source !== source) state = { id, upload, fallbackId, source, page: 1, items: [], complete: false };
+    const reuseComplete = options.showCompletedWhileProcessing && state?.complete;
+    if (!state || String(state.id) !== String(id) || (state.source !== source && !reuseComplete)) {
+      state = { id, upload, fallbackId, source, page: 1, items: [], complete: false };
+    }
+    state.source = source;
     state.upload = upload;
-    if (/^(processing|pending|running|in_progress|scheduled)$/i.test(upload.status || '')) {
+    state.processingReportId = processingReportId;
+    if (isProcessing(upload)) {
       state.items = []; state.page = 1; state.complete = false;
       await kv.put(key, JSON.stringify(state), { expirationTtl: 3600 });
       return result('Авито ещё обрабатывает последнюю загрузку. Ожидаем её завершения; это не отчёт об отсутствии ошибок.', Date.now() + 60000);
     }
-    if (state.complete) {
-      state.checkAfter = Date.now() + 10 * 60 * 1000;
-    } else {
+    if (!state.complete) {
       const page = state.page;
-      const path = state.fallbackId ? `/autoload/v2/reports/${state.fallbackId}/items?per_page=50&page=${page - 1}` : `/autoload/v4/uploads/${state.source}/items?perPage=50&page=${page}`;
+      const pageSize = options.showCompletedWhileProcessing && source === 'last_successful' && !state.fallbackId ? 100 : 50;
+      const path = state.fallbackId ? `/autoload/v2/reports/${state.fallbackId}/items?per_page=50&page=${page - 1}` : `/autoload/v4/uploads/${state.source}/items?perPage=${pageSize}&page=${page}`;
       const data = await get(path);
       if (!Array.isArray(data.items)) throw new Error(`В ответе Авито нет списка объявлений: страница ${page}`);
+      if (pageSize === 100) {
+        const confirmed = await get('/autoload/v4/uploads/last_successful');
+        if (String(uploadId(confirmed)) !== String(id)) throw new Error('Авито завершило следующую загрузку. Запрашиваем её отчёт.');
+      }
       const batch = data.items;
       const pages = Number(data.meta && data.meta.pages || data.pagination && (data.pagination.totalPages || data.pagination.pages) || data.pages || 0);
+      const complete = !batch.length || (pages ? page >= pages : batch.length < (Number(data.meta?.perPage) || pageSize));
+      if (pageSize === 100) {
+        const keys = new Set(state.itemKeys || []);
+        let duplicate = false;
+        for (const item of batch) {
+          const itemId = item.ad_id ?? item.id;
+          if (itemId == null) continue;
+          const itemKey = JSON.stringify([item.feed_name || '', String(itemId)]);
+          if (keys.has(itemKey)) duplicate = true;
+          keys.add(itemKey);
+        }
+        const total = data.meta?.total ?? upload.stats?.count;
+        if (duplicate || (complete && total != null && Number(total) !== state.items.length + batch.length)) {
+          state.items = [];
+          state.itemKeys = [];
+          state.page = 1;
+          throw new Error('Авито вернуло неполный список объявлений. Запрашиваем отчёт заново.');
+        }
+        state.itemKeys = [...keys];
+      }
       state.items.push(...batch.map(normalizeAutoloadItem));
       state.page++;
-      state.complete = !batch.length || (pages ? page >= pages : batch.length < 50);
-      state.checkAfter = Date.now() + 10 * 60 * 1000;
+      state.complete = complete;
     }
+    state.checkAfter = Date.now() + (processingReportId != null ? 60000 : 10 * 60 * 1000);
     state.updatedAt = Date.now();
     await kv.put(key, JSON.stringify(state), { expirationTtl: 3600 });
-    return result(state.complete ? null : 'Отчёт загружен частично. Получаем следующие страницы; список ошибок пока неполный.', state.complete ? null : Date.now() + 15000);
+    return result(state.complete ? null : 'Отчёт загружен частично. Получаем следующие страницы; список ошибок пока неполный.',
+      state.complete ? (processingReportId != null ? state.checkAfter : null) : Date.now() + 15000);
   } catch (err) {
     // Preserve progress even if the first item page was rejected.
     if (state) await kv.put(key, JSON.stringify(state), { expirationTtl: 3600 });
@@ -15265,7 +15312,7 @@ async function handleFeedsApi(request, env, url) {
     try {
       const { account, token } = await feedsAvitoAccount(env, feed);
       const [result, profile] = await Promise.all([
-        fetchAvitoAutoloadReport(env, account, null, { refresh: url.searchParams.get('refresh') === '1' }),
+        fetchAvitoAutoloadReport(env, account, null, { refresh: url.searchParams.get('refresh') === '1', showCompletedWhileProcessing: true }),
         fetchAutoloadProfileCached(env, account, token),
       ]);
       const urls = profile ? ((profile.feeds_data || []).map((f) => f.feed_url).concat(profile.upload_url || [])).filter(Boolean) : [];
@@ -15821,7 +15868,7 @@ async function handleExtraFeedsApi(request, env, url, ctx) {
     try {
       const { account, token } = await extraAvitoAccount(env, feed);
       const [result, profile] = await Promise.all([
-        fetchAvitoAutoloadReport(env, account, null, { refresh: url.searchParams.get('refresh') === '1' }),
+        fetchAvitoAutoloadReport(env, account, null, { refresh: url.searchParams.get('refresh') === '1', showCompletedWhileProcessing: true }),
         fetchAutoloadProfileCached(env, account, token),
       ]);
       const urls = profile ? ((profile.feeds_data || []).map((f) => f.feed_url).concat(profile.upload_url || [])).filter(Boolean) : [];
