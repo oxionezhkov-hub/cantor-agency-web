@@ -1,3 +1,4 @@
+import { LiveFreshness } from "../service/LiveFreshness";
 import { AvitoAudit } from "./AvitoAudit";
 import { useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -293,7 +294,7 @@ export function CabinetPage({ focus }: { focus?: string }) {
                 <p>{sampleCabinet.subject}</p>
               </div>
             </div>
-            <div className="st-actions">
+            <div className="st-actions st-account-actions">
               <a
                 className="st-button"
                 href="https://www.avito.ru/profile"
@@ -311,8 +312,9 @@ export function CabinetPage({ focus }: { focus?: string }) {
                 Параметры подключения
                 <ChevronRight size={15} />
               </button>
+              <AvitoAudit />
+              <LiveFreshness />
             </div>
-            <AvitoAudit />
             {apiOpen && (
               <div className="st-connection-fields">
                 <div className="st-form-grid">

@@ -1,5 +1,4 @@
 import { SidebarFunds } from "./SidebarFunds";
-import { LiveFreshness } from "./LiveFreshness";
 import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ServiceLoading } from "./ServiceLoading";
@@ -333,7 +332,6 @@ export function Shell({
       </aside>
       <div className="service-body">
         <main id="service-content" className="service-content" tabIndex={-1}>
-          <LiveFreshness section={section} />
           <h1 className="sr-only">{selected.label}</h1>
           {storageError ? (
             <p role="alert" className="crm-error">

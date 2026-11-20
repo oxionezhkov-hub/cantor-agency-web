@@ -76,7 +76,7 @@ try {
       true,
     );
     await page
-      .locator(".st-avito-audit")
+      .locator(".st-avito-audit > .st-connection-fields")
       .screenshot({ path: `/tmp/cantor-avito-audit-check/${width}.png` });
     await page.close();
   }

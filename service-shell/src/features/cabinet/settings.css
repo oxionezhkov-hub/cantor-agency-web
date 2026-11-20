@@ -1152,3 +1152,23 @@
 .st-avito-audit { margin-top: 14px; }
 .st-avito-audit p, .st-avito-audit li { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 .st-avito-audit .st-field { max-width: 360px; }
+
+/* The four account actions form one desktop row; expanded audit stays below it. */
+.st-account-actions {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;gap:10px;}
+.st-account-actions > .st-button,.st-account-actions .st-avito-audit > .st-button {width:100%;min-height:44px;white-space:normal;text-align:center;line-height:1.4;padding:10px 12px;}
+.st-account-actions .st-avito-audit {display:contents;}
+.st-account-actions .st-avito-audit > .st-connection-fields {order:1;grid-column:1/-1;min-width:0;}
+.st-freshness-dialog {width:min(660px,calc(100% - 32px));}
+.st-freshness-sources {display:grid;gap:10px;margin-top:18px;}
+.st-freshness-source {border:1px solid var(--color-line);border-radius:10px;padding:14px 16px;min-width:0;}
+.st-freshness-source-heading {display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.st-freshness-source-heading h3 {font-size:14px;}
+.st-freshness-badge {display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-size:11px;line-height:1.4;padding:4px 7px;border-radius:6px;background:var(--sunken);color:var(--color-muted);}
+.st-freshness-badge.ok {color:#267150;background:#eef6f0;}.st-freshness-badge.warn {color:#91601e;background:#fbf3e6;}
+.st-freshness-source p {margin:6px 0 0;font-size:12px;line-height:1.6;overflow-wrap:anywhere;}
+.st-freshness-time {color:var(--color-ink)!important;}
+.st-freshness-more {margin-top:10px;font-size:11px;}
+.st-freshness-legend {margin-top:18px;padding-top:16px;border-top:1px solid var(--color-line);}
+.st-freshness-legend h3 {font-size:13px;}.st-freshness-legend p {font-size:12px;line-height:1.7;}
+@media(max-width:760px){.st-account-actions {grid-template-columns:repeat(2,minmax(0,1fr));}.st-account-actions > .st-button,.st-account-actions .st-avito-audit > .st-button {padding:10px 8px;}.st-freshness-source {padding:12px;}.st-freshness-source-heading {align-items:flex-start;}.st-freshness-dialog .st-dialog-heading h2 {font-size:18px;}}
+@media(max-width:350px){.st-account-actions {grid-template-columns:1fr;}}
