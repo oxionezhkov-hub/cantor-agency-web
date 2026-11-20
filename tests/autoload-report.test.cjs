@@ -134,14 +134,27 @@ test('photo readiness uses Worker-supported manual redirects and refuses redirec
  await vm.runInContext('feedsApplyPhotoReadiness(feed,ads,stat)',c);assert.equal(c.ads[0].blocked,undefined);
 });
 for (const [file,name] of [['avito-bids','renderReport'],['zagruzka-extra','paintReport']]) {
- test(`${file} renders upstream total and marks processing summary as provisional`,()=>{
+ test(`${file} shows publication totals only for complete reports and uses listing messages for reasons`,()=>{
   const html=fs.readFileSync(`${__dirname}/../${file}`,'utf8');
   const start=html.indexOf(`function ${name}(slug) {`),end=html.indexOf('\n}',start)+2;
   const body={},button={};
-  const c=vm.createContext({R:{test:{summary:{reportId:1,totalItems:351,items:0,status:'processing'},problems:[]}},
-   $:id=>id==='#repCsv'?button:body,int:String,esc:String,I:()=>'',probCards:()=>'',probGroups:()=>[]});
+  const summary={reportId:1,totalItems:351,items:0,status:'processing',sectionStats:{sections:[
+   {slug:'not_publish',count:212,title:'Не опубликовано',sections:[{slug:'date_in_future',count:212,title:'Не наступила дата'}]},
+  ]}};
+  const result={summary,problems:[]};
+  const c=vm.createContext({R:{test:result},
+   $:id=>id==='#repCsv'?button:body,int:String,esc:String,I:()=>'',httpUrl:()=>'',probCards:groups=>groups.map(x=>x.msg).join(' '),probGroups:x=>x});
   vm.runInContext(html.slice(start,end),c);vm.runInContext(`${name}('test')`,c);
-  assert.match(body.innerHTML,/351 объявлений/);assert.doesNotMatch(body.innerHTML,/всего 0 объявлений/);assert.match(body.innerHTML,/Сводка ниже предварительная/);
+  assert.match(body.innerHTML,/351 объявлений/);
+  assert.doesNotMatch(body.innerHTML,/Не опубликовано|Не наступила дата/);
+  Object.assign(summary,{status:'success_warning',complete:true});
+  result.problems.push({section:'Не наступила дата',messages:[
+   {type:'info',text:'Не наступила дата'}, {type:'error',text:'Закончились размещения в категории'},
+  ]});
+  vm.runInContext(`${name}('test')`,c);
+  assert.match(body.innerHTML,/Не опубликовано/);
+  assert.match(body.innerHTML,/Закончились размещения в категории/);
+  assert.doesNotMatch(body.innerHTML,/Не наступила дата/);
  });
 }
 test('mismatched provider IDs preserve the existing XML and never upload a shortened file',async()=>{
