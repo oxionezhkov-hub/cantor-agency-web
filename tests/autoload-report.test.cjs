@@ -260,3 +260,23 @@ for (const [file, render] of [['avito-bids','renderReport'],['zagruzka-extra','p
   assert.match(body.innerHTML,/Отчёт old-42/);
  });
 }
+
+test('feed panels switch to pages keyed by report ID when Avito repeats an item', async () => {
+ const c = setup([upload('indexed'), page(2,2), upload('indexed'),
+  upload('indexed'), page(1,2), upload('indexed'),
+  upload('indexed'), ok({report_id:'other',items:[{ad_id:'wrong'}]}),
+  upload('indexed'), ok({report_id:'indexed',items:[{ad_id:'right'}],meta:{total:1,pages:1}})]);
+ const panel = () => vm.runInContext('fetchAvitoAutoloadReport(env,account,null,{showCompletedWhileProcessing:true})', c);
+ assert.equal((await panel()).items.length,2);
+ const repeated = await panel();
+ assert.equal(repeated.items.length,0);
+ assert.equal(repeated.summary.complete,false);
+ assert.match(repeated.summary.warning,/по номеру отчёта/);
+ const wrong = await panel();
+ assert.equal(wrong.items.length,0);
+ assert.match(wrong.summary.warning,/другого отчёта/);
+ const exact = await panel();
+ assert.equal(exact.items[0].adId,'right');
+ assert.equal(exact.summary.complete,true);
+ assert.match(c.called[9], /v2\/reports\/indexed\/items.*page=0/);
+});

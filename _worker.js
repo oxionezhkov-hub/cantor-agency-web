@@ -1323,11 +1323,13 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
       if (pageSize === 100) {
         const confirmed = await get(`/autoload/v4/uploads/${state.source}`);
         if (String(uploadId(confirmed)) !== String(id)) throw new Error('Авито завершило следующую загрузку. Запрашиваем её отчёт.');
+      } else if (options.showCompletedWhileProcessing && data.report_id != null && String(data.report_id) !== String(id)) {
+        throw new Error('Авито вернуло объявления из другого отчёта. Запрашиваем нужный отчёт заново.');
       }
       const batch = data.items;
       const pages = Number(data.meta && data.meta.pages || data.pagination && (data.pagination.totalPages || data.pagination.pages) || data.pages || 0);
-      const complete = !batch.length || (pages ? page >= pages : batch.length < (Number(data.meta?.perPage) || pageSize));
-      if (pageSize === 100) {
+      const complete = !batch.length || (pages ? page >= pages : batch.length < (Number(data.meta?.perPage ?? data.meta?.per_page) || pageSize));
+      if (options.showCompletedWhileProcessing) {
         const keys = new Set(state.itemKeys || []);
         let duplicate = false;
         for (const item of batch) {
@@ -1342,6 +1344,12 @@ async function fetchAvitoAutoloadReport(env, account, reportId, options = {}) {
           state.items = [];
           state.itemKeys = [];
           state.page = 1;
+          if (!state.fallbackId) {
+            state.fallbackId = id;
+            const error = new Error('Авито вернуло неполный список объявлений. Загружаем его по номеру отчёта.');
+            error.retryAt = Date.now() + 15000;
+            throw error;
+          }
           throw new Error('Авито вернуло неполный список объявлений. Запрашиваем отчёт заново.');
         }
         state.itemKeys = [...keys];
