@@ -247,22 +247,21 @@ export function LeadWorkspace({
   };
   return (
     <div className={`dialog-workbench ${selected ? "contact-open" : ""} view-${view}`}>
-      {selectedId && getPreviewData() && (
-        <div className="live-chat-status" role="status">
-          {historyState.busy
-            ? "Обновляем переписку…"
-            : historyState.error ||
-              `${historyState.stale ? "Сохранённая история" : "Проверено"} ${historyState.at ? new Date(historyState.at).toLocaleString("ru-RU") : ""}`}
-          {historyState.next !== null && !historyState.busy && (
-            <button
-              className="st-button"
-              onClick={() => void loadHistory(selectedId, historyState.next!)}
-            >
-              Загрузить более ранние сообщения
-            </button>
-          )}
-        </div>
-      )}
+      {selectedId &&
+        getPreviewData() &&
+        (historyState.busy || historyState.error || historyState.next !== null) && (
+          <div className="live-chat-status" role="status">
+            {historyState.busy ? "Обновляем переписку…" : historyState.error || null}
+            {historyState.next !== null && !historyState.busy && (
+              <button
+                className="st-button"
+                onClick={() => void loadHistory(selectedId, historyState.next!)}
+              >
+                Загрузить более ранние сообщения
+              </button>
+            )}
+          </div>
+        )}
       {moveError ? (
         <p role="alert" className="crm-error">
           {moveError}

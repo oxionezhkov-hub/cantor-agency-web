@@ -1,0 +1,341 @@
+.ai-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 1100px;
+  min-width: 0;
+}
+.aim-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.aim-model {
+  width: min(360px, 55%);
+  min-width: 0;
+}
+.aim-model .sc-select-trigger {
+  height: 42px;
+  background: var(--color-surface);
+  border-radius: 9px;
+}
+.aim-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 3px;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.aim-check i {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: 20px;
+  background: #d8d5cf;
+  margin-left: 5px;
+}
+.aim-check i:after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+.aim-check[aria-checked="true"] i {
+  background: #292826;
+}
+.aim-check[aria-checked="true"] i:after {
+  transform: translateX(12px);
+}
+.aim-tabs {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--color-line);
+  flex-shrink: 0;
+}
+.aim-tabs::-webkit-scrollbar {
+  display: none;
+}
+.aim-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  min-height: 47px;
+  padding: 0 0 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.aim-tabs button[aria-selected="true"] {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
+.aim-tabs svg {
+  flex: none;
+}
+.aim-tabs small {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--sunken);
+}
+.aim-panel {
+  padding-top: 22px;
+  min-width: 0;
+}
+.aim-editor-wrap {
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.ai-manager textarea.aim-editor {
+  display: block;
+  border: 0;
+  border-radius: 0;
+  min-height: 56dvh;
+  max-height: none;
+  margin: 0;
+  width: 100%;
+  padding: 24px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.8;
+  resize: vertical;
+  background: transparent;
+  color: var(--color-ink);
+  outline: none;
+  box-shadow: none;
+}
+.aim-editor-wrap:focus-within {
+  border-color: #a6a099;
+}
+.aim-scenarios {
+  display: grid;
+  gap: 10px;
+}
+.ai-manager article.aim-scenario {
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 11px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.aim-scenario-top {
+  display: flex;
+  align-items: center;
+  padding: 0 10px 0 18px;
+  gap: 12px;
+}
+.aim-scenario-open {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+  padding: 17px 0;
+  background: none;
+  border: 0;
+  color: var(--color-ink);
+  font: inherit;
+}
+.aim-scenario-open > span {
+  min-width: 0;
+}
+.aim-scenario-open strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+}
+.aim-scenario-open small {
+  display: block;
+  color: var(--color-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 4px;
+  max-width: 70vw;
+}
+.aim-scenario-open svg {
+  flex: none;
+  color: var(--color-muted);
+}
+.aim-scenario-open[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.aim-delete {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-muted);
+}
+.aim-delete:hover {
+  background: var(--sunken);
+}
+.aim-scenario-fields {
+  display: grid;
+  gap: 14px;
+  padding: 4px 18px 20px;
+}
+.aim-scenario-fields label {
+  display: grid;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.ai-manager .aim-scenario-fields textarea,
+.aim-scenario-fields input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-ink);
+  background: var(--soft);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  width: 100%;
+  line-height: 1.6;
+  outline: none;
+}
+.ai-manager .aim-scenario-fields textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.aim-scenario-fields input:focus,
+.aim-scenario-fields textarea:focus {
+  border-color: #a6a099;
+}
+.aim-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 46px;
+  border: 1px dashed #c9c3ba;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 12px;
+}
+.aim-add:hover {
+  background: var(--soft);
+  color: var(--color-ink);
+}
+.aim-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 70px 20px;
+  color: var(--color-muted);
+}
+.aim-empty strong {
+  font-size: 14px;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+.aim-empty p {
+  font-size: 12px;
+  max-width: 350px;
+  margin: 0;
+  line-height: 1.7;
+}
+.aim-feedback {
+  display: grid;
+  gap: 12px;
+}
+.aim-feedback article {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: 18px;
+}
+.aim-feedback-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--color-muted);
+  margin-bottom: 12px;
+}
+.aim-feedback p,
+.aim-feedback blockquote {
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.aim-feedback blockquote {
+  margin: 10px 0 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--soft);
+}
+.aim-loading {
+  padding: 40px 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .aim-toolbar {
+    gap: 10px;
+    margin-bottom: 13px;
+    flex-wrap: wrap;
+  }
+  .aim-model {
+    width: 100%;
+  }
+  .aim-check {
+    min-height: 32px;
+  }
+  .aim-tabs {
+    gap: 20px;
+  }
+  .aim-panel {
+    padding-top: 15px;
+  }
+  .ai-manager textarea.aim-editor {
+    padding: 16px;
+    font-size: 14px;
+    min-height: 55dvh;
+  }
+  .aim-scenario-top {
+    padding-left: 14px;
+  }
+  .aim-scenario-fields {
+    padding-inline: 14px;
+  }
+  .aim-scenario-open small {
+    max-width: 60vw;
+  }
+  .aim-tabs button {
+    font-size: 11px;
+  }
+}

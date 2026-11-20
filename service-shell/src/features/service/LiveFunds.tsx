@@ -30,12 +30,13 @@ export function LiveFunds() {
           ) : null}
         </p>
       </div>
-      <p>
-        {meta?.observedAt
-          ? `Проверено ${new Date(meta.observedAt).toLocaleString("ru-RU")}`
-          : "Получаем текущие остатки…"}
-        {meta?.error ? " · Не удалось обновить; показаны последние полученные данные" : ""}
-      </p>
+      {!meta?.observedAt || meta?.error ? (
+        <p>
+          {meta?.error
+            ? "Не удалось обновить; показаны последние полученные данные"
+            : "Получаем текущие остатки…"}
+        </p>
+      ) : null}
       <p>
         Прогноз остатка: {estimate.reason}.
         {estimate.available

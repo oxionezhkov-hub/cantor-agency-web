@@ -1,4 +1,15 @@
 import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  SlidersHorizontal,
+  MessagesSquare,
+  CalendarDays,
+  History,
+  Plus,
+  Trash2,
+  ChevronDown,
+  ShieldCheck,
+} from "lucide-react";
 import { ServiceSelect } from "./service-controls";
 import { useDemoCrm } from "./demo-crm-store";
 import {
@@ -8,10 +19,21 @@ import {
   updateAiSettings,
   type AiSettings,
 } from "./ai-manager-client";
+import "./ai-manager.css";
+type Tab = "system" | "knowledge" | "scripts" | "slots" | "feedback";
+const tabs = [
+  { id: "system", label: "Инструкции", icon: SlidersHorizontal },
+  { id: "knowledge", label: "База знаний", icon: BookOpen },
+  { id: "scripts", label: "Сценарии", icon: MessagesSquare },
+  { id: "slots", label: "Свободное время", icon: CalendarDays },
+  { id: "feedback", label: "Правки ответов", icon: History },
+] as const;
+type Scenario = { title: string; when: string; text: string };
 export function AiManager() {
   const [value, setValue] = useState<AiSettings | null>(settings),
-    [tab, setTab] = useState<"system" | "knowledge" | "scripts" | "slots">("system"),
-    [error, setError] = useState("");
+    [tab, setTab] = useState<Tab>("system"),
+    [error, setError] = useState(""),
+    [expanded, setExpanded] = useState<number | null>(null);
   const { state } = useDemoCrm();
   useEffect(() => {
     let active = true;
@@ -26,155 +48,256 @@ export function AiManager() {
       active = false;
     };
   }, []);
+  function update(patch: Partial<AiSettings>) {
+    if (!value) return;
+    const next = { ...value, ...patch };
+    updateAiSettings(next);
+    setValue(next);
+  }
+  let rows: Scenario[] = [];
+  let invalid = false;
+  try {
+    if (value) {
+      const parsed: unknown = JSON.parse(value.scripts);
+      if (!Array.isArray(parsed)) invalid = true;
+      else rows = parsed;
+    }
+  } catch {
+    invalid = true;
+  }
+  const feedback = [...(state.feedback ?? [])].reverse();
   return (
-    <section className="ai-manager">
-      <div className="ai-manager-tools">
-        <ServiceSelect
-          label="Модель ответа"
-          value={value?.model || modelOptions[0].value}
-          onChange={(model) => {
-            if (value) {
-              const next = { ...value, model };
-              updateAiSettings(next);
-              setValue(next);
-            }
-          }}
-          options={modelOptions}
-        />
+    <section className="ai-manager" aria-label="ИИ-менеджер">
+      <div className="aim-toolbar">
+        <div className="aim-model">
+          <ServiceSelect
+            label="Модель ответа"
+            value={value?.model || modelOptions[0].value}
+            onChange={(model) => update({ model })}
+            options={modelOptions}
+          />
+        </div>
+        <button
+          type="button"
+          className="aim-check"
+          role="switch"
+          aria-label="Проверять ответ перед согласованием"
+          aria-checked={Boolean(value?.selfCheck)}
+          disabled={!value}
+          onClick={() => update({ selfCheck: !value?.selfCheck })}
+        >
+          <ShieldCheck size={16} />
+          <span>Самопроверка</span>
+          <i />
+        </button>
       </div>
-      {value ? (
-        <label>
-          <input
-            type="checkbox"
-            checked={Boolean(value.selfCheck)}
-            onChange={(e) => {
-              const next = { ...value, selfCheck: e.target.checked };
-              updateAiSettings(next);
-              setValue(next);
+      <div className="aim-tabs" role="tablist" aria-label="Настройки менеджера">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            type="button"
+            key={id}
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls={`aim-panel-${id}`}
+            id={`aim-tab-${id}`}
+            tabIndex={tab === id ? 0 : -1}
+            onKeyDown={(e) => {
+              if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+              e.preventDefault();
+              const index = tabs.findIndex((item) => item.id === id);
+              const next =
+                e.key === "Home"
+                  ? 0
+                  : e.key === "End"
+                    ? tabs.length - 1
+                    : (index + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+              setTab(tabs[next].id);
+              document.getElementById(`aim-tab-${tabs[next].id}`)?.focus();
             }}
-          />{" "}
-          Проверять ответ перед согласованием
-        </label>
-      ) : null}
-      <div className="ai-manager-tabs">
-        {(
-          [
-            ["system", "Инструкции"],
-            ["knowledge", "База знаний"],
-            ["scripts", "Сценарии"],
-            ["slots", "Свободное время"],
-          ] as const
-        ).map(([id, label]) => (
-          <button type="button" key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>
+            onClick={() => setTab(id)}
+          >
+            <Icon size={16} />
             {label}
+            {id === "feedback" && feedback.length > 0 ? <small>{feedback.length}</small> : null}
           </button>
         ))}
       </div>
-      {value && tab === "scripts" ? (
-        <div className="ai-scripts">
-          {(() => {
-            let rows: { title: string; when: string; text: string }[] = [];
-            try {
-              rows = JSON.parse(value.scripts);
-            } catch {
-              return <p role="alert">Проверьте формат сценариев</p>;
-            }
-            return (
+      <div
+        role="tabpanel"
+        id={`aim-panel-${tab}`}
+        aria-labelledby={`aim-tab-${tab}`}
+        className="aim-panel"
+      >
+        {!value && !error ? (
+          <div className="aim-loading" role="status">
+            Загрузка настроек…
+          </div>
+        ) : null}
+        {value && tab !== "scripts" && tab !== "feedback" ? (
+          <div className="aim-editor-wrap">
+            <textarea
+              className="aim-editor"
+              aria-label="Настройки ИИ-менеджера"
+              value={value[tab]}
+              maxLength={16000}
+              spellCheck={false}
+              placeholder={
+                tab === "slots"
+                  ? "Добавьте доступные дни и время для диагностики…"
+                  : "Добавьте правила и важные детали…"
+              }
+              onChange={(e) => update({ [tab]: e.target.value })}
+            />
+          </div>
+        ) : null}
+        {value && tab === "scripts" ? (
+          <div className="aim-scenarios">
+            {invalid ? (
+              <p role="alert" className="crm-error">
+                Не удалось прочитать сценарии. Проверьте настройки источника.
+              </p>
+            ) : (
               <>
                 {rows.map((row, index) => (
-                  <article key={index}>
-                    {(
-                      [
-                        ["title", "Название"],
-                        ["when", "Когда применять"],
-                        ["text", "Ответ"],
-                      ] as const
-                    ).map(([field, label]) => (
-                      <label key={field}>
-                        {label}
-                        <textarea
-                          aria-label={`${label} сценария ${index + 1}`}
-                          value={row[field] || ""}
-                          onChange={(e) => {
-                            const next = {
-                              ...value,
-                              scripts: JSON.stringify(
-                                rows.map((r, i) =>
-                                  i === index ? { ...r, [field]: e.target.value } : r,
-                                ),
-                              ),
-                            };
-                            updateAiSettings(next);
-                            setValue(next);
-                          }}
-                        />
-                      </label>
-                    ))}
-                    <button
-                      type="button"
-                      className="crm-quiet"
-                      onClick={() => {
-                        const next = {
-                          ...value,
-                          scripts: JSON.stringify(rows.filter((_, i) => i !== index)),
-                        };
-                        updateAiSettings(next);
-                        setValue(next);
-                      }}
-                    >
-                      Удалить сценарий
-                    </button>
+                  <article className="aim-scenario" key={index}>
+                    <div className="aim-scenario-top">
+                      <button
+                        type="button"
+                        className="aim-scenario-open"
+                        aria-expanded={expanded === index}
+                        onClick={() => setExpanded(expanded === index ? null : index)}
+                      >
+                        <span>
+                          <strong>{row.title || "Без названия"}</strong>
+                          <small>{row.when || "Условия не заданы"}</small>
+                        </span>
+                        <ChevronDown size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className="aim-delete"
+                        aria-label={`Удалить сценарий ${index + 1}`}
+                        onClick={() => {
+                          update({ scripts: JSON.stringify(rows.filter((_, i) => i !== index)) });
+                          setExpanded(null);
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                    {expanded === index ? (
+                      <div className="aim-scenario-fields">
+                        {(
+                          [
+                            ["title", "Название"],
+                            ["when", "Когда применять"],
+                            ["text", "Ответ"],
+                          ] as const
+                        ).map(([field, label]) => (
+                          <label key={field}>
+                            {label}
+                            {field === "title" ? (
+                              <input
+                                aria-label={`${label} сценария ${index + 1}`}
+                                value={row[field] || ""}
+                                maxLength={300}
+                                onChange={(e) =>
+                                  update({
+                                    scripts: JSON.stringify(
+                                      rows.map((r, i) =>
+                                        i === index ? { ...r, [field]: e.target.value } : r,
+                                      ),
+                                    ),
+                                  })
+                                }
+                              />
+                            ) : (
+                              <textarea
+                                aria-label={`${label} сценария ${index + 1}`}
+                                value={row[field] || ""}
+                                maxLength={4000}
+                                onChange={(e) =>
+                                  update({
+                                    scripts: JSON.stringify(
+                                      rows.map((r, i) =>
+                                        i === index ? { ...r, [field]: e.target.value } : r,
+                                      ),
+                                    ),
+                                  })
+                                }
+                              />
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    ) : null}
                   </article>
                 ))}
                 <button
-                  className="crm-secondary"
                   type="button"
+                  className="aim-add"
                   onClick={() => {
-                    const next = {
-                      ...value,
+                    update({
                       scripts: JSON.stringify([
                         ...rows,
                         { title: "Новый сценарий", when: "", text: "" },
                       ]),
-                    };
-                    updateAiSettings(next);
-                    setValue(next);
+                    });
+                    setExpanded(rows.length);
                   }}
                 >
+                  <Plus size={16} />
                   Добавить сценарий
                 </button>
               </>
-            );
-          })()}
-        </div>
-      ) : value ? (
-        <textarea
-          aria-label="Настройки ИИ-менеджера"
-          value={value[tab]}
-          maxLength={16000}
-          onChange={(e) => {
-            const next = { ...value, [tab]: e.target.value };
-            updateAiSettings(next);
-            setValue(next);
-          }}
-        />
-      ) : (
-        <p role="status">Загрузка настроек…</p>
-      )}
-      <details>
-        <summary>Правки ответов · {state.feedback?.length || 0}</summary>
-        {state.feedback?.map((f) => (
-          <article key={f.id}>
-            <p>{f.original}</p>
-            <strong>{f.corrected || "Ответ отклонён"}</strong>
-          </article>
-        ))}
-      </details>
-      {error ? (
-        <p role="alert" className="crm-error">
-          {error}
-        </p>
-      ) : null}
+            )}
+          </div>
+        ) : null}
+        {tab === "feedback" ? (
+          <div className="aim-feedback">
+            {!feedback.length ? (
+              <div className="aim-empty">
+                <History size={24} />
+                <strong>Пока нет правок</strong>
+                <p>
+                  Одобрите или отредактируйте предложенный ответ в сообщениях — он появится здесь.
+                </p>
+              </div>
+            ) : (
+              feedback.map((f) => (
+                <article key={f.id}>
+                  <div className="aim-feedback-head">
+                    <span>
+                      {f.action === "approved"
+                        ? "Одобрен"
+                        : f.action === "edited"
+                          ? "Отредактирован"
+                          : "Отклонён"}
+                    </span>
+                    <time>
+                      {new Date(f.at).toLocaleString("ru-RU", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </div>
+                  <p>{f.original}</p>
+                  {f.corrected && f.corrected !== f.original ? (
+                    <blockquote>{f.corrected}</blockquote>
+                  ) : null}
+                </article>
+              ))
+            )}
+          </div>
+        ) : null}
+        {error ? (
+          <p role="alert" className="crm-error">
+            {error}
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }
