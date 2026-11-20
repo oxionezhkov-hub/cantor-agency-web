@@ -1,0 +1,74 @@
+.workspace-profile {
+  margin-bottom: 10px;
+}
+.sidebar-funds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+.sidebar-fund {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px;
+  border: 1px solid var(--color-line);
+  border-radius: 9px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.sidebar-fund svg {
+  color: var(--color-muted);
+  flex: 0 0 auto;
+}
+.sidebar-fund > span:not(.sidebar-fund-tooltip) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-fund:hover,
+.sidebar-fund:focus-visible {
+  border-color: var(--color-muted);
+}
+.sidebar-fund:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+.sidebar-fund-tooltip {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 7px);
+  left: 0;
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: var(--color-ink);
+  color: white;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.sidebar-fund:hover .sidebar-fund-tooltip,
+.sidebar-fund:focus-visible .sidebar-fund-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+@media (max-width: 760px) {
+  .sidebar-funds {
+    display: none;
+    margin: 12px 0 0;
+  }
+  .sidebar-funds.mobile-open {
+    display: grid;
+  }
+}

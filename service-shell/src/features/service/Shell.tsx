@@ -1,3 +1,4 @@
+import { SidebarFunds } from "./SidebarFunds";
 import { LiveFreshness } from "./LiveFreshness";
 import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -188,6 +189,7 @@ export function Shell({
             <small>{sampleCabinet.subject}</small>
           </div>
         </button>
+        <SidebarFunds mobileOpen={mobileMenuOpen} onNavigate={() => setMobileMenuOpen(false)} />
         <nav
           ref={navRef}
           id="service-navigation"
