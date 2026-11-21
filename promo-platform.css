@@ -190,3 +190,45 @@
 @media(prefers-reduced-motion:reduce) {
   .site-header.is-visible,.console-stage,.console-outcome {animation:none!important}
 }
+
+/* The bars share a common scale. The dots represent individual enquiries. */
+.conversion-chart {display:grid;gap:12px;margin-top:20px}
+.conversion-chart>div {display:grid;grid-template-columns:1fr auto;gap:5px;font:500 12px/1.3 Geologica,sans-serif;color:#354332}
+.conversion-chart i {grid-column:1/-1;height:6px;border-radius:6px;background:#e5e8e0;overflow:hidden}
+.conversion-chart i::before {content:"";display:block;width:var(--share);height:100%;border-radius:inherit;background:#52674a;transform-origin:left}
+.conversion-chart>div:last-child i::before {background:#ba472f}
+.case-conversion {margin:22px 0 0}
+.case-dots {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;width:min(190px,100%);margin-bottom:13px}
+.case-dots i {height:9px;border-radius:5px;border:1px solid #ffffff96}
+.case-dots .paid {background:white}
+.case-dots .assessed {background:#ffffff70}
+.case-conversion figcaption {display:grid;gap:5px;font-size:13px;line-height:1.5}
+.case-conversion figcaption strong {font-size:16px}
+@keyframes motion-settle {
+  from {opacity:.35;transform:translateY(7px)}
+  to {opacity:1;transform:none}
+}
+@keyframes motion-fill {from {transform:scaleX(0)} to {transform:scaleX(1)}}
+@keyframes motion-check {from {stroke-dashoffset:24} to {stroke-dashoffset:0}}
+@media (prefers-reduced-motion:no-preference) {
+  .visible .update-branches span,.visible .message-status strong,
+  .visible .ad-preview,.visible .cities span,.visible .conversation .bubble,
+  .visible .booking,.visible .compare-items>div,.visible .flow-node,
+  .console-subjects span,.case.visible .case-dots i {
+    animation:motion-settle .45s cubic-bezier(.22,.75,.23,1) both;
+    animation-delay:var(--beat,0s);
+  }
+  .visible .update-branches span:nth-child(2),.console-subjects span:nth-child(2),
+  .visible .cities span:nth-child(2),.compare-items>div:nth-child(2),.connected-flow>div:nth-child(2) {--beat:.12s}
+  .visible .update-branches span:nth-child(3),.visible .cities span:nth-child(3),
+  .visible .conversation .reply,.compare-items>div:nth-child(3),.connected-flow>div:nth-child(3) {--beat:.24s}
+  .visible .message-status strong,.visible .conversation .bubble:nth-child(4),
+  .compare-items>div:nth-child(4),.connected-flow>div:nth-child(4) {--beat:.36s}
+  .compare-items>div:nth-child(5),.connected-flow>div:nth-child(5) {--beat:.48s}
+  .visible .booking {--beat:.54s}
+  .case.visible .case-dots i {--beat:calc(var(--order)*24ms)}
+  .panel-art.visible .conversion-chart i::before {animation:motion-fill .68s cubic-bezier(.22,.75,.23,1) both}
+  .panel-art.visible .conversion-chart>div:nth-child(2) i::before {animation-delay:.12s}
+  .panel-art.visible .conversion-chart>div:nth-child(3) i::before {animation-delay:.24s}
+  .console-booking path {stroke-dasharray:24;animation:motion-check .45s .35s both}
+}
