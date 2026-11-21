@@ -11,7 +11,7 @@ const browser = await chromium.launch({
 try {
   for (const width of [1440, 390]) {
     const ctx = await browser.newContext({ viewport: { width, height: 960 } });
-    let generated = 0;
+    const requests = [];
     await ctx.route("**/api/**", (r) => r.abort());
     await ctx.route("**/api/demo/bootstrap", (r) =>
       r.fulfill({
@@ -53,13 +53,13 @@ try {
             models,
             settings: {
               ...defaults,
+              knowledge: "Исходная база\nС кем работает: 5–11 классы",
               model: models[0].value,
               scripts: JSON.stringify(defaults.scripts),
             },
           }),
         });
-      generated++;
-      assert.equal(r.request().postDataJSON().settings.knowledge, "Проверенная база");
+      requests.push(r.request().postDataJSON());
       return r.fulfill({
         status: 200,
         contentType: "application/json",
@@ -73,7 +73,37 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(base + "/?section=chats&view=ai", { waitUntil: "networkidle" });
     await p.locator(".ai-manager").getByRole("tab", { name: "База знаний", exact: true }).click();
-    await p.getByRole("textbox", { name: "Настройки ИИ-менеджера" }).fill("Проверенная база");
+    await p.getByRole("button", { name: /О преподавателе/ }).click();
+    await p.getByRole("textbox", { name: "О преподавателе" }).fill("Проверенная база");
+    await p.getByRole("button", { name: "Проверить в чате" }).click();
+    await p.getByRole("button", { name: "Сколько стоит занятие?" }).click();
+    await p.getByRole("textbox", { name: "Напишите как клиент" }).press("Enter");
+    await p.getByRole("button", { name: "Исправить и запомнить" }).click();
+    await p
+      .getByRole("textbox", { name: "Как лучше ответить" })
+      .fill("Обсудим условия на диагностике.");
+    await p.getByRole("button", { name: "Запомнить пример" }).click();
+    await p.getByRole("button", { name: "Проверить ещё раз" }).click();
+    await p.getByRole("button", { name: "Исправить и запомнить" }).waitFor();
+    assert.deepEqual(requests[1].messages, requests[0].messages);
+    assert.match(requests[1].feedback, /Обсудим условия/);
+    assert.equal(requests[1].settings.knowledge, "Проверенная база\nС кем работает: 5–11 классы");
+    await p.getByRole("textbox", { name: "Напишите как клиент" }).fill("Как записаться?");
+    await p.getByRole("button", { name: "Отправить тестовое сообщение" }).click();
+    await p.getByRole("button", { name: "Исправить и запомнить" }).waitFor();
+    assert.deepEqual(
+      requests[2].messages.map((m) => m.role),
+      ["user", "assistant", "user"],
+    );
+    await p.screenshot({ path: `/tmp/aim-${width}-test-chat.png` });
+    await p.getByRole("tab", { name: /Правки ответов/ }).click();
+    await p.getByText("Обсудим условия на диагностике.", { exact: true }).waitFor();
+    await p.getByRole("button", { name: /Удалить пример/ }).click();
+    await p.getByRole("tab", { name: "База знаний", exact: true }).click();
+    assert.equal(
+      await p.getByRole("textbox", { name: "О преподавателе" }).inputValue(),
+      "Проверенная база",
+    );
     await p.screenshot({ path: `/tmp/aim-${width}-editor.png`, fullPage: true });
     await p.getByRole("tab", { name: "Сценарии", exact: true }).click();
     await p.getByRole("button", { name: "Добавить сценарий" }).click();
@@ -108,7 +138,8 @@ try {
       0,
     );
     assert.equal(await p.getByText(/Проверено \d/).count(), 0);
-    assert.equal(generated, 1);
+    assert.equal(requests.length, 4);
+    assert.equal(requests[3].feedback, "");
     assert.deepEqual(errors, []);
     assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     console.log(

@@ -9,19 +9,25 @@ import {
   Trash2,
   ChevronDown,
   ShieldCheck,
+  FlaskConical,
 } from "lucide-react";
 import { ServiceSelect } from "./service-controls";
 import { useDemoCrm } from "./demo-crm-store";
 import {
   settings,
+  splitAiBlocks,
+  aiExamples,
+  removeAiExample,
   modelOptions,
   loadAiSettings,
   updateAiSettings,
   type AiSettings,
 } from "./ai-manager-client";
 import "./ai-manager.css";
-type Tab = "system" | "knowledge" | "scripts" | "slots" | "feedback";
+import { AiBlockEditor, AiTestChat } from "./ai-manager-training";
+type Tab = "test" | "system" | "knowledge" | "scripts" | "slots" | "feedback";
 const tabs = [
+  { id: "test", label: "Тестовый чат", icon: FlaskConical },
   { id: "system", label: "Инструкции", icon: SlidersHorizontal },
   { id: "knowledge", label: "База знаний", icon: BookOpen },
   { id: "scripts", label: "Сценарии", icon: MessagesSquare },
@@ -31,15 +37,40 @@ const tabs = [
 type Scenario = { title: string; when: string; text: string };
 export function AiManager() {
   const [value, setValue] = useState<AiSettings | null>(settings),
-    [tab, setTab] = useState<Tab>("system"),
+    [tab, setTab] = useState<Tab>("test"),
     [error, setError] = useState(""),
     [expanded, setExpanded] = useState<number | null>(null);
   const { state } = useDemoCrm();
+  const [examples, setExamples] = useState(aiExamples);
+  const [blocks, setBlocks] = useState(() =>
+    settings
+      ? {
+          system: splitAiBlocks(settings.system, "Роль и цель"),
+          knowledge: splitAiBlocks(settings.knowledge, "О преподавателе"),
+        }
+      : null,
+  );
+  const [openBlock, setOpenBlock] = useState({ system: -1, knowledge: -1 });
+  function openTest() {
+    setTab("test");
+    document
+      .getElementById("aim-tab-test")
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
   useEffect(() => {
     let active = true;
     loadAiSettings()
       .then((s) => {
-        if (active) setValue(s);
+        if (active) {
+          setValue(s);
+          setBlocks(
+            (current) =>
+              current ?? {
+                system: splitAiBlocks(s.system, "Роль и цель"),
+                knowledge: splitAiBlocks(s.knowledge, "О преподавателе"),
+              },
+          );
+        }
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -118,7 +149,9 @@ export function AiManager() {
           >
             <Icon size={16} />
             {label}
-            {id === "feedback" && feedback.length > 0 ? <small>{feedback.length}</small> : null}
+            {id === "feedback" && feedback.length + examples.length > 0 ? (
+              <small>{feedback.length + examples.length}</small>
+            ) : null}
           </button>
         ))}
       </div>
@@ -133,20 +166,32 @@ export function AiManager() {
             Загрузка настроек…
           </div>
         ) : null}
-        {value && tab !== "scripts" && tab !== "feedback" ? (
+        {value ? (
+          <div hidden={tab !== "test"}>
+            <AiTestChat active={tab === "test"} onRemember={() => setExamples(aiExamples)} />
+          </div>
+        ) : null}
+        {value && blocks && (tab === "system" || tab === "knowledge") ? (
+          <AiBlockEditor
+            blocks={blocks[tab]}
+            expanded={openBlock[tab]}
+            onExpand={(index) => setOpenBlock({ ...openBlock, [tab]: index })}
+            onEdit={(next) => {
+              setBlocks({ ...blocks, [tab]: next });
+              update({ [tab]: next.map((block) => block.separator + block.text).join("") });
+            }}
+            onTest={openTest}
+          />
+        ) : null}
+        {value && tab === "slots" ? (
           <div className="aim-editor-wrap">
             <textarea
               className="aim-editor"
-              aria-label="Настройки ИИ-менеджера"
-              value={value[tab]}
+              aria-label="Свободное время"
+              value={value.slots}
               maxLength={16000}
-              spellCheck={false}
-              placeholder={
-                tab === "slots"
-                  ? "Добавьте доступные дни и время для диагностики…"
-                  : "Добавьте правила и важные детали…"
-              }
-              onChange={(e) => update({ [tab]: e.target.value })}
+              placeholder="Добавьте доступные дни и время для диагностики…"
+              onChange={(e) => update({ slots: e.target.value })}
             />
           </div>
         ) : null}
@@ -255,7 +300,40 @@ export function AiManager() {
         ) : null}
         {tab === "feedback" ? (
           <div className="aim-feedback">
-            {!feedback.length ? (
+            <div className="aim-training-help">
+              <p>
+                В тестовом чате исправьте ответ и нажмите «Запомнить пример». ИИ учитывает свежие
+                примеры в следующих ответах до обновления страницы.
+              </p>
+              <button type="button" className="st-button" onClick={openTest}>
+                Открыть тестовый чат
+              </button>
+            </div>
+            {examples
+              .slice()
+              .reverse()
+              .map((example) => (
+                <article key={example.id}>
+                  <div className="aim-feedback-head">
+                    <span>Пример ответа</span>
+                    <button
+                      type="button"
+                      className="aim-delete"
+                      aria-label={`Удалить пример: ${example.question}`}
+                      onClick={() => {
+                        removeAiExample(example.id);
+                        setExamples(aiExamples);
+                      }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                  <strong>{example.question}</strong>
+                  <p>{example.original}</p>
+                  <blockquote>{example.answer}</blockquote>
+                </article>
+              ))}
+            {!feedback.length && !examples.length ? (
               <div className="aim-empty">
                 <History size={24} />
                 <strong>Пока нет правок</strong>
