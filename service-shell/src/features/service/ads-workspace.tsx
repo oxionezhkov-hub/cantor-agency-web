@@ -31,6 +31,7 @@ import "./ads-workspace.css";
 import { AdsSelect, AdsHelp } from "./ads-controls";
 import { bidModes, timeOptions } from "./ads-options";
 import { PREVIEW_EVENT, getPreviewData } from "./preview-data";
+import { AdAssistant } from "./ad-assistant";
 import { AdCampaign } from "./ad-campaign";
 import { getAdPreflightWarnings } from "./ad-preflight";
 import { AdComparison } from "./ad-comparison";
@@ -251,6 +252,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   const [bidDrafts, setBidDrafts] = useState<Record<string, string>>({});
   const [details, setDetails] = useState(false);
   const [singleCreation, setSingleCreation] = useState(false);
+  const [manualBatch, setManualBatch] = useState(false);
   const [sort, setSort] = useState<{ key: string; asc: boolean }>({ key: "status", asc: false });
   const [photoIndex, setPhotoIndex] = useState(0);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -258,6 +260,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   useEffect(() => {
     if (focus === "generate") {
       setSingleCreation(false);
+      setManualBatch(false);
       setTab("generate");
       setEdit(newListing());
       setEditorTab("content");
@@ -1319,7 +1322,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                         <a
                           className="aw-text-link aw-autoload-error"
                           href="/?section=ads&focus=feeds"
-                          title={getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError}
+                          title={
+                            getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError
+                          }
                         >
                           {getPreviewData()!.ads.find((item) => item.id === a.id)!.autoloadError}
                         </a>
@@ -1786,7 +1791,24 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
           </div>
         </div>
       )}
-      {tab === "generate" && !singleCreation && (
+      {tab === "generate" && !singleCreation && !manualBatch && (
+        <AdAssistant
+          sources={state.items}
+          onBatch={() => setManualBatch(true)}
+          onAdd={(drafts) =>
+            commit(
+              [...state.items, ...drafts.map((draft) => ({ ...newListing(), ...draft }))],
+              `Добавлено черновиков: ${drafts.length}`,
+            )
+          }
+        />
+      )}
+      {tab === "generate" && manualBatch && !singleCreation && (
+        <button className="aw-text-button" onClick={() => setManualBatch(false)}>
+          К созданию с ИИ
+        </button>
+      )}
+      {tab === "generate" && !singleCreation && manualBatch && (
         <AdCampaign
           sources={state.items}
           onSingle={() => setSingleCreation(true)}

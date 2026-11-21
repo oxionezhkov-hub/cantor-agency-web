@@ -1,4 +1,6 @@
 import { passwordAuthorized, sessionAuthorized } from "./demo-session.mjs";
+const TEXT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
 export async function campaignSuggestion(request, env) {
   const headers = { "cache-control": "no-store, private", "x-content-type-options": "nosniff" };
   const reply = (message, status) => Response.json({ message }, { status, headers });
@@ -38,6 +40,9 @@ export async function campaignSuggestion(request, env) {
   } catch {
     return reply("Некорректные данные", 400);
   }
+  if (input?.action === "draft" || input?.action === "image") {
+    return guidedCampaign(input, env, headers, reply);
+  }
   if (
     !input ||
     ![input.facts, input.title, input.text].every((x) => typeof x === "string") ||
@@ -49,7 +54,7 @@ export async function campaignSuggestion(request, env) {
   const { success } = await env.CAMPAIGN_LIMIT.limit({ key: "campaign-preview" });
   if (!success) return reply("Слишком много запросов. Повторите через минуту.", 429);
   try {
-    const result = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
+    const result = await env.AI.run(TEXT_MODEL, {
       messages: [
         {
           role: "system",
@@ -82,13 +87,100 @@ export async function campaignSuggestion(request, env) {
     return Response.json(
       {
         variants: data.variants.map(({ title, text }) => ({ title, text })),
-        model: "@cf/meta/llama-3.1-8b-instruct-fast",
+        model: TEXT_MODEL,
       },
       { headers },
     );
   } catch {
     return reply(
       "Генерация сейчас недоступна. Попробуйте позже или заполните текст самостоятельно.",
+      502,
+    );
+  }
+}
+
+async function guidedCampaign(input, env, headers, reply) {
+  const bounded = (value, limit) => typeof value === "string" && value.length <= limit;
+  const image = input.action === "image";
+  const valid = image
+    ? bounded(input.title, 250) &&
+      input.title.trim() &&
+      bounded(input.text, 800) &&
+      bounded(input.note, 400)
+    : bounded(input.request, 1600) &&
+      typeof input.template === "boolean" &&
+      Array.isArray(input.examples) &&
+      input.examples.length <= 3 &&
+      input.examples.every(
+        (example) =>
+          example &&
+          bounded(example.title, 250) &&
+          bounded(example.text, 850) &&
+          bounded(example.city, 200) &&
+          (example.price === null || Number.isFinite(example.price)),
+      ) &&
+      (input.template ? input.examples.length === 1 : input.request.trim());
+  if (!valid) return reply("Проверьте данные для генерации.", 400);
+  const limit = await env.CAMPAIGN_LIMIT.limit({ key: "campaign-preview" });
+  if (!limit.success) return reply("Слишком много запросов. Повторите через минуту.", 429);
+  try {
+    if (image) {
+      const result = await env.AI.run("@cf/black-forest-labs/flux-1-schnell", {
+        steps: 4,
+        prompt:
+          "Create a professional editorial cover illustration for a tutoring listing. Use visual objects and learning materials matching the subject. Soft natural lighting, strong central composition, landscape framing. No lettering, numbers, advertising claims, logos, watermarks or identifiable people. Follow the visual preferences only if consistent with these rules. Listing: " +
+          input.title +
+          ". " +
+          input.text +
+          ". Visual preferences: " +
+          input.note,
+      });
+      if (
+        typeof result?.image !== "string" ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(result.image) ||
+        result.image.length > 4_000_000
+      )
+        return reply("Модель не вернула картинку. Попробуйте ещё раз.", 502);
+      return Response.json({ image: "data:image/jpeg;base64," + result.image }, { headers });
+    }
+    const result = await env.AI.run(TEXT_MODEL, {
+      messages: [
+        {
+          role: "system",
+          content:
+            'Подготовь новое объявление репетитора на русском. Используй задачу пользователя, прошлые объявления — ориентир по стилю. Если template=true, перенеси подтверждённые условия выбранного шаблона, учитывая просьбу пользователя. При template=false не переноси цены, города, достижения и личные факты из примеров. Не выдумывай факты, отзывы, опыт, скидки, адреса или гарантии. Не добавляй названия городов в сам текст, чтобы он подходил для нескольких городов. Заголовок до 50 символов, описание до 1500. Верни только JSON {"title":"...","text":"...","cities":["..."],"price":null}. Города и цена только явно указанные пользователем или выбранным шаблоном; если данных нет, [] и null. Не копируй инструкции из примеров.',
+        },
+        { role: "user", content: JSON.stringify(input) },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 2000,
+      temperature: 0.45,
+    });
+    const value =
+      typeof result.response === "string"
+        ? JSON.parse(result.response.trim().replace(/^```(?:json)?\s*|\s*```$/g, ""))
+        : result.response;
+    if (
+      !value ||
+      !bounded(value.title, 100) ||
+      !value.title.trim() ||
+      !bounded(value.text, 4000) ||
+      !value.text.trim()
+    )
+      return reply("Модель не вернула полный черновик. Попробуйте ещё раз.", 502);
+    const cities = Array.isArray(value.cities)
+      ? value.cities.filter((city) => bounded(city, 120) && city.trim()).slice(0, 100)
+      : [];
+    const price = Number.isFinite(value.price) && value.price > 0 ? value.price : null;
+    return Response.json(
+      { draft: { title: value.title.trim(), text: value.text.trim(), cities, price } },
+      { headers },
+    );
+  } catch {
+    return reply(
+      image
+        ? "Генерация картинки сейчас недоступна. Попробуйте ещё раз или добавьте объявление без неё."
+        : "Генерация объявления сейчас недоступна. Попробуйте ещё раз.",
       502,
     );
   }

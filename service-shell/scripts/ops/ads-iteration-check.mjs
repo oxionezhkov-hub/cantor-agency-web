@@ -178,6 +178,7 @@ try {
     await p.screenshot({ path: `/tmp/cantor-ads-nov18/feed-${width}.png` });
     await openMenu();
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
+    await p.getByRole("button", { name: "Ручное создание и партии", exact: true }).click();
     await p.locator('.ac').getByLabel('Заголовок', {exact:true}).fill('Математика · {город}');
     await p.locator('.ac').getByLabel('Текст', {exact:true}).fill('Онлайн-занятия по математике для школьников. {город}.');
     await p.locator('.ac').getByLabel('Цена занятия, ₽', {exact:true}).fill('1500');
@@ -238,6 +239,7 @@ try {
     assert.equal(await p.getByRole("dialog", { name: "Редактор объявления" }).count(), 0);
     await openMenu();
     await nav.getByRole("button", { name: "ИИ-генерация", exact: true }).click();
+    await p.getByRole("button", { name: "Ручное создание и партии", exact: true }).click();
     await p.getByRole("button", { name: "Одно объявление", exact: true }).click();
     await d.waitFor();
     assert.equal(await d.getByLabel("Заголовок", { exact: true }).inputValue(), "");
