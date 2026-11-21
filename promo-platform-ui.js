@@ -180,7 +180,7 @@
         observer.unobserve(entry.target);
       }
     }, { threshold: 0.08 });
-    document.querySelectorAll('.pain,.journey,.feature-heading,.support-features article,.audience,.big-stats,.case,.values>div,details').forEach(element => {
+    document.querySelectorAll('.pain,.journey,.feature-heading,.panel-art,.compare-cards article,.support-features article,.audience,.big-stats,.case,.values>div,details').forEach(element => {
       element.classList.add('reveal-ready');
       observer.observe(element);
     });
