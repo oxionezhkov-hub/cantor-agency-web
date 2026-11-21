@@ -6,7 +6,7 @@ const digest = Buffer.from(
   await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password)),
 ).toString("hex");
 const request = (body, auth = true, origin = "https://preview.test") =>
-  new Request("https://preview.test/api/campaign/suggest", {
+  new Request("https://preview.test/api/demo/campaign/suggest", {
     method: "POST",
     headers: {
       origin,

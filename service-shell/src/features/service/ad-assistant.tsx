@@ -10,7 +10,7 @@ type Draft = Omit<CampaignDraft, "city" | "price"> & { cities: string; price: st
 const words = (value: string) => value.toLocaleLowerCase("ru").match(/[\p{L}\d]{3,}/gu) ?? [];
 
 async function generate(input: object) {
-  const response = await fetch("/api/campaign/suggest", {
+  const response = await fetch("/api/demo/campaign/suggest", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),

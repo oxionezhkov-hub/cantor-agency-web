@@ -11,7 +11,7 @@ export default {
     const path = url.pathname;
     if (path === "/api/demo/live") return liveRead(request,env);
     if (path === "/api/demo/avito-audit") return avitoAudit(request, env);
-    if (path === "/api/campaign/suggest") return campaignSuggestion(request, env);
+    if (path === "/api/demo/campaign/suggest" || path === "/api/campaign/suggest") return campaignSuggestion(request, env);
     const headers = {
       "x-robots-tag": "noindex, nofollow",
       "x-content-type-options": "nosniff",

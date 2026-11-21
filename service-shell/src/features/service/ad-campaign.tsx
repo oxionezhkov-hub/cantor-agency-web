@@ -90,7 +90,7 @@ export function AdCampaign({
     setBusy(true);
     setMessage("");
     try {
-      const response = await fetch("/api/campaign/suggest", {
+      const response = await fetch("/api/demo/campaign/suggest", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ facts, title, text, count: Number(count) }),
