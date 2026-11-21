@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { ArrowLeft, ImagePlus, Sparkles } from "lucide-react";
 import { AdsSelect } from "./ads-controls";
-import { getAdPreflightWarnings } from "./ad-preflight";
+import { adVariants, checkAdVariants, recommendAdSettings } from "./ad-assistant-model";
+import { createAdCover } from "./ad-cover";
 import type { CampaignDraft } from "./ad-campaign";
 import "./ad-campaign.css";
 
-type Source = CampaignDraft & { id: string };
+type Source = CampaignDraft & { id: string; views?: number; contacts?: number; status?: string };
 type Draft = Omit<CampaignDraft, "city" | "price"> & { cities: string; price: string };
 const words = (value: string) => value.toLocaleLowerCase("ru").match(/[\p{L}\d]{3,}/gu) ?? [];
 
@@ -38,7 +39,9 @@ export function AdAssistant({
   const [references, setReferences] = useState<Source[]>([]);
   const [approved, setApproved] = useState(false);
   const [image, setImage] = useState("");
-  const [imageNote, setImageNote] = useState("");
+  const [photo, setPhoto] = useState("");
+  const [previewCity, setPreviewCity] = useState("");
+  const [reviewed, setReviewed] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(0);
@@ -53,6 +56,14 @@ export function AdAssistant({
     ).values(),
   ];
   const price = Number(draft?.price.replace(",", "."));
+  const historical = sources.filter((item) => item.status !== "draft");
+  const recommendations = recommendAdSettings(historical);
+  const texts = adVariants(draft?.text ?? "", cities.length ? cities : [""]);
+  const checks = checkAdVariants(draft?.title.trim() ?? "", texts, price, cities, historical);
+  const preview = texts[Math.max(0, cities.indexOf(previewCity))] ?? "";
+  const availablePhotos = [
+    ...new Set([...(draft?.photos ?? []), ...references.flatMap((item) => item.photos)]),
+  ].slice(0, 8);
   const valid = !!(
     draft?.title.trim() &&
     draft?.text.trim() &&
@@ -62,27 +73,25 @@ export function AdAssistant({
     cities.length > 0 &&
     cities.length <= 100
   );
-  const warnings = draft
-    ? getAdPreflightWarnings({ title: draft.title, text: draft.text, price })
-    : [];
 
   async function prepare() {
     setBusy("draft");
     setError("");
     const terms = new Set(words(request));
-    const candidates = sources
+    const candidates = historical
       .filter((item) => item.text.trim())
       .map((item) => ({
         item,
         score: [...new Set(words(item.title + " " + item.text))].filter((word) => terms.has(word))
           .length,
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score || (b.item.contacts || 0) - (a.item.contacts || 0));
     const examples =
       selected && mode === "template"
         ? [selected]
         : candidates
             .filter((x) => x.score > 0)
+            .filter((x, index, all) => all.findIndex((y) => y.item.text === x.item.text) === index)
             .slice(0, 3)
             .map((x) => x.item);
     try {
@@ -91,7 +100,7 @@ export function AdAssistant({
         request,
         examples: examples.map(({ title, text, city, price }) => ({
           title: title.slice(0, 250),
-          text: text.slice(0, 850),
+          text: text.slice(0, 1250),
           city,
           price: Number.isFinite(price) ? price : null,
         })),
@@ -112,41 +121,41 @@ export function AdAssistant({
       setReferences(examples);
       setApproved(false);
       setImage("");
-      setImageNote("");
+      setPhoto("");
+      setReviewed("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось подготовить черновик.");
     } finally {
       setBusy("");
     }
   }
-  async function createImage() {
-    if (!draft) return;
+  async function createImage(reference = photo || availablePhotos[0]) {
+    if (!draft || !reference) return;
     setBusy("image");
     setError("");
+    setPhoto(reference);
+    setImage("");
     try {
-      const result = await generate({
-        action: "image",
-        title: draft.title.slice(0, 250),
-        text: draft.text.slice(0, 800),
-        note: imageNote,
-      });
-      setImage(result.image);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Не удалось создать изображение.");
+      const format = /онлайн|дистанцион/i.test(draft.title + " " + draft.text)
+        ? "Онлайн-занятия"
+        : "Репетитор";
+      setImage(await createAdCover(reference, draft.title, format));
+    } catch {
+      setError("Не удалось собрать обложку из этого фото. Выберите другое или загрузите файл.");
     } finally {
       setBusy("");
     }
   }
   function save(photos: string[]) {
-    if (!draft || !approved || !valid) return;
+    if (!draft || !approved || !valid || checks.errors.length) return;
     if (
       onAdd(
-        cities.map((city) => ({
+        cities.map((city, index) => ({
           city,
           price,
           photos,
           title: draft.title.trim().replaceAll("{город}", city),
-          text: draft.text.trim().replaceAll("{город}", city),
+          text: texts[index],
         })),
       )
     )
@@ -306,20 +315,105 @@ export function AdAssistant({
               запятую.
             </p>
           )}
-          {warnings.length > 0 && (
-            <ul className="aw-preflight">
-              {warnings.map((w) => (
-                <li key={w}>{w}</li>
-              ))}
-            </ul>
-          )}
+          <div className="ac-advice">
+            <strong>Рекомендации по объявлениям кабинета</strong>
+            {recommendations.cities.length ? (
+              <div className="ac-ai-row">
+                {recommendations.cities.map((item) => (
+                  <button
+                    key={item.city}
+                    className="aw-btn"
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        cities: [...new Set([...cities, item.city])].join(", "),
+                      })
+                    }
+                  >
+                    {item.city} · {item.contacts} конт.
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p>В истории пока нет городов с подтверждёнными контактами.</p>
+            )}
+            {recommendations.price !== null && (
+              <p>
+                <button
+                  className="aw-btn"
+                  onClick={() => setDraft({ ...draft, price: String(recommendations.price) })}
+                >
+                  Подставить {recommendations.price.toLocaleString("ru-RU")} ₽
+                </button>{" "}
+                Медиана по {recommendations.samples} ценам кабинета. Диапазон{" "}
+                {recommendations.low.toLocaleString("ru-RU")}–
+                {recommendations.high?.toLocaleString("ru-RU")} ₽.
+              </p>
+            )}
+            <small>
+              Города ранжированы по числу контактов за доступный период. Это собственная история,
+              без оценки рынка.
+            </small>
+          </div>
+          <div className="ac-advice">
+            <strong>
+              Предпросмотр описания · вариантов {checks.unique} из {texts.length}
+            </strong>
+            {cities.length > 1 && (
+              <AdsSelect
+                label="Город предпросмотра"
+                value={cities.includes(previewCity) ? previewCity : cities[0]}
+                options={cities.map((value) => ({ value, label: value }))}
+                onChange={setPreviewCity}
+              />
+            )}
+            {preview.split(/\n\s*\n/).map((paragraph, index) =>
+              index === 0 ? (
+                <p key={index}>
+                  <strong>{paragraph}</strong>
+                </p>
+              ) : (
+                <p key={index}>{paragraph}</p>
+              ),
+            )}
+            <small>
+              Для вариантов фраз используйте {"{Напишите в чат|Расскажите о задаче в чате}"}.
+            </small>
+          </div>
+          <div className="ac-advice">
+            <strong>Проверка перед согласованием</strong>
+            {checks.errors.length + checks.warnings.length ? (
+              <ul className="aw-preflight">
+                {[...checks.errors, ...checks.warnings].map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Проверки длины, цены, формата, контактов и совпадений пройдены.</p>
+            )}
+            {checks.warnings.length > 0 && (
+              <label className="ac-confirm">
+                <input
+                  type="checkbox"
+                  checked={reviewed === checks.warnings.join("\n")}
+                  onChange={(e) => setReviewed(e.target.checked ? checks.warnings.join("\n") : "")}
+                />
+                Я проверил замечания
+              </label>
+            )}
+          </div>
           <button
             className="aw-btn aw-primary"
-            disabled={!valid}
+            disabled={
+              !valid ||
+              !!checks.errors.length ||
+              (!!checks.warnings.length && reviewed !== checks.warnings.join("\n"))
+            }
             onClick={() => {
               setApproved(true);
               setImage("");
-              void createImage();
+              setError("");
+              if (availablePhotos[0]) void createImage(availablePhotos[0]);
             }}
           >
             Согласовать и перейти к картинкам
@@ -348,32 +442,52 @@ export function AdAssistant({
               alt="Сгенерированная обложка объявления"
             />
           )}
-          <details className="ac-references">
-            <summary>Уточнить, что нарисовать</summary>
+          <div className="ac-advice">
+            <strong>Исходные фото из ваших объявлений</strong>
+            {availablePhotos.length > 0 ? (
+              <div className="ac-cover-options">
+                {availablePhotos.map((url, index) => (
+                  <button
+                    key={url}
+                    type="button"
+                    className="aw-btn"
+                    aria-label={`Обложка из фото ${index + 1}`}
+                    aria-pressed={photo === url}
+                    disabled={!!busy}
+                    onClick={() => void createImage(url)}
+                  >
+                    <img src={url} alt="" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p>Выберите фото репетитора. На его основе соберём обложку с заголовком.</p>
+            )}
             <label>
-              Пожелания к картинке
-              <textarea
-                rows={2}
-                maxLength={400}
-                value={imageNote}
-                onChange={(e) => setImageNote(e.target.value)}
-                placeholder="Например, тетрадь и учебники на светлом столе"
+              Загрузить своё фото
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={!!busy}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 12_000_000) {
+                    setError("Выберите фото до 12 МБ.");
+                    return;
+                  }
+                  const url = URL.createObjectURL(file);
+                  void createImage(url).finally(() => URL.revokeObjectURL(url));
+                }}
               />
             </label>
-          </details>
+          </div>
           <div className="ac-ai-row">
-            <button
-              className={image ? "aw-btn" : "aw-btn aw-primary"}
-              disabled={!!busy}
-              onClick={createImage}
-            >
-              <ImagePlus size={16} />
-              {busy
-                ? "Создаём картинку…"
-                : image
-                  ? "Сгенерировать другую"
-                  : "Сгенерировать картинку"}
-            </button>
+            {busy && (
+              <p role="status">
+                <ImagePlus size={16} /> Собираем обложку…
+              </p>
+            )}
             {image && (
               <button
                 className="aw-btn aw-primary"
