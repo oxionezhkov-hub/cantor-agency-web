@@ -195,7 +195,7 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-dashboard-password',
+    'Access-Control-Allow-Headers': 'Content-Type, x-dashboard-password, X-Source',
     'Access-Control-Max-Age': '86400',
   };
 }
@@ -1075,6 +1075,7 @@ async function avitoCallViaProxy(account, path, options) {
     }
     return res;
   } catch (e) {
+    if (options.noRetry) throw e;
     console.error('avito-call via proxy failed, going straight to Avito', e && e.message);
     AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
     return null;
@@ -1087,7 +1088,7 @@ async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = 
   let res = null;
   if (owner && AVITO_PROXY.url && Date.now() > AVITO_PROXY_OFF_UNTIL) {
     res = await avitoCallViaProxy(owner.account, path, options);
-    if (res && (res.status === 401 || res.status === 403) && /not authorized|bad bearer/i.test(await res.clone().text().catch(() => ''))) {
+    if (!options.noRetry && res && (res.status === 401 || res.status === 403) && /not authorized|bad bearer/i.test(await res.clone().text().catch(() => ''))) {
       // Avito refuses even the function's own fresh token: back to going straight, as before the proxy.
       console.error('avito: not authorized even via the proxy — going straight to Avito for 10 minutes');
       AVITO_PROXY_OFF_UNTIL = Date.now() + 10 * 60 * 1000;
@@ -1095,11 +1096,22 @@ async function avitoRequest(token, path, options = {}, attempt = 0, refreshed = 
     }
   }
   if (!res) {
+    // Writes must not be replayed through another transport after an uncertain timeout.
+    // With the proxy unavailable before this request, send directly exactly once.
+    if (options.noRetry) {
+      const { noRetry, ...init } = options;
+      return fetch(`${AVITO_API_BASE}${path}`, {
+        ...init,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
+        signal: AbortSignal.timeout(AVITO_FETCH_TIMEOUT_MS),
+      });
+    }
     res = await avitoFetch(path, {
       ...options,
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
     });
   }
+  if (options.noRetry) return res;
   if ((res.status === 401 || res.status === 403) && !refreshed && AVITO_TOKEN_OWNER.has(token)) {
     const text = await res.clone().text().catch(() => '');
     if (res.status === 401 || /not authorized|bad bearer|token/i.test(text)) {
@@ -1972,49 +1984,83 @@ async function handleAvitoApi(request, env, url) {
     return json({ tariffs });
   }
 
-  // Any read from Avito's API for a cabinet: GET /api/avito/raw?accountId=…&path=/core/v1/accounts/self
-  // ({user_id} in the path becomes the cabinet's id). GET goes to any path; POST only to the paths
-  // where Avito uses POST to read (statistics, operations history, balance, prices, calls) — the body
-  // is passed through. Nothing that changes a cabinet (prices, promotion, listings, messages) goes here.
-  if (pathname === '/api/avito/raw' && (request.method === 'GET' || request.method === 'POST')) {
+  // Full cabinet API proxy. Known read-only POSTs work by default. Other POSTs and all
+  // PUT/PATCH/DELETE calls require allowWrite=true for this particular request.
+  // {user_id} in the path becomes the selected cabinet's id; credentials stay server-side.
+  if (pathname === '/api/avito/raw' && ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const accountId = url.searchParams.get('accountId');
     const rawPath = url.searchParams.get('path') || '';
     if (!accountId || !rawPath) return json({ error: 'missing_fields' }, 400);
     const account = await kv.get(`account:${accountId}`, 'json');
     if (!account) return json({ error: 'not_found' }, 404);
     const path = rawPath.replace(/\{user_?id\}/gi, account.userId);
-    if (!/^\/[A-Za-z0-9_\-./]*(\?.*)?$/.test(path) || path.includes('..') || /^\/token\b/.test(path)) {
+    if (!/^\/(?!\/)[A-Za-z0-9_\-./]+(\?[^#\r\n]*)?$/.test(path) || path.split('?')[0].includes('..') || /^\/token\b/i.test(path)) {
       return json({ error: 'bad_path' }, 400);
     }
-    if (request.method === 'POST' && !AVITO_READ_POSTS.some((re) => re.test(path.split('?')[0]))) {
-      return json({ error: 'post_not_allowed', message: 'POST only for read-only Avito endpoints', allowed: AVITO_READ_POSTS.map(String) }, 403);
+    const readOnly = request.method === 'GET' || (request.method === 'POST' && AVITO_READ_POSTS.some((re) => re.test(path.split('?')[0])));
+    if (!readOnly && url.searchParams.get('allowWrite') !== 'true') {
+      return json({ error: 'write_confirmation_required', message: 'This operation may change the cabinet or spend money. Add allowWrite=true only for an explicitly authorized operation.' }, 403);
     }
     try {
       const token = await avitoGetToken(env, account);
-      const body = request.method === 'POST' ? await request.text() : undefined;
-      const res = await avitoRequest(token, path, { method: request.method, body });
+      const body = request.method !== 'GET' && request.body !== null ? await request.arrayBuffer() : undefined;
+      const headers = { 'Content-Type': request.headers.get('Content-Type') || 'application/json' };
+      if (request.headers.has('X-Source')) headers['X-Source'] = request.headers.get('X-Source');
+      const res = await avitoRequest(token, path, { method: request.method, body, headers, noRetry: !readOnly });
+      const contentType = res.headers.get('Content-Type') || '';
+      if (contentType && !/json|text|xml|form|javascript|csv/i.test(contentType)) {
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        return json({ status: res.status, path, data: btoa(binary), encoding: 'base64', contentType }, res.ok ? 200 : 502);
+      }
       const text = await res.text();
       let data;
       try { data = JSON.parse(text); } catch (e) { data = text; }
       return json({ status: res.status, path, data }, res.ok ? 200 : 502);
     } catch (e) {
-      return json({ error: 'raw_failed', message: String(e && e.message) }, 502);
+      return json({ error: 'raw_failed', message: readOnly ? String(e && e.message) : 'The write outcome is unknown. Check the cabinet before retrying.', ...(!readOnly ? { outcome: 'unknown' } : {}) }, 502);
     }
   }
 
   return json({ error: 'not_found' }, 404);
 }
 
-// Avito endpoints that take POST but only read. /api/avito/raw lets POST through to these and nothing else.
+// POST reads from Avito's API catalog. Keep explicit patterns: names such as
+// "get", "info" or "report" alone do not prove that an endpoint is free of side effects.
+// Other operations remain available with per-request allowWrite=true.
 const AVITO_READ_POSTS = [
+  /^\/special-offers\/v1\/stats\/?$/,
+  /^\/special-offers\/v1\/(available|tariffInfo)\/?$/,
   /^\/stats\/v1\/accounts\/\d+\/items\/?$/,
   /^\/stats\/v2\/accounts\/\d+\/items\/?$/,
   /^\/stats\/v2\/accounts\/\d+\/spendings\/?$/,
   /^\/core\/v1\/accounts\/operations_history\/?$/,
   /^\/core\/v1\/accounts\/\d+\/price\/vas\/?$/,
-  /^\/cpa\/v3\/balanceInfo\/?$/,
+  /^\/core\/v1\/accounts\/\d+\/vas\/prices\/?$/,
+  /^\/core\/v1\/accounts\/\d+\/calls\/stats\/?$/,
+  /^\/cpa\/v[23]\/balanceInfo\/?$/,
+  /^\/cpa\/v1\/(chatsByTime|phonesInfoFromChats)\/?$/,
+  /^\/cpa\/v2\/callById\/?$/,
   /^\/cpa\/v2\/(calls|chats)ByTime\/?$/,
-  /^\/calltracking\/v1\/getCalls\/?$/,
+  /^\/calltracking\/v1\/(getCalls|getCallById)\/?$/,
+  /^\/cpxpromo\/1\/getPromotionsByItemIds\/?$/,
+  /^\/autostrategy\/v1\/(budget|campaign\/info|campaigns|stat)\/?$/,
+  /^\/ads\/v1\/account\/[^/]+\/(advertisers|campaigns|contracts|creatives|groups)\/?$/,
+  /^\/ads\/v1\/account\/[^/]+\/campaigns\/[^/]+\/(stats|creatives\/stats|groups\/stats)\/?$/,
+  /^\/api\/1\/agency\/clients\/?$/,
+  /^\/api\/1\/agency\/clients\/target\/result\/?$/,
+  /^\/api\/1\/agency\/finances\/transactionsHistory\/?$/,
+  /^\/api\/1\/agency\/users\/(invite\/status|verificationStatus)\/?$/,
+  /^\/job\/v1\/applications\/get_by_ids\/?$/,
+  /^\/job\/v2\/vacancies\/(batch|statuses)\/?$/,
+  /^\/listItemsByEmployeeIdV1\/?$/,
+  /^\/messenger\/v1\/subscriptions\/?$/,
+  /^\/promotion\/v1\/items\/services\/(dict|get|orders\/get|orders\/status|bbip\/forecasts\/get|bbip\/suggests\/get)\/?$/,
+  /^\/promotion\/v2\/items\/services\/get\/?$/,
+  /^\/stock-management\/1\/info\/?$/,
+  /^\/delivery-sandbox\/v1\/(getAnnouncementEvent|getChangeParcelInfo|getParcelInfo|getRegisteredParcelID)\/?$/,
+  /^\/delivery-sandbox\/(announcements\/track|order\/tracking)\/?$/,
 ];
 
 // Avito's /tariff/info/1 only knows the «Транспорт» tariffs («Тариф должен принадлежать к категории
