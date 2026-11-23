@@ -88,15 +88,46 @@ test('bad API response preserves the cache and a valid empty response does not c
   assert.equal(omitted.rows.length,0);
 });
 
-test('results use cache, validate active cabinet and save only server fetched rows',async()=>{
+test('recording a row updates only its date and ignores caller supplied metrics',async()=>{
   const today=new Date(Date.now()+3*3600000).toISOString().slice(0,7);
-  const records={'project:client':PROJECT,[`mailResults:account:${today}`]:{month:today,rows:[{date:today+'-01',spent:100,recipients:5,interested:2}]}};
+  const records={'project:client':PROJECT,[`mailResults:account:${today}`]:{month:today,rows:[{date:today+'-01',spent:100,recipients:5,interested:2},{date:today+'-02',spent:200,recipients:10,interested:4}]}};
   const {c}=context(records,{month:today});
-  const result=await run(c,'mailResultsApi(env,{name:"Tester"},"mail-results-save",{month,projectId:"client",rows:[{interested:999}]})');
+  const result=await run(c,'mailResultsApi(env,{name:"Tester"},"mail-results-save",{date:month+"-01",projectId:"client",rows:[{interested:999}]})');
   assert.equal(result.created,1);assert.equal(records[`mail:${today}`].items[0].contacts,2);assert.equal(c.fetchCalls,0);
-  records['project:client'].inactive=true;
+  assert.equal(records[`mail:${today}`].items.length,1);
+  assert.equal(records[`mail:${today}`].items[0].date,today+'-01');
+  assert.equal((await run(c,'mailResultsApi(env,{},"mail-results-save",{projectId:"client"})')).status,400);
+  assert.equal((await run(c,'mailResultsApi(env,{},"mail-results-save",{date:month+"-03",projectId:"client"})')).status,404);
+  records['project:client']={...records['project:client'],inactive:true};
   assert.equal((await run(c,'mailResultsApi(env,{},"mail-results",{month,projectId:"client"})')).status,400);
-  assert.equal((await run(c,'mailResultsApi(env,{},"mail-results",{month:"2026-13",projectId:"client"})')).status,400);
+  assert.equal((await run(c,'mailResultsApi(env,{},"mail-results-save",{date:"2026-02-31",projectId:"client"})')).status,400);
+});
+
+test('continuous history fetches earlier years and merges monthly cron updates newest first',async()=>{
+  const {c,records}=context({'project:client':PROJECT,'account:account':{}}, {requests:[]});
+  run(c,`avitoJson=async (_token,_path,options)=>{requests.push(JSON.parse(options.body));return {stats:[...stats,{sentAt:'2024-09-13T20:30:42+03:00',price:500,count:20,chatsOpened:3}]}}`);
+  const all=await run(c,'mailResultsApi(env,{},"mail-results",{projectId:"client"})');
+  assert.equal(all.error,undefined,JSON.stringify(all));
+  assert.deepEqual(Array.from(all.rows,r=>r.date),['2026-11-19','2026-11-12','2024-09-13']);
+  assert.equal(c.requests[0].dateTimeFrom,'1970-01-01T00:00:00Z');
+  assert.equal(records['mailResultsHistory:account'].complete,true);
+  records['mailResults:account:2026-11'].rows[0].interested=12;
+  const updated=await run(c,'mailResultsApi(env,{},"mail-results",{projectId:"client"})');
+  assert.equal(updated.rows[0].interested,12);assert.equal(c.requests.length,1);
+  await run(c,'mailResultsApi(env,{},"mail-results",{projectId:"client",refresh:true})');
+  assert.equal(c.requests.length,2);
+});
+
+test('an older history row is recorded in its own calendar month only',async()=>{
+  const {c,records}=context({'project:client':PROJECT,
+    'mailResults:account:2024-09':{month:'2024-09',rows:[{date:'2024-09-13',spent:500,recipients:20,interested:3},{date:'2024-09-14',spent:700,recipients:30,interested:4}]},
+    'mail:2026-11':{items:[{id:'keep',date:'2026-11-19',projectId:'client',contacts:11}]}});
+  const result=await run(c,'mailResultsApi(env,{name:"Tester"},"mail-results-save",{projectId:"client",date:"2024-09-13"})');
+  assert.equal(result.error,undefined,JSON.stringify(result));
+  assert.equal(result.month,'2024-09');assert.equal(result.created,1);
+  assert.equal(records['mail:2024-09'].items.length,1);
+  assert.equal(records['mail:2024-09'].items[0].date,'2024-09-13');
+  assert.equal(records['mail:2026-11'].items[0].contacts,11);
 });
 
 test('daily job includes all active linked accounts, even if general analytics is disabled',async()=>{

@@ -8074,24 +8074,64 @@ async function mailResultsCron(env) {
   }
 }
 
+async function mailResultsHistory(env, project, refresh = false) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const key = `mailResultsHistory:${project.avitoAccountId}`;
+  let history = await kv.get(key, 'json');
+  if (refresh || !history || !history.complete) {
+    const account = await env.AVITO_KV.get(`account:${project.avitoAccountId}`, 'json');
+    if (!account) throw new Error('Кабинет Авито не подключён');
+    const token = await avitoGetToken(env, account);
+    const data = await avitoJson(token, '/special-offers/v1/stats', { method: 'POST',
+      body: JSON.stringify({ dateTimeFrom: '1970-01-01T00:00:00Z', dateTimeTo: new Date().toISOString() }) });
+    const rows = mailResultsGroup(data && typeof data === 'object' && !Array.isArray(data) && !Object.keys(data).length ? [] : data && data.stats);
+    const months = new Map();
+    for (const row of rows) {
+      const month = row.date.slice(0, 7);
+      if (!months.has(month)) months.set(month, []);
+      months.get(month).push(row);
+    }
+    const updatedAt = new Date().toISOString();
+    for (const [month, monthRows] of months) await kv.put(`mailResults:${project.avitoAccountId}:${month}`,
+      JSON.stringify({ accountId: project.avitoAccountId, month, rows: monthRows, updatedAt }));
+    history = { complete: true, updatedAt };
+    await kv.put(key, JSON.stringify(history));
+  }
+  // Monthly cron updates are merged into the same continuous history, without hiding older dates.
+  const records = await listByPrefix(kv, `mailResults:${project.avitoAccountId}:`);
+  const rows = [];
+  let updatedAt = history.updatedAt;
+  for (const result of records) {
+    if (!result || !Array.isArray(result.rows)) continue;
+    if (result.updatedAt > updatedAt) updatedAt = result.updatedAt;
+    const record = await kv.get(`mail:${result.month}`, 'json');
+    for (const row of result.rows) {
+      const matches = (record && record.items || []).filter((it) => it.projectId === project.id && it.date === row.date);
+      const planned = matches.length === 1 && matches[0].budgetSource !== 'avito-spend' ? matches[0].budget : null;
+      rows.push({ ...row, budget: planned == null ? row.spent : planned, budgetSource: planned == null ? 'avito-spend' : 'plan' });
+    }
+  }
+  return { projectId: project.id, accountId: project.avitoAccountId, rows: rows.sort((a, b) => b.date.localeCompare(a.date)), updatedAt };
+}
+
 async function mailResultsApi(env, me, action, body) {
-  const month = String(body.month || botMsk(Date.now()).date.slice(0, 7));
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month > botMsk(Date.now()).date.slice(0, 7)) return { error: 'bad_month', status: 400 };
+  const date = String(body.date || '');
+  if (action === 'mail-results-save' && (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date)) return { error: 'bad_date', status: 400 };
   const project = await env.AGENCY_DASHBOARD_KV.get(`project:${atClean(body.projectId, 80)}`, 'json');
   if (!project || project.inactive || !project.avitoAccountId) return { error: 'Кабинет не подключён или неактивен', status: 400 };
   try {
-    const result = await mailResultsFetch(env, project, month, action === 'mail-results' && body.refresh === true);
     if (action === 'mail-results-save') {
-      const saved = await mailResultsRecord(env, project, result, me.name);
+      const month = date.slice(0, 7);
+      if (date > botMsk(Date.now()).date) return { error: 'bad_date', status: 400 };
+      const result = await mailResultsFetch(env, project, month);
+      const rows = result.rows.filter((r) => r.date === date);
+      if (rows.length !== 1) return { error: 'Результат за эту дату не найден', status: 404 };
+      const saved = await mailResultsRecord(env, project, { ...result, rows }, me.name);
       const rec = await env.AGENCY_DASHBOARD_KV.get(`mail:${month}`, 'json');
       return { ...saved, month, items: rec && rec.items || [] };
     }
-    const record = await env.AGENCY_DASHBOARD_KV.get(`mail:${month}`, 'json');
-    return { ...result, projectId: project.id, rows: result.rows.map((row) => {
-      const matches = (record && record.items || []).filter((it) => it.projectId === project.id && it.date === row.date);
-      const planned = matches.length === 1 && matches[0].budgetSource !== 'avito-spend' ? matches[0].budget : null;
-      return { ...row, budget: planned == null ? row.spent : planned, budgetSource: planned == null ? 'avito-spend' : 'plan' };
-    }) };
+    return await mailResultsHistory(env, project, body.refresh === true);
   } catch (err) { return { error: String(err && err.message || err).slice(0, 300), status: 502 }; }
 }
 
