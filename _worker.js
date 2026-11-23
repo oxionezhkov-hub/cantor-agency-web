@@ -3129,6 +3129,24 @@ async function handleDashboardApi(request, env, url, ctx) {
     return json({ error: 'kv_not_configured', message: 'AGENCY_DASHBOARD_KV namespace is not set up yet — see wrangler.jsonc' }, 500);
   }
 
+  if (pathname === '/api/dashboard/mailing-results/sync') {
+    const day = botMsk(Date.now()).date;
+    if (request.method === 'GET') {
+      const month = url.searchParams.get('month') || day.slice(0, 7);
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return json({ error: 'bad_month' }, 400);
+      return json({ job: await kv.get(`mailResultsPull:${day}:${month}`, 'json') });
+    }
+    if (request.method === 'POST') {
+      const body = await readJson(request) || {};
+      const month = body.month || day.slice(0, 7);
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month > day.slice(0, 7)) return json({ error: 'bad_month' }, 400);
+      const job = await mailResultsStart(env, month, body.force === true);
+      if (ctx) ctx.waitUntil(mailResultsProcess(env, day, month, 24000));
+      return json({ job });
+    }
+    return json({ error: 'method_not_allowed' }, 405);
+  }
+
   await ensureDashboardSeed(kv);
   await ensureDailyMetricsSeed(kv);
   await ensureProjectRatingsMigration(kv);
@@ -7340,6 +7358,7 @@ async function atLoadProjects(kv) {
     id: p.id,
     name: p.name,
     inactive: !!p.inactive,
+    avitoAccountId: p.avitoAccountId || null,
     profileUrl: p.profileUrl || p.avitoProfileUrl || null,
     briefUrl: p.briefUrl || null,
     staffUrl: p.staffUrl || null,
@@ -7905,6 +7924,217 @@ async function reflWeekAverages(kv, people, week) {
 }
 // Everyone's answers for a week — the owner and the assistant always, the team per reflLocked.
 const REFL_LEGACY_ROLES = { manager: 'От менеджера', specialist: 'От специалиста', client: 'От клиента' };
+// Mailing statistics share the analytics' 07:00 MSK schedule. Avito reports deliveries
+// by listing, not campaign IDs: aggregate by Moscow delivery date, retaining that source.
+function mailResultsGroup(stats) {
+  if (!Array.isArray(stats)) throw new Error('Авито не вернул статистику рассылок');
+  const groups = new Map();
+  for (const row of stats) {
+    if (!row || !Number.isFinite(Date.parse(row.sentAt)) ||
+        ['count', 'chatsOpened', 'price'].some((k) => !Number.isFinite(row[k]) || row[k] < 0)) {
+      throw new Error('Неполные данные рассылок Авито — прежние результаты сохранены');
+    }
+    const date = botMsk(Date.parse(row.sentAt)).date;
+    const g = groups.get(date) || { date, spent: 0, recipients: 0, interested: 0 };
+    g.spent += row.price;
+    g.recipients += row.count;
+    g.interested += row.chatsOpened;
+    groups.set(date, g);
+  }
+  return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+async function mailResultsFetch(env, project, month, refresh = false) {
+  const key = `mailResults:${project.avitoAccountId}:${month}`;
+  const cached = await env.AGENCY_DASHBOARD_KV.get(key, 'json');
+  if (!refresh && cached && Array.isArray(cached.rows)) return cached;
+  const account = await env.AVITO_KV.get(`account:${project.avitoAccountId}`, 'json');
+  if (!account) throw new Error('Кабинет Авито не подключён');
+  const start = Date.parse(`${month}-01T00:00:00+03:00`);
+  const [year, m] = month.split('-').map(Number);
+  const end = Math.min(Date.UTC(year, m, 1) - 3 * 3600000 - 1000, Date.now());
+  if (!Number.isFinite(start) || start > end) throw new Error('Некорректный период');
+  const token = await avitoGetToken(env, account);
+  const data = await avitoJson(token, '/special-offers/v1/stats', {
+    method: 'POST', body: JSON.stringify({ dateTimeFrom: new Date(start).toISOString(), dateTimeTo: new Date(end).toISOString() }),
+  });
+  // Avito omits the optional stats property altogether when no deliveries exist.
+  const rows = mailResultsGroup(data && typeof data === 'object' && !Array.isArray(data) && !Object.keys(data).length ? [] : data && data.stats);
+  if (rows.some((r) => !r.date.startsWith(month + '-'))) throw new Error('Авито вернул данные другого месяца');
+  const result = { accountId: project.avitoAccountId, month, rows, updatedAt: new Date().toISOString() };
+  await env.AGENCY_DASHBOARD_KV.put(key, JSON.stringify(result));
+  return result;
+}
+
+async function mailResultsRecord(env, project, result, by = 'Авито · автоматически') {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const key = `mail:${result.month}`;
+  const record = (await kv.get(key, 'json')) || {};
+  const items = record.items || [];
+  const iso = new Date().toISOString();
+  let created = 0, updated = 0;
+  const conflicts = [];
+  for (const row of result.rows) {
+    const source = `${project.avitoAccountId}:${row.date}`;
+    const linked = items.filter((it) => it.projectId === project.id && it.avitoMailSource === source);
+    const matches = linked.length ? linked : items.filter((it) => it.projectId === project.id && it.date === row.date);
+    // Never pick an arbitrary plan if somebody created multiple entries for this date.
+    if (matches.length > 1) { conflicts.push(row.date); continue; }
+    let item = matches[0];
+    if (!item) {
+      const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${project.id}:${source}`)));
+      const id = 'avml' + [...hash.slice(0, 12)].map((b) => b.toString(16).padStart(2, '0')).join('');
+      item = { id, projectId: project.id, date: row.date, budget: null, contacts: null, result: null, comment: '', by, at: iso };
+      items.push(item);
+      created++;
+    } else updated++;
+    // Preserve the planned budget and human assessment/comment. A missing plan uses actual
+    // spend with explicit provenance so the interface can label it «расход».
+    if (item.budget == null || item.budgetSource === 'avito-spend') {
+      item.budget = row.spent;
+      item.budgetSource = 'avito-spend';
+    }
+    Object.assign(item, { contacts: row.interested, recipients: row.recipients, avitoSpent: row.spent,
+      avitoMailSource: source, avitoAccountId: project.avitoAccountId, avitoUpdatedAt: result.updatedAt,
+      status: 'results', updatedBy: by, updatedAt: iso });
+  }
+  // An empty response must not remove existing calendar entries or manual plans.
+  if (created || updated) await kv.put(key, JSON.stringify({ ...record, items: items.sort((a, b) => a.date.localeCompare(b.date)) }));
+  return { created, updated, conflicts };
+}
+
+async function mailResultsStart(env, month, force = false) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const day = botMsk(Date.now()).date;
+  const key = `mailResultsPull:${day}:${month}`;
+  const old = await kv.get(key, 'json');
+  if (old && (!force || old.leaseUntil > Date.now())) return old;
+  const projects = await listByPrefix(kv, 'project:');
+  const job = { month, day, status: 'running', pending: projects.filter((p) => !p.inactive && p.avitoAccountId)
+    .map((p) => ({ projectId: p.id, accountId: p.avitoAccountId })), done: {}, errors: {}, tries: {}, leaseUntil: 0 };
+  if (!job.pending.length) job.status = 'done';
+  await kv.put(key, JSON.stringify(job), { expirationTtl: 8 * 86400 });
+  return job;
+}
+
+async function mailResultsProcess(env, day, month, budgetMs = 150000) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const key = `mailResultsPull:${day}:${month}`;
+  const job = await kv.get(key, 'json');
+  if (!job || job.status !== 'running' || job.leaseUntil > Date.now()) return job;
+  const deadline = Date.now() + budgetMs;
+  job.leaseUntil = deadline + 30000;
+  const save = () => kv.put(key, JSON.stringify(job), { expirationTtl: 8 * 86400 });
+  await save();
+  for (const entry of [...job.pending]) {
+    if (Date.now() >= deadline) break;
+    const id = entry.projectId;
+    if ((job.tries[id] || 0) >= 3) {
+      job.errors[id] = 'Авито не ответил после трёх попыток';
+      job.pending = job.pending.filter((p) => p.projectId !== id);
+      await save();
+      continue;
+    }
+    job.tries[id] = (job.tries[id] || 0) + 1;
+    // Save before a remote call, so a timeout cannot hold the queue forever.
+    await save();
+    try {
+      const project = await kv.get(`project:${id}`, 'json');
+      if (!project || project.inactive || project.avitoAccountId !== entry.accountId) {
+        job.done[id] = { skipped: true };
+      } else {
+        const result = await mailResultsFetch(env, project, month, true);
+        job.done[id] = { ...(await mailResultsRecord(env, project, result)), rows: result.rows.length };
+      }
+      job.pending = job.pending.filter((p) => p.projectId !== id);
+      delete job.errors[id];
+    } catch (err) {
+      job.errors[id] = String(err && err.message || err).slice(0, 300);
+      if (job.tries[id] >= 3) job.pending = job.pending.filter((p) => p.projectId !== id);
+    }
+    await save();
+  }
+  job.leaseUntil = 0;
+  if (!job.pending.length) job.status = Object.keys(job.errors).length ? 'partial' : 'done';
+  job.updatedAt = new Date().toISOString();
+  await save();
+  return job;
+}
+
+async function mailResultsCron(env) {
+  if (!env.AGENCY_DASHBOARD_KV || !env.AVITO_KV) return;
+  const now = botMsk(Date.now());
+  if (now.hh < AVITO_PULL_AUTOSTART_HOUR_MSK) return;
+  const months = [now.date.slice(0, 7)];
+  // Late responses to last month's mailings still arrive in the first week.
+  if (Number(now.date.slice(8)) <= 7) months.push(avitoAddDays(`${months[0]}-01`, -1).slice(0, 7));
+  for (const month of months) {
+    await mailResultsStart(env, month);
+    await mailResultsProcess(env, now.date, month);
+  }
+}
+
+async function mailResultsHistory(env, project, refresh = false) {
+  const kv = env.AGENCY_DASHBOARD_KV;
+  const key = `mailResultsHistory:${project.avitoAccountId}`;
+  let history = await kv.get(key, 'json');
+  if (refresh || !history || !history.complete) {
+    const account = await env.AVITO_KV.get(`account:${project.avitoAccountId}`, 'json');
+    if (!account) throw new Error('Кабинет Авито не подключён');
+    const token = await avitoGetToken(env, account);
+    const data = await avitoJson(token, '/special-offers/v1/stats', { method: 'POST',
+      body: JSON.stringify({ dateTimeFrom: '1970-01-01T00:00:00Z', dateTimeTo: new Date().toISOString() }) });
+    const rows = mailResultsGroup(data && typeof data === 'object' && !Array.isArray(data) && !Object.keys(data).length ? [] : data && data.stats);
+    const months = new Map();
+    for (const row of rows) {
+      const month = row.date.slice(0, 7);
+      if (!months.has(month)) months.set(month, []);
+      months.get(month).push(row);
+    }
+    const updatedAt = new Date().toISOString();
+    for (const [month, monthRows] of months) await kv.put(`mailResults:${project.avitoAccountId}:${month}`,
+      JSON.stringify({ accountId: project.avitoAccountId, month, rows: monthRows, updatedAt }));
+    history = { complete: true, updatedAt };
+    await kv.put(key, JSON.stringify(history));
+  }
+  // Monthly cron updates are merged into the same continuous history, without hiding older dates.
+  const records = await listByPrefix(kv, `mailResults:${project.avitoAccountId}:`);
+  const rows = [];
+  let updatedAt = history.updatedAt;
+  for (const result of records) {
+    if (!result || !Array.isArray(result.rows)) continue;
+    if (result.updatedAt > updatedAt) updatedAt = result.updatedAt;
+    const record = await kv.get(`mail:${result.month}`, 'json');
+    for (const row of result.rows) {
+      const matches = (record && record.items || []).filter((it) => it.projectId === project.id && it.date === row.date);
+      const planned = matches.length === 1 && matches[0].budgetSource !== 'avito-spend' ? matches[0].budget : null;
+      rows.push({ ...row, budget: planned == null ? row.spent : planned, budgetSource: planned == null ? 'avito-spend' : 'plan' });
+    }
+  }
+  return { projectId: project.id, accountId: project.avitoAccountId, rows: rows.sort((a, b) => b.date.localeCompare(a.date)), updatedAt };
+}
+
+async function mailResultsApi(env, me, action, body) {
+  const date = String(body.date || '');
+  if (action === 'mail-results-save' && (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date)) return { error: 'bad_date', status: 400 };
+  const project = await env.AGENCY_DASHBOARD_KV.get(`project:${atClean(body.projectId, 80)}`, 'json');
+  if (!project || project.inactive || !project.avitoAccountId) return { error: 'Кабинет не подключён или неактивен', status: 400 };
+  try {
+    if (action === 'mail-results-save') {
+      const month = date.slice(0, 7);
+      if (date > botMsk(Date.now()).date) return { error: 'bad_date', status: 400 };
+      const result = await mailResultsFetch(env, project, month);
+      const rows = result.rows.filter((r) => r.date === date);
+      if (rows.length !== 1) return { error: 'Результат за эту дату не найден', status: 404 };
+      const saved = await mailResultsRecord(env, project, { ...result, rows }, me.name);
+      const rec = await env.AGENCY_DASHBOARD_KV.get(`mail:${month}`, 'json');
+      return { ...saved, month, items: rec && rec.items || [] };
+    }
+    return await mailResultsHistory(env, project, body.refresh === true);
+  } catch (err) { return { error: String(err && err.message || err).slice(0, 300), status: 502 }; }
+}
+
 // ── Avito Tasks → «Рассылки» ──
 // One KV record per month: mail:<YYYY-MM> -> { items: [{ id, date, projectId, budget, status, contacts, result,
 // comment, by, at, updatedBy, updatedAt }] }. budget/contacts are whole numbers or null (contacts stay
@@ -7959,6 +8189,7 @@ async function atMailApi(env, me, action, body, nowMs) {
       updatedAt: iso,
     };
     if (rec.contacts != null || rec.result) rec.status = 'results';
+    if (old && old.budget !== rec.budget) delete rec.budgetSource;
     delete rec.sent;
     items = items.filter((x) => x.id !== rec.id).concat(rec).sort(byDate);
     await write(month, items);
@@ -8803,6 +9034,10 @@ async function handleAvitoTasksApi(request, env, url, ctx) {
   // «Рассылки» — календарь: когда, какому кабинету, на какой бюджет и что вышло.
   if (action === 'mail' || action.startsWith('mail-')) {
     if (!sections.includes('mail')) return json({ error: 'forbidden' }, 403);
+    if (action === 'mail-results' || action === 'mail-results-save') {
+      const res = await mailResultsApi(env, me, action, body);
+      return json(res.error ? { error: res.error } : res, res.status || 200);
+    }
     const res = await atMailApi(env, me, action, body, nowMs);
     return json(res.error ? { error: res.error } : res, res.status || 200);
   }
@@ -16128,6 +16363,7 @@ export default {
     if (!(await cronClaimTick(env, event && event.scheduledTime))) return;
     ctx.waitUntil(botScheduled(env).catch((err) => console.error('control bot cron failed', err && err.stack)));
     ctx.waitUntil(avitoPullCron(env).catch((err) => console.error('avito pull cron failed', err && err.stack)));
+    ctx.waitUntil(mailResultsCron(env).catch((err) => console.error('mailing results cron failed', err && err.stack)));
     ctx.waitUntil(avitoNotifyCron(env).catch((err) => console.error('avito notify cron failed', err && err.stack)));
     ctx.waitUntil(atKbCron(env).catch((err) => console.error('knowledge-base cron failed', err && err.stack)));
     ctx.waitUntil(waiCron(env).catch((err) => console.error('workers ai jobs cron failed', err && err.stack)));
