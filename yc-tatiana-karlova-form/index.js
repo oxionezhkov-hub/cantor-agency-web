@@ -94,6 +94,9 @@ async function sendEmail(fields) {
   const from = process.env.MAIL_FROM?.trim();
   if (!apiKey?.trim() || !to.length || !from) return 'skipped';
 
+  // Keep an optional, unvalidated form value in the letter body, not mail headers.
+  const replyTo = String(fields['Email'] || '').trim();
+  const validReplyTo = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(replyTo);
   const entries = orderedEntries(fields);
   const name = [fields['Имя ученика'], fields['Фамилия ученика']].filter(Boolean).join(' ');
   const text = `Новая заявка с сайта (${mskNow()} МСК)\n\n`
@@ -113,14 +116,19 @@ async function sendEmail(fields) {
       body: JSON.stringify({
         from,
         to,
-        ...(fields['Email'] ? { reply_to: fields['Email'] } : {}),
+        ...(validReplyTo ? { reply_to: replyTo } : {}),
         subject: `Новая заявка на диагностику — Карлова${name ? ` — ${name}` : ''}`,
         text,
         html,
       }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`resend_http_${res.status}`);
+    if (!res.ok) {
+      const rejection = await res.json().catch(() => null);
+      const message = String(rejection?.message || '').toLowerCase();
+      const field = ['reply_to', 'from', 'to', 'subject'].find(key => new RegExp(`\\b${key}\\b`).test(message));
+      throw new Error(`resend_http_${res.status}${field ? '_' + field : ''}`);
+    }
   } finally {
     clearTimeout(timer);
   }
@@ -198,7 +206,7 @@ module.exports.handler = async function (event) {
         diagnostics.telegram = /^(relay_(url_invalid|https_required|timeout|unreachable|invalid_response|http_[0-9]{3})|bot_unauthorized|chat_not_found|bot_blocked|telegram_(forbidden|rate_limited|rejected|unreachable|timeout))$/.test(code) ? code : 'telegram_failed';
       }
       if (names[i] === 'email') {
-        diagnostics.email = /^resend_http_[0-9]{3}$/.test(code) ? code
+        diagnostics.email = /^resend_http_[0-9]{3}(_(from|to|reply_to|subject))?$/.test(code) ? code
           : ['TimeoutError', 'AbortError'].includes(r.reason?.name) ? 'email_timeout' : 'email_delivery_failed';
       }
       console.error(`${names[i]}_failed`, diagnostics[names[i]] || 'delivery_failed');
