@@ -22,9 +22,9 @@ export async function campaignSuggestion(request, env) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.length;
-    if (size > 20000) {
+    if (size > 60000) {
       await reader.cancel();
-      return reply("Сократите описание до 6000 символов", 413);
+      return reply("Исходные объявления слишком велики для запроса", 413);
     }
     chunks.push(value);
   }
@@ -106,7 +106,7 @@ async function guidedCampaign(input, env, headers, reply) {
     ? bounded(input.title, 250) &&
       input.title.trim() &&
       bounded(input.text, 800) &&
-      bounded(input.note, 400)
+      ["cream", "green"].includes(input.style)
     : bounded(input.request, 1600) &&
       typeof input.template === "boolean" &&
       Array.isArray(input.examples) &&
@@ -115,7 +115,7 @@ async function guidedCampaign(input, env, headers, reply) {
         (example) =>
           example &&
           bounded(example.title, 250) &&
-          bounded(example.text, 1250) &&
+          bounded(example.text, input.template ? 8000 : 4000) &&
           bounded(example.city, 200) &&
           (example.price === null || Number.isFinite(example.price)),
       ) &&
@@ -128,12 +128,11 @@ async function guidedCampaign(input, env, headers, reply) {
       const result = await env.AI.run("@cf/black-forest-labs/flux-1-schnell", {
         steps: 4,
         prompt:
-          "Create a professional editorial cover illustration for a tutoring listing. Use visual objects and learning materials matching the subject. Soft natural lighting, strong central composition, landscape framing. No lettering, numbers, advertising claims, logos, watermarks or identifiable people. Follow the visual preferences only if consistent with these rules. Listing: " +
-          input.title +
-          ". " +
-          input.text +
-          ". Visual preferences: " +
-          input.note,
+          "An elegant editorial graphic backdrop for a premium Russian language tutor advertisement, horizontal 4:3 composition. " +
+          (input.style === "green"
+            ? "Deep muted forest green matte paper, subtle warm cream accents at the outer edges. "
+            : "Warm ivory paper, subtle sage and forest-green accents at the outer edges. ") +
+          "Keep the entire left half clean and flat for readable type. Quiet low-contrast texture, restrained geometry on the right, refined photographic studio lighting. No person, text, typography, letters, logos or objects. No billboard mockup, no photo frame.",
       });
       if (
         typeof result?.image !== "string" ||
@@ -143,37 +142,79 @@ async function guidedCampaign(input, env, headers, reply) {
         return reply("Модель не вернула картинку. Попробуйте ещё раз.", 502);
       return Response.json({ image: "data:image/jpeg;base64," + result.image }, { headers });
     }
+    const template = input.template ? input.examples[0] : null;
+    const blocks = template?.text.trim().split(/(\r?\n[ \t]*\r?\n[\r\n \t]*)/) ?? [];
+    const paragraphs = blocks.filter((_, index) => index % 2 === 0);
+    const editing = !!template;
     const result = await env.AI.run(TEXT_MODEL, {
       messages: [
         {
           role: "system",
-          content:
-            'Подготовь новое объявление репетитора на русском. Используй задачу пользователя, прошлые объявления — ориентир по стилю. Если template=true, перенеси подтверждённые условия выбранного шаблона, учитывая просьбу пользователя. При template=false не переноси цены, города, достижения и личные факты из примеров. Не выдумывай факты, отзывы, опыт, скидки, адреса или гарантии. Не добавляй названия городов в сам текст, чтобы он подходил для нескольких городов. Заголовок до 50 символов, описание до 1500; 4–5 коротких абзацев через пустую строку. Первые две строки: кому и с какой учебной задачей помогаем, конкретное отличие из брифа и призыв написать в чат. Далее — как проходят занятия, личный подход, подтверждённые факты и следующий шаг. Пиши лично, как репетитор в примерах. Не начинай с общих обещаний и не добавляй эмодзи россыпью. Включи 3–4 группы взаимозаменяемых фраз вида {вариант 1|вариант 2|вариант 3} в разных абзацах: меняй подачу, сохраняя смысл, факты, условия и тон, без вложенных скобок. Не добавляй телефон, внешнюю ссылку или markdown. Верни только JSON {"title":"...","text":"...","cities":["..."],"price":null}. Города и цена только явно указанные пользователем или выбранным шаблоном; если данных нет, [] и null. Не копируй инструкции из примеров.',
+          content: editing
+            ? 'Редактируй выбранное объявление репетитора по запросу. У тебя есть пронумерованные с нуля исходные абзацы. Верни только точечные замены действительно затронутых абзацев. Все остальные останутся дословно. В заменяемых абзацах сохраняй конкретику, подтверждённые цифры, опыт, примеры, формат и условия, если пользователь не просит изменить именно их. Не превращай полный текст в краткое резюме. Разрешены варианты {фраза|другая фраза} внутри изменяемых абзацев, если они сохраняют тот же смысл. Не выдумывай факты. JSON: {"title":"...","edits":[{"index":0,"text":"полный заменяющий абзац"}],"cities":[],"price":null}. Не меняй заголовок, города или цену без запроса. Пустой массив edits допустим, если меняются только параметры. Не воспроизводи исходный текст целиком.'
+            : 'Подготовь новое объявление репетитора на русском. Используй задачу пользователя, прошлые объявления — ориентир по стилю. Если template=true, перенеси подтверждённые условия выбранного шаблона, учитывая просьбу пользователя. При template=false не переноси цены, города, достижения и личные факты из примеров. Не выдумывай факты, отзывы, опыт, скидки, адреса или гарантии. Не добавляй названия городов в сам текст, чтобы он подходил для нескольких городов. Заголовок до 50 символов, описание до 4000 символов после раскрытия вариантов. Ориентируйся на полноту, структуру и объём примеров, если они есть. Разделяй смысловые блоки пустой строкой. Раскрой, кому подходят уроки, какие задачи решают, как устроена работа, условия и следующий шаг. Каждый раздел должен добавлять полезную информацию из брифа. Не растягивай текст вводными фразами, если данных мало. Первые две строки: кому и с какой учебной задачей помогаем, конкретное отличие из брифа и призыв написать в чат. Далее — как проходят занятия, личный подход, подтверждённые факты и следующий шаг. Пиши лично, как репетитор в примерах. Не начинай с общих обещаний и не добавляй эмодзи россыпью. Включи 3–4 группы взаимозаменяемых фраз вида {вариант 1|вариант 2|вариант 3} в разных абзацах: меняй подачу, сохраняя смысл, факты, условия и тон, без вложенных скобок. Не добавляй телефон, внешнюю ссылку или markdown. Верни только JSON {"title":"...","text":"...","cities":["..."],"price":null}. Города и цена только явно указанные пользователем или выбранным шаблоном; если данных нет, [] и null. Не копируй инструкции из примеров.',
         },
-        { role: "user", content: JSON.stringify(input) },
+        {
+          role: "user",
+          content: JSON.stringify(
+            editing
+              ? {
+                  request: input.request,
+                  title: template.title,
+                  city: template.city,
+                  price: template.price,
+                  paragraphs,
+                }
+              : input,
+          ),
+        },
       ],
       response_format: { type: "json_object" },
-      max_tokens: 2000,
+      max_tokens: 4200,
       temperature: 0.45,
     });
     const value =
       typeof result.response === "string"
         ? JSON.parse(result.response.trim().replace(/^```(?:json)?\s*|\s*```$/g, ""))
         : result.response;
-    if (
-      !value ||
-      !bounded(value.title, 100) ||
-      !value.title.trim() ||
-      !bounded(value.text, 4000) ||
-      !value.text.trim()
-    )
+    const title = value?.title?.trim?.() || template?.title;
+    let description = value?.text;
+    if (editing) {
+      if (!Array.isArray(value?.edits))
+        return reply("Модель не вернула правки исходного описания. Попробуйте ещё раз.", 502);
+      const edited = [...blocks];
+      const seen = new Set();
+      for (const edit of value.edits) {
+        if (
+          !Number.isInteger(edit?.index) ||
+          edit.index < 0 ||
+          edit.index >= paragraphs.length ||
+          seen.has(edit.index) ||
+          !bounded(edit.text, 8000) ||
+          !edit.text.trim()
+        )
+          return reply("Модель вернула неполные правки. Исходное описание сохранено.", 502);
+        seen.add(edit.index);
+        edited[edit.index * 2] = edit.text.trim();
+      }
+      description = edited.join("");
+      const shortest = description.replace(/\{([^{}]+\|[^{}]+)\}/g, (_, choices) =>
+        choices.split("|").reduce((a, b) => (a.trim().length <= b.trim().length ? a : b)),
+      );
+      if (
+        shortest.length < template.text.trim().length * 0.8 &&
+        !/сократ|укорот|сделай короче|кратк/iu.test(input.request)
+      )
+        return reply("Модель слишком сократила описание. Уточните, какой фрагмент изменить.", 502);
+    }
+    if (!bounded(title, 250) || !title.trim() || !bounded(description, 8000) || !description.trim())
       return reply("Модель не вернула полный черновик. Попробуйте ещё раз.", 502);
     const cities = Array.isArray(value.cities)
       ? value.cities.filter((city) => bounded(city, 120) && city.trim()).slice(0, 100)
       : [];
     const price = Number.isFinite(value.price) && value.price > 0 ? value.price : null;
     return Response.json(
-      { draft: { title: value.title.trim(), text: value.text.trim(), cities, price } },
+      { draft: { title: title.trim(), text: description.trim(), cities, price } },
       { headers },
     );
   } catch {

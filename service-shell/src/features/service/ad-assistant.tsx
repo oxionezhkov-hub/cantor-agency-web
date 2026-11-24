@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ImagePlus, Sparkles } from "lucide-react";
 import { AdsSelect } from "./ads-controls";
 import { adVariants, checkAdVariants, recommendAdSettings } from "./ad-assistant-model";
-import { createAdCover } from "./ad-cover";
+import { createAdCover, type CoverStyle } from "./ad-cover";
 import type { CampaignDraft } from "./ad-campaign";
 import "./ad-campaign.css";
 
@@ -40,6 +40,12 @@ export function AdAssistant({
   const [approved, setApproved] = useState(false);
   const [image, setImage] = useState("");
   const [photo, setPhoto] = useState("");
+  const [portrait, setPortrait] = useState<File | null>(null);
+  const [background, setBackground] = useState("");
+  const [coverTitle, setCoverTitle] = useState("");
+  const [coverSubtitle, setCoverSubtitle] = useState("");
+  const [coverStyle, setCoverStyle] = useState<CoverStyle>("cream");
+  const [composing, setComposing] = useState(false);
   const [previewCity, setPreviewCity] = useState("");
   const [reviewed, setReviewed] = useState("");
   const [busy, setBusy] = useState("");
@@ -95,18 +101,28 @@ export function AdAssistant({
             .slice(0, 3)
             .map((x) => x.item);
     try {
-      const result = await generate({
-        action: "draft",
-        request,
-        examples: examples.map(({ title, text, city, price }) => ({
-          title: title.slice(0, 250),
-          text: text.slice(0, 1250),
-          city,
-          price: Number.isFinite(price) ? price : null,
-        })),
-        template: mode === "template",
-      });
       const baseline = mode === "template" ? selected : undefined;
+      const result =
+        baseline && !request.trim()
+          ? {
+              draft: {
+                title: baseline.title,
+                text: baseline.text,
+                cities: [baseline.city],
+                price: baseline.price,
+              },
+            }
+          : await generate({
+              action: "draft",
+              request,
+              examples: examples.map(({ title, text, city, price }) => ({
+                title: title.slice(0, 250),
+                text: baseline ? text : text.slice(0, 4000),
+                city,
+                price: Number.isFinite(price) ? price : null,
+              })),
+              template: mode === "template",
+            });
       setDraft({
         title: result.draft.title,
         text: result.draft.text,
@@ -114,7 +130,11 @@ export function AdAssistant({
           ", ",
         ),
         price: String(
-          result.draft.price ?? (Number.isFinite(baseline?.price) ? baseline?.price : ""),
+          Number.isFinite(result.draft.price)
+            ? result.draft.price
+            : Number.isFinite(baseline?.price)
+              ? baseline?.price
+              : "",
         ),
         photos: baseline?.photos ?? [],
       });
@@ -122,6 +142,8 @@ export function AdAssistant({
       setApproved(false);
       setImage("");
       setPhoto("");
+      setPortrait(null);
+      setBackground("");
       setReviewed("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось подготовить черновик.");
@@ -129,19 +151,50 @@ export function AdAssistant({
       setBusy("");
     }
   }
-  async function createImage(reference = photo || availablePhotos[0]) {
-    if (!draft || !reference) return;
+  useEffect(() => {
+    if (!portrait || !background || !coverTitle.trim()) {
+      setComposing(false);
+      return;
+    }
+    let active = true;
+    const url = URL.createObjectURL(portrait);
+    setComposing(true);
+    createAdCover(url, background, coverTitle, coverSubtitle, coverStyle)
+      .then((next) => {
+        if (active) setImage(next);
+      })
+      .catch(() => {
+        if (active) {
+          setImage("");
+          setError("Не удалось обработать портрет. Попробуйте другое фото.");
+        }
+      })
+      .finally(() => {
+        if (active) setComposing(false);
+      });
+    return () => {
+      active = false;
+      URL.revokeObjectURL(url);
+    };
+  }, [portrait, background, coverTitle, coverSubtitle, coverStyle]);
+
+  async function createImage() {
+    if (!draft || !portrait || !coverTitle.trim()) return;
     setBusy("image");
     setError("");
-    setPhoto(reference);
     setImage("");
+    setPhoto("");
+    setBackground("");
     try {
-      const format = /онлайн|дистанцион/i.test(draft.title + " " + draft.text)
-        ? "Онлайн-занятия"
-        : "Репетитор";
-      setImage(await createAdCover(reference, draft.title, format));
-    } catch {
-      setError("Не удалось собрать обложку из этого фото. Выберите другое или загрузите файл.");
+      const result = await generate({
+        action: "image",
+        title: coverTitle,
+        text: "",
+        style: coverStyle,
+      });
+      setBackground(result.image);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось создать фон.");
     } finally {
       setBusy("");
     }
@@ -413,7 +466,12 @@ export function AdAssistant({
               setApproved(true);
               setImage("");
               setError("");
-              if (availablePhotos[0]) void createImage(availablePhotos[0]);
+              setPhoto(availablePhotos[0] || "");
+              setBackground("");
+              setCoverTitle(draft.title.slice(0, 50));
+              setCoverSubtitle(
+                /онлайн|дистанцион/i.test(draft.title + " " + draft.text) ? "Занятия онлайн" : "",
+              );
             }}
           >
             Согласовать и перейти к картинкам
@@ -435,15 +493,15 @@ export function AdAssistant({
           <p>
             {draft.title} · {cities.join(", ")}
           </p>
-          {image && (
+          {(image || photo) && (
             <img
               className="ac-generated-image"
-              src={image}
-              alt="Сгенерированная обложка объявления"
+              src={image || photo}
+              alt={image ? "Новая обложка объявления" : "Обложка из объявления"}
             />
           )}
           <div className="ac-advice">
-            <strong>Исходные фото из ваших объявлений</strong>
+            <strong>Выбрать готовое изображение из объявлений</strong>
             {availablePhotos.length > 0 ? (
               <div className="ac-cover-options">
                 {availablePhotos.map((url, index) => (
@@ -451,20 +509,31 @@ export function AdAssistant({
                     key={url}
                     type="button"
                     className="aw-btn"
-                    aria-label={`Обложка из фото ${index + 1}`}
+                    aria-label={`Готовое изображение ${index + 1}`}
                     aria-pressed={photo === url}
                     disabled={!!busy}
-                    onClick={() => void createImage(url)}
+                    onClick={() => {
+                      setImage("");
+                      setBackground("");
+                      setPhoto(url);
+                    }}
                   >
                     <img src={url} alt="" />
                   </button>
                 ))}
               </div>
             ) : (
-              <p>Выберите фото репетитора. На его основе соберём обложку с заголовком.</p>
+              <p>В выбранных объявлениях нет готовых изображений.</p>
             )}
+          </div>
+          <div className="ac-advice">
+            <strong>Создать новую обложку</strong>
+            <p>
+              Загрузите отдельный портрет. Генератор создаст фон и оформит портрет вместе с
+              заголовком.
+            </p>
             <label>
-              Загрузить своё фото
+              Портрет преподавателя
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -476,23 +545,80 @@ export function AdAssistant({
                     setError("Выберите фото до 12 МБ.");
                     return;
                   }
-                  const url = URL.createObjectURL(file);
-                  void createImage(url).finally(() => URL.revokeObjectURL(url));
+                  setPortrait(file);
+                  setError("");
                 }}
               />
             </label>
+            <div className="ac-switch">
+              <button
+                className="aw-btn"
+                disabled={!!busy}
+                aria-pressed={coverStyle === "cream"}
+                onClick={() => {
+                  setCoverStyle("cream");
+                  setBackground("");
+                  setImage("");
+                }}
+              >
+                Кремовая
+              </button>
+              <button
+                className="aw-btn"
+                disabled={!!busy}
+                aria-pressed={coverStyle === "green"}
+                onClick={() => {
+                  setCoverStyle("green");
+                  setBackground("");
+                  setImage("");
+                }}
+              >
+                Тёмно-зелёная
+              </button>
+            </div>
+            <label>
+              Заголовок на обложке
+              <input
+                value={coverTitle}
+                maxLength={50}
+                onChange={(e) => {
+                  setImage("");
+                  setCoverTitle(e.target.value);
+                }}
+              />
+            </label>
+            <label>
+              Короткая строка
+              <input
+                value={coverSubtitle}
+                maxLength={60}
+                onChange={(e) => {
+                  setImage("");
+                  setCoverSubtitle(e.target.value);
+                }}
+              />
+            </label>
+            <button
+              className="aw-btn"
+              disabled={!!busy || !portrait || !coverTitle.trim()}
+              onClick={() => void createImage()}
+            >
+              {background ? "Сгенерировать другой фон" : "Сгенерировать обложку"}
+            </button>
           </div>
           <div className="ac-ai-row">
-            {busy && (
+            {(busy || composing) && (
               <p role="status">
                 <ImagePlus size={16} /> Собираем обложку…
               </p>
             )}
-            {image && (
+            {(image || photo) && (
               <button
                 className="aw-btn aw-primary"
-                disabled={!!busy}
-                onClick={() => save([image, ...draft.photos])}
+                disabled={!!busy || composing}
+                onClick={() =>
+                  save([image || photo, ...draft.photos.filter((url) => url !== (image || photo))])
+                }
               >
                 Согласовать картинку и добавить
               </button>

@@ -89,7 +89,7 @@ test("guided draft keeps unknown settings unknown and image generation respects 
     cities: [],
     price: null,
   });
-  const image = { action: "image", title: "Русский язык", text: "Онлайн-занятия", note: "" };
+  const image = { action: "image", title: "Русский язык", text: "Онлайн-занятия", style: "cream" };
   const visuals = {
     ...env,
     AI: {
@@ -103,5 +103,43 @@ test("guided draft keeps unknown settings unknown and image generation respects 
   assert.equal(
     (await (await campaignSuggestion(request(image), visuals)).json()).image,
     "data:image/jpeg;base64,/9j/2Q==",
+  );
+});
+
+test("template edits retain long untouched paragraphs and reject near-total shortening", async () => {
+  const first = "Подготовка к ОГЭ по русскому языку.";
+  const second = "На занятиях разбираем критерии, проверяем сочинения и ведём план подготовки. "
+    .repeat(24)
+    .trim();
+  const last = "Напишите в Авито, чтобы обсудить подготовку.";
+  const text = [first, second, last].join("\n\n");
+  const input = {
+    action: "draft",
+    template: true,
+    request: "Измени первую строку",
+    examples: [{ title: "Русский язык", city: "Казань", price: 1500, text }],
+  };
+  const model = (edits) => ({
+    ...env,
+    AI: {
+      run: async (_, config) => {
+        assert.equal(JSON.parse(config.messages[1].content).paragraphs[1], second);
+        return { response: { edits, cities: [], price: null } };
+      },
+    },
+  });
+  const edited = await campaignSuggestion(
+    request(input),
+    model([{ index: 0, text: "Готовлю к ОГЭ по русскому." }]),
+  );
+  assert.equal(edited.status, 200);
+  assert.equal(
+    (await edited.json()).draft.text,
+    ["Готовлю к ОГЭ по русскому.", second, last].join("\n\n"),
+  );
+  assert.equal(
+    (await campaignSuggestion(request(input), model([{ index: 1, text: "Готовлю к экзамену." }])))
+      .status,
+    502,
   );
 });
