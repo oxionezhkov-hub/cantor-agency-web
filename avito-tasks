@@ -5418,6 +5418,20 @@ function mlResultsRender() {
   const refresh = $('mlResultsRefresh');
   if (refresh) refresh.disabled = disabled || !MLR.projectId;
 }
+function mlResultsSetSaving(date) {
+  MLR.saving = date;
+  const box = $('mlResults');
+  if (!box) return;
+  // Keep the table and its scroll container mounted while a row is recorded.
+  box.querySelectorAll('[data-mlr-save]').forEach((button) => {
+    button.disabled = !!date || MLR.loading;
+    button.textContent = date === button.dataset.mlrSave ? 'Запись…' : 'Записать';
+  });
+  const client = $('mlResultsClient');
+  if (client) { client.disabled = !!date; if (client._dd) client._dd.sync(); }
+  const refresh = $('mlResultsRefresh');
+  if (refresh) refresh.disabled = !!date || MLR.loading || !MLR.projectId;
+}
 async function mlResultsLoad(refresh = false) {
   const serial = ++MLR.serial;
   MLR.loading = true; MLR.error = ''; MLR.rows = []; MLR.updatedAt = null;
@@ -5442,14 +5456,14 @@ $('drawerRoot').addEventListener('click', async (e) => {
   if (!save || MLR.loading || MLR.saving || MLR.error) return;
   const date = save.dataset.mlrSave;
   if (!MLR.rows.some((r) => r.date === date)) return;
-  MLR.saving = date; mlResultsRender();
+  mlResultsSetSaving(date);
   try {
     const r = await api('mail-results-save', { projectId: MLR.projectId, date });
     if (!r.ok) throw new Error(r.data && r.data.error || 'Не удалось записать результат');
     mlApply(r.data);
     toast(r.data.conflicts && r.data.conflicts.length ? `Несколько планов на ${date.split('-').reverse().join('.')} — проверьте вручную` : `Записано в календарь: ${date.split('-').reverse().join('.')}`);
   } catch (err) { toast(err.message || 'Не удалось записать результат'); }
-  MLR.saving = ''; mlResultsRender();
+  mlResultsSetSaving('');
 });
 const mlNarrow = () => window.matchMedia('(max-width:720px)').matches;
 function mlShift(month, n) {
