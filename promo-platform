@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-platform-build="4c36602ec15e699b">
+<html lang="ru" data-platform-build="1bafb17ab7ca054b">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -244,10 +244,156 @@
   .panel-art.visible .conversion-chart>div:nth-child(3) i::before {animation-delay:.24s}
   .console-booking path {stroke-dasharray:24;animation:motion-check .45s .35s both}
 }
+
+/* A printed lesson cover, an appointment slip and a ledger share one stage. */
+.hero {background:#faf8f4}
+.hero-grid {grid-template-columns:minmax(0,.96fr) minmax(0,1.04fr);gap:clamp(32px,5vw,84px)}
+.studio-brand {display:flex;align-items:center;gap:12px;margin-bottom:clamp(24px,4vh,44px);font:600 16px/1.2 Geologica,sans-serif}
+.studio-brand img {width:56px;height:auto}
+.studio-brand small {display:block;color:#62605d;font:400 12px/1.5 Geologica,sans-serif}
+.hero h1 {font:500 clamp(40px,4.1vw,68px)/1.1 Unbounded,sans-serif;letter-spacing:-.045em;text-wrap:balance}
+.hero h1 em {color:#bd3925}
+.hero .intro {max-width:46ch;font-size:clamp(15px,1.1vw,18px);line-height:1.65;color:#585450}
+.studio {min-width:0;padding:9px;background:#fff;border:1px solid #ded7ce;border-radius:24px;box-shadow:0 24px 42px -27px #4d32285c;isolation:isolate}
+.studio-frames {display:grid;border-radius:16px;overflow:hidden;background:#f1e8df}
+.studio-frame {grid-area:1/1}
+.studio-frame[hidden] {display:block!important;visibility:hidden;pointer-events:none}
+.studio-frame[hidden] * {animation:none!important}
+.studio-skip {position:fixed;left:12px;top:12px;z-index:30;padding:12px 18px;background:white;color:#292822;border-radius:8px;transform:translateY(calc(-100% - 22px))}
+.studio-skip:focus {transform:none}
+.studio-cover,.studio-agenda,.studio-ledger {height:clamp(240px,23vw,345px);position:relative;overflow:hidden}
+.studio-cover img {width:100%;height:100%;object-fit:cover;display:block}
+.cover-type {position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:clamp(18px,2.7vw,42px);color:#38231f;background:linear-gradient(90deg,#ffefdeeb,transparent 68%)}
+.cover-type span {font:500 12px Geologica,sans-serif;padding-bottom:12px}
+.cover-type strong {font:500 clamp(28px,3.4vw,54px)/1.04 Unbounded,sans-serif;letter-spacing:-.05em}
+.studio-caption {padding:17px clamp(14px,2vw,28px) 19px;background:#f6f3ed;min-height:88px}
+.studio-caption strong {font:600 clamp(18px,1.55vw,25px)/1.18 Geologica,sans-serif;letter-spacing:-.024em}
+.studio-caption p {margin:5px 0 0;font:400 14px/1.5 Geologica,sans-serif;color:#57514b}
+.studio-tabs {display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:7px}
+.studio-tabs button {min-width:0;min-height:44px;border:0;background:transparent;color:#655f5a;border-radius:12px;font:500 13px Geologica,sans-serif;cursor:pointer}
+.studio-tabs button[aria-selected=true] {background:#292822;color:white}
+.studio-tabs button:focus-visible {outline-offset:-3px;outline:2px solid #5285d5}
+.studio-agenda {background-color:#e4def0;background-image:linear-gradient(#76608617 1px,transparent 1px),linear-gradient(90deg,#76608617 1px,transparent 1px);background-size:24px 24px;display:flex;flex-direction:column;justify-content:center;padding:clamp(18px,3vw,46px);gap:8px;color:#292334}
+.agenda-question,.agenda-answer {max-width:85%;padding:9px 14px;border-radius:15px 15px 15px 3px;background:white;font-size:clamp(12px,1.08vw,16px);line-height:1.4}
+.agenda-question {align-self:flex-start}
+.agenda-answer {align-self:flex-end;border-radius:15px 15px 3px 15px;background:#52465e;color:white}
+.agenda-ticket {align-self:center;display:flex;align-items:center;gap:14px;padding:12px 15px;background:#fffaf1;box-shadow:0 5px 10px #35294715;transform:rotate(-3deg);margin-top:5px}
+.agenda-ticket>div {padding-right:14px;border-right:1px dashed #b3a498}
+.agenda-ticket b,.agenda-ticket strong {display:block}
+.agenda-ticket>div b {color:#a73b27;font-size:11px}
+.agenda-ticket strong {font:500 clamp(19px,2.1vw,31px)/1.3 Unbounded,sans-serif}
+.agenda-ticket span {font-size:13px}
+.agenda-ticket span b {font-size:11px;color:#486443}
+.studio-ledger {display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(12px,2vw,30px);padding:clamp(18px,3vw,44px);background:#293a33;color:#f2f4db}
+.ledger-ring {position:relative;min-width:0}
+.ledger-ring svg {display:block;width:100%;transform:rotate(-90deg)}
+.ledger-ring circle {fill:none;stroke-width:9}
+.ledger-track {stroke:#475b50}
+.ledger-arc {stroke:#d6eb92}
+.ledger-ring>div {position:absolute;inset:0;display:grid;align-content:center;text-align:center}
+.ledger-ring strong {font:500 clamp(32px,4vw,65px)/1 Unbounded,sans-serif}
+.ledger-ring span,.ledger-figures span {font-size:13px}
+.ledger-figures>div {display:grid;padding:9px 0;border-bottom:1px solid #66766b}
+.ledger-figures b {font:500 clamp(18px,2vw,30px)/1.35 Geologica,sans-serif;font-variant-numeric:tabular-nums}
+.ledger-figures>div:last-child {border:0;color:#d6eb92}
+.ad-art.ad-print {background:#efcfb5 url('/images/promo-platform/math-desk.webp') center/cover}
+.ad-art.ad-print span {display:inline-block;padding:6px;color:#392620;background:#fff2e2db;font:600 18px/1.12 Geologica,sans-serif}
+@keyframes print-expose {from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+@keyframes slip-arrive {from{transform:translateY(16px) rotate(3deg);opacity:.1}to{transform:rotate(-3deg);opacity:1}}
+@keyframes ledger-ink {from{stroke-dasharray:0 100}to{stroke-dasharray:33.333 100}}
+@media(prefers-reduced-motion:no-preference) {
+  .studio-cover img {animation:print-expose .85s cubic-bezier(.16,.7,.18,1) both}
+  .agenda-question,.agenda-answer {animation:motion-settle .35s both}
+  .agenda-answer {animation-delay:.18s}
+  .agenda-ticket {animation:slip-arrive .5s .38s both}
+  .ledger-arc {animation:ledger-ink .85s cubic-bezier(.2,.7,.3,1) both}
+}
+@media(max-width:780px) {
+  .hero-grid {grid-template-columns:minmax(0,1fr);max-width:595px}
+  .hero {padding:34px 0 48px}
+  .hero h1 {font-size:clamp(30px,6.7vw,47px)}
+  .studio-brand {margin-bottom:22px}
+  .studio-cover,.studio-agenda,.studio-ledger {height:clamp(215px,55vw,310px)}
+  .studio-caption {min-height:94px}
+}
+@media(max-width:370px) {
+  .studio-tabs button {font-size:12px}
+  .studio-ledger {padding:14px;gap:10px}
+  .hero-grid {gap:26px}
+}
+.wait-timeline {display:flex;align-items:center;gap:7px;color:#58494e;font:500 12px Geologica,sans-serif;font-variant-numeric:tabular-nums}
+.wait-timeline i {height:8px;flex:1;background:repeating-linear-gradient(90deg,#a7786b 0 2px,transparent 2px 8px);transform-origin:left}
+.wait-caption {font-size:12px;color:#8f352b}
+.results .case {padding:clamp(20px,3vw,44px);background:#fff6e9;color:#39291f;border:0;border-radius:22px;position:relative;z-index:1;align-items:center}
+.case-flow {margin:22px 0 0}
+.case-flow figcaption {font:500 16px/1.4 Geologica,sans-serif}
+.case-stages {display:flex;justify-content:space-between;gap:6px;margin:18px 0 7px}
+.case-stages span {display:grid;font-size:12px;line-height:1.4}
+.case-stages span:last-child {text-align:right}
+.case-stages span:nth-child(2) {text-align:center}
+.case-stages b {font:500 22px/1.2 Unbounded,sans-serif}
+.case-flow svg {display:block;width:100%;height:clamp(66px,7vw,100px)}
+.flow-discard {fill:#dfc0aa}
+.flow-retained {fill:#b94a31}
+.flow-stitch {stroke:#fff6e9;stroke-width:2;stroke-dasharray:4 4}
+.case-metrics>div {border-top:1px solid #d6baaa;padding-top:14px}
+.results .case-metrics span {color:#655044}
+@media(prefers-reduced-motion:no-preference) {
+  .pain.visible .wait-timeline i {animation:motion-fill .75s .15s both}
+  .case.visible .case-flow svg {animation:flow-unfold 1s cubic-bezier(.2,.7,.2,1) both}
+}
+@keyframes flow-unfold {from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
+.cover-type {justify-content:flex-start;background:linear-gradient(105deg,#ffefdfd9,transparent 66%)}
+.cover-type strong {font:650 clamp(28px,3.5vw,54px)/1.02 Geologica,sans-serif;letter-spacing:-.035em}
+.hero h1 {letter-spacing:-.028em}
+#panel-0 .panel-art {background-color:#efdfce;background-image:linear-gradient(#b89f8729 1px,transparent 1px),linear-gradient(90deg,#b89f8729 1px,transparent 1px);background-size:20px 20px}
+#panel-1 .panel-art {background:#e5e0ed}
+#panel-2 .panel-art {background:#dbe4d7}
+.ads-workspace {max-width:370px}
+.ads-workspace .ai-prompt {background:#fff9f1;color:#674837;border:1px solid #d9c2aa;font-size:13px}
+.ads-workspace .ad-preview {width:88%;overflow:hidden;transform:rotate(-3deg);border:5px solid white;box-shadow:0 12px 23px -8px #70513c50}
+.ads-workspace .ad-print {height:clamp(165px,13vw,225px);padding:16px}
+.ads-workspace .ad-print span {font-size:clamp(19px,1.8vw,28px);background:none;padding:0}
+.ads-workspace .ad-details {padding:13px}
+.ads-workspace .ad-details>span {color:#68615a;font-size:12px}
+.dispatch-cities {width:100%;display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:4px}
+.dispatch-cities span {background:#fffaf5;color:#58483c;border:1px solid #d9c2aa;text-align:center;padding:8px 2px}
+.automation-status {color:#554b41}
+.conversation {max-width:400px;gap:14px}
+.conversation .online-state {color:#4d4059}
+.conversation .bubble {padding:14px 18px;font-size:14px;line-height:1.5}
+.conversation .reply {background:#52465e;color:white}
+.conversation .booking {background:#fffaf0;border-left:4px solid #b54830;color:#3d342d;font-size:13px}
+.economy-board {background:#293a33;color:#f2f4db;max-width:410px}
+.economy-board .economy-total,.economy-board .economy-grid>div {background:#34483e}
+.economy-board .economy-total>b,.economy-board .economy-grid b {color:#e2efa8}
+.economy-board .economy-total span,.economy-board .economy-grid span,.economy-board>p {color:#d0d9cc}
+.economy-board .conversion-chart>div {color:#f2f4db}
+.economy-board .conversion-chart i {background:#45594c}
+.economy-board .conversion-chart i::before {background:#b1c3a5}
+.economy-board .conversion-chart>div:last-child i::before {background:#d8ed91}
+@media(prefers-reduced-motion:no-preference) {
+  .panel-art.visible .ads-workspace .ad-preview {animation:proof-arrive .65s cubic-bezier(.16,.7,.18,1) both}
+}
+@keyframes proof-arrive {from{transform:translateY(14px) rotate(1deg);opacity:.4}to{transform:rotate(-3deg);opacity:1}}
+@media(max-width:780px) {
+  .product-panel:not([hidden]) {display:flex;flex-direction:column}
+  .product-panel .panel-art {order:-1}
+  .hero-actions {display:flex;max-width:none;gap:5px 12px}
+  .hero-actions .btn {font-size:12px;min-height:44px;gap:7px;padding:12px 14px}
+  .hero-actions .secondary {padding:10px 0;border:0;box-shadow:none}
+  .cover-type {padding:17px}
+}
+@media(max-width:480px) {
+  .case-metrics {grid-template-columns:1fr;gap:10px}
+  .case-metrics>div {display:flex;align-items:baseline;justify-content:space-between;flex-direction:row-reverse;gap:8px;padding-top:10px}
+  .case-metrics b {font-size:clamp(16px,4.7vw,22px);white-space:nowrap}
+}
 </style>
 
 </head>
-<body><header class="site-header" aria-hidden="true" inert>
+<body><a class="studio-skip" href="#features">К возможностям платформы</a>
+<header class="site-header" aria-hidden="true" inert>
 <nav class="wrap nav" aria-label="Основная навигация">
 <a class="brand" href="#top" aria-label="Cantor Agency — главная"><img src="/images/brand/logo.svg" width="68" height="37" alt=""><span class="brand-name">Cantor Agency<small>Авито</small></span></a>
 <div class="links">
@@ -263,29 +409,43 @@
 <section class="hero" id="top">
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <h1>Привлекайте учеников с Авито <em>даже во время занятий</em></h1>
-      <p class="intro">ИИ Cantor Agency создаёт объявления, управляет ставками и записывает на диагностику, пока вы преподаёте. В одной воронке видно, какие объявления приносят оплаты и сколько стоит каждый ученик.</p>
+      <div class="studio-brand"><img src="/images/brand/logo.svg" width="56" height="36" alt=""><span>Cantor Agency<small>Авито</small></span></div>
+      <h1>Ученики с Авито.<em>От объявления до оплаты.</em></h1>
+      <p class="intro">ИИ готовит объявления, управляет ставками и записывает учеников, пока вы преподаёте. В кабинете видно, какие объявления принесли оплаты.</p>
       <div class="hero-actions">
         <a class="btn red" href="#access">Получить ранний доступ <svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></a>
         <a class="btn secondary" href="#why">Как это работает <svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v15m-6-6 6 6 6-6"/></svg></a>
       </div>
     </div>
-    <div class="hero-console" aria-label="Объявления, запись и экономика в одном кабинете">
-      <div class="console-pipeline">
-        <div class="console-stage">
-          <span class="icon-chip coral"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h4v4H7zm7 1h3m-3 3h3M7 16h10"/></svg></span><div><strong>ИИ создаёт объявления</strong><p>Пишет тексты и подбирает оформление под предмет</p></div>
-          <div class="console-subjects"><span>Математика</span><span>Английский</span></div>
+    <div class="studio">
+      <div class="studio-frames">
+        <div class="studio-frame" id="studio-ad" role="tabpanel" aria-labelledby="studio-tab-ad">
+          <div class="studio-cover">
+            <img src="/images/promo-platform/math-desk.webp" alt="" width="1080" height="810" fetchpriority="high">
+            <div class="cover-type"><span>Онлайн · 11 класс</span><strong>Математика<br>для ЕГЭ</strong></div>
+          </div>
+          <div class="studio-caption"><strong>ИИ собирает объявление</strong><p>От предмета и формата занятий — к тексту и обложке.</p></div>
         </div>
-        <div class="console-stage">
-          <span class="icon-chip lilac"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H5l-2 2V11a9 9 0 0 1 18 0Z"/><path d="M8 11h.01m4 0h.01m4 0h.01"/></svg></span><div><strong>ИИ ведёт диалоги</strong><p>Отвечает на обращение и предлагает время</p></div>
-          <div class="console-booking"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg> Диагностика · четверг, 19:00</div>
+        <div class="studio-frame" id="studio-chat" role="tabpanel" aria-labelledby="studio-tab-chat" hidden>
+          <div class="studio-agenda">
+            <div class="agenda-question">Запишите меня на четверг, на 19:00.</div>
+            <div class="agenda-answer">Записала на диагностику. До четверга!</div>
+            <div class="agenda-ticket"><div><b>ЧТ</b><strong>19:00</strong></div><span>Диагностика<br><b>Запись подтверждена ✓</b></span></div>
+          </div>
+          <div class="studio-caption"><strong>ИИ согласует время</strong><p>Ученик получает ответ, пока у вас идёт занятие.</p></div>
+        </div>
+        <div class="studio-frame" id="studio-money" role="tabpanel" aria-labelledby="studio-tab-money" hidden>
+          <div class="studio-ledger">
+            <div class="ledger-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ledger-track" cx="60" cy="60" r="50"/><circle class="ledger-arc" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="33.333 100"/></svg><div><strong>7</strong><span>учеников</span></div></div>
+            <div class="ledger-figures"><div><span>Обращения</span><b>21</b></div><div><span>Расходы</span><b>19 244 ₽</b></div><div><span>За ученика</span><b>2 749 ₽</b></div></div>
+          </div>
+          <div class="studio-caption"><strong>Видно, сколько стоит привлечь ученика</strong><p>Кейс по русскому языку. Треть обращений привела к оплате.</p></div>
         </div>
       </div>
-      <div class="console-outcome">
-        <span class="icon-chip green"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16M8 15l4-5 4 2 4-6"/></svg></span>
-        <div><strong>Стоимость ученика</strong><p>Кейс по русскому языку</p></div>
-        <div class="console-number">2 749 ₽</div>
-        <div class="console-math"><span>19 244 ₽ на рекламу</span><span>÷</span><span>7 оплативших учеников</span></div>
+      <div class="studio-tabs" role="tablist" aria-label="Посмотреть работу платформы">
+        <button id="studio-tab-ad" role="tab" type="button" aria-selected="true" aria-controls="studio-ad">Объявление</button>
+        <button id="studio-tab-chat" role="tab" type="button" aria-selected="false" aria-controls="studio-chat" tabindex="-1">Запись</button>
+        <button id="studio-tab-money" role="tab" type="button" aria-selected="false" aria-controls="studio-money" tabindex="-1">Экономика</button>
       </div>
     </div>
   </div>
@@ -296,7 +456,7 @@
   <div class="scene-status"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg> В каждом городе нужно обновить вручную</div>
 </div><h3>Одна правка — три обновления</h3><p>Когда объявлений много, даже смена оффера отнимает время. ИИ готовит варианты, а автозагрузка обновляет размещения из одного места.</p></article><article class="pain"><div class="pain-scene message-scene">
   <div class="messenger-preview"><span class="icon-chip lilac"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H5l-2 2V11a9 9 0 0 1 18 0Z"/><path d="M8 11h.01m4 0h.01m4 0h.01"/></svg></span><span>Здравствуйте! Нужна подготовка к ЕГЭ.</span></div>
-  <div class="message-status"><span>18:02 · новое обращение</span><strong>18:48 · ответа ещё нет</strong></div>
+  <div class="wait-timeline"><span>18:02</span><i aria-hidden="true"></i><span>18:48</span></div><div class="wait-caption">46 минут без ответа</div>
 </div><h3>Пока вы на занятии, ученик ждёт ответа</h3><p>Если ответ приходит поздно, ученик успевает написать другим. ИИ уточняет запрос и предлагает свободное время для диагностики.</p></article><article class="pain"><div class="pain-scene money-scene"><div><span>Расходы</span><b>19 244 ₽</b></div><span class="math-separator">÷</span><div><span>Ученики</span><b>7</b></div><div class="money-result">= 2 749 ₽ за ученика</div></div><h3>Контакты видны.<br>А стоимость ученика?</h3><p>Количество обращений ещё не показывает окупаемость. Нужна связь между расходами, диагностикой и оплатой.</p></article></div></div></section><section class="section dark"><div class="wrap"><h2>Доведите обращение<br><em>до первой оплаты.</em></h2><p class="flow-intro">Cantor Agency объединяет рекламу и продажи. Чтобы было видно, где прерывается путь ученика — и кто должен сделать следующий шаг.</p>
 <div class="journey connected-flow">
 <div><span class="flow-node"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h4v4H7zm7 1h3m-3 3h3M7 16h10"/></svg></span><b>Объявление</b><span>ИИ готовит текст и оформление</span></div>
@@ -305,11 +465,19 @@
 <div><span class="flow-node"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-13 5 2 2 5-5"/></svg></span><b>Диагностика</b><span>Запись и напоминание</span></div>
 <div><span class="flow-node"><svg class="line-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M21 10h-5a2.5 2.5 0 0 0 0 5h5"/></svg></span><b>Оплата</b><span>ИИ анализирует, что принесло результат</span></div>
 </div>
-<div class="flow-resolution"><strong>ИИ помогает на всём пути до оплаты</strong><p>Готовит объявления, помогает управлять ставками, ведёт переписку и показывает, какие объявления и города приводят оплативших учеников.</p></div></div></section><section class="section" id="features"><div class="wrap"><div class="feature-heading"><h2>Ваш отдел продвижения.<br>С искусственным интеллектом.</h2><p>Контент, реклама, диалоги и деньги связаны в одном рабочем пространстве.</p></div><div class="feature-tabs" role="tablist" aria-label="Возможности платформы"><button class="feature-tab" type="button" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0" data-panel="0"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span>Продвижение</button><button class="feature-tab" type="button" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1" data-panel="1"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5"/></svg></span>Диалоги</button><button class="feature-tab" type="button" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-panel="2"><span aria-hidden="true">₽</span>Экономика</button></div><div class="product-panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0" ><div class="panel-copy"><h3>ИИ создаёт.<br>Автоматизация масштабирует.</h3><p>От первого текста до продвижения в нескольких городах — без бесконечного копирования и ручных правок.</p><div class="feature-points"><div><b>Объявления с ИИ</b><span>Тексты и изображения по моделям, которые учитывают предмет, аудиторию и ваш оффер.</span></div><div><b>Масштабирование автозагрузкой</b><span>Размещайте и обновляйте объявления через единый фид. Контролируйте ошибки загрузки.</span></div><div><b>Автоматическое управление ставками</b><span>Задавайте цель и лимиты. Платформа помогает управлять продвижением и расходами.</span></div></div></div><div class="panel-art"><div class="ads-workspace"><div class="ai-prompt">✳ Математика · ЕГЭ · Онлайн</div><div class="ad-preview"><div class="ad-art">x² + y²<span>Понятная математика.<br>Уверенный результат.</span></div><div class="ad-details"><b>Подготовка к ЕГЭ</b><span>Текст и оформление собраны с ИИ</span></div></div><div class="cities"><span>Москва ✓</span><span>Казань ✓</span><span>Екатеринбург ✓</span></div><div class="automation-status"><i></i>Автозагрузка и ставки под контролем</div></div></div></div><div class="product-panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><div class="panel-copy"><h3>ИИ отвечает.<br>Вы встречаетесь с учениками.</h3><p>Собственная база знаний, ваш стиль общения и понятная цель: не поддерживать разговор, а довести до диагностики.</p><div class="feature-points"><div><b>Ответы без ожидания</b><span>ИИ обрабатывает входящие сообщения, пока вы ведёте занятия.</span></div><div><b>Сценарий под ваш предмет</b><span>Уточняет класс, цель и формат. Использует информацию о ваших занятиях.</span></div><div><b>Запись и продолжение диалога</b><span>Предлагает время, помогает вернуться к молчащим и напомнить о встрече.</span></div></div></div><div class="panel-art"><div class="conversation"><div class="online-state">ИИ-менеджер на связи</div><span class="bubble">Дочь в 11 классе, пробник на 58. Поможете?</span><span class="bubble reply">Начнём с диагностики: посмотрим пробник и составим план подготовки. В четверг в 19:00 удобно?</span><span class="bubble">Да, записывайте!</span><div class="booking">Четверг · 19:00 <b>Диагностика ✓</b></div></div></div></div><div class="product-panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><div class="panel-copy"><h3>Видеть расходы.<br>Понимать результат.</h3><p>Сквозная аналитика от объявления до оплаты. Считайте стоимость ученика и сравнивайте её с тем, сколько он приносит.</p><div class="feature-points"><div><b>Вся воронка перед глазами</b><span>Просмотры, обращения, диагностики и оплаты — чтобы найти слабый этап.</span></div><div><b>Стоимость заявки и ученика</b><span>Расходы связаны с результатом. Оплаты вносите в кабинет.</span></div><div><b>Основа для решений</b><span>Какие объявления и города развивать, где пересмотреть бюджет и работу с диалогами.</span></div></div></div><div class="panel-art"><div class="economy-board"><div class="economy-total"><span>Стоимость ученика</span><b>2 749 <small>₽</small></b><span>19 244 ₽ расходов ÷ 7 учеников</span></div><div class="economy-grid"><div><span>Стоимость заявки</span><b>916 ₽</b></div><div><span>Оплаты учеников</span><b>99 000 ₽</b></div></div><div class="conversion-chart" role="group" aria-label="Воронка по русскому языку">
+<div class="flow-resolution"><strong>ИИ помогает на всём пути до оплаты</strong><p>Готовит объявления, помогает управлять ставками, ведёт переписку и показывает, какие объявления и города приводят оплативших учеников.</p></div></div></section><section class="section" id="features"><div class="wrap"><div class="feature-heading"><h2>Ваш отдел продвижения.<br>С искусственным интеллектом.</h2><p>Контент, реклама, диалоги и деньги связаны в одном рабочем пространстве.</p></div><div class="feature-tabs" role="tablist" aria-label="Возможности платформы"><button class="feature-tab" type="button" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0" data-panel="0"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span>Продвижение</button><button class="feature-tab" type="button" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1" data-panel="1"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5"/></svg></span>Диалоги</button><button class="feature-tab" type="button" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-panel="2"><span aria-hidden="true">₽</span>Экономика</button></div><div class="product-panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0" ><div class="panel-copy"><h3>Одно объявление.<br>Несколько городов.</h3><p>От первого текста до продвижения в нескольких городах — без бесконечного копирования и ручных правок.</p><div class="feature-points"><div><b>Объявления с ИИ</b><span>Тексты и изображения по моделям, которые учитывают предмет, аудиторию и ваш оффер.</span></div><div><b>Масштабирование автозагрузкой</b><span>Размещайте и обновляйте объявления через единый фид. Контролируйте ошибки загрузки.</span></div><div><b>Автоматическое управление ставками</b><span>Задавайте цель и лимиты. Платформа помогает управлять продвижением и расходами.</span></div></div></div><div class="panel-art"><div class="ads-workspace"><div class="ai-prompt">Математика · ЕГЭ · Онлайн</div><div class="ad-preview"><div class="ad-art ad-print"><span>Математика<br>для ЕГЭ</span></div><div class="ad-details"><b>Подготовка к ЕГЭ</b><span>Текст и оформление собраны с ИИ</span></div></div><div class="cities dispatch-cities"><span>Москва</span><span>Казань</span><span>Екатеринбург</span></div><div class="automation-status"><i></i>Автозагрузка и ставки под контролем</div></div></div></div><div class="product-panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><div class="panel-copy"><h3>ИИ отвечает.<br>Вы встречаетесь с учениками.</h3><p>Собственная база знаний, ваш стиль общения и понятная цель: не поддерживать разговор, а довести до диагностики.</p><div class="feature-points"><div><b>Ответы без ожидания</b><span>ИИ обрабатывает входящие сообщения, пока вы ведёте занятия.</span></div><div><b>Сценарий под ваш предмет</b><span>Уточняет класс, цель и формат. Использует информацию о ваших занятиях.</span></div><div><b>Запись и продолжение диалога</b><span>Предлагает время, помогает вернуться к молчащим и напомнить о встрече.</span></div></div></div><div class="panel-art"><div class="conversation"><div class="online-state">ИИ-менеджер на связи</div><span class="bubble">Дочь в 11 классе, пробник на 58. Поможете?</span><span class="bubble reply">Начнём с диагностики: посмотрим пробник и составим план подготовки. В четверг в 19:00 удобно?</span><span class="bubble">Да, записывайте!</span><div class="booking">Четверг · 19:00 <b>Диагностика ✓</b></div></div></div></div><div class="product-panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><div class="panel-copy"><h3>Видеть расходы.<br>Понимать результат.</h3><p>Сквозная аналитика от объявления до оплаты. Считайте стоимость ученика и сравнивайте её с тем, сколько он приносит.</p><div class="feature-points"><div><b>Вся воронка перед глазами</b><span>Просмотры, обращения, диагностики и оплаты — чтобы найти слабый этап.</span></div><div><b>Стоимость заявки и ученика</b><span>Расходы связаны с результатом. Оплаты вносите в кабинет.</span></div><div><b>Основа для решений</b><span>Какие объявления и города развивать, где пересмотреть бюджет и работу с диалогами.</span></div></div></div><div class="panel-art"><div class="economy-board"><div class="economy-total"><span>Стоимость ученика</span><b>2 749 <small>₽</small></b><span>19 244 ₽ расходов ÷ 7 учеников</span></div><div class="economy-grid"><div><span>Стоимость заявки</span><b>916 ₽</b></div><div><span>Оплаты учеников</span><b>99 000 ₽</b></div></div><div class="conversion-chart" role="group" aria-label="Воронка по русскому языку">
   <div><span>Обращения</span><b>21</b><i style="--share:100%"></i></div>
   <div><span>Диагностики</span><b>10</b><i style="--share:47.62%"></i></div>
   <div><span>Оплаты</span><b>7</b><i style="--share:33.33%"></i></div>
-</div><p>Кейс агентства: Оксана Алексеева, 1–21 сентября 2026. Расчёт по рекламным расходам.</p></div></div></div><div class="support-features"><article><h3>База знаний, а не догадки</h3><p>Объявления, фото, офферы, запуск, диалоги и продажи. Рекомендации из практики работы с репетиторами.</p></article><article><h3>Единый контроль</h3><p>Следующие действия, состояние рекламы и движение заявок. Не нужно собирать картину по вкладкам.</p></article><article><h3>Экспертиза рядом</h3><p>Методология Cantor Agency помогает разбирать причины, проверять гипотезы и улучшать весь путь ученика.</p></article></div></div></section><section class="section compare" id="compare"><div class="wrap"><div class="section-head"><h2>Авито даёт аудиторию.<br>Cantor Agency помогает привлекать учеников.</h2><p>Все задачи продвижения остаются у вас, если работать только в рекламном кабинете. Платформа берёт на себя повторяющиеся действия.</p></div><div class="compare-cards"><article class="solo-card"><h3>Самостоятельно на Авито</h3><p>Каждый шаг — ваша задача</p><div class="compare-items"><div><span>−</span>Писать и оформлять каждое объявление</div><div><span>−</span>Копировать и обновлять размещения</div><div><span>−</span>Следить за ставками и расходами</div><div><span>−</span>Отвечать между занятиями</div><div><span>−</span>Сводить рекламу и оплаты вручную</div></div></article><article class="platform-card"><h3>С платформой Cantor Agency</h3><p>Рутинные задачи — в одной системе</p><div class="compare-items"><div><span>✓</span>ИИ помогает создавать тексты и изображения</div><div><span>✓</span>Автозагрузка масштабирует объявления</div><div><span>✓</span>Автоматизация управляет ставками</div><div><span>✓</span>ИИ-менеджер ведёт входящие диалоги</div><div><span>✓</span>Аналитика показывает стоимость ученика</div></div></article></div></div></section><section class="section"><div class="wrap"><h2>Для тех, кто преподаёт.<br>И тех, кто растит школу.</h2><div class="audiences"><article class="audience"><h3>Репетиторам</h3><p>Получать учеников, не превращая продвижение в отдельную профессию.</p><div class="audience-points"><div>Запустить объявления с помощью ИИ</div><div>Не оставлять обращения без ответа во время занятий</div><div>Понимать, сколько стоит заполнить расписание</div></div></article><article class="audience"><h3>Онлайн-школам</h3><p>Масштабировать привлечение и сохранять контроль над воронкой.</p><div class="audience-points"><div>Продвигать несколько направлений и городов</div><div>Выстроить единый сценарий работы с обращениями</div><div>Оценивать результат по ученикам и оплатам</div></div></article></div></div></section><section class="section results" id="results"><div class="wrap"><h2>Опыт агентства.<br>Теперь — внутри платформы.</h2><p class="results-intro">Мы продвигали репетиторов и онлайн-школы на Авито, проверяли объявления, города, ставки и сценарии продаж. Увидели, какие механики приводят учеников — и перенесли их в инструменты, которыми вы управляете сами.</p><div class="big-stats"><div><b>1 206</b><span>заявок с Авито</span></div><div><b>222</b><span>диагностики</span></div><div><b>97</b><span>оплативших учеников</span></div></div><p class="note">Суммарные результаты клиентов Cantor Agency с лета 2026 года.</p><div class="case"><div><h3>Оксана Алексеева</h3><p>Русский язык · 1–21 сентября 2026</p><figure class="case-conversion"><div class="case-dots" aria-hidden="true"><i class="paid" style="--order:0"></i><i class="paid" style="--order:1"></i><i class="paid" style="--order:2"></i><i class="paid" style="--order:3"></i><i class="paid" style="--order:4"></i><i class="paid" style="--order:5"></i><i class="paid" style="--order:6"></i><i class="assessed" style="--order:7"></i><i class="assessed" style="--order:8"></i><i class="assessed" style="--order:9"></i><i class="contact" style="--order:10"></i><i class="contact" style="--order:11"></i><i class="contact" style="--order:12"></i><i class="contact" style="--order:13"></i><i class="contact" style="--order:14"></i><i class="contact" style="--order:15"></i><i class="contact" style="--order:16"></i><i class="contact" style="--order:17"></i><i class="contact" style="--order:18"></i><i class="contact" style="--order:19"></i><i class="contact" style="--order:20"></i></div><figcaption><strong>Каждая третья заявка привела к оплате</strong><span>Из 21 обращения — 10 диагностик и 7 учеников.</span></figcaption></figure></div><div class="case-metrics"><div><b>99 000 ₽</b><span>оплат от учеников</span></div><div><b>19 244 ₽</b><span>рекламный бюджет</span></div><div><b>2 749 ₽</b><span>стоимость ученика</span></div><div><b>916 ₽</b><span>стоимость заявки</span></div></div></div></div></section><section class="section"><div class="wrap"><h2>Ваша цель — ученики.<br>Наша — помочь к ней прийти.</h2><div class="values"><div><h3>Экономика важнее охватов</h3><p>Оцениваем рекламу по стоимости ученика и оплатам. Просмотры полезны, когда превращаются в результат.</p></div><div><h3>Ниша важнее общих советов</h3><p>Предмет, класс, экзамен, цель родителя, цена занятий. Наши модели и база знаний учитывают специфику образования.</p></div><div><h3>Автоматизация с понятной логикой</h3><p>ИИ помогает делать работу, а вы видите воронку и управляете решениями. Больше ясности, меньше действий по кругу.</p></div></div><div class="knowledge-band"><h3>За инструментами —<br>методология Cantor Agency.</h3><p>Как сформулировать оффер, собрать объявление, проверить конверсию, ответить родителю и довести до диагностики. Всё это собрано в базе знаний и связано с вашей ежедневной работой в платформе.</p></div></div></section><section class="section signup" id="access"><div class="wrap form-layout"><div class="form-copy"><h2>Получите платформу<br>одними из первых.<br><em>На особых условиях.</em></h2><p>Присоединяйтесь к раннему доступу Cantor Agency: первыми получите инструменты ИИ для продвижения и продаж на Авито и эксклюзивные условия для первых пользователей.</p><div class="steps"><div><span>01</span>Приоритетное подключение к платформе</div><div><span>02</span>Знакомство с инструментами на ваших задачах</div><div><span>03</span>Прямой диалог с командой и влияние на улучшения</div></div><p>Оставьте контакты — расскажем об условиях участия и поможем определить, с чего начать.</p></div><div class="form-card"><form id="access-form">
+</div><p>Кейс агентства: Оксана Алексеева, 1–21 сентября 2026. Расчёт по рекламным расходам.</p></div></div></div><div class="support-features"><article><h3>База знаний, а не догадки</h3><p>Объявления, фото, офферы, запуск, диалоги и продажи. Рекомендации из практики работы с репетиторами.</p></article><article><h3>Единый контроль</h3><p>Следующие действия, состояние рекламы и движение заявок. Не нужно собирать картину по вкладкам.</p></article><article><h3>Экспертиза рядом</h3><p>Методология Cantor Agency помогает разбирать причины, проверять гипотезы и улучшать весь путь ученика.</p></article></div></div></section><section class="section compare" id="compare"><div class="wrap"><div class="section-head"><h2>Авито даёт аудиторию.<br>Cantor Agency помогает привлекать учеников.</h2><p>Все задачи продвижения остаются у вас, если работать только в рекламном кабинете. Платформа берёт на себя повторяющиеся действия.</p></div><div class="compare-cards"><article class="solo-card"><h3>Самостоятельно на Авито</h3><p>Каждый шаг — ваша задача</p><div class="compare-items"><div><span>−</span>Писать и оформлять каждое объявление</div><div><span>−</span>Копировать и обновлять размещения</div><div><span>−</span>Следить за ставками и расходами</div><div><span>−</span>Отвечать между занятиями</div><div><span>−</span>Сводить рекламу и оплаты вручную</div></div></article><article class="platform-card"><h3>С платформой Cantor Agency</h3><p>Рутинные задачи — в одной системе</p><div class="compare-items"><div><span>✓</span>ИИ помогает создавать тексты и изображения</div><div><span>✓</span>Автозагрузка масштабирует объявления</div><div><span>✓</span>Автоматизация управляет ставками</div><div><span>✓</span>ИИ-менеджер ведёт входящие диалоги</div><div><span>✓</span>Аналитика показывает стоимость ученика</div></div></article></div></div></section><section class="section"><div class="wrap"><h2>Для тех, кто преподаёт.<br>И тех, кто растит школу.</h2><div class="audiences"><article class="audience"><h3>Репетиторам</h3><p>Получать учеников, не превращая продвижение в отдельную профессию.</p><div class="audience-points"><div>Запустить объявления с помощью ИИ</div><div>Не оставлять обращения без ответа во время занятий</div><div>Понимать, сколько стоит заполнить расписание</div></div></article><article class="audience"><h3>Онлайн-школам</h3><p>Масштабировать привлечение и сохранять контроль над воронкой.</p><div class="audience-points"><div>Продвигать несколько направлений и городов</div><div>Выстроить единый сценарий работы с обращениями</div><div>Оценивать результат по ученикам и оплатам</div></div></article></div></div></section><section class="section results" id="results"><div class="wrap"><h2>Опыт агентства.<br>Теперь — внутри платформы.</h2><p class="results-intro">Мы продвигали репетиторов и онлайн-школы на Авито, проверяли объявления, города, ставки и сценарии продаж. Увидели, какие механики приводят учеников — и перенесли их в инструменты, которыми вы управляете сами.</p><div class="big-stats"><div><b>1 206</b><span>заявок с Авито</span></div><div><b>222</b><span>диагностики</span></div><div><b>97</b><span>оплативших учеников</span></div></div><p class="note">Суммарные результаты клиентов Cantor Agency с лета 2026 года.</p><div class="case"><div><h3>Оксана Алексеева</h3><p>Русский язык · 1–21 сентября 2026</p><figure class="case-flow">
+  <figcaption>Каждая третья заявка привела к оплате</figcaption>
+  <div class="case-stages"><span><b>21</b>обращение</span><span><b>10</b>диагностик</span><span><b>7</b>учеников</span></div>
+  <svg viewBox="0 0 420 96" preserveAspectRatio="none" aria-hidden="true">
+    <path class="flow-discard" d="M0 4H420V91H0Z"/>
+    <path class="flow-retained" d="M0 4H12C105 4 115 50 210 50C311 50 325 62 407 62H420V91H0Z"/>
+    <path class="flow-stitch" d="M2 0v96M210 0v96M418 0v96"/>
+  </svg>
+</figure></div><div class="case-metrics"><div><b>99 000 ₽</b><span>оплат от учеников</span></div><div><b>19 244 ₽</b><span>рекламный бюджет</span></div><div><b>2 749 ₽</b><span>стоимость ученика</span></div><div><b>916 ₽</b><span>стоимость заявки</span></div></div></div></div></section><section class="section"><div class="wrap"><h2>Ваша цель — ученики.<br>Наша — помочь к ней прийти.</h2><div class="values"><div><h3>Экономика важнее охватов</h3><p>Оцениваем рекламу по стоимости ученика и оплатам. Просмотры полезны, когда превращаются в результат.</p></div><div><h3>Ниша важнее общих советов</h3><p>Предмет, класс, экзамен, цель родителя, цена занятий. Наши модели и база знаний учитывают специфику образования.</p></div><div><h3>Автоматизация с понятной логикой</h3><p>ИИ помогает делать работу, а вы видите воронку и управляете решениями. Больше ясности, меньше действий по кругу.</p></div></div><div class="knowledge-band"><h3>За инструментами —<br>методология Cantor Agency.</h3><p>Как сформулировать оффер, собрать объявление, проверить конверсию, ответить родителю и довести до диагностики. Всё это собрано в базе знаний и связано с вашей ежедневной работой в платформе.</p></div></div></section><section class="section signup" id="access"><div class="wrap form-layout"><div class="form-copy"><h2>Получите платформу<br>одними из первых.<br><em>На особых условиях.</em></h2><p>Присоединяйтесь к раннему доступу Cantor Agency: первыми получите инструменты ИИ для продвижения и продаж на Авито и эксклюзивные условия для первых пользователей.</p><div class="steps"><div><span>01</span>Приоритетное подключение к платформе</div><div><span>02</span>Знакомство с инструментами на ваших задачах</div><div><span>03</span>Прямой диалог с командой и влияние на улучшения</div></div><p>Оставьте контакты — расскажем об условиях участия и поможем определить, с чего начать.</p></div><div class="form-card"><form id="access-form">
 <div class="form-grid">
 <label class="field"><span class="field-label">Ваше имя <span class="required-mark">*</span></span><input name="name" required autocomplete="name" maxlength="100" placeholder="Как к вам обращаться">
 </label>
@@ -321,7 +489,7 @@
 </label>
 <label class="field full">Предметы и направления<input name="subject" maxlength="300" placeholder="Например, математика, ОГЭ и ЕГЭ">
 </label>
-<label class="field full"><span class="field-label">Telegram для связи <span class="required-mark">*</span></span><input name="telegram" required maxlength="100" pattern="@?[A-Za-z0-9_]{5,32}" title="Telegram username: от 5 до 32 латинских букв, цифр или подчёркиваний" autocomplete="off" placeholder="@username">
+<label class="field full"><span class="field-label">Telegram для связи <span class="required-mark">*</span></span><input name="telegram" autocapitalize="none" spellcheck="false" required maxlength="100" pattern="@?[A-Za-z0-9_]{5,32}" title="Telegram username: от 5 до 32 латинских букв, цифр или подчёркиваний" autocomplete="off" placeholder="@username">
 </label>
 <label class="field">Опыт работы с Авито<select name="experience">
 <option value="">Выберите</option>
@@ -377,29 +545,31 @@ form.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValid
 (() => {
   'use strict';
 
-  const tabs = [...document.querySelectorAll('.feature-tab')];
-  function activateTab(active) {
-    for (const tab of tabs) {
-      const selected = tab === active;
-      tab.setAttribute('aria-selected', String(selected));
-      tab.tabIndex = selected ? 0 : -1;
-      document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
+  document.querySelectorAll('[role="tablist"]').forEach(tablist => {
+    const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+    function activateTab(active) {
+      for (const tab of tabs) {
+        const selected = tab === active;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
+      }
     }
-  }
-  tabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => activateTab(tab));
-    tab.addEventListener('keydown', event => {
-      const targets = {
-        ArrowRight: (index + 1) % tabs.length,
-        ArrowLeft: (index - 1 + tabs.length) % tabs.length,
-        Home: 0,
-        End: tabs.length - 1,
-      };
-      if (!(event.key in targets)) return;
-      event.preventDefault();
-      const target = tabs[targets[event.key]];
-      activateTab(target);
-      target.focus();
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activateTab(tab));
+      tab.addEventListener('keydown', event => {
+        const targets = {
+          ArrowRight: (index + 1) % tabs.length,
+          ArrowLeft: (index - 1 + tabs.length) % tabs.length,
+          Home: 0,
+          End: tabs.length - 1,
+        };
+        if (!(event.key in targets)) return;
+        event.preventDefault();
+        const target = tabs[targets[event.key]];
+        activateTab(target);
+        target.focus();
+      });
     });
   });
 

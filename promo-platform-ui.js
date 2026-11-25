@@ -1,29 +1,31 @@
 (() => {
   'use strict';
 
-  const tabs = [...document.querySelectorAll('.feature-tab')];
-  function activateTab(active) {
-    for (const tab of tabs) {
-      const selected = tab === active;
-      tab.setAttribute('aria-selected', String(selected));
-      tab.tabIndex = selected ? 0 : -1;
-      document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
+  document.querySelectorAll('[role="tablist"]').forEach(tablist => {
+    const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+    function activateTab(active) {
+      for (const tab of tabs) {
+        const selected = tab === active;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        document.getElementById(tab.getAttribute('aria-controls')).hidden = !selected;
+      }
     }
-  }
-  tabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => activateTab(tab));
-    tab.addEventListener('keydown', event => {
-      const targets = {
-        ArrowRight: (index + 1) % tabs.length,
-        ArrowLeft: (index - 1 + tabs.length) % tabs.length,
-        Home: 0,
-        End: tabs.length - 1,
-      };
-      if (!(event.key in targets)) return;
-      event.preventDefault();
-      const target = tabs[targets[event.key]];
-      activateTab(target);
-      target.focus();
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activateTab(tab));
+      tab.addEventListener('keydown', event => {
+        const targets = {
+          ArrowRight: (index + 1) % tabs.length,
+          ArrowLeft: (index - 1 + tabs.length) % tabs.length,
+          Home: 0,
+          End: tabs.length - 1,
+        };
+        if (!(event.key in targets)) return;
+        event.preventDefault();
+        const target = tabs[targets[event.key]];
+        activateTab(target);
+        target.focus();
+      });
     });
   });
 
