@@ -1,3 +1,5 @@
+import { auditFilters, parseClientAudit } from "./cabinet-audit.mjs";
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const hex = (bytes) =>
@@ -288,11 +290,18 @@ export async function cabinetApi(request, env) {
       return result({ account: { ...metadata, cabinet: await cabinet(env, id).summary() } }, 201);
     }
     const match = path.match(
-      /^\/api\/admin\/cabinets\/([a-f0-9]{12})(?:\/(activate|retry|employees|reset|revoke))?$/,
+      /^\/api\/admin\/cabinets\/([a-f0-9]{12})(?:\/(activate|retry|employees|reset|revoke|history))?$/,
     );
     if (!match) return fail("not_found", 404);
     const [, id, action] = match;
     const stub = cabinet(env, id);
+    if (method === "GET" && action === "history") {
+      const filters = auditFilters(url.searchParams);
+      if (!filters) return fail("invalid_audit_filter");
+      if (!(await stub.connection(id)) && !(await existingAccount(env, id)))
+        return fail("not_found", 404);
+      return result({ workspaceId: id, ...(await stub.auditHistory(filters)) });
+    }
     if (method === "GET" && !action) return result(await stub.details());
     if (method !== "POST") return fail("method_not_allowed", 405);
     if (action === "activate") {
@@ -334,6 +343,12 @@ export async function cabinetApi(request, env) {
   if (!parts) return fail("unauthorized", 401);
   const stub = cabinet(env, parts[1]);
   const token = await digest(parts[2]);
+  if (path === "/api/cabinet/audit" && method === "POST") {
+    if (request.headers.get("origin") !== url.origin) return fail("invalid_origin", 403);
+    const events = parseClientAudit(body);
+    if (!events) return fail("invalid_audit_events");
+    return asResult(await stub.ingestAudit(token, body.workspaceId, body.employeeId, events));
+  }
   if (path === "/api/cabinet/logout" && method === "POST") {
     await stub.logout(token);
     return result({ ok: true }, 200, { "set-cookie": cookie("cantor_test_session", "", 0) });

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 
 const base = new URL(process.env.CABINET_TEST_URL ?? "http://127.0.0.1:8831");
 const password = process.env.CABINET_TEST_OWNER_PASSWORD;
@@ -98,6 +99,94 @@ const chat = await request("/api/cabinet/chat?id=synthetic-chat-101", { cookie: 
 assert.equal(chat.data.messages.length, 1);
 await request("/api/cabinet/chat?id=synthetic-chat-102", { cookie: session.cookie, status: 404 });
 
+const auditPath = "/api/cabinet/audit";
+const historyPath = endpoint + "/history";
+await request(historyPath, { status: 401 });
+await request(historyPath, { cookie: session.cookie, status: 401 });
+const event = {
+  id: randomUUID(),
+  section: "ads",
+  action: "open-ad",
+  outcome: "click",
+  target: snapshot.data.ads[0].id,
+  text: "private-placeholder",
+  password: personal,
+  actor: "owner",
+  at: "1900-01-01T00:00:00.000Z",
+};
+const audit = { workspaceId: workspace, employeeId: session.data.employeeId, events: [event] };
+await request(auditPath, { cookie: provisional.cookie, body: audit, status: 401 });
+await request(auditPath, {
+  cookie: session.cookie,
+  body: { ...audit, workspaceId: other },
+  status: 401,
+});
+await request(auditPath, {
+  cookie: session.cookie,
+  body: audit,
+  origin: "https://example.com",
+  status: 403,
+});
+await request(auditPath, {
+  cookie: session.cookie,
+  body: { ...audit, events: [{ ...event, outcome: "changed" }] },
+  status: 400,
+});
+await request(auditPath, { cookie: session.cookie, body: audit });
+await request(auditPath, { cookie: session.cookie, body: audit });
+await request(auditPath, {
+  cookie: session.cookie,
+  body: { ...audit, events: [{ ...event, id: randomUUID(), target: "synthetic-chat-102" }] },
+});
+await request(endpoint + "/employees", {
+  cookie: owner,
+  body: { name: "Повтор", login },
+  status: 409,
+});
+await request(historyPath + "?from=2026-02-30", { cookie: owner, status: 400 });
+const history = (await request(historyPath, { cookie: owner })).data;
+assert.equal(history.workspaceId, workspace);
+assert.equal(history.events.filter(({ action }) => action === "activate").length, 1);
+assert.equal(
+  history.events.find(({ action }) => action === "password-change").actor,
+  audit.employeeId,
+);
+assert.equal(
+  history.events.filter(
+    ({ action, outcome }) => action === "employee-create" && outcome === "failed",
+  ).length,
+  1,
+);
+assert.equal(
+  history.events.filter(({ source, object }) => source === "client" && object === event.target)
+    .length,
+  1,
+);
+const safe = JSON.stringify(history);
+for (const value of [
+  "private-placeholder",
+  "fixture-secret",
+  "synthetic-chat-102",
+  personal,
+  issued.temporaryPassword,
+  "1900-01-01",
+])
+  assert(!safe.includes(value));
+const filter = new URLSearchParams({
+  actor: audit.employeeId,
+  section: "ads",
+  action: "open-ad",
+  q: "СОТРУДНИКА",
+  from: new Date().toISOString().slice(0, 10),
+});
+assert.equal((await request(historyPath + "?" + filter, { cookie: owner })).data.events.length, 2);
+await request(root + "/" + other + "/activate", { cookie: owner, body: {} });
+assert(
+  !(await request(root + "/" + other + "/history", { cookie: owner })).data.events.some(
+    ({ actor }) => actor === audit.employeeId,
+  ),
+);
+
 const reset = await request(endpoint + "/reset", {
   cookie: owner,
   body: { employeeId: issued.employee.id },
@@ -110,5 +199,5 @@ await request(endpoint + "/revoke", { cookie: owner, body: { employeeId: issued.
 await request("/api/cabinet/session", { cookie: fresh.cookie, status: 401 });
 await attempt(workspace, reset.data.temporaryPassword, 401);
 console.log(
-  "Synthetic cabinet check passed: inventory, setup, idempotent activation, background import, scope, rotation, reset and revoke.",
+  "Synthetic cabinet check passed: access lifecycle, import, audit authenticity, tenant scope, privacy, filtering and batch deduplication.",
 );

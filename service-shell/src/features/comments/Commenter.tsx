@@ -1,3 +1,4 @@
+import { trackCabinetAttempt } from "../cabinet-admin/use-cabinet-audit";
 import {
   createContext,
   useContext,
@@ -351,6 +352,7 @@ function Commenter({
   }
 
   async function save(draft: Draft, text: string, audio: Blob | null) {
+    trackCabinetAttempt("create-comment");
     const form = new FormData();
     form.set(
       "comment",
@@ -450,6 +452,7 @@ function Commenter({
       <button
         ref={start}
         className="commenter-launch"
+        data-cabinet-audit="commenter-menu"
         type="button"
         aria-label="Комментарии"
         aria-expanded={open}

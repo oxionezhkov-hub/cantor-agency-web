@@ -8,6 +8,7 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { AdminAccess } from "@/features/cabinet-admin/AdminAccess";
+import { CabinetHistory } from "@/features/cabinet-admin/CabinetHistory";
 import { CommentQueue } from "@/features/comments/CommentQueue";
 import { CabinetAccess } from "@/features/cabinet-admin/CabinetAccess";
 import { validateServiceSearch } from "@/features/service/sections";
@@ -34,13 +35,24 @@ const adminCommentsRoute = createRoute({
   path: "/admin/comments",
   component: () => <AdminAccess comments={<CommentQueue />} />,
 });
+const adminHistoryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/history",
+  component: () => <AdminAccess history={<CabinetHistory />} />,
+});
 const cabinetRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/cabinet",
   component: () => <CabinetAccess entry section="today" />,
 });
 const router = createRouter({
-  routeTree: rootRoute.addChildren([indexRoute, adminRoute, adminCommentsRoute, cabinetRoute]),
+  routeTree: rootRoute.addChildren([
+    indexRoute,
+    adminRoute,
+    adminCommentsRoute,
+    adminHistoryRoute,
+    cabinetRoute,
+  ]),
 });
 const target = document.getElementById("root");
 if (!target) throw new Error("Preview root is missing");

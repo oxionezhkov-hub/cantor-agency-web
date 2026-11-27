@@ -1,3 +1,4 @@
+import { trackCabinetAttempt } from "../cabinet-admin/use-cabinet-audit";
 import {
   useEffect,
   useMemo,
@@ -384,6 +385,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
     open(newListing());
   }
   function save() {
+    trackCabinetAttempt("save-ad");
     if (!edit) return;
     if (!edit.title.trim() || !edit.text.trim() || !edit.city.trim())
       return setNotice("Заполните заголовок, текст и город.");
@@ -1281,7 +1283,12 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                       />
                     </td>
                     <td>
-                      <button className="aw-ad" onClick={() => open(a)}>
+                      <button
+                        className="aw-ad"
+                        data-cabinet-audit="open-ad"
+                        data-audit-target={a.id}
+                        onClick={() => open(a)}
+                      >
                         <span className={`aw-thumb aw-thumb-${i % 3}`}>
                           {a.photos[0] ? (
                             <img src={a.photos[0]} alt="" />

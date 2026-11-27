@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { auditSchema, listAudit, saveClientAudit, saveServerAudit } from "./cabinet-audit.mjs";
 import { digest, equal, protectCredentials, random } from "./cabinet-admin.mjs";
 import {
   checkConnection,
@@ -23,6 +24,7 @@ const CREATE = `
     FOREIGN KEY(employee_id) REFERENCES employees(id)
   );
   CREATE INDEX IF NOT EXISTS session_employee ON sessions(employee_id);
+  ${auditSchema}
 `;
 const hour = 3600000;
 const encode = (value) => JSON.stringify(value);
@@ -65,6 +67,39 @@ export class CabinetStorage extends DurableObject {
   rows(query, ...args) {
     return this.sql.exec(query, ...args).toArray();
   }
+  ingestAudit(token, workspaceId, employeeId, events) {
+    const identity = this.identify(token);
+    if (
+      !identity ||
+      identity.mustChangePassword ||
+      identity.workspaceId !== workspaceId ||
+      identity.employeeId !== employeeId
+    )
+      return own("unauthorized", 401);
+    const saved = this.ctx.storage.transactionSync(() => {
+      for (const event of events) {
+        const kind =
+          event.action === "open-ad" ? "ads" : event.action === "open-dialog" ? "chats" : null;
+        if (
+          kind &&
+          !this.one("SELECT id FROM items WHERE kind=? AND parent='' AND id=?", kind, event.object)
+        )
+          event.object = event.action;
+      }
+      return saveClientAudit(this.sql, identity.employeeId, events);
+    });
+    return saved ? { ok: true } : own("rate_limited", 429);
+  }
+  auditHistory(filters) {
+    return listAudit(this.sql, filters);
+  }
+  auditChange(action, object, changes, actor) {
+    saveServerAudit(this.sql, { action, object, changes, actor, outcome: "changed" });
+  }
+  auditFailure(action, object, error, status, actor) {
+    saveServerAudit(this.sql, { action, object, actor, outcome: "failed" });
+    return own(error, status);
+  }
   connections() {
     return this.rows("SELECT metadata FROM connection ORDER BY id LIMIT 100").map(({ metadata }) =>
       JSON.parse(metadata),
@@ -88,13 +123,19 @@ export class CabinetStorage extends DurableObject {
   }
   configure(metadata, encrypted) {
     if (this.job()?.status === "running" || this.job()?.status === "queued")
-      return own("connection_busy", 409);
-    this.sql.exec(
-      "INSERT INTO connection VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET metadata=excluded.metadata, encrypted=excluded.encrypted",
-      metadata.id,
-      encode(metadata),
-      encrypted,
-    );
+      return this.auditFailure("configure", metadata.id, "connection_busy", 409);
+    const previous = this.connection(metadata.id);
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        "INSERT INTO connection VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET metadata=excluded.metadata, encrypted=excluded.encrypted",
+        metadata.id,
+        encode(metadata),
+        encrypted,
+      );
+      this.auditChange("configure", metadata.id, {
+        configured: [previous?.configured ?? null, true],
+      });
+    });
     this.cachedToken = null;
     return { ok: true };
   }
@@ -167,7 +208,7 @@ export class CabinetStorage extends DurableObject {
         metadata.id,
       )
     ) {
-      return own("connection_unavailable", 409);
+      return this.auditFailure("activate", metadata.id, "connection_unavailable", 409);
     }
     const nextAt = Date.now() + 250;
     this.ctx.storage.transactionSync(() => {
@@ -190,6 +231,7 @@ export class CabinetStorage extends DurableObject {
         nextAt,
         error: null,
       });
+      this.auditChange("activate", metadata.id, { importStatus: [null, "queued"] });
     });
     await this.ctx.storage.setAlarm(nextAt);
     return { cabinet: this.summary(), replayed: false };
@@ -197,11 +239,18 @@ export class CabinetStorage extends DurableObject {
   async retry() {
     const job = this.job();
     if (!job) return own("cabinet_not_found", 404);
-    if (job.status !== "failed") return { cabinet: this.summary(), replayed: true };
+    if (job.status !== "failed") {
+      if (job.nextAt && !(await this.ctx.storage.getAlarm()))
+        await this.ctx.storage.setAlarm(job.nextAt);
+      return { cabinet: this.summary(), replayed: true };
+    }
     job.attempts = 0;
     job.nextAt = Date.now() + 250;
     job.status = "queued";
-    this.storeJob(job);
+    this.ctx.storage.transactionSync(() => {
+      this.storeJob(job);
+      this.auditChange("retry", job.id, { importStatus: ["failed", "queued"] });
+    });
     await this.ctx.storage.setAlarm(job.nextAt);
     return { cabinet: this.summary(), replayed: false };
   }
@@ -363,25 +412,37 @@ export class CabinetStorage extends DurableObject {
   async createEmployee(name, login) {
     if (!this.job()) return own("cabinet_not_found", 404);
     if (this.one("SELECT id FROM employees WHERE login=?", login))
-      return own("employee_exists", 409);
+      return this.auditFailure("employee-create", null, "employee_exists", 409);
     const secret = await newPassword();
     const id = random(12);
     if (this.one("SELECT id FROM employees WHERE login=?", login))
-      return own("employee_exists", 409);
-    this.sql.exec(
-      "INSERT INTO employees VALUES (?,?,?,?,?,?,NULL)",
-      id,
-      login,
-      name,
-      secret.salt,
-      secret.verifier,
-      Date.now() + 24 * hour,
-    );
+      return this.auditFailure("employee-create", null, "employee_exists", 409);
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(
+        "INSERT INTO employees VALUES (?,?,?,?,?,?,NULL)",
+        id,
+        login,
+        name,
+        secret.salt,
+        secret.verifier,
+        Date.now() + 24 * hour,
+      );
+      this.auditChange("employee-create", id, { access: [null, "temporary"] });
+    });
     return { employee: expose(this.employee(id)), temporaryPassword: secret.password };
   }
   async changeEmployee(id, action) {
-    if (typeof id !== "string" || !this.employee(id)) return own("employee_not_found", 404);
+    const auditAction = action === "reset" ? "employee-reset" : "employee-revoke";
+    if (typeof id !== "string" || !this.employee(id))
+      return this.auditFailure(auditAction, null, "employee_not_found", 404);
     const secret = action === "reset" ? await newPassword() : null;
+    const employee = this.employee(id);
+    if (!secret && employee.revoked_at) return { employee: expose(employee) };
+    const previous = employee.revoked_at
+      ? "revoked"
+      : employee.temporary_until
+        ? "temporary"
+        : "active";
     this.ctx.storage.transactionSync(() => {
       if (secret)
         this.sql.exec(
@@ -393,6 +454,7 @@ export class CabinetStorage extends DurableObject {
         );
       else this.sql.exec("UPDATE employees SET revoked_at=? WHERE id=?", Date.now(), id);
       this.sql.exec("DELETE FROM sessions WHERE employee_id=?", id);
+      this.auditChange(auditAction, id, { access: [previous, secret ? "temporary" : "revoked"] });
     });
     return {
       employee: expose(this.employee(id)),
@@ -437,13 +499,27 @@ export class CabinetStorage extends DurableObject {
     return { token, identity };
   }
   logout(token) {
-    this.sql.exec("DELETE FROM sessions WHERE token=?", token);
+    const identity = this.identify(token);
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec("DELETE FROM sessions WHERE token=?", token);
+      if (identity)
+        this.auditChange(
+          "logout",
+          identity.employeeId,
+          { signedIn: [true, false] },
+          identity.employeeId,
+        );
+    });
   }
   async changePassword(oldToken, password) {
     const identity = this.identify(oldToken);
     if (!identity?.mustChangePassword) return null;
     const employee = this.employee(identity.employeeId);
-    if (equal(await verifier(password, employee.salt), employee.verifier)) return null;
+    if (equal(await verifier(password, employee.salt), employee.verifier)) {
+      if (this.identify(oldToken))
+        this.auditFailure("password-change", employee.id, "invalid_password", 403, employee.id);
+      return null;
+    }
     const secret = await newPassword(password);
     const token = random();
     const hash = await digest(token);
@@ -461,6 +537,12 @@ export class CabinetStorage extends DurableObject {
         hash,
         employee.id,
         Date.now() + 12 * hour,
+      );
+      this.auditChange(
+        "password-change",
+        employee.id,
+        { access: ["temporary", "active"] },
+        employee.id,
       );
     });
     return { token, identity: this.identity(this.employee(employee.id)) };

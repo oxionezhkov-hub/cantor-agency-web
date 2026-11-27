@@ -1,3 +1,4 @@
+import { useCabinetAudit } from "../cabinet-admin/use-cabinet-audit";
 import { SidebarFunds } from "./SidebarFunds";
 import { SETTINGS_PAGES, settingsPage } from "../cabinet/settings-model";
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -54,9 +55,28 @@ export function Shell({
   section: SectionId;
   focus?: string;
   view?: "crm" | "ai";
-  testSession?: { logout: () => void; loading: boolean; error: string };
+  testSession?: {
+    workspaceId: string;
+    employeeId: string;
+    logout: () => void;
+    loading: boolean;
+    error: string;
+  };
 }) {
   const navigate = useNavigate();
+  useCabinetAudit(
+    testSession,
+    section,
+    section === "stats"
+      ? analyticsTabFromFocus(focus)
+      : section === "acc"
+        ? settingsPage(focus)
+        : section === "chats"
+          ? (view ?? "")
+          : section === "ads" && ["list", "generate", "feeds", "offers"].includes(focus ?? "")
+            ? focus!
+            : "",
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -159,6 +179,7 @@ export function Shell({
           <button
             type="button"
             className="service-mobile-menu-button"
+            data-cabinet-audit="mobile-menu"
             aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
             aria-expanded={mobileMenuOpen}
             aria-controls="service-navigation"
@@ -170,6 +191,7 @@ export function Shell({
         <button
           type="button"
           className="workspace-profile"
+          data-cabinet-audit="cabinet-profile"
           aria-label="Открыть настройки кабинета"
           onClick={() => navigate({ to: "/", search: { section: "acc", focus: "cabinet" } })}
         >
@@ -218,6 +240,8 @@ export function Shell({
                   type="button"
                   className={`service-nav-item ${item.id === section ? "active" : ""}`}
                   data-comment-anchor={`navigation-${item.id}`}
+                  data-cabinet-audit="workspace-nav"
+                  data-audit-target={item.id}
                   aria-current={item.id === section ? "page" : undefined}
                   onClick={() => {
                     if (!["chats", "stats", "ads", "acc"].includes(item.id))
@@ -235,6 +259,7 @@ export function Shell({
                   <div className="ads-subnav chat-subnav">
                     <button
                       type="button"
+                      data-cabinet-audit="workspace-subnav"
                       className={!view ? "active" : ""}
                       aria-current={!view ? "page" : undefined}
                       onClick={() => navigate({ to: "/", search: { section: "chats" } })}
@@ -243,6 +268,7 @@ export function Shell({
                     </button>
                     <button
                       type="button"
+                      data-cabinet-audit="workspace-subnav"
                       className={view === "crm" ? "active" : ""}
                       aria-current={view === "crm" ? "page" : undefined}
                       onClick={() =>
@@ -253,6 +279,7 @@ export function Shell({
                     </button>
                     <button
                       type="button"
+                      data-cabinet-audit="workspace-subnav"
                       className={view === "ai" ? "active" : ""}
                       onClick={() =>
                         navigate({ to: "/", search: { section: "chats", view: "ai" } })
@@ -268,6 +295,7 @@ export function Shell({
                       <button
                         type="button"
                         key={id}
+                        data-cabinet-audit="workspace-subnav"
                         className={analyticsTabFromFocus(focus) === id ? "active" : ""}
                         aria-current={analyticsTabFromFocus(focus) === id ? "page" : undefined}
                         onClick={() =>
@@ -285,6 +313,7 @@ export function Shell({
                       <button
                         type="button"
                         key={id}
+                        data-cabinet-audit="workspace-subnav"
                         className={settingsPage(focus) === id ? "active" : ""}
                         aria-current={settingsPage(focus) === id ? "page" : undefined}
                         onClick={() => navigate({ to: "/", search: { section: "acc", focus: id } })}
@@ -305,6 +334,7 @@ export function Shell({
                       <button
                         type="button"
                         key={id}
+                        data-cabinet-audit="workspace-subnav"
                         className={focus === id || (!focus && id === "list") ? "active" : ""}
                         onClick={() => navigate({ to: "/", search: { section: "ads", focus: id } })}
                       >
@@ -374,5 +404,7 @@ export function Shell({
   );
   return testSession ? (
     <CommenterProvider location={{ section, focus, view }}>{layout}</CommenterProvider>
-  ) : layout;
+  ) : (
+    layout
+  );
 }

@@ -1,3 +1,4 @@
+import { trackCabinetAttempt } from "../cabinet-admin/use-cabinet-audit";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -342,6 +343,8 @@ export function LeadWorkspace({
                   type="button"
                   key={lead.id}
                   data-comment-anchor={`lead-${lead.id}`}
+                  data-cabinet-audit="open-dialog"
+                  data-audit-target={lead.id}
                   aria-label={`Открыть обращение: ${lead.name}`}
                   aria-current={selected?.id === lead.id ? "true" : undefined}
                   className={`workbench-contact ${selected?.id === lead.id ? "selected" : ""} ${lead.unreadCount ? "unread" : ""} ${waiting.waiting ? "needs-reply" : reminder ? "needs-reminder" : ""}`}
@@ -614,6 +617,7 @@ function ContactChat({
   }
   async function send() {
     if ((!text.trim() && !attachment) || sending || preparing) return;
+    trackCabinetAttempt("send-reply");
     setSending(true);
     setError("");
     requestId.current ??= crypto.randomUUID();

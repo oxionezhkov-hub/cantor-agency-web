@@ -98,6 +98,8 @@ export function CabinetAccess({ entry = false, ...props }: ViewProps & { entry?:
           <Shell
             {...props}
             testSession={{
+              workspaceId: identity.workspaceId,
+              employeeId: identity.employeeId,
               loading: ["queued", "running"].includes(snapshot.importStatus?.status || ""),
               error,
               logout: () => {

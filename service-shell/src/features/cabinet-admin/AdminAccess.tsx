@@ -56,7 +56,7 @@ function LinkButton({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-export function AdminAccess({ comments }: { comments?: ReactNode }) {
+export function AdminAccess({ comments, history }: { comments?: ReactNode; history?: ReactNode }) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -116,11 +116,14 @@ export function AdminAccess({ comments }: { comments?: ReactNode }) {
           Cantor
         </a>
         <nav aria-label="Разделы админки">
-          <a aria-current={!comments ? "page" : undefined} href="/admin">
+          <a aria-current={!comments && !history ? "page" : undefined} href="/admin">
             Кабинеты
           </a>
           <a aria-current={comments ? "page" : undefined} href="/admin/comments">
             Комментарии
+          </a>
+          <a aria-current={history ? "page" : undefined} href="/admin/history">
+            История действий
           </a>
         </nav>
         <button
@@ -139,7 +142,7 @@ export function AdminAccess({ comments }: { comments?: ReactNode }) {
           {error}
         </p>
       )}
-      {comments || <Cabinets />}
+      {history || comments || <Cabinets />}
     </main>
   );
 }

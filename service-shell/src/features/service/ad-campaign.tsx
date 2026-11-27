@@ -1,3 +1,4 @@
+import { trackCabinetAttempt } from "../cabinet-admin/use-cabinet-audit";
 import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, Sparkles, X } from "lucide-react";
 import { AdsSelect } from "./ads-controls";
@@ -83,6 +84,7 @@ export function AdCampaign({
     }
   }
   async function suggest() {
+    trackCabinetAttempt("campaign-generate");
     if (!facts.trim() && !text.trim()) {
       setMessage("Добавьте факты о преподавателе или выберите готовое объявление.");
       return;
