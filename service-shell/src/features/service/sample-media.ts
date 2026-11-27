@@ -3,7 +3,8 @@ import { getPreviewData } from "./preview-data.ts";
 import type { ChatMessage, MessageAdapter } from "./communication.ts";
 const sessionMedia = new Map<string, { workspaceId: string; blob: Blob }>();
 const isProtectedSandbox = (workspaceId: string) =>
-  Boolean(getPreviewData()) && workspaceId === "cantor-elena-dobrynina";
+  Boolean(getPreviewData()) &&
+  (getPreviewData()?.workspaceId === workspaceId || workspaceId === "cantor-elena-dobrynina");
 const MAX_FILE = 20 * 1024 * 1024;
 function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

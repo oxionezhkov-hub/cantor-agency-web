@@ -98,13 +98,15 @@ export function LeadWorkspace({
   const { state, storageError } = useDemoCrm();
   const activeAdapter =
     adapter ??
-    (getPreviewData()
-      ? liveReadOnlyAdapter
-      : import.meta.env.VITE_SERVICE_PREVIEW === "true" &&
-          (state.workspaceId === "cantor-demo-anna" ||
-            (state.workspaceId === "cantor-elena-dobrynina" && Boolean(getPreviewData())))
-        ? createExampleAdapter(state.workspaceId)
-        : disconnectedAdapter);
+    (getPreviewData()?.workspaceId === state.workspaceId
+      ? createExampleAdapter(state.workspaceId)
+      : getPreviewData()
+        ? liveReadOnlyAdapter
+        : import.meta.env.VITE_SERVICE_PREVIEW === "true" &&
+            (state.workspaceId === "cantor-demo-anna" ||
+              (state.workspaceId === "cantor-elena-dobrynina" && Boolean(getPreviewData())))
+          ? createExampleAdapter(state.workspaceId)
+          : disconnectedAdapter);
   const [, refreshReplyState] = useState(0);
   const [startPanel, setStartPanel] = useState<Panel>("conversation");
   const [moveError, setMoveError] = useState("");
@@ -1007,7 +1009,9 @@ function ContactChat({
                       >
                         <Reply size={13} />
                       </button>
-                      {m.author === "manager" && adapter.edit ? (
+                      {m.author === "manager" &&
+                      adapter.edit &&
+                      (!getPreviewData()?.workspaceId || m.delivery === "local") ? (
                         <button
                           type="button"
                           className="message-quote"

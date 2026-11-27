@@ -7,7 +7,8 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { PreviewAccess } from "@/features/service/PreviewAccess";
+import { AdminAccess } from "@/features/cabinet-admin/AdminAccess";
+import { CabinetAccess } from "@/features/cabinet-admin/CabinetAccess";
 import { validateServiceSearch } from "@/features/service/sections";
 import "./styles.css";
 
@@ -20,9 +21,21 @@ const indexRoute = createRoute({
 });
 export function Preview() {
   const { section, focus, view } = indexRoute.useSearch();
-  return <PreviewAccess section={section ?? "today"} focus={focus} view={view} />;
+  return <CabinetAccess section={section ?? "today"} focus={focus} view={view} />;
 }
-const router = createRouter({ routeTree: rootRoute.addChildren([indexRoute]) });
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: AdminAccess,
+});
+const cabinetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/cabinet",
+  component: () => <CabinetAccess entry section="today" />,
+});
+const router = createRouter({
+  routeTree: rootRoute.addChildren([indexRoute, adminRoute, cabinetRoute]),
+});
 const target = document.getElementById("root");
 if (!target) throw new Error("Preview root is missing");
 createRoot(target).render(

@@ -5,6 +5,21 @@ import { windows } from "./data.ts";
 import { PREVIEW_EVENT, getPreviewData } from "./preview-data.ts";
 export const CRM_KEY = "cantor.demo-crm.v1";
 let protectedPreviewState: CrmState | null = null;
+function previewCrm(): CrmState {
+  const workspaceId = getPreviewData()?.workspaceId;
+  if (!workspaceId) return protectedPreviewState ?? demoCrm;
+  if (protectedPreviewState?.workspaceId === workspaceId) return protectedPreviewState;
+  return {
+    version: 1,
+    workspaceId,
+    students: [],
+    leads: [],
+    appointments: [],
+    payments: [],
+    refunds: [],
+    events: [],
+  };
+}
 export const CRM_EVENT = "cantor-crm-changed";
 export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: string): CrmState {
   let state = structuredClone(demoCrm);
@@ -49,7 +64,7 @@ export function migrateLegacyDemo(payments: unknown, bookings: unknown, now: str
   return state;
 }
 export function readDemoCrm(): CrmState {
-  if (getPreviewData()) return protectedPreviewState ?? demoCrm;
+  if (getPreviewData()) return previewCrm();
   if (typeof localStorage === "undefined") return demoCrm;
   const current = localStorage.getItem(CRM_KEY);
   if (current) {
@@ -74,8 +89,9 @@ export function readDemoCrm(): CrmState {
 }
 export function changeDemoCrm(change: (state: CrmState) => CrmState): CrmState {
   if (getPreviewData()) {
-    const next = parseCrmState(change(protectedPreviewState ?? demoCrm));
-    if (next.workspaceId !== demoCrm.workspaceId) throw new Error("Нет доступа");
+    const current = previewCrm();
+    const next = parseCrmState(change(current));
+    if (next.workspaceId !== current.workspaceId) throw new Error("Нет доступа");
     protectedPreviewState = next;
     if (typeof window !== "undefined") window.dispatchEvent(new Event(CRM_EVENT));
     return next;
@@ -89,7 +105,7 @@ export function changeDemoCrm(change: (state: CrmState) => CrmState): CrmState {
 export function ingestPreviewLive() {
   const preview = getPreviewData();
   if (!preview) return;
-  const current = protectedPreviewState ?? demoCrm;
+  const current = previewCrm();
   const leads = new Map(current.leads.map((l) => [l.id, l])),
     students = new Map(current.students.map((s) => [s.id, s])),
     messages = new Map((current.messages || []).map((m) => [m.id, m]));
@@ -136,7 +152,7 @@ export function ingestPreviewLive() {
 }
 if (typeof window !== "undefined") window.addEventListener(PREVIEW_EVENT, ingestPreviewLive);
 export function useDemoCrm() {
-  const [state, setState] = useState(demoCrm);
+  const [state, setState] = useState(() => (getPreviewData() ? previewCrm() : demoCrm));
   const [storageError, setStorageError] = useState("");
   useEffect(() => {
     const sync = () => {
@@ -149,6 +165,12 @@ export function useDemoCrm() {
         );
       }
     };
+    if (
+      getPreviewData()?.workspaceId &&
+      protectedPreviewState?.workspaceId !== getPreviewData()?.workspaceId
+    ) {
+      ingestPreviewLive();
+    }
     sync();
     window.addEventListener(CRM_EVENT, sync);
     window.addEventListener("storage", sync);
