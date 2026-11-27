@@ -63,7 +63,11 @@ export async function cabinetIdentity(request, env) {
   const path = new URL(request.url).pathname;
   if (path.startsWith("/api/admin/"))
     return (await ownerAuthorized(request, env)) ? { role: "owner" } : null;
-  return testerIdentity(request, env);
+  const parts = sessionParts(request);
+  if (!parts || !env.CABINET_ADMIN) return null;
+  const sessionId = await digest(parts[2]);
+  const identity = await cabinet(env, parts[1]).identify(sessionId);
+  return identity ? { ...identity, sessionId } : null;
 }
 async function readBody(request) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) return null;

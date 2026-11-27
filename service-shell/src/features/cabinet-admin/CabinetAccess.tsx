@@ -95,7 +95,7 @@ export function CabinetAccess({ entry = false, ...props }: ViewProps & { entry?:
     if (snapshot)
       return (
         <Suspense fallback={<ServiceLoading />}>
-          <Shell {...props} />
+          <Shell {...props} testCommenter />
           <aside aria-label="Тестовый сеанс" className="cabinet-test-session">
             {snapshot.importStatus &&
               ["queued", "running"].includes(snapshot.importStatus.status) && (

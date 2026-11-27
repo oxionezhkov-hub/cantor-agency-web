@@ -5,6 +5,13 @@
   "compatibility_date": "2026-11-16",
   "durable_objects": { "bindings": [{ "name": "CABINET_ADMIN", "class_name": "CabinetStorage" }] },
   "migrations": [{ "tag": "cabinet-v1", "new_sqlite_classes": ["CabinetStorage"] }],
+  // This placeholder ID is for local D1 only. Provision an isolated test DB for a remote preview.
+  "d1_databases": [{
+    "binding": "TEST_COMMENTS_DB",
+    "database_name": "cantor-cabinet-test-comments",
+    "database_id": "00000000-0000-0000-0000-000000000201",
+    "migrations_dir": "scripts/ops/comment-migrations"
+  }],
   "vars": { "CABINET_SOURCE_MODE": "synthetic" },
   "ratelimits": [
     { "name": "CABINET_LOGIN_LIMIT", "namespace_id": "8328371", "simple": { "limit": 10, "period": 60 } },

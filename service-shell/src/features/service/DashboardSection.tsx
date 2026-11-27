@@ -135,7 +135,7 @@ export function DashboardSection() {
   ];
   return (
     <div className="daily-brief">
-      <section className="brief-promotion" aria-label="Сводка продвижения">
+      <section className="brief-promotion" data-comment-anchor="dashboard-promotion" aria-label="Сводка продвижения">
         <div className="brief-section-heading">
           <div>
             <h2>
@@ -171,7 +171,7 @@ export function DashboardSection() {
         </div>
       </section>
 
-      <section className="brief-attention" aria-label="Приоритетные действия">
+      <section className="brief-attention" data-comment-anchor="dashboard-attention" aria-label="Приоритетные действия">
         <div className="brief-section-heading">
           <div>
             <h2>С чего начать сегодня</h2>
@@ -209,7 +209,7 @@ export function DashboardSection() {
       </section>
 
       <div className="brief-workspaces">
-        <section className="brief-workspace">
+        <section className="brief-workspace" data-comment-anchor="dashboard-meetings">
           <div className="brief-section-heading">
             <h2>
               <PanelTop size={18} />
@@ -246,7 +246,7 @@ export function DashboardSection() {
             </b>
           </div>
         </section>
-        <section className="brief-workspace">
+        <section className="brief-workspace" data-comment-anchor="dashboard-crm">
           <div className="brief-section-heading">
             <h2>
               <MessageSquare size={18} />

@@ -30,7 +30,7 @@ import {
 import "./comments.css";
 
 type Location = { section: SectionId; focus?: string; view?: "crm" | "ai" };
-type Mode = { available: boolean; enabled: boolean };
+type Mode = { available: boolean; enabled: boolean; screenshotsAllowed: boolean };
 type Draft = {
   id: string;
   section: SectionId;
@@ -39,7 +39,7 @@ type Draft = {
   diagnostics: Diagnostic[];
 };
 const Context = createContext<{ mode: Mode; setMode: (mode: Mode) => void } | null>(null);
-const disabled = { available: false, enabled: false };
+const disabled: Mode = { available: false, enabled: false, screenshotsAllowed: false };
 
 function failure(error: unknown) {
   if (!(error instanceof CommentError))
@@ -70,7 +70,9 @@ export function CommenterProvider({
   return (
     <Context.Provider value={{ mode, setMode }}>
       {children}
-      {mode.enabled && <Commenter location={location} />}
+      {mode.enabled && (
+        <Commenter location={location} screenshotsAllowed={mode.screenshotsAllowed} />
+      )}
     </Context.Provider>
   );
 }
@@ -91,7 +93,7 @@ export function CommenterSettings() {
         ...(!mode.enabled && jsonBody({ password })),
       });
       setPassword("");
-      setMode({ available: true, enabled: data.enabled });
+      setMode({ ...mode, enabled: data.enabled });
     } catch (error) {
       setError(failure(error));
     } finally {
@@ -144,7 +146,13 @@ function sameLocation(comment: Comment, location: Location) {
     (comment.target.view ?? "") === (location.view ?? "")
   );
 }
-function Commenter({ location }: { location: Location }) {
+function Commenter({
+  location,
+  screenshotsAllowed,
+}: {
+  location: Location;
+  screenshotsAllowed: boolean;
+}) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selecting, setSelecting] = useState(false);
@@ -220,7 +228,10 @@ function Commenter({ location }: { location: Location }) {
         id: crypto.randomUUID(),
         section: location.section,
         target,
-        screenshot: screenshot ? captureViewport(location.section) : Promise.resolve(null),
+        screenshot:
+          screenshot && screenshotsAllowed
+            ? captureViewport(location.section)
+            : Promise.resolve(null),
         diagnostics: diagnostics.current.filter((item) => item.at >= at - 120_000),
       });
       setSelecting(false);
@@ -271,7 +282,7 @@ function Commenter({ location }: { location: Location }) {
       window.removeEventListener("click", click, true);
       window.removeEventListener("keydown", key, true);
     };
-  }, [selecting, screenshot, location.section, location.focus, location.view]);
+  }, [selecting, screenshot, screenshotsAllowed, location.section, location.focus, location.view]);
 
   useLayoutEffect(() => {
     let frame = 0;
@@ -476,7 +487,7 @@ function Commenter({ location }: { location: Location }) {
           >
             <MapPinPlus size={17} /> Новый комментарий
           </button>
-          {location.section !== "acc" && location.section !== "chats" && (
+          {screenshotsAllowed && location.section !== "acc" && location.section !== "chats" && (
             <label className="commenter-checkbox">
               <input
                 type="checkbox"

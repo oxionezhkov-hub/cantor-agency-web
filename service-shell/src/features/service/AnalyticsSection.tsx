@@ -416,7 +416,7 @@ export function AnalyticsSection({ focus }: { focus?: string }) {
           <p>Выберите период от 1 до 366 дней.</p>
         </div>
       ) : (
-        <section className="an-report" aria-label={ANALYTICS_TABS.find((item) => item.id === tab)?.label}>
+        <section className="an-report" data-comment-anchor={`analytics-${tab}`} aria-label={ANALYTICS_TABS.find((item) => item.id === tab)?.label}>
           {!report.coverage.complete ? (
             <div className="an-notice">
               <CircleHelp size={17} />

@@ -255,7 +255,7 @@ export function CabinetPage({ focus }: { focus?: string }) {
     </div>
   );
   return (
-    <div className="st-settings">
+    <div className="st-settings" data-comment-anchor={`settings-${tab}`}>
       {notice && (
         <div className="st-notice" role="status">
           {notice}

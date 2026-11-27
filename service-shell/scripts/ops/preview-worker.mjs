@@ -1,4 +1,5 @@
-import { cabinetApi, isCabinetApi, hasCabinetSession, fail } from "./cabinet-admin.mjs";
+import { isCommentRoute, workspaceComments } from "./workspace-comments.mjs";
+import { cabinetApi, cabinetIdentity, isCabinetApi, hasCabinetSession, fail } from "./cabinet-admin.mjs";
 import {liveRead} from "./avito-live.mjs";
 import { avitoAudit } from "./avito-audit.mjs";
 import { aiManager } from "./ai-manager.mjs";
@@ -10,6 +11,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    if (isCommentRoute(path)) return workspaceComments(request, env, cabinetIdentity);
     if (isCabinetApi(path)) {
       try { return await cabinetApi(request, env); }
       catch { return fail("cabinet_unavailable", 503); }

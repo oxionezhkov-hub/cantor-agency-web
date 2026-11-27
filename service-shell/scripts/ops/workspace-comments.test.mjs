@@ -41,6 +41,7 @@ async function fixture(t) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password));
   const env = {
     TEST_COMMENTS_DB: db,
+    CABINET_SOURCE_MODE: "synthetic",
     COMMENTER_PASSWORD_SHA256: Buffer.from(digest).toString("hex"),
   };
   const root = "/api/cabinet/comments";
@@ -102,6 +103,7 @@ test("comment routes require current tester membership, distinct password, and s
     ok: true,
     available: true,
     enabled: false,
+    screenshotsAllowed: true,
   });
   assert.equal(
     (await send(root + "/mode", "POST", { body: { password: "wrong" }, sameOrigin: false })).status,

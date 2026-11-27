@@ -68,13 +68,11 @@ function bounded(value: number) {
 }
 export function anchorElement(element: Element): Element | null {
   return main()?.contains(element) || element.closest(".service-sidebar")
-    ? (element.closest(
-        "button, a, input, label, select, textarea, [role='button'], [data-comment-anchor]",
-      ) ?? element)
+    ? (element.closest("button, a, input, label, select, textarea, [role='button']") ?? element)
     : null;
 }
 export function targetFor(element: Element, x: number, y: number): Target {
-  const stable = element.closest("[data-comment-anchor]");
+  const stable = element.closest("[data-comment-anchor]:not(.service-layout)");
   const name = stable?.getAttribute("data-comment-anchor");
   const hasStable = name && anchorPattern.test(name);
   const root =

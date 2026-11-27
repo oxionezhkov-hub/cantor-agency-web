@@ -201,7 +201,7 @@ async function attachment(file, max, types) {
   }
   return { type, bytes };
 }
-async function create(request, db, identity) {
+async function create(request, db, identity, screenshotsAllowed) {
   const body = await readBody(request, AUDIO_LIMIT + SCREENSHOT_LIMIT + 32_768);
   const form = await body.formData().catch(() => {
     throw new HttpError(400, "invalid_request");
@@ -221,9 +221,10 @@ async function create(request, db, identity) {
   const text = raw.text.trim();
   const audio = await attachment(form.get("audio"), AUDIO_LIMIT, AUDIO_TYPES);
   // Settings and conversations can contain information that belongs outside the review queue.
-  const screenshot = ["acc", "chats"].includes(raw.section)
-    ? null
-    : await attachment(form.get("screenshot"), SCREENSHOT_LIMIT, ["image/jpeg"]);
+  const screenshot =
+    !screenshotsAllowed || ["acc", "chats"].includes(raw.section)
+      ? null
+      : await attachment(form.get("screenshot"), SCREENSHOT_LIMIT, ["image/jpeg"]);
   if (!text && !audio) throw new HttpError(400, "empty_comment");
   await db
     .prepare(
@@ -364,6 +365,7 @@ export async function workspaceComments(request, env, resolveIdentity) {
   const method = request.method;
   const db = env.TEST_COMMENTS_DB;
   const secret = env.COMMENTER_PASSWORD_SHA256;
+  const screenshotsAllowed = env.CABINET_SOURCE_MODE === "synthetic";
   try {
     const identity = await resolveIdentity(request, env);
     if (
@@ -382,6 +384,7 @@ export async function workspaceComments(request, env, resolveIdentity) {
         ok: true,
         available,
         enabled: available && (await enabled(request, secret, identity)),
+        screenshotsAllowed,
       });
     }
     if (!db || (!admin && !/^[0-9a-f]{64}$/.test(secret ?? "")))
@@ -394,7 +397,8 @@ export async function workspaceComments(request, env, resolveIdentity) {
     if (!admin && !(await enabled(request, secret, identity)))
       throw new HttpError(403, "mode_disabled");
     if (!route && method === "GET") return await list(db, url, admin ? null : identity);
-    if (!route && method === "POST" && !admin) return await create(request, db, identity);
+    if (!route && method === "POST" && !admin)
+      return await create(request, db, identity, screenshotsAllowed);
     const [, id, action, extra] = route.split("/");
     if (!ID.test(id ?? "") || extra !== undefined) throw new HttpError(404, "not_found");
     if (method === "GET" && (action === "audio" || action === "screenshot")) {
