@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { CabinetPage } from "@/features/cabinet/CabinetPage";
+import { CommenterProvider } from "@/features/comments/Commenter";
 import { balanceRows, blockRows } from "@/features/cabinet/rules";
 import { sampleCabinet } from "@/features/cabinet/sample";
 import { ads, dialogs, windows, PHOTO_SLOTS } from "./data.ts";
@@ -48,10 +49,12 @@ export function Shell({
   section,
   focus,
   view,
+  testCommenter = false,
 }: {
   section: SectionId;
   focus?: string;
   view?: "crm" | "ai";
+  testCommenter?: boolean;
 }) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -136,8 +139,8 @@ export function Shell({
   marks.today = marks.stats + marks.ads + marks.chats;
   const selected = SECTIONS.find((item) => item.id === section)!;
 
-  return (
-    <div className="service-layout">
+  const layout = (
+    <div className="service-layout" data-comment-anchor="shell-layout">
       <a className="skip-link" href="#service-content">
         Перейти к содержимому
       </a>
@@ -209,6 +212,7 @@ export function Shell({
                 <button
                   type="button"
                   className={`service-nav-item ${item.id === section ? "active" : ""}`}
+                  data-comment-anchor={`navigation-${item.id}`}
                   aria-current={item.id === section ? "page" : undefined}
                   onClick={() => {
                     if (!["chats", "stats", "ads", "acc"].includes(item.id))
@@ -354,4 +358,7 @@ export function Shell({
       </div>
     </div>
   );
+  return testCommenter ? (
+    <CommenterProvider location={{ section, focus, view }}>{layout}</CommenterProvider>
+  ) : layout;
 }

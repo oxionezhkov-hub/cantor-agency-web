@@ -1265,7 +1265,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </thead>
               <tbody>
                 {visible.map((a, i) => (
-                  <tr key={a.id}>
+                  <tr key={a.id} data-comment-anchor={`ad-${a.id}`}>
                     <td>
                       <input
                         type="checkbox"
@@ -1693,7 +1693,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
               </thead>
               <tbody>
                 {state.items.map((a) => (
-                  <tr key={a.id}>
+                  <tr key={a.id} data-comment-anchor={`ad-${a.id}`}>
                     <td>
                       <button
                         className="aw-link"

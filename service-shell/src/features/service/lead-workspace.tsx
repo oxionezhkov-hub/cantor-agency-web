@@ -339,6 +339,7 @@ export function LeadWorkspace({
                 <button
                   type="button"
                   key={lead.id}
+                  data-comment-anchor={`lead-${lead.id}`}
                   aria-label={`Открыть обращение: ${lead.name}`}
                   aria-current={selected?.id === lead.id ? "true" : undefined}
                   className={`workbench-contact ${selected?.id === lead.id ? "selected" : ""} ${lead.unreadCount ? "unread" : ""} ${waiting.waiting ? "needs-reply" : reminder ? "needs-reminder" : ""}`}

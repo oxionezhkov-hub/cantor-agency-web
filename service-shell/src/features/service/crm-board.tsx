@@ -281,6 +281,7 @@ export function CrmBoard({
                       className={`crm-contact-card health-${health.kind} ${drag === lead.id ? "dragging" : ""}`}
                       draggable
                       data-lead-id={lead.id}
+                      data-comment-anchor={`lead-${lead.id}`}
                       aria-label={`Карточка CRM: ${lead.name}`}
                       onDragStart={(e) => {
                         e.dataTransfer.setData("application/x-cantor-lead", lead.id);

@@ -1,5 +1,6 @@
 import { LiveFreshness } from "../service/LiveFreshness";
 import { AvitoAudit } from "./AvitoAudit";
+import { CommenterSettings } from "../comments/Commenter";
 import { useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
@@ -265,6 +266,7 @@ export function CabinetPage({ focus }: { focus?: string }) {
       )}
       {tab === "cabinet" && (
         <>
+          <CommenterSettings />
           <section className="st-card">
             <div className="st-heading-row">
               <h3>Кабинет Авито</h3>
