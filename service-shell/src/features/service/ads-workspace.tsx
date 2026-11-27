@@ -39,8 +39,21 @@ import { OfferMailings } from "./offer-mailings";
 import { liveListingFields, statusOrder } from "./ads-live-model";
 import { previewAdTotals } from "./preview-data";
 
+import {
+  readAdSheet,
+  saveAdSheet,
+  sheetStatusLabels,
+  type SheetEdit,
+  type SheetResult,
+  type SheetRow,
+  type SheetField,
+  type SheetSnapshot,
+} from "./ad-sheet-sync";
+
 type Listing = {
   id: string;
+  sheetRow?: SheetRow;
+  category?: string;
   title: string;
   text: string;
   city: string;
@@ -212,8 +225,109 @@ function newListing(): Listing {
     end: "21:00",
   };
 }
+function syncedListings(items: Listing[], snapshot: SheetSnapshot): Listing[] {
+  const linked = new Set<string>();
+  const rows = snapshot.rows.map((row) => {
+    const avito = row.avitoId ? items.find((item) => item.id === row.avitoId) : undefined;
+    if (avito) linked.add(avito.id);
+    const fields = row.fields;
+    return {
+      ...(avito || newListing()),
+      id: "feed:" + row.feedId,
+      source: "sheet" as const,
+      title: fields.Title || "",
+      text: fields.Description || "",
+      city: fields.Address || "",
+      address: fields.Address || "",
+      category: fields.Category || "",
+      price: fields.Price?.trim() ? Number(fields.Price.replace(",", ".")) : NaN,
+      photos: (fields.Images || "").split(/\s+/).filter((url) => /^https?:\/\//i.test(url)),
+      autoloadId: row.feedId,
+      sheetRow: row,
+      shows: avito?.shows ?? NaN,
+      views: avito?.views ?? NaN,
+      contacts: avito?.contacts ?? NaN,
+      spend: avito?.spend ?? NaN,
+    };
+  });
+  return [...rows, ...items.filter((item) => !linked.has(item.id))];
+}
+
+function sheetEdit(listing: Listing): SheetEdit {
+  const row = listing.sheetRow;
+  const values: Record<SheetField, string> = {
+    Title: listing.title,
+    Description: listing.text,
+    Address: listing.city,
+    Category: listing.category || "",
+    Price: Number.isFinite(listing.price) ? String(listing.price) : "",
+    Images: listing.photos.join("\n"),
+  };
+  const fields = Object.fromEntries(
+    (Object.keys(values) as SheetField[])
+      .filter((key) => {
+        if (!row) return Boolean(values[key]) || key === "Price";
+        if (!(key in row.fields)) return false;
+        const previous = row.fields[key] || "";
+        if (key === "Price") return values[key] !== previous.replace(",", ".");
+        if (key === "Images")
+          return values[key] !== previous.split(/\s+/).filter(Boolean).join("\n");
+        return values[key] !== previous;
+      })
+      .map((key) => [key, values[key]]),
+  );
+  return { feedId: row?.feedId || "cantor-" + listing.id, revision: row?.revision, fields };
+}
+
 export function AdsWorkspace({ focus }: { focus?: string }) {
-  const [state, setState] = useState<State>(load);
+  const [baseState, setState] = useState<State>(load);
+  const [sheetSnapshot, setSheetSnapshot] = useState<SheetSnapshot | null>(null);
+  const [sheetProblems, setSheetProblems] = useState<Record<string, SheetResult>>({});
+  const [sheetBusy, setSheetBusy] = useState(false);
+  const [sheetReadError, setSheetReadError] = useState("");
+  const [sheetRefresh, setSheetRefresh] = useState(0);
+  const [bulkPrice, setBulkPrice] = useState("");
+  const pendingSheetSave = useRef(false);
+  const sheetWriteVersion = useRef(0);
+  const state = useMemo(
+    () =>
+      sheetSnapshot
+        ? { ...baseState, items: syncedListings(baseState.items, sheetSnapshot) }
+        : baseState,
+    [baseState, sheetSnapshot],
+  );
+  useEffect(() => {
+    if (!getPreviewData()) return;
+    const controller = new AbortController();
+    let reading = false;
+    async function refresh() {
+      if (pendingSheetSave.current || reading) return;
+      reading = true;
+      const writeVersion = sheetWriteVersion.current;
+      try {
+        const snapshot = await readAdSheet(controller.signal);
+        if (
+          controller.signal.aborted ||
+          pendingSheetSave.current ||
+          writeVersion !== sheetWriteVersion.current
+        )
+          return;
+        setSheetSnapshot(snapshot);
+        setSheetReadError("");
+      } catch (error) {
+        if (!controller.signal.aborted && !pendingSheetSave.current)
+          setSheetReadError(String(error instanceof Error ? error.message : error));
+      } finally {
+        reading = false;
+      }
+    }
+    void refresh();
+    const timer = window.setInterval(refresh, 30000);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [sheetRefresh]);
   const localChanges = useRef(new Map<string, Partial<Listing>>());
   useEffect(() => {
     const knownIds = new Set(initial.items.map((item) => item.id));
@@ -340,6 +454,14 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   }, [editing]);
   function persist(next: State) {
     if (getPreviewData()) {
+      if (sheetSnapshot) {
+        const ordinary = next.items.filter((item) => !item.sheetRow);
+        const linked = new Set(sheetSnapshot.rows.map((row) => row.avitoId));
+        next = {
+          ...next,
+          items: [...ordinary, ...baseState.items.filter((item) => linked.has(item.id))],
+        };
+      }
       setState(next);
       setNotice("Изменения действуют до обновления страницы и не отправлены в Авито.");
       return true;
@@ -383,8 +505,72 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
   function create() {
     open(newListing());
   }
-  function save() {
+  async function writeEdits(edits: SheetEdit[]) {
+    if (pendingSheetSave.current || !edits.length) return null;
+    pendingSheetSave.current = true;
+    sheetWriteVersion.current += 1;
+    setSheetBusy(true);
+    try {
+      const results = await saveAdSheet(edits);
+      setSheetSnapshot((current) => {
+        if (!current) return current;
+        const rows = new Map(current.rows.map((row) => [row.feedId, row]));
+        for (const result of results) if (result.row) rows.set(result.row.feedId, result.row);
+        return { ...current, rows: [...rows.values()] };
+      });
+      setSheetProblems((current) => {
+        const next = { ...current };
+        for (const result of results) {
+          delete next[result.feedId];
+          if (["conflict", "validation", "write_failed"].includes(result.status))
+            next[result.feedId] = result;
+        }
+        return next;
+      });
+      const failed = results.filter((result) =>
+        ["conflict", "validation", "write_failed"].includes(result.status),
+      ).length;
+      setNotice(
+        failed
+          ? `Сохранено строк: ${results.length - failed}. Требуют исправления: ${failed}.`
+          : `Сохранено в таблице: ${results.length}.`,
+      );
+      return results;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setSheetProblems((current) => {
+        const next = { ...current };
+        for (const sheetEdit of edits)
+          next[sheetEdit.feedId] = { feedId: sheetEdit.feedId, status: "write_failed", message };
+        return next;
+      });
+      setNotice(message);
+      return null;
+    } finally {
+      pendingSheetSave.current = false;
+      setSheetBusy(false);
+    }
+  }
+
+  async function save() {
     if (!edit) return;
+    if (sheetReadError && !state.items.some((item) => item.id === edit.id))
+      return setNotice(sheetReadError);
+    if (edit.sheetRow || (sheetSnapshot && !state.items.some((item) => item.id === edit.id))) {
+      const change = sheetEdit(edit);
+      if (!Object.keys(change.fields).length) return setNotice("Нет изменений полей таблицы.");
+      const results = await writeEdits([change]);
+      const result = results?.[0];
+      if (!result) return;
+      if (["conflict", "validation", "write_failed"].includes(result.status)) {
+        setNotice(result.message || sheetStatusLabels[result.status]);
+      } else if (tab === "generate") {
+        create();
+      } else {
+        setEdit(null);
+      }
+      return;
+    }
     if (!edit.title.trim() || !edit.text.trim() || !edit.city.trim())
       return setNotice("Заполните заголовок, текст и город.");
     if (edit.price < 0 || edit.bid < 0 || edit.max < edit.bid || edit.budget < 0)
@@ -415,7 +601,9 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         .filter(
           (a) =>
             (!query ||
-              `${a.title} ${a.city} ${a.id}`.toLowerCase().includes(query.toLowerCase())) &&
+              `${a.title} ${a.city} ${a.id} ${a.autoloadId || ""} ${a.sheetRow?.avitoId || ""}`
+                .toLowerCase()
+                .includes(query.toLowerCase())) &&
             (filter === "all" || a.status === filter),
         )
         .sort((a, b) => {
@@ -711,19 +899,51 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                 />
                 {candidate?.kind === "text" && suggestion}
               </div>
-              <div className="aw-editor-meta">
-                <Field label="Управление объявлением">
-                  <AdsSelect
-                    label="Источник управления"
-                    value={edit.source}
-                    options={sourceOptions}
-                    onChange={(source) => setEdit({ ...edit, source: source as Listing["source"] })}
+              {(edit.sheetRow ||
+                (sheetSnapshot && !state.items.some((item) => item.id === edit.id))) && (
+                <Field label="Категория Авито">
+                  <input
+                    value={edit.category || ""}
+                    onChange={(e) => setEdit({ ...edit, category: e.target.value })}
                   />
                 </Field>
-                <AdsHelp label="Об источнике управления">
-                  Выберите, где редактировать объявление.
-                </AdsHelp>
-              </div>
+              )}
+              {edit.sheetRow ? (
+                <div className="aw-editor-meta">
+                  <p>ID автозагрузки: {edit.sheetRow.feedId}</p>
+                  {edit.sheetRow.avitoId && <p>ID Авито: {edit.sheetRow.avitoId}</p>}
+                  {sheetProblems[edit.sheetRow.feedId]?.status === "conflict" && (
+                    <button
+                      className="aw-btn"
+                      onClick={() => {
+                        const fresh = state.items.find((item) => item.id === edit.id);
+                        if (fresh) {
+                          open(fresh);
+                          setNotice("Загружена свежая строка таблицы.");
+                        }
+                      }}
+                    >
+                      Загрузить свежую версию
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="aw-editor-meta">
+                  <Field label="Управление объявлением">
+                    <AdsSelect
+                      label="Источник управления"
+                      value={edit.source}
+                      options={sourceOptions}
+                      onChange={(source) =>
+                        setEdit({ ...edit, source: source as Listing["source"] })
+                      }
+                    />
+                  </Field>
+                  <AdsHelp label="Об источнике управления">
+                    Выберите, где редактировать объявление.
+                  </AdsHelp>
+                </div>
+              )}
               {getPreviewData() &&
                 ((edit.attributes && Object.keys(edit.attributes).length > 0) ||
                   edit.address ||
@@ -1071,7 +1291,7 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
         <button className="aw-btn" onClick={() => (tab === "generate" ? create() : setEdit(null))}>
           {tab === "generate" ? "Очистить" : "Отмена"}
         </button>
-        <button className="aw-btn aw-primary" onClick={save}>
+        <button className="aw-btn aw-primary" onClick={save} disabled={sheetBusy}>
           Сохранить
         </button>
       </footer>
@@ -1209,6 +1429,37 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                     </button>
                   </>
                 )}
+                {sheetSnapshot &&
+                  state.items.some((item) => selected.includes(item.id) && item.sheetRow) && (
+                    <>
+                      <input
+                        type="number"
+                        min="0"
+                        aria-label="Общая цена"
+                        value={bulkPrice}
+                        onChange={(event) => setBulkPrice(event.target.value)}
+                      />
+                      <button
+                        disabled={sheetBusy || !bulkPrice.trim()}
+                        onClick={() => {
+                          const changes = state.items.flatMap((item) =>
+                            selected.includes(item.id) && item.sheetRow
+                              ? [
+                                  {
+                                    feedId: item.sheetRow.feedId,
+                                    revision: item.sheetRow.revision,
+                                    fields: { Price: bulkPrice },
+                                  },
+                                ]
+                              : [],
+                          );
+                          void writeEdits(changes);
+                        }}
+                      >
+                        Изменить цену в таблице
+                      </button>
+                    </>
+                  )}
                 <button onClick={() => setSelected([])}>Снять выбор</button>
               </div>
             )}
@@ -1318,6 +1569,23 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                           removed: "Снято",
                         }[a.status] || a.status}
                       </span>
+                      {a.sheetRow && (
+                        <button
+                          className="aw-text-button aw-autoload-error"
+                          onClick={() => open(a)}
+                        >
+                          {
+                            sheetStatusLabels[
+                              sheetProblems[a.sheetRow.feedId]?.status || a.sheetRow.status
+                            ]
+                          }
+                          {sheetProblems[a.sheetRow.feedId]?.message || a.sheetRow.message
+                            ? `: ${sheetProblems[a.sheetRow.feedId]?.message || a.sheetRow.message}`
+                            : a.sheetRow.missing.length
+                              ? `: ${a.sheetRow.missing.join(", ")}`
+                              : ""}
+                        </button>
+                      )}
                       {getPreviewData()?.ads.find((item) => item.id === a.id)?.autoloadError && (
                         <a
                           className="aw-text-link aw-autoload-error"
@@ -1461,6 +1729,26 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
       )}
       {tab === "feeds" && (
         <div className={`aw-feed-layout ${sheetSaved ? "" : "first-step"}`}>
+          {sheetSnapshot && (
+            <div className="aw-panel">
+              <a href={sheetSnapshot.sheetUrl} target="_blank" rel="noreferrer">
+                {sheetSnapshot.tab}
+              </a>
+              <button
+                className="aw-btn"
+                disabled={sheetBusy}
+                onClick={() => setSheetRefresh((value) => value + 1)}
+              >
+                Обновить из таблицы
+              </button>
+              {sheetSnapshot.problems.map((problem) => (
+                <p key={problem.row}>
+                  Строка {problem.row}: {problem.message}
+                </p>
+              ))}
+            </div>
+          )}
+          {sheetReadError && <p role="status">{sheetReadError}</p>}
           <div className="aw-panel">
             <div className="aw-panel-heading">
               <span className="aw-eyebrow">01 · ТАБЛИЦА</span>

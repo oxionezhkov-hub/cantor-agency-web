@@ -1,3 +1,4 @@
+import { adSheetSync } from "./ad-sheet-sync.mjs";
 import {liveRead} from "./avito-live.mjs";
 import { avitoAudit } from "./avito-audit.mjs";
 import { aiManager } from "./ai-manager.mjs";
@@ -9,6 +10,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    if (path === "/api/demo/ad-sheet") return adSheetSync(request, env);
     if (path === "/api/demo/live") return liveRead(request,env);
     if (path === "/api/demo/avito-audit") return avitoAudit(request, env);
     if (path === "/api/demo/campaign/suggest" || path === "/api/campaign/suggest") return campaignSuggestion(request, env);
