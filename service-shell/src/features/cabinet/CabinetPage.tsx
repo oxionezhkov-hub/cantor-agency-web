@@ -157,7 +157,8 @@ export function CabinetPage({ focus }: { focus?: string }) {
   const setNotice = (text: string) => setNoticeState({ page: tab, text });
   const source = getPreviewData();
   const notification = useNotificationPreferences(
-    (source as { accountId?: string } | null)?.accountId || source?.tutor || "example",
+    source?.workspaceId || (source as { accountId?: string } | null)?.accountId || source?.tutor || "example",
+    !source?.workspaceId,
   );
   const { email, channels, events } = notification;
   const setEmail = (value: string) => notification.update({ email: value });

@@ -24,13 +24,14 @@ function read(key: string): Preferences {
   }
 }
 // Only user-entered notification preferences; never account snapshots or API credentials.
-export function useNotificationPreferences(scope: string) {
+export function useNotificationPreferences(scope: string, persist = true) {
   const key = `cantor.notifications.v1.${encodeURIComponent(scope)}`;
-  const [preferences, setPreferences] = useState(() => read(key));
+  const [preferences, setPreferences] = useState(() => (persist ? read(key) : defaults()));
   const [error, setError] = useState("");
   function update(patch: Partial<Preferences>) {
     const next = { ...preferences, ...patch };
     setPreferences(next);
+    if (!persist) return;
     try {
       localStorage.setItem(key, JSON.stringify(next));
       setError("");

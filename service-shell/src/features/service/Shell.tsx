@@ -49,12 +49,12 @@ export function Shell({
   section,
   focus,
   view,
-  testCommenter = false,
+  testSession,
 }: {
   section: SectionId;
   focus?: string;
   view?: "crm" | "ai";
-  testCommenter?: boolean;
+  testSession?: { logout: () => void; loading: boolean; error: string };
 }) {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -316,6 +316,15 @@ export function Shell({
               </div>
             );
           })}
+          {testSession && (
+            <div className="cabinet-test-session">
+              {testSession.loading && <small role="status">Загружаем данные Авито…</small>}
+              <button type="button" className="cabinet-button quiet" onClick={testSession.logout}>
+                Выйти из кабинета
+              </button>
+              {testSession.error && <small role="alert">{testSession.error}</small>}
+            </div>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <div className="support-card">
@@ -363,7 +372,7 @@ export function Shell({
       </div>
     </div>
   );
-  return testCommenter ? (
+  return testSession ? (
     <CommenterProvider location={{ section, focus, view }}>{layout}</CommenterProvider>
   ) : layout;
 }

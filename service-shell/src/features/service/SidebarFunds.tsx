@@ -12,13 +12,13 @@ export function SidebarFunds({
 }) {
   const preview = getPreviewData();
   const money = preview?.liveMoney;
-  const loading = Boolean(preview && !money && !preview.live?.metrics);
+  const loading = Boolean(preview && !preview.workspaceId && !money && !preview.live?.metrics);
   const items = [
     {
       id: "wallet",
       name: "Кошелёк",
-      value: money?.wallet?.realRub,
-      observedAt: money?.wallet?.observedAt,
+      value: money?.wallet?.realRub ?? preview?.balance?.real,
+      observedAt: money?.wallet?.observedAt ?? (preview?.balance ? preview.readAt : undefined),
       stale: money?.wallet?.stale,
       Icon: Wallet,
     },

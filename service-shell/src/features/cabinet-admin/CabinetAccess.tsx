@@ -95,26 +95,20 @@ export function CabinetAccess({ entry = false, ...props }: ViewProps & { entry?:
     if (snapshot)
       return (
         <Suspense fallback={<ServiceLoading />}>
-          <Shell {...props} testCommenter />
-          <aside aria-label="Тестовый сеанс" className="cabinet-test-session">
-            {snapshot.importStatus &&
-              ["queued", "running"].includes(snapshot.importStatus.status) && (
-                <small>Загружаем данные Авито…</small>
-              )}
-            <button
-              className="cabinet-button quiet"
-              onClick={() => {
+          <Shell
+            {...props}
+            testSession={{
+              loading: ["queued", "running"].includes(snapshot.importStatus?.status || ""),
+              error,
+              logout: () => {
                 cabinetRequest("/api/cabinet/logout", {})
                   .then(() => {
                     location.replace(`/cabinet?workspace=${identity.workspaceId}`);
                   })
                   .catch((e) => setError(e.message));
-              }}
-            >
-              Выйти из кабинета
-            </button>
-            {error && <small role="alert">{error}</small>}
-          </aside>
+              },
+            }}
+          />
         </Suspense>
       );
     if (!error) return <ServiceLoading />;
