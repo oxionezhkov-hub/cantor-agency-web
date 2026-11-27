@@ -47,9 +47,25 @@ function readReports(tab) {
   for (const [feedId, rowRevision, avitoId, result, reason] of tab?.getDataRange().getDisplayValues().slice(1) || []) {
     if (!ID_PATTERN.test(feedId) || !["applied", "rejected"].includes(result)) continue;
     if (!/^[A-Za-z0-9_-]{43}$/.test(rowRevision) || (result === "applied" && !/^\d+$/.test(avitoId))) continue;
-    entries.set(feedId, { rowRevision, avitoId, result, reason: reason || "" });
+    const previousId = entries.get(feedId)?.avitoId;
+    if (previousId && avitoId && previousId !== avitoId) continue;
+    entries.set(feedId, { rowRevision, avitoId: avitoId || previousId, result, reason: reason || "" });
   }
   return entries;
+}
+
+function validateFields(fields, photoFolder = "") {
+  const missing = REQUIRED.filter((key) => !fields[key]?.trim() || fields[key].trim() === "-");
+  if (missing.length) return { missing, message: "Заполните обязательные поля: " + missing.join(", ") };
+  if (fields.Price?.trim() && !/^\d+(?:[.,]\d{1,2})?$/.test(fields.Price.replace(/\s/g, ""))) {
+    return { missing, message: "Проверьте цену." };
+  }
+  const photoSources = (fields.Images || "").split(/\s*\|\s*|\r?\n|\s+(?=https?:\/\/)/).map((source) => source.trim()).filter(Boolean);
+  if (photoSources.some((url) => !/^https?:\/\/[^\s]+$/i.test(url) &&
+      !(/^https?:\/\//i.test(photoFolder) && !url.includes(":")))) {
+    return { missing, message: "Проверьте ссылки на фотографии." };
+  }
+  return { missing, message: "" };
 }
 
 function sheetModel(tab, reports) {
@@ -91,13 +107,14 @@ function sheetModel(tab, reports) {
     const source = tags.flatMap((tag, i) => marks[i]?.trim().toLowerCase() === "грузим в xml"
       || tag === "Товар доступен?" || tag === "Папка на Яндекс Диск" ? [[tag, values[i] || ""]] : []);
     const rowRevision = revision(source);
-    const missing = REQUIRED.filter((key) => !fields[key]?.trim() || fields[key].trim() === "-");
+    const photoFolder = values[tags.indexOf("Папка на Яндекс Диск")] || "";
+    const validation = validateFields(fields, photoFolder);
     const report = reports.get(feedId);
     rows.push({
-      feedId, row: index + 1, revision: rowRevision, fields, missing,
+      feedId, row: index + 1, revision: rowRevision, fields, photoFolder, missing: validation.missing,
       avitoId: /^\d+$/.test(report?.avitoId || "") ? report.avitoId : undefined,
-      status: missing.length ? "validation" : report?.rowRevision === rowRevision ? report.result : "pending",
-      message: report?.rowRevision === rowRevision && report.result === "rejected" ? report.reason : "",
+      status: validation.message ? "validation" : report?.rowRevision === rowRevision ? report.result : "pending",
+      message: validation.message || (report?.rowRevision === rowRevision && report.result === "rejected" ? report.reason : ""),
     });
   }
   return { columns, id, rows, problems, tags, counts };
@@ -144,13 +161,9 @@ function syncSheet(tab, input, reports = new Map()) {
       finish("conflict", { row: before, message: "Строка изменилась. Загрузите свежую версию перед сохранением." });
       continue;
     }
-    const values = { ...before?.fields, ...fields };
-    const missing = REQUIRED.filter((name) => !values[name]?.trim() || values[name].trim() === "-");
-    if (missing.length || (values.Price?.trim() && !/^\d+(?:[.,]\d{1,2})?$/.test(values.Price.trim()))
-        || (fields.Images && fields.Images.split(/\s+/).some((url) => url && !/^https?:\/\/[^\s]+$/i.test(url)))) {
-      finish("validation", { message: missing.length
-        ? "Заполните обязательные поля: " + missing.join(", ")
-        : "Проверьте цену и ссылки на фотографии." });
+    const validation = validateFields({ ...before?.fields, ...fields }, before?.photoFolder);
+    if (validation.message) {
+      finish("validation", { message: validation.message });
       continue;
     }
     try {

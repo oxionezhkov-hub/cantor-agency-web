@@ -225,6 +225,15 @@ function newListing(): Listing {
     end: "21:00",
   };
 }
+function sheetPhotoSources(value = "") {
+  return value
+    .split(/\s*\|\s*|\r?\n|\s+(?=https?:\/\/)/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+const isWebPhoto = (value: string) => /^https?:\/\//i.test(value);
+const sheetPrice = (value: string) => value.replace(/\s/g, "").replace(",", ".");
+
 function syncedListings(items: Listing[], snapshot: SheetSnapshot): Listing[] {
   const linked = new Set<string>();
   const rows = snapshot.rows.map((row) => {
@@ -240,8 +249,8 @@ function syncedListings(items: Listing[], snapshot: SheetSnapshot): Listing[] {
       city: fields.Address || "",
       address: fields.Address || "",
       category: fields.Category || "",
-      price: fields.Price?.trim() ? Number(fields.Price.replace(",", ".")) : NaN,
-      photos: (fields.Images || "").split(/\s+/).filter((url) => /^https?:\/\//i.test(url)),
+      price: fields.Price?.trim() ? Number(sheetPrice(fields.Price)) : NaN,
+      photos: sheetPhotoSources(fields.Images).filter(isWebPhoto),
       autoloadId: row.feedId,
       sheetRow: row,
       shows: avito?.shows ?? NaN,
@@ -255,13 +264,18 @@ function syncedListings(items: Listing[], snapshot: SheetSnapshot): Listing[] {
 
 function sheetEdit(listing: Listing): SheetEdit {
   const row = listing.sheetRow;
+  const originalPhotos = sheetPhotoSources(row?.fields.Images);
+  let nextPhoto = 0;
+  const updatedPhotos = originalPhotos.map((url) =>
+    isWebPhoto(url) ? listing.photos[nextPhoto++] : url,
+  );
   const values: Record<SheetField, string> = {
     Title: listing.title,
     Description: listing.text,
     Address: listing.city,
     Category: listing.category || "",
     Price: Number.isFinite(listing.price) ? String(listing.price) : "",
-    Images: listing.photos.join("\n"),
+    Images: [...updatedPhotos.filter(Boolean), ...listing.photos.slice(nextPhoto)].join("\n"),
   };
   const fields = Object.fromEntries(
     (Object.keys(values) as SheetField[])
@@ -269,9 +283,10 @@ function sheetEdit(listing: Listing): SheetEdit {
         if (!row) return Boolean(values[key]) || key === "Price";
         if (!(key in row.fields)) return false;
         const previous = row.fields[key] || "";
-        if (key === "Price") return values[key] !== previous.replace(",", ".");
+        if (key === "Price")
+          return !Object.is(listing.price, previous.trim() ? Number(sheetPrice(previous)) : NaN);
         if (key === "Images")
-          return values[key] !== previous.split(/\s+/).filter(Boolean).join("\n");
+          return listing.photos.join("\n") !== originalPhotos.filter(isWebPhoto).join("\n");
         return values[key] !== previous;
       })
       .map((key) => [key, values[key]]),
@@ -993,6 +1008,8 @@ export function AdsWorkspace({ focus }: { focus?: string }) {
                     open({
                       ...edit,
                       id: crypto.randomUUID(),
+                      sheetRow: undefined,
+                      autoloadId: undefined,
                       title: `${edit.title} — копия`,
                       status: "draft",
                       views: 0,
