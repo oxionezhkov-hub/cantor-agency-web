@@ -418,6 +418,7 @@ function Commenter({
             <button
               key={comment.id}
               className="commenter-pin"
+              disabled={selecting}
               style={{ top: point.y, left: point.x }}
               aria-label={`Комментарий ${index + 1}`}
               onClick={() => {
@@ -429,7 +430,8 @@ function Commenter({
               <MessageCircle size={15} aria-hidden="true" />
             </button>
           );
-        })}
+        })
+        .reverse()}
       {selecting && (
         <div className="commenter-prompt" role="status">
           <MapPinPlus size={18} aria-hidden="true" /> Выберите место на странице
