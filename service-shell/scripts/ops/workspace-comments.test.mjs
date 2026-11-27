@@ -65,7 +65,8 @@ async function fixture(t) {
       async () => identity,
     );
   }
-  const unlock = () => send(root + "/mode", "POST", { body: { password } });
+  const unlock = (identity = employee) =>
+    send(root + "/mode", "POST", { identity, body: { password } });
   const owner = { role: "owner" };
   return { employee, owner, root, admin, send, unlock, env };
 }
@@ -176,14 +177,21 @@ test("saving text and media is idempotent, scoped, and independent of Whisper", 
   );
   assert.equal((await send(`${admin}/${id}/audio`)).status, 401);
   const outsider = { ...employee, workspaceId: "other" };
-  const otherCookie = cookieFor(
-    await send(root + "/mode", "POST", { identity: outsider, body: { password: "wrong" } }),
-  );
-  assert.equal(otherCookie, undefined);
+  const otherCookie = cookieFor(await unlock(outsider));
   assert.equal(
     (await send(`${root}/${id}/screenshot`, "GET", { cookie, identity: outsider })).status,
     403,
   );
+  assert.equal(
+    (await send(`${root}/${id}/screenshot`, "GET", { cookie: otherCookie, identity: outsider }))
+      .status,
+    404,
+  );
+  const foreignList = await send(`${root}?workspace=${employee.workspaceId}`, "GET", {
+    cookie: otherCookie,
+    identity: outsider,
+  });
+  assert.deepEqual((await foreignList.json()).comments, []);
   for (const [name, bytes] of [
     ["audio", audio],
     ["screenshot", screenshot],
@@ -229,7 +237,7 @@ test("saving text and media is idempotent, scoped, and independent of Whisper", 
 });
 
 test("screenshots are dropped in sensitive sections and malformed targets are rejected", async (t) => {
-  const { send, root, unlock } = await fixture(t);
+  const { send, root, unlock, env } = await fixture(t);
   const cookie = cookieFor(await unlock());
   const screenshot = new Blob([new Uint8Array([255, 216, 255])], { type: "image/jpeg" });
   for (const section of ["acc", "chats"]) {
@@ -240,6 +248,13 @@ test("screenshots are dropped in sensitive sections and malformed targets are re
     assert.equal(saved.status, 201);
     assert.equal((await saved.json()).comment.hasScreenshot, false);
   }
+  env.CABINET_SOURCE_MODE = "avito";
+  const restricted = await send(root, "POST", {
+    cookie,
+    body: form({ section: "today", text: "Проверка" }, { screenshot }),
+  });
+  assert.equal(restricted.status, 201);
+  assert.equal((await restricted.json()).comment.hasScreenshot, false);
   const invalid = await send(root, "POST", {
     cookie,
     body: form({

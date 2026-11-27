@@ -83,7 +83,11 @@ export function CommentQueue() {
         </label>
         <label>
           Раздел
-          <select value={section} onChange={(event) => filter(setSection, event.target.value)}>
+          <select
+            aria-label="Раздел"
+            value={section}
+            onChange={(event) => filter(setSection, event.target.value)}
+          >
             <option value="">Все разделы</option>
             {SECTIONS.map(({ id, label }) => (
               <option key={id} value={id}>
@@ -94,7 +98,11 @@ export function CommentQueue() {
         </label>
         <label>
           Состояние
-          <select value={status} onChange={(event) => filter(setStatus, event.target.value)}>
+          <select
+            aria-label="Состояние"
+            value={status}
+            onChange={(event) => filter(setStatus, event.target.value)}
+          >
             <option value="">Все состояния</option>
             {Object.entries(STATUSES).map(([value, label]) => (
               <option key={value} value={value}>
@@ -182,6 +190,7 @@ function QueueItem({ comment, refresh }: { comment: Comment; refresh: () => void
         <label>
           Состояние
           <select
+            aria-label="Состояние"
             value={comment.status}
             disabled={busy}
             onChange={(event) => void update("status", event.target.value as Status)}

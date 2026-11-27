@@ -86,7 +86,7 @@ async function signature(secret, identity, expires) {
           "workspace-commenter-v1",
           identity.workspaceId,
           identity.employeeId,
-          identity.sessionId ?? "",
+          identity.sessionId,
           expires,
         ]),
       ),
@@ -371,7 +371,11 @@ export async function workspaceComments(request, env, resolveIdentity) {
     if (
       !identity ||
       identity.role !== (admin ? "owner" : "tester") ||
-      identity.mustChangePassword
+      identity.mustChangePassword ||
+      (!admin &&
+        ![identity.workspaceId, identity.employeeId, identity.sessionId].every(
+          (part) => typeof part === "string" && part,
+        ))
     ) {
       throw new HttpError(401, "unauthorized");
     }
