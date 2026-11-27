@@ -1,3 +1,4 @@
+import { cabinetApi, isCabinetApi, hasCabinetSession, fail } from "./cabinet-admin.mjs";
 import {liveRead} from "./avito-live.mjs";
 import { avitoAudit } from "./avito-audit.mjs";
 import { aiManager } from "./ai-manager.mjs";
@@ -9,6 +10,14 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    if (isCabinetApi(path)) {
+      try { return await cabinetApi(request, env); }
+      catch { return fail("cabinet_unavailable", 503); }
+    }
+    if (env.CABINET_ADMIN && (path.startsWith("/api/demo/") || path === "/api/campaign/suggest") &&
+        (env.CABINET_SOURCE_MODE === "synthetic" || hasCabinetSession(request))) {
+      return fail("cabinet_scope_required", 403);
+    }
     if (path === "/api/demo/live") return liveRead(request,env);
     if (path === "/api/demo/avito-audit") return avitoAudit(request, env);
     if (path === "/api/demo/campaign/suggest" || path === "/api/campaign/suggest") return campaignSuggestion(request, env);

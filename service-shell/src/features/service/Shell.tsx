@@ -178,7 +178,12 @@ export function Shell({
                 style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
               />
             ) : getPreviewData() ? (
-              "ЕД"
+              getPreviewData()
+                ?.tutor.split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join("")
+                .toUpperCase()
             ) : (
               "АС"
             )}

@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cantor-cabinet-test",
+  "main": "scripts/ops/cabinet-preview-worker.mjs",
+  "compatibility_date": "2026-11-16",
+  "durable_objects": { "bindings": [{ "name": "CABINET_ADMIN", "class_name": "CabinetStorage" }] },
+  "migrations": [{ "tag": "cabinet-v1", "new_sqlite_classes": ["CabinetStorage"] }],
+  "vars": { "CABINET_SOURCE_MODE": "synthetic" },
+  "ratelimits": [
+    { "name": "CABINET_LOGIN_LIMIT", "namespace_id": "8328371", "simple": { "limit": 10, "period": 60 } },
+    { "name": "CABINET_READ_LIMIT", "namespace_id": "8328372", "simple": { "limit": 12, "period": 60 } }
+  ],
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "observability": { "enabled": true, "traces": { "enabled": true } }
+}

@@ -62,6 +62,7 @@ export type PreviewChat = {
 };
 export type PreviewMessage = { id: string; at: number; author: string; type: string; text: string };
 export type PreviewSnapshot = {
+  workspaceId?: string;
   live?: Record<string, LiveMeta>;
   liveMoney?: LiveMoney;
   tutor: string;
@@ -108,11 +109,14 @@ export function setPreviewData(data: PreviewSnapshot, credential: string) {
   password = credential;
 }
 export async function readPreviewChat(id: string, signal?: AbortSignal): Promise<PreviewMessage[]> {
-  const response = await fetch(`/api/demo/chat?id=${encodeURIComponent(id)}`, {
-    headers: { "x-demo-password": password },
-    cache: "no-store",
-    signal,
-  });
+  const response = await fetch(
+    `/api/${snapshot?.workspaceId ? "cabinet" : "demo"}/chat?id=${encodeURIComponent(id)}`,
+    {
+      headers: { "x-demo-password": password },
+      cache: "no-store",
+      signal,
+    },
+  );
   if (!response.ok) throw new Error("Не удалось загрузить переписку");
   const data = await response.json();
   return data.messages;
@@ -324,6 +328,14 @@ export async function refreshLivePreview(signal?: AbortSignal) {
   }
 }
 export async function readLiveMessages(id: string, offset = 0, signal?: AbortSignal) {
+  if (snapshot?.workspaceId) {
+    const messages = await readPreviewChat(id, signal);
+    return {
+      messages,
+      observedAt: snapshot.readAt,
+      coverage: { complete: false, nextOffset: null, truncated: false },
+    };
+  }
   const response = await fetch(
     `/api/demo/live?section=messages&id=${encodeURIComponent(id)}&offset=${offset}`,
     {
